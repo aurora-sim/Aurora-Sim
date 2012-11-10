@@ -27,21 +27,20 @@
 
 using System;
 using OpenMetaverse;
-using Griffin.Networking;
-using Griffin.Networking.Http.Protocol;
+using HttpServer;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
     public class PollServiceHttpRequest
     {
-        public readonly IPipelineHandlerContext HttpContext;
+        public readonly IHttpClientContext HttpContext;
         public readonly PollServiceEventArgs PollServiceArgs;
-        public readonly IRequest Request;
+        public readonly IHttpRequest Request;
         public readonly UUID RequestID;
         public readonly int RequestTime;
 
-        public PollServiceHttpRequest(PollServiceEventArgs pPollServiceArgs, IPipelineHandlerContext pHttpContext,
-                                      IRequest pRequest)
+        public PollServiceHttpRequest(PollServiceEventArgs pPollServiceArgs, IHttpClientContext pHttpContext,
+                                      IHttpRequest pRequest)
         {
             PollServiceArgs = pPollServiceArgs;
             HttpContext = pHttpContext;

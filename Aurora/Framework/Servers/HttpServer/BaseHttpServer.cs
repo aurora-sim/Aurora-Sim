@@ -39,26 +39,16 @@ using Nwc.XmlRpc;
 using OpenMetaverse.StructuredData;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
-using Griffin.Networking;
-using Griffin.Networking.Buffers;
-using Griffin.Networking.Http.Handlers;
-using Griffin.Networking.Http.Implementation;
-using Griffin.Networking.Http.Messages;
-using Griffin.Networking.Http.Protocol;
-using Griffin.Networking.Http.Services;
-using Griffin.Networking.Http.Services.Authentication;
-using Griffin.Networking.Http.Services.BodyDecoders;
-using Griffin.Networking.Http.Services.Errors;
-using Griffin.Networking.Logging;
-using Griffin.Networking.Messages;
-using Griffin.Networking.Pipelines;
-using HttpListener = Griffin.Networking.Http.HttpListener;
+using HttpServer;
+using HttpListener = HttpServer.HttpListener;
+using LogPrio = HttpServer.LogPrio;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
     public class BaseHttpServer : IHttpServer
     {
         public volatile bool HTTPDRunning = false;
+        private readonly HttpServerLogWriter httpserverlog = new HttpServerLogWriter();
 
         protected HttpListener _httpListener;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
@@ -81,12 +71,6 @@ namespace Aurora.Framework.Servers.HttpServer
         internal PollServiceRequestManager PollServiceManager { get { return m_PollServiceManager; } }
 
         private PollServiceRequestManager m_PollServiceManager;
-
-        public MessageHandler MessageHandler
-        {
-            get;
-            private set;
-        }
 
         public uint Port
         {
@@ -615,26 +599,11 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             try
             {
-                var factory = new DelegatePipelineFactory();
-                factory.AddDownstreamHandler(() => new ResponseEncoder());
-                factory.AddUpstreamHandler(() => new HeaderDecoder(new HttpParser()));
-                var decoder = new CompositeBodyDecoder();
-                decoder.Add("application/json", new JsonBodyDecoder());
-                decoder.Add("application/xml", new JsonBodyDecoder());
-                decoder.Add("application/x-gzip", new JsonBodyDecoder());
-                decoder.Add("application/llsd+json", new JsonBodyDecoder());
-                decoder.Add("application/llsd+xml", new JsonBodyDecoder());
-                decoder.Add("application/xml+llsd", new JsonBodyDecoder());
-                decoder.Add("application/octet-stream", new JsonBodyDecoder());
-                decoder.Add("text/html", new JsonBodyDecoder());
-                decoder.Add("text/xml", new JsonBodyDecoder());
-                decoder.Add("text/www-form-urlencoded", new JsonBodyDecoder());
-                decoder.Add("text/x-www-form-urlencoded", new JsonBodyDecoder());
-
-                factory.AddUpstreamHandler(() => new BodyDecoder(decoder, 65535, int.MaxValue));
-                factory.AddUpstreamHandler(() => (MessageHandler = new MessageHandler(this)));
-                _httpListener = new HttpListener(factory);
-                _httpListener.Start(new IPEndPoint(IPAddress.Any, (int)Port));
+                _httpListener = HttpListener.Create(m_listenIPAddress, (int)m_port/*, httpserverlog*/);
+                _httpListener.ExceptionThrown += httpServerException;
+                _httpListener.LogWriter = httpserverlog;
+                _httpListener.RequestReceived += OnRequest;
+                _httpListener.Start(64);
 
                 // Long Poll Service Manager with 3 worker threads a 25 second timeout for no events
                 m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
@@ -657,12 +626,292 @@ namespace Aurora.Framework.Servers.HttpServer
             HTTPDRunning = false;
             try
             {
+                _httpListener.ExceptionThrown -= httpServerException;
+                _httpListener.LogWriter = null;
+                _httpListener.RequestReceived -= OnRequest;
                 _httpListener.Stop();
             }
             catch (NullReferenceException)
             {
                 MainConsole.Instance.Warn("[BASE HTTP SERVER]: Null Reference when stopping HttpServer.");
             }
+        }
+
+        private void OnRequest(object source, RequestEventArgs args)
+        {
+            try
+            {
+                IHttpClientContext context = (IHttpClientContext)source;
+                IHttpRequest request = args.Request;
+
+                PollServiceEventArgs psEvArgs;
+
+                if (TryGetPollServiceHTTPHandler(request.UriPath.ToString(), out psEvArgs))
+                {
+                    PollServiceHttpRequest psreq = new PollServiceHttpRequest(psEvArgs, context, request);
+
+                    if (psEvArgs.Request != null)
+                    {
+                        OSHttpRequest req = new OSHttpRequest(context, request);
+
+                        Stream requestStream = req.InputStream;
+
+                        Encoding encoding = Encoding.UTF8;
+                        StreamReader reader = new StreamReader(requestStream, encoding);
+
+                        string requestBody = reader.ReadToEnd();
+
+                        Hashtable keysvals = new Hashtable();
+                        Hashtable headervals = new Hashtable();
+
+                        string[] querystringkeys = req.QueryString.AllKeys;
+                        string[] rHeaders = req.Headers.AllKeys;
+
+                        keysvals.Add("body", requestBody);
+                        keysvals.Add("uri", req.RawUrl);
+                        keysvals.Add("content-type", req.ContentType);
+                        keysvals.Add("http-method", req.HttpMethod);
+
+                        foreach (string queryname in querystringkeys)
+                        {
+                            keysvals.Add(queryname, req.QueryString[queryname]);
+                        }
+
+                        foreach (string headername in rHeaders)
+                        {
+                            headervals[headername] = req.Headers[headername];
+                        }
+
+                        keysvals.Add("headers", headervals);
+                        keysvals.Add("querystringkeys", querystringkeys);
+
+                        psEvArgs.Request(psreq.RequestID, keysvals);
+                    }
+
+                    m_PollServiceManager.Enqueue(psreq);
+                }
+                else
+                {
+                    OnHandleRequestIOThread(context, request);
+                }
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: OnRequest() failed: {0} ", e);
+            }
+        }
+
+        public void OnHandleRequestIOThread(IHttpClientContext context, IHttpRequest request)
+        {
+            OSHttpRequest req = new OSHttpRequest(context, request);
+            OSHttpResponse resp = new OSHttpResponse(new HttpResponse(context, request), context);
+            HandleRequest(req, resp);
+
+            // !!!HACK ALERT!!!
+            // There seems to be a bug in the underlying http code that makes subsequent requests
+            // come up with trash in Accept headers. Until that gets fixed, we're cleaning them up here.
+            if (request.AcceptTypes != null)
+                for (int i = 0; i < request.AcceptTypes.Length; i++)
+                    request.AcceptTypes[i] = string.Empty;
+        }
+
+        public virtual void HandleRequest(OSHttpRequest request, OSHttpResponse response)
+        {
+            if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
+            {
+                try
+                {
+                    SendHTML500(response);
+                }
+                catch
+                {
+                }
+
+                return;
+            }
+
+            string requestMethod = request.HttpMethod;
+            string uriString = request.RawUrl;
+
+            int requestStartTick = Environment.TickCount;
+
+            // Will be adjusted later on.
+            int requestEndTick = requestStartTick;
+
+            IStreamedRequestHandler requestHandler = null;
+
+            try
+            {
+                // OpenSim.Framework.WebUtil.OSHeaderRequestID
+                //                if (request.Headers["opensim-request-id"] != null)
+                //                    reqnum = String.Format("{0}:{1}",request.RemoteIPEndPoint,request.Headers["opensim-request-id"]);
+                //m_log.DebugFormat("[BASE HTTP SERVER]: <{0}> handle request for {1}",reqnum,request.RawUrl);
+
+                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US", true);
+
+                //                //  This is the REST agent interface. We require an agent to properly identify
+                //                //  itself. If the REST handler recognizes the prefix it will attempt to
+                //                //  satisfy the request. If it is not recognizable, and no damage has occurred
+                //                //  the request can be passed through to the other handlers. This is a low
+                //                //  probability event; if a request is matched it is normally expected to be
+                //                //  handled
+                //                IHttpAgentHandler agentHandler;
+                //
+                //                if (TryGetAgentHandler(request, response, out agentHandler))
+                //                {
+                //                    if (HandleAgentRequest(agentHandler, request, response))
+                //                    {
+                //                        requestEndTick = Environment.TickCount;
+                //                        return;
+                //                    }
+                //                }
+
+                //response.KeepAlive = true;
+
+                string path = request.RawUrl;
+                string handlerKey = GetHandlerKey(request.HttpMethod, path);
+
+                if (TryGetStreamHandler(handlerKey, out requestHandler))
+                {
+                    response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
+                    HandleStreamHandler(request, response, path, requestHandler);
+                    return;
+                }
+                
+                if (request.AcceptTypes != null && request.AcceptTypes.Length > 0)
+                {
+                    if (request.AcceptTypes.Any(strAccept => strAccept.Contains("application/llsd+xml") || strAccept.Contains("application/llsd+json")))
+                    {
+                        HandleLLSDRequests(request, response);
+                        return;
+                    }
+                }
+
+                if (request.ContentType != null && request.ContentType.StartsWith("multipart/form-data"))
+                {
+                    HandleHTTPRequest(request, response);
+                    return;
+                }
+
+                switch (request.ContentType)
+                {
+                    case null:
+                    case "text/html":
+                    case "application/x-www-form-urlencoded":
+                    case "application/x-www-form-urlencoded; charset=UTF-8":
+                        HandleHTTPRequest(request, response);
+                        return;
+
+                    case "application/llsd+xml":
+                    case "application/xml+llsd":
+                    case "application/llsd+json":
+                        HandleLLSDRequests(request, response);
+                        return;
+
+                    case "text/xml":
+                    case "application/xml":
+                    case "application/json":
+                    default:
+                        if (request.ContentType == "application/x-gzip")
+                        {
+                            Stream inputStream = new System.IO.Compression.GZipStream(request.InputStream, System.IO.Compression.CompressionMode.Decompress);
+                            request.InputStream = inputStream;
+                        }
+                        if (DoWeHaveALLSDHandler(request.RawUrl))
+                            HandleLLSDRequests(request, response);
+                        else if (DoWeHaveAHTTPHandler(request.RawUrl))
+                            HandleHTTPRequest(request, response);
+                        else if (!HandleXmlRpcRequests(request, response))
+                            SendHTML404(response, "");
+
+                        return;
+                }
+            }
+            catch (SocketException e)
+            {
+                // At least on linux, it appears that if the client makes a request without requiring the response,
+                // an unconnected socket exception is thrown when we close the response output stream.  There's no
+                // obvious way to tell if the client didn't require the response, so instead we'll catch and ignore
+                // the exception instead.
+                //
+                // An alternative may be to turn off all response write exceptions on the HttpListener, but let's go
+                // with the minimum first
+                MainConsole.Instance.Warn(String.Format("[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux ", e.Message), e);
+            }
+            catch (IOException e)
+            {
+                MainConsole.Instance.Error(String.Format("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.StackTrace), e);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error(String.Format("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.StackTrace), e);
+                SendHTML500(response);
+            }
+            finally
+            {
+                // Every month or so this will wrap and give bad numbers, not really a problem
+                // since its just for reporting
+                int tickdiff = Environment.TickCount - requestStartTick;
+                if (tickdiff > 3000 && requestHandler != null)
+                {
+                    MainConsole.Instance.InfoFormat(
+                        "[BASE HTTP SERVER]: Slow handling of {0} {1} from {2} took {3}ms",
+                        requestMethod,
+                        uriString,
+                        request.RemoteIPEndPoint,
+                        tickdiff);
+                }
+                MainConsole.Instance.TraceFormat(
+                    "[BASE HTTP SERVER]: HTTP IN {0} {1} from {2} took {3}ms",
+                    requestMethod,
+                    uriString,
+                    request.RemoteIPEndPoint,
+                    tickdiff);
+            }
+        }
+
+        private static void HandleStreamHandler(OSHttpRequest request, OSHttpResponse response, string path, IStreamedRequestHandler requestHandler)
+        {
+            byte[] buffer = null;
+            response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
+
+            try
+            {
+                IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
+                buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex + ".");
+            }
+            request.InputStream.Close();
+
+            if (buffer != null)
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+
+            // Do not include the time taken to actually send the response to the caller in the measurement
+            // time.  This is to avoid logging when it's the client that is slow to process rather than the
+            // server
+
+            response.Send();
+
+            //response.OutputStream.Close();
+
+            //response.FreeContext();
+        }
+
+        public void httpServerException(object source, Exception exception)
+        {
+            MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: {0} had an exception {1}", source, exception);
+            /*
+             if (HTTPDRunning)// && NotSocketErrors > 5)
+             {
+                 Stop();
+                 Thread.Sleep(200);
+                 StartHTTP();
+                 MainConsole.Instance.Warn("[HTTPSERVER]: Died.  Trying to kick.....");
+             }
+             */
         }
 
         #region Remove Handlers
@@ -733,77 +982,6 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         #endregion
-    }
-
-    public class MessageHandler : IUpstreamHandler, IDisposable
-    {
-        private BaseHttpServer _server;
-        public MessageHandler(BaseHttpServer server)
-        {
-            _server = server;
-        }
-
-        /// <summary>
-        /// Handle an message
-        /// </summary>
-        /// <param name="context">Context unique for this handler instance</param>
-        /// <param name="message">Message to process</param>
-        /// <remarks>
-        /// All messages that can't be handled MUST be send up the chain using <see cref="IPipelineHandlerContext.SendUpstream"/>.
-        /// </remarks>
-        public void HandleUpstream(IPipelineHandlerContext context, IPipelineMessage message)
-        {
-            var msg = message as ReceivedHttpRequest;
-            if (msg == null)
-            {
-                if (message is PipelineFailure)
-                    MainConsole.Instance.ErrorFormat("[BaseHttpServer]: Failed to get message, {0}", (message as PipelineFailure).Exception);
-                return;
-            }
-
-            //MainConsole.Instance.Warn("Taking in request " + msg.HttpRequest.Uri.ToString());
-
-            var request = msg.HttpRequest;
-            PollServiceEventArgs psEvArgs;
-            OSHttpRequest req = new OSHttpRequest(context, request);
-
-            if (_server.TryGetPollServiceHTTPHandler(request.Uri.AbsolutePath, out psEvArgs))
-            {
-                PollServiceHttpRequest psreq = new PollServiceHttpRequest(psEvArgs, context, request);
-
-                if (psEvArgs.Request != null)
-                {
-                    string requestBody;
-                    using (StreamReader reader = new StreamReader(req.InputStream, Encoding.UTF8))
-                        requestBody = reader.ReadToEnd();
-
-                    Hashtable keysvals = new Hashtable(), headervals = new Hashtable();
-
-                    string[] querystringkeys = req.QueryString.AllKeys;
-                    string[] rHeaders = req.Headers.AllKeys;
-
-                    keysvals.Add("body", requestBody);
-                    keysvals.Add("uri", req.RawUrl);
-                    keysvals.Add("content-type", req.ContentType);
-                    keysvals.Add("http-method", req.HttpMethod);
-
-                    foreach (string queryname in querystringkeys)
-                        keysvals.Add(queryname, req.QueryString[queryname]);
-
-                    foreach (string headername in rHeaders)
-                        headervals[headername] = req.Headers[headername];
-
-                    keysvals.Add("headers", headervals);
-                    keysvals.Add("querystringkeys", querystringkeys);
-
-                    psEvArgs.Request(psreq.RequestID, keysvals);
-                }
-
-                _server.PollServiceManager.Enqueue(psreq);
-            }
-            else
-                HandleRequest(req, req.MakeResponse(HttpStatusCode.OK, "OK"));
-        }
 
         #region Generic HTTP Handlers
 
@@ -874,13 +1052,6 @@ namespace Aurora.Framework.Servers.HttpServer
                     response.ContentEncoding = Encoding.UTF8;
                     response.OutputStream.Write(buffer, 0, buffer.Length);
                 }
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[HTTPD]: Error - " + ex);
-            }
-            finally
-            {
                 try
                 {
                     response.Send();
@@ -894,6 +1065,10 @@ namespace Aurora.Framework.Servers.HttpServer
                 {
                     MainConsole.Instance.Debug("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
                 }
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.Warn("[HTTPD]: Error - " + ex);
             }
         }
 
@@ -955,36 +1130,34 @@ namespace Aurora.Framework.Servers.HttpServer
             if (keysvals.Contains("method"))
             {
                 string method = (string)keysvals["method"];
-                if (_server.TryGetHTTPHandler(method, out requestprocessor))
+                if (TryGetHTTPHandler(method, out requestprocessor))
                     SendGenericHTTPResponse(requestprocessor(keysvals), response, request);
-                else if (_server.TryGetStreamHTTPHandler(method, out streamProcessor))
+                else if (TryGetStreamHTTPHandler(method, out streamProcessor))
                 {
-                    int respLength = 0;
                     if (request.InputStream != null)
                     {
                         request.InputStream.Close();
                         MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(requestBody));
                         request.InputStream = stream;
                     }
-                    HandleStreamHandler(request, response, request.RawUrl, ref respLength, streamProcessor);
+                    HandleStreamHandler(request, response, request.RawUrl, streamProcessor);
                 }
                 else
                     SendHTML404(response, host);
             }
             else
             {
-                if (_server.TryGetHTTPHandlerPathBased(request.RawUrl, out requestprocessor))
+                if (TryGetHTTPHandlerPathBased(request.RawUrl, out requestprocessor))
                     SendGenericHTTPResponse(requestprocessor(keysvals), response, request);
-                else if (_server.TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
+                else if (TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
                 {
-                    int respLength = 0;
                     if (request.InputStream != null)
                     {
                         request.InputStream.Close();
                         MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(requestBody));
                         request.InputStream = stream;
                     }
-                    HandleStreamHandler(request, response, request.RawUrl, ref respLength, streamProcessor);
+                    HandleStreamHandler(request, response, request.RawUrl, streamProcessor);
                 }
                 else
                     SendHTML404(response, host);
@@ -1007,7 +1180,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private void HandleLLSDRequests(OSHttpRequest request, OSHttpResponse response)
         {
             string requestBody;
-            using(StreamReader reader = new StreamReader(request.InputStream, Encoding.UTF8))
+            using (StreamReader reader = new StreamReader(request.InputStream, Encoding.UTF8))
                 requestBody = reader.ReadToEnd();
 
             response.KeepAlive = true;
@@ -1032,7 +1205,7 @@ namespace Aurora.Framework.Servers.HttpServer
             if (llsdRequest != null)
             {
                 LLSDMethod llsdhandler = null;
-                if (_server.TryGetLLSDHandler(request.RawUrl, out llsdhandler) && !LegacyLLSDLoginLibOMV)
+                if (TryGetLLSDHandler(request.RawUrl, out llsdhandler) && !LegacyLLSDLoginLibOMV)
                 {
                     // we found a registered llsd handler to service this request
                     llsdResponse = llsdhandler(request.RawUrl, llsdRequest, request.RemoteIPEndPoint);
@@ -1063,6 +1236,9 @@ namespace Aurora.Framework.Servers.HttpServer
 
             try
             {
+                response.ContentEncoding = Encoding.UTF8;
+                response.KeepAlive = true;
+
                 response.OutputStream.Write(buffer, 0, buffer.Length);
                 response.Send();
             }
@@ -1159,7 +1335,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     XmlRpcResponse xmlRpcResponse;
                     XmlRpcMethod method;
 
-                    if (_server.TryGetXMLHandler(methodName, out method))
+                    if (TryGetXMLHandler(methodName, out method))
                     {
                         xmlRprcRequest.Params.Add(request.Url); // Param[2]
                         xmlRprcRequest.Params.Add(request.Headers.Get("X-Forwarded-For")); // Param[3]
@@ -1182,7 +1358,7 @@ namespace Aurora.Framework.Servers.HttpServer
                         }
 
                         // if the method wasn't found, we can't determine KeepAlive state anyway, so lets do it only here
-                        response.KeepAlive = _server.GetXMLHandlerIsKeepAlive(methodName);
+                        response.KeepAlive = GetXMLHandlerIsKeepAlive(methodName);
                     }
                     else
                     {
@@ -1208,6 +1384,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 try
                 {
+                    response.ContentEncoding = Encoding.UTF8;
                     response.OutputStream.Write(buf, 0, buf.Length);
                     response.Send();
                 }
@@ -1309,6 +1486,114 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Relays HttpServer log messages to our own logging mechanism.
+    /// </summary>
+    /// To use this you must uncomment the switch section
+    ///
+    /// You may also be able to get additional trace information from HttpServer if you uncomment the UseTraceLogs
+    /// property in StartHttp() for the HttpListener
+    public class HttpServerLogWriter : ILogWriter
+    {
+        public void Write(object source, LogPrio priority, string message)
+        {
+            switch (priority)
+            {
+                case LogPrio.Trace:
+                    MainConsole.Instance.Format(new log4net.Core.Level(0, "None"), "[{0}]: {1}", source, message);
+                    break;
+                case LogPrio.Debug:
+                    MainConsole.Instance.Format(new log4net.Core.Level(0, "None"), "[{0}]: {1}", source, message);
+                    break;
+                case LogPrio.Error:
+                    MainConsole.Instance.ErrorFormat("[{0}]: {1}", source, message);
+                    break;
+                case LogPrio.Info:
+                    MainConsole.Instance.InfoFormat("[{0}]: {1}", source, message);
+                    break;
+                case LogPrio.Warning:
+                    MainConsole.Instance.WarnFormat("[{0}]: {1}", source, message);
+                    break;
+                case LogPrio.Fatal:
+                    MainConsole.Instance.ErrorFormat("[{0}]: FATAL! - {1}", source, message);
+                    break;
+            }
+
+            return;
+        }
+    }
+
+    /*public class MessageHandler : IUpstreamHandler, IDisposable
+    {
+        private BaseHttpServer _server;
+        public MessageHandler(BaseHttpServer server)
+        {
+            _server = server;
+        }
+
+        /// <summary>
+        /// Handle an message
+        /// </summary>
+        /// <param name="context">Context unique for this handler instance</param>
+        /// <param name="message">Message to process</param>
+        /// <remarks>
+        /// All messages that can't be handled MUST be send up the chain using <see cref="IPipelineHandlerContext.SendUpstream"/>.
+        /// </remarks>
+        public void HandleUpstream(IPipelineHandlerContext context, IPipelineMessage message)
+        {
+            var msg = message as ReceivedHttpRequest;
+            if (msg == null)
+            {
+                if (message is PipelineFailure)
+                    MainConsole.Instance.ErrorFormat("[BaseHttpServer]: Failed to get message, {0}", (message as PipelineFailure).Exception);
+                return;
+            }
+
+            //MainConsole.Instance.Warn("Taking in request " + msg.HttpRequest.Uri.ToString());
+
+            var request = msg.HttpRequest;
+            PollServiceEventArgs psEvArgs;
+            OSHttpRequest req = new OSHttpRequest(context, request);
+
+            if (_server.TryGetPollServiceHTTPHandler(request.Uri.AbsolutePath, out psEvArgs))
+            {
+                PollServiceHttpRequest psreq = new PollServiceHttpRequest(psEvArgs, context, request);
+
+                if (psEvArgs.Request != null)
+                {
+                    string requestBody;
+                    using (StreamReader reader = new StreamReader(req.InputStream, Encoding.UTF8))
+                        requestBody = reader.ReadToEnd();
+
+                    Hashtable keysvals = new Hashtable(), headervals = new Hashtable();
+
+                    string[] querystringkeys = req.QueryString.AllKeys;
+                    string[] rHeaders = req.Headers.AllKeys;
+
+                    keysvals.Add("body", requestBody);
+                    keysvals.Add("uri", req.RawUrl);
+                    keysvals.Add("content-type", req.ContentType);
+                    keysvals.Add("http-method", req.HttpMethod);
+
+                    foreach (string queryname in querystringkeys)
+                        keysvals.Add(queryname, req.QueryString[queryname]);
+
+                    foreach (string headername in rHeaders)
+                        headervals[headername] = req.Headers[headername];
+
+                    keysvals.Add("headers", headervals);
+                    keysvals.Add("querystringkeys", querystringkeys);
+
+                    psEvArgs.Request(psreq.RequestID, keysvals);
+                }
+
+                _server.PollServiceManager.Enqueue(psreq);
+            }
+            else
+                HandleRequest(req, req.MakeResponse(HttpStatusCode.OK, "OK"));
+        }
 
         /// <summary>
         /// This methods is the start of incoming HTTP request handling.
@@ -1495,12 +1780,5 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         #endregion
-    }
-
-    public class JsonBodyDecoder : IBodyDecoder
-    {
-        public void Decode(IRequest message)
-        {
-        }
-    }
+    }*/
 }

@@ -30,11 +30,9 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web;
-using Griffin.Networking;
-using Griffin.Networking.Http;
-using Griffin.Networking.Http.Implementation;
-using Griffin.Networking.Http.Protocol;
-using Griffin.Networking.Http.Messages;
+using HttpServer;
+
+using HTTPResponse = HttpServer.HttpResponse;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -44,22 +42,34 @@ namespace Aurora.Framework.Servers.HttpServer
     /// </summary>
     public class OSHttpResponse : IDisposable
     {
-        protected IResponse _httpResponse;
-        protected IRequest _httpRequest;
-        protected IPipelineHandlerContext _httpContext;
+        private readonly IHttpClientContext _httpClientContext;
+        protected IHttpResponse _httpResponse;
 
         public OSHttpResponse()
         {
         }
 
-        public OSHttpResponse(IPipelineHandlerContext context, IRequest request, IResponse response)
+        public OSHttpResponse(IHttpResponse resp)
         {
-            _httpContext = context;
-            _httpRequest = request;
-            _httpResponse = response;
+            _httpResponse = resp;
+        }
 
-            _httpResponse.AddHeader("remote_addr", MainServer.Instance.HostName);
-            _httpResponse.AddHeader("remote_port", MainServer.Instance.Port.ToString());
+        /// <summary>
+        ///   Instantiate an OSHttpResponse object from an OSHttpRequest
+        ///   object.
+        /// </summary
+        /// <param name = "req">Incoming OSHttpRequest to which we are
+        ///   replying</param>
+        public OSHttpResponse(OSHttpRequest req)
+        {
+            _httpResponse = new HTTPResponse(req.IHttpClientContext, req.IHttpRequest);
+            _httpClientContext = req.IHttpClientContext;
+        }
+
+        public OSHttpResponse(HTTPResponse resp, IHttpClientContext clientContext)
+        {
+            _httpResponse = resp;
+            _httpClientContext = clientContext;
         }
 
         public System.Web.HttpCookieCollection Cookies
@@ -69,18 +79,14 @@ namespace Aurora.Framework.Servers.HttpServer
                 var cookies = _httpResponse.Cookies;
                 HttpCookieCollection httpCookies = new HttpCookieCollection();
                 foreach (var cookie in cookies)
-                    httpCookies.Add(new System.Web.HttpCookie(cookie.Name, cookie.Value));
+                    httpCookies.Add(new System.Web.HttpCookie(((RequestCookie)cookie).Name, ((RequestCookie)cookie).Value));
                 return httpCookies;
             }
         }
 
         public void AddCookie(System.Web.HttpCookie cookie)
         {
-            _httpResponse.Cookies[cookie.Name] = new HttpResponseCookie()
-            {
-                Expires = cookie.Expires, 
-                Name = cookie.Name, Path = cookie.Path, Value = cookie.Value
-            };
+            _httpResponse.Cookies[cookie.Name] = new ResponseCookie(cookie.Name, cookie.Value, cookie.Expires, cookie.Path, cookie.Domain);
         }
 
         /// <summary>
@@ -110,18 +116,14 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public Encoding ContentEncoding
         {
-            get { return _httpResponse.ContentEncoding; }
-
-            set { _httpResponse.ContentEncoding = value; }
+            get { return _httpResponse.Encoding; }
+            set { _httpResponse.Encoding = value; }
         }
 
         public bool KeepAlive
         {
-            get { return _httpResponse.KeepAlive; }
-
-            set {
-                _httpResponse.KeepAlive = value;
-            }
+            get { return _httpResponse.Connection == ConnectionType.KeepAlive; }
+            set { _httpResponse.Connection = value ? ConnectionType.KeepAlive : ConnectionType.Close; }
         }
 
         /// <summary>
@@ -159,9 +161,8 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public virtual int StatusCode
         {
-            get { return (int) _httpResponse.StatusCode; }
-
-            set { _httpResponse.StatusCode = value; }
+            get { return (int)_httpResponse.Status; }
+            set { _httpResponse.Status = (HttpStatusCode)value; }
         }
 
 
@@ -170,9 +171,8 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public string StatusDescription
         {
-            get { return _httpResponse.StatusDescription; }
-
-            set { _httpResponse.StatusDescription = value; }
+            get { return _httpResponse.Reason; }
+            set { _httpResponse.Reason = value; }
         }
 
         /// <summary>
@@ -192,22 +192,16 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public void Send()
         {
-            if (_httpResponse.Body != null)
-                _httpResponse.Body.Position = 0;
-            _httpContext.SendDownstream(new SendHttpResponse(_httpRequest, _httpResponse));
-            if (_httpResponse.Body != null)
-                _httpResponse.Body.Dispose();
+            _httpResponse.Body.Flush();
+            _httpResponse.Send();
         }
 
         #region Implementation of IDisposable
 
         public void Dispose()
         {
-            _httpResponse.Body = null;
-            _httpResponse = null;
-            _httpRequest.Body = null;
-            _httpRequest = null;
-            _httpContext = null;
+            if (_httpClientContext != null)
+                _httpClientContext.Close();
         }
 
         #endregion

@@ -154,7 +154,7 @@ namespace Aurora.Framework.Servers.HttpServer
             foreach (PollServiceHttpRequest req in m_requests.Cast<PollServiceHttpRequest>())
             {
                 var request = new OSHttpRequest(req.HttpContext, req.Request);
-                m_server.MessageHandler.SendGenericHTTPResponse(
+                m_server.SendGenericHTTPResponse(
                     req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
                     request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
                     request

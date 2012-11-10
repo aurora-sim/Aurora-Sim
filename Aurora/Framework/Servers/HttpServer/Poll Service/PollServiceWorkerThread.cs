@@ -83,7 +83,7 @@ namespace Aurora.Framework.Servers.HttpServer
                             Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
                                                                                    str.ReadToEnd());
                             var request = new OSHttpRequest(req.HttpContext, req.Request);
-                            m_server.MessageHandler.SendGenericHTTPResponse(
+                            m_server.SendGenericHTTPResponse(
                                 responsedata,
                                 request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
                                 request
@@ -94,7 +94,7 @@ namespace Aurora.Framework.Servers.HttpServer
                             if ((Environment.TickCount - req.RequestTime) > m_timeout)
                             {
                                 var request = new OSHttpRequest(req.HttpContext, req.Request);
-                                m_server.MessageHandler.SendGenericHTTPResponse(
+                                m_server.SendGenericHTTPResponse(
                                     req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
                                     request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
                                     request);
