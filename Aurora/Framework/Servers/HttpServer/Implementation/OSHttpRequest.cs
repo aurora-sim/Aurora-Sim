@@ -35,6 +35,7 @@ using System.Reflection;
 using System.Text;
 using System.Web;
 using HttpServer;
+using HTTPFile = HttpServer.HttpFile;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -44,7 +45,6 @@ namespace Aurora.Framework.Servers.HttpServer
         private readonly NameValueCollection _queryString;
         private IPEndPoint _remoteIPEndPoint;
         private Dictionary<string, HttpFile> _files = new Dictionary<string, HttpFile>();
-        private NameValueCollection _form = new NameValueCollection();
 
         protected IHttpClientContext _context;
         protected IHttpRequest _request;
@@ -104,12 +104,67 @@ namespace Aurora.Framework.Servers.HttpServer
                 MainConsole.Instance.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
             }
 
-            //            Form = new Hashtable();
-            //            foreach (HttpInputItem item in req.Form)
-            //            {
-            //                MainConsole.Instance.DebugFormat("[OSHttpRequest]: Got form item {0}={1}", item.Name, item.Value);
-            //                Form.Add(item.Name, item.Value);
-            //            }
+            if (ContentType != null && ContentType.StartsWith("multipart/form-data"))
+            {
+                HttpMultipart.Element element;
+                var boundry = "";
+                var multipart = new HttpMultipart(InputStream, boundry, ContentEncoding);
+
+                while ((element = multipart.ReadNextElement()) != null)
+                {
+                    if (string.IsNullOrEmpty(element.Name))
+                        throw new FormatException("Error parsing request. Missing value name.\nElement: " + element);
+
+                    if (!string.IsNullOrEmpty(element.Filename))
+                    {
+                        if (string.IsNullOrEmpty(element.ContentType))
+                            throw new FormatException("Error parsing request. Value '" + element.Name +
+                                                      "' lacks a content type.");
+
+                        // Read the file data
+                        var buffer = new byte[element.Length];
+                        InputStream.Seek(element.Start, SeekOrigin.Begin);
+                        InputStream.Read(buffer, 0, (int)element.Length);
+
+                        // Generate a filename
+                        var originalFileName = element.Filename;
+                        var internetCache = Environment.GetFolderPath(Environment.SpecialFolder.InternetCache);
+
+                        // if the internet path doesn't exist, assume mono and /var/tmp
+                        var path = string.IsNullOrEmpty(internetCache)
+                                       ? Path.Combine("var", "tmp")
+                                       : Path.Combine(internetCache.Replace("\\\\", "\\"), "tmp");
+
+                        element.Filename = Path.Combine(path, Math.Abs(element.Filename.GetHashCode()) + ".tmp");
+
+                        // If the file exists generate a new filename
+                        while (File.Exists(element.Filename))
+                            element.Filename = Path.Combine(path, Math.Abs(element.Filename.GetHashCode() + 1) + ".tmp");
+
+                        if (!Directory.Exists(path))
+                            Directory.CreateDirectory(path);
+
+                        File.WriteAllBytes(element.Filename, buffer);
+
+                        var file = new HttpFile
+                        {
+                            Name = element.Name,
+                            OriginalFileName = originalFileName,
+                            ContentType = element.ContentType,
+                            TempFileName = element.Filename
+                        };
+                        Files.Add(element.Name, file);
+                    }
+                    /*else
+                    {
+                        var buffer = new byte[element.Length];
+                        message.Body.Seek(element.Start, SeekOrigin.Begin);
+                        message.Body.Read(buffer, 0, (int)element.Length);
+
+                        form.Add(Uri.UnescapeDataString(element.Name), message.ContentEncoding.GetString(buffer));
+                    }*/
+                }
+            }
         }
 
         public string[] AcceptTypes
@@ -152,12 +207,6 @@ namespace Aurora.Framework.Servers.HttpServer
         public NameValueCollection Headers
         {
             get { return _request.Headers; }
-        }
-
-        public NameValueCollection Form
-        {
-            get { return _form; }
-            set { _form = value; }
         }
 
         public class HttpFile : IDisposable
@@ -281,7 +330,6 @@ namespace Aurora.Framework.Servers.HttpServer
             _query.Clear();
             _queryString.Clear();
             _remoteIPEndPoint = null;
-            _form.Clear();
         }
 
         #endregion
