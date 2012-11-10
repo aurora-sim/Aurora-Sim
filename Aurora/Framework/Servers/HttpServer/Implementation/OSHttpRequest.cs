@@ -174,7 +174,11 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public Encoding ContentEncoding
         {
-            get { return Encoding.GetEncoding(_request.Headers["content-encoding"]); }
+            get
+            {
+                return _request.Headers["content-encoding"] == null ? Encoding.UTF8 :
+                    Encoding.GetEncoding(_request.Headers["content-encoding"]);
+            }
         }
 
         public long ContentLength
