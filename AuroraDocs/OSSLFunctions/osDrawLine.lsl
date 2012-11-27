@@ -38,13 +38,13 @@ default
             Touched = TRUE;
             string DrawList = "";
             DrawList = osSetPenSize( DrawList, 5);              // Set the pen width to 3 pixels
-            DrawList = osSetPenColour( DrawList, "Red");        // Set the pen color to red
+            DrawList = osSetPenColor( DrawList, "Red");        // Set the pen color to red
             DrawList = osDrawLine( DrawList, 0,0,128,256);      // 1st Line diagonal(long form)
-            DrawList = osSetPenColour( DrawList, "Blue");       // Set the pen color to green
+            DrawList = osSetPenColor( DrawList, "Blue");       // Set the pen color to green
             DrawList = osDrawLine( DrawList, 256,0);            // 2nd Line diagonal (short form)
-            DrawList = osSetPenColour( DrawList, "Green");      // Set the pen color to green
+            DrawList = osSetPenColor( DrawList, "Green");      // Set the pen color to green
             DrawList = osDrawLine( DrawList, 128,256,128,0);    // 3rd Line straight across
-            DrawList = osSetPenColour( DrawList, "Purple");     // Set the pen color to Purple
+            DrawList = osSetPenColor( DrawList, "Purple");     // Set the pen color to Purple
             DrawList = osDrawLine( DrawList, 256,128,-256,128); // 4th Line straight across
             // Draw the lines
             // Coordinate mapping to draw lines is set to touch Edge to Edge based on settings below
