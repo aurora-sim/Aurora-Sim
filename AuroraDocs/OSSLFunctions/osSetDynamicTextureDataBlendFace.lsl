@@ -47,7 +47,7 @@ default
         sData = osMovePen(sData, 20, 40);                // place pen @ X,Y coordinates 
         sData = osSetFontName(sData, "Arial");           // Set the Fontname to use
         sData = osSetFontSize(sData, 10);                // Set the Font Size in pixels
-        sData = osSetPenColour( sData, "Green" );        // Set the pen color to Green
+        sData = osSetPenColor( sData, "Green" );        // Set the pen color to Green
         sData = osDrawText(sData, "Written Text to display on\nALL_SIDES ");  // The text to write
         // Now draw it out
         osSetDynamicTextureDataBlendFace( sDynamicID, sContentType, sData, sExtraParams, iBlend, iDisp, iTimer, iAlpha, iFace );
