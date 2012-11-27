@@ -39,7 +39,7 @@ default
             string DrawList = "";                               // Storage for our drawing commands
             integer i;
             DrawList = osSetPenSize( DrawList, 3 );          // Set the pen width to 3 pixels
-            DrawList = osSetPenColour( DrawList, "Blue" );   // Set the pen color to blue
+            DrawList = osSetPenColor( DrawList, "Blue" );   // Set the pen color to blue
             for (i = 0; i < 256; i += 20)
             {
                 DrawList = osMovePen( DrawList, 255, i );    // Move to the right side
