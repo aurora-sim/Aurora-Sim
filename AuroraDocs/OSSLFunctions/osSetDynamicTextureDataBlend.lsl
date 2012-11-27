@@ -43,14 +43,14 @@ default
         // sData (drawing commands) used in the example.
         // draw a filled rectangle
         sData = osSetPenSize(sData, 3);                   // Set the pen width to 3 pixels
-        sData = osSetPenColour(sData, "Red");             // Set the pen color to red
+        sData = osSetPenColor(sData, "Red");             // Set the pen color to red
         sData = osMovePen(sData, 28, 78);                 // Upper left corner at <28,78>
         sData = osDrawFilledRectangle(sData, 200, 100);   // 200 pixels by 100 pixels
         // setup text to go in the drawn box
         sData = osMovePen(sData, 30, 80);                 // place pen @ X,Y coordinates 
         sData = osSetFontName(sData, "Arial");            // Set the Fontname to use
         sData = osSetFontSize(sData, 10);                 // Set the Font Size in pixels
-        sData = osSetPenColour(sData, "Green");           // Set the pen color to Green
+        sData = osSetPenColor(sData, "Green");           // Set the pen color to Green
         sData = osDrawText(sData, "Your Name is: "+llDetectedName(0)); // The text to write
         // Now draw it out
         osSetDynamicTextureDataBlend( sDynamicID, sContentType, sData, sExtraParams, iTimer, iAlpha );
