@@ -34,7 +34,7 @@ default
             Touched = TRUE;
             string DrawList = ""; 
             DrawList = osSetPenSize(DrawList, 3);           // Set the pen width to 3 pixels
-            DrawList = osSetPenColour(DrawList, "Green");   // Set the pen color to green
+            DrawList = osSetPenColor(DrawList, "Green");   // Set the pen color to green
             DrawList = osMovePen(DrawList, 28, 78);         // Upper left corner at <28,78>
             DrawList = osDrawRectangle(DrawList, 200, 100); // 200 pixels by 100 pixels
             // Draw the rectangle
