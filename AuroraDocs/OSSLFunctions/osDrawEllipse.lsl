@@ -34,7 +34,7 @@ default
             Touched = TRUE;
             string DrawList = "";                           // Storage for drawing commands
             DrawList = osSetPenSize( DrawList, 4 );         // Set the pen width to 3 pixels
-            DrawList = osSetPenColour( DrawList, "Blue" );  // Set the pen color to blue
+            DrawList = osSetPenColor( DrawList, "Blue" );  // Set the pen color to blue
             DrawList = osMovePen( DrawList, 28, 78 );       // Upper left corner at <28,78>
             DrawList = osDrawEllipse( DrawList, 200, 100 ); // 200 pixels by 100 pixels
             // Now draw the ellipse
