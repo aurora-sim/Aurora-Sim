@@ -33,7 +33,7 @@ default
             Touched = TRUE;
             string DrawList = "";
             DrawList = osSetPenSize( DrawList, 3 );                 // Set the pen width to 3 pixels
-            DrawList = osSetPenColour( DrawList, "Red" );           // Set the pen color to red
+            DrawList = osSetPenColor( DrawList, "Red" );           // Set the pen color to red
             DrawList = osMovePen( DrawList, 28, 78 );               // Upper left corner at <28,78>
             DrawList = osDrawFilledRectangle( DrawList, 200, 100 ); // 200 pixels by 100 pixels
             // Now to draw image
