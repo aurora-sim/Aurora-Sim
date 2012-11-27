@@ -27,7 +27,7 @@ default
     {
         string sDrawList = "";                                                       // Storage for our drawing commands
         integer iPenSize;                                                            // Define the Integer for iPenSize
-        sDrawList = osSetPenColour(sDrawList, "Blue");                               // Set the pen color to Blue
+        sDrawList = osSetPenColor(sDrawList, "Blue");                               // Set the pen color to Blue
  
         for (iPenSize = 1; iPenSize < 21; ++iPenSize)
         {
