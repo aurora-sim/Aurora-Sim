@@ -34,7 +34,7 @@ default
             Touched = TRUE;
             string DrawList = ""; 
             DrawList = osSetPenSize( DrawList, 5 );         // Set the pen width to 3 pixels
-            DrawList = osSetPenColour( DrawList, "Blue" );  // Set the pen color to blue
+            DrawList = osSetPenColor( DrawList, "Blue" );  // Set the pen color to blue
             DrawList = osDrawFilledPolygon( DrawList, [50,100,150], ["50",100,150.0] ); // You can use either integer, float or string 
             // Now draw the polygon
             osSetDynamicTextureData( "", "vector", DrawList, "", 0 );
