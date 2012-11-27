@@ -59,7 +59,7 @@ default
         for (i = 0; i < iLstLen; ++i)
         {
             string sColour = llList2String(lColours, i);            //Get the colour from the List
-            sCommandList = osSetPenColour(sCommandList, sColour);   // Set PenColour to the colour
+            sCommandList = osSetPenColor(sCommandList, sColour);   // Set PenColour to the colour
             // Setup fontsize & text for names
             sCommandList = osSetFontSize(sCommandList, 7);          // Set our font size to be readable
             sCommandList = osDrawText(sCommandList, "___"+sColour); // Set the Colour Name prefixed with ___
