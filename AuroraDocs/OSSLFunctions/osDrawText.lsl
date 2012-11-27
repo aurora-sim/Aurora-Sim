@@ -36,7 +36,7 @@ default
             Touched = TRUE;    
             string DrawList = ""; 
             DrawList = osMovePen( DrawList, 10, 10 );           // Upper left corner at <10,10>
-            DrawList = osSetPenColour(DrawList, "Green");       // Set the pen color to green
+            DrawList = osSetPenColor(DrawList, "Green");       // Set the pen color to green
             DrawList = osDrawText( DrawList, "Hello "+AvatarName+"\nThis message is a Test"); // Place some text
             // Draw the text
             osSetDynamicTextureData( "", "vector", DrawList, "width:256,height:256", 0 );
