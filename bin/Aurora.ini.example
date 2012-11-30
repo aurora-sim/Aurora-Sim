@@ -35,7 +35,7 @@
     ;; that you can trigger in modules by restarting a region, set this to
     ;; true to make the entire instance restart instead of restarting the region.
     ;; Restarting the region in this way is the same as reopening Aurora.
-    InworldRestartShutsDown = true
+    InworldRestartShutsDown = false
 
     ;; Should we restart Aurora if the sim crashes?
     AutoRestartOnCrash = false
