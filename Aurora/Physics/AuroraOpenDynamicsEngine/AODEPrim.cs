@@ -526,7 +526,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastorientation = Orientation;
             m_lastposition = Position;
             m_lastVelocity = _velocity;
-            d.BodySetLinearVel(Body, 0, 0, 0);
+            if(Body != null && Body != IntPtr.Zero)
+                d.BodySetLinearVel(Body, 0, 0, 0);
         }
 
         public override void ForceSetVelocity(Vector3 velocity)
