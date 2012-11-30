@@ -747,7 +747,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     LandData parcel = new LandData();
                     OSD parcelData = OSDParser.DeserializeLLSDBinary(data);
                     parcel.FromOSD((OSDMap) parcelData);
-                    m_parcels.Add(parcel);
+                    if(parcel.RegionID == m_scene.RegionInfo.RegionID)
+                        m_parcels.Add(parcel);
                 }
                 else if (filePath.StartsWith("terrain/"))
                 {
