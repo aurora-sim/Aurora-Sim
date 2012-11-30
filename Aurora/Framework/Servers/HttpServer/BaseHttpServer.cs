@@ -972,7 +972,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 if (tickdiff > 3000 && requestHandler != null)
                 {
                     MainConsole.Instance.InfoFormat(
-                        "[BASE HTTP SERVER]: Slow handling of {0} {1} {2} {3} {4} from {5} took {6}ms",
+                        "[BASE HTTP SERVER]: Slow handling of {0} {1} from {2} took {3}ms",
                         requestMethod,
                         uriString,
                         request.RemoteIPEndPoint,
