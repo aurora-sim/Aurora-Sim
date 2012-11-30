@@ -87,6 +87,11 @@ namespace Aurora.Modules.Archivers
             }
             else
             {
+                if(!File.Exists(FileName))
+                {
+                    MainConsole.Instance.Error("[AvatarArchive] Unable to load from file: file does not exist!");
+                    return null;
+                }
                 StreamReader reader = new StreamReader(FileName);
                 archiveXML = reader.ReadToEnd();
                 reader.Close();
@@ -100,8 +105,6 @@ namespace Aurora.Modules.Archivers
                 foreach (IScene scene in manager.GetAllScenes())
                     if (scene.TryGetScenePresence(account.PrincipalID, out SP))
                         break;
-                if (SP == null)
-                    return null; //Bad people!
             }
 
             if (SP != null)
@@ -185,7 +188,7 @@ namespace Aurora.Modules.Archivers
 
                             // Wear item
                             AvatarWearable newWearable = new AvatarWearable();
-                            newWearable.Wear(destinationItem.ID, wearable[ii].AssetID);
+                            newWearable.Wear(destinationItem.ID, destinationItem.AssetID);
                             avatarAppearance.SetWearable(i, newWearable);
                         }
                         else
@@ -244,7 +247,9 @@ namespace Aurora.Modules.Archivers
                 MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
                 return;
             }
-            LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
+            var avappearance = LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
+            if (avappearance != null)
+                AvatarService.SetAppearance(UserAccountService.GetUserAccount(null, cmdparams[3] + " " + cmdparams[4]).PrincipalID, avappearance);
         }
 
         private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item,
@@ -313,6 +318,7 @@ namespace Aurora.Modules.Archivers
             if (cmdparams.Length < 7)
             {
                 MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
+                return;
             }
             UserAccount account = UserAccountService.GetUserAccount(null, cmdparams[3] + " " + cmdparams[4]);
             if (account == null)
@@ -329,7 +335,10 @@ namespace Aurora.Modules.Archivers
                     if (scene.TryGetScenePresence(account.PrincipalID, out SP))
                         break;
                 if (SP == null)
+                {
+                    MainConsole.Instance.Error("[AvatarArchive] User not online!");
                     return; //Bad people!
+                }
             }
 
             if (SP != null)
