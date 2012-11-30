@@ -61,7 +61,7 @@ namespace Aurora.Modules.Ban
                 m_allowedViewers = Util.ConvertToList(allowedViewers);
                 m_viewerTagURL = config.GetString("ViewerXMLURL", m_viewerTagURL);
                 m_viewerTagFile = config.GetString("ViewerXMLFile", m_viewerTagFile);
-                m_enabled = config.GetBoolean ("Enabled", true);
+                m_enabled = config.GetBoolean ("ViewerBanEnabled", true);
                 m_useIncludeList = config.GetBoolean ("UseAllowListInsteadOfBanList", false);
                 if (m_enabled)
                     registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler("SetAppearance", EventManager_OnGenericEvent);

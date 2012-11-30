@@ -38,7 +38,7 @@
     
     ;; Should we check for whether a viewer can enter our sims?
     ;; Default is true
-    Enabled = true
+    ViewerBanEnabled = true
     
     ;; If instead of having a ban list, you would rather have an allowed viewers list, enable this object
     ;; Default is false
@@ -56,7 +56,7 @@
     ;; Ex.  ViewersToBan = "Phoenix,LGG Proxy"
     ;; See http://viewertags.com/client_list.php for a full list of clients
     ;; Default is ""
-    ViewersToBan = ""
+    ViewersToBan = "Angstrom,Phoenix,Firestorm"
     
     ;; If you want to use a different URL than http://phoenixviewer.com/app/client_list.xml, which is the default, set the URL here
     ;; Default is commented out
