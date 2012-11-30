@@ -1189,9 +1189,14 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 else
                 {
-                    // we didn't find a registered llsd handler to service this request
-
-                    llsdResponse = GenerateNoLLSDHandlerResponse();
+                    //Attempt to use the base one
+                    if (LegacyLLSDLoginLibOMV && TryGetLLSDHandler("/", out llsdhandler))
+                    {
+                        llsdResponse = llsdhandler(request.RawUrl, llsdRequest, request.RemoteIPEndPoint);
+                    }
+                    else
+                        // we didn't find a registered llsd handler to service this request
+                        llsdResponse = GenerateNoLLSDHandlerResponse();
                 }
             }
             else
