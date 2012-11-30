@@ -629,7 +629,7 @@ namespace OpenSim.Region.Framework.Scenes
                             entitiesToRemove.Add(update.Entity.LocalId); //Remove it later
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
                                 SendFullUpdateForPresence((IScenePresence) update.Entity);
-                            else
+                            else if(!((IScenePresence)update.Entity).IsChildAgent) 
                                 updates.Add(update);
                             e.MoveNext();
 #else
