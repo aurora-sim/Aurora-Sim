@@ -662,6 +662,8 @@ namespace Aurora.Modules.Land
         {
             //Don't make a copy unless necessary
             ILandObject new_land = incomingFromDatabase ? land : land.Copy();
+            new_land.LandData.RegionID = m_scene.RegionInfo.RegionID;
+            new_land.LandData.RegionHandle = m_scene.RegionInfo.RegionHandle;
 
             lock (m_landListLock)
             {
