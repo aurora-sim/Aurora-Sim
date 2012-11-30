@@ -87,6 +87,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                           };
 
                     m_ScriptEngine.AddToObjectQueue(info.PrimID, "http_response", new DetectParams[0], resobj);
+                    if (info.Status == (int)Aurora.Framework.Servers.HttpServer.OSHttpStatusCode.ClientErrorJoker && info.VerbroseThrottle)
+                    {
+                        foreach (var scene in m_ScriptEngine.Worlds)
+                        {
+                            ISceneChildEntity part = scene.GetSceneObjectPart(info.PrimID);
+                            if (part != null)
+                            {
+                                IChatModule chatModule = scene.RequestModuleInterface<IChatModule>();
+                                if (chatModule != null)
+                                    chatModule.SimChat(part.Name + "(" + part.AbsolutePosition + ") http_response error: Too many outgoing requests.", ChatTypeEnum.DebugChannel,
+                                                       2147483647, part.AbsolutePosition, part.Name, part.UUID, false, scene);
+                            }
+                        }
+                    }
                     httpInfo = iHttpReq.GetNextCompletedRequest();
                 }
             }
