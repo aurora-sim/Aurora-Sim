@@ -277,7 +277,7 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 HttpMultipart.Element element;
                 var boundry = "";
-                var multipart = new HttpMultipart(InputStream, boundry, ContentEncoding);
+                var multipart = new HttpMultipart(InputStream, boundry, ContentEncoding ?? Encoding.UTF8);
 
                 while ((element = multipart.ReadNextElement()) != null)
                 {
