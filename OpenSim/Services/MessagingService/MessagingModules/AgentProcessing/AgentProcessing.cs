@@ -1109,6 +1109,19 @@ namespace OpenSim.Services.MessagingService
                             pos.Y += YOffset;
 
                             IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionHandle);
+                            
+                            bool useCallbacks = false;
+                            if (otherRegion == null)
+                            {
+                                if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref crossingRegion, 0, cAgent, out reason, out useCallbacks))
+                                {
+                                    ResetFromTransit(AgentID);
+                                    return false;
+                                }
+                                else
+                                    otherRegion = clientCaps.GetCapsService(crossingRegion.RegionHandle);
+                            }
+                            
                             //Tell the client about the transfer
                             EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity,
                                                   otherRegion.LoopbackRegionIP,
@@ -1120,7 +1133,7 @@ namespace OpenSim.Services.MessagingService
                                                   crossingRegion.RegionSizeY,
                                                   requestingRegion);
 
-                            result = WaitForCallback(AgentID);
+                            result = !useCallbacks || WaitForCallback(AgentID);
                             if (!result)
                             {
                                 MainConsole.Instance.Warn("[AgentProcessing]: Callback never came in crossing agent " + circuit.AgentID +

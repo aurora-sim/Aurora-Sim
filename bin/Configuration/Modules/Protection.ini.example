@@ -38,7 +38,7 @@
     
     ;; Should we check for whether a viewer can enter our sims?
     ;; Default is true
-    Enabled = true
+    ViewerBanEnabled = true
     
     ;; If instead of having a ban list, you would rather have an allowed viewers list, enable this object
     ;; Default is false

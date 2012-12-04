@@ -132,32 +132,34 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public int ProcessQueuedRequests()
         {
             int time = Environment.TickCount;
+            ODERayCastRequest[] reqs = new ODERayCastRequest[0];
             lock (m_PendingRequests)
             {
                 if (m_PendingRequests.Count > 0)
                 {
-                    ODERayCastRequest[] reqs = m_PendingRequests.ToArray();
-                    for (int i = 0; i < reqs.Length; i++)
-                    {
-                        if (reqs[i].callbackMethod != null) // quick optimization here, don't raycast 
-                            RayCast(reqs[i]); // if there isn't anyone to send results
-                    }
-
+                    reqs = m_PendingRequests.ToArray();
                     m_PendingRequests.Clear();
                 }
             }
+            for (int i = 0; i < reqs.Length; i++)
+            {
+                if (reqs[i].callbackMethod != null) // quick optimization here, don't raycast 
+                    RayCast(reqs[i]); // if there isn't anyone to send results
+            }
+
+            ODERayRequest[] rayReqs = new ODERayRequest[0];
             lock (m_PendingRayRequests)
             {
                 if (m_PendingRayRequests.Count > 0)
                 {
-                    ODERayRequest[] reqs = m_PendingRayRequests.ToArray();
-                    for (int i = 0; i < reqs.Length; i++)
-                    {
-                        if (reqs[i].callbackMethod != null) // quick optimization here, don't raycast 
-                            RayCast(reqs[i]); // if there isn't anyone to send results
-                    }
+                    rayReqs = m_PendingRayRequests.ToArray();
                     m_PendingRayRequests.Clear();
                 }
+            }
+            for (int i = 0; i < rayReqs.Length; i++)
+            {
+                if (rayReqs[i].callbackMethod != null) // quick optimization here, don't raycast 
+                    RayCast(rayReqs[i]); // if there isn't anyone to send results
             }
 
             lock (m_contactResults)

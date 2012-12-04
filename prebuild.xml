@@ -133,8 +133,7 @@
       <Reference name="System.Web"/>
  	  <Reference name="System.Xml"/>
 
-      <Reference name="Griffin.Networking" path="../../bin/"/>
-      <Reference name="Griffin.Networking.Http" path="../../bin/"/>
+      <Reference name="HttpServer_OpenSim" path="../../bin/"/>
       <Reference name="log4net"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
@@ -1255,101 +1254,6 @@
       
       <Files>
         <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-	
-	<Project frameworkVersion="v3_5" name="Griffin.Networking" path="Dependencies/Griffin.Networking" type="Library">
-      <Configuration name="Debug" platform="x86">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x86">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="x64">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x64">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="Microsoft.CSharp"/>
-      <Reference name="System"/>
-	  <Reference name="System.Core"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Data.DataSetExtensions"/>
-      <Reference name="System.Web"/>
-      <Reference name="System.Xml"/>
-      <Reference name="System.Xml.Linq"/>
-      
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-	
-	<Project frameworkVersion="v3_5" name="Griffin.Networking.Http" path="Dependencies/Griffin.Networking.Http" type="Library">
-      <Configuration name="Debug" platform="x86">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x86">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="x64">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x64">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="Microsoft.CSharp"/>
-      <Reference name="System"/>
-	  <Reference name="System.Core"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Data.DataSetExtensions"/>
-      <Reference name="System.Web"/>
-      <Reference name="System.Xml"/>
-      <Reference name="System.Xml.Linq"/>
-      <Reference name="Griffin.Networking"/>
-      
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
 	

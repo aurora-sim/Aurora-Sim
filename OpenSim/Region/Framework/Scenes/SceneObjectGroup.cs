@@ -76,7 +76,8 @@ namespace OpenSim.Region.Framework.Scenes
         link_message = 4294967296,
         no_sensor = 8589934592,
         on_rez = 17179869184,
-        sensor = 34359738368
+        sensor = 34359738368,
+        http_request = 68719476736
     }
 
     internal struct scriptPosTarget

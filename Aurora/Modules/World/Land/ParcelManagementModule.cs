@@ -109,7 +109,7 @@ namespace Aurora.Modules.Land
         protected Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
         private IScene m_scene;
 
-        private int m_update_land = 10;
+        private int m_update_land = 200;
                     //Check whether we need to rebuild the parcel prim count and other land related functions
 
         private bool m_usePrivateParcelAsBan = true;
@@ -662,6 +662,8 @@ namespace Aurora.Modules.Land
         {
             //Don't make a copy unless necessary
             ILandObject new_land = incomingFromDatabase ? land : land.Copy();
+            new_land.LandData.RegionID = m_scene.RegionInfo.RegionID;
+            new_land.LandData.RegionHandle = m_scene.RegionInfo.RegionHandle;
 
             lock (m_landListLock)
             {

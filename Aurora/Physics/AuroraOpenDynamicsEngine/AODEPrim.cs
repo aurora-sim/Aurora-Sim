@@ -86,6 +86,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private IntPtr _triMeshData;
         private Vector3 _velocity;
         private bool _zeroFlag;
+        private bool _zeroFlagForceSet;
         internal volatile bool childPrim;
         internal List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim>();
         private int fakeori; // control the use of above
@@ -525,7 +526,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastorientation = Orientation;
             m_lastposition = Position;
             m_lastVelocity = _velocity;
-            d.BodySetLinearVel(Body, 0, 0, 0);
+            if(Body != null && Body != IntPtr.Zero)
+                d.BodySetLinearVel(Body, 0, 0, 0);
         }
 
         public override void ForceSetVelocity(Vector3 velocity)
@@ -1743,9 +1745,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         )
                     {
                         _zeroFlag = true;
+                        if (!_zeroFlagForceSet)
+                        {
+                            _zeroFlagForceSet = true;
+                            m_lastUpdateSent = 2;
+                        }
                     }
                     else
                     {
+                        _zeroFlagForceSet = false;
                         _zeroFlag = false;
                         m_lastUpdateSent = 2;
                     }

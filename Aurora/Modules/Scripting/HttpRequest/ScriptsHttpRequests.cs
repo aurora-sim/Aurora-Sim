@@ -156,9 +156,30 @@ namespace Aurora.Modules.Scripting
                             BODY_MAXLENGTH = int.Parse(parms[i + 1]);
                             break;
 
-                        case (int) HttpRequestConstants.HTTP_VERIFY_CERT:
+                        case (int)HttpRequestConstants.HTTP_VERIFY_CERT:
 
                             htc.HttpVerifyCert = (int.Parse(parms[i + 1]) != 0);
+                            break;
+
+                        case (int)HttpRequestConstants.HTTP_VERBOSE_THROTTLE:
+
+                            htc.VerbroseThrottle = (int.Parse(parms[i + 1]) != 0);
+                            break;
+
+                        case (int)HttpRequestConstants.HTTP_PRAGMA_NO_CACHE:
+
+                            if (int.Parse(parms[i + 1]) != 0)
+                            {
+                                headers["Pragma"] = "no-cache";
+                            }
+                            break;
+
+                        case (int)HttpRequestConstants.HTTP_CUSTOM_HEADER:
+
+                            string name = parms[i + 1];
+                            string value = parms[i + 2];
+                            i++;//Move forward one, since we pulled out 3 instead of 2
+                            headers[name] = value;
                             break;
                     }
                 }
@@ -369,6 +390,12 @@ namespace Aurora.Modules.Scripting
         public string HttpMethod = "GET";
         public int HttpTimeout;
         public bool HttpVerifyCert = true;
+        private bool _VerbroseThrottle = false;
+        public bool VerbroseThrottle
+        {
+            get { return _VerbroseThrottle; }
+            set { _VerbroseThrottle = value; }
+        }
         public int MaxLength;
         public object[] _Metadata = new object[0];
         public object[] Metadata

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
+ * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,7 +9,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Aurora-Sim Project nor the
+ *     * Neither the name of the OpenSimulator Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
  *
@@ -27,8 +27,13 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using HttpServer;
+using OpenMetaverse;
 using System.Reflection;
+using log4net;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -36,10 +41,16 @@ namespace Aurora.Framework.Servers.HttpServer
 
     public class PollServiceWorkerThread
     {
-        private readonly BlockingQueue<PollServiceHttpRequest> m_request;
+        private static readonly ILog m_log =
+                LogManager.GetLogger(
+                MethodBase.GetCurrentMethod().DeclaringType);
+
+        public event ReQueuePollServiceItem ReQueue;
+
         private readonly BaseHttpServer m_server;
-        private readonly int m_timeout = 250;
+        private BlockingQueue<PollServiceHttpRequest> m_request;
         private bool m_running = true;
+        private int m_timeout = 250;
 
         public PollServiceWorkerThread(BaseHttpServer pSrv, int pTimeout)
         {
@@ -48,11 +59,8 @@ namespace Aurora.Framework.Servers.HttpServer
             m_timeout = pTimeout;
         }
 
-        public event ReQueuePollServiceItem ReQueue;
-
-        public void ThreadStart(object o)
+        public void ThreadStart()
         {
-            Culture.SetCurrentCulture();
             Run();
         }
 
@@ -61,56 +69,47 @@ namespace Aurora.Framework.Servers.HttpServer
             while (m_running)
             {
                 PollServiceHttpRequest req = m_request.Dequeue();
+
                 try
                 {
-                    if (req.PollServiceArgs.Valid())
+                    if (req.PollServiceArgs.HasEvents(req.RequestID, req.PollServiceArgs.Id))
                     {
-                        if (req.PollServiceArgs.HasEvents(req.RequestID, req.PollServiceArgs.Id))
+                        StreamReader str;
+                        try
                         {
-                            StreamReader str;
-                            try
-                            {
-                                str = new StreamReader(req.Request.Body);
-                            }
-                            catch (ArgumentException)
-                            {
-                                // Stream was not readable means a child agent
-                                // was closed due to logout, leaving the
-                                // Event Queue request orphaned.
-                                continue;
-                            }
+                            str = new StreamReader(req.Request.Body);
+                        }
+                        catch (System.ArgumentException)
+                        {
+                            // Stream was not readable means a child agent
+                            // was closed due to logout, leaving the
+                            // Event Queue request orphaned.
+                            continue;
+                        }
 
-                            Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
-                                                                                   str.ReadToEnd());
-                            var request = new OSHttpRequest(req.HttpContext, req.Request);
-                            m_server.MessageHandler.SendGenericHTTPResponse(
-                                responsedata,
-                                request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
-                                request
-                            );
+                        Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id, str.ReadToEnd());
+                        DoHTTPGruntWork(m_server, req, responsedata);
+                    }
+                    else
+                    {
+                        if ((Environment.TickCount - req.RequestTime) > m_timeout)
+                        {
+                            DoHTTPGruntWork(
+                                m_server,
+                                req,
+                                req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id));
                         }
                         else
                         {
-                            if ((Environment.TickCount - req.RequestTime) > m_timeout)
-                            {
-                                var request = new OSHttpRequest(req.HttpContext, req.Request);
-                                m_server.MessageHandler.SendGenericHTTPResponse(
-                                    req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
-                                    request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
-                                    request);
-                            }
-                            else
-                            {
-                                ReQueuePollServiceItem reQueueItem = ReQueue;
-                                if (reQueueItem != null)
-                                    reQueueItem(req);
-                            }
+                            ReQueuePollServiceItem reQueueItem = ReQueue;
+                            if (reQueueItem != null)
+                                reQueueItem(req);
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.ErrorFormat("Exception in poll service thread: " + e);
+                    m_log.ErrorFormat("Exception in poll service thread: " + e.ToString());
                 }
             }
         }
@@ -118,6 +117,46 @@ namespace Aurora.Framework.Servers.HttpServer
         internal void Enqueue(PollServiceHttpRequest pPollServiceHttpRequest)
         {
             m_request.Enqueue(pPollServiceHttpRequest);
+        }
+
+        /// <summary>
+        /// FIXME: This should be part of BaseHttpServer
+        /// </summary>
+        internal static void DoHTTPGruntWork(BaseHttpServer server, PollServiceHttpRequest req, Hashtable responsedata)
+        {
+            OSHttpResponse response
+                = new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext);
+
+            byte[] buffer = server.DoHTTPGruntWork(responsedata, response);
+
+            response.SendChunked = false;
+            response.ContentLength64 = buffer.Length;
+            response.ContentEncoding = Encoding.UTF8;
+
+            try
+            {
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn(string.Format("[POLL SERVICE WORKER THREAD]: Error ", ex));
+            }
+            finally
+            {
+                //response.OutputStream.Close();
+                try
+                {
+                    response.OutputStream.Flush();
+                    response.Send();
+
+                    //if (!response.KeepAlive && response.ReuseContext)
+                    //    response.FreeContext();
+                }
+                catch (Exception e)
+                {
+                    m_log.Warn(String.Format("[POLL SERVICE WORKER THREAD]: Error ", e));
+                }
+            }
         }
     }
 }

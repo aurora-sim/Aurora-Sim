@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
+ * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,7 +9,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Aurora-Sim Project nor the
+ *     * Neither the name of the OpenSimulator Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
  *
@@ -34,126 +34,18 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Web;
-using Griffin.Networking;
-using Griffin.Networking.Http.Protocol;
+using HttpServer;
+using log4net;
+using Aurora.Framework;
+using HTTPFile = HttpServer.HttpFile;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public class OSHttpRequest : IDisposable
+    public class OSHttpRequest
     {
-        private readonly Hashtable _query;
-        private readonly NameValueCollection _queryString;
-        private IPEndPoint _remoteIPEndPoint;
-        private Dictionary<string, HttpFile> _files = new Dictionary<string, HttpFile>();
-        private NameValueCollection _form = new NameValueCollection();
-
-        protected IRequest _httpRequest;
-        protected IPipelineHandlerContext _httpContext;
-
-        public OSHttpRequest()
-        {
-        }
-
-        public OSHttpRequest(IPipelineHandlerContext context, IRequest req)
-        {
-            _httpContext = context;
-            _httpRequest = req;
-
-            _queryString = new NameValueCollection();
-            _query = new Hashtable();
-            try
-            {
-                foreach (var item in req.QueryString)
-                {
-                    try
-                    {
-                        _queryString.Add(item.Name, item.Value);
-                        _query[item.Name] = item.Value;
-                    }
-                    catch (InvalidCastException)
-                    {
-                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it", item.Name);
-                        continue;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                MainConsole.Instance.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
-            }
-
-            foreach (var header in _httpRequest.Files)
-                _files[header.Name] = new HttpFile
-                {
-                    ContentType = header.ContentType,
-                    Name = header.Name,
-                    OriginalFileName = header.OriginalFileName,
-                    TempFileName = header.TempFileName
-                };
-            foreach (var header in _httpRequest.Form)
-                _form.Add(header.Name, header.Value);
-
-            //            Form = new Hashtable();
-            //            foreach (HttpInputItem item in req.Form)
-            //            {
-            //                MainConsole.Instance.DebugFormat("[OSHttpRequest]: Got form item {0}={1}", item.Name, item.Value);
-            //                Form.Add(item.Name, item.Value);
-            //            }
-        }
-
-        public string[] AcceptTypes
-        {
-            get { return new string[0]; }
-        }
-
-        public Encoding ContentEncoding
-        {
-            get { return _httpRequest.ContentEncoding; }
-        }
-
-        public long ContentLength
-        {
-            get { return _httpRequest.ContentLength; }
-        }
-
-        public string ContentType
-        {
-            get { return _httpRequest.ContentType; }
-        }
-
-        public HttpCookieCollection Cookies
-        {
-            get
-            {
-                var cookies = _httpRequest.Cookies;
-                HttpCookieCollection httpCookies = new HttpCookieCollection();
-                foreach (var cookie in cookies)
-                    httpCookies.Add(new HttpCookie(cookie.Name, cookie.Value));
-                return httpCookies;
-            }
-        }
-
-        public bool HasEntityBody
-        {
-            get { return _httpRequest.ContentLength != 0; }
-        }
-
-        public NameValueCollection Headers
-        {
-            get
-            {
-                NameValueCollection nvc = new NameValueCollection();
-                foreach (var header in _httpRequest.Headers)
-                    nvc.Add(header.Name, header.Value);
-                return nvc;
-            }
-        }
-
-        public NameValueCollection Form
-        {
-            get { return _form; }
-            set { _form = value; }
-        }
+        protected IHttpRequest _request = null;
+        protected IHttpClientContext _context = null;
+        protected Dictionary<string, HttpFile> _files = new Dictionary<string, HttpFile>();
 
         public class HttpFile : IDisposable
         {
@@ -193,60 +85,255 @@ namespace Aurora.Framework.Servers.HttpServer
             set { _files = value; }
         }
 
+        public string[] AcceptTypes
+        {
+            get { return _request.AcceptTypes; }
+        }
+
+        public Encoding ContentEncoding
+        {
+            get { return _contentEncoding; }
+        }
+        private Encoding _contentEncoding;
+
+        public long ContentLength
+        {
+            get { return _request.ContentLength; }
+        }
+
+        public long ContentLength64
+        {
+            get { return ContentLength; }
+        }
+
+        public string ContentType
+        {
+            get { return _contentType; }
+        }
+        private string _contentType;
+
+        public HttpCookieCollection Cookies
+        {
+            get
+            {
+                RequestCookies cookies = _request.Cookies;
+                HttpCookieCollection httpCookies = new HttpCookieCollection();
+                foreach (RequestCookie cookie in cookies)
+                    httpCookies.Add(new HttpCookie(cookie.Name, cookie.Value));
+                return httpCookies;
+            }
+        }
+
+        public bool HasEntityBody
+        {
+            get { return _request.ContentLength != 0; }
+        }
+
+        public NameValueCollection Headers
+        {
+            get { return _request.Headers; }
+        }
+
         public string HttpMethod
         {
-            get { return _httpRequest.Method; }
+            get { return _request.Method; }
         }
 
         public Stream InputStream
         {
-            get { return _httpRequest.Body; }
-            set { _httpRequest.Body = value; }
+            get { return _request.Body; }
+            set { _request.Body = value; }
+        }
+
+        public bool IsSecured
+        {
+            get { return _context.IsSecured; }
         }
 
         public bool KeepAlive
         {
-            get { return _httpRequest.KeepAlive; }
+            get { return ConnectionType.KeepAlive == _request.Connection; }
         }
 
         public NameValueCollection QueryString
         {
             get { return _queryString; }
         }
+        private NameValueCollection _queryString;
 
         public Hashtable Query
         {
             get { return _query; }
         }
+        private Hashtable _query;
 
         /// <value>
-        ///   POST request values, if applicable
+        /// POST request values, if applicable
         /// </value>
         //        public Hashtable Form { get; private set; }
+
         public string RawUrl
         {
-            get { return _httpRequest.Uri.AbsolutePath; }
+            get { return _request.Uri.AbsolutePath; }
         }
 
         public IPEndPoint RemoteIPEndPoint
         {
-            get
-            {
-                if (_remoteIPEndPoint == null)
-                {
-                    if (_httpRequest.Headers["Host"].Value.Split(':').Length == 1)
-                        _remoteIPEndPoint = NetworkUtils.ResolveEndPoint(_httpRequest.Headers["Host"].Value.Split(':')[0], 80);
-                    else
-                        _remoteIPEndPoint = NetworkUtils.ResolveEndPoint(_httpRequest.Headers["Host"].Value.Split(':')[0], int.Parse(_httpRequest.Headers["Host"].Value.Split(':')[1]));
-                }
-
-                return _remoteIPEndPoint;
-            }
+            get { return _remoteIPEndPoint; }
         }
+        private IPEndPoint _remoteIPEndPoint;
 
         public Uri Url
         {
-            get { return _httpRequest.Uri; }
+            get { return _request.Uri; }
+        }
+
+        public string UserAgent
+        {
+            get { return _userAgent; }
+        }
+        private string _userAgent;
+
+        internal IHttpRequest IHttpRequest
+        {
+            get { return _request; }
+        }
+
+        internal IHttpClientContext IHttpClientContext
+        {
+            get { return _context; }
+        }
+
+        /// <summary>
+        /// Internal whiteboard for handlers to store temporary stuff
+        /// into.
+        /// </summary>
+        internal Dictionary<string, object> Whiteboard
+        {
+            get { return _whiteboard; }
+        }
+        private Dictionary<string, object> _whiteboard = new Dictionary<string, object>();
+
+        public OSHttpRequest() { }
+
+        public OSHttpRequest(IHttpClientContext context, IHttpRequest req)
+        {
+            _request = req;
+            _context = context;
+
+            if (null != req.Headers["content-encoding"])
+                _contentEncoding = Encoding.GetEncoding(_request.Headers["content-encoding"]);
+            if (null != req.Headers["content-type"])
+                _contentType = _request.Headers["content-type"];
+            if (null != req.Headers["user-agent"])
+                _userAgent = req.Headers["user-agent"];
+            if (null != req.Headers["remote_addr"])
+            {
+                try
+                {
+                    IPAddress addr = IPAddress.Parse(req.Headers["remote_addr"]);
+                    // sometimes req.Headers["remote_port"] returns a comma separated list, so use
+                    // the first one in the list and log it 
+                    string[] strPorts = req.Headers["remote_port"].Split(new char[] { ',' });
+                    if (strPorts.Length > 1)
+                    {
+                        MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
+                                     req.Headers["remote_addr"], req.Headers["remote_port"]);
+                    }
+                    int port = Int32.Parse(strPorts[0]);
+                    _remoteIPEndPoint = new IPEndPoint(addr, port);
+                }
+                catch (FormatException)
+                {
+                    MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
+                                     req.Headers["remote_addr"], req.Headers["remote_port"]);
+                }
+            }
+
+            _queryString = new NameValueCollection();
+            _query = new Hashtable();
+            try
+            {
+                foreach (HttpInputItem item in req.QueryString)
+                {
+                    try
+                    {
+                        _queryString.Add(item.Name, item.Value);
+                        _query[item.Name] = item.Value;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it", item.Name);
+                        continue;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                MainConsole.Instance.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
+            }
+
+            if (ContentType != null && ContentType.StartsWith("multipart/form-data"))
+            {
+                HttpMultipart.Element element;
+                var boundry = "";
+                var multipart = new HttpMultipart(InputStream, boundry, ContentEncoding ?? Encoding.UTF8);
+
+                while ((element = multipart.ReadNextElement()) != null)
+                {
+                    if (string.IsNullOrEmpty(element.Name))
+                        throw new FormatException("Error parsing request. Missing value name.\nElement: " + element);
+
+                    if (!string.IsNullOrEmpty(element.Filename))
+                    {
+                        if (string.IsNullOrEmpty(element.ContentType))
+                            throw new FormatException("Error parsing request. Value '" + element.Name +
+                                                      "' lacks a content type.");
+
+                        // Read the file data
+                        var buffer = new byte[element.Length];
+                        InputStream.Seek(element.Start, SeekOrigin.Begin);
+                        InputStream.Read(buffer, 0, (int)element.Length);
+
+                        // Generate a filename
+                        var originalFileName = element.Filename;
+                        var internetCache = Environment.GetFolderPath(Environment.SpecialFolder.InternetCache);
+
+                        // if the internet path doesn't exist, assume mono and /var/tmp
+                        var path = string.IsNullOrEmpty(internetCache)
+                                       ? Path.Combine("var", "tmp")
+                                       : Path.Combine(internetCache.Replace("\\\\", "\\"), "tmp");
+
+                        element.Filename = Path.Combine(path, Math.Abs(element.Filename.GetHashCode()) + ".tmp");
+
+                        // If the file exists generate a new filename
+                        while (File.Exists(element.Filename))
+                            element.Filename = Path.Combine(path, Math.Abs(element.Filename.GetHashCode() + 1) + ".tmp");
+
+                        if (!Directory.Exists(path))
+                            Directory.CreateDirectory(path);
+
+                        File.WriteAllBytes(element.Filename, buffer);
+
+                        var file = new HttpFile
+                        {
+                            Name = element.Name,
+                            OriginalFileName = originalFileName,
+                            ContentType = element.ContentType,
+                            TempFileName = element.Filename
+                        };
+                        Files.Add(element.Name, file);
+                    }
+                    /*else
+                    {
+                        var buffer = new byte[element.Length];
+                        message.Body.Seek(element.Start, SeekOrigin.Begin);
+                        message.Body.Read(buffer, 0, (int)element.Length);
+
+                        form.Add(Uri.UnescapeDataString(element.Name), message.ContentEncoding.GetString(buffer));
+                    }*/
+                }
+            }
         }
 
         public override string ToString()
@@ -264,24 +351,5 @@ namespace Aurora.Framework.Servers.HttpServer
 
             return me.ToString();
         }
-
-        internal OSHttpResponse MakeResponse(HttpStatusCode code, string reason)
-        {
-            return new OSHttpResponse(_httpContext, _httpRequest, _httpRequest.CreateResponse(code, reason));
-        }
-
-        #region Implementation of IDisposable
-
-        public void Dispose()
-        {
-            _query.Clear();
-            _queryString.Clear();
-            _remoteIPEndPoint = null;
-            _httpRequest.Body = null;
-            _httpRequest = null;
-            _httpContext = null;
-        }
-
-        #endregion
     }
 }

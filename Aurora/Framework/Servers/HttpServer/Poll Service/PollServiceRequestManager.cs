@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
+ * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,7 +9,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Aurora-Sim Project nor the
+ *     * Neither the name of the OpenSimulator Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
  *
@@ -27,22 +27,26 @@
 
 using System;
 using System.Collections;
-using System.Linq;
 using System.Threading;
+using System.Reflection;
+using log4net;
+using HttpServer;
+using Aurora.Framework;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
     public class PollServiceRequestManager
     {
-        private static readonly Queue m_requests = Queue.Synchronized(new Queue());
-        private readonly PollServiceWorkerThread[] m_PollServiceWorkerThreads;
-        private readonly uint m_WorkerThreadCount;
+        //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private readonly BaseHttpServer m_server;
-        private readonly int m_timeOut;
-        private readonly Thread[] m_workerThreads;
-        private bool m_running = true;
-        private bool m_threadRunning;
+        private static Queue m_requests = Queue.Synchronized(new Queue());
+        private uint m_WorkerThreadCount = 0;
+        private Thread[] m_workerThreads;
         private Thread m_watcherThread;
+        private PollServiceWorkerThread[] m_PollServiceWorkerThreads;
+        private bool m_running = true;
+        private readonly object m_queueSync = new object();
 
         public PollServiceRequestManager(BaseHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
         {
@@ -50,49 +54,17 @@ namespace Aurora.Framework.Servers.HttpServer
             m_WorkerThreadCount = pWorkerThreadCount;
             m_workerThreads = new Thread[m_WorkerThreadCount];
             m_PollServiceWorkerThreads = new PollServiceWorkerThread[m_WorkerThreadCount];
-            m_timeOut = pTimeout;
-        }
+            m_workerThreads = new Thread[m_WorkerThreadCount];
 
-        internal void ReQueueEvent(PollServiceHttpRequest req)
-        {
-            try
-            {
-                // Do accounting stuff here
-                Enqueue(req);
-            }
-            catch
-            {
-            }
-        }
-
-        public void Enqueue(PollServiceHttpRequest req)
-        {
-            lock (m_requests)
-            {
-                PokeThreads();
-                m_requests.Enqueue(req);
-            }
-        }
-
-        private void PokeThreads()
-        {
-            if (m_threadRunning)
-                return;
-
-            m_threadRunning = true;
             //startup worker threads
             for (uint i = 0; i < m_WorkerThreadCount; i++)
             {
-                if (m_PollServiceWorkerThreads[i] == null)
-                {
-                    m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, m_timeOut);
-                    m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
-
-                    m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart)
-                                             {Name = String.Format("PollServiceWorkerThread{0}", i)};
-                    //Can't add to thread Tracker here Referencing Aurora.Framework creates circular reference
-                    m_workerThreads[i].Start();
-                }
+                m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, pTimeout);
+                m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
+                
+                m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart)
+                                            {Name = String.Format("PollServiceWorkerThread{0}", i)};
+                m_workerThreads[i].Start();
             }
 
             //start watcher threads
@@ -100,22 +72,32 @@ namespace Aurora.Framework.Servers.HttpServer
             m_watcherThread.Start();
         }
 
-        public void ThreadStart(object o)
+        internal void ReQueueEvent(PollServiceHttpRequest req)
+        {
+            // Do accounting stuff here
+            Enqueue(req);
+        }
+
+        public void Enqueue(PollServiceHttpRequest req)
+        {
+            lock (m_requests)
+            {
+                m_requests.Enqueue(req);
+                lock (m_queueSync)
+                    Monitor.Pulse(m_queueSync);
+            }
+        }
+
+        public void ThreadStart()
         {
             while (m_running)
             {
-                try
+                if (!ProcessQueuedRequests())
                 {
-                    if (!ProcessQueuedRequests())
-                    {
-                        m_threadRunning = false;
-                        return;
-                    }
+                    //lock(m_queueSync)
+                    //    Monitor.Wait(m_queueSync);
+                    Thread.Sleep(1000);
                 }
-                catch
-                {
-                }
-                Thread.Sleep(1000);
             }
         }
 
@@ -126,7 +108,10 @@ namespace Aurora.Framework.Servers.HttpServer
                 if (m_requests.Count == 0)
                     return false;
 
-                int reqperthread = (int) (m_requests.Count/m_WorkerThreadCount) + 1;
+                //                m_log.DebugFormat("[POLL SERVICE REQUEST MANAGER]: Processing {0} requests", m_requests.Count);
+
+                int reqperthread = (int)(m_requests.Count / m_WorkerThreadCount) + 1;
+
                 // For Each WorkerThread
                 for (int tc = 0; tc < m_WorkerThreadCount && m_requests.Count > 0; tc++)
                 {
@@ -135,48 +120,37 @@ namespace Aurora.Framework.Servers.HttpServer
                     {
                         try
                         {
-                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest) m_requests.Dequeue());
+                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest)m_requests.Dequeue());
                         }
                         catch (InvalidOperationException)
                         {
                             // The queue is empty, we did our calculations wrong!
-                            return false;
+                            return true;
                         }
+
                     }
                 }
+                return true;
             }
-            return true;
-        }
 
+        }
 
         ~PollServiceRequestManager()
         {
-            foreach (PollServiceHttpRequest req in m_requests.Cast<PollServiceHttpRequest>())
+            foreach (object o in m_requests)
             {
-                var request = new OSHttpRequest(req.HttpContext, req.Request);
-                m_server.MessageHandler.SendGenericHTTPResponse(
-                    req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
-                    request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
-                    request
-                );
+                PollServiceHttpRequest req = (PollServiceHttpRequest)o;
+                PollServiceWorkerThread.DoHTTPGruntWork(
+                    m_server, req, req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id));
             }
 
             m_requests.Clear();
 
-#if (!ISWIN)
             foreach (Thread t in m_workerThreads)
-            {
-                if (t != null)
-                {
-                    t.Abort();
-                }
-            }
-#else
-            foreach (Thread t in m_workerThreads.Where(t => t != null))
             {
                 t.Abort();
             }
-#endif
+
             m_running = false;
         }
     }

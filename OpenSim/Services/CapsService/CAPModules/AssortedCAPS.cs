@@ -154,6 +154,8 @@ namespace OpenSim.Services.CapsService
         {
             NameValueCollection query = HttpUtility.ParseQueryString(httpRequest.Url.Query);
             string amt = query.GetOne("page-size");
+            if (amt == null)
+                amt = query.GetOne("page_size");
             string name = query.GetOne("names");
             List<UserAccount> accounts = m_service.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(m_service.ClientCaps.AccountInfo.AllScopeIDs, name, 0, uint.Parse(amt)) ??
                                          new List<UserAccount>(0);

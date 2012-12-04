@@ -852,9 +852,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if(makePhysicalActor)//Someone else will deal with this
                 {
                     //Send updates to everyone about us
+                    //Do us first though, we're the most important
+                    SceneViewer.QueuePresenceForFullUpdate(this, true);
                     foreach(IScenePresence sp in m_scene.GetScenePresences())
                     {
-                        sp.SceneViewer.QueuePresenceForFullUpdate(this, true);
+                        if(sp.UUID != UUID)
+                            sp.SceneViewer.QueuePresenceForFullUpdate(this, true);
                     }
                 }
                 if(appearance.Appearance != null)
@@ -875,6 +878,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public virtual void MakeChildAgent(GridRegion destination)
         {
+            IsChildAgent = true;
             SuccessfullyMadeRootAgent = false;
             SuccessfulTransit ();
             // It looks like m_animator is set to null somewhere, and MakeChild
@@ -887,8 +891,7 @@ namespace OpenSim.Region.Framework.Scenes
             MainConsole.Instance.DebugFormat(
                  "[SCENEPRESENCE]: Downgrading root agent {0}, {1} to a child agent in {2}",
                  Name, UUID, m_scene.RegionInfo.RegionName);
-
-            IsChildAgent = true;
+            
             RootAgentHandle = destination.RegionHandle;
             RemoveFromPhysicalScene ();
             m_sceneViewer.Reset ();
@@ -2432,14 +2435,12 @@ namespace OpenSim.Region.Framework.Scenes
             CurrentParcelUUID = UUID.Zero;
             CurrentParcel = null;
             // Put the child agent back at the center
-            AbsolutePosition
-                = new Vector3(Scene.RegionInfo.RegionSizeX * 0.5f, Scene.RegionInfo.RegionSizeY * 0.5f, 70);
-            if(Animator != null)
-                Animator.ResetAnimations();
             m_parentID = UUID.Zero;
             m_parentPosition = Vector3.Zero;
             ControllingClient.Reset();
-            SuccessfulTransit ();
+            AbsolutePosition
+                = new Vector3(Scene.RegionInfo.RegionSizeX * 0.5f, Scene.RegionInfo.RegionSizeY * 0.5f, 70);
+            SuccessfulTransit();
         }
 
         #endregion

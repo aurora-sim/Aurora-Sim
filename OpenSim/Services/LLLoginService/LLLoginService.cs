@@ -423,6 +423,8 @@ namespace OpenSim.Services.LLLoginService
                         avappearance = m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
                         UPI.AArchiveName = "";
                         m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
+                        //Must reload this, as we created a new folder
+                        inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                     }
                     if (UPI.IsNewUser)
                     {
@@ -551,6 +553,8 @@ namespace OpenSim.Services.LLLoginService
                                 ", loading the default avatar from " + m_DefaultUserAvatarArchive + ".");
                             avappearance = m_ArchiveService.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
                             m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
+                            //Must reload this, as we created a new folder
+                            inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                         }
                         else
                         {

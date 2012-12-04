@@ -461,15 +461,6 @@ namespace Aurora.Modules.Ban
                     return false;
                 }
             }
-            //foreach (string id0 in info.KnownID0s)
-            {
-                if (info.LastKnownID0.Contains("000"))
-                {
-                    //Ban this asshole
-                    reason = "Viewer is blocked (IO)";
-                    return false;
-                }
-            }
 
             reason = "";
             return true;
