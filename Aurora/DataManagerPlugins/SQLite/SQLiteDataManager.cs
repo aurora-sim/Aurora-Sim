@@ -255,6 +255,10 @@ namespace Aurora.DataManager.SQLite
         {
             foreach (SqliteParameter v in cmd.Parameters)
             {
+                if (v.Value == null)
+                {
+                    v.Value = "";
+                }
                 if (v.Value.ToString().Contains("\\'"))
                 {
                     v.Value = v.Value.ToString().Replace("\\'", "\'");

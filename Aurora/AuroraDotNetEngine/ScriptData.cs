@@ -115,7 +115,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool Compiled;
         public int ControlEventsInQueue;
         private double DefaultEventDelayTicks = 0.05;
-        public string DefaultState = "";
+        private string DefaultState = "";
         public bool Disabled;
 
 
@@ -769,6 +769,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     MainConsole.Instance.Warn("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
                     this.State = DefaultState;
+                    m_ScriptEngine.StateSave.DeleteFrom(Part, LastStateSave.ItemID);
                     m_ScriptEngine.StateSave.SaveStateTo(this, true);
                 }
                 else

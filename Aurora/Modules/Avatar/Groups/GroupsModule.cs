@@ -1580,6 +1580,7 @@ namespace Aurora.Modules.Groups
                             GroupMembershipData gmd =
                                 AttemptFindGroupMembershipData(inviteInfo.AgentID, inviteInfo.AgentID, inviteInfo.GroupID);
                             m_cachedGroupTitles[inviteInfo.AgentID] = gmd;
+                            m_cachedGroupMemberships.Remove(remoteClient.AgentId);
                             UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, gmd.GroupTitle);
                             SendAgentGroupDataUpdate(remoteClient);
                             // XTODO: If the inviter is still online, they need an agent dataupdate 

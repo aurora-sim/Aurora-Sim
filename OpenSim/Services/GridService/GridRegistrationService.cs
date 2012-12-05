@@ -233,10 +233,10 @@ namespace OpenSim.Services.GridService
                                           {
                                               {
                                                   "regionURI",
-                                                  "http://" + regionInfo.ExternalEndPoint.Address + ":" + regionInfo.ExternalEndPoint.Port + "/region" + UUID.Random()
+                                                  "http://" + regionInfo.ExternalEndPoint.Address + ":" + regionInfo.HttpPort + "/region" + UUID.Random()
                                               }
                                           };
-                OSDMap ports = new OSDMap { { "regionURI", regionInfo.InternalEndPoint.Port } };
+                OSDMap ports = new OSDMap { { "regionURI", regionInfo.HttpPort } };
 
                 GridRegistrationURLs urls2 = new GridRegistrationURLs
                 {

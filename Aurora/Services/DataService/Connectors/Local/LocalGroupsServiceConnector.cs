@@ -145,7 +145,7 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> row = new Dictionary<string, object>(11);
             row["GroupID"] = groupID;
             row["Name"] = name;
-            row["Charter"] = charter;
+            row["Charter"] = charter ?? "";
             row["InsigniaID"] = insigniaID;
             row["FounderID"] = founderID;
             row["MembershipFee"] = membershipFee;
