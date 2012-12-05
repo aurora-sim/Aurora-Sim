@@ -79,6 +79,7 @@ namespace OpenSim.Region.Framework.Interfaces
         ///   Build a terrain tile for the current region
         /// </summary>
         void CreateTerrainTexture();
+        void CreateTerrainTexture(bool forced);
 
         void CreateMapTile(out Bitmap terrainBMP, out Bitmap mapBMP);
         void CreateMapTile(out byte[] terrain, out byte[] map);

@@ -75,6 +75,7 @@ namespace Aurora.Modules.WorldMap
         private System.Timers.Timer UpdateOnlineStatus;
         private bool m_generateMapTiles = true;
         private UUID staticMapTileUUID = UUID.Zero;
+        private UUID regionMapTileUUID = UUID.Zero;
         private bool m_asyncMapTileCreation = false;
 
         #region IMapImageGenerator Members
@@ -175,11 +176,11 @@ namespace Aurora.Modules.WorldMap
             {
                 string name = scene.RegionInfo.RegionName;
                 name = name.Replace(' ', '_');
-                string regionMapTileUUID = m_config.Configs["MapModule"].GetString(name + "MaptileStaticUUID", "");
-                if (regionMapTileUUID != "")
+                string regionMapTile = m_config.Configs["MapModule"].GetString(name + "MaptileStaticUUID", "");
+                if (regionMapTile != "")
                 {
                     //It exists, override the default
-                    UUID.TryParse(regionMapTileUUID, out staticMapTileUUID);
+                    UUID.TryParse(regionMapTile, out regionMapTileUUID);
                 }
                 m_asyncMapTileCreation = m_config.Configs["MapModule"].GetBoolean("UseAsyncMapTileCreation", m_asyncMapTileCreation);
                 minutes = m_config.Configs["MapModule"].GetDouble("TimeBeforeMapTileRegeneration", minutes);
@@ -271,7 +272,7 @@ namespace Aurora.Modules.WorldMap
         {
             if (MainConsole.Instance.ConsoleScene != null && m_scene != MainConsole.Instance.ConsoleScene)
                 return;
-            CreateTerrainTexture();
+            CreateTerrainTexture(true);
         }
 
         private void OnUpdateRegion(object source, ElapsedEventArgs e)
@@ -296,11 +297,27 @@ namespace Aurora.Modules.WorldMap
         /// </summary>
         public void CreateTerrainTexture()
         {
-            if (!m_generateMapTiles)
+            CreateTerrainTexture(false);
+        }
+
+        /// <summary>
+        /// Create a terrain texture for this scene
+        /// </summary>
+        public void CreateTerrainTexture(bool forced)
+        {
+            if (!m_generateMapTiles && !forced)
             {
                 //They want a static texture, lock it in.
-                m_scene.RegionInfo.RegionSettings.TerrainMapImageID = staticMapTileUUID;
-                m_scene.RegionInfo.RegionSettings.TerrainImageID = staticMapTileUUID;
+                if (regionMapTileUUID != UUID.Zero)
+                {
+                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = regionMapTileUUID;
+                    m_scene.RegionInfo.RegionSettings.TerrainImageID = regionMapTileUUID;
+                }
+                else if (staticMapTileUUID != UUID.Zero)
+                {
+                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = staticMapTileUUID;
+                    m_scene.RegionInfo.RegionSettings.TerrainImageID = staticMapTileUUID;
+                }
                 m_scene.RegionInfo.RegionSettings.TerrainMapLastRegenerated = DateTime.Now;
                 m_scene.RegionInfo.RegionSettings.Save();
                 return;

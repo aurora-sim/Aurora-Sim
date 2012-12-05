@@ -10438,7 +10438,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         IMapImageGenerator mapModule = Scene.RequestModuleInterface<IMapImageGenerator>();
                         if(mapModule != null)
-                            mapModule.CreateTerrainTexture();
+                            mapModule.CreateTerrainTexture(true);
                     }
                     return true;
 
