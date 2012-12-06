@@ -1084,7 +1084,7 @@ textures 1
             /// <param name = "e"></param>
             private void CheckToMakeSureWearablesHaveBeenSent(object sender, ElapsedEventArgs e)
             {
-                if (m_sp == null)
+                if (m_sp == null || m_sp.IsChildAgent)
                     return;
                 if (!m_InitialHasWearablesBeenSent)
                 {

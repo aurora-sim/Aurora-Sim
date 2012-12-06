@@ -440,8 +440,8 @@ namespace Aurora.Modules.Terrain
                     {
                         ITerrainChannel channel = loader.Value.LoadFile(filename, m_scene);
                         channel.Scene = m_scene;
-                        if (m_channel.Height == channel.Height &&
-                            m_channel.Width == channel.Width)
+                        if (m_scene.RegionInfo.RegionSizeY == channel.Height &&
+                            m_scene.RegionInfo.RegionSizeX == channel.Width)
                         {
                             m_channel = channel;
                             m_scene.RegisterModuleInterface(m_channel);

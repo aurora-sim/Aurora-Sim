@@ -478,7 +478,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             }
             else if (m_movementAnimation == "LAND")
             {
-                if (actor != null && actor.Velocity.Z != 0)
+                if (actor != null && actor.Velocity.Z < 0)
                 {
                     if (actor.Velocity.Z < SOFTLAND_FORCE)
                         return "LAND";
