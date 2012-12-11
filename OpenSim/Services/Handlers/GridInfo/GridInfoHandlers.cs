@@ -87,9 +87,9 @@ namespace OpenSim.Services
                 if (GridEconomyURI == "")
                 {
                     if (moneyModule != null)
-                        _info["helperuri"] = MainServer.Instance.FullHostName + ":" + moneyModule.ClientPort + "/";
+                        GridEconomyURI = MainServer.Instance.FullHostName + ":" + moneyModule.ClientPort + "/";
                     else
-                        _info["helperuri"] = MainServer.Instance.FullHostName + ":" + 9000 + "/";//Fallback... we dunno
+                        GridEconomyURI = MainServer.Instance.FullHostName + ":" + 9000 + "/";//Fallback... we dunno
                 }
                 if (GridEconomyURI != "" && !GridEconomyURI.EndsWith("/"))
                     GridEconomyURI += "/";

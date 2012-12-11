@@ -47,6 +47,7 @@ namespace Aurora.Modules.SampleCurrencyModule
     public class CurrencyModule : IMoneyModule, ISharedRegionModule
     {
         private bool m_enabled;
+        private IConfigSource m_config;
 
         #region IMoneyModule Members
 
@@ -64,7 +65,7 @@ namespace Aurora.Modules.SampleCurrencyModule
         {
             get
             {
-                return (int)MainServer.Instance.Port;
+                return m_config.Configs["Handlers"].GetInt("LLLoginHandlerPort", (int)MainServer.Instance.Port);
             }
         }
 
@@ -106,6 +107,7 @@ namespace Aurora.Modules.SampleCurrencyModule
         /// <param name = "config"></param>
         public void Initialise(IConfigSource config)
         {
+            m_config = config;
             IConfig currencyConfig = config.Configs["Currency"];
             if (currencyConfig != null)
             {
