@@ -351,7 +351,8 @@ namespace OpenSim.Services.GridService
                         IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
                         GridRegistrationService.GridRegistrationURLs grurl = new GridRegistrationService.GridRegistrationURLs();
                         grurl.FromOSD(rr.RegionRemote);
-                        server.AddStreamHandler(new ServerHandler(grurl.URLS["regionURI"].AsString().Replace("http://" + regionInfos.ExternalEndPoint.Address + ":" + regionInfos.ExternalEndPoint.Port, ""), regionInfos.SessionID.ToString(), m_registry));
+                        string url = grurl.URLS["regionURI"].AsString().Replace("http://" + regionInfos.ExternalEndPoint.Address + ":" + MainServer.Instance.Port, "");
+                        server.AddStreamHandler(new ServerHandler(url, UUID.Zero.ToString(), m_registry));
                     }
                 }
                 else

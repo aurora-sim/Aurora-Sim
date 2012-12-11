@@ -902,6 +902,14 @@ namespace Aurora.Framework.Servers.HttpServer
 
                                 buffer = HandleLLSDRequests(request, response);
                             }
+                            else if (GetXmlRPCHandler(request.RawUrl) != null)
+                            {
+                                if (DebugLevel >= 3)
+                                    LogIncomingToXmlRpcHandler(request);
+
+                                // generic login request.
+                                buffer = HandleXmlRpcRequests(request, response);
+                            }
                             //                        MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Checking for HTTP Handler for request {0}", request.RawUrl);
                             else if (DoWeHaveAHTTPHandler(request.RawUrl))
                             {
