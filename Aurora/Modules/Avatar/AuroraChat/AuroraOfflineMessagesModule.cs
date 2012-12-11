@@ -177,16 +177,22 @@ namespace Aurora.Modules.Chat
             });
             foreach (GridInstantMessage IM in msglist)
             {
-                // Send through scene event manager so all modules get a chance
-                // to look at this message before it gets delivered.
-                //
-                // Needed for proper state management for stored group
-                // invitations
-                //
-                IM.offline = 1;
-                IScene s = FindScene(client.AgentId);
-                if (s != null)
-                    s.EventManager.TriggerIncomingInstantMessage(IM);
+                if (IM.dialog == (byte)InstantMessageDialog.InventoryOffered)
+                    client.SendInstantMessage(IM);
+                else
+                {
+
+                    // Send through scene event manager so all modules get a chance
+                    // to look at this message before it gets delivered.
+                    //
+                    // Needed for proper state management for stored group
+                    // invitations
+                    //
+                    IM.offline = 1;
+                    IScene s = FindScene(client.AgentId);
+                    if (s != null)
+                        s.EventManager.TriggerIncomingInstantMessage(IM);
+                }
             }
         }
 
