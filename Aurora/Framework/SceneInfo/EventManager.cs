@@ -263,7 +263,7 @@ namespace Aurora.Framework
 
             public LandBuyArgs(UUID pagentId, UUID pgroupId, bool pfinal, bool pgroupOwned,
                 bool premoveContribution, int pparcelLocalID, int pparcelArea, int pparcelPrice,
-                bool pauthenticated)
+                bool pauthenticated, UUID pparcelOwnerID)
             {
                 agentId = pagentId;
                 groupId = pgroupId;
@@ -273,6 +273,7 @@ namespace Aurora.Framework
                 parcelLocalID = pparcelLocalID;
                 parcelArea = pparcelArea;
                 parcelPrice = pparcelPrice;
+                parcelOwnerID = pparcelOwnerID;
                 authenticated = pauthenticated;
             }
         }

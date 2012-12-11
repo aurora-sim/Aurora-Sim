@@ -1607,13 +1607,12 @@ namespace Aurora.Modules.Land
                                      bool removeContribution, int parcelLocalID, int parcelArea, int parcelPrice,
                                      bool authenticated)
         {
-            EventManager.LandBuyArgs args = new EventManager.LandBuyArgs(agentId, groupId, final, groupOwned,
-                                                                         removeContribution, parcelLocalID, parcelArea,
-                                                                         parcelPrice, authenticated);
-
-            ILandObject land = GetLandObject(args.parcelLocalID);
+            ILandObject land = GetLandObject(parcelLocalID);
             if (land != null)
             {
+                EventManager.LandBuyArgs args = new EventManager.LandBuyArgs(agentId, groupId, final, groupOwned,
+                                                                             removeContribution, parcelLocalID, parcelArea,
+                                                                             parcelPrice, authenticated, land.LandData.OwnerID);
                 // Make sure that we do all checking that we can sell this land
                 if (m_scene.EventManager.TriggerValidateBuyLand(args))
                 {
