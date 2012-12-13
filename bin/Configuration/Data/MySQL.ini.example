@@ -3,5 +3,5 @@
     ;; Change the connection string to your db details
     ;; NOTE: This sets up the database for all services
     ;; 
-    ConnectionString = "Data Source=localhost;Port=3306;Database=opensim;User ID=opensim;Password=***;"
+    ConnectionString = "Data Source=localhost;Port=3306;Database=aurora;User ID=aurora;Password=***;"
     StorageProvider = MySQL
