@@ -4960,7 +4960,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void PhysicsOutOfBounds(Vector3 pos)
         {
-            MainConsole.Instance.Error("[Physics]: Physical Object " + Name + " @ " + AbsolutePosition + " went out of bounds.");
+            MainConsole.Instance.Error("[Physics]: Physical object " + Name + ", localID " + LocalId + " went out of bounds at " + pos + ".  Stopping at " + AbsolutePosition + " and making non-physical.");
             if (!ParentGroup.Scene.PhysicsReturns.Contains(ParentGroup))
                 ParentGroup.Scene.PhysicsReturns.Add(ParentGroup);
         }
