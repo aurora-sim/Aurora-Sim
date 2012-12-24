@@ -123,6 +123,24 @@ namespace Aurora.Framework
             return builder.ToString();
         }
 
+        //wab - Added for debugging ease
+        public static string ConvertToString(OSDMap values, string lineStart = "\t")
+        {
+            StringBuilder builder = new StringBuilder ();
+            String[] keys = new String[values.Count];
+            values.Keys.CopyTo (keys, 0);
+            foreach (String key in keys) {
+                 Object val = values [key];
+                 if (val == null)
+                     builder.AppendFormat("{0}{1}=null\n", lineStart, key);
+                 else if (val is OSDMap)
+                     builder.AppendFormat("{0}{1}=...\n{2}", lineStart, key, ConvertToString((OSDMap)val, "\t\t"));
+                 else
+                     builder.AppendFormat("{0}{1}={2}\n", lineStart, key, val.ToString());
+            }
+            return builder.ToString();
+        }
+
         public static List<string> ConvertToList(string listAsString)
         {
             //Do both , and " " so that it removes any annoying spaces in the string added by users
