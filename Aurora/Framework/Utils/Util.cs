@@ -126,7 +126,7 @@ namespace Aurora.Framework
         //wab - Added for debugging ease
         public static string ConvertToString(OSDMap values, string lineStart)
         {
-            lineStart = "\t";
+            if (string.IsNullOrEmpty(lineStart)) lineStart = "\t";
             StringBuilder builder = new StringBuilder ();
             String[] keys = new String[values.Count];
             values.Keys.CopyTo (keys, 0);
