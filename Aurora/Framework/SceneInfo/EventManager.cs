@@ -157,7 +157,7 @@ namespace Aurora.Framework
         //This is called after OnStartupComplete is done, it should ONLY be registered to the Scene
         public event StartupComplete OnStartupFullyComplete;
 
-        public delegate void EstateToolsSunUpdate(ulong regionHandle, bool FixedTime, bool EstateSun, float LindenHour);
+        public delegate void EstateToolsSunUpdate(ulong regionHandle);
         public event EstateToolsSunUpdate OnEstateToolsSunUpdate;
 
         public delegate void ObjectBeingRemovedFromScene(ISceneEntity obj);
@@ -1321,13 +1321,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Updates the system as to how the position of the sun should be handled.
+        /// Called when the sun's position parameters have changed in the Region and/or Estate
         /// </summary>
-        /// <param name="regionHandle"></param>
-        /// <param name="FixedTime">True if the Sun Position is fixed</param>
-        /// <param name="useEstateTime">True if the Estate Settings should be used instead of region</param>
-        /// <param name="FixedSunHour">The hour 0.0 <= FixedSunHour <= 24.0 at which the sun is fixed at. Sun Hour 0 is sun-rise, when Day/Night ratio is 1:1</param>
-        public void TriggerEstateToolsSunUpdate(ulong regionHandle, bool FixedTime, bool useEstateTime, float FixedSunHour)
+        /// <param name="regionHandle">The region that changed</param>
+        public void TriggerEstateToolsSunUpdate(ulong regionHandle)
         {
             EstateToolsSunUpdate handlerEstateToolsSunUpdate = OnEstateToolsSunUpdate;
             if (handlerEstateToolsSunUpdate != null)
@@ -1336,7 +1333,7 @@ namespace Aurora.Framework
                 {
                     try
                     {
-                        d(regionHandle, FixedTime, useEstateTime, FixedSunHour);
+                        d(regionHandle);
                     }
                     catch (Exception e)
                     {
