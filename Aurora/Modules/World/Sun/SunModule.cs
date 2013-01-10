@@ -395,20 +395,33 @@ namespace Aurora.Modules.Sun
         /// <param name = "FixedTime">Is the sun's position fixed?</param>
         /// <param name = "useEstateTime">Use the Region or Estate Sun hour?</param>
         /// <param name = "FixedSunHour">What hour of the day is the Sun Fixed at?</param>
-        public void EstateToolsSunUpdate(ulong regionHandle, bool FixedSun, bool useEstateTime, float FixedSunHour)
+        public void EstateToolsSunUpdate(ulong regionHandle)
         {
             if (m_scene.RegionInfo.RegionHandle == regionHandle)
             {
+                float sunFixedHour;
+                bool fixedSun;
+
+                if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
+                {
+                    sunFixedHour = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
+                    fixedSun = m_scene.RegionInfo.EstateSettings.FixedSun;
+               }
+                else
+                {
+                    sunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition - 6.0f;
+                    fixedSun = m_scene.RegionInfo.RegionSettings.FixedSun;
+                }
+
                 // Must limit the Sun Hour to 0 ... 24
-                while (FixedSunHour > 24.0f)
-                    FixedSunHour -= 24;
+                while (sunFixedHour > 24.0f)
+                    sunFixedHour -= 24;
 
-                while (FixedSunHour < 0)
-                    FixedSunHour += 24;
+                while (sunFixedHour < 0)
+                    sunFixedHour += 24;
 
-
-                m_SunFixedHour = FixedSunHour;
-                m_SunFixed = FixedSun;
+                m_SunFixedHour = sunFixedHour;
+                m_SunFixed = fixedSun;
 
                 //MainConsole.Instance.DebugFormat("[SUN]: Sun Settings Update: Fixed Sun? : {0}", m_SunFixed.ToString());
                 //MainConsole.Instance.DebugFormat("[SUN]: Sun Settings Update: Sun Hour   : {0}", m_SunFixedHour.ToString());
@@ -418,7 +431,6 @@ namespace Aurora.Modules.Sun
 
                 // When sun settings are updated, we should update all clients with new settings.
                 SunUpdateToAllClients();
-
 
                 //MainConsole.Instance.DebugFormat("[SUN]: PosTime : {0}", PosTime.ToString());
             }
@@ -535,7 +547,7 @@ namespace Aurora.Modules.Sun
                 Velocity = (Velocity*Tilt)*(1.0f/Magnitude);
             }
             m_scene.RegionInfo.RegionSettings.SunVector = Position;
-            m_scene.RegionInfo.RegionSettings.SunPosition = GetCurrentTimeAsLindenSunHour();
+            //m_scene.RegionInfo.RegionSettings.SunPosition = GetCurrentTimeAsLindenSunHour();
         }
 
         private void SunUpdateToAllClients()

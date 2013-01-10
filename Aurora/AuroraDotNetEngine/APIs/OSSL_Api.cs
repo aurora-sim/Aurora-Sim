@@ -1162,8 +1162,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 World.RegionInfo.RegionSettings.FixedSun = sunFixed;
                 World.RegionInfo.RegionSettings.Save();
 
-                World.EventManager.TriggerEstateToolsSunUpdate(World.RegionInfo.RegionHandle, sunFixed, useEstateSun,
-                                                               (float)sunHour);
+                World.EventManager.TriggerEstateToolsSunUpdate(World.RegionInfo.RegionHandle);
             }
         }
 
@@ -1194,9 +1193,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 World.RegionInfo.EstateSettings.FixedSun = sunFixed;
                 World.RegionInfo.EstateSettings.Save();
 
-                World.EventManager.TriggerEstateToolsSunUpdate(World.RegionInfo.RegionHandle, sunFixed,
-                                                               World.RegionInfo.RegionSettings.UseEstateSun,
-                                                               (float)sunHour);
+                World.EventManager.TriggerEstateToolsSunUpdate(World.RegionInfo.RegionHandle);
             }
         }
 
