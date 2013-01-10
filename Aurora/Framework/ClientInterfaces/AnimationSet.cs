@@ -146,13 +146,32 @@ namespace Aurora.Framework
         {
             lock (m_animations)
             {
-                animIDs = new UUID[m_animations.Count + 1];
-                sequenceNums = new int[m_animations.Count + 1];
-                objectIDs = new UUID[m_animations.Count + 1];
+                int defaultSize = 0;
+                if (m_defaultAnimation.AnimID != UUID.Zero)
+                {
+                    defaultSize++;
+                }
+                else if (m_animations.Count == 0)
+                {
+                    defaultSize++;
+                }
 
-                animIDs[0] = m_defaultAnimation.AnimID;
-                sequenceNums[0] = m_defaultAnimation.SequenceNum;
-                objectIDs[0] = m_defaultAnimation.ObjectID;
+                animIDs = new UUID[m_animations.Count + defaultSize];
+                sequenceNums = new int[m_animations.Count + defaultSize];
+                objectIDs = new UUID[m_animations.Count + defaultSize];
+
+                if (m_defaultAnimation.AnimID != UUID.Zero)
+                {
+                    animIDs[0] = m_defaultAnimation.AnimID;
+                    sequenceNums[0] = m_defaultAnimation.SequenceNum;
+                    objectIDs[0] = m_defaultAnimation.ObjectID;
+                }
+                else if (m_animations.Count == 0)
+                {
+                    animIDs[0] = m_implicitDefaultAnimation.AnimID;
+                    sequenceNums[0] = m_defaultAnimation.SequenceNum;
+                    objectIDs[0] = m_implicitDefaultAnimation.ObjectID;
+                }
 
                 for (int i = 0; i < m_animations.Count; ++i)
                 {
