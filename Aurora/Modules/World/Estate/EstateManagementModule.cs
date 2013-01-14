@@ -62,7 +62,7 @@ namespace Aurora.Modules.Estate
         {
             uint sun = 0;
 
-            if (!m_scene.RegionInfo.EstateSettings.FixedSun)
+            if (!m_scene.RegionInfo.EstateSettings.UseGlobalTime)
                 sun=(uint)(m_scene.RegionInfo.EstateSettings.SunPosition*1024.0) + 0x1800;
             UUID estateOwner = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
@@ -1683,7 +1683,38 @@ namespace Aurora.Modules.Estate
 
         public void TriggerEstateSunUpdate()
         {
-            m_scene.EventManager.TriggerEstateToolsSunUpdate(m_scene.RegionInfo.RegionHandle);
+            if (m_scene.RegionInfo.EstateSettings == null)
+                return;
+
+            float sun;
+            if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
+            {
+                sun = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
+                if (m_scene.RegionInfo.EstateSettings.UseGlobalTime)
+                {
+                    ISunModule sunModule = m_scene.RequestModuleInterface<ISunModule>();
+                    if(sunModule != null)
+                        sun = sunModule.GetCurrentSunHour();
+                }
+
+                // 
+                m_scene.EventManager.TriggerEstateToolsSunUpdate(
+                        m_scene.RegionInfo.RegionHandle,
+                        m_scene.RegionInfo.EstateSettings.FixedSun,
+                        m_scene.RegionInfo.RegionSettings.UseEstateSun,
+                        sun);
+            }
+            else
+            {
+                // Use the Sun Position from the Region Settings
+                sun = (float)m_scene.RegionInfo.RegionSettings.SunPosition/* - 6.0f*/;
+
+                m_scene.EventManager.TriggerEstateToolsSunUpdate(
+                        m_scene.RegionInfo.RegionHandle,
+                        m_scene.RegionInfo.RegionSettings.FixedSun,
+                        m_scene.RegionInfo.RegionSettings.UseEstateSun,
+                        sun);
+            }
         }
     }
 }
