@@ -747,6 +747,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     else if (!(ex.Message.Contains("EventAbortException")) &&
                              !(ex.Message.Contains("MinEventDelayException")))
                         QIS.ID.DisplayUserNotification(ex.ToString(), "executing", false, true);
+                    EventManager.EventComplete(QIS);
                     return false;
                 }
                 else if (Running != null)

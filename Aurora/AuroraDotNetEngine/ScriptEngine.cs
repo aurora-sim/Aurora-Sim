@@ -655,17 +655,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             // Create a structure and add data
             QueueItemStruct QIS = new QueueItemStruct
-                                      {
-                                          ID = ID,
-                                          EventsProcData = new ScriptEventsProcData(),
-                                          functionName = FunctionName,
-                                          llDetectParams = qParams,
-                                          param = param,
-                                          VersionID = Interlocked.Read(ref ID.VersionID),
-                                          State = ID.State
-                                      };
+            {
+                ID = ID,
+                EventsProcData = new ScriptEventsProcData(),
+                functionName = FunctionName,
+                llDetectParams = qParams,
+                param = param,
+                VersionID = Interlocked.Read(ref ID.VersionID),
+                State = ID.State
+            };
 
-            if(EventManager.CheckIfEventShouldFire(ID, FunctionName, param))
+            if (EventManager.CheckIfEventShouldFire(ID, FunctionName, param))
                 return MaintenanceThread.AddEventSchQIS(QIS, priority);
             return false;
         }
