@@ -163,21 +163,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "changed";
             object[] param = new Object[] { new LSL_Types.LSLInteger(change) };
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         /// <summary>
@@ -218,21 +208,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "touch_start";
             object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(),
                                                 EventPriority.FirstStart, param);
             }
-#endif
         }
 
         public void touch(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
@@ -269,21 +249,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "touch";
             object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(),
                                                 EventPriority.FirstStart, param);
             }
-#endif
         }
 
         public void touch_end(ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient,
@@ -314,21 +284,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "touch_end";
             object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(),
                                                 EventPriority.FirstStart, param);
             }
-#endif
             //Remove us from the det param list
             det.Remove(remoteClient.AgentId);
             CoalescedTouchEvents[part.LocalId] = det;
@@ -355,23 +315,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                      new LSL_Types.LSLInteger(amount)
                                  };
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                    ret = true;
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
                 ret = true;
             }
-#endif
             return ret;
         }
 
@@ -410,20 +359,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string functionName = "collision_start";
                 object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
-#if (!ISWIN)
                 foreach (ScriptData ID in datas)
-                {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                    {
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
-                    }
-                }
-#else
-                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
                     m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
-#endif
             }
         }
 
@@ -462,20 +401,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string functionName = "collision";
                 object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
-#if (!ISWIN)
                 foreach (ScriptData ID in datas)
-                {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                    {
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
-                    }
-                }
-#else
-                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
                     m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
-#endif
             }
         }
 
@@ -514,20 +443,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string functionName = "collision_end";
                 object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
-#if (!ISWIN)
                 foreach (ScriptData ID in datas)
-                {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                    {
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
-                    }
-                }
-#else
-                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
                     m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
-#endif
             }
         }
 
@@ -576,20 +495,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string functionName = "land_collision_start";
                 object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
 
-#if (!ISWIN)
                 foreach (ScriptData ID in datas)
-                {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                    {
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
-                    }
-                }
-#else
-                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
                     m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
-#endif
             }
         }
 
@@ -636,20 +545,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string functionName = "land_collision";
                 object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
 
-#if (!ISWIN)
                 foreach (ScriptData ID in datas)
-                {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                    {
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
-                    }
-                }
-#else
-                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
                     m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
-#endif
             }
         }
 
@@ -696,20 +595,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string functionName = "land_collision_end";
                 object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
 
-#if (!ISWIN)
                 foreach (ScriptData ID in datas)
-                {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                    {
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
-                    }
-                }
-#else
-                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
                     m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
-#endif
             }
         }
 
@@ -730,8 +619,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                      new LSL_Types.LSLInteger(change)
                                  };
 
-            if (CheckIfEventShouldFire(ID, functionName, param))
-                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+            m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
         }
 
         public void email(uint localID, UUID itemID, string timeSent,
@@ -757,22 +645,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                      new LSL_Types.LSLString(message),
                                      new LSL_Types.LSLInteger(numLeft)
                                  };
-
-#if (!ISWIN)
+            
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         public void at_target(uint localID, uint handle, Vector3 targetpos,
@@ -797,21 +675,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                      new LSL_Types.Vector3(atpos.X, atpos.Y, atpos.Z)
                                  };
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         public void not_at_target(uint localID)
@@ -829,22 +697,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             string functionName = "not_at_target";
             object[] param = new object[0];
-
-#if (!ISWIN)
+            
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         public void at_rot_target(uint localID, uint handle, Quaternion targetrot,
@@ -869,21 +727,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                      new LSL_Types.Quaternion(atrot.X, atrot.Y, atrot.Z, atrot.W)
                                  };
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         public void not_at_rot_target(uint localID)
@@ -902,21 +750,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "not_at_rot_target";
             object[] param = new object[0];
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         public void attach(uint localID, UUID itemID, UUID avatar)
@@ -938,21 +776,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                      new LSL_Types.LSLString(avatar.ToString())
                                  };
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         public void moving_start(ISceneChildEntity part)
@@ -968,21 +796,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "moving_start";
             object[] param = new object[0];
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         public void moving_end(ISceneChildEntity part)
@@ -998,21 +816,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "moving_end";
             object[] param = new object[0];
 
-#if (!ISWIN)
             foreach (ScriptData ID in datas)
-            {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                {
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                }
-            }
-#else
-            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
                                                 param);
             }
-#endif
         }
 
         /// <summary>

@@ -573,12 +573,12 @@ namespace OpenSim.Services
         /// <param name = "dir"></param>
         private void CleanExpiredFiles(string dir, DateTime purgeLine)
         {
-            foreach (string file in Directory.GetFiles(dir))
+            lock (m_fileCacheLock)
             {
-                lock (m_fileCacheLock)
+                foreach (string file in Directory.GetFiles(dir))
                 {
-                    if (File.GetLastAccessTime(file) < purgeLine)
-                        File.Delete(file);
+                        if (File.GetLastAccessTime(file) < purgeLine)
+                            File.Delete(file);
                 }
             }
 
