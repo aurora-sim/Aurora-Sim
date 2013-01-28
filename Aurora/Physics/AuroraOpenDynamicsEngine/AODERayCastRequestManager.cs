@@ -110,7 +110,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name = "retMethod">Return method to send the results</param>
         public void QueueRequest(Vector3 position, Vector3 direction, float length, int count, RayCallback retMethod)
         {
-            lock (m_PendingRequests)
+            lock (m_PendingRayRequests)
             {
                 ODERayRequest req = new ODERayRequest
                                         {
