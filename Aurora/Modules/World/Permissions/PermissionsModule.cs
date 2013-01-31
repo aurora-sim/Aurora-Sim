@@ -411,6 +411,18 @@ namespace Aurora.Modules.Permissions
                     "transfer sim ownership",
                     "Transfers all objects and land on the region to another user.",
                     HandleTransferOwnership);
+
+                MainConsole.Instance.Commands.AddCommand(
+                    "transfer objects ownership",
+                    "transfer objects ownership",
+                    "Transfers ownership of all objects on the region to another user.",
+                    HandleTransferObjectOwnership);
+
+                MainConsole.Instance.Commands.AddCommand(
+                    "transfer parcel ownership",
+                    "transfer parcel ownership",
+                    "Transfers ownership of all land in the region to another user.",
+                    HandleTransferLandOwnership);
             }
 
 
@@ -645,7 +657,70 @@ namespace Aurora.Modules.Permissions
                 }
             }
         }
-        
+
+        public void HandleTransferLandOwnership(string[] args)
+        {
+            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
+                return;
+
+
+            string name = MainConsole.Instance.Prompt("Name of user: ", "");
+            if (name == "")
+            {
+                MainConsole.Instance.InfoFormat("[PERMISSIONS]: No user selected.");
+                return;
+            }
+
+            UserAccount acc = m_scene.UserAccountService.GetUserAccount(null, name);
+            if (acc == null)
+            {
+                MainConsole.Instance.InfoFormat("[PERMISSIONS]: No user found.");
+                return;
+            }
+
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            IPrimCountModule primCount = m_scene.RequestModuleInterface<IPrimCountModule>();
+            foreach (ILandObject parcel in parcelManagement.AllParcels())
+            {
+                parcel.LandData.OwnerID = acc.PrincipalID;
+            }
+        }
+
+        public void HandleTransferObjectOwnership(string[] args)
+        {
+            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
+                return;
+
+
+            string name = MainConsole.Instance.Prompt("Name of user: ", "");
+            if (name == "")
+            {
+                MainConsole.Instance.InfoFormat("[PERMISSIONS]: No user selected.");
+                return;
+            }
+
+            UserAccount acc = m_scene.UserAccountService.GetUserAccount(null, name);
+            if (acc == null)
+            {
+                MainConsole.Instance.InfoFormat("[PERMISSIONS]: No user found.");
+                return;
+            }
+
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            IPrimCountModule primCount = m_scene.RequestModuleInterface<IPrimCountModule>();
+            foreach (ILandObject parcel in parcelManagement.AllParcels())
+            {
+                foreach (ISceneEntity sog in primCount.GetPrimCounts(parcel.LandData.GlobalID).Objects)
+                {
+                    sog.SetOwnerId(acc.PrincipalID);
+                    sog.SetGroup(UUID.Zero, acc.PrincipalID, true);
+                    sog.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+
+                    foreach (ISceneChildEntity child in sog.ChildrenEntities())
+                        child.Inventory.ChangeInventoryOwner(acc.PrincipalID);
+                }
+            }
+        }
 
         public void HandleDebugPermissions(string[] args)
         {
