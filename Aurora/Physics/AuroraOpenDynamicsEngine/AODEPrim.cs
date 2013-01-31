@@ -875,7 +875,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (vertexCount == 0 || indexCount == 0)
             {
-                MainConsole.Instance.WarnFormat("[PHYSICS]: Got invalid mesh on prim at <{0},{1},{2}>. It can be a sculp with alpha channel in map. Replacing it by a small box.", _position.X, _position.Y, _position.Z);
+                MainConsole.Instance.WarnFormat("[PHYSICS]: Got invalid mesh on prim at <{0},{1},{2}>. It can be a sculpt with alpha channel in map. Replacing it by a small box.", _position.X, _position.Y, _position.Z);
                 _size.X = 0.01f;
                 _size.Y = 0.01f;
                 _size.Z = 0.01f;
