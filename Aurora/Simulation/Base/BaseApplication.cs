@@ -195,7 +195,7 @@ namespace Aurora.Simulation.Base
         public static void Configure(bool requested)
         {
             bool Aurora_log = (File.Exists(Path.Combine(Util.configDir(), "Aurora.log")));
-            bool Aurora_Server_log = (File.Exists(Path.Combine(Util.configDir(), "AuroraServer.log")));
+            bool Aurora_Server_log = (File.Exists(Path.Combine(Util.configDir(), "Aurora.Server.log")));
             bool isAuroraExe = System.AppDomain.CurrentDomain.FriendlyName == "Aurora.exe" ||
                 System.AppDomain.CurrentDomain.FriendlyName == "Aurora.vshost.exe";
 
