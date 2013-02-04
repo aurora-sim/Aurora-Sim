@@ -331,6 +331,8 @@ namespace Aurora.Framework
 
         void SetSoundQueueing(int queue);
 
+        void Resize(Vector3 size);
+
         void FixOffsetPosition(Vector3 vector3, bool p);
 
         void UpdateOffSet(Vector3 vector3);

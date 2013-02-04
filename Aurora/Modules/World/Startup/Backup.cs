@@ -57,6 +57,7 @@ namespace Aurora.Modules.Startup
         {
             if (MainConsole.Instance != null && m_backup.Count == 0)//Only add them once
             {
+                MainConsole.Instance.Commands.AddCommand("edit scale", "edit scale <name> <X> <Y> <Z>", "Change the scale of a named prim", EditScale);
                 MainConsole.Instance.Commands.AddCommand ("backup", "backup", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
                 MainConsole.Instance.Commands.AddCommand ("disable backup", "disable backup", "Disables persistance until reenabled", DisableBackup);
                 MainConsole.Instance.Commands.AddCommand ("enable backup", "disable backup", "Enables persistance after 'disable persistance' has been run", EnableBackup);
@@ -103,14 +104,28 @@ namespace Aurora.Modules.Startup
         /// <param name="cmdparams">Additional arguments passed to the command</param>
         public void RunCommand (string[] cmdparams)
         {
-#if (!ISWIN)
+            m_manager.ForEachCurrentScene (scene => scene.AuroraEventManager.FireGenericEventHandler("Backup", null));
+        }
+
+        public void EditScale(string[] cmdparams)
+        {
             m_manager.ForEachCurrentScene(delegate(IScene scene)
             {
-                scene.AuroraEventManager.FireGenericEventHandler("Backup", null);
+                scene.ForEachSceneEntity(delegate(ISceneEntity entity)
+                {
+                    foreach (ISceneChildEntity child in entity.ChildrenEntities())
+                    {
+                        if (child.Name == cmdparams[2])
+                        {
+                            child.Resize(
+                                new Vector3(Convert.ToSingle(cmdparams[3]), Convert.ToSingle(cmdparams[4]),
+                                                Convert.ToSingle(cmdparams[5])));
+
+                            MainConsole.Instance.InfoFormat("Edited scale of Primitive: {0}", child.Name);
+                        }
+                    }
+                });
             });
-#else
-            m_manager.ForEachCurrentScene (scene => scene.AuroraEventManager.FireGenericEventHandler("Backup", null));
-#endif
         }
 
         public void DisableBackup (string[] cmdparams)
