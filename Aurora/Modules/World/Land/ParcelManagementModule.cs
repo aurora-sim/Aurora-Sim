@@ -2180,7 +2180,8 @@ namespace Aurora.Modules.Land
                 DSC.AddRegion(AllParcels().ConvertAll(delegate(ILandObject o)
                                                           {
                                                               LandData d = o.LandData.Copy();
-                                                              d.UserLocation = GetParcelCenterAtGround(o);
+                                                              if(d.UserLocation == Vector3.Zero)
+                                                                d.UserLocation = GetParcelCenterAtGround(o);
                                                               d.RegionID = o.RegionUUID;
                                                               return d;
                                                           }));
