@@ -139,9 +139,7 @@ namespace Aurora.Modules.Groups
         {
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            List<GroupRolesData> data = m_groupData.GetGroupRoles(GetRequestingAgentID(remoteClient), groupID);
-
-            return data;
+            return m_groupData.GetGroupRoles(GetRequestingAgentID(remoteClient), groupID);
         }
 
         public List<GroupRoleMembersData> GroupRoleMembersRequest(IClientAPI remoteClient, UUID groupID)

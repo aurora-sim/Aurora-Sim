@@ -583,7 +583,7 @@ namespace Aurora.Modules.Profiles
                                                                                         CultureInfo.InvariantCulture),
                                               charterMember, Profile.FirstLifeAboutText, flags,
                                               Profile.FirstLifeImage, Profile.Image, Profile.WebURL,
-                                              new UUID(Profile.Partner));
+                                              Profile.Partner);
         }
 
         #endregion
