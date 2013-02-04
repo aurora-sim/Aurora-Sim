@@ -183,7 +183,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="region"></param>
         /// <returns></returns>
-        string UpdateMap(GridRegion region);
+        string UpdateMap(GridRegion region, bool online);
 
         /// <summary>
         /// Get all map items of the given type for the given region

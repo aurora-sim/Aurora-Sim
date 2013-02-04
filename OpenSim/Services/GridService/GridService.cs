@@ -576,9 +576,9 @@ namespace OpenSim.Services.GridService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual string UpdateMap(GridRegion gregion)
+        public virtual string UpdateMap(GridRegion gregion, bool online)
         {
-            object remoteValue = DoRemote(gregion);
+            object remoteValue = DoRemote(gregion, online);
             if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
@@ -596,7 +596,10 @@ namespace OpenSim.Services.GridService
 
                 m_Database.Delete(gregion.RegionID);
 
-                region.Flags |= (int) RegionFlags.RegionOnline;
+                if (online)
+                    region.Flags |= (int)RegionFlags.RegionOnline;
+                else
+                    region.Flags &= (int)RegionFlags.RegionOnline;
 
                 region.TerrainImage = gregion.TerrainImage;
                 region.TerrainMapImage = gregion.TerrainMapImage;

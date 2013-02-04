@@ -714,7 +714,7 @@ namespace OpenSim.Services.Robust
             return new List<GridRegion>();
         }
 
-        public string UpdateMap(GridRegion region)
+        public string UpdateMap(GridRegion region, bool online)
         {
             return "";
         }
