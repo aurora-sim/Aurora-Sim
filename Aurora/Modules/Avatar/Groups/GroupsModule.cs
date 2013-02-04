@@ -257,6 +257,7 @@ namespace Aurora.Modules.Groups
             m_cachedGroupTitles[remoteClient.AgentId] =
                 AttemptFindGroupMembershipData(remoteClient.AgentId, remoteClient.AgentId, groupID);
             m_cachedGroupMemberships.Remove(remoteClient.AgentId);
+            RemoveFromGroupPowersCache(remoteClient.AgentId, remoteClient.ActiveGroupId);
             // Update the founder with new group information.
             SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
 
@@ -359,6 +360,7 @@ namespace Aurora.Modules.Groups
                     }
                     m_groupData.UpdateGroupRole(GetRequestingAgentID(remoteClient), groupID, roleID, name, description,
                                                 title, powers);
+                    RemoveFromGroupPowersCache(groupID);
                     break;
 
                 case OpenMetaverse.GroupRoleUpdate.NoUpdate:
@@ -633,6 +635,7 @@ namespace Aurora.Modules.Groups
             // this only works within the comms servers domain, and won't work hypergrid
 
             m_cachedGroupTitles[ejecteeID] = null;
+            RemoveFromGroupPowersCache(ejecteeID, groupID);
             UpdateAllClientsWithGroupInfo(ejecteeID, "");
 
             if (m_groupsMessagingModule != null)
@@ -763,6 +766,7 @@ namespace Aurora.Modules.Groups
         public void UpdateCachedData(UUID agentID, CachedUserInfo cachedInfo)
         {
             //Update the cache
+            RemoveFromGroupPowersCache(agentID, UUID.Zero);
             m_cachedGroupTitles[agentID] = cachedInfo.ActiveGroup;
             m_cachedGroupMemberships[agentID] = cachedInfo.GroupMemberships;
         }
@@ -1252,6 +1256,7 @@ namespace Aurora.Modules.Groups
 
             //Remove them from the cache
             m_cachedGroupTitles.Remove(client.AgentId);
+            RemoveFromGroupPowersCache(client.AgentId, client.ActiveGroupId);
         }
 
         private void GroupProposalBallotRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID,
@@ -1579,6 +1584,7 @@ namespace Aurora.Modules.Groups
                                 AttemptFindGroupMembershipData(inviteInfo.AgentID, inviteInfo.AgentID, inviteInfo.GroupID);
                             m_cachedGroupTitles[inviteInfo.AgentID] = gmd;
                             m_cachedGroupMemberships.Remove(remoteClient.AgentId);
+                            RemoveFromGroupPowersCache(inviteInfo.AgentID, inviteInfo.GroupID);
                             UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, gmd.GroupTitle);
                             SendAgentGroupDataUpdate(remoteClient);
                             // XTODO: If the inviter is still online, they need an agent dataupdate 
@@ -1989,15 +1995,33 @@ namespace Aurora.Modules.Groups
             }
         }
 
+        private void RemoveFromGroupPowersCache(UUID GroupID)
+        {
+            lock (AgentGroupPowersCache)
+            {
+                foreach (Dictionary<UUID, ulong> grp in AgentGroupPowersCache.Values)
+                {
+                    grp.Remove(GroupID);
+                }
+            }
+        }
+
         private void RemoveFromGroupPowersCache(UUID AgentID, UUID GroupID)
         {
             lock (AgentGroupPowersCache)
             {
-                Dictionary<UUID, ulong> Groups = new Dictionary<UUID, ulong>();
-                if (AgentGroupPowersCache.TryGetValue(AgentID, out Groups))
+                if (GroupID == UUID.Zero)
                 {
-                    Groups.Remove(GroupID);
-                    AgentGroupPowersCache[AgentID] = Groups;
+                    AgentGroupPowersCache.Remove(AgentID);
+                }
+                else
+                {
+                    Dictionary<UUID, ulong> Groups = new Dictionary<UUID, ulong>();
+                    if (AgentGroupPowersCache.TryGetValue(AgentID, out Groups))
+                    {
+                        Groups.Remove(GroupID);
+                        AgentGroupPowersCache[AgentID] = Groups;
+                    }
                 }
             }
         }
