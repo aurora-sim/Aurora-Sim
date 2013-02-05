@@ -1575,6 +1575,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 // Long Poll Service Manager with 3 worker threads a 25 second timeout for no events
                 m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
+                m_PollServiceManager.Start();
                 HTTPDRunning = true;
 
                 //HttpListenerContext context;
@@ -1600,6 +1601,7 @@ namespace Aurora.Framework.Servers.HttpServer
             HTTPDRunning = false;
             try
             {
+                m_PollServiceManager.Stop();
                 m_httpListener2.ExceptionThrown -= httpServerException;
                 //m_httpListener2.DisconnectHandler = null;
 
