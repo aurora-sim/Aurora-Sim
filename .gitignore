@@ -56,10 +56,6 @@ bin/AuroraServerConfiguration/*.ini.old
 bin/AuroraServerConfiguration/*/*.ini
 bin/AuroraServerConfiguration/*/*.ini.old
 bin/Backups
-bin/config-include/CenomeCache.ini
-bin/config-include/FlotsamCache.ini
-bin/config-include/GridCommon.ini
-bin/config-include/StandaloneCommon.ini
 bin/Configuration/*.ini
 bin/Configuration/*.ini.old
 bin/Configuration/*/*.ini
