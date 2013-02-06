@@ -72,14 +72,6 @@ bin/j2kDecodeCache
 bin/MapAPI_tileCache/*
 bin/MapTiles/*
 bin/ObjectCache
-bin/OpenSim.Grid.AssetInventoryServer.log
-bin/OpenSim.Grid.AssetServer.log
-bin/OpenSim.Grid.GridServer.log
-bin/OpenSim.Grid.InventoryServer.log
-bin/OpenSim.Grid.MessagingServer.log
-bin/OpenSim.Grid.UserServer.log
-bin/OpenSim.log
-bin/OpenSim.vshost.exe.config
 bin/Physics*
 bin/Regions/*
 bin/ScriptEngines/*-*-*-*-*
