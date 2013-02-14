@@ -5294,6 +5294,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
+            
             if (pushAllowed)
             {
                 float distance = (PusheePos - m_host.AbsolutePosition).Length();
@@ -5324,37 +5325,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 if (pusheeIsAvatar)
                 {
-                    if (pusheeav.PhysicsActor != null)
+                    if (pusheeav != null)
                     {
-                        if (local != 0)
+                        PhysicsActor pa = pusheeav.PhysicsActor;
+
+                        if (pa != null)
                         {
-                            applied_linear_impulse *= m_host.GetWorldRotation();
+                            if (local != 0)
+                            {
+                                applied_linear_impulse *= m_host.GetWorldRotation();
+                            }
+                            //Put a limit on it...
+                            int MaxPush = (int)pusheeav.PhysicsActor.Mass * 25;
+
+                            if (applied_linear_impulse.X > 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.X = MaxPush;
+                            if (applied_linear_impulse.X < 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.X = -MaxPush;
+
+                            if (applied_linear_impulse.Y > 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.Y = MaxPush;
+                            if (applied_linear_impulse.Y < 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.Y = -MaxPush;
+
+                            if (applied_linear_impulse.Z > 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.Z = MaxPush;
+                            if (applied_linear_impulse.Z < 0 &&
+                                Math.Abs(applied_linear_impulse.Z) > MaxPush)
+                                applied_linear_impulse.Z = -MaxPush;
+
+                            pa.AddForce(applied_linear_impulse, true);
                         }
-                        //Put a limit on it...
-                        int MaxPush = (int)pusheeav.PhysicsActor.Mass * 25;
-
-                        if (applied_linear_impulse.X > 0 &&
-                            Math.Abs(applied_linear_impulse.X) > MaxPush)
-                            applied_linear_impulse.X = MaxPush;
-                        if (applied_linear_impulse.X < 0 &&
-                            Math.Abs(applied_linear_impulse.X) > MaxPush)
-                            applied_linear_impulse.X = -MaxPush;
-
-                        if (applied_linear_impulse.Y > 0 &&
-                            Math.Abs(applied_linear_impulse.X) > MaxPush)
-                            applied_linear_impulse.Y = MaxPush;
-                        if (applied_linear_impulse.Y < 0 &&
-                            Math.Abs(applied_linear_impulse.X) > MaxPush)
-                            applied_linear_impulse.Y = -MaxPush;
-
-                        if (applied_linear_impulse.Z > 0 &&
-                            Math.Abs(applied_linear_impulse.X) > MaxPush)
-                            applied_linear_impulse.Z = MaxPush;
-                        if (applied_linear_impulse.Z < 0 &&
-                            Math.Abs(applied_linear_impulse.Z) > MaxPush)
-                            applied_linear_impulse.Z = -MaxPush;
-
-                        pusheeav.PhysicsActor.AddForce(applied_linear_impulse, true);
                     }
                 }
                 else
