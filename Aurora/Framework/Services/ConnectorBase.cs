@@ -125,37 +125,35 @@ namespace Aurora.Framework
 
         public object DoRemote(params object[] o)
         {
-            return DoRemoteCall(false, "ServerURI", false, UUID.Zero, o);
+            return DoRemoteCall(false, "ServerURI", false, UUID.Zero.ToString(), o);
         }
 
         public object DoRemoteForced(params object[] o)
         {
-            return DoRemoteCall(true, "ServerURI", false, UUID.Zero, o);
+            return DoRemoteCall(true, "ServerURI", false, UUID.Zero.ToString(), o);
         }
 
         public object DoRemoteForUser(UUID userID, params object[] o)
         {
-            return DoRemoteCall(false, "ServerURI", false, UUID.Zero, o);
+            return DoRemoteCall(false, "ServerURI", false, userID.ToString(), o);
         }
 
         public object DoRemoteByURL(string url, params object[] o)
         {
-            return DoRemoteCall(false, url, false, UUID.Zero, o);
+            return DoRemoteCall(false, url, false, UUID.Zero.ToString(), o);
         }
 
         public object DoRemoteByHTTP(string url, params object[] o)
         {
-            return DoRemoteCall(false, url, true, UUID.Zero, o);
+            return DoRemoteCall(false, url, true, UUID.Zero.ToString(), o);
         }
 
-        public object DoRemoteCall(bool forced, string url, bool urlOverrides, UUID userID, params object[] o)
+        public object DoRemoteCall(bool forced, string url, bool urlOverrides, string userID, params object[] o)
         {
             if (!m_doRemoteCalls && !forced)
                 return null;
             StackTrace stackTrace = new StackTrace();
-            int upStack = 1;
-            if (userID == UUID.Zero)
-                upStack = 2;
+            int upStack = 2;
             MethodInfo method;
             CanBeReflected reflection;
             GetReflection(upStack, stackTrace, out method, out reflection);
@@ -219,9 +217,9 @@ namespace Aurora.Framework
             return Util.OSDToObject(response["Value"], method.ReturnType);
         }
 
-        protected virtual List<string> GetURIs(bool urlOverrides, OSDMap map, string url, UUID userID)
+        protected virtual List<string> GetURIs(bool urlOverrides, OSDMap map, string url, string userID)
         {
-            return urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID.ToString(), url, false);
+            return urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID, url, false);
         }
         private void GetReflection(int upStack, StackTrace stackTrace, out MethodInfo method, out CanBeReflected reflection)
         {
@@ -341,13 +339,14 @@ namespace Aurora.Framework
                             if (!methodInfo.Reference.CheckPassword(args["Password"].AsString()))
                                 return MainServer.BadRequest;
                         }
-                        if (methodInfo.Attribute.OnlyCallableIfUserInRegion)
+                        //Doesn't really work yet...
+                        /*if (methodInfo.Attribute.OnlyCallableIfUserInRegion)
                         {
                             UUID userID = args["UserID"].AsUUID();
                             IClientCapsService clientCaps = m_capsService.GetClientCapsService(userID);
                             if (userID == UUID.Zero || clientCaps == null || clientCaps.GetRootCapsService().RegionHandle != ulong.Parse(m_SessionID))
                                 return MainServer.BadRequest;
-                        }
+                        }*/
 
                         ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
                         object[] parameters = new object[paramInfo.Length];

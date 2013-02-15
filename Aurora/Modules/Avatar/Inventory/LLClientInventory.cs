@@ -1709,7 +1709,7 @@ namespace Aurora.Modules.Inventory
                     AddInventoryItem(agentItem);
                 }
             }
-
+            
             IScenePresence avatar;
             if (m_scene.TryGetScenePresence(destID, out avatar))
             {

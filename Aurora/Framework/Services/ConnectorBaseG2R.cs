@@ -62,7 +62,7 @@ namespace Aurora.Framework
                 m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
         }
 
-        protected override List<string> GetURIs(bool urlOverrides, OSDMap map, string url, UUID userID)
+        protected override List<string> GetURIs(bool urlOverrides, OSDMap map, string url, string userID)
         {
             List<string> returnValue = new List<string>();
             if (!map.Keys.Contains("regionID")) return returnValue;

@@ -543,7 +543,7 @@ namespace OpenSim.Services.InventoryService
             return folders[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High, OnlyCallableIfUserInRegion = true)]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
         public virtual InventoryCollection GetFolderContent(UUID UserID, UUID folderID)
         {
             object remoteValue = DoRemote(UserID, folderID);
