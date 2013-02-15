@@ -597,9 +597,15 @@ namespace OpenSim.Services.GridService
                 m_Database.Delete(gregion.RegionID);
 
                 if (online)
+                {
                     region.Flags |= (int)RegionFlags.RegionOnline;
+                    region.Flags |= (int)RegionFlags.Safe;
+                }
                 else
-                    region.Flags &= (int)RegionFlags.RegionOnline;
+                {
+                    region.Flags &= ~(int)RegionFlags.RegionOnline;
+                    region.Flags &= ~(int)RegionFlags.Safe;
+                }
 
                 region.TerrainImage = gregion.TerrainImage;
                 region.TerrainMapImage = gregion.TerrainMapImage;

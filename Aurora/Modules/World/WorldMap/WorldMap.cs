@@ -397,24 +397,52 @@ namespace Aurora.Modules.WorldMap
                         break;
                     List<MapBlockData> mapBlocks = new List<MapBlockData>();
 
-                    List<GridRegion> regions = m_scene.GridService.GetRegionRange(item.remoteClient.AllScopeIDs,
-                            (item.minX - 4) * Constants.RegionSize,
-                            (item.maxX + 4) * Constants.RegionSize,
-                            (item.minY - 4) * Constants.RegionSize,
-                            (item.maxY + 4) * Constants.RegionSize);
-
-                    foreach (GridRegion region in regions)
+                    if (item.minX == item.maxX && item.minY == item.maxY)
                     {
-                        if ((item.mapBlocks & 0) == 0 || (item.mapBlocks & 0x10000) != 0)
-                            mapBlocks.Add(MapBlockFromGridRegion(region));
-                        else if ((item.mapBlocks & 1) == 1)
-                            mapBlocks.Add(TerrainBlockFromGridRegion(region));
-                        else if ((item.mapBlocks & 2) == 2) //V2 viewer, we need to deal with it a bit
-                            mapBlocks.AddRange (Map2BlockFromGridRegion (region));
-                    }
+                        List<GridRegion> regions = m_scene.GridService.GetRegionRange(item.remoteClient.AllScopeIDs,
+                                (item.minX) * Constants.RegionSize,
+                                (item.maxX) * Constants.RegionSize,
+                                (item.minY) * Constants.RegionSize,
+                                (item.maxY) * Constants.RegionSize);
 
-                    item.remoteClient.SendMapBlock(mapBlocks, item.mapBlocks);
-                    Thread.Sleep (5);
+                        foreach (GridRegion region in regions)
+                        {
+                            if ((item.mapBlocks & 0) == 0 || (item.mapBlocks & 0x10000) != 0)
+                                mapBlocks.Add(MapBlockFromGridRegion(region, region.RegionLocX, region.RegionLocY));
+                            else if ((item.mapBlocks & 1) == 1)
+                                mapBlocks.Add(TerrainBlockFromGridRegion(region));
+                            else if ((item.mapBlocks & 2) == 2) //V2 viewer, we need to deal with it a bit
+                                mapBlocks.AddRange(Map2BlockFromGridRegion(region));
+                        }
+                        if (regions.Count == 0)
+                        {
+                            mapBlocks.Add(MapBlockFromGridRegion(null, item.minX, item.minY));
+                        }
+
+                        item.remoteClient.SendMapBlock(mapBlocks, item.mapBlocks);
+                        Thread.Sleep(5);
+                    }
+                    else
+                    {
+                        List<GridRegion> regions = m_scene.GridService.GetRegionRange(item.remoteClient.AllScopeIDs,
+                                (item.minX - 4) * Constants.RegionSize,
+                                (item.maxX + 4) * Constants.RegionSize,
+                                (item.minY - 4) * Constants.RegionSize,
+                                (item.maxY + 4) * Constants.RegionSize);
+
+                        foreach (GridRegion region in regions)
+                        {
+                            if ((item.mapBlocks & 0) == 0 || (item.mapBlocks & 0x10000) != 0)
+                                mapBlocks.Add(MapBlockFromGridRegion(region, region.RegionLocX, region.RegionLocY));
+                            else if ((item.mapBlocks & 1) == 1)
+                                mapBlocks.Add(TerrainBlockFromGridRegion(region));
+                            else if ((item.mapBlocks & 2) == 2) //V2 viewer, we need to deal with it a bit
+                                mapBlocks.AddRange(Map2BlockFromGridRegion(region));
+                        }
+
+                        item.remoteClient.SendMapBlock(mapBlocks, item.mapBlocks);
+                        Thread.Sleep(5);
+                    }
                 }
             }
             catch (Exception)
@@ -422,22 +450,24 @@ namespace Aurora.Modules.WorldMap
             }
             blockRequesterIsRunning = false;
         }
-        
-        protected MapBlockData MapBlockFromGridRegion(GridRegion r)
+
+        protected MapBlockData MapBlockFromGridRegion(GridRegion r, int x, int y)
         {
             MapBlockData block = new MapBlockData();
             if (r == null)
             {
-                block.Access = (byte)SimAccess.Down;
+                block.Access = (byte)SimAccess.NonExistent;
+                block.X = (ushort)x;
+                block.Y = (ushort)y;
                 block.MapImageID = UUID.Zero;
                 return block;
             }
-            block.Access = r.Access;
-            block.MapImageID = r.TerrainImage;
-            if ((r.Access & (byte)SimAccess.Down) == (byte)SimAccess.Down)
-                block.Name = r.RegionName + " (offline)";
+            if ((r.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == (int)Aurora.Framework.RegionFlags.RegionOnline)
+                block.Access = r.Access;
             else
-                block.Name = r.RegionName;
+                block.Access = (byte)OpenMetaverse.SimAccess.Down;
+            block.MapImageID = r.TerrainImage;
+            block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
             block.SizeX = (ushort)r.RegionSizeX;
@@ -457,12 +487,12 @@ namespace Aurora.Modules.WorldMap
                 blocks.Add (block);
                 return blocks;
             }
-            block.Access = r.Access;
-            block.MapImageID = r.TerrainImage;
-            if ((r.Access & (byte)SimAccess.Down) == (byte)SimAccess.Down)
-                block.Name = r.RegionName + " (offline)";
+            if ((r.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == (int)Aurora.Framework.RegionFlags.RegionOnline)
+                block.Access = r.Access;
             else
-                block.Name = r.RegionName;
+                block.Access = (byte)OpenMetaverse.SimAccess.Down;
+            block.MapImageID = r.TerrainImage;
+            block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
             block.SizeX = (ushort)r.RegionSizeX;

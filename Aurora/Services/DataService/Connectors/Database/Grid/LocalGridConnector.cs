@@ -505,10 +505,6 @@ namespace Aurora.Services.DataService
                     map["EstateOwner"] = (!map.ContainsKey("EstateOwner") || map["EstateOwner"].AsUUID() == UUID.Zero) ? OSD.FromUUID(UUID.Parse(query[i + 6])) : map["EstateOwner"];
                     data.FromOSD(map);
 
-                    //Check whether it should be down
-                    if (data.LastSeen > (Util.UnixTimeSinceEpoch() + (1000 * 6)))
-                        data.Access |= (int)SimAccess.Down;
-
                     if (!regionData.Contains(data))
                         regionData.Add(data);
                 }
