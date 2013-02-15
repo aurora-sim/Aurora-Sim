@@ -204,6 +204,20 @@ namespace OpenSim.Services.CapsService
         {
             if (!m_ClientCapsServices.ContainsKey(AgentID))
                 return null;
+            bool disabled = true;
+            foreach (IRegionClientCapsService regionClients in m_ClientCapsServices[AgentID].GetCapsServices())
+            {
+                if (!regionClients.Disabled)
+                {
+                    disabled = false;
+                    break;
+                }
+            }
+            if (disabled)
+            {
+                RemoveCAPS(AgentID);
+                return null;
+            }
             return m_ClientCapsServices[AgentID];
         }
 
