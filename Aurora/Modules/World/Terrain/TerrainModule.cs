@@ -1718,7 +1718,7 @@ namespace Aurora.Modules.Terrain
 
             if (m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, true))
             {
-                InterfaceBakeTerrain(null); //bake terrain does not use the passed in parameter
+                UpdateRevertMap();
             }
         }
 
