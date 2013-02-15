@@ -761,25 +761,19 @@ namespace Aurora.Modules.EntityTransfer
             {
                 if(grp.SitTargetAvatar.Count != 0)
                 {
-                    bool success = false;
                     foreach (UUID avID in grp.SitTargetAvatar)
                     {
                         IScenePresence SP = grp.Scene.GetScenePresence(avID);
                         SP.Velocity = grp.RootChild.PhysActor.Velocity;
                         InternalCross(SP, attemptedPos, false, destination);
-                        success = grp.Scene.GetScenePresence(avID).IsChildAgent;
                     }
-                    if(success)
-                    {
-                        foreach (ISceneChildEntity part in grp.ChildrenEntities())
-                            part.SitTargetAvatar = new List<UUID>();
+                    foreach (ISceneChildEntity part in grp.ChildrenEntities())
+                        part.SitTargetAvatar = new List<UUID>();
 
-                        IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
-                        if(backup != null)
-                            return backup.DeleteSceneObjects(new[] { grp }, false, false);
-                        return true;//They do all the work adding the prim in the other region
-                    }
-                    return false;
+                    IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
+                    if(backup != null)
+                        return backup.DeleteSceneObjects(new[] { grp }, false, false);
+                    return true;//They do all the work adding the prim in the other region
                 }
 
                 SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy(false);
@@ -792,9 +786,6 @@ namespace Aurora.Modules.EntityTransfer
                     // We remove the object here
                     try
                     {
-                        foreach (ISceneChildEntity part in grp.ChildrenEntities())
-                            part.SitTargetAvatar = new List<UUID>();
-
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
                             return backup.DeleteSceneObjects(new[] { grp }, false, true);
@@ -869,33 +860,8 @@ namespace Aurora.Modules.EntityTransfer
             IScene scene = GetScene(regionID);
             if (scene == null)
                 return false;
-            
-            //MainConsole.Instance.Debug(" >>> IncomingCreateObject(sog) <<< " + ((SceneObjectGroup)sog).AbsolutePosition + " deleted? " + ((SceneObjectGroup)sog).IsDeleted);
-            SceneObjectGroup newObject;
-            try
-            {
-                newObject = (SceneObjectGroup)sog;
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.WarnFormat("[EntityTransferModule]: Problem casting object: {0}", e.Message);
-                return false;
-            }
 
-            IAttachmentsModule attachmentsModule = scene.RequestModuleInterface<IAttachmentsModule>();
-            attachmentsModule.AttachObjectFromInworldObject(sog.LocalId, scene.GetScenePresence(sog.OwnerID).ControllingClient, newObject, 0, false);
-            /*newObject.RootPart.IsAttachment = true;
-            newObject.RootPart.AttachedAvatar = sog.OwnerID;
-            newObject.RootPart.AttachmentPoint = 0;
-            if (!AddSceneObject(scene, newObject))
-            {
-                MainConsole.Instance.WarnFormat("[EntityTransferModule]: Problem adding scene object {0} in {1} ", sog.UUID, scene.RegionInfo.RegionName);
-                return false;
-            }
-
-            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, StateSource.PrimCrossing, UUID.Zero, false);*/
-
-            return true;
+            return AddSceneObject(scene, (SceneObjectGroup)sog);
         }
 
         /// <summary>
@@ -934,7 +900,9 @@ namespace Aurora.Modules.EntityTransfer
 
                     return false;
                 }
-                if (scene.SceneGraph.RestorePrimToScene(sceneObject, true))
+
+                sceneObject.IsInTransit = false;//Reset this now that it's entering here
+                if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
                     if(sceneObject.RootPart.IsSelected)
                         sceneObject.RootPart.CreateSelected = true;

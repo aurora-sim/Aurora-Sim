@@ -111,7 +111,7 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore] private Vector3 m_grpOOBsize;
                                     // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
 
-        public bool m_inTransit;
+        public bool IsInTransit { get; set; }
 
         public bool m_isLoaded;
         private UUID m_lastParcelUUID = UUID.Zero;
@@ -4022,7 +4022,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetAbsolutePosition(bool UpdatePrimActor, Vector3 val)
         {
             if (!IsAttachment && RootPart != null && RootPart.Shape != null && Scene != null && Scene.RegionInfo != null &&
-                RootPart.Shape.State == 0)
+                RootPart.Shape.State == 0 && !IsDeleted)
             {
                 IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
                 if ((val.X < 0f || val.Y < 0f || val.Z < 0f ||
@@ -4030,8 +4030,9 @@ namespace OpenSim.Region.Framework.Scenes
                     && !IsAttachmentCheckFull() && (backup != null && !backup.LoadingPrims))
                     //Don't do it when backup is loading prims, otherwise it lags the region out
                 {
-                    if (Scene.RegionInfo.InfiniteRegion)
+                    if (Scene.RegionInfo.InfiniteRegion && !IsInTransit)
                     {
+                        IsInTransit = true;
                         double TargetX = Scene.RegionInfo.RegionLocX + (double) val.X;
                         double TargetY = Scene.RegionInfo.RegionLocY + (double) val.Y;
                         if (m_lastSigInfiniteRegionPos.X - AbsolutePosition.X > 256 ||
@@ -4077,18 +4078,19 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 if (transferModule.CrossGroupToNewRegion(this, val, neighborRegion))
                                 {
-                                    m_inTransit = false;
+                                    IsInTransit = false;
                                     return;
                                 }
                             }
                         }
+                        IsInTransit = false;
                         return;
                     }
                     //If we are headed out of the region, make sure we have a region there
                     IGridRegisterModule neighborService = Scene.RequestModuleInterface<IGridRegisterModule>();
-                    if (neighborService != null && !m_inTransit)
+                    if (neighborService != null && !IsInTransit)
                     {
-                        m_inTransit = true;
+                        IsInTransit = true;
                         List<GridRegion> neighbors = neighborService.GetNeighbors(Scene);
 
                         int RegionCrossX = Scene.RegionInfo.RegionLocX;
@@ -4102,19 +4104,7 @@ namespace OpenSim.Region.Framework.Scenes
                             RegionCrossX += Scene.RegionInfo.RegionSizeX;
                         if (val.Y > Scene.RegionInfo.RegionSizeY)
                             RegionCrossY += Scene.RegionInfo.RegionSizeY;
-#if (!ISWIN)
-                        GridRegion neighborRegion = null;
-                        foreach (GridRegion region in neighbors)
-                        {
-                            if (region.RegionLocX == RegionCrossX && region.RegionLocY == RegionCrossY)
-                            {
-                                neighborRegion = region;
-                                break;
-                            }
-                        }
-#else
                         GridRegion neighborRegion = neighbors.FirstOrDefault(region => region.RegionLocX == RegionCrossX && region.RegionLocY == RegionCrossY);
-#endif
 
                         if (neighborRegion != null)
                         {
@@ -4134,11 +4124,12 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 if (transferModule.CrossGroupToNewRegion(this, val, neighborRegion))
                                 {
-                                    m_inTransit = false;
+                                    IsInTransit = false;
                                     return;
                                 }
                             }
                         }
+                        IsInTransit = false;
                         //The group should have crossed a region, but no region was found so return it instead
                         MainConsole.Instance.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition +
                                    " because it has gone out of bounds.");
