@@ -43,6 +43,8 @@ namespace Aurora.Framework
 
         void RemoveAllScriptControllers(ISceneChildEntity part);
 
+        void HandleForceReleaseControls(IClientAPI remoteClient, UUID agentID);
+
         ControllerData[] Serialize();
 
         void Deserialize(ControllerData[] controllerData);

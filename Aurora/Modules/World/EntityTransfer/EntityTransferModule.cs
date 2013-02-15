@@ -220,6 +220,7 @@ namespace Aurora.Modules.EntityTransfer
                         position, sp.Scene.RegionInfo.RegionName);
 
                     sp.ControllingClient.SendLocalTeleport(position, lookAt, teleportFlags);
+                    sp.RequestModuleInterface<IScriptControllerModule>().HandleForceReleaseControls(sp.ControllingClient, sp.UUID);
                     sp.Teleport(position);
                 }
                 else // Another region possibly in another simulator
