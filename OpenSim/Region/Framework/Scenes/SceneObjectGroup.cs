@@ -2621,6 +2621,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Scene.AuroraEventManager.FireGenericEventHandler("ObjectChangedPhysicalStatus", this);
                 if (OnFinishedPhysicalRepresentationBuilding != null)
                     OnFinishedPhysicalRepresentationBuilding();
+                OnFinishedPhysicalRepresentationBuilding = null;
                 return;
             }
 
@@ -2715,6 +2716,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (OnFinishedPhysicalRepresentationBuilding != null)
                 OnFinishedPhysicalRepresentationBuilding();
+            OnFinishedPhysicalRepresentationBuilding = null;
         }
 
 /*
