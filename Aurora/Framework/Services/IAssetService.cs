@@ -135,6 +135,6 @@ namespace OpenSim.Services.Interfaces
         bool ExistsAsset(UUID uuid);
         bool Delete(UUID id);
         bool Delete(UUID id, bool ignoreFlags);
-        List<string> GetAssetUUIDs();
+        List<string> GetAssetUUIDs(uint? start, uint? count);
     }
 }

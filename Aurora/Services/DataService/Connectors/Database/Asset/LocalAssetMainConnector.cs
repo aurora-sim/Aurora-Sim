@@ -44,9 +44,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return GetAsset(uuid, true);
         }
 
-        public List<string> GetAssetUUIDs()
+        public List<string> GetAssetUUIDs(uint? start, uint? count)
         {
-            return m_Gd.Query(new string[1] {"id"}, "assets", null, null, null, null);
+            return m_Gd.Query(new string[1] {"id"}, "assets", null, null, start, count);
         }
 
         public AssetBase GetMeta(UUID uuid)

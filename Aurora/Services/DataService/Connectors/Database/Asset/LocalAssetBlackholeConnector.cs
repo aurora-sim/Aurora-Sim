@@ -176,7 +176,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return GetAsset(uuid, false, true);
         }
 
-        public List<string> GetAssetUUIDs()
+        public List<string> GetAssetUUIDs(uint? start, uint? count)
         {
             return new List<string>();
         }
