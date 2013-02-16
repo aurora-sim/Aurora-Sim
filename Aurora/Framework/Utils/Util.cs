@@ -91,6 +91,7 @@ namespace Aurora.Framework
         ///   FireAndForgetMethod.SmartThreadPool is used
         /// </summary>
         private static SmartThreadPool m_ThreadPool;
+        private static volatile bool m_threadPoolRunning;
 
         // Unix-epoch starts at January 1st 1970, 00:00:00 UTC. And all our times in the server are (or at least should be) in UTC.
         public static readonly DateTime UnixEpoch =
@@ -101,7 +102,6 @@ namespace Aurora.Framework
             = new Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
         public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.SmartThreadPool;
-        private static volatile bool m_threadPoolRunning;
 
         public static string ConvertToString(List<string> list)
         {

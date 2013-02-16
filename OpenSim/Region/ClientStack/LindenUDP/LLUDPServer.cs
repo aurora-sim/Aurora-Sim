@@ -38,6 +38,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Region.Framework.Interfaces;
+using Amib.Threading;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
@@ -197,6 +198,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if(networkConfig != null)
                 IPAddress.TryParse(networkConfig.GetString("internal_ip", "0.0.0.0"), out internalIP);
 
+            InitThreadPool(15);
+
             base.Initialise(internalIP, port);
 
             #region Environment.TickCount Measurement
@@ -305,6 +308,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             incomingPacketMonitor.Stop();
             outgoingPacketMonitor.Stop();
             base.Stop();
+            CloseThreadPool();
         }
 
         public IClientNetworkServer Copy()
@@ -335,6 +339,46 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         #endregion
+
+        private Amib.Threading.SmartThreadPool m_ThreadPool;
+        private volatile bool m_threadPoolRunning;
+        public void FireAndForget(Action<object> callback, object obj)
+        {
+            if (m_ThreadPool == null)
+                InitThreadPool(15);
+            if (m_threadPoolRunning) //Check if the thread pool should be running
+                m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new[] { callback, obj });
+        }
+
+        private static object SmartThreadPoolCallback(object o)
+        {
+            object[] array = (object[])o;
+            Action<object> callback = (Action<object>)array[0];
+            object obj = array[1];
+
+            callback(obj);
+            return null;
+        }
+
+        public void CloseThreadPool()
+        {
+            if (m_threadPoolRunning)
+            {
+                //This stops more tasks and threads from being started
+                m_threadPoolRunning = false;
+                m_ThreadPool.WaitForIdle(60 * 1000);
+                //Wait for the threads to be idle, but don't wait for more than a minute
+                //Destroy the threadpool now
+                m_ThreadPool.Dispose();
+                m_ThreadPool = null;
+            }
+        }
+
+        public void InitThreadPool(int maxThreads)
+        {
+            m_threadPoolRunning = true;
+            m_ThreadPool = new SmartThreadPool(2000, maxThreads, 2);
+        }
 
         public void BroadcastPacket(Packet packet, ThrottleOutPacketType category, bool sendToPausedAgents,
                                     bool allowSplitting, UnackedPacketMethod resendMethod,
