@@ -30,6 +30,7 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -134,5 +135,6 @@ namespace OpenSim.Services.Interfaces
         bool ExistsAsset(UUID uuid);
         bool Delete(UUID id);
         bool Delete(UUID id, bool ignoreFlags);
+        List<string> GetAssetUUIDs();
     }
 }

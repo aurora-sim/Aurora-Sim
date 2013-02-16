@@ -56,10 +56,13 @@ namespace Aurora.Services.DataService
 
                 DataManager.DataManager.RegisterPlugin(this);
 
-                MainConsole.Instance.Commands.AddCommand("fix missing region owner", "fix missing region owner", "Attempts to fix missing region owners in the database.", delegate(string[] cmd)
+                if (MainConsole.Instance != null)
                 {
-                    FixMissingRegionOwners();
-                });
+                    MainConsole.Instance.Commands.AddCommand("fix missing region owner", "fix missing region owner", "Attempts to fix missing region owners in the database.", delegate(string[] cmd)
+                    {
+                        FixMissingRegionOwners();
+                    });
+                }
             }
         }
 

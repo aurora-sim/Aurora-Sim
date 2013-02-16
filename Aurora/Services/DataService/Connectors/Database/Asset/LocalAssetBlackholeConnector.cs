@@ -176,6 +176,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return GetAsset(uuid, false, true);
         }
 
+        public List<string> GetAssetUUIDs()
+        {
+            return new List<string>();
+        }
+
         /// <summary>
         ///   Get a asset without the actual data. You can always use MetaOnly Property to deterine if its there
         /// </summary>
