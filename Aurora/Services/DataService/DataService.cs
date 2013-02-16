@@ -88,7 +88,8 @@ namespace Aurora.Services.DataService
                 }
                 catch(Exception ex)
                 {
-                    MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                    if (MainConsole.Instance != null)
+                        MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
                 }
             }
         }
