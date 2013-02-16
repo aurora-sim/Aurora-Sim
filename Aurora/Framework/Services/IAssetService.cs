@@ -65,6 +65,13 @@ namespace OpenSim.Services.Interfaces
         AssetBase Get(string id);
 
         /// <summary>
+        ///   Get a mesh asset synchronously.
+        /// </summary>
+        /// <param name = "id"></param>
+        /// <returns></returns>
+        AssetBase GetMesh(string id);
+
+        /// <summary>
         ///   Get whether an asset with the given ID exists
         /// </summary>
         /// <param name = "id"></param>

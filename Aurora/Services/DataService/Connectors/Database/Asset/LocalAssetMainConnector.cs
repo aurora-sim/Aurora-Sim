@@ -60,11 +60,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     return LoadAssetFromDataRead(dr.DataReader);
                 }
-                MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetMeta({0}) - Asset was not found.", uuid);
+                if(MainConsole.Instance != null)
+                    MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetMeta({0}) - Asset was not found.", uuid);
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
             }
             finally
             {
@@ -92,13 +94,15 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     AssetBase oldAsset = GetAsset(asset.ID);
                     if (oldAsset == null || (oldAsset.Flags & AssetFlags.Rewritable) == AssetFlags.Rewritable)
                     {
-                        MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
+                        if (MainConsole.Instance != null)
+                            MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
                         Delete(asset.ID, true);
                         InsertAsset(asset, asset.ID);
                     }
                     else
                     {
-                        MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
+                        if (MainConsole.Instance != null)
+                            MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
                         InsertAsset(asset, UUID.Random());
                     }
                 }
@@ -109,7 +113,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat("[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.ErrorFormat("[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
                                   asset.ID, asset.Name, e);
             }
             return true;
@@ -137,7 +142,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e);
+                    if (MainConsole.Instance != null)
+                        MainConsole.Instance.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e);
                 }
                 newID = id;
             }
@@ -178,7 +184,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat("[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e, uuid);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.ErrorFormat("[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e, uuid);
             }
             return false;
         }
@@ -199,12 +206,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     return LoadAssetFromDataRead(dr.DataReader);
                 }
-                if (displaywarning)
+                if (displaywarning && MainConsole.Instance != null)
                     MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetAsset({0}) - Asset was not found.", uuid);
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
             }
             finally
             {
@@ -221,11 +229,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "data");
                 if (dr != null)
                     return (byte[])dr.DataReader["data"];
-                MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetData({0}) - Asset was not found.", uuid);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetData({0}) - Asset was not found.", uuid);
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
             }
             finally
             {
@@ -256,7 +266,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[LocalAssetDatabase] Error while deleting asset " + e);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Error("[LocalAssetDatabase] Error while deleting asset " + e);
             }
             return true;
         }
@@ -295,7 +306,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             {
                 asset.MetaOnly = true;
                 asset.Data = new byte[0];
-                MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to cast data for " + asset.ID + ", " + ex);
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to cast data for " + asset.ID + ", " + ex);
             }
 
             if (dr["local"].ToString().Equals("1") ||

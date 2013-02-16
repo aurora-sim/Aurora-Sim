@@ -138,7 +138,7 @@ namespace OpenSim.Services.CapsService
         /// <returns>False for "caller try another codec"; true otherwise</returns>
         private bool FetchTexture(OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID textureID, string format, out byte[] response)
         {
-            MainConsole.Instance.DebugFormat("[GETTEXTURE]: {0} with requested format {1}", textureID, format);
+            //MainConsole.Instance.DebugFormat("[GETTEXTURE]: {0} with requested format {1}", textureID, format);
             AssetBase texture;
 
             string fullID = textureID.ToString();
@@ -510,7 +510,7 @@ namespace OpenSim.Services.CapsService
                 }
                 else
                 {
-                    mesh = m_assetService.Get(meshID.ToString());
+                    mesh = m_assetService.GetMesh(meshID.ToString());
                     if (mesh != null)
                     {
                         if (mesh.Type == (SByte)AssetType.Mesh)

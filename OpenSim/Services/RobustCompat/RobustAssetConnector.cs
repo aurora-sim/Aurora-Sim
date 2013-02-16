@@ -85,6 +85,11 @@ namespace OpenSim.Services.Robust
             m_Cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
         }
 
+        public Aurora.Framework.AssetBase GetMesh(string id)
+        {
+            return Get(id);
+        }
+
         public Aurora.Framework.AssetBase Get(string id)
         {
             Aurora.Framework.AssetBase asset = null;
