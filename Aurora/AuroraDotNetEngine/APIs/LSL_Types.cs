@@ -2125,12 +2125,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 return f1.value == f2.value;
             }
-#endif
 
             static public bool operator !=(LSLFloat f1, LSLFloat f2)
             {
                 return f1.value != f2.value;
             }
+#endif
 
             static public LSLFloat operator ++(LSLFloat f)
             {
