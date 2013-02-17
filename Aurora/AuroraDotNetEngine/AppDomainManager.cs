@@ -203,7 +203,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
             AppDomain restrictedDomain = null;
 
-#if NET_3_5
+#if NET_3_5 || LINUX
 
             PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));
             UnionCodeGroup policyRoot = new UnionCodeGroup(new AllMembershipCondition(), emptyPolicy);
