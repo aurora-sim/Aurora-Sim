@@ -93,5 +93,57 @@ namespace Aurora.Services.DataService
                 }
             }
         }
+
+        public void Initialise<T>(IConfigSource source, IRegistryCore simBase) where T : IAuroraDataPlugin
+        {
+            IConfig m_config = source.Configs["AuroraData"];
+            if (m_config != null)
+            {
+                StorageProvider = m_config.GetString("StorageProvider", StorageProvider);
+                ConnectionString = m_config.GetString("ConnectionString", ConnectionString);
+            }
+
+            IGenericData DataConnector = null;
+            if (StorageProvider == "MySQL")
+            //Allow for fallback when AuroraData isn't set
+            {
+                MySQLDataLoader GenericData = new MySQLDataLoader();
+
+                DataConnector = GenericData;
+            }
+            /*else if (StorageProvider == "MSSQL2008")
+            {
+                MSSQLDataLoader GenericData = new MSSQLDataLoader();
+
+                DataConnector = GenericData;
+            }
+            else if (StorageProvider == "MSSQL7")
+            {
+                MSSQLDataLoader GenericData = new MSSQLDataLoader();
+
+                DataConnector = GenericData;
+            }*/
+            else if (StorageProvider == "SQLite")
+            //Allow for fallback when AuroraData isn't set
+            {
+                SQLiteLoader GenericData = new SQLiteLoader();
+
+                DataConnector = GenericData;
+            }
+
+            List<T> Plugins = AuroraModuleLoader.PickupModules<T>();
+            foreach (T plugin in Plugins)
+            {
+                try
+                {
+                    plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
+                }
+                catch (Exception ex)
+                {
+                    if (MainConsole.Instance != null)
+                        MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                }
+            }
+        }
     }
 }
