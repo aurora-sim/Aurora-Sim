@@ -286,6 +286,7 @@
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
+      <Reference name="Aurora.Management"/>
 
       <Reference name="DotNetOpenMail" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
@@ -835,7 +836,6 @@
       <Reference name="System.Web"/>
 
       <Reference name="Aurora.Framework"/>
-	  <Reference name="Aurora.Simulation.Base"/>
 	  
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>

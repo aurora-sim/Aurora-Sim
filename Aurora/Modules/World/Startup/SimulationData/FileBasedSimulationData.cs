@@ -134,10 +134,9 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             if (info == null)
             {
             retry:
-                RegionManager manager = Aurora.Management.RegionManager.StartSynchronously(true,
+                info = Aurora.Management.RegionManagerHelper.StartSynchronously(true,
                     Management.RegionManagerPage.CreateRegion,
                     simBase.ConfigSource, simBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), null);
-                info = manager.RegionInfo;
                 if (info == null)
                     goto retry;
                 newRegion = true;

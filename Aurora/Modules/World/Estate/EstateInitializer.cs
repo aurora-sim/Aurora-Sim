@@ -217,7 +217,7 @@ namespace Aurora.Modules.Estate
                         ES = CreateEstateInfo(scene);
                     else
                     {
-                        Aurora.Management.RegionManager.StartSynchronously(true,
+                        Aurora.Management.RegionManagerHelper.StartSynchronously(true,
                             Management.RegionManagerPage.EstateSetup, source,
                             openSimBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), scene.RegionInfo);
                         FinishStartup(scene, source, openSimBase);

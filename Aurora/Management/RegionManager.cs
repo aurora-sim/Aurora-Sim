@@ -63,42 +63,6 @@ namespace Aurora.Management
             set;
         }
 
-        public static void StartAsynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement, RegionInfo startingRegionInfo)
-        {
-            Thread t = new Thread(delegate()
-            {
-                try
-                {
-                    RegionManager manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement, startingRegionInfo);
-                    Application.Run(manager);
-                }
-                catch { }
-            });
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start();
-        }
-
-        public static RegionManager StartSynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement, RegionInfo startingRegionInfo)
-        {
-            RegionManager manager = null;
-            bool done = false;
-            Thread t = new Thread(delegate()
-                {
-                    try
-                    {
-                        manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement, startingRegionInfo);
-                        Application.Run(manager);
-                        done = true;
-                    }
-                    catch { done = true; }
-                });
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start();
-            while (!done)
-                Thread.Sleep(100);
-            return manager;
-        }
-
         public RegionManager(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement, RegionInfo startingRegionInfo)
         {
             _regionManager = regionManagement;
@@ -576,5 +540,44 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
     {
         CreateRegion,
         EstateSetup
+    }
+
+    public class RegionManagerHelper
+    {
+        public static void StartAsynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement, RegionInfo startingRegionInfo)
+        {
+            Thread t = new Thread(delegate()
+            {
+                try
+                {
+                    RegionManager manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement, startingRegionInfo);
+                    Application.Run(manager);
+                }
+                catch { }
+            });
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+        }
+
+        public static RegionInfo StartSynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement, RegionInfo startingRegionInfo)
+        {
+            RegionManager manager = null;
+            bool done = false;
+            Thread t = new Thread(delegate()
+            {
+                try
+                {
+                    manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement, startingRegionInfo);
+                    Application.Run(manager);
+                    done = true;
+                }
+                catch { done = true; }
+            });
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+            while (!done)
+                Thread.Sleep(100);
+            return manager.RegionInfo;
+        }
     }
 }
