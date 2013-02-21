@@ -8,4 +8,9 @@
 [Configuration]
     ;;
     ;; Change this to your grid-wide grid server
-    RegistrationURI = "http://127.0.0.1:8003"
+    ServerURI = "http://127.0.0.1:8003/server/"
+    GridServerURI = "http://127.0.0.1:8004/grid/"
+    MessagingServerURI = "http://127.0.0.1:8003/messaging/"   
+    AssetServerURI = "http://127.0.0.1:8005/asset/"
+    InventoryServerURI = "http://127.0.0.1:8006/inventory/"
+    UserAccountServerURI = "http://127.0.0.1:8007/user/"

@@ -26,7 +26,18 @@
     SimulationHandler = SimulationServiceConnector
     UserAccountHandler = UserAccountService
 
-    RegistrationHandlerPort = 8003
+    GridServiceOpenServerHandler = true
+    GridServiceServerHandlerPort = 8004
+
+    AssetServiceOpenServerHandler = true
+    AssetServiceServerHandlerPort = 8005
+
+    InventoryServiceOpenServerHandler = true
+    InventoryServiceServerHandlerPort = 8006
+
+    UserAccountServiceOpenServerHandler = true
+    UserAccountServiceServerHandlerPort = 8007
+
     LLLoginHandlerPort = 8002
 
 [AuroraConnectors]
@@ -100,3 +111,14 @@
     BackupCacheDirector = "C:\aurora\admin\BHAssetsBackup\"
     AssetsAreOldAfterHowManyDays = 30
     PointInventoryToParentAssets = true
+
+[RedisConnection]
+	;; If you're running this on the same computer as Aurora.Server, 
+	;;  and you haven't changed the port for it, leave this alone
+	ConnectionString = localhost:6379
+	
+	;; If you've set a password (which is recommended) on Redis server, 
+	;;  set it here
+	;ConnectionPassword =
+	
+	DoConversion = true
