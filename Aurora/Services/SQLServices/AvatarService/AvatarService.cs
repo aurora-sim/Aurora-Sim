@@ -32,9 +32,8 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenMetaverse.StructuredData;
 using OpenSim.Services.Interfaces;
-using log4net.Core;
 
-namespace OpenSim.Services.AvatarService
+namespace Aurora.Services.SQLServices.AvatarService
 {
     public class AvatarService : ConnectorBase, IAvatarService, IService
     {
@@ -71,12 +70,12 @@ namespace OpenSim.Services.AvatarService
                 MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]",
                                                          "Resets the given avatar's appearance to the default",
                                                          ResetAvatarAppearance);
-            Init(registry, Name);
+            Init(registry, Name, serverPath: "/avatar/");
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_Database = DataManager.RequestPlugin<IAvatarData>();
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAvatarData>();
             registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);
         }
 
@@ -131,7 +130,7 @@ namespace OpenSim.Services.AvatarService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AvatarData GetAvatar(UUID principalID)
         {
-            object remoteValue = DoRemote(principalID);
+            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (AvatarData)remoteValue;
 
@@ -141,7 +140,7 @@ namespace OpenSim.Services.AvatarService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool SetAvatar(UUID principalID, AvatarData avatar)
         {
-            object remoteValue = DoRemote(principalID, avatar);
+            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID, avatar);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
@@ -212,7 +211,7 @@ namespace OpenSim.Services.AvatarService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool ResetAvatar(UUID principalID)
         {
-            object remoteValue = DoRemote(principalID);
+            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 

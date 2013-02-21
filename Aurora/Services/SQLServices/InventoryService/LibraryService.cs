@@ -29,8 +29,6 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 
-using log4net.Core;
-
 using Nini.Ini;
 using Nini.Config;
 
@@ -40,7 +38,7 @@ using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 
-namespace OpenSim.Services.InventoryService
+namespace Aurora.Services.SQLServices.InventoryService
 {
     /// <summary>
     ///   Basically a hack to give us a Inventory library while we don't have a inventory server

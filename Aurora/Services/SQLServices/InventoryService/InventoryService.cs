@@ -37,7 +37,7 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.InventoryService
+namespace Aurora.Services.SQLServices.InventoryService
 {
     public class InventoryService : ConnectorBase, IInventoryService, IService
     {
@@ -80,7 +80,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_Database = DataManager.RequestPlugin<IInventoryData>();
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_AssetService = registry.RequestModuleInterface<IAssetService>();

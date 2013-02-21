@@ -34,7 +34,7 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.AssetService
+namespace Aurora.Services.SQLServices.AssetService
 {
     public class AssetService : ConnectorBase, IAssetService, IService
     {
@@ -65,7 +65,7 @@ namespace OpenSim.Services.AssetService
         {
             m_registry = registry;
 
-            m_database = DataManager.RequestPlugin<IAssetDataPlugin>();
+            m_database = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
             if (m_database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 

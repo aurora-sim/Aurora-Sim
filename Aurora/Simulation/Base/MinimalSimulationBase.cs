@@ -94,8 +94,6 @@ namespace Aurora.Simulation.Base
             get { return m_StartupTime; }
         }
 
-        protected List<IApplicationPlugin> m_applicationPlugins = new List<IApplicationPlugin>();
-
         public IHttpServer HttpServer
         {
             get { return m_BaseHTTPServer; }
@@ -212,7 +210,7 @@ namespace Aurora.Simulation.Base
 
         public virtual ISimulationBase Copy()
         {
-            return new SimulationBase();
+            return new MinimalSimulationBase<S,T>(m_consolePrompt);
         }
 
         /// <summary>
@@ -426,8 +424,6 @@ namespace Aurora.Simulation.Base
         {
             //Rebuild the configs
             m_config = m_configurationLoader.LoadConfigSettings (m_original_config);
-            foreach (IApplicationPlugin plugin in m_applicationPlugins)
-                plugin.ReloadConfiguration(m_config);
 
             string hostName =
                 m_config.Configs["Network"].GetString("HostName", "http://127.0.0.1");

@@ -39,7 +39,7 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using RegionFlags = Aurora.Framework.RegionFlags;
 
-namespace OpenSim.Services.GridService
+namespace Aurora.Services.SQLServices.GridService
 {
     public class GridService : ConnectorBase, IGridService, IService
     {
@@ -128,7 +128,7 @@ namespace OpenSim.Services.GridService
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
             m_registryCore = registry;
-            m_Database = DataManager.RequestPlugin<IRegionData>();
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
 
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");

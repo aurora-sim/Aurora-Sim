@@ -34,10 +34,9 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Connectors;
 using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.UserAccountService
+namespace Aurora.Services.SQLServices.UserAccountService
 {
     public class UserAccountService : ConnectorBase, IUserAccountService, IService
     {
@@ -108,7 +107,7 @@ namespace OpenSim.Services.UserAccountService
             m_GridService = registry.RequestModuleInterface<IGridService>();
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
-            m_Database = DataManager.RequestPlugin<IUserAccountData>();
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
         }
