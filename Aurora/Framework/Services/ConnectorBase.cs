@@ -205,6 +205,8 @@ namespace Aurora.Framework
                     return null;
                 else if (method.ReturnType == typeof(System.Drawing.Image))
                     inst = null;
+                else if (method.ReturnType == typeof(byte[]))
+                    return response["Value"].AsBinary();
                 else
                     inst = Activator.CreateInstance(method.ReturnType);
             }

@@ -56,50 +56,6 @@ namespace Aurora.Management
         private void InitializeComponent()
         {
             this.label14 = new System.Windows.Forms.Label();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label16 = new System.Windows.Forms.Label();
-            this.RegionSelections = new System.Windows.Forms.ComboBox();
-            this.label15 = new System.Windows.Forms.Label();
-            this.RegionSelectionsPicture = new System.Windows.Forms.PictureBox();
-            this.Create = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.cInfiniteRegion = new System.Windows.Forms.CheckBox();
-            this.button19 = new System.Windows.Forms.Button();
-            this.label39 = new System.Windows.Forms.Label();
-            this.CStartupType = new System.Windows.Forms.ListBox();
-            this.button18 = new System.Windows.Forms.Button();
-            this.label37 = new System.Windows.Forms.Label();
-            this.button14 = new System.Windows.Forms.Button();
-            this.CRegionSizeY = new System.Windows.Forms.TextBox();
-            this.label33 = new System.Windows.Forms.Label();
-            this.button15 = new System.Windows.Forms.Button();
-            this.CRegionSizeX = new System.Windows.Forms.TextBox();
-            this.label34 = new System.Windows.Forms.Label();
-            this.DisabledCreate = new System.Windows.Forms.CheckBox();
-            this.button11 = new System.Windows.Forms.Button();
-            this.button10 = new System.Windows.Forms.Button();
-            this.button9 = new System.Windows.Forms.Button();
-            this.button6 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
-            this.RName = new System.Windows.Forms.TextBox();
-            this.label12 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.LocX = new System.Windows.Forms.TextBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.Maturity = new System.Windows.Forms.ListBox();
-            this.LocY = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.ObjectCount = new System.Windows.Forms.TextBox();
-            this.Port = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.Type = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.button20 = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
@@ -109,15 +65,8 @@ namespace Aurora.Management
             this.takeOffline = new System.Windows.Forms.Button();
             this.RegionStatus = new System.Windows.Forms.TextBox();
             this.label38 = new System.Windows.Forms.Label();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.ExportFileName = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.Export = new System.Windows.Forms.Button();
-            this.RegionListBox = new System.Windows.Forms.ListBox();
-            this.SearchForRegionByName = new System.Windows.Forms.Button();
-            this.label31 = new System.Windows.Forms.Label();
-            this.RegionToFind = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.einfiniteRegion = new System.Windows.Forms.CheckBox();
             this.button13 = new System.Windows.Forms.Button();
             this.label17 = new System.Windows.Forms.Label();
@@ -169,18 +118,12 @@ namespace Aurora.Management
             this.label8 = new System.Windows.Forms.Label();
             this.createNewEstate = new System.Windows.Forms.Button();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.find_user = new System.Windows.Forms.Button();
             this.estateOwnerLookupSearch = new System.Windows.Forms.Button();
             this.estateOwnerName = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.estateRegionSelection = new System.Windows.Forms.ListBox();
-            this.find_user = new System.Windows.Forms.Button();
-            this.tabPage2.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).BeginInit();
-            this.groupBox1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox5.SuspendLayout();
-            this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage3.SuspendLayout();
@@ -200,463 +143,10 @@ namespace Aurora.Management
             this.label14.TabIndex = 26;
             this.label14.Text = "Aurora Region Manager";
             // 
-            // tabPage2
-            // 
-            this.tabPage2.Controls.Add(this.groupBox2);
-            this.tabPage2.Controls.Add(this.Create);
-            this.tabPage2.Controls.Add(this.groupBox1);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(654, 418);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Create new region";
-            this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Controls.Add(this.label16);
-            this.groupBox2.Controls.Add(this.RegionSelections);
-            this.groupBox2.Controls.Add(this.label15);
-            this.groupBox2.Controls.Add(this.RegionSelectionsPicture);
-            this.groupBox2.Location = new System.Drawing.Point(377, 8);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(265, 284);
-            this.groupBox2.TabIndex = 28;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Region Settings";
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(6, 61);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(130, 13);
-            this.label16.TabIndex = 3;
-            this.label16.Text = "Default Region Selections";
-            // 
-            // RegionSelections
-            // 
-            this.RegionSelections.FormattingEnabled = true;
-            this.RegionSelections.Location = new System.Drawing.Point(138, 58);
-            this.RegionSelections.Name = "RegionSelections";
-            this.RegionSelections.Size = new System.Drawing.Size(121, 21);
-            this.RegionSelections.TabIndex = 2;
-            this.RegionSelections.SelectedIndexChanged += new System.EventHandler(this.RegionSelections_SelectedIndexChanged);
-            // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(6, 29);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(105, 13);
-            this.label15.TabIndex = 1;
-            this.label15.Text = "Default Region Look";
-            // 
-            // RegionSelectionsPicture
-            // 
-            this.RegionSelectionsPicture.Location = new System.Drawing.Point(6, 88);
-            this.RegionSelectionsPicture.Name = "RegionSelectionsPicture";
-            this.RegionSelectionsPicture.Size = new System.Drawing.Size(253, 190);
-            this.RegionSelectionsPicture.TabIndex = 0;
-            this.RegionSelectionsPicture.TabStop = false;
-            // 
-            // Create
-            // 
-            this.Create.Location = new System.Drawing.Point(515, 301);
-            this.Create.Name = "Create";
-            this.Create.Size = new System.Drawing.Size(127, 23);
-            this.Create.TabIndex = 1;
-            this.Create.Text = "Create my Region!";
-            this.Create.UseVisualStyleBackColor = true;
-            this.Create.Click += new System.EventHandler(this.CreateNewRegion);
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.cInfiniteRegion);
-            this.groupBox1.Controls.Add(this.button19);
-            this.groupBox1.Controls.Add(this.label39);
-            this.groupBox1.Controls.Add(this.CStartupType);
-            this.groupBox1.Controls.Add(this.button18);
-            this.groupBox1.Controls.Add(this.label37);
-            this.groupBox1.Controls.Add(this.button14);
-            this.groupBox1.Controls.Add(this.CRegionSizeY);
-            this.groupBox1.Controls.Add(this.label33);
-            this.groupBox1.Controls.Add(this.button15);
-            this.groupBox1.Controls.Add(this.CRegionSizeX);
-            this.groupBox1.Controls.Add(this.label34);
-            this.groupBox1.Controls.Add(this.DisabledCreate);
-            this.groupBox1.Controls.Add(this.button11);
-            this.groupBox1.Controls.Add(this.button10);
-            this.groupBox1.Controls.Add(this.button9);
-            this.groupBox1.Controls.Add(this.button6);
-            this.groupBox1.Controls.Add(this.button4);
-            this.groupBox1.Controls.Add(this.button3);
-            this.groupBox1.Controls.Add(this.button2);
-            this.groupBox1.Controls.Add(this.button1);
-            this.groupBox1.Controls.Add(this.RName);
-            this.groupBox1.Controls.Add(this.label12);
-            this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Controls.Add(this.LocX);
-            this.groupBox1.Controls.Add(this.label11);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.Maturity);
-            this.groupBox1.Controls.Add(this.LocY);
-            this.groupBox1.Controls.Add(this.label10);
-            this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.ObjectCount);
-            this.groupBox1.Controls.Add(this.Port);
-            this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.Type);
-            this.groupBox1.Controls.Add(this.label7);
-            this.groupBox1.Location = new System.Drawing.Point(9, 6);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(362, 405);
-            this.groupBox1.TabIndex = 27;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Region Info";
-            // 
-            // cInfiniteRegion
-            // 
-            this.cInfiniteRegion.AutoSize = true;
-            this.cInfiniteRegion.Location = new System.Drawing.Point(247, 266);
-            this.cInfiniteRegion.Name = "cInfiniteRegion";
-            this.cInfiniteRegion.Size = new System.Drawing.Size(15, 14);
-            this.cInfiniteRegion.TabIndex = 66;
-            this.cInfiniteRegion.UseVisualStyleBackColor = true;
-            // 
-            // button19
-            // 
-            this.button19.Location = new System.Drawing.Point(84, 263);
-            this.button19.Name = "button19";
-            this.button19.Size = new System.Drawing.Size(21, 20);
-            this.button19.TabIndex = 65;
-            this.button19.Text = "?";
-            this.button19.UseVisualStyleBackColor = true;
-            this.button19.Click += new System.EventHandler(this.InfiniteRegion_Click);
-            // 
-            // label39
-            // 
-            this.label39.AutoSize = true;
-            this.label39.Location = new System.Drawing.Point(6, 267);
-            this.label39.Name = "label39";
-            this.label39.Size = new System.Drawing.Size(75, 13);
-            this.label39.TabIndex = 64;
-            this.label39.Text = "Infinite Region";
-            // 
-            // CStartupType
-            // 
-            this.CStartupType.FormattingEnabled = true;
-            this.CStartupType.Items.AddRange(new object[] {
-            "Normal",
-            "Medium",
-            "Soft"});
-            this.CStartupType.Location = new System.Drawing.Point(247, 286);
-            this.CStartupType.Name = "CStartupType";
-            this.CStartupType.Size = new System.Drawing.Size(100, 30);
-            this.CStartupType.TabIndex = 63;
-            // 
-            // button18
-            // 
-            this.button18.Location = new System.Drawing.Point(75, 291);
-            this.button18.Name = "button18";
-            this.button18.Size = new System.Drawing.Size(21, 20);
-            this.button18.TabIndex = 61;
-            this.button18.Text = "?";
-            this.button18.UseVisualStyleBackColor = true;
-            this.button18.Click += new System.EventHandler(this.startupType_Click);
-            // 
-            // label37
-            // 
-            this.label37.AutoSize = true;
-            this.label37.Location = new System.Drawing.Point(6, 295);
-            this.label37.Name = "label37";
-            this.label37.Size = new System.Drawing.Size(68, 13);
-            this.label37.TabIndex = 60;
-            this.label37.Text = "Startup Type";
-            // 
-            // button14
-            // 
-            this.button14.Location = new System.Drawing.Point(80, 169);
-            this.button14.Name = "button14";
-            this.button14.Size = new System.Drawing.Size(21, 20);
-            this.button14.TabIndex = 56;
-            this.button14.Text = "?";
-            this.button14.UseVisualStyleBackColor = true;
-            this.button14.Click += new System.EventHandler(this.RSizeYHelp_Click);
-            // 
-            // CRegionSizeY
-            // 
-            this.CRegionSizeY.Location = new System.Drawing.Point(247, 169);
-            this.CRegionSizeY.Name = "CRegionSizeY";
-            this.CRegionSizeY.Size = new System.Drawing.Size(100, 20);
-            this.CRegionSizeY.TabIndex = 54;
-            this.CRegionSizeY.Text = "256";
-            // 
-            // label33
-            // 
-            this.label33.AutoSize = true;
-            this.label33.Location = new System.Drawing.Point(6, 172);
-            this.label33.Name = "label33";
-            this.label33.Size = new System.Drawing.Size(74, 13);
-            this.label33.TabIndex = 55;
-            this.label33.Text = "Region Size Y";
-            // 
-            // button15
-            // 
-            this.button15.Location = new System.Drawing.Point(80, 143);
-            this.button15.Name = "button15";
-            this.button15.Size = new System.Drawing.Size(21, 20);
-            this.button15.TabIndex = 53;
-            this.button15.Text = "?";
-            this.button15.UseVisualStyleBackColor = true;
-            this.button15.Click += new System.EventHandler(this.RSizeXHelp_Click);
-            // 
-            // CRegionSizeX
-            // 
-            this.CRegionSizeX.Location = new System.Drawing.Point(247, 143);
-            this.CRegionSizeX.Name = "CRegionSizeX";
-            this.CRegionSizeX.Size = new System.Drawing.Size(100, 20);
-            this.CRegionSizeX.TabIndex = 51;
-            this.CRegionSizeX.Text = "256";
-            // 
-            // label34
-            // 
-            this.label34.AutoSize = true;
-            this.label34.Location = new System.Drawing.Point(6, 146);
-            this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(74, 13);
-            this.label34.TabIndex = 52;
-            this.label34.Text = "Region Size X";
-            // 
-            // DisabledCreate
-            // 
-            this.DisabledCreate.AutoSize = true;
-            this.DisabledCreate.Location = new System.Drawing.Point(247, 246);
-            this.DisabledCreate.Name = "DisabledCreate";
-            this.DisabledCreate.Size = new System.Drawing.Size(15, 14);
-            this.DisabledCreate.TabIndex = 42;
-            this.DisabledCreate.UseVisualStyleBackColor = true;
-            // 
-            // button11
-            // 
-            this.button11.Location = new System.Drawing.Point(56, 243);
-            this.button11.Name = "button11";
-            this.button11.Size = new System.Drawing.Size(21, 20);
-            this.button11.TabIndex = 40;
-            this.button11.Text = "?";
-            this.button11.UseVisualStyleBackColor = true;
-            this.button11.Click += new System.EventHandler(this.DisabledHelp_Click);
-            // 
-            // button10
-            // 
-            this.button10.Location = new System.Drawing.Point(56, 220);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(21, 20);
-            this.button10.TabIndex = 39;
-            this.button10.Text = "?";
-            this.button10.UseVisualStyleBackColor = true;
-            this.button10.Click += new System.EventHandler(this.MaturityHelp_Click);
-            // 
-            // button9
-            // 
-            this.button9.Location = new System.Drawing.Point(155, 195);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(21, 20);
-            this.button9.TabIndex = 38;
-            this.button9.Text = "?";
-            this.button9.UseVisualStyleBackColor = true;
-            this.button9.Click += new System.EventHandler(this.MaxPrimsHelp_Click);
-            // 
-            // button6
-            // 
-            this.button6.Location = new System.Drawing.Point(75, 116);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(21, 20);
-            this.button6.TabIndex = 35;
-            this.button6.Text = "?";
-            this.button6.UseVisualStyleBackColor = true;
-            this.button6.Click += new System.EventHandler(this.RegionTypeHelp_Click);
-            // 
-            // button4
-            // 
-            this.button4.Location = new System.Drawing.Point(75, 90);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(21, 20);
-            this.button4.TabIndex = 33;
-            this.button4.Text = "?";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.RegionPort_Click);
-            // 
-            // button3
-            // 
-            this.button3.Location = new System.Drawing.Point(107, 65);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(21, 20);
-            this.button3.TabIndex = 32;
-            this.button3.Text = "?";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.RegionLocationY_Click);
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(107, 39);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(21, 20);
-            this.button2.TabIndex = 31;
-            this.button2.Text = "?";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.RegionLocationX_Click);
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(84, 13);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(21, 20);
-            this.button1.TabIndex = 30;
-            this.button1.Text = "?";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.RegionNameHelp_Click);
-            // 
-            // RName
-            // 
-            this.RName.Location = new System.Drawing.Point(247, 13);
-            this.RName.Name = "RName";
-            this.RName.Size = new System.Drawing.Size(100, 20);
-            this.RName.TabIndex = 2;
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(6, 247);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(48, 13);
-            this.label12.TabIndex = 24;
-            this.label12.Text = "Disabled";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 16);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(72, 13);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "Region Name";
-            // 
-            // LocX
-            // 
-            this.LocX.Location = new System.Drawing.Point(247, 39);
-            this.LocX.Name = "LocX";
-            this.LocX.Size = new System.Drawing.Size(100, 20);
-            this.LocX.TabIndex = 4;
-            this.LocX.Text = "1000";
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(6, 224);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(44, 13);
-            this.label11.TabIndex = 22;
-            this.label11.Text = "Maturity";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(6, 42);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(95, 13);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "Region Location X";
-            // 
-            // Maturity
-            // 
-            this.Maturity.Items.AddRange(new object[] {
-            "PG",
-            "Mature",
-            "Adult"});
-            this.Maturity.Location = new System.Drawing.Point(247, 221);
-            this.Maturity.Name = "Maturity";
-            this.Maturity.Size = new System.Drawing.Size(100, 17);
-            this.Maturity.TabIndex = 21;
-            // 
-            // LocY
-            // 
-            this.LocY.Location = new System.Drawing.Point(247, 65);
-            this.LocY.Name = "LocY";
-            this.LocY.Size = new System.Drawing.Size(100, 20);
-            this.LocY.TabIndex = 6;
-            this.LocY.Text = "1000";
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 198);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(146, 13);
-            this.label10.TabIndex = 20;
-            this.label10.Text = "Maximum Prims in this Region";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 68);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(95, 13);
-            this.label3.TabIndex = 7;
-            this.label3.Text = "Region Location Y";
-            // 
-            // ObjectCount
-            // 
-            this.ObjectCount.Location = new System.Drawing.Point(247, 195);
-            this.ObjectCount.Name = "ObjectCount";
-            this.ObjectCount.Size = new System.Drawing.Size(100, 20);
-            this.ObjectCount.TabIndex = 19;
-            this.ObjectCount.Text = "65536";
-            // 
-            // Port
-            // 
-            this.Port.Location = new System.Drawing.Point(247, 91);
-            this.Port.Name = "Port";
-            this.Port.Size = new System.Drawing.Size(100, 20);
-            this.Port.TabIndex = 8;
-            this.Port.Text = "9000";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(6, 94);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(68, 13);
-            this.label4.TabIndex = 9;
-            this.label4.Text = "Region Ports";
-            // 
-            // Type
-            // 
-            this.Type.Location = new System.Drawing.Point(247, 117);
-            this.Type.Name = "Type";
-            this.Type.Size = new System.Drawing.Size(100, 20);
-            this.Type.TabIndex = 13;
-            this.Type.Text = "Mainland";
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(6, 120);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(68, 13);
-            this.label7.TabIndex = 14;
-            this.label7.Text = "Region Type";
-            // 
             // tabPage1
             // 
             this.tabPage1.Controls.Add(this.button20);
             this.tabPage1.Controls.Add(this.groupBox5);
-            this.tabPage1.Controls.Add(this.groupBox4);
-            this.tabPage1.Controls.Add(this.RegionListBox);
-            this.tabPage1.Controls.Add(this.SearchForRegionByName);
-            this.tabPage1.Controls.Add(this.label31);
-            this.tabPage1.Controls.Add(this.RegionToFind);
             this.tabPage1.Controls.Add(this.groupBox3);
             this.tabPage1.Controls.Add(this.webBrowser1);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
@@ -664,7 +154,7 @@ namespace Aurora.Management
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage1.Size = new System.Drawing.Size(654, 418);
             this.tabPage1.TabIndex = 2;
-            this.tabPage1.Text = "Edit existing region";
+            this.tabPage1.Text = "Edit region";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // button20
@@ -756,81 +246,9 @@ namespace Aurora.Management
             this.label38.TabIndex = 0;
             this.label38.Text = "Status";
             // 
-            // groupBox4
-            // 
-            this.groupBox4.Controls.Add(this.ExportFileName);
-            this.groupBox4.Controls.Add(this.label6);
-            this.groupBox4.Controls.Add(this.Export);
-            this.groupBox4.Location = new System.Drawing.Point(425, 192);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(217, 66);
-            this.groupBox4.TabIndex = 35;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Export to .ini";
-            // 
-            // ExportFileName
-            // 
-            this.ExportFileName.Location = new System.Drawing.Point(9, 36);
-            this.ExportFileName.Name = "ExportFileName";
-            this.ExportFileName.Size = new System.Drawing.Size(121, 20);
-            this.ExportFileName.TabIndex = 36;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(6, 16);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(54, 13);
-            this.label6.TabIndex = 35;
-            this.label6.Text = "File Name";
-            // 
-            // Export
-            // 
-            this.Export.Location = new System.Drawing.Point(136, 33);
-            this.Export.Name = "Export";
-            this.Export.Size = new System.Drawing.Size(75, 23);
-            this.Export.TabIndex = 34;
-            this.Export.Text = "Export";
-            this.Export.UseVisualStyleBackColor = true;
-            this.Export.Click += new System.EventHandler(this.Export_Click);
-            // 
-            // RegionListBox
-            // 
-            this.RegionListBox.FormattingEnabled = true;
-            this.RegionListBox.Location = new System.Drawing.Point(425, 22);
-            this.RegionListBox.Name = "RegionListBox";
-            this.RegionListBox.Size = new System.Drawing.Size(217, 108);
-            this.RegionListBox.TabIndex = 33;
-            this.RegionListBox.SelectedIndexChanged += new System.EventHandler(this.RegionListBox_SelectedIndexChanged);
-            // 
-            // SearchForRegionByName
-            // 
-            this.SearchForRegionByName.Location = new System.Drawing.Point(425, 163);
-            this.SearchForRegionByName.Name = "SearchForRegionByName";
-            this.SearchForRegionByName.Size = new System.Drawing.Size(75, 23);
-            this.SearchForRegionByName.TabIndex = 31;
-            this.SearchForRegionByName.Text = "Search";
-            this.SearchForRegionByName.UseVisualStyleBackColor = true;
-            this.SearchForRegionByName.Click += new System.EventHandler(this.SearchForRegionByName_Click);
-            // 
-            // label31
-            // 
-            this.label31.AutoSize = true;
-            this.label31.Location = new System.Drawing.Point(422, 6);
-            this.label31.Name = "label31";
-            this.label31.Size = new System.Drawing.Size(76, 13);
-            this.label31.TabIndex = 30;
-            this.label31.Text = "Region to edit:";
-            // 
-            // RegionToFind
-            // 
-            this.RegionToFind.Location = new System.Drawing.Point(425, 137);
-            this.RegionToFind.Name = "RegionToFind";
-            this.RegionToFind.Size = new System.Drawing.Size(217, 20);
-            this.RegionToFind.TabIndex = 29;
-            // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.button1);
             this.groupBox3.Controls.Add(this.einfiniteRegion);
             this.groupBox3.Controls.Add(this.button13);
             this.groupBox3.Controls.Add(this.label17);
@@ -875,6 +293,16 @@ namespace Aurora.Management
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Region Info";
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(259, 322);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(145, 23);
+            this.button1.TabIndex = 57;
+            this.button1.Text = "Update";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.updateRegion_click);
+            // 
             // einfiniteRegion
             // 
             this.einfiniteRegion.AutoSize = true;
@@ -883,7 +311,6 @@ namespace Aurora.Management
             this.einfiniteRegion.Size = new System.Drawing.Size(15, 14);
             this.einfiniteRegion.TabIndex = 55;
             this.einfiniteRegion.UseVisualStyleBackColor = true;
-            this.einfiniteRegion.CheckedChanged += new System.EventHandler(this.einfiniteRegion_CheckedChanged);
             // 
             // button13
             // 
@@ -1239,7 +666,6 @@ namespace Aurora.Management
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Location = new System.Drawing.Point(-1, 39);
             this.tabControl1.Name = "tabControl1";
@@ -1364,7 +790,6 @@ namespace Aurora.Management
             this.groupBox6.Controls.Add(this.estateOwnerLookupSearch);
             this.groupBox6.Controls.Add(this.estateOwnerName);
             this.groupBox6.Controls.Add(this.label5);
-            this.groupBox6.Controls.Add(this.estateRegionSelection);
             this.groupBox6.Location = new System.Drawing.Point(9, 6);
             this.groupBox6.Name = "groupBox6";
             this.groupBox6.Size = new System.Drawing.Size(636, 137);
@@ -1372,19 +797,29 @@ namespace Aurora.Management
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Select Region";
             // 
+            // find_user
+            // 
+            this.find_user.Location = new System.Drawing.Point(195, 40);
+            this.find_user.Name = "find_user";
+            this.find_user.Size = new System.Drawing.Size(99, 23);
+            this.find_user.TabIndex = 38;
+            this.find_user.Text = "Search for user";
+            this.find_user.UseVisualStyleBackColor = true;
+            this.find_user.Click += new System.EventHandler(this.find_user_Click);
+            // 
             // estateOwnerLookupSearch
             // 
-            this.estateOwnerLookupSearch.Location = new System.Drawing.Point(341, 104);
+            this.estateOwnerLookupSearch.Location = new System.Drawing.Point(15, 69);
             this.estateOwnerLookupSearch.Name = "estateOwnerLookupSearch";
             this.estateOwnerLookupSearch.Size = new System.Drawing.Size(75, 23);
             this.estateOwnerLookupSearch.TabIndex = 37;
-            this.estateOwnerLookupSearch.Text = "Search";
+            this.estateOwnerLookupSearch.Text = "Select User";
             this.estateOwnerLookupSearch.UseVisualStyleBackColor = true;
             this.estateOwnerLookupSearch.Click += new System.EventHandler(this.estateOwnerLookupSearch_Click);
             // 
             // estateOwnerName
             // 
-            this.estateOwnerName.Location = new System.Drawing.Point(242, 41);
+            this.estateOwnerName.Location = new System.Drawing.Point(15, 43);
             this.estateOwnerName.Name = "estateOwnerName";
             this.estateOwnerName.Size = new System.Drawing.Size(174, 20);
             this.estateOwnerName.TabIndex = 36;
@@ -1392,30 +827,11 @@ namespace Aurora.Management
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(239, 16);
+            this.label5.Location = new System.Drawing.Point(12, 18);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(152, 13);
             this.label5.TabIndex = 35;
             this.label5.Text = "Name of the new estate owner";
-            // 
-            // estateRegionSelection
-            // 
-            this.estateRegionSelection.FormattingEnabled = true;
-            this.estateRegionSelection.Location = new System.Drawing.Point(6, 19);
-            this.estateRegionSelection.Name = "estateRegionSelection";
-            this.estateRegionSelection.Size = new System.Drawing.Size(217, 108);
-            this.estateRegionSelection.TabIndex = 34;
-            this.estateRegionSelection.SelectedIndexChanged += new System.EventHandler(this.estateRegionSelection_SelectedIndexChanged);
-            // 
-            // find_user
-            // 
-            this.find_user.Location = new System.Drawing.Point(317, 58);
-            this.find_user.Name = "find_user";
-            this.find_user.Size = new System.Drawing.Size(99, 23);
-            this.find_user.TabIndex = 38;
-            this.find_user.Text = "Find user";
-            this.find_user.UseVisualStyleBackColor = true;
-            this.find_user.Click += new System.EventHandler(this.find_user_Click);
             // 
             // RegionManager
             // 
@@ -1428,18 +844,9 @@ namespace Aurora.Management
             this.Text = "RegionManager";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RegionManager_FormClosing);
             this.Load += new System.EventHandler(this.RegionManager_Load);
-            this.tabPage2.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.tabPage1.ResumeLayout(false);
-            this.tabPage1.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.tabControl1.ResumeLayout(false);
@@ -1459,50 +866,6 @@ namespace Aurora.Management
         #endregion
 
         private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Label label16;
-        private System.Windows.Forms.ComboBox RegionSelections;
-        private System.Windows.Forms.Label label15;
-        private System.Windows.Forms.PictureBox RegionSelectionsPicture;
-        private System.Windows.Forms.Button Create;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.CheckBox cInfiniteRegion;
-        private System.Windows.Forms.Button button19;
-        private System.Windows.Forms.Label label39;
-        private System.Windows.Forms.ListBox CStartupType;
-        private System.Windows.Forms.Button button18;
-        private System.Windows.Forms.Label label37;
-        private System.Windows.Forms.Button button14;
-        private System.Windows.Forms.TextBox CRegionSizeY;
-        private System.Windows.Forms.Label label33;
-        private System.Windows.Forms.Button button15;
-        private System.Windows.Forms.TextBox CRegionSizeX;
-        private System.Windows.Forms.Label label34;
-        private System.Windows.Forms.CheckBox DisabledCreate;
-        private System.Windows.Forms.Button button11;
-        private System.Windows.Forms.Button button10;
-        private System.Windows.Forms.Button button9;
-        private System.Windows.Forms.Button button6;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox RName;
-        private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox LocX;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ListBox Maturity;
-        private System.Windows.Forms.TextBox LocY;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox ObjectCount;
-        private System.Windows.Forms.TextBox Port;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox Type;
-        private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.Button button20;
         private System.Windows.Forms.GroupBox groupBox5;
@@ -1512,14 +875,6 @@ namespace Aurora.Management
         private System.Windows.Forms.Button takeOffline;
         private System.Windows.Forms.TextBox RegionStatus;
         private System.Windows.Forms.Label label38;
-        private System.Windows.Forms.GroupBox groupBox4;
-        private System.Windows.Forms.TextBox ExportFileName;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Button Export;
-        private System.Windows.Forms.ListBox RegionListBox;
-        private System.Windows.Forms.Button SearchForRegionByName;
-        private System.Windows.Forms.Label label31;
-        private System.Windows.Forms.TextBox RegionToFind;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.CheckBox einfiniteRegion;
         private System.Windows.Forms.Button button13;
@@ -1562,7 +917,6 @@ namespace Aurora.Management
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.GroupBox groupBox6;
-        private System.Windows.Forms.ListBox estateRegionSelection;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox estateOwnerName;
         private System.Windows.Forms.GroupBox changeEstateBox;
@@ -1577,5 +931,6 @@ namespace Aurora.Management
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.GroupBox groupBox9;
         private System.Windows.Forms.Button find_user;
+        private System.Windows.Forms.Button button1;
     }
 }

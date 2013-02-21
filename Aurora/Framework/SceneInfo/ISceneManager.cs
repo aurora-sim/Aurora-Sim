@@ -44,7 +44,7 @@ namespace Aurora.Framework
 
         void HandleStartupComplete(List<string> data);
 
-        ISimulationDataStore GetNewSimulationDataStore();
+        ISimulationDataStore GetSimulationDataStore();
 
         IConfigSource ConfigSource { get; }
 

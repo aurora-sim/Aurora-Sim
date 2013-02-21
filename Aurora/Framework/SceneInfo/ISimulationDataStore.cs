@@ -59,7 +59,7 @@ namespace Aurora.Framework
         /// <param name = "uuid"></param>
         /// <param name = "regionUUID"></param>
         /// <returns></returns>
-        void RemoveRegion(UUID regionUUID);
+        void RemoveRegion();
 
         /// <summary>
         ///   Something has changed in the region, just alerting us to the change if we need to do anything
@@ -71,28 +71,28 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "regionUUID">the Region UUID</param>
         /// <returns>List of loaded groups</returns>
-        List<ISceneEntity> LoadObjects(IScene scene);
+        List<ISceneEntity> LoadObjects();
 
         /// <summary>
         ///   Load the latest terrain revision from region storage
         /// </summary>
         /// <param name = "regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        short[] LoadTerrain(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
+        short[] LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
         ///   Load the latest water revision from region storage
         /// </summary>
         /// <param name = "scene">the region</param>
         /// <returns>Heightfield data</returns>
-        short[] LoadWater(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
+        short[] LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
         ///   Load all parcels from the database
         /// </summary>
         /// <param name = "regionUUID"></param>
         /// <returns></returns>
-        List<LandData> LoadLandObjects(UUID regionUUID);
+        List<LandData> LoadLandObjects();
 
         /// <summary>
         ///   Shutdown and exit the module
@@ -116,5 +116,16 @@ namespace Aurora.Framework
         /// <param name = "newRegionName"></param>
         /// <param name = "configSource"></param>
         void RenameBackupFiles(string oldRegionName, string newRegionName, IConfigSource configSource);
+
+        /// <summary>
+        /// Load the region info for this sim
+        /// </summary>
+        /// <param name="simBase"></param>
+        /// <returns></returns>
+        RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion);
+
+        void SetRegion(IScene scene);
+
+        void ForceBackup();
     }
 }

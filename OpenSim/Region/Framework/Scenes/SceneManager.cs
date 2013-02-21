@@ -150,6 +150,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void PostStart()
         {
+            if (m_simulationDataService == null)
+                return;
+
+            bool newRegion = false;
+            RegionInfo info = m_simulationDataService.LoadRegionInfo(m_OpenSimBase, out newRegion);
+            IScene scene = StartNewRegion(info);
+            MainConsole.Instance.DefaultPrompt = "Region ";
+            if (newRegion)//Save the new info
+                m_simulationDataService.ForceBackup();
         }
 
         public string Name
@@ -217,6 +226,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Do this here so that we don't have issues later when startup complete messages start coming in
             m_scene = scene;
+            m_simulationDataService.SetRegion(scene);
 
             if (OnAddedScene != null)
                 OnAddedScene(scene);
@@ -234,9 +244,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// Gets a new copy of the simulation data store, keep one per region
         /// </summary>
         /// <returns></returns>
-        public ISimulationDataStore GetNewSimulationDataStore()
+        public ISimulationDataStore GetSimulationDataStore()
         {
-            return m_simulationDataService.Copy();
+            return m_simulationDataService;
         }
 
         #endregion

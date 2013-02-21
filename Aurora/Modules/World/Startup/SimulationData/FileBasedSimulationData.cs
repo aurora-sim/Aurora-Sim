@@ -42,6 +42,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using Timer = System.Timers.Timer;
+using Aurora.Management;
 
 namespace Aurora.Modules.Startup.FileBasedSimulationData
 {
@@ -53,12 +54,11 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         protected Timer m_backupSaveTimer;
 
         protected string m_fileName = "";
+        protected bool m_loaded = false;
         protected List<ISceneEntity> m_groups = new List<ISceneEntity>();
-        protected bool m_hasShownFileBasedWarning;
         protected bool m_keepOldSave = true;
         protected string m_loadAppendedFileName = "";
         protected string m_loadDirectory = "";
-        protected bool m_loaded;
         protected string m_oldSaveDirectory = "Backups";
         protected bool m_oldSaveHasBeenSaved;
         protected byte[] m_oldstylerevertTerrain;
@@ -126,32 +126,50 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         {
         }
 
-        public virtual List<ISceneEntity> LoadObjects(IScene scene)
+        public virtual RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion)
+        {
+            newRegion = false;
+            ReadConfig(simBase);
+            RegionInfo info = ReadRegionInfo();
+            if (info == null)
+            {
+            retry:
+                RegionManager manager = Aurora.Management.RegionManager.StartSynchronously(true,
+                    Management.RegionManagerPage.CreateRegion,
+                    simBase.ConfigSource, simBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), null);
+                info = manager.RegionInfo;
+                if (info == null)
+                    goto retry;
+                newRegion = true;
+            }
+            return info;
+        }
+
+        public virtual void SetRegion(IScene scene)
         {
             if (!m_loaded)
             {
                 m_loaded = true;
-                ReadConfig(scene, scene.Config.Configs["FileBasedSimulationData"]);
+                scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
+                m_scene = scene;
                 ReadBackup(scene);
             }
+        }
+
+        public virtual List<ISceneEntity> LoadObjects()
+        {
             return m_groups;
         }
 
-        public virtual short[] LoadTerrain(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public virtual short[] LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
-            if (!m_loaded)
-            {
-                m_loaded = true;
-                ReadConfig(scene, scene.Config.Configs["FileBasedSimulationData"]);
-                ReadBackup(scene);
-            }
-            ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
+            ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
             if (RevertMap)
             {
                 if (m_revertTerrain == null)
                 {
                     if (m_shortrevertTerrain != null) //OpenSim style
-                        terrainModule.TerrainRevertMap = new TerrainChannel(m_shortrevertTerrain, scene);
+                        terrainModule.TerrainRevertMap = new TerrainChannel(m_shortrevertTerrain, m_scene);
                     else if (m_oldstylerevertTerrain != null)
                     {
                         MemoryStream ms = new MemoryStream(m_oldstylerevertTerrain);
@@ -161,10 +179,10 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 }
                 else
                     //New style
-                    terrainModule.TerrainRevertMap = ReadFromData(m_revertTerrain, scene);
+                    terrainModule.TerrainRevertMap = ReadFromData(m_revertTerrain, m_scene);
                 //Make sure the size is right!
                 if (terrainModule.TerrainRevertMap != null &&
-                    terrainModule.TerrainRevertMap.Height != scene.RegionInfo.RegionSizeX)
+                    terrainModule.TerrainRevertMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainRevertMap = null;
                 m_revertTerrain = null;
                 m_oldstylerevertTerrain = null;
@@ -176,7 +194,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 if (m_terrain == null)
                 {
                     if (m_shortterrain != null) //OpenSim style
-                        terrainModule.TerrainMap = new TerrainChannel(m_shortterrain, scene);
+                        terrainModule.TerrainMap = new TerrainChannel(m_shortterrain, m_scene);
                     else if (m_oldstyleterrain != null)
                     {
 //Old style
@@ -187,10 +205,10 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 }
                 else
                     //New style
-                    terrainModule.TerrainMap = ReadFromData(m_terrain, scene);
+                    terrainModule.TerrainMap = ReadFromData(m_terrain, m_scene);
                 //Make sure the size is right!
                 if (terrainModule.TerrainMap != null &&
-                    terrainModule.TerrainMap.Height != scene.RegionInfo.RegionSizeX)
+                    terrainModule.TerrainMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainMap = null;
                 m_terrain = null;
                 m_oldstyleterrain = null;
@@ -199,22 +217,16 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             }
         }
 
-        public virtual short[] LoadWater(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public virtual short[] LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
-            if (!m_loaded)
-            {
-                m_loaded = true;
-                ReadConfig(scene, scene.Config.Configs["FileBasedSimulationData"]);
-                ReadBackup(scene);
-            }
-            ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
+            ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
             if (RevertMap)
             {
                 if (m_revertWater == null)
                     return null;
-                terrainModule.TerrainWaterRevertMap = ReadFromData(m_revertWater, scene);
+                terrainModule.TerrainWaterRevertMap = ReadFromData(m_revertWater, m_scene);
                 //Make sure the size is right!
-                if (terrainModule.TerrainWaterRevertMap.Height != scene.RegionInfo.RegionSizeX)
+                if (terrainModule.TerrainWaterRevertMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainWaterRevertMap = null;
                 m_revertWater = null;
                 return null;
@@ -223,9 +235,9 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             {
                 if (m_water == null)
                     return null;
-                terrainModule.TerrainWaterMap = ReadFromData(m_water, scene);
+                terrainModule.TerrainWaterMap = ReadFromData(m_water, m_scene);
                 //Make sure the size is right!
-                if (terrainModule.TerrainWaterMap.Height != scene.RegionInfo.RegionSizeX)
+                if (terrainModule.TerrainWaterMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainWaterMap = null;
                 m_water = null;
                 return null;
@@ -256,7 +268,28 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             m_requiresSave = true;
         }
 
-        public virtual void RemoveRegion(UUID regionUUID)
+        public virtual void ForceBackup()
+        {
+            if (m_saveTimer != null)
+                m_saveTimer.Stop();
+            try
+            {
+                lock (m_saveLock)
+                {
+                    if (!m_shutdown)
+                        SaveBackup(m_saveDirectory, false);
+                    m_requiresSave = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
+            }
+            if (m_saveTimer != null)
+                m_saveTimer.Start(); //Restart it as we just did a backup
+        }
+
+        public virtual void RemoveRegion()
         {
             //Remove the file so that the region is gone
             File.Delete(m_loadDirectory == "/" ? m_fileName : m_loadDirectory + m_fileName);
@@ -274,14 +307,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         /// </summary>
         /// <param name = "regionUUID"></param>
         /// <returns></returns>
-        public virtual List<LandData> LoadLandObjects(UUID regionUUID)
+        public virtual List<LandData> LoadLandObjects()
         {
-            if (!m_loaded)
-            {
-                m_loaded = true;
-                ReadConfig(m_scene, m_scene.Config.Configs["FileBasedSimulationData"]);
-                ReadBackup(m_scene);
-            }
             return m_parcels;
         }
 
@@ -300,9 +327,10 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         /// </summary>
         /// <param name = "scene"></param>
         /// <param name = "config"></param>
-        protected virtual void ReadConfig(IScene scene, IConfig config)
+        protected virtual void ReadConfig(ISimulationBase simBase)
         {
-            scene.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
+            simBase.EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
+            IConfig config = simBase.ConfigSource.Configs["FileBasedSimulationData"];
             if (config != null)
             {
                 m_loadAppendedFileName = config.GetString("AppendedLoadFileName", m_loadAppendedFileName);
@@ -331,10 +359,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 m_backupSaveTimer.Start();
             }
 
-            scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
-
-            m_scene = scene;
-            m_fileName = scene.RegionInfo.RegionName + m_loadAppendedFileName + ".abackup";
+            m_fileName = "sim.abackup";
         }
 
         /// <summary>
@@ -347,21 +372,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         {
             if (FunctionName == "Backup")
             {
-                m_saveTimer.Stop();
-                try
-                {
-                    lock (m_saveLock)
-                    {
-                        if(!m_shutdown)
-                            SaveBackup(m_saveDirectory, false);
-                        m_requiresSave = false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
-                }
-                m_saveTimer.Start(); //Restart it as we just did a backup
+                ForceBackup();
             }
             return null;
         }
@@ -469,7 +480,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             }
 
             MainConsole.Instance.Info("[FileBasedSimulationData]: Saving backup for region " + m_scene.RegionInfo.RegionName);
-            string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppendedFileName + ".abackup";
+            string fileName = "sim.abackup";
             if (File.Exists(fileName))
             {
                 //Do new style saving here!
@@ -502,6 +513,9 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
                 writer.WriteDir("newstylewater");
                 writer.WriteDir("newstylerevertwater");
+                writer.WriteDir("regioninfo");
+                byte[] regionData = OSDParser.SerializeLLSDBinary(m_scene.RegionInfo.PackRegionInfoData());
+                writer.WriteFile("regioninfo/regioninfo", regionData);
 
                 ITerrainModule tModule = m_scene.RequestModuleInterface<ITerrainModule>();
                 if (tModule != null)
@@ -718,9 +732,47 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             //return "--" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute;
         }
 
+        protected virtual RegionInfo ReadRegionInfo()
+        {
+            MainConsole.Instance.Debug("[FileBasedSimulationData]: Restoring sim backup...");
+            List<uint> foundLocalIDs = new List<uint>();
+            var stream = ArchiveHelpers.GetStream((m_loadDirectory == "" || m_loadDirectory == "/")
+                                                      ? m_fileName
+                                                      : Path.Combine(m_loadDirectory, m_fileName));
+            if (stream == null)
+                return null;
+
+            GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
+            TarArchiveReader reader = new TarArchiveReader(m_loadStream);
+            RegionInfo regionInfo = null;
+
+            byte[] data;
+            string filePath;
+            TarArchiveReader.TarEntryType entryType;
+            //Load the archive data that we need
+            while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
+            {
+                if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
+                    continue;
+
+                if (filePath.StartsWith("regioninfo/"))
+                {
+                    //Only use if we are not merging
+                    OSD regionData = OSDParser.DeserializeLLSDBinary(data);
+                    regionInfo = new RegionInfo();
+                    regionInfo.UnpackRegionInfoData((OSDMap)regionData);
+                }
+                data = null;
+            }
+            m_loadStream.Close();
+            m_loadStream = null;
+
+            return regionInfo;
+        }
+
         protected virtual void ReadBackup(IScene scene)
         {
-            MainConsole.Instance.Debug("[FileBasedSimulationData]: Reading file for " + scene.RegionInfo.RegionName);
+            MainConsole.Instance.Debug("[FileBasedSimulationData]: Restoring sim backup...");
             List<uint> foundLocalIDs = new List<uint>();
             var stream = ArchiveHelpers.GetStream((m_loadDirectory == "" || m_loadDirectory == "/")
                                                       ? m_fileName

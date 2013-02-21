@@ -63,9 +63,9 @@ namespace Aurora.Management
             _historyLog.Add(_ipaddress.Text, _port.Text, _password.Text);
             UpdateHistoryGUI();
             RegionManager.StartAsynchronously(false,
-                RegionManagerPage.ViewRegions,
+                RegionManagerPage.CreateRegion,
                 _config,
-                management);
+                management, null);
         }
 
         private void _history_SelectedIndexChanged(object sender, EventArgs e)

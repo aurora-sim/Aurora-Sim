@@ -1582,14 +1582,17 @@ namespace Aurora.Modules.Estate
             if (m_scene.RegionInfo.RegionSettings.Sandbox)
                 flags |= RegionFlags.Sandbox;
 
-            if (m_scene.RegionInfo.EstateSettings.AllowLandmark)
-                flags |= RegionFlags.AllowLandmark;
-            if (m_scene.RegionInfo.EstateSettings.AllowSetHome)
-                flags |= RegionFlags.AllowSetHome;
-            if (m_scene.RegionInfo.EstateSettings.BlockDwell)
-                flags |= RegionFlags.BlockDwell;
-            if (m_scene.RegionInfo.EstateSettings.ResetHomeOnTeleport)
-                flags |= RegionFlags.ResetHomeOnTeleport;
+            if (m_scene.RegionInfo.EstateSettings != null)
+            {
+                if (m_scene.RegionInfo.EstateSettings.AllowLandmark)
+                    flags |= RegionFlags.AllowLandmark;
+                if (m_scene.RegionInfo.EstateSettings.AllowSetHome)
+                    flags |= RegionFlags.AllowSetHome;
+                if (m_scene.RegionInfo.EstateSettings.BlockDwell)
+                    flags |= RegionFlags.BlockDwell;
+                if (m_scene.RegionInfo.EstateSettings.ResetHomeOnTeleport)
+                    flags |= RegionFlags.ResetHomeOnTeleport;
+            }
 
             
 

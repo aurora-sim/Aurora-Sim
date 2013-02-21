@@ -246,7 +246,7 @@ namespace Aurora.Modules.Startup
                 LoadingPrims = true;
 
                 MainConsole.Instance.Info("[BackupModule]: Loading objects for " + m_scene.RegionInfo.RegionName + " from " + m_scene.SimulationDataService.Name);
-                List<ISceneEntity> PrimsFromDB = m_scene.SimulationDataService.LoadObjects(m_scene);
+                List<ISceneEntity> PrimsFromDB = m_scene.SimulationDataService.LoadObjects();
                 foreach (ISceneEntity group in PrimsFromDB)
                 {
                     try
@@ -307,7 +307,7 @@ namespace Aurora.Modules.Startup
             public void LoadAllLandObjectsFromStorage()
             {
                 MainConsole.Instance.Debug ("[BackupModule]: Loading Land Objects from database... ");
-                m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID), Vector2.Zero);
+                m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_scene.SimulationDataService.LoadLandObjects(), Vector2.Zero);
             }
 
             public void FinishStartup()
@@ -378,7 +378,7 @@ namespace Aurora.Modules.Startup
                     DeleteSceneObjects(groups.ToArray(), true, true);
 
                     //Now remove the entire region at once
-                    m_scene.SimulationDataService.RemoveRegion(m_scene.RegionInfo.RegionID);
+                    m_scene.SimulationDataService.RemoveRegion();
                     LoadingPrims = false;
                 }
                 catch

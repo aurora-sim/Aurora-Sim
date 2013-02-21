@@ -250,7 +250,7 @@ namespace Aurora.Modules.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX,
+                short[] map = m_scene.SimulationDataService.LoadTerrain(true, m_scene.RegionInfo.RegionSizeX,
                                                                         m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
@@ -305,7 +305,7 @@ namespace Aurora.Modules.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX,
+                short[] map = m_scene.SimulationDataService.LoadTerrain(false, m_scene.RegionInfo.RegionSizeX,
                                                                         m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
@@ -1047,7 +1047,7 @@ namespace Aurora.Modules.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadWater(m_scene, true, m_scene.RegionInfo.RegionSizeX,
+                short[] map = m_scene.SimulationDataService.LoadWater(true, m_scene.RegionInfo.RegionSizeX,
                                                                       m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
@@ -1107,7 +1107,7 @@ namespace Aurora.Modules.Terrain
                 return;
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadWater(m_scene, false, m_scene.RegionInfo.RegionSizeX,
+                short[] map = m_scene.SimulationDataService.LoadWater(false, m_scene.RegionInfo.RegionSizeX,
                                                                       m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {

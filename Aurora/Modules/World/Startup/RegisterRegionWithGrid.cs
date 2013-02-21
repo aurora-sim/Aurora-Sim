@@ -144,12 +144,6 @@ namespace Aurora.Modules.Startup
 
                 scene.RegionInfo.RegionLocX = X*Constants.RegionSize;
                 scene.RegionInfo.RegionLocY = Y*Constants.RegionSize;
-
-                IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
-                foreach (IRegionLoader loader in loaders)
-                {
-                    loader.UpdateRegionInfo(scene.RegionInfo.RegionName, scene.RegionInfo);
-                }
             }
             else if (error.Error.Contains("Can't move this region"))
             {
@@ -162,12 +156,6 @@ namespace Aurora.Modules.Startup
 
                     scene.RegionInfo.RegionLocX = int.Parse(position[1])*Constants.RegionSize;
                     scene.RegionInfo.RegionLocY = int.Parse(position[2])*Constants.RegionSize;
-
-                    IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
-                    foreach (IRegionLoader loader in loaders)
-                    {
-                        loader.UpdateRegionInfo(scene.RegionInfo.RegionName, scene.RegionInfo);
-                    }
                 }
                 catch (Exception e)
                 {
@@ -182,12 +170,6 @@ namespace Aurora.Modules.Startup
                                            " with the grid failed - The region name you specified is already in use. Please change the name.");
                 string oldRegionName = scene.RegionInfo.RegionName;
                 scene.RegionInfo.RegionName = MainConsole.Instance.Prompt("New Region Name", "");
-
-                IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
-                foreach (IRegionLoader loader in loaders)
-                {
-                    loader.UpdateRegionInfo(oldRegionName, scene.RegionInfo);
-                }
             }
             else if (error.Error == "Region locked out")
             {

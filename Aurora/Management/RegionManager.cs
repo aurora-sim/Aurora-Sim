@@ -47,26 +47,29 @@ namespace Aurora.Management
         public delegate void NoOp();
         public event NewRegion OnNewRegion;
         private readonly bool KillAfterRegionCreation = false;
-        private bool RegionHasBeenCreated = false;
-        private UUID RegionCreatedID = UUID.Zero;
-        private UUID CurrentRegionID = UUID.Zero;
-        private UUID _CurrentEstateRegionSelectedID = UUID.Zero;
-        private RegionManagerPage _pageToStart = RegionManagerPage.ViewRegions;
+        private RegionManagerPage _pageToStart = RegionManagerPage.CreateRegion;
         private IConfigSource _config;
         private bool _changingRegion = false;
         private bool _textHasChanged = false;
         private readonly IRegionManagement _regionManager;
+        private RegionInfo _startingRegionInfo;
 
         private readonly System.Windows.Forms.Timer _timer = new System.Windows.Forms.Timer();
         private readonly List<NoOp> _timerEvents = new List<NoOp>();
 
-        public static void StartAsynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement)
+        public RegionInfo RegionInfo
+        {
+            get;
+            set;
+        }
+
+        public static void StartAsynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement, RegionInfo startingRegionInfo)
         {
             Thread t = new Thread(delegate()
             {
                 try
                 {
-                    RegionManager manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement);
+                    RegionManager manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement, startingRegionInfo);
                     Application.Run(manager);
                 }
                 catch { }
@@ -75,14 +78,15 @@ namespace Aurora.Management
             t.Start();
         }
 
-        public static void StartSynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement)
+        public static RegionManager StartSynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement, RegionInfo startingRegionInfo)
         {
+            RegionManager manager = null;
             bool done = false;
             Thread t = new Thread(delegate()
                 {
                     try
                     {
-                        RegionManager manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement);
+                        manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement, startingRegionInfo);
                         Application.Run(manager);
                         done = true;
                     }
@@ -92,23 +96,23 @@ namespace Aurora.Management
             t.Start();
             while (!done)
                 Thread.Sleep(100);
+            return manager;
         }
 
-        public RegionManager(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement)
+        public RegionManager(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement, RegionInfo startingRegionInfo)
         {
             _regionManager = regionManagement;
             _config = config;
+            _startingRegionInfo = startingRegionInfo;
+            RegionInfo = _startingRegionInfo;
             KillAfterRegionCreation = killWindowOnRegionCreation;
             _pageToStart = page;
             InitializeComponent();
-            if (page == RegionManagerPage.CreateRegion)
-                tabControl1.SelectedTab = tabPage2;
-            else if (page == RegionManagerPage.EstateSetup)
-                tabControl1.SelectedTab = tabPage3;
+            ChangeRegionInfo(_startingRegionInfo);
+            if (_startingRegionInfo == null)
+                groupBox5.Visible = false;
+            tabControl1.SelectedIndex = (int)_pageToStart;
             changeEstateBox.Visible = false;
-            CStartupType.SelectedIndex = 1;
-            RefreshCurrentRegions();
-            GetDefaultRegions ();
             _timer.Interval = 100;
             _timer.Tick += m_timer_Tick;
             _timer.Start ();
@@ -124,122 +128,28 @@ namespace Aurora.Management
             }
         }
 
-        private void RefreshCurrentRegions()
-        {
-            List<RegionInfo> infos = _regionManager.GetRegionInfos(false);
-            infos.Sort (delegate (RegionInfo a, RegionInfo b)
-            {
-                if (!a.Disabled || !b.Disabled)
-                    return a.Disabled.CompareTo(b.Disabled);//At the top
-                return a.RegionName.CompareTo (b.RegionName);
-            });
-            RegionListBox.Items.Clear();
-            estateRegionSelection.Items.Clear();
-            foreach(RegionInfo r in infos)
-            {
-                bool online = _regionManager.GetWhetherRegionIsOnline(r.RegionID);
-                RegionListBox.Items.Add(online ? "Online - " + r.RegionName : r.RegionName);
-                estateRegionSelection.Items.Add(r.RegionName);
-            }
-        }
-
-        private void CreateNewRegion(object sender, EventArgs e)
-        {
-            if (RName.Text == "")
-            {
-                MessageBox.Show("You must enter a region name!");
-                return;
-            }
-            RegionInfo region = new RegionInfo
-                                    {
-                                        RegionName = RName.Text,
-                                        RegionID = UUID.Random(),
-                                        RegionLocX = int.Parse(LocX.Text)*Constants.RegionSize,
-                                        RegionLocY = int.Parse(LocY.Text)*Constants.RegionSize
-                                    };
-
-            IPAddress address = IPAddress.Parse("0.0.0.0");
-            string[] ports = Port.Text.Split (',');
-            
-            foreach (string port in ports)
-            {
-                string tPort = port.Trim ();
-                int iPort = 0;
-                if (int.TryParse (tPort, out iPort))
-                    region.UDPPorts.Add (iPort);
-            }
-            region.InternalEndPoint = new IPEndPoint (address, region.UDPPorts[0]);
-
-            region.RegionType = Type.Text;
-            region.ObjectCapacity = int.Parse(ObjectCount.Text);
-            int maturityLevel = 0;
-            if (!int.TryParse(Maturity.Text, out maturityLevel))
-            {
-                if (Maturity.Text == "Adult")
-                    maturityLevel = 2;
-                else if (Maturity.Text == "Mature")
-                    maturityLevel = 1;
-                else //Leave it as PG by default if they do not select a valid option
-                    maturityLevel = 0;
-            }
-            region.RegionSettings.Maturity = maturityLevel;
-            region.Disabled = DisabledEdit.Checked;
-            region.RegionSizeX = int.Parse(CRegionSizeX.Text);
-            region.RegionSizeY = int.Parse(CRegionSizeY.Text);
-            if ((region.RegionSizeX % Constants.MinRegionSize) != 0 ||
-                (region.RegionSizeY % Constants.MinRegionSize) != 0)
-            {
-                MessageBox.Show ("You must enter a valid region size (multiple of " + Constants.MinRegionSize + "!");
-                return;
-            }
-            region.Startup = ConvertIntToStartupType(CStartupType.SelectedIndex);
-            region.InfiniteRegion = cInfiniteRegion.Checked;
-
-            _regionManager.UpdateRegionInfo(region);
-            CopyOverDefaultRegion (region.RegionName);
-            MessageBox.Show("You must now set up an estate for the new region");
-            RefreshCurrentRegions();
-            tabControl1.SelectedIndex = 2;
-            estateRegionSelection.SelectedItem = region.RegionName;
-            RegionHasBeenCreated = true;
-            RegionCreatedID = region.RegionID;
-        }
-
-        private void SearchForRegionByName_Click(object sender, EventArgs e)
-        {
-            RegionInfo region = _regionManager.GetRegionInfo(RegionToFind.Text);
-            if (region == null)
-            {
-                MessageBox.Show("Region was not found!");
-                return;
-            }
-            ChangeRegionInfo (region);
-        }
-
         private void ChangeRegionInfo (RegionInfo region)
         {
             _changingRegion = true;
             if (region == null)
             {
                 button20.Enabled = false;
-                CurrentRegionID = UUID.Zero;
                 _changingRegion = false;
                 textBox11.Text = "";
-                textBox6.Text = ""; 
-                textBox4.Text = "";
+                textBox6.Text = "50000"; 
+                textBox4.Text = "Adult";
                 DisabledEdit.Checked = false;
-                textBox7.Text = "";
-                textBox3.Text = "";
-                textBox5.Text = "";
-                textBox1.Text = "";
-                RegionSizeX.Text = "";
-                RegionSizeY.Text = "";
+                textBox7.Text = "9000";
+                textBox3.Text = "1000";
+                textBox5.Text = "1000";
+                textBox1.Text = "My Sim";
+                RegionSizeX.Text = "256";
+                RegionSizeY.Text = "256";
                 startupType.SelectedIndex = 0;
                 einfiniteRegion.Checked = false;
                 return;
             }
             button20.Enabled = true;
-            CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString ();
             uint maturityLevel = Util.ConvertAccessLevelToMaturity (region.AccessLevel);
@@ -296,14 +206,6 @@ namespace Aurora.Management
             });
         }
 
-        private void RefreshCurrentRegionsThreaded()
-        {
-            _timerEvents.Add (delegate
-            {
-                RefreshCurrentRegions();
-            });
-        }
-
         private void SetStoppingStatus ()
         {
             _timerEvents.Add (delegate
@@ -332,26 +234,13 @@ namespace Aurora.Management
 
         private new void Update()
         {
-            if(RegionListBox.SelectedIndex < 0)
-                return;
-            object item = RegionListBox.Items[RegionListBox.SelectedIndex];
-            if(item == null)
-            {
-                MessageBox.Show("Select a valid region from the list.");
-                return;
-            }
-            if (item.ToString().StartsWith("Online - "))
-                item = item.ToString().Remove(0, 9);
-            RegionInfo region = _regionManager.GetRegionInfo(item.ToString());
+            RegionInfo region = _startingRegionInfo;
             if (region == null)
             {
-                MessageBox.Show("You must enter a valid region name!");
-                return;
+                region = new RegionInfo();
+                region.RegionID = UUID.Random();
             }
-            string oldRegionName = region.RegionName;
-            bool listNeedsUpdated = oldRegionName != textBox1.Text;
             region.RegionName = textBox1.Text;
-            region.RegionID = CurrentRegionID;
             region.RegionLocX = int.Parse(textBox3.Text) * Constants.RegionSize;
             region.RegionLocY = int.Parse(textBox5.Text) * Constants.RegionSize;
 
@@ -373,11 +262,11 @@ namespace Aurora.Management
             if (int.TryParse(textBox6.Text, out capacity))
                 region.ObjectCapacity = capacity;
             int maturityLevel = 0;
-            if (!int.TryParse(Maturity.Text, out maturityLevel))
+            if (!int.TryParse(textBox4.Text, out maturityLevel))
             {
-                if (Maturity.Text == "Adult")
+                if (textBox4.Text == "Adult")
                     maturityLevel = 2;
-                else if (Maturity.Text == "Mature")
+                else if (textBox4.Text == "Mature")
                     maturityLevel = 1;
                 else //Leave it as PG by default if they do not select a valid option
                     maturityLevel = 0;
@@ -396,29 +285,18 @@ namespace Aurora.Management
                 return;
             }
 
-            _regionManager.UpdateRegionInfo(region);
+            RegionInfo = region;
+
             if (OnNewRegion != null)
                 OnNewRegion(region);
-            if(listNeedsUpdated)
-                RefreshCurrentRegions();
-            RegionListBox.SelectedItem = region.RegionName;
+
+            if (KillAfterRegionCreation)
+                Close();
         }
 
-        private void RegionListBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void updateRegion_click(object sender, EventArgs e)
         {
-            if(RegionListBox.SelectedIndex < 0)
-                return;
-            string item = RegionListBox.Items[RegionListBox.SelectedIndex].ToString();
-            if(item.StartsWith("Online - "))
-                item = item.Remove(0, 9);
-            RegionInfo region = _regionManager.GetRegionInfo(item);
-            if (region == null)
-            {
-                MessageBox.Show("Region was not found!");
-                return;
-            }
-            ChangeRegionInfo (region);
-            RegionManager_Load(null, new EventArgs());
+            Update();
         }
 
         private int ConvertStartupType (StartupType startupType2)
@@ -508,32 +386,6 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             MessageBox.Show("This disables the borders around the region, so that you can leave the boundries of the region and go into the 'void'.");
         }
 
-        private void Export_Click(object sender, EventArgs e)
-        {
-            if(CurrentRegionID == UUID.Zero)
-            {
-                MessageBox.Show("Select a region before attempting to export.");
-                return;
-            }
-            RegionInfo region = _regionManager.GetRegionInfo(CurrentRegionID);
-            if (region != null) //It never should be, but who knows
-            {
-                //Make sure the directory exists
-                if (!Directory.Exists("Regions"))
-                    Directory.CreateDirectory("Regions");
-                if (!File.Exists ("Regions\\" + ExportFileName.Text))
-                     File.Create ("Regions\\" + ExportFileName.Text).Close();
-                IniConfigSource source = new IniConfigSource("Regions\\" + ExportFileName.Text, IniFileType.AuroraStyle);
-                if (source.Configs[region.RegionName] != null)
-                {
-                    source.Configs.Remove(region.RegionName);
-                }
-                //Add the config to the given source
-                region.CreateIConfig(source);
-                source.Save();
-            }
-        }
-
         private void startupType_TextChanged (object sender, EventArgs e)
         {
             if (!_changingRegion)
@@ -543,34 +395,23 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         private void startupType_Leave (object sender, EventArgs e)
         {
             if (_textHasChanged)
-            {
-                Update ();
                 _textHasChanged = false;
-            }
         }
 
         private void RegionManager_FormClosing (object sender, FormClosingEventArgs e)
         {
             //Save at the end if it hasn't yet
             if (_textHasChanged)
-            {
-                Update ();
                 _textHasChanged = false;
-            }
         }
 
         private void putOnline_Click (object sender, EventArgs e)
         {
             SetStartingStatus ();
-            RegionInfo region = _regionManager.GetRegionInfo(CurrentRegionID);
             Util.FireAndForget (delegate
             {
-                _regionManager.StartRegion(region);
-                if (CurrentRegionID == region.RegionID)
-                {
-                    SetOnlineStatus();
-                    RefreshCurrentRegionsThreaded();
-                }
+                _regionManager.StartRegion( _startingRegionInfo);
+                SetOnlineStatus();
             });
         }
 
@@ -579,21 +420,18 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             SetStoppingStatus();
             Util.FireAndForget (delegate
             {
-                if (_regionManager.StopRegion(CurrentRegionID, 0))
-                {
+                if (_regionManager.StopRegion(_startingRegionInfo.RegionID, 0))
                     SetOfflineStatus();
-                    RefreshCurrentRegionsThreaded();
-                }
             });
         }
 
         private void resetRegion_Click (object sender, EventArgs e)
         {
-            if (_regionManager.GetWhetherRegionIsOnline(CurrentRegionID))
+            if (_regionManager.GetWhetherRegionIsOnline(_startingRegionInfo.RegionID))
             {
                 DialogResult r = Utilities.InputBox("Are you sure?", "Are you sure you want to reset this region (deletes all prims and reverts terrain)?");
                 if (r == DialogResult.OK)
-                    _regionManager.ResetRegion(CurrentRegionID);
+                    _regionManager.ResetRegion(_startingRegionInfo.RegionID);
             }
             else
                 MessageBox.Show("The region is not online, please turn it online before doing this command.");
@@ -601,73 +439,23 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void deleteregion_Click (object sender, EventArgs e)
         {
-            RegionInfo region = _regionManager.GetRegionInfo(CurrentRegionID);
-            if (region != null) //It never should be, but who knows
+            DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to delete this region?");
+            if (r == DialogResult.OK)
             {
-                DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to delete this region?");
-                if (r == DialogResult.OK)
-                {
-                    SetStoppingStatus();
-                    _regionManager.DeleteRegion(region.RegionID);
-                    SetOfflineStatus();
-                    //Remove everything from the GUI
-                    ChangeRegionInfo(null);
-                    //Update the regions in the list box as well
-                    RefreshCurrentRegions ();
-                }
+                SetStoppingStatus();
+                _regionManager.DeleteRegion(_startingRegionInfo.RegionID);
+                SetOfflineStatus();
+                //Remove everything from the GUI
+                ChangeRegionInfo(null);
             }
         }
-
-        #region Default Region pieces
-
-        private void GetDefaultRegions ()
-        {
-            RegionSelections.Items.Add("None");//Add one for the default default
-            List<string> files = _regionManager.GetDefaultRegionNames();
-
-            foreach (string file in files)
-                RegionSelections.Items.Add (Path.GetFileNameWithoutExtension (file));//Remove the extension
-
-            if (RegionSelections.Items.Count > 1)//Select the first one by default so that its pretty for the user
-                RegionSelections.SelectedIndex = 1;
-            else
-                RegionSelections.SelectedIndex = 0;
-        }
-
-        private void CopyOverDefaultRegion (string regionName)
-        {
-            string fileName = RegionSelections.Items[RegionSelections.SelectedIndex].ToString();
-            if (!_regionManager.MoveDefaultRegion(regionName, fileName, false))
-            {
-                DialogResult s = Utilities.InputBox("Delete file?", "The file " + regionName + ".abackup already exists, delete?");
-                if (s == DialogResult.OK)
-                    _regionManager.MoveDefaultRegion(regionName, fileName, true);
-                else
-                    return;//Don't copy the region then
-            }
-        }
-
-        private void RegionSelections_SelectedIndexChanged (object sender, EventArgs e)
-        {
-            string name = RegionSelections.Items[RegionSelections.SelectedIndex].ToString ();
-            Image b = _regionManager.GetDefaultRegionImage(name);
-            if (b == null)
-            {
-                RegionSelectionsPicture.Image = null;
-                return;
-            }
-            Bitmap result = new Bitmap(RegionSelectionsPicture.Width, RegionSelectionsPicture.Height);
-            using (Graphics g = Graphics.FromImage (result))
-                g.DrawImage(b, 0, 0, RegionSelectionsPicture.Width, RegionSelectionsPicture.Height);
-            RegionSelectionsPicture.Image = result;
-        }
-
-        #endregion
 
         private void RegionManager_Load(object sender, EventArgs e)
         {
             string url;
-            if((url = _regionManager.GetOpenRegionSettingsHTMLPage(CurrentRegionID)) != "")
+            if (_startingRegionInfo == null)
+                return;
+            if ((url = _regionManager.GetOpenRegionSettingsHTMLPage(_startingRegionInfo.RegionID)) != "")
                 webBrowser1.Navigate(url);
         }
 
@@ -700,27 +488,26 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private string RegionMangerHTMLChanged(Dictionary<string, string> vars)
         {
-            RegionInfo region = _regionManager.GetRegionInfo(CurrentRegionID);
-            region.RegionName = vars["Region Name"];
-            region.RegionLocX = int.Parse(vars["Region Location X"]) * Constants.RegionSize;
-            region.RegionLocY = int.Parse(vars["Region Location Y"]) * Constants.RegionSize;
+            _startingRegionInfo.RegionName = vars["Region Name"];
+            _startingRegionInfo.RegionLocX = int.Parse(vars["Region Location X"]) * Constants.RegionSize;
+            _startingRegionInfo.RegionLocY = int.Parse(vars["Region Location Y"]) * Constants.RegionSize;
             string[] ports = vars["Region Ports"].Split(',');
 
-            region.UDPPorts.Clear();
+            _startingRegionInfo.UDPPorts.Clear();
             foreach (string port in ports)
             {
                 string tPort = port.Trim();
                 int iPort = 0;
                 if (int.TryParse(tPort, out iPort))
-                    region.UDPPorts.Add(iPort);
+                    _startingRegionInfo.UDPPorts.Add(iPort);
             }
-            region.RegionSizeX = int.Parse(vars["Region Size X"]);
-            region.RegionSizeY = int.Parse(vars["Region Size Y"]);
-            region.AccessLevel = byte.Parse(vars["Maturity"]);
-            region.Disabled = vars["Disabled"] != null;
-            region.Startup = vars["Startup Type"] == "Normal" ? StartupType.Normal : StartupType.Medium;
-            region.InfiniteRegion = vars["Infinite Region"] != null;
-            return BuildRegionManagerHTTPPage(CurrentRegionID);
+            _startingRegionInfo.RegionSizeX = int.Parse(vars["Region Size X"]);
+            _startingRegionInfo.RegionSizeY = int.Parse(vars["Region Size Y"]);
+            _startingRegionInfo.AccessLevel = byte.Parse(vars["Maturity"]);
+            _startingRegionInfo.Disabled = vars["Disabled"] != null;
+            _startingRegionInfo.Startup = vars["Startup Type"] == "Normal" ? StartupType.Normal : StartupType.Medium;
+            _startingRegionInfo.InfiniteRegion = vars["Infinite Region"] != null;
+            return BuildRegionManagerHTTPPage(_startingRegionInfo.RegionID);
         }
 
         private void button20_Click(object sender, EventArgs e)
@@ -729,24 +516,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             webBrowser1.Visible = !webBrowser1.Visible;
         }
 
-        private void einfiniteRegion_CheckedChanged(object sender, EventArgs e)
-        {
-            Update();
-        }
-
         private void estateOwnerLookupSearch_Click(object sender, EventArgs e)
         {
-            if (estateRegionSelection.SelectedItem == null && estateRegionSelection.Items.Count > 0)
-                estateRegionSelection.SelectedItem = estateRegionSelection.Items[0];
-            else if (estateRegionSelection.SelectedItem == null)
-                return;
-            RegionInfo region = _regionManager.GetRegionInfo(estateRegionSelection.SelectedItem.ToString());
-            if (region == null)
-            {
-                MessageBox.Show("Region was not found!");
-                return;
-            }
-            _CurrentEstateRegionSelectedID = region.RegionID;
             estateSelection.Items.Clear();
             List<string> estateItems = _regionManager.GetEstatesForUser(estateOwnerName.Text);
             estateSelection.Items.AddRange(estateItems.ToArray());
@@ -762,7 +533,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 currentEstateName.Text = p;
             else
             {
-                string estateName = _regionManager.GetCurrentEstate(_CurrentEstateRegionSelectedID);
+                string estateName = _regionManager.GetCurrentEstate(_startingRegionInfo.RegionID);
                 currentEstateName.Text = estateName == "" ? "No estates exist" : estateName;
             }
         }
@@ -772,55 +543,25 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             string ownerName = estateOwnerName.Text;
             string estateToJoin = estateSelection.SelectedItem.ToString();
 
-            _regionManager.ChangeEstate(ownerName, estateToJoin, _CurrentEstateRegionSelectedID);
+            _regionManager.ChangeEstate(ownerName, estateToJoin, _startingRegionInfo.RegionID);
             UpdateCurrentEstateText(estateToJoin);
-            if ((RegionHasBeenCreated && RegionCreatedID == _CurrentEstateRegionSelectedID) ||
-                    _pageToStart == RegionManagerPage.EstateSetup)
-                StartRegionAfterEstateCreation();
-        }
-
-        private void StartRegionAfterEstateCreation()
-        {
             if (KillAfterRegionCreation)
-            {
-                //Kill it so startup can continue
-                Application.Exit();
-                return;
-            }
-            RegionInfo region = _regionManager.GetRegionInfo(_CurrentEstateRegionSelectedID);
-            if (MainConsole.Instance != null)
-                MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
-            _regionManager.StartNewRegion(region);
-            RefreshCurrentRegions();
-            RegionHasBeenCreated = false;
-            RegionCreatedID = UUID.Zero;
+                Close();
         }
 
         private void createNewEstate_Click(object sender, EventArgs e)
         {
-            UUID regionID = _CurrentEstateRegionSelectedID;
             string estateName = this.estateName.Text;
             string ownerName = estateOwnerName.Text;
 
-            if (!_regionManager.CreateNewEstate(regionID, estateName, ownerName))
+            if (!_regionManager.CreateNewEstate(_startingRegionInfo.RegionID, estateName, ownerName))
                 MessageBox.Show("Failed to create the estate, possibly duplicate estate name?");
             else
             {
                 UpdateCurrentEstateText(estateName);
-
-                if ((RegionHasBeenCreated && RegionCreatedID == regionID) ||
-                    _pageToStart == RegionManagerPage.EstateSetup)
-                    StartRegionAfterEstateCreation();
+                if (KillAfterRegionCreation)
+                    Close();
             }
-        }
-
-        private void estateRegionSelection_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            RegionInfo region = _regionManager.GetRegionInfo(estateRegionSelection.SelectedItem.ToString());
-            if (region == null)
-                return;
-
-            estateOwnerName.Text = _regionManager.GetEstateOwnerName(region.RegionID);
         }
 
         private void find_user_Click(object sender, EventArgs e)
@@ -834,7 +575,6 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
     public enum RegionManagerPage
     {
         CreateRegion,
-        ViewRegions,
         EstateSetup
     }
 }
