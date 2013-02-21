@@ -10,10 +10,10 @@
 	DoConversion = true
 
 [Handlers]
-    AssetHandler = RedisAssetService
+    UserAccountHandler = UserAccountService
 
-    AssetServiceOpenServerHandler = true
-    AssetServiceServerHandlerPort = 8010
+    UserAccountServiceOpenServerHandler = true
+    UserAccountServiceServerHandlerPort = 8014
 
 [Console]
     ;; Setting for which console log will be used

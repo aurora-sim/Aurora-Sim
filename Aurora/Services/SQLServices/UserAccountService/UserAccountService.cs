@@ -44,8 +44,6 @@ namespace Aurora.Services.SQLServices.UserAccountService
 
         protected IAuthenticationService m_AuthenticationService;
         protected IUserAccountData m_Database;
-        protected IGridService m_GridService;
-        protected IInventoryService m_InventoryService;
         protected GenericAccountCache<UserAccount> m_cache = new GenericAccountCache<UserAccount>();
 
         #endregion
@@ -104,9 +102,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_GridService = registry.RequestModuleInterface<IGridService>();
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
-            m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");

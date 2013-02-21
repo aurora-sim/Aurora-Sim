@@ -26,17 +26,20 @@
     SimulationHandler = SimulationServiceConnector
     UserAccountHandler = UserAccountService
 
-    GridServiceOpenServerHandler = true
+    GridServiceOpenServerHandler = false
     GridServiceServerHandlerPort = 8004
 
     AssetServiceOpenServerHandler = false
     AssetServiceServerHandlerPort = 8005
 
-    InventoryServiceOpenServerHandler = true
+    InventoryServiceOpenServerHandler = false
     InventoryServiceServerHandlerPort = 8006
 
-    UserAccountServiceOpenServerHandler = true
+    UserAccountServiceOpenServerHandler = false
     UserAccountServiceServerHandlerPort = 8007
+
+    AvatarServiceOpenServerHandler = false
+    AvatarServiceServerHandlerPort = 8008
 
     LLLoginHandlerPort = 8002
 

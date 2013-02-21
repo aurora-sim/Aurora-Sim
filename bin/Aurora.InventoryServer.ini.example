@@ -10,10 +10,10 @@
 	DoConversion = true
 
 [Handlers]
-    AssetHandler = RedisAssetService
+    InventoryHandler = InventoryService
 
-    AssetServiceOpenServerHandler = true
-    AssetServiceServerHandlerPort = 8010
+    InventoryServiceOpenServerHandler = true
+    InventoryServiceServerHandlerPort = 8013
 
 [Console]
     ;; Setting for which console log will be used

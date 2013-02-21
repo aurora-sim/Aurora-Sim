@@ -10,10 +10,10 @@
 	DoConversion = true
 
 [Handlers]
-    AssetHandler = RedisAssetService
+    GridHandler = GridService
 
-    AssetServiceOpenServerHandler = true
-    AssetServiceServerHandlerPort = 8010
+    GridServiceOpenServerHandler = true
+    GridServiceServerHandlerPort = 8012
 
 [Console]
     ;; Setting for which console log will be used
