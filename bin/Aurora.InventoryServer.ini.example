@@ -10,7 +10,9 @@
 	DoConversion = true
 
 [Handlers]
+    AssetHandler = RedisAssetService
     InventoryHandler = InventoryService
+    UserAccountHandler = UserAccountService
 
     InventoryServiceOpenServerHandler = true
     InventoryServiceServerHandlerPort = 8013

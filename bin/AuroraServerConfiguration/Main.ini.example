@@ -9,7 +9,7 @@
     EventQueueInHandler = EventQueueHandler
 
     AgentInfoHandler = AgentInfoService
-    AssetHandler = AssetService
+    AssetHandler = RedisAssetService
     AssetHandlerUseCache = false
     AsyncMessagePostServiceHandler = RemoteAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService

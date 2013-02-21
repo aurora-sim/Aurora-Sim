@@ -10,6 +10,7 @@
 	DoConversion = true
 
 [Handlers]
+    AuthenticationHandler = PasswordAuthenticationService
     UserAccountHandler = UserAccountService
 
     UserAccountServiceOpenServerHandler = true

@@ -10,7 +10,10 @@
 	DoConversion = true
 
 [Handlers]
+    AssetHandler = RedisAssetService
     AvatarHandler = AvatarService
+    InventoryHandler = InventoryService
+    UserAccountHandler = UserAccountService
 
     AvatarServiceOpenServerHandler = true
     AvatarServiceServerHandlerPort = 8011

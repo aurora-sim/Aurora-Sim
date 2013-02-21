@@ -349,7 +349,10 @@ namespace Aurora.RedisServices.AssetService
 
         public bool RedisExistsAsset(string id)
         {
-            return RedisEnsureConnection((conn) => conn.Exists(id));
+            bool success = RedisEnsureConnection((conn) => conn.Exists(id));
+            if (!success)
+                success = m_assetService.ExistsAsset(UUID.Parse(id));
+            return success;
         }
 
         public bool RedisSetAsset(AssetBase asset)

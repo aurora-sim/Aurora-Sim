@@ -421,7 +421,7 @@ namespace Aurora.Framework
             else if (opts[0].StartsWith("Command help:"))
                 Output(opts[0]);
             else
-                Output(String.Format("Options: {0}", String.Join("\n", opts)));
+                Output(String.Format("Options: {0}", String.Join("\n         ", opts)));
 
             return true;
         }

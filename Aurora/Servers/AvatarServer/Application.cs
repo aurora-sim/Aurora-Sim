@@ -41,9 +41,9 @@ namespace Aurora.Servers.AvatarServer
         public static void Main(string[] args)
         {
             BaseApplication.BaseMain(args, "Aurora.AvatarServer.ini",
-                new MinimalSimulationBase("Aurora.AvatarServer ", 
-                    new List<Type>() { typeof(IAvatarData), typeof(IInventoryData), typeof(IUserAccountData) },
-                    new List<Type>() { typeof(IAvatarService), typeof(IInventoryService), typeof(IUserAccountService) }));
+                new MinimalSimulationBase("Aurora.AvatarServer ",
+                    new List<Type>() { typeof(IAvatarData), typeof(IInventoryData), typeof(IUserAccountData), typeof(IAssetDataPlugin) },
+                    new List<Type>() { typeof(IAvatarService), typeof(IInventoryService), typeof(IUserAccountService), typeof(IAssetService) }));
         }
     }
 }
