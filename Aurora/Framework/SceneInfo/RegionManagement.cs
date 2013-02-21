@@ -65,7 +65,7 @@ namespace Aurora.Framework
         {
             if (!m_enabled) return;
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
-            server.AddStreamHandler(new ServerHandler("/regionmanagement", m_registry));
+            server.AddStreamHandler(new ServerHandler("/regionmanagement", m_registry, this));
         }
 
         public void Close()

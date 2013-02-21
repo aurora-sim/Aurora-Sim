@@ -69,10 +69,9 @@ namespace OpenSim.Services.Connectors.Simulation
                                 AgentData data, out int requestedUDPPort, out string reason)
         {
             requestedUDPPort = 0;
-            if (destination == null)
+            if (destination == null || Scene == null)
             {
                 reason = "Given destination was null";
-                MainConsole.Instance.DebugFormat("[LOCAL SIMULATION CONNECTOR]: CreateAgent was given a null destination");
                 return false;
             }
             if (destination.ExternalEndPoint != null) requestedUDPPort = destination.ExternalEndPoint.Port;
@@ -110,7 +109,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool UpdateAgent(GridRegion destination, AgentPosition cAgentData)
         {
-            if (destination == null)
+            if (Scene == null || destination == null)
                 return false;
 
             bool retVal = false;
@@ -127,6 +126,9 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
         {
+            if (Scene == null)
+                return false;
+
             IScenePresence sp = Scene.GetScenePresence(AgentID);
             if (sp != null)
             {
@@ -137,6 +139,9 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion destination, bool markAgentAsLeaving)
         {
+            if (Scene == null)
+                return false;
+
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule == null) return false;
@@ -150,7 +155,7 @@ namespace OpenSim.Services.Connectors.Simulation
             agent = null;
             circuitData = null;
 
-            if (destination == null)
+            if (Scene == null || destination == null)
                 return false;
 
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
@@ -164,7 +169,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool CloseAgent(GridRegion destination, UUID id)
         {
-            if (destination == null)
+            if (Scene == null || destination == null)
                 return false;
 
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to SendCloseAgent");
@@ -181,7 +186,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool CreateObject(GridRegion destination, ISceneObject sog)
         {
-            if (destination == null)
+            if (Scene == null || destination == null)
                 return false;
 
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to SendCreateObject");
@@ -196,7 +201,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool CreateObject(GridRegion destination, UUID userID, UUID itemID)
         {
-            if (destination == null)
+            if (Scene == null || destination == null)
                 return false;
 
             IEntityTransferModule AgentTransferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
@@ -205,6 +210,14 @@ namespace OpenSim.Services.Connectors.Simulation
                 return AgentTransferModule.IncomingCreateObject(Scene.RegionInfo.RegionID, userID, itemID);
             }
             return false;
+        }
+
+        public bool IsLocalRegion(ulong handle)
+        {
+            if (Scene == null)
+                return false;
+
+            return Scene.RegionInfo.RegionHandle == handle;
         }
 
         #endregion /* ISimulationService */

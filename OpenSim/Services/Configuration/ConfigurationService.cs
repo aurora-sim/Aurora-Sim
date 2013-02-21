@@ -117,25 +117,16 @@ namespace OpenSim.Services.ConfigurationService
             if (autoConfig == null)
                 return;
 
-            string serverURL = autoConfig.GetString("RegistrationURI", "");
             OSDMap request = new OSDMap();
-            if (serverURL == "")
-            {
-                //Get the urls from the config
-                GetConfigFor("GridServerURI", request);
-                GetConfigFor("AssetServerURI", request);
-                GetConfigFor("InventoryServerURI", request);
-                GetConfigFor("AvatarServerURI", request);
-                GetConfigFor("UserAccountServerURI", request);
-                GetConfigFor("RemoteServerURI", request);
-                GetConfigFor("EventQueueServiceURI", request);
-                GetConfigFor("AbuseReportURI", request);
-                m_urls = request;
-            }
-            else
-            {
-                GetConfigFor("RegistrationURI", request);
-            }
+            //Get the urls from the config
+            GetConfigFor("GridServerURI", request);
+            GetConfigFor("AssetServerURI", request);
+            GetConfigFor("InventoryServerURI", request);
+            GetConfigFor("AvatarServerURI", request);
+            GetConfigFor("UserAccountServerURI", request);
+            GetConfigFor("ServerURI", request);
+            GetConfigFor("MessagingServerURI", request);
+            m_urls = request;
         }
 
         private void GetConfigFor(string name, OSDMap request)

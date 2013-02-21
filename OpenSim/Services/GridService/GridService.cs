@@ -49,7 +49,6 @@ namespace OpenSim.Services.GridService
         protected bool m_AllowNewRegistrations = true;
         protected bool m_AllowNewRegistrationsWithPass = false;
         protected string m_RegisterRegionPassword = "";
-        protected IAuthenticationService m_AuthenticationService;
         protected IRegionData m_Database;
         protected bool m_DisableRegistrations;
         protected bool m_UseSessionID = true;
@@ -58,7 +57,6 @@ namespace OpenSim.Services.GridService
         protected int m_cachedMaxRegionSize = 0;
         protected int m_cachedRegionViewSize = 0;
         protected IRegistryCore m_registryCore;
-        protected ISimulationBase m_simulationBase;
         private readonly Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
 
         #endregion
@@ -124,14 +122,12 @@ namespace OpenSim.Services.GridService
                                                          HandleClearRegion);
             }
             registry.RegisterModuleInterface<IGridService>(this);
-            Init(registry, Name);
+            Init(registry, Name, serverPath: "/grid/");
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
             m_registryCore = registry;
-            m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
-            m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
             m_Database = DataManager.RequestPlugin<IRegionData>();
 
             if (m_Database == null)
@@ -156,7 +152,7 @@ namespace OpenSim.Services.GridService
         {
             if (m_cachedMaxRegionSize != 0)
                 return m_cachedMaxRegionSize;
-            object remoteValue = DoRemote();
+            object remoteValue = DoRemoteByURL("GridServerURI");
             if (remoteValue != null || m_doRemoteOnly) {
                 m_cachedMaxRegionSize = (int)remoteValue == 0 ? 8192 : (int)remoteValue;
                 if ((int)remoteValue == 0) return 8192;
@@ -171,7 +167,7 @@ namespace OpenSim.Services.GridService
         {
             if (m_cachedRegionViewSize != 0)
                 return m_cachedRegionViewSize;
-            object remoteValue = DoRemote();
+            object remoteValue = DoRemoteByURL("GridServerURI");
             if (remoteValue != null && m_doRemoteOnly)
             {
                 m_cachedRegionViewSize = (int)remoteValue;
@@ -193,7 +189,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs)
         {
-            object remoteValue = DoRemote(scopeIDs);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
@@ -223,7 +219,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetSafeRegions(List<UUID> scopeIDs, int x, int y)
         {
-            object remoteValue = DoRemote(scopeIDs, x, y);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, x, y);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
@@ -238,7 +234,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual void SetRegionUnsafe(UUID id)
         {
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("GridServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
@@ -260,7 +256,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual void SetRegionSafe(UUID id)
         {
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("GridServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
@@ -277,7 +273,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetFallbackRegions(List<UUID> scopeIDs, int x, int y)
         {
-            object remoteValue = DoRemote(scopeIDs, x, y);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, x, y);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
@@ -300,7 +296,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual int GetRegionFlags(List<UUID> scopeIDs, UUID regionID)
         {
-            object remoteValue = DoRemote(scopeIDs, regionID);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (int)remoteValue;
 
@@ -317,7 +313,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual multipleMapItemReply GetMapItems(List<UUID> scopeIDs, ulong regionHandle, GridItemType gridItemType)
         {
-            object remoteValue = DoRemote(scopeIDs, regionHandle, gridItemType);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionHandle, gridItemType);
             if (remoteValue != null || m_doRemoteOnly)
                 return (multipleMapItemReply)remoteValue;
 
@@ -336,7 +332,7 @@ namespace OpenSim.Services.GridService
         public virtual RegisterRegion RegisterRegion (GridRegion regionInfos, UUID oldSessionID, string password)
         {
             RegisterRegion rr = new RegisterRegion ();
-            object remoteValue = DoRemoteByURL ("RegistrationURI", regionInfos, oldSessionID, password);
+            object remoteValue = DoRemoteByURL("GridServerURI", regionInfos, oldSessionID, password);
             if (remoteValue != null || m_doRemoteOnly) {
                 rr = (RegisterRegion)remoteValue;
                 if (rr == null)
@@ -349,8 +345,6 @@ namespace OpenSim.Services.GridService
                 return new RegisterRegion { Error = "Registrations are disabled." };
 
             UUID NeedToDeletePreviousRegion = UUID.Zero;
-
-            IConfig gridConfig = m_config.Configs ["GridService"];
 
             //Get the range of this so that we get the full count and make sure that we are not overlapping smaller regions
             List<GridRegion> regions = m_Database.Get (regionInfos.RegionLocX - GetMaxRegionSize (), regionInfos.RegionLocY - GetMaxRegionSize (),
@@ -451,20 +445,6 @@ namespace OpenSim.Services.GridService
                     //       this with the later retrieval of the same flags!
                     rflags |= RegionFlags.Authenticate;
                 }
-
-                if ((rflags & RegionFlags.Authenticate) != 0)
-                {
-                    // Can we authenticate at all?
-                    //
-                    if (m_AuthenticationService == null)
-                        return new RegisterRegion { Error = "No authentication possible" };
-                    //Make sure the key exists
-                    if (!m_AuthenticationService.CheckExists(regionInfos.SessionID, "SessionID"))
-                        return new RegisterRegion { Error = "Bad authentication" };
-                    //Now verify the key
-                    if (!m_AuthenticationService.Verify(regionInfos.SessionID, "SessionID", regionInfos.AuthToken, 30))
-                        return new RegisterRegion { Error = "Bad authentication" };
-                }
             }
 
             if (!m_AllowDuplicateNames)
@@ -500,6 +480,8 @@ namespace OpenSim.Services.GridService
                 //Regions do not get to set flags, so wipe them
                 regionInfos.Flags = 0;
                 //See if we are in the configs anywhere and have flags set
+
+                IConfig gridConfig = m_config.Configs["GridService"];
                 if ((gridConfig != null) && regionInfos.RegionName != string.Empty)
                 {
                     int newFlags = 0;
@@ -529,9 +511,6 @@ namespace OpenSim.Services.GridService
 
                 if (m_Database.Store(regionInfos))
                 {
-                    //Fire the event so that other modules notice
-                    m_simulationBase.EventManager.FireGenericEventHandler("RegionRegistered", regionInfos);
-
                     //Get the neighbors for them
                     List<GridRegion> neighbors = GetNeighbors(null, regionInfos);
                     FixNeighbors(regionInfos, neighbors, false);
@@ -559,7 +538,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual string UpdateMap(GridRegion gregion, bool online)
         {
-            object remoteValue = DoRemote(gregion, online);
+            object remoteValue = DoRemoteByURL("GridServerURI", gregion, online);
             if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
@@ -620,7 +599,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool DeregisterRegion(GridRegion gregion)
         {
-            object remoteValue = DoRemote(gregion);
+            object remoteValue = DoRemoteByURL("GridServerURI", gregion);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue != null && (bool)remoteValue;
 
@@ -645,7 +624,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual GridRegion GetRegionByUUID(List<UUID> scopeIDs, UUID regionID)
         {
-            object remoteValue = DoRemote(scopeIDs, regionID);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (GridRegion)remoteValue;
 
@@ -655,7 +634,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual GridRegion GetRegionByPosition(List<UUID> scopeIDs, int x, int y)
         {
-            object remoteValue = DoRemote(scopeIDs, x, y);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, x, y);
             if (remoteValue != null || m_doRemoteOnly)
                 return (GridRegion)remoteValue;
 
@@ -665,7 +644,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual GridRegion GetRegionByName(List<UUID> scopeIDs, string regionName)
         {
-            object remoteValue = DoRemote(scopeIDs, regionName);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionName);
             if (remoteValue != null || m_doRemoteOnly)
                 return (GridRegion)remoteValue;
 
@@ -685,7 +664,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetRegionsByName(List<UUID> scopeIDs, string name, uint? start, uint? count)
         {
-            object remoteValue = DoRemote(scopeIDs, name, start, count);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, name, start, count);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
@@ -705,7 +684,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual uint GetRegionsByNameCount(List<UUID> scopeIDs, string name)
         {
-            object remoteValue = DoRemote(scopeIDs, name);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, name);
             if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
@@ -715,7 +694,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetRegionRange(List<UUID> scopeIDs, int xmin, int xmax, int ymin, int ymax)
         {
-            object remoteValue = DoRemote(scopeIDs, xmin,xmax, ymin, ymax);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, xmin,xmax, ymin, ymax);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
@@ -725,7 +704,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetRegionRange(List<UUID> scopeIDs, float centerX, float centerY, uint squareRangeFromCenterInMeters)
         {
-            object remoteValue = DoRemote(scopeIDs, centerX, centerY, squareRangeFromCenterInMeters);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, centerX, centerY, squareRangeFromCenterInMeters);
 
             return (remoteValue != null || m_doRemoteOnly) ? (List<GridRegion>)remoteValue : m_Database.Get(scopeIDs, UUID.Zero, centerX, centerY, squareRangeFromCenterInMeters);
         }
@@ -738,7 +717,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetNeighbors(List<UUID> scopeIDs, GridRegion region)
         {
-            object remoteValue = DoRemote(region);
+            object remoteValue = DoRemoteByURL("GridServerURI", region);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 

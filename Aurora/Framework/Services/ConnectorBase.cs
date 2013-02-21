@@ -78,17 +78,13 @@ namespace Aurora.Framework
             set;
         }
 
-        public void Init(IRegistryCore registry, string name, string password)
-        {
-            m_password = password;
-            Init(registry, name);
-        }
-
-        public void Init(IRegistryCore registry, string name)
+        public void Init(IRegistryCore registry, string name, string password="", string serverPath = "")
         {
             Enabled = true;
             m_registry = registry;
             m_name = name;
+            bool openServerHandler = false;
+            uint serverHandlerPort = 0;
             ISimulationBase simBase = registry == null ? null : registry.RequestModuleInterface<ISimulationBase>();
             if (simBase != null)
             {
@@ -100,6 +96,12 @@ namespace Aurora.Framework
                         m_doRemoteCalls = config.GetBoolean(name + "DoRemoteCalls", false);
                     else
                         m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+
+                    if ((config = source.Configs["Handlers"]) != null)
+                    {
+                        openServerHandler = config.GetBoolean(name + "OpenServerHandler", false);
+                        serverHandlerPort = config.GetUInt(name + "ServerHandlerPort", serverHandlerPort);
+                    }
                 }
                 if ((config = source.Configs["Configuration"]) != null)
                 {
@@ -110,6 +112,16 @@ namespace Aurora.Framework
             if (m_doRemoteCalls)
                 m_doRemoteOnly = true;//Lock out local + remote for now
             ConnectorRegistry.RegisterConnector(this);
+
+            if (openServerHandler)
+                CreateServerHandler(serverHandlerPort, serverPath);
+        }
+
+        public void CreateServerHandler(uint port, string urlPath)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            server.AddStreamHandler(new ServerHandler(urlPath, m_registry, this));
         }
 
         public void SetPassword(string password)
@@ -248,10 +260,10 @@ namespace Aurora.Framework
     public class ServerHandler : BaseRequestHandler
     {
         protected IRegistryCore m_registry;
-        protected static Dictionary<string, List<MethodImplementation>> m_methods = null;
+        protected Dictionary<string, List<MethodImplementation>> m_methods = null;
         protected ICapsService m_capsService;
 
-        public ServerHandler(string url, IRegistryCore registry) :
+        public ServerHandler(string url, IRegistryCore registry, ConnectorBase conn) :
             base("POST", url)
         {
             m_registry = registry;
@@ -260,7 +272,8 @@ namespace Aurora.Framework
             {
                 m_methods = new Dictionary<string, List<MethodImplementation>>();
                 List<string> alreadyRunPlugins = new List<string>();
-                foreach (ConnectorBase plugin in ConnectorRegistry.Connectors)
+                List<ConnectorBase> connectors = conn == null ? ConnectorRegistry.Connectors : new List<ConnectorBase>() { conn };
+                foreach (ConnectorBase plugin in connectors)
                 {
                     if (alreadyRunPlugins.Contains(plugin.PluginName))
                         continue;

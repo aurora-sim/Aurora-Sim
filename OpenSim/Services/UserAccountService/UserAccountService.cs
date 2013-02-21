@@ -64,7 +64,7 @@ namespace OpenSim.Services.UserAccountService
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
             Configure(config, registry);
-            Init(registry, Name);
+            Init(registry, Name, serverPath: "/users/");
         }
 
         public void Configure(IConfigSource config, IRegistryCore registry)
@@ -133,7 +133,7 @@ namespace OpenSim.Services.UserAccountService
             if (m_cache.Get(firstName + " " + lastName, out account))
                 return AllScopeIDImpl.CheckScopeIDs(scopeIDs, account);
 
-            object remoteValue = DoRemote(scopeIDs, firstName, lastName);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, firstName, lastName);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 UserAccount acc = (UserAccount)remoteValue;
@@ -170,7 +170,7 @@ namespace OpenSim.Services.UserAccountService
             if (m_cache.Get(name, out account))
                 return AllScopeIDImpl.CheckScopeIDs(scopeIDs, account);
 
-            object remoteValue = DoRemote(scopeIDs, name);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, name);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 UserAccount acc = (UserAccount)remoteValue;
@@ -206,7 +206,7 @@ namespace OpenSim.Services.UserAccountService
             if (m_cache.Get(principalID, out account))
                 return AllScopeIDImpl.CheckScopeIDs(scopeIDs, account);
 
-            object remoteValue = DoRemote(scopeIDs, principalID);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, principalID);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 UserAccount acc = (UserAccount)remoteValue;
@@ -235,7 +235,7 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public bool StoreUserAccount(UserAccount data)
         {
-            object remoteValue = DoRemote(data);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", data);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
@@ -248,7 +248,7 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query)
         {
-            object remoteValue = DoRemote(scopeIDs, query);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserAccount>)remoteValue;
 
@@ -264,7 +264,7 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query, uint? start, uint? count)
         {
-            object remoteValue = DoRemote(scopeIDs, query);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserAccount>)remoteValue;
 
@@ -280,7 +280,7 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, int level, int flags)
         {
-            object remoteValue = DoRemote(level, flags);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", level, flags);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserAccount>)remoteValue;
 
@@ -296,7 +296,7 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public uint NumberOfUserAccounts(List<UUID> scopeIDs, string query)
         {
-            object remoteValue = DoRemote(scopeIDs, query);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
@@ -328,7 +328,7 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public string CreateUser(UserAccount newAcc, string password)
         {
-            object remoteValue = DoRemote(newAcc, password);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", newAcc, password);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? "" : remoteValue.ToString();
 
@@ -372,7 +372,7 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
         {
-            object remoteValue = DoRemote(userID, password, archiveInformation, wipeFromDatabase);
+            object remoteValue = DoRemoteByURL("UserAccountServerURI", userID, password, archiveInformation, wipeFromDatabase);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 

@@ -58,7 +58,7 @@ namespace OpenSim.Services.AssetService
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
             Configure(config, registry);
-            Init(registry, Name);
+            Init(registry, Name, serverPath: "/asset/");
         }
 
         public virtual void Configure(IConfigSource config, IRegistryCore registry)
@@ -124,7 +124,7 @@ namespace OpenSim.Services.AssetService
                 if (found && (cachedAsset == null || cachedAsset.Data.Length != 0))
                     return cachedAsset;
             }
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 if (doDatabaseCaching && cache != null)
@@ -159,7 +159,7 @@ namespace OpenSim.Services.AssetService
                     return cachedAsset.Data;
             }
 
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
                 return (byte[])remoteValue;
 
@@ -173,7 +173,7 @@ namespace OpenSim.Services.AssetService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool GetExists(string id)
         {
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
@@ -192,7 +192,7 @@ namespace OpenSim.Services.AssetService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual UUID Store(AssetBase asset)
         {
-            object remoteValue = DoRemote(asset);
+            object remoteValue = DoRemoteByURL("AssetServerURI", asset);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 if (remoteValue == null)
@@ -214,7 +214,7 @@ namespace OpenSim.Services.AssetService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual UUID UpdateContent(UUID id, byte[] data)
         {
-            object remoteValue = DoRemote(id, data);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id, data);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? UUID.Zero : (UUID)remoteValue;
 
@@ -229,7 +229,7 @@ namespace OpenSim.Services.AssetService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool Delete(UUID id)
         {
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 

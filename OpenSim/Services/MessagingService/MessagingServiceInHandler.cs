@@ -93,7 +93,7 @@ namespace OpenSim.Services.MessagingService
             }
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(8003);
 
-            server.AddStreamHandler(new MessagingServiceInPostHandler("/messagingservice/", m_registry, this));
+            server.AddStreamHandler(new MessagingServiceInPostHandler("/messaging/", m_registry, this));
         }
 
         public void FinishedStartup()

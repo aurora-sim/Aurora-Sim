@@ -76,7 +76,7 @@ namespace OpenSim.Services
                 uint port = m_config.Configs["Network"].GetUInt("http_listener_port", 8003);
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-                server.AddStreamHandler(new ServerHandler("/server/", m_registry));
+                server.AddStreamHandler(new ServerHandler("/server/", m_registry, null));
                 //AddUDPConector(8008);
             }
         }
