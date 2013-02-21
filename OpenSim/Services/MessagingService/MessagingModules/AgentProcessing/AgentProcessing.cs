@@ -49,8 +49,6 @@ namespace OpenSim.Services.MessagingService
         protected int MaxVariableRegionSight = 512;
         protected bool VariableRegionSight;
         protected bool m_enabled = true;
-
-        protected string _capsURL = "", _capsURLPassword = "";
         protected IConfigSource _config;
 
         #endregion
@@ -93,27 +91,7 @@ namespace OpenSim.Services.MessagingService
         {
             //Also look for incoming messages to display
             if (m_enabled)
-            {
                 m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
-                ReadRemoteCapsPassword();
-            }
-        }
-
-        private void ReadRemoteCapsPassword()
-        {
-            IConfig handlerConfig = _config.Configs["AuroraConnectors"];
-            IGenericsConnector genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            if (handlerConfig.GetBoolean("CapsServiceDoRemoteCalls", false))
-            {
-                OSDWrapper wrapper = genericsConnector.GetGeneric<OSDWrapper>(UUID.Zero, "CapsServiceURL", "CapsURL");
-                if (wrapper != null)
-                {
-                    _capsURL = wrapper.Info.AsString();
-                    OSDWrapper w = genericsConnector.GetGeneric<OSDWrapper>(UUID.Zero, "CapsServiceURL", "CapsPassword");
-                    _capsURLPassword = w.Info.AsString();
-                    base.SetPassword(_capsURLPassword);
-                }
-            }
         }
 
         #endregion
@@ -1240,17 +1218,6 @@ namespace OpenSim.Services.MessagingService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
         public virtual LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit)
         {
-            object retVal = base.DoRemoteByHTTP(_capsURL, region, aCircuit);
-            if (retVal != null || m_doRemoteOnly)
-            {
-                if (retVal == null)
-                {
-                    ReadRemoteCapsPassword();
-                    retVal = base.DoRemoteByHTTP(_capsURL, region, aCircuit);
-                }
-                return retVal == null ? null : (LoginAgentArgs)retVal;
-            }
-
             bool success = false;
             string seedCap = "";
             string reason = "Could not find the simulation service";

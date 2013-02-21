@@ -56,7 +56,7 @@ namespace OpenSim.Services.MessagingService
         /// <param name = "request"></param>
         public void Post(ulong RegionHandle, OSDMap request)
         {
-            m_asyncReceiverService.FireMessageReceived(RegionHandle.ToString(), request);
+            m_asyncReceiverService.FireMessageReceived(request);
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace OpenSim.Services.MessagingService
         /// <param name = "request"></param>
         public void PostToAll(OSDMap request)
         {
-            m_asyncReceiverService.FireMessageReceived("0", request);
+            m_asyncReceiverService.FireMessageReceived(request);
         }
 
         #endregion

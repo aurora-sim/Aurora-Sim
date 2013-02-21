@@ -69,14 +69,12 @@ namespace OpenSim.Services.MessagingService
 
         public void Post(OSDMap request, ulong RegionHandle)
         {
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(
-                RegionHandle.ToString(), request);
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
         }
 
         public void Get(OSDMap request, UUID userID, ulong RegionHandle, GetResponse response)
         {
-            response(m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(
-                RegionHandle.ToString(), request));
+            response(m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request));
         }
 
         #endregion

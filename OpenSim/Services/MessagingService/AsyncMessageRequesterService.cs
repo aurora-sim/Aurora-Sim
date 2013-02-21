@@ -47,7 +47,7 @@ namespace OpenSim.Services.MessagingService
         #region Declares
 
         protected volatile bool m_locked;
-        protected List<IScene> m_scenes = new List<IScene>();
+        protected IScene m_scene;
         protected Timer m_timer;
 
         #endregion
@@ -72,7 +72,7 @@ namespace OpenSim.Services.MessagingService
             if (handlerConfig.GetString("AsyncMessageRequesterServiceHandler", "") != Name)
                 return;
 
-            m_scenes.Add(scene);
+            m_scene = scene;
 
             if (m_timer == null)
             {
@@ -86,7 +86,7 @@ namespace OpenSim.Services.MessagingService
 
         public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove(scene);
+            m_scene = null;
         }
 
         public void Close()
@@ -109,48 +109,31 @@ namespace OpenSim.Services.MessagingService
 
         private void requestAsyncMessages(object sender, ElapsedEventArgs e)
         {
-            if (m_locked || m_scenes.Count == 0)
+            if (m_locked || m_scene == null)
                 return;
             m_locked = true;
             OSDMap message = CreateWebRequest();
-            List<string> serverURIs =
-                m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
-            foreach (string host in serverURIs)
+            string host = m_scene.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+            OSD resp = OSDParser.DeserializeJson(WebUtils.PostToService(host, message));
+            if (resp is OSDMap)
             {
-                OSD resp = OSDParser.DeserializeJson(WebUtils.PostToService(host, message));
-                if (resp is OSDMap)
+                OSDMap response = (OSDMap)resp;
+                if (response["Messages"].Type == OSDType.Map)
                 {
-                    OSDMap response = (OSDMap)resp;
-                    if (response["Messages"].Type == OSDType.Map)
+                    OSDMap messages = (OSDMap)response["Messages"];
+                    foreach (KeyValuePair<string, OSD> kvp in messages)
                     {
-                        OSDMap messages = (OSDMap) response["Messages"];
-                        foreach (KeyValuePair<string, OSD> kvp in messages)
+                        OSDArray array = (OSDArray)kvp.Value;
+                        IAsyncMessageRecievedService service =
+                            m_scene.RequestModuleInterface<IAsyncMessageRecievedService>();
+                        foreach (OSD asyncMessage in array)
                         {
-                            OSDArray array = (OSDArray) kvp.Value;
-                            IAsyncMessageRecievedService service =
-                                GetScene(ulong.Parse(kvp.Key)).RequestModuleInterface<IAsyncMessageRecievedService>();
-                            foreach (OSD asyncMessage in array)
-                            {
-                                service.FireMessageReceived(kvp.Key, (OSDMap) asyncMessage);
-                            }
+                            service.FireMessageReceived((OSDMap)asyncMessage);
                         }
                     }
                 }
             }
             m_locked = false;
-        }
-
-        private IScene GetScene(ulong regionHandle)
-        {
-#if (!ISWIN)
-            foreach (IScene scene in m_scenes)
-            {
-                if (scene.RegionInfo.RegionHandle == regionHandle) return scene;
-            }
-            return null;
-#else
-            return m_scenes.FirstOrDefault(scene => scene.RegionInfo.RegionHandle == regionHandle);
-#endif
         }
 
         #region Helpers
@@ -162,11 +145,8 @@ namespace OpenSim.Services.MessagingService
             OSDMap request = new OSDMap();
             request["Method"] = "AsyncMessageRequest";
             OSDArray array = new OSDArray();
-            foreach (IScene scene in m_scenes)
-            {
-                array.Add(scene.RegionInfo.RegionHandle);
-                array.Add(scene.RegionInfo.GridSecureSessionID);
-            }
+            array.Add(m_scene.RegionInfo.RegionHandle);
+            array.Add(m_scene.RegionInfo.GridSecureSessionID);
             request["RegionHandles"] = array;
             message["Message"] = request;
             return message;

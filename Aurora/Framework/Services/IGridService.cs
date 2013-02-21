@@ -226,8 +226,6 @@ namespace OpenSim.Services.Interfaces
         public List<GridRegion> Neighbors = new List<GridRegion>();
         public UUID SessionID;
         public int RegionFlags = 0;
-        public OSDMap Urls = new OSDMap();
-        public OSDMap RegionRemote;
         public GridRegion Region;
 
         public override OSDMap ToOSD()
@@ -237,10 +235,6 @@ namespace OpenSim.Services.Interfaces
             map["Neighbors"] = new OSDArray(Neighbors.ConvertAll<OSD>((region) => region.ToOSD()));
             map["SessionID"] = SessionID;
             map["RegionFlags"] = RegionFlags;
-            if (Urls != null)
-                map["Urls"] = Urls;
-            if (RegionRemote != null)
-                map["RegionRemote"] = RegionRemote;
             if (Region != null)
                 map["Region"] = Region.ToOSD();
             return map;
@@ -253,10 +247,6 @@ namespace OpenSim.Services.Interfaces
             Neighbors = n.ConvertAll<GridRegion>((osd) => { GridRegion r = new GridRegion(); r.FromOSD((OSDMap)osd); return r; });
             SessionID = map["SessionID"];
             RegionFlags = map["RegionFlags"];
-            if (map.ContainsKey("Urls"))
-                Urls = (OSDMap)map["Urls"];
-            if (map.ContainsKey("RegionRemote"))
-                RegionRemote = (OSDMap)map["RegionRemote"];
             if (map.ContainsKey("Region"))
             {
                 Region = new GridRegion();
@@ -664,53 +654,6 @@ namespace OpenSim.Services.Interfaces
     }
 
     /// <summary>
-    /// This is the main service that collects URLs for registering clients.
-    /// Call this if you want to get secure URLs for the given SessionID
-    /// </summary>
-    public interface IGridRegistrationService
-    {
-        /// <summary>
-        /// Time before handlers will need to reregister (in hours)
-        /// </summary>
-        float ExpiresTime { get; }
-
-        /// <summary>
-        /// Gets a list of secure URLs for the given RegionHandle and SessionID
-        /// </summary>
-        /// <param name="SessionID"></param>
-        /// <returns></returns>
-        OSDMap GetUrlForRegisteringClient(string SessionID);
-
-        /// <summary>
-        /// Registers a module that will be requested when GetUrlForRegisteringClient is called
-        /// </summary>
-        /// <param name="module"></param>
-        void RegisterModule(IGridRegistrationUrlModule module);
-
-        /// <summary>
-        /// Remove the URLs for the given region
-        /// </summary>
-        /// <param name="SessionID"></param>
-        void RemoveUrlsForClient(string SessionID);
-
-        /// <summary>
-        /// Checks that the given client can access the function that it is calling
-        /// </summary>
-        /// <param name="SessionID"></param>
-        /// <param name="function"></param>
-        /// <param name="defaultThreatLevel"></param>
-        /// <returns></returns>
-        bool CheckThreatLevel(string SessionID, string function, ThreatLevel defaultThreatLevel);
-
-        /// <summary>
-        /// Updates the time so that the region does not timeout
-        /// </summary>
-        /// <param name="p"></param>
-        void UpdateUrlsForClient(string SessionID);
-		OSDMap RegionRemoteHandlerURL(GridRegion regionInfo, UUID sessionID, UUID oldSessionID);
-    }
-
-    /// <summary>
     /// The threat level enum
     /// Tells how much we trust another host
     /// </summary>
@@ -721,46 +664,5 @@ namespace OpenSim.Services.Interfaces
         Medium = 4,
         High = 8,
         Full = 16
-    }
-
-    /// <summary>
-    /// This is the sub service of the IGridRegistrationService that is implemented by other modules
-    ///   so that they can be queried for URLs to return.
-    /// </summary>
-    public interface IGridRegistrationUrlModule
-    {
-        /// <summary>
-        /// Name of the Url
-        /// </summary>
-        string UrlName { get; }
-
-        /// <summary>
-        /// Give the region all of the ports assigned for this module
-        /// </summary>
-        bool DoMultiplePorts { get; }
-
-        /// <summary>
-        /// Get the Url for the given sessionID
-        /// </summary>
-        /// <param name="SessionID"></param>
-        /// <param name="port"></param>
-        /// <returns></returns>
-        string GetUrlForRegisteringClient (string SessionID, uint port);
-
-        /// <summary>
-        /// Adds an existing URL to the module for the given SessionID and RegionHandle
-        /// </summary>
-        /// <param name="SessionID"></param>
-        /// <param name="url"></param>
-        /// <param name="port"></param>
-        void AddExistingUrlForClient (string SessionID, string url, uint port);
-
-        /// <summary>
-        /// Removes the given region from the http server so that the URLs cannot be used anymore
-        /// </summary>
-        /// <param name="sessionID"></param>
-        /// <param name="url"></param>
-        /// <param name="port"></param>
-        void RemoveUrlForClient (string sessionID, string url, uint port);
     }
 }

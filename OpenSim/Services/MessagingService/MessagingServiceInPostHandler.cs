@@ -39,22 +39,12 @@ namespace OpenSim.Services.MessagingService
 {
     public class MessagingServiceInPostHandler : BaseRequestHandler
     {
-        private readonly string m_SessionID;
         private readonly IAsyncMessageRecievedService m_handler;
-        private readonly ulong m_ourRegionHandle;
 
-        public MessagingServiceInPostHandler(string url, IRegistryCore registry, IAsyncMessageRecievedService handler,
-                                             string SessionID) :
+        public MessagingServiceInPostHandler(string url, IRegistryCore registry, IAsyncMessageRecievedService handler) :
                                                  base("POST", url)
         {
             m_handler = handler;
-            m_SessionID = SessionID;
-            if (!ulong.TryParse(SessionID, out m_ourRegionHandle))
-            {
-                string[] s = SessionID.Split('|');
-                if (s.Length == 2)
-                    ulong.TryParse(s[1], out m_ourRegionHandle);
-            }
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -84,9 +74,7 @@ namespace OpenSim.Services.MessagingService
         private byte[] NewMessage(OSDMap map)
         {
             OSDMap message = (OSDMap) map["Message"];
-            if (m_ourRegionHandle != 0)
-                message["RegionHandle"] = m_ourRegionHandle;
-            OSDMap result = m_handler.FireMessageReceived(m_SessionID, message);
+            OSDMap result = m_handler.FireMessageReceived(message);
             if (result != null)
                 return ReturnResult(result);
             else

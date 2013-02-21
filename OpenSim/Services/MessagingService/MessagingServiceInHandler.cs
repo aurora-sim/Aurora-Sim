@@ -36,7 +36,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class MessagingServiceInHandler : IService, IAsyncMessageRecievedService, IGridRegistrationUrlModule
+    public class MessagingServiceInHandler : IService, IAsyncMessageRecievedService
     {
         protected bool m_enabled;
 
@@ -53,7 +53,7 @@ namespace OpenSim.Services.MessagingService
 
         public event MessageReceived OnMessageReceived;
 
-        public OSDMap FireMessageReceived(string SessionID, OSDMap message)
+        public OSDMap FireMessageReceived(OSDMap message)
         {
             OSDMap result = null;
             if (OnMessageReceived != null)
@@ -65,39 +65,6 @@ namespace OpenSim.Services.MessagingService
                 }
             }
             return result;
-        }
-
-        #endregion
-
-        #region IGridRegistrationUrlModule Members
-
-        public string UrlName
-        {
-            get { return "MessagingServerURI"; }
-        }
-
-        public void AddExistingUrlForClient(string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, SessionID));
-        }
-
-        public string GetUrlForRegisteringClient(string SessionID, uint port)
-        {
-            string url = "/messagingservice" + UUID.Random();
-
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, SessionID));
-
-            return url;
-        }
-
-        public void RemoveUrlForClient(string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
         }
 
         #endregion
@@ -124,7 +91,9 @@ namespace OpenSim.Services.MessagingService
                         //Register so that we have an internal message handler, but don't add the external handler
                 return;
             }
-            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(8003);
+
+            server.AddStreamHandler(new MessagingServiceInPostHandler("/messagingservice/", m_registry, this));
         }
 
         public void FinishedStartup()

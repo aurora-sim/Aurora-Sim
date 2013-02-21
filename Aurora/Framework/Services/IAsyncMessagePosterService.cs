@@ -78,7 +78,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "message"></param>
         /// <returns></returns>
-        OSDMap FireMessageReceived(string SessionID, OSDMap message);
+        OSDMap FireMessageReceived(OSDMap message);
     }
 
     /// <summary>

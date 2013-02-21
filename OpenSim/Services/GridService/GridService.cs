@@ -339,23 +339,7 @@ namespace OpenSim.Services.GridService
             object remoteValue = DoRemoteByURL ("RegistrationURI", regionInfos, oldSessionID, password);
             if (remoteValue != null || m_doRemoteOnly) {
                 rr = (RegisterRegion)remoteValue;
-                if (rr != null)
-                {
-                    m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(
-                        regionInfos.RegionHandle.ToString(),
-                        rr.Urls
-                        );
-                    if (rr.RegionRemote != null)
-                    {
-                        //Set up the external handlers
-                        IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
-                        GridRegistrationService.GridRegistrationURLs grurl = new GridRegistrationService.GridRegistrationURLs();
-                        grurl.FromOSD(rr.RegionRemote);
-                        string url = grurl.URLS["regionURI"].AsString().Replace("http://" + regionInfos.ExternalEndPoint.Address + ":" + MainServer.Instance.Port, "");
-                        server.AddStreamHandler(new ServerHandler(url, UUID.Zero.ToString(), m_registry));
-                    }
-                }
-                else
+                if (rr == null)
                     rr = new RegisterRegion { Error = "Could not reach grid service." };
                 return rr;
             }
@@ -560,10 +544,7 @@ namespace OpenSim.Services.GridService
                         Neighbors = neighbors,
                         RegionFlags = regionInfos.Flags,
                         SessionID = SessionID,
-                        Region = regionInfos,
-                        Urls =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(regionInfos.RegionHandle.ToString()),
-                        RegionRemote = m_registry.RequestModuleInterface<IGridRegistrationService>().RegionRemoteHandlerURL(regionInfos, SessionID, oldSessionID)
+                        Region = regionInfos
                     };
                 }
             }
@@ -631,10 +612,6 @@ namespace OpenSim.Services.GridService
                 {
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Database exception: {0}", e);
                 }
-
-                IGridRegistrationService gridRegModule = m_registry.RequestModuleInterface<IGridRegistrationService>();
-                if (gridRegModule != null)
-                    gridRegModule.UpdateUrlsForClient(region.RegionHandle.ToString());
             }
 
             return "";

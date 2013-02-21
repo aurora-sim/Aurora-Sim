@@ -44,12 +44,11 @@ namespace Aurora.Modules.Chat
     {
         #region Declares
 
-        private readonly List<IScene> m_scenes = new List<IScene> ();
+        private IScene m_scene;
 
 		private IMessageTransferModule m_TransferModule;
         private bool m_Enabled = true;
         private bool m_allowGodTeleports = true;
-        private readonly ExpiringCache<UUID, GridInstantMessage> m_PendingLures = new ExpiringCache<UUID, GridInstantMessage> ();
 
         #endregion
 
@@ -70,7 +69,7 @@ namespace Aurora.Modules.Chat
             if (!m_Enabled)
                 return;
 
-            m_scenes.Add(scene);
+            m_scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -82,7 +81,7 @@ namespace Aurora.Modules.Chat
             if (!m_Enabled)
                 return;
 
-            m_scenes.Remove(scene);
+            m_scene = null;
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -93,7 +92,7 @@ namespace Aurora.Modules.Chat
         {
             if (!m_Enabled)
                 return;
-            m_TransferModule = m_scenes[0].RequestModuleInterface<IMessageTransferModule>();
+            m_TransferModule = m_scene.RequestModuleInterface<IMessageTransferModule>();
 
             if (m_TransferModule == null)
                 MainConsole.Instance.Error("[INSTANT MESSAGE]: No message transfer module, " +
@@ -144,9 +143,6 @@ namespace Aurora.Modules.Chat
                 (uint)position.Y,
                 (uint)position.Z);
 
-            string mainGridURL = GetMainGridURL ();
-            message += "@" + mainGridURL;//Add it to the message
-
 			GridInstantMessage m;
 
             if (m_allowGodTeleports && client.Scene.Permissions.CanGodTeleport(client.AgentId, targetid))//if we are an admin and are in god mode
@@ -167,7 +163,6 @@ namespace Aurora.Modules.Chat
                                            message, dest, false, presence.AbsolutePosition,
                                            new Byte[0]);
             }
-            m_PendingLures.Add (m.imSessionID, m, 7200); // 2 hours
 
 			if (m_TransferModule != null)
 				m_TransferModule.SendInstantMessage(m);
@@ -186,43 +181,9 @@ namespace Aurora.Modules.Chat
             IEntityTransferModule entityTransfer = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
             if (entityTransfer != null)
             {
-                GridInstantMessage im;
-                if (m_PendingLures.TryGetValue (lureID, out im))
-                {
-                    string[] parts = im.message.Split (new[] { '@' });
-                    if (parts.Length > 1)
-                    {
-                        string url = parts[parts.Length - 1]; // the last part
-                        if (url.Trim (new[] { '/' }) != GetMainGridURL ().Trim (new[] { '/' }))
-                        {
-                            GridRegion gatekeeper = new GridRegion
-                                                        {
-                                                            ServerURI = url,
-                                                            RegionID = im.RegionID,
-                                                            Flags =
-                                                                (int)
-                                                                (Framework.RegionFlags.Foreign |
-                                                                 Framework.RegionFlags.Hyperlink)
-                                                        };
-                            entityTransfer.RequestTeleportLocation (client, gatekeeper, position,
-                                Vector3.Zero, teleportFlags);
-                            return;
-                        }
-                    }
-                }
                 entityTransfer.RequestTeleportLocation(client, handle, position,
                                       Vector3.Zero, teleportFlags);
             }
-        }
-
-        private string GetMainGridURL ()
-        {
-            IConfigurationService configService = m_scenes[0].RequestModuleInterface<IConfigurationService> ();
-            List<string> mainGridURLs = configService.FindValueOf ("MainGridURL");
-            string mainGridURL = MainServer.Instance.ServerURI + "/";//Assume the default
-            if (mainGridURLs.Count > 0)//Then check whether we were given one
-                mainGridURL = mainGridURLs[0];
-            return mainGridURL;
         }
 
         void OnGridInstantMessage (GridInstantMessage im)
@@ -231,8 +192,7 @@ namespace Aurora.Modules.Chat
             {
                 UUID sessionID = new UUID (im.imSessionID);
                 MainConsole.Instance.DebugFormat ("[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.imSessionID, im.RegionID, im.message);
-                m_PendingLures.Add (sessionID, im, 7200); // 2 hours
-
+                
                 // Forward. We do this, because the IM module explicitly rejects
                 // IMs of this type
                 if (m_TransferModule != null)

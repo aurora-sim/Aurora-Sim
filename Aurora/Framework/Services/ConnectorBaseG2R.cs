@@ -45,38 +45,6 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
-    public class ConnectorBaseG2R : ConnectorBase
-    {
-        private IGenericsConnector m_genericsConnector;
-
-        public new void Init(IRegistryCore registry, string name)
-        {
-            base.Init(registry, name);
-            //flip it
-            IConfigSource source = registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
-            IConfig config;
-            m_doRemoteCalls = (config = source.Configs["AuroraConnectors"]) == null || config.GetBoolean("DoRemoteCalls", true);
-            SetDoRemoteCalls(!m_doRemoteCalls);
-            //this should be the grid server
-            if (m_doRemoteCalls)
-                m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-        }
-
-        protected override List<string> GetURIs(bool urlOverrides, OSDMap map, string url, string userID)
-        {
-            List<string> returnValue = new List<string>();
-            if (!map.Keys.Contains("regionID")) return returnValue;
-            UUID regionid = (UUID)Util.OSDToObject(map["regionID"], typeof(UUID));
-
-            List<RegionRegistrationURLs> urls = m_genericsConnector.GetGenerics<RegionRegistrationURLs>(regionid, "RegionRegistrationUrls");
-            foreach (RegionRegistrationURLs regionRegistrationUrLse in urls)
-            {
-                returnValue.Add(regionRegistrationUrLse.URLS["regionURI"].AsString());
-            }
-            return returnValue;
-        }
-    }
-
     public class RegionRegistrationURLs : IDataTransferable
     {
         public OSDMap URLS;

@@ -73,18 +73,10 @@ namespace OpenSim.Services.MessagingService
         {
             Util.FireAndForget((o) =>
             {
-                List<string> serverURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(),
-                                                                                           "MessagingServerURI");
-                if (serverURIs.Count > 0)
-                {
-                    OSDMap message = CreateWebRequest(request);
-                    foreach (string host in serverURIs)
-                    {
-                        //Send it async
-                        WebUtils.PostToService(host, message);
-                    }
-                }
+                string host = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+                OSDMap message = CreateWebRequest(request);
+                //Send it async
+                WebUtils.PostToService(host, message);
             });
         }
 
@@ -93,38 +85,32 @@ namespace OpenSim.Services.MessagingService
             Util.FireAndForget((o) =>
             {
                 OSDMap retval = null;
-                List<string> serverURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID.ToString(),
-                                                                                           RegionHandle.ToString(),
-                                                                                           "MessagingServerURI");
-                foreach (string host in serverURIs)
+                string host = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+                string backURL = "/" + UUID.Random();
+                request["ResponseURL"] = MainServer.Instance.ServerURI + backURL;
+                OSDMap message = CreateWebRequest(request);
+                MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", backURL, (path, req,
+                                httpRequest, httpResponse) =>
                 {
-                    string backURL = "/" + UUID.Random();
-                    request["ResponseURL"] = MainServer.Instance.ServerURI + backURL;
-                    OSDMap message = CreateWebRequest(request);
-                    MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", backURL, (path, req,
-                                  httpRequest, httpResponse) =>
+                    string resultStr = req.ReadUntilEnd();
+                    if (resultStr != "")
                     {
-                        string resultStr = req.ReadUntilEnd();
-                        if (resultStr != "")
-                        {
-                            retval = OSDParser.DeserializeJson(resultStr) as OSDMap;
-                            if (retval != null)
-                                response(retval);
-                        }
-                        MainServer.Instance.RemoveStreamHandler("POST", backURL);
-                        return MainServer.NoResponse;
-                    }));
-                    string result = WebUtils.PostToService(host, message);
-                    if (result != "")
-                    {
-                        OSDMap r = OSDParser.DeserializeJson(result) as OSDMap;
-                        if (r == null || !r.ContainsKey("WillHaveResponse"))
-                            response(null);
+                        retval = OSDParser.DeserializeJson(resultStr) as OSDMap;
+                        if (retval != null)
+                            response(retval);
                     }
-                    else
+                    MainServer.Instance.RemoveStreamHandler("POST", backURL);
+                    return MainServer.NoResponse;
+                }));
+                string result = WebUtils.PostToService(host, message);
+                if (result != "")
+                {
+                    OSDMap r = OSDParser.DeserializeJson(result) as OSDMap;
+                    if (r == null || !r.ContainsKey("WillHaveResponse"))
                         response(null);
                 }
+                else
+                    response(null);
             });
         }
 

@@ -43,7 +43,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
-    public class ServerConnector : IService, IGridRegistrationUrlModule
+    public class ServerConnector : IService
     {
         private IRegistryCore m_registry;
         private IConfigSource m_config;
@@ -52,43 +52,6 @@ namespace OpenSim.Services
         {
             get { return GetType().Name; }
         }
-
-        #region IGridRegistrationUrlModule Members
-
-        public string UrlName
-        {
-            get { return "ServerURI"; }
-        }
-
-        public bool DoMultiplePorts
-        {
-            get { return true; }
-        }
-
-        public void AddExistingUrlForClient(string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler(new ServerHandler(url, SessionID, m_registry));
-        }
-
-        public string GetUrlForRegisteringClient(string SessionID, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            string url = "/server" + UUID.Random();
-
-            server.AddStreamHandler(new ServerHandler(url, SessionID, m_registry));
-
-            return url;
-        }
-
-        public void RemoveUrlForClient(string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
-        }
-
-        #endregion
 
         #region IService Members
 
@@ -104,8 +67,6 @@ namespace OpenSim.Services
                 return;
 
             m_registry = registry;
-
-            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
         public void FinishedStartup()
@@ -113,7 +74,9 @@ namespace OpenSim.Services
             if (m_registry != null)
             {
                 uint port = m_config.Configs["Network"].GetUInt("http_listener_port", 8003);
-                AddExistingUrlForClient("", "/", port);
+                IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+                server.AddStreamHandler(new ServerHandler("/server/", m_registry));
                 //AddUDPConector(8008);
             }
         }

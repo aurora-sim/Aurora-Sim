@@ -65,7 +65,7 @@ namespace Aurora.Framework
         {
             if (!m_enabled) return;
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
-            server.AddStreamHandler(new ServerHandler("/regionmanagement", "", m_registry));
+            server.AddStreamHandler(new ServerHandler("/regionmanagement", m_registry));
         }
 
         public void Close()
@@ -405,7 +405,7 @@ namespace Aurora.Framework
             if (_url == "")
                 return DoRemote(o);
             else
-                return DoRemoteByHTTP(_url, o);
+                return DoRemote(_url, o);
         }
     }
 }
