@@ -29,7 +29,7 @@
     GridServiceOpenServerHandler = true
     GridServiceServerHandlerPort = 8004
 
-    AssetServiceOpenServerHandler = true
+    AssetServiceOpenServerHandler = false
     AssetServiceServerHandlerPort = 8005
 
     InventoryServiceOpenServerHandler = true
