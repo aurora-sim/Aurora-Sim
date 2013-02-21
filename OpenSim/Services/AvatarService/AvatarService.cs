@@ -219,67 +219,6 @@ namespace OpenSim.Services.AvatarService
             return m_Database.Delete("PrincipalID", principalID.ToString());
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public void CacheWearableData(UUID principalID, AvatarWearable wearable)
-        {
-            object remoteValue = DoRemote(principalID, wearable);
-            if (remoteValue != null || m_doRemoteOnly)
-                return;
-
-            if (!m_enableCacheBakedTextures)
-            {
-                IAssetService service = m_registry.RequestModuleInterface<IAssetService>();
-                if (service != null)
-                {
-                    //Remove the old baked textures then from the DB as we don't want to keep them around
-                    foreach (UUID texture in wearable.GetItems().Values)
-                    {
-                        service.Delete(texture);
-                    }
-                }
-                return;
-            }
-            wearable.MaxItems = 0; //Unlimited items
-
-            /*AvatarBaseData baseData = new AvatarBaseData();
-            AvatarBaseData[] av = m_CacheDatabase.Get("PrincipalID", principalID.ToString());
-            foreach (AvatarBaseData abd in av)
-            {
-                //If we have one already made, keep what is already there
-                if (abd.Data["Name"] == "CachedWearables")
-                {
-                    baseData = abd;
-                    OSDArray array = (OSDArray)OSDParser.DeserializeJson(abd.Data["Value"]);
-                    AvatarWearable w = new AvatarWearable();
-                    w.MaxItems = 0; //Unlimited items
-                    w.Unpack(array);
-                    foreach (KeyValuePair<UUID, UUID> kvp in w.GetItems())
-                    {
-                        wearable.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
-            //If we don't have one, set it up for saving a new one
-            if (baseData.Data == null)
-            {
-                baseData.PrincipalID = principalID;
-                baseData.Data = new Dictionary<string, string>();
-                baseData.Data.Add("Name", "CachedWearables");
-            }
-            baseData.Data["Value"] = OSDParser.SerializeJsonString(wearable.Pack());
-            try
-            {
-                bool store = m_CacheDatabase.Store(baseData);
-                if (!store)
-                {
-                    MainConsole.Instance.Warn("[AvatarService]: Issue saving the cached wearables to the database.");
-                }
-            }
-            catch
-            {
-            }*/
-        }
-
         public object DeleteUserInformation(string name, object param)
         {
             UUID user = (UUID)param;

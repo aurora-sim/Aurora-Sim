@@ -563,7 +563,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             if (string.IsNullOrEmpty(Source))
             {
-                AssetBase asset = Part.ParentEntity.Scene.AssetService.Get(InventoryItem.AssetID.ToString());
+                byte[] asset = Part.ParentEntity.Scene.AssetService.GetData(InventoryItem.AssetID.ToString());
                 if (null == asset)
                 {
                     MainConsole.Instance.ErrorFormat(
@@ -574,7 +574,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ScriptEngine.ScriptProtection.RemoveScript(this);
                     return false;
                 }
-                Source = Utils.BytesToString(asset.Data);
+                Source = Utils.BytesToString(asset);
             }
             if (string.IsNullOrEmpty(Source))
             {

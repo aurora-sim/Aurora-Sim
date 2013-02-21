@@ -755,20 +755,8 @@ namespace OpenSim.Services
             {
                 UuidGatherer gatherer = new UuidGatherer(m_AssetService);
 
-                foreach (IScene s in manager.GetAllScenes())
-                {
-                    StampRegionStatusFile(s.RegionInfo.RegionID);
-
-                    IScene s1 = s;
-#if (!ISWIN)
-                    s.ForEachSceneEntity(delegate(ISceneEntity e)
-                    {
-                        gatherer.GatherAssetUuids(e, assets, s1);
-                    });
-#else
-                    s.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets, s1));
-#endif
-                }
+                StampRegionStatusFile(manager.Scene.RegionInfo.RegionID);
+                manager.Scene.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets, manager.Scene));
 
                 foreach (UUID assetID in assets.Keys)
                 {

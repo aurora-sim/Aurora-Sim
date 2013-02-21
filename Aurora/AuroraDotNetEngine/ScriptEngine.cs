@@ -61,7 +61,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public static ScriptProtectionModule ScriptProtection;
 
-        private readonly List<IScene> m_Scenes = new List<IScene>();
+        private IScene m_Scene;
+        public IScene Scene
+        {
+            get { return m_Scene; }
+        }
 
         // Handles and queues incoming events from OpenSim
 
@@ -118,11 +122,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private bool m_consoleDisabled;
         private bool m_disabled;
         private bool m_enabled;
-
-        public List<IScene> Worlds
-        {
-            get { return m_Scenes; }
-        }
 
         /// <summary>
         ///   Disabled from the command line, takes presidence over normal Disabled
@@ -203,8 +202,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region ISharedRegionModule
 
-        private int AmountOfStartupsLeft;
-
         public void Initialise(IConfigSource config)
         {
             m_ConfigSource = config;
@@ -281,7 +278,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
-            m_Scenes.Add(scene);
+            m_Scene = scene;
 
             //Must come AFTER the script plugins setup! Otherwise you'll get weird errors from the plugins
             if (MaintenanceThread == null)
@@ -292,7 +289,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //Still must come before the maintenance thread start
                 StartSharedScriptPlugins(); //This only gets called once
 
-                m_XmlRpcRouter = m_Scenes[0].RequestModuleInterface<IXmlRpcRouter>();
+                m_XmlRpcRouter = m_Scene.RequestModuleInterface<IXmlRpcRouter>();
                 if (m_XmlRpcRouter != null)
                 {
                     OnScriptRemoved += m_XmlRpcRouter.ScriptRemoved;
@@ -327,10 +324,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
+            m_Scene = null;
             scene.EventManager.OnRemoveScript -= StopScript;
-
             scene.UnregisterModuleInterface<IScriptModule>(this);
-            m_Scenes.Remove(scene);
             UpdateLeasesTimer.Enabled = false;
             UpdateLeasesTimer.Elapsed -= UpdateAllLeases;
             UpdateLeasesTimer.Stop();
@@ -354,13 +350,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private void EventManager_OnStartupComplete(IScene scene, List<string> data)
         {
-            AmountOfStartupsLeft++;
-            ISceneManager m = scene.RequestModuleInterface<ISceneManager>();
-            if (AmountOfStartupsLeft >= m.AllRegions)
-            {
-                //All done!
-                MaintenanceThread.Started = true;
-            }
+            //All done!
+            MaintenanceThread.Started = true;
         }
 
         #endregion
@@ -409,21 +400,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (File.Exists(Dir))
             {
                 string defaultScript = File.ReadAllText(Dir);
-#if (!ISWIN)
-                foreach (IScene scene in m_Scenes)
-                {
-                    ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
-                    if (inventoryModule != null)
-                    {
-                        inventoryModule.DefaultLSLScript = defaultScript;
-                    }
-                }
-#else
-                foreach (ILLClientInventory inventoryModule in m_Scenes.Select(scene => scene.RequestModuleInterface<ILLClientInventory>()).Where(inventoryModule => inventoryModule != null))
+                ILLClientInventory inventoryModule = m_Scene.RequestModuleInterface<ILLClientInventory>();
+                if(inventoryModule != null)
                 {
                     inventoryModule.DefaultLSLScript = defaultScript;
                 }
-#endif
             }
         }
 
@@ -1141,12 +1122,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public string TestCompileScript(UUID assetID, UUID itemID)
         {
-            AssetBase asset = m_Scenes[0].AssetService.Get(assetID.ToString());
+            byte[] asset = m_Scene.AssetService.GetData(assetID.ToString());
             if (null == asset)
                 return "Could not find script.";
             else
             {
-                string script = Utils.BytesToString(asset.Data);
+                string script = Utils.BytesToString(asset);
                 try
                 {
                     Compiler.PerformInMemoryScriptCompile(script, itemID);
@@ -1400,42 +1381,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public ISceneChildEntity findPrim(UUID objectID)
         {
-#if (!ISWIN)
-            foreach (IScene s in m_Scenes)
-            {
-                ISceneChildEntity part = s.GetSceneObjectPart(objectID);
-                if (part != null) return part;
-            }
-            return null;
-#else
-            return m_Scenes.Select(s => s.GetSceneObjectPart(objectID)).FirstOrDefault(part => part != null);
-#endif
+            return m_Scene.GetSceneObjectPart(objectID);
         }
 
         public ISceneChildEntity findPrim(uint localID)
         {
-#if (!ISWIN)
-            foreach (IScene s in m_Scenes)
-            {
-                ISceneChildEntity part = s.GetSceneObjectPart(localID);
-                if (part != null) return part;
-            }
-            return null;
-#else
-            return m_Scenes.Select(s => s.GetSceneObjectPart(localID)).FirstOrDefault(part => part != null);
-#endif
+            return m_Scene.GetSceneObjectPart(localID);
         }
 
-        public IScene findPrimsScene(uint localID)
-        {
-            foreach (IScene s in m_Scenes)
-            {
-                ISceneChildEntity part = s.GetSceneObjectPart(localID);
-                if (part != null)
-                    return s;
-            }
-            return null;
-        }
 
         private bool ScriptDanger(ISceneChildEntity part, Vector3 pos)
         {

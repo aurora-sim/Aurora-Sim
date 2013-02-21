@@ -293,9 +293,5 @@ namespace OpenSim.Services.Robust
 
             return false;
         }
-
-        public void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
-        {
-        }
     }
 }

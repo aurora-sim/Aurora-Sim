@@ -571,8 +571,7 @@ namespace OpenSim.Services.LLLoginService
                             bool messedUp = false;
                             foreach (KeyValuePair<UUID, UUID> item in avappearance.Wearables[i].GetItems())
                             {
-                                AssetBase asset = m_AssetService.Get(item.Value.ToString());
-                                if (asset == null)
+                                if (!m_AssetService.GetExists(item.Value.ToString()))
                                 {
                                     InventoryItemBase invItem = m_InventoryService.GetItem(new InventoryItemBase(item.Value));
                                     if (invItem == null)
@@ -1188,11 +1187,11 @@ namespace OpenSim.Services.LLLoginService
 
                     if (newcopy.InvType == (int) InventoryType.Object)
                     {
-                        AssetBase attobj = m_AssetService.Get(newcopy.AssetID.ToString());
+                        byte[] attobj = m_AssetService.GetData(newcopy.AssetID.ToString());
 
                         if (attobj != null)
                         {
-                            string xmlData = Utils.BytesToString(attobj.Data);
+                            string xmlData = Utils.BytesToString(attobj);
                             XmlDocument doc = new XmlDocument();
                             try
                             {

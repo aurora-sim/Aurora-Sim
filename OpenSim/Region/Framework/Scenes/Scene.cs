@@ -926,7 +926,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void StartupComplete(IScene scene, List<string> data)
         {
             //Tell the SceneManager about it
-            m_sceneManager.HandleStartupComplete(this, data);
+            m_sceneManager.HandleStartupComplete(data);
         }
 
         #endregion

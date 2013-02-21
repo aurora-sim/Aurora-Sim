@@ -221,11 +221,11 @@ namespace OpenSim.Services.Handlers.Map
                 IJ2KDecoder decoder = m_registry.RequestModuleInterface<IJ2KDecoder>();
                 foreach (GridRegion r in regions)
                 {
-                    AssetBase texAsset = m_assetService.Get(r.TerrainMapImage.ToString());
+                    byte[] texAsset = m_assetService.GetData(r.TerrainMapImage.ToString());
 
                     if (texAsset != null)
                     {
-                        Image image = decoder.DecodeToImage(texAsset.Data);
+                        Image image = decoder.DecodeToImage(texAsset);
                         if (image != null)
                             bitImages.Add(image);
                         else
@@ -291,12 +291,12 @@ namespace OpenSim.Services.Handlers.Map
                     if (region == null)
                         return null;
                     // non-async because we know we have the asset immediately.
-                    AssetBase mapasset = m_assetService.Get(region.TerrainMapImage.ToString());
+                    byte[] mapasset = m_assetService.GetData(region.TerrainMapImage.ToString());
                     if (mapasset != null)
                     {
                         Image image;
                         ManagedImage mImage;
-                        if (!OpenJPEG.DecodeToImage(mapasset.Data, out mImage, out image) || image == null)
+                        if (!OpenJPEG.DecodeToImage(mapasset, out mImage, out image) || image == null)
                             return null;
                         // Decode image to System.Drawing.Image
 
@@ -310,7 +310,6 @@ namespace OpenSim.Services.Handlers.Map
                         jpeg = imgstream.ToArray();
                         SaveCachedImage(uri, jpeg);
 
-                        mapasset.Dispose();
                         image.Dispose();
                     }
                 }

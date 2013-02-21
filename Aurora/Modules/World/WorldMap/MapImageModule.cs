@@ -988,13 +988,13 @@ namespace Aurora.Modules.WorldMap
 
         private Bitmap fetchTexture(UUID id)
         {
-            AssetBase asset = m_scene.AssetService.Get(id.ToString());
+            byte[] asset = m_scene.AssetService.GetData(id.ToString());
             //MainConsole.Instance.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
             if (asset == null) return null;
 
             try
             {
-                Image i = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(asset.Data);
+                Image i = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(asset);
                 if (i != null)
                     return new Bitmap(i);
             }

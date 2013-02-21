@@ -83,8 +83,7 @@ namespace Aurora.Framework
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            IScene scene;
-            return _sceneManager.TryGetScene(regionID, out scene);
+            return true;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
@@ -94,7 +93,6 @@ namespace Aurora.Framework
             if (m_doRemoteOnly)
                 return;
 
-            _sceneManager.AllRegions++;
             region.NewRegion = true;
             Util.FireAndForget(delegate(object o)
             {
@@ -110,7 +108,6 @@ namespace Aurora.Framework
             if (m_doRemoteOnly)
                 return;
 
-            _sceneManager.AllRegions++;
             Util.FireAndForget(delegate(object o)
             {
                 _sceneManager.StartNewRegion(region);
@@ -124,14 +121,8 @@ namespace Aurora.Framework
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            IScene scene;
-            if (_sceneManager.TryGetScene(regionID, out scene))
-            {
-                _sceneManager.AllRegions--;
-                _sceneManager.CloseRegion(scene, secondsBeforeShutdown == 0 ? ShutdownType.Immediate : ShutdownType.Delayed, secondsBeforeShutdown);
-                return true;
-            }
-            return false;
+            _sceneManager.CloseRegion(secondsBeforeShutdown == 0 ? ShutdownType.Immediate : ShutdownType.Delayed, secondsBeforeShutdown);
+            return true;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
@@ -141,9 +132,7 @@ namespace Aurora.Framework
             if (m_doRemoteOnly)
                 return;
 
-            IScene scene;
-            if (_sceneManager.TryGetScene(regionID, out scene))
-                _sceneManager.ResetRegion(scene);
+            _sceneManager.ResetRegion();
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
@@ -153,9 +142,7 @@ namespace Aurora.Framework
             if (m_doRemoteOnly)
                 return;
 
-            IScene scene;
-            if (_sceneManager.TryGetScene(regionID, out scene))
-                _sceneManager.RemoveRegion(scene, true);//Deletes the .abackup file, all prims in the region, and the info from all region loaders
+            _sceneManager.RemoveRegion(true);//Deletes the .abackup file, all prims in the region, and the info from all region loaders
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]

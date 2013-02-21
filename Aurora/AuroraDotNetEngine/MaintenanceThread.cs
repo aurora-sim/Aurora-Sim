@@ -148,10 +148,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public void ScriptChangeQueue()
         {
-            if (m_ScriptEngine.Worlds.Count == 0)
+            if (m_ScriptEngine.Scene == null)
                 return;
 
-            IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
+            IMonitorModule module = m_ScriptEngine.Scene.RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
             if (!Started) //Break early
@@ -187,12 +187,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (LUQueue.Count() == 0)
                 {
                     FiredStartupEvent = true;
-                    foreach (IScene scene in m_ScriptEngine.Worlds)
-                    {
-                        scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
+                    m_ScriptEngine.Scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
                                                                           m_ScriptEngine.ScriptErrorMessages);
 
-                        scene.EventManager.TriggerModuleFinishedStartup("ScriptEngine", new List<string>
+                    m_ScriptEngine.Scene.EventManager.TriggerModuleFinishedStartup("ScriptEngine", new List<string>
                                                                                             {
                                                                                                 m_ScriptEngine.
                                                                                                     ScriptFailCount.
@@ -200,7 +198,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                                                                 m_ScriptEngine.
                                                                                                     ScriptErrorMessages
                                                                                             }); //Tell that we are done
-                    }
                 }
             }
             ScriptChangeIsRunning = false;
@@ -208,22 +205,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-#if (!ISWIN)
-                foreach (IScene scene in m_ScriptEngine.Worlds)
-                {
-                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
-                    if (scriptMonitor != null)
-                    {
-                        scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
-                    }
-                }
-#else
-                foreach (ITimeMonitor scriptMonitor in m_ScriptEngine.Worlds.Select(scene => (ITimeMonitor)
-                                                                                             module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime)).Where(scriptMonitor => scriptMonitor != null))
+                ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(m_ScriptEngine.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
+                if(scriptMonitor != null)
                 {
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
-#endif
             }
         }
 
@@ -261,13 +247,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void CmdHandlerQueue()
         {
-            if (m_ScriptEngine.Worlds.Count == 0)
+            if (m_ScriptEngine.Scene == null)
             {
                 Interlocked.Exchange(ref CmdHandlerQueueIsRunning, 0);
                 return;
             }
             Interlocked.Exchange(ref CmdHandlerQueueIsRunning, 1);
-            IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
+            IMonitorModule module = m_ScriptEngine.Scene.RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
             if (!Started) //Break early
@@ -289,22 +275,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-#if (!ISWIN)
-                foreach (IScene scene in m_ScriptEngine.Worlds)
-                {
-                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
-                    if (scriptMonitor != null)
-                    {
-                        scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
-                    }
-                }
-#else
-                foreach (ITimeMonitor scriptMonitor in m_ScriptEngine.Worlds.Select(scene => (ITimeMonitor)
-                                                                                             module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime)).Where(scriptMonitor => scriptMonitor != null))
+                ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(m_ScriptEngine.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
+                if(scriptMonitor != null)
                 {
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
-#endif
             }
 
             if (didAnything) //If we did something, run us again soon

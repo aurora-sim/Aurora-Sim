@@ -870,19 +870,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAAllRegionInstanceSay", m_host, "AA", m_itemID))
                 return;
 
-            foreach (IScene scene in m_host.ParentEntity.Scene.RequestModuleInterface<ISceneManager>().GetAllScenes())
-            {
-                if (text.Length > 1023)
-                    text = text.Substring(0, 1023);
+            if (text.Length > 1023)
+                text = text.Substring(0, 1023);
 
-                IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
-                if (chatModule != null)
-                    chatModule.SimChat(text, ChatTypeEnum.Region, channelID,
-                        m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(text, ChatTypeEnum.Region, channelID,
+                    m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
 
-                var comms = scene.RequestModuleInterface<IWorldComm>();
-                comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
-            }
+            var comms = m_host.ParentEntity.Scene.RequestModuleInterface<ISceneManager>().Scene.RequestModuleInterface<IWorldComm>();
+            comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
         }
 
         #region Get Windlight

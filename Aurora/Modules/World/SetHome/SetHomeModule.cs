@@ -157,10 +157,10 @@ namespace Aurora.Modules.SetHome
                 notecardItem = m_scene.InventoryService.GetItem(new InventoryItemBase(NotecardID));
             if (notecardItem != null && notecardItem.Owner == agentID)
             {
-                AssetBase asset = m_scene.AssetService.Get(notecardItem.AssetID.ToString());
+                byte[] asset = m_scene.AssetService.GetData(notecardItem.AssetID.ToString());
                 if (asset != null)
                 {
-                    AssetNotecard noteCardAsset = new AssetNotecard(UUID.Zero, asset.Data);
+                    AssetNotecard noteCardAsset = new AssetNotecard(UUID.Zero, asset);
                     noteCardAsset.Decode();
                     bool found = false;
                     UUID lastOwnerID = UUID.Zero;

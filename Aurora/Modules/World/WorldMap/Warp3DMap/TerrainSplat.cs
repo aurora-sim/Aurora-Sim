@@ -121,12 +121,12 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                         if (detailTexture[i] == null)
                         {
                             // Try to fetch the original JPEG2000 texture, resize if needed, and cache as PNG
-                            asset = assetService.Get(textureIDs[i].ToString());
+                            byte[] assetData = assetService.GetData(textureIDs[i].ToString());
                             if (asset != null)
                             {
                                 try
                                 {
-                                    detailTexture[i] = (Bitmap) J2kImage.FromBytes(asset.Data);
+                                    detailTexture[i] = (Bitmap) J2kImage.FromBytes(assetData);
                                 }
                                 catch (Exception ex)
                                 {

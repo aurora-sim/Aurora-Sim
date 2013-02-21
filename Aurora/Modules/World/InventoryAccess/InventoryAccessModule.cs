@@ -634,11 +634,11 @@ namespace Aurora.Modules.InventoryAccess
 
         protected virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID, out XmlDocument doc)
         {
-            AssetBase rezAsset = m_scene.AssetService.Get(assetID.ToString());
+            byte[] rezAsset = m_scene.AssetService.GetData(assetID.ToString());
 
             if (rezAsset != null)
             {
-                string xmlData = Utils.BytesToString(rezAsset.Data);
+                string xmlData = Utils.BytesToString(rezAsset);
                 doc = new XmlDocument();
                 try
                 {

@@ -139,15 +139,14 @@ namespace OpenSim.Services
             if (args.ContainsKey("sog") && args["sog"] != null)
                 sogXmlStr = args["sog"].AsString();
 
-            IScene s = m_SimulationService.GetScene(destination.RegionHandle);
             ISceneObject sog = null;
             try
             {
                 //MainConsole.Instance.DebugFormat("[OBJECT HANDLER]: received {0}", sogXmlStr);
-                IRegionSerialiserModule mod = s.RequestModuleInterface<IRegionSerialiserModule>();
+                IRegionSerialiserModule mod =  m_SimulationService.Scene.RequestModuleInterface<IRegionSerialiserModule>();
                 if (mod != null)
                 {
-                    sog = mod.DeserializeGroupFromXml2(sogXmlStr, s);
+                    sog = mod.DeserializeGroupFromXml2(sogXmlStr,  m_SimulationService.Scene);
                     if (sog != null)
                         sog.ExtraFromXmlString(extraStr);
                 }

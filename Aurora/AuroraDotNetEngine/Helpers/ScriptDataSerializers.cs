@@ -45,7 +45,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             m_module = module;
 
-            m_manager = module.Worlds[0].RequestModuleInterface<IComponentManager>();
+            m_manager = module.Scene.RequestModuleInterface<IComponentManager>();
         }
 
         public void AddScene(IScene scene)

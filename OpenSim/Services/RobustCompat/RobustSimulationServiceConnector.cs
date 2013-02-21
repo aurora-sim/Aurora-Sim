@@ -44,7 +44,6 @@ namespace OpenSim.Services.Robust
             if (handlers.GetString("SimulationHandler", "") == "RobustSimulationServiceConnector")
             {
                 registry.RegisterModuleInterface<ISimulationService>(this);
-                m_localBackend = new LocalSimulationServiceConnector();
                 m_registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("ReleaseAgent",
                                                                                                        ReleaseAgentHandler);
             }

@@ -1990,11 +1990,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (!NotecardCache.IsCached(assetID))
             {
-                AssetBase a = World.AssetService.Get(assetID.ToString());
+                byte[] a = World.AssetService.GetData(assetID.ToString());
                 if (a != null)
                 {
                     UTF8Encoding enc = new UTF8Encoding();
-                    string data = enc.GetString(a.Data);
+                    string data = enc.GetString(a);
                     NotecardCache.Cache(assetID, data);
                 }
                 else
@@ -2049,11 +2049,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (!NotecardCache.IsCached(assetID))
             {
-                AssetBase a = World.AssetService.Get(assetID.ToString());
+                byte[] a = World.AssetService.GetData(assetID.ToString());
                 if (a != null)
                 {
                     UTF8Encoding enc = new UTF8Encoding();
-                    string data = enc.GetString(a.Data);
+                    string data = enc.GetString(a);
                     NotecardCache.Cache(assetID, data);
                 }
                 else
@@ -2113,11 +2113,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (!NotecardCache.IsCached(assetID))
             {
-                AssetBase a = World.AssetService.Get(assetID.ToString());
+                byte[] a = World.AssetService.GetData(assetID.ToString());
                 if (a != null)
                 {
                     UTF8Encoding enc = new UTF8Encoding();
-                    string data = enc.GetString(a.Data);
+                    string data = enc.GetString(a);
                     NotecardCache.Cache(assetID, data);
                 }
                 else

@@ -81,7 +81,6 @@ namespace OpenSim.CoreApplicationPlugins
             ISceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             MainConsole.Instance.DefaultPrompt = "Region (root)";//Set this up
         reload:
-            List<RegionInfo[]> regions = new List<RegionInfo[]>();
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, m_openSim);
@@ -90,74 +89,21 @@ namespace OpenSim.CoreApplicationPlugins
                     continue;
 
                 MainConsole.Instance.Info("[LoadRegions]: Checking for regions from " + loader.Name + "");
-                RegionInfo[] regionsToLoad = loader.LoadRegions();
+                RegionInfo regionsToLoad = loader.LoadRegion();
                 if (regionsToLoad == null)
                     continue; //No regions, end for this module
-
-                string reason;
-                if (!CheckRegionsForSanity(regionsToLoad, out reason))
+                manager.StartNewRegion(regionsToLoad);
+                return;
+            }
+            foreach (IRegionLoader loader in regionLoaders)
+            {
+                if (loader.Default && loader.Enabled)
                 {
-                    MainConsole.Instance.Error("[LoadRegions]: Halting startup due to conflicts in region configurations");
-                    if (!loader.FailedToStartRegions(reason))
-                    {
-                        bool foundSomeRegions = false;
-                        foreach (IRegionLoader l in regionLoaders)
-                        {
-                            l.Initialise(m_openSim.ConfigSource, m_openSim);
-
-                            if (!loader.Enabled)
-                                continue;
-
-                            RegionInfo[] rs = loader.LoadRegions();
-                            if (rs == null)
-                                continue; //No regions, end for this module
-                            if (CheckRegionsForSanity(regionsToLoad, out reason))
-                            {
-                                foundSomeRegions = true;
-                                break;
-                            }
-                        }
-                        if(!foundSomeRegions)
-                            throw new Exception(); //If it doesn't fix it, and we don't have regions now, end the program
-                    }
+                    MainConsole.Instance.Info("[LoadRegions]: Attempting to create new region with " + loader.Name);
+                    loader.CreateRegion();
                     goto reload;
                 }
-                else
-                {
-                    //They are sanitized, load them
-                    manager.AllRegions += regionsToLoad.Length;
-                    regions.Add(regionsToLoad);
-                }
             }
-            while (regions.Count == 0)
-            {
-                foreach (IRegionLoader loader in regionLoaders)
-                {
-                    if (loader.Default && loader.Enabled)
-                    {
-                        MainConsole.Instance.Info("[LoadRegions]: Attempting to create new region with " + loader.Name);
-                        loader.CreateRegion();
-                        goto reload;
-                    }
-                }
-            }
-#if (!ISWIN)
-            foreach (RegionInfo[] regionsToLoad in regions)
-                foreach (RegionInfo r in regionsToLoad)
-                {
-                    RegionInfo reg = r;
-                    //System.Threading.Thread t = new System.Threading.Thread(delegate()
-                    //    {
-                            manager.StartNewRegion(reg);
-                    //    });
-                    //t.Start();
-                }
-#else
-            foreach (RegionInfo t in regions.SelectMany(regionsToLoad => regionsToLoad))
-            {
-                manager.StartNewRegion(t);
-            }
-#endif
         }
 
         public void Close()

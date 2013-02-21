@@ -1249,12 +1249,12 @@ namespace Aurora.Modules.Estate
                     paintAsset = new AssetBase(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture,
                                                "PaintableTerrainTexture-" + m_scene.RegionInfo.RegionID,
                                                AssetType.Texture, UUID.Zero) {Flags = AssetFlags.Deletable};
-                    AssetBase defaultTexture = m_scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
+                    byte[] defaultTexture = m_scene.AssetService.GetData(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
                     if (defaultTexture == null)
                         //Erm... what to do!
                         return;
 
-                    paintAsset.Data = defaultTexture.Data;//Eventually we need to replace this with an interpolation of the existing textures!
+                    paintAsset.Data = defaultTexture;//Eventually we need to replace this with an interpolation of the existing textures!
                     paintAsset.ID = m_scene.AssetService.Store(paintAsset);
                 }
             }

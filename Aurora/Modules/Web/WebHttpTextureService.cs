@@ -61,14 +61,14 @@ namespace Aurora.Modules.Web
                 // Taking our jpeg2000 data, decoding it, then saving it to a byte array with regular jpeg data
 
                 // non-async because we know we have the asset immediately.
-                AssetBase mapasset = m_AssetService.Get(keysvals["uuid"].ToString());
+                byte[] mapasset = m_AssetService.GetData(keysvals["uuid"].ToString());
 
                 if (mapasset != null)
                 {
                     // Decode image to System.Drawing.Image
                     Image image = null;
                     ManagedImage managedImage;
-                    if (OpenJPEG.DecodeToImage(mapasset.Data, out managedImage, out image))
+                    if (OpenJPEG.DecodeToImage(mapasset, out managedImage, out image))
                     {
                         // Save to bitmap
                         using (Bitmap texture = ResizeBitmap(image, 256, 256))
@@ -84,7 +84,6 @@ namespace Aurora.Modules.Web
                         }
                         image.Dispose();
                     }
-                    mapasset.Dispose();
                 }
             }
 

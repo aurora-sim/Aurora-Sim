@@ -641,7 +641,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public ISceneEntity GetRezReadySceneObject (TaskInventoryItem item)
         {
-            AssetBase rezAsset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
+            byte[] rezAsset = m_part.ParentGroup.Scene.AssetService.GetData(item.AssetID.ToString());
 
             if (null == rezAsset)
             {
@@ -651,7 +651,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return null;
             }
 
-            string xmlData = Utils.BytesToString(rezAsset.Data);
+            string xmlData = Utils.BytesToString(rezAsset);
             SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(xmlData, m_part.ParentGroup.Scene);
             if (group == null)
                 return null;

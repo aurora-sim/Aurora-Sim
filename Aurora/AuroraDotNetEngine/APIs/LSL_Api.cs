@@ -3451,11 +3451,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 UUID ownerID = item.OwnerID;
 
-                AssetBase rezAsset = World.AssetService.Get(item.AssetID.ToString());
+                byte[] rezAsset = World.AssetService.GetData(item.AssetID.ToString());
 
                 if (rezAsset != null)
                 {
-                    string xmlData = Utils.BytesToString(rezAsset.Data);
+                    string xmlData = Utils.BytesToString(rezAsset);
                     SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(xmlData, World);
                     if (group == null)
                         return null;
@@ -4259,9 +4259,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
                 {
-                    AssetBase asset = World.AssetService.Get(inventory);
+                    byte[] asset = World.AssetService.GetData(inventory);
                     SceneObjectGroup group
-                                        = SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data), World);
+                                        = SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset), World);
                     if (group == null)
                         return;
 

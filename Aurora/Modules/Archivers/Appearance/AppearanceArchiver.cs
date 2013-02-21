@@ -100,12 +100,8 @@ namespace Aurora.Modules.Archivers
 
             IScenePresence SP = null;
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-            if (manager != null)
-            {
-                foreach (IScene scene in manager.GetAllScenes())
-                    if (scene.TryGetScenePresence(account.PrincipalID, out SP))
-                        break;
-            }
+            if (manager != null && manager.Scene != null)
+                manager.Scene.TryGetScenePresence(account.PrincipalID, out SP);
 
             if (SP != null)
                 SP.ControllingClient.SendAlertMessage("Appearance loading in progress...");
@@ -331,10 +327,7 @@ namespace Aurora.Modules.Archivers
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                foreach (IScene scene in manager.GetAllScenes())
-                    if (scene.TryGetScenePresence(account.PrincipalID, out SP))
-                        break;
-                if (SP == null)
+                if (!manager.Scene.TryGetScenePresence(account.PrincipalID, out SP))
                 {
                     MainConsole.Instance.Error("[AvatarArchive] User not online!");
                     return; //Bad people!

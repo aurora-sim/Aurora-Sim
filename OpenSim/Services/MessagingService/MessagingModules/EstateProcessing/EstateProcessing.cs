@@ -120,22 +120,18 @@ namespace OpenSim.Services.MessagingService
                 uint estateID = innerMessage["EstateID"].AsUInteger();
                 UUID regionID = innerMessage["RegionID"].AsUUID();
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null)
+                if (manager != null && manager.Scene != null)
                 {
-                    IScene s = null;
-                    if (manager.TryGetScene(regionID, out s))
+                    if (manager.Scene.RegionInfo.EstateSettings.EstateID == estateID)
                     {
-                        if (s.RegionInfo.EstateSettings.EstateID == estateID)
+                        IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
+                        if (estateConnector != null)
                         {
-                            IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
-                            if (estateConnector != null)
+                            EstateSettings es = null;
+                            if ((es = estateConnector.GetEstateSettings(regionID)) != null && es.EstateID != 0)
                             {
-                                EstateSettings es = null;
-                                if ((es = estateConnector.GetEstateSettings(regionID)) != null && es.EstateID != 0)
-                                {
-                                    s.RegionInfo.EstateSettings = es;
-                                    MainConsole.Instance.Debug("[EstateProcessor]: Updated estate information.");
-                                }
+                                manager.Scene.RegionInfo.EstateSettings = es;
+                                MainConsole.Instance.Debug("[EstateProcessor]: Updated estate information.");
                             }
                         }
                     }

@@ -675,10 +675,10 @@ namespace Aurora.Modules.WorldMap
                 imgstream = new MemoryStream();
 
                 // non-async because we know we have the asset immediately.
-                AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
+                byte[] mapasset = m_scene.AssetService.GetData(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
                 if (mapasset != null)
                 {
-                    image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(mapasset.Data);
+                    image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(mapasset);
                     // Decode image to System.Drawing.Image
                     if (image != null)
                     {
@@ -762,22 +762,13 @@ namespace Aurora.Modules.WorldMap
                     m_scene.RegionInfo.RegionLocY + (9 * Constants.RegionSize));
             List<Image> bitImages = new List<Image>();
 
-#if (!ISWIN)
-            List<AssetBase> textures = new List<AssetBase>();
-            foreach (GridRegion r in regions)
-            {
-                AssetBase texAsset = m_scene.AssetService.Get(r.TerrainImage.ToString());
-                if (texAsset != null) textures.Add(texAsset);
-            }
-#else
-            List<AssetBase> textures = regions.Select(r => m_scene.AssetService.Get(r.TerrainImage.ToString())).Where(texAsset => texAsset != null).ToList();
-#endif
+            List<byte[]> textures = regions.Select(r => m_scene.AssetService.GetData(r.TerrainImage.ToString())).Where(texAsset => texAsset != null).ToList();
 
-            foreach (AssetBase asset in textures)
+            foreach (byte[] asset in textures)
             {
                 Image image;
 
-                if ((image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage(asset.Data)) != null)
+                if ((image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage(asset)) != null)
                     bitImages.Add(image);
             }
 

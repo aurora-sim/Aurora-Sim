@@ -176,9 +176,9 @@ namespace OpenSim.Services.MessagingService
 
                 //Do this since IFriendsModule is a scene module, not a ISimulationBase module (not interchangable)
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.GetAllScenes().Count > 0)
+                if (manager != null && manager.Scene != null)
                 {
-                    IFriendsModule friendsModule = manager.GetCurrentOrFirstScene().RequestModuleInterface<IFriendsModule>();
+                    IFriendsModule friendsModule = manager.Scene.RequestModuleInterface<IFriendsModule>();
                     if (friendsModule != null)
                     {
                         //Send the message

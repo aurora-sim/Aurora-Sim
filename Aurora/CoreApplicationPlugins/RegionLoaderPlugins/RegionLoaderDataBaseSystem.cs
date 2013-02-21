@@ -68,11 +68,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 if (MainConsole.Instance != null)
                     MainConsole.Instance.Commands.AddCommand("open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
                 m_default = config.GetString("Default") == GetType().Name;
-
-                //Add the console command if it is the default
-                if (m_default)
-                    if (MainConsole.Instance != null)
-                        MainConsole.Instance.Commands.AddCommand ("create region", "create region", "Create a new region.", AddRegion);
             }
             IConfig startupconfig = configSource.Configs["Startup"];
             if (startupconfig != null)
@@ -93,148 +88,25 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
         }
 
-        public RegionInfo[] LoadRegions()
+        public RegionInfo LoadRegion()
         {
-            //Grab old region files
-            if(m_default)
-                FindOldRegionFiles();
-
             IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();
             if (conn == null)
                 return null;
             RegionInfo[] infos = conn.GetRegionInfos(true);
-            return infos.Length == 0 ? null : infos;
-        }
-
-        /// <summary>
-        /// Creates a new region based on the parameters specified.   This will ask the user questions on the console
-        /// </summary>
-        /// <param name="cmd">0,1,region name, region XML file</param>
-        public void AddRegion(string[] cmd)
-        {
-            try
-            {
-                if(m_noGUI)
-                {
-                    RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
-                    system.Initialise (m_configSource, m_openSim);
-                    system.AddRegion (new string[0]);
-                }
-                else
-                {
-                    RegionManager.StartSynchronously(false, RegionManagerPage.CreateRegion, 
-                        m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
-                }
-            }
-            catch
-            {
-                //Probably no winforms
-                RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
-                system.Initialise (m_configSource, m_openSim);
-                system.AddRegion (new string[0]);
-            }
+            return infos.Length == 0 ? null : infos[0];
         }
 
         public void CreateRegion()
         {
-            try
-            {
-                if (m_noGUI)
-                {
-                    RegionLoaderFileSystem system = new RegionLoaderFileSystem();
-                    system.Initialise(m_configSource, m_openSim);
-                    system.AddRegion(new string[0]);
-                }
-                else
-                {
-                    RegionManager.StartSynchronously(true, RegionManagerPage.CreateRegion,
-                        m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
-                }
-            }
-            catch
-            {
-                //Probably no winforms
-                RegionLoaderFileSystem system = new RegionLoaderFileSystem();
-                system.Initialise(m_configSource, m_openSim);
-                system.AddRegion(new string[0]);
-            }
+            RegionManager.StartSynchronously(true, RegionManagerPage.CreateRegion,
+                m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
         }
 
         protected void OpenRegionManager(string[] cmdparams)
         {
             RegionManager.StartAsynchronously(false, RegionManagerPage.ViewRegions,
                 m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
-        }
-
-        private void FindOldRegionFiles()
-        {
-            try
-            {
-                //Load the file loader and set it up and make sure that we pull any regions from it
-                RegionLoaderFileSystem system = new RegionLoaderFileSystem();
-                system.Initialise(m_configSource, m_openSim);
-                RegionInfo[] regionsToConvert = system.InternalLoadRegions(true);
-                if (regionsToConvert == null)
-                    return;
-
-                bool changed = false;
-                //Now load all the regions into the database
-                IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();
-                foreach (RegionInfo info in regionsToConvert)
-                {
-                    RegionInfo alreadyExists;
-                    if ((alreadyExists = conn.GetRegionInfo (info.RegionID)) == null)
-                    {
-                        changed = true;
-                        if (!info.UDPPorts.Contains (info.InternalEndPoint.Port))
-                            info.UDPPorts.Add (info.InternalEndPoint.Port);
-                        info.Disabled = false;
-                        conn.UpdateRegionInfo (info);
-                    }
-                    else
-                    {
-                        //Update some atributes...
-                        alreadyExists.RegionName = info.RegionName;
-                        alreadyExists.RegionLocX = info.RegionLocX;
-                        alreadyExists.RegionLocY = info.RegionLocY;
-                        alreadyExists.RegionSizeX = info.RegionSizeX;
-                        alreadyExists.RegionSizeY = info.RegionSizeY;
-                        alreadyExists.Disabled = false;
-                        if (!alreadyExists.UDPPorts.Contains (info.InternalEndPoint.Port))
-                            alreadyExists.UDPPorts.Add (info.InternalEndPoint.Port);
-                        conn.UpdateRegionInfo (alreadyExists);
-                    }
-                }
-
-                //Make sure all the regions got saved
-                bool foundAll = true;
-                foreach (RegionInfo info in regionsToConvert)
-                {
-                    if (conn.GetRegionInfo(info.RegionID) == null)
-                        foundAll = false;
-                }
-                //We found some new ones, they are all loaded
-                if (foundAll && regionsToConvert.Length != 0 && changed)
-                {
-                    try
-                    {
-                        MessageBox.Show ("All region .ini and .xml files have been successfully converted to the new region loader style.");
-                        MessageBox.Show ("To change your region settings, type 'open region manager' on the console, and a GUI will pop up for you to use.");
-                        DialogResult t = Utilities.InputBox ("Remove .ini files", "Do you want to remove your old .ini files?");
-                        if (t == DialogResult.OK)
-                            system.DeleteAllRegionFiles ();
-                    }
-                    catch
-                    {
-                        //For people who only have consoles, no winforms
-                        MainConsole.Instance.Output ("All region .ini and .xml files have been successfully converted to the new region loader style.");
-                        MainConsole.Instance.Output ("To change your region settings, well, you don't have Mono-Winforms installed. Get that, stick with just modifying the .ini files, or get something to modify the region database that isn't a GUI.");
-                    }
-                }
-            }
-            catch
-            {
-            }
         }
 
         public void DeleteRegion(RegionInfo regionInfo)

@@ -321,21 +321,15 @@ namespace Aurora.Modules.Installer
                 {
                     srm.Initialise(m_config);
                     srm.PostInitialise();
-                    foreach (IScene scene in manager.GetAllScenes())
-                    {
-                        srm.AddRegion(scene);
-                        srm.RegionLoaded(scene);
-                    }
+                    srm.AddRegion(manager.Scene);
+                    srm.RegionLoaded(manager.Scene);
                     rmc.AllModules.Add(srm);
                 }
                 foreach (INonSharedRegionModule nsrm in nsregionModule)
                 {
                     nsrm.Initialise(m_config);
-                    foreach (IScene scene in manager.GetAllScenes())
-                    {
-                        nsrm.AddRegion(scene);
-                        nsrm.RegionLoaded(scene);
-                    }
+                    nsrm.AddRegion(manager.Scene);
+                    nsrm.RegionLoaded(manager.Scene);
                     rmc.AllModules.Add(nsrm);
                 }
             }

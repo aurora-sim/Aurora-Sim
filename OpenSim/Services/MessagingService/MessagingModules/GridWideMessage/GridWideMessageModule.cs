@@ -239,19 +239,16 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 //Get the Scene registry since IDialogModule is a region module, and isn't in the ISimulationBase registry
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.AllRegions > 0)
+                if (manager != null && manager.Scene != null)
                 {
-                    foreach (IScene scene in manager.GetAllScenes())
+                    IScenePresence sp = null;
+                    if (manager.Scene.TryGetScenePresence(UUID.Parse(user), out sp) && !sp.IsChildAgent)
                     {
-                        IScenePresence sp = null;
-                        if (scene.TryGetScenePresence(UUID.Parse(user), out sp) && !sp.IsChildAgent)
+                        IDialogModule dialogModule = manager.Scene.RequestModuleInterface<IDialogModule>();
+                        if (dialogModule != null)
                         {
-                            IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
-                            if (dialogModule != null)
-                            {
-                                //Send the message to the user now
-                                dialogModule.SendAlertToUser(UUID.Parse(user), value);
-                            }
+                            //Send the message to the user now
+                            dialogModule.SendAlertToUser(UUID.Parse(user), value);
                         }
                     }
                 }
@@ -264,18 +261,15 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 //Get the Scene registry since IDialogModule is a region module, and isn't in the ISimulationBase registry
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.AllRegions > 0)
+                if (manager != null && manager.Scene != null)
                 {
-                    foreach (IScene scene in manager.GetAllScenes())
+                    IScenePresence sp = null;
+                    if (manager.Scene.TryGetScenePresence(UUID.Parse(user), out sp))
                     {
-                        IScenePresence sp = null;
-                        if (scene.TryGetScenePresence(UUID.Parse(user), out sp))
-                        {
-                            sp.ControllingClient.Kick(value == "" ? "The Aurora Grid Manager kicked you out." : value);
-                            IEntityTransferModule transferModule = scene.RequestModuleInterface<IEntityTransferModule>();
-                            if (transferModule != null)
-                                transferModule.IncomingCloseAgent(scene, sp.UUID);
-                        }
+                        sp.ControllingClient.Kick(value == "" ? "The Aurora Grid Manager kicked you out." : value);
+                        IEntityTransferModule transferModule = manager.Scene.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.IncomingCloseAgent(manager.Scene, sp.UUID);
                     }
                 }
             }

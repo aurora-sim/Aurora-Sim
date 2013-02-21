@@ -104,14 +104,12 @@ namespace Aurora.Modules.Startup
         /// <param name="cmdparams">Additional arguments passed to the command</param>
         public void RunCommand (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (scene => scene.AuroraEventManager.FireGenericEventHandler("Backup", null));
+            m_manager.Scene.AuroraEventManager.FireGenericEventHandler("Backup", null);
         }
 
         public void EditScale(string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene(delegate(IScene scene)
-            {
-                scene.ForEachSceneEntity(delegate(ISceneEntity entity)
+            m_manager.Scene.ForEachSceneEntity(delegate(ISceneEntity entity)
                 {
                     foreach (ISceneChildEntity child in entity.ChildrenEntities())
                     {
@@ -125,24 +123,17 @@ namespace Aurora.Modules.Startup
                         }
                     }
                 });
-            });
         }
 
         public void DisableBackup (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (IScene scene)
-            {
-                scene.SimulationDataService.SaveBackups = false;
-            });
+            m_manager.Scene.SimulationDataService.SaveBackups = false;
             MainConsole.Instance.Warn ("Disabled backup");
         }
 
         public void EnableBackup (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (IScene scene)
-            {
-                scene.SimulationDataService.SaveBackups = true;
-            });
+            m_manager.Scene.SimulationDataService.SaveBackups = true;
             if(cmdparams != null)//so that it doesn't show on startup
                 MainConsole.Instance.Warn ("Enabled backup");
         }

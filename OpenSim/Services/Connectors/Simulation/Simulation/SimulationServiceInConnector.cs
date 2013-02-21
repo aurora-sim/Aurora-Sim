@@ -95,10 +95,10 @@ namespace OpenSim.Services
             }
 
             server.AddHTTPHandler(path,
-                                  new AgentHandler(m_LocalSimulationService.GetInnerService(), m_registry, secure).
+                                  new AgentHandler(m_LocalSimulationService, m_registry, secure).
                                       Handler);
             server.AddHTTPHandler("/object/",
-                                  new ObjectHandler(m_LocalSimulationService.GetInnerService(), m_config).Handler);
+                                  new ObjectHandler(m_LocalSimulationService, m_config).Handler);
             return null;
         }
     }

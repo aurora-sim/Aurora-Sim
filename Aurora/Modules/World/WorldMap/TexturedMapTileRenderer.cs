@@ -347,16 +347,14 @@ namespace Aurora.Modules.WorldMap
         // take too long, as most assets should be cached
         private Bitmap fetchTexture(UUID id)
         {
-            using (AssetBase asset = m_scene.AssetService.Get(id.ToString()))
+            byte[] asset = m_scene.AssetService.GetData(id.ToString());
+            if (asset != null)
             {
-                //MainConsole.Instance.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
-                if (asset == null) return null;
-
                 try
                 {
-                    if (asset.Data != null)
+                    if (asset != null)
                     {
-                        Image image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(asset.Data);
+                        Image image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(asset);
                         if (image != null)
                             return new Bitmap(image);
                     }

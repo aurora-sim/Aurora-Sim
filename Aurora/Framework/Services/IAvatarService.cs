@@ -77,13 +77,6 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "userID"></param>
         /// <returns></returns>
         bool ResetAvatar(UUID userID);
-
-        /// <summary>
-        ///   Cache the given avatarWearable for the client
-        /// </summary>
-        /// <param name = "principalID"></param>
-        /// <param name = "cachedWearable"></param>
-        void CacheWearableData(UUID principalID, AvatarWearable cachedWearable);
     }
 
     /// <summary>

@@ -58,10 +58,10 @@ namespace Aurora.Framework
         void Initialise(IConfigSource configSource, ISimulationBase openSim);
 
         /// <summary>
-        ///   Loads all regions from all enabled plugins
+        ///   Loads the region from all enabled plugins
         /// </summary>
         /// <returns>All regionInfos loaded</returns>
-        RegionInfo[] LoadRegions();
+        RegionInfo LoadRegion();
 
         /// <summary>
         ///   This updates a Regions info given by the param 'oldName' to the new region info given

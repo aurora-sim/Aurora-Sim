@@ -55,10 +55,10 @@ namespace OpenSim.Services.Robust
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                foreach (IScene scene in manager.GetAllScenes().Where(scene => scene.RegionInfo.RegionID == gridRegion.RegionID))
+                if(manager.Scene.RegionInfo.RegionID == gridRegion.RegionID)
                 {
-                    gridRegion.RegionSizeX = scene.RegionInfo.RegionSizeX;
-                    gridRegion.RegionSizeY = scene.RegionInfo.RegionSizeY;
+                    gridRegion.RegionSizeX = manager.Scene.RegionInfo.RegionSizeX;
+                    gridRegion.RegionSizeY = manager.Scene.RegionInfo.RegionSizeY;
                     return gridRegion;
                 }
             }

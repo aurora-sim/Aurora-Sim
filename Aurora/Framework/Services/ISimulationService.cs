@@ -75,34 +75,9 @@ namespace OpenSim.Services.Interfaces
 
     public interface ISimulationService
     {
-        #region Local Initalization
+        #region Local
 
-        /// <summary>
-        ///   Add and set up the scene for the simulation module
-        /// </summary>
-        /// <param name = "scene"></param>
-        void Init(IScene scene);
-
-        /// <summary>
-        ///   Remove the scene from the list of known scenes
-        /// </summary>
-        /// <param name = "scene"></param>
-        void RemoveScene(IScene scene);
-
-        /// <summary>
-        ///   Try to find a scene with the given region handle
-        /// </summary>
-        /// <param name = "regionHandle"></param>
-        /// <returns></returns>
-        IScene GetScene(ulong regionHandle);
-
-        /// <summary>
-        ///   Get the 'inner' simulation service.
-        ///   For the remote simulation service, this gives the local simulation service.
-        ///   For the local simulation service. this gives the same service as it is already the local service.
-        /// </summary>
-        /// <returns></returns>
-        ISimulationService GetInnerService();
+        IScene Scene { get; }
 
         #endregion
 

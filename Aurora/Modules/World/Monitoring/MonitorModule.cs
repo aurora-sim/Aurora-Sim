@@ -737,13 +737,8 @@ namespace Aurora.Modules.Monitoring
                 MainConsole.Instance.Info("[Stats] " + m_registry[""].Report());
                 MainConsole.Instance.Info("");
 
-                //Then dump for each scene
-                manager.ForEachCurrentScene(delegate(IScene scene)
-                                                {
-                                                    MainConsole.Instance.Info("[Stats] " +
-                                                               m_registry[scene.RegionInfo.RegionID.ToString()].Report());
-                                                    MainConsole.Instance.Info("");
-                                                });
+                MainConsole.Instance.Info("[Stats] " + m_registry[manager.Scene.RegionInfo.RegionID.ToString()].Report());
+                MainConsole.Instance.Info("");
             }
             else
             {
@@ -831,71 +826,36 @@ namespace Aurora.Modules.Monitoring
             ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-#if (!ISWIN)
-                manager.ForEachScene(
-                    delegate(IScene scene)
-                    {
-                        scene.ForEachClient(
-                            delegate(IClientAPI client)
-                            {
-                                if (client is IStatsCollector)
-                                {
-                                    IScenePresence SP = scene.GetScenePresence(client.AgentId);
-                                    if (SP == null || (SP.IsChildAgent && !showChildren))
-                                        return;
-
-                                    string name = client.Name;
-                                    string regionName = scene.RegionInfo.RegionName;
-
-                                    report.AppendFormat(
-                                        "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
-                                        name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name, "");
-                                    report.AppendFormat(
-                                        "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
-                                        regionName.Length > maxRegionNameLength ? regionName.Substring(0, maxRegionNameLength) : regionName, "");
-                                    report.AppendFormat(
-                                        "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
-                                        SP.IsChildAgent ? "Child" : "Root", "");
-
-                                    IStatsCollector stats = (IStatsCollector)client;
-
-                                    report.AppendLine(stats.Report());
-                                }
-                            });
-                    });
-#else
-                manager.ForEachScene(
-                    scene => scene.ForEachClient(
+                manager.Scene.ForEachClient(
                         delegate(IClientAPI client)
+                        {
+                            if (client is IStatsCollector)
                             {
-                                if (client is IStatsCollector)
-                                {
-                                    IScenePresence SP = scene.GetScenePresence(client.AgentId);
-                                    if (SP == null || (SP.IsChildAgent && !showChildren))
-                                        return;
+                                IScenePresence SP = manager.Scene.GetScenePresence(client.AgentId);
+                                if (SP == null || (SP.IsChildAgent && !showChildren))
+                                    return;
 
-                                    string name = client.Name;
-                                    string regionName = scene.RegionInfo.RegionName;
+                                string name = client.Name;
+                                string regionName = manager.Scene.RegionInfo.RegionName;
 
-                                    report.AppendFormat(
-                                        "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
-                                        name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name,
-                                        "");
-                                    report.AppendFormat(
-                                        "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
-                                        regionName.Length > maxRegionNameLength
-                                            ? regionName.Substring(0, maxRegionNameLength)
-                                            : regionName, "");
-                                    report.AppendFormat(
-                                        "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
-                                        SP.IsChildAgent ? "Child" : "Root", "");
+                                report.AppendFormat(
+                                    "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
+                                    name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name,
+                                    "");
+                                report.AppendFormat(
+                                    "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
+                                    regionName.Length > maxRegionNameLength
+                                        ? regionName.Substring(0, maxRegionNameLength)
+                                        : regionName, "");
+                                report.AppendFormat(
+                                    "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
+                                    SP.IsChildAgent ? "Child" : "Root", "");
 
-                                    IStatsCollector stats = (IStatsCollector) client;
+                                IStatsCollector stats = (IStatsCollector)client;
 
-                                    report.AppendLine(stats.Report());
-                                }
-                            }));
-#endif
+                                report.AppendLine(stats.Report());
+                            }
+                        });
             }
 
             return report.ToString();

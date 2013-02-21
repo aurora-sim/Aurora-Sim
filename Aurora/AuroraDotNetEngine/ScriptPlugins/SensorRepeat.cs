@@ -172,11 +172,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public void CreateFromData(UUID itemID, UUID objectID,
                                    OSD data)
         {
-            IScene scene = findPrimsScene(objectID);
-            if (scene == null)
-                return;
             ISceneChildEntity part =
-                scene.GetSceneObjectPart(
+                m_ScriptEngine.Scene.GetSceneObjectPart(
                     objectID);
 
             if (part == null)
@@ -612,32 +609,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 ts.host.ParentEntity.Scene.ForEachScenePresence(senseEntity);
             }
             return sensedEntities;
-        }
-
-        public IScene findPrimsScene(UUID objectID)
-        {
-            foreach (IScene s in m_ScriptEngine.Worlds)
-            {
-                ISceneChildEntity part = s.GetSceneObjectPart(objectID);
-                if (part != null)
-                {
-                    return s;
-                }
-            }
-            return null;
-        }
-
-        public IScene findPrimsScene(uint localID)
-        {
-            foreach (IScene s in m_ScriptEngine.Worlds)
-            {
-                ISceneChildEntity part = s.GetSceneObjectPart(localID);
-                if (part != null)
-                {
-                    return s;
-                }
-            }
-            return null;
         }
 
         public void Dispose()

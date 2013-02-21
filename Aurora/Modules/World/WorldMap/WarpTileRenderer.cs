@@ -387,19 +387,19 @@ namespace Aurora.Modules.WorldMap
                 if (omvPrim.Sculpt != null && omvPrim.Sculpt.SculptTexture != UUID.Zero)
                 {
                     // Try fetchinng the asset
-                    AssetBase sculptAsset = m_scene.AssetService.Get(omvPrim.Sculpt.SculptTexture.ToString());
+                    byte[] sculptAsset = m_scene.AssetService.GetData(omvPrim.Sculpt.SculptTexture.ToString());
                     if (sculptAsset != null)
                     {
                         // Is it a mesh?
                         if (omvPrim.Sculpt.Type == SculptType.Mesh)
                         {
-                            AssetMesh meshAsset = new AssetMesh(omvPrim.Sculpt.SculptTexture, sculptAsset.Data);
+                            AssetMesh meshAsset = new AssetMesh(omvPrim.Sculpt.SculptTexture, sculptAsset);
                             FacetedMesh.TryDecodeFromAsset(omvPrim, meshAsset, DetailLevel.Highest, out renderMesh);
                         }
                         else // It's sculptie
                         {
                             IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
-                            Image sculpt = imgDecoder.DecodeToImage(sculptAsset.Data);
+                            Image sculpt = imgDecoder.DecodeToImage(sculptAsset);
                             if (sculpt != null)
                             {
                                 renderMesh = m_primMesher.GenerateFacetedSculptMesh(omvPrim, (Bitmap) sculpt,
@@ -504,13 +504,13 @@ namespace Aurora.Modules.WorldMap
 
                 // Attempt to fetch the texture metadata
                 UUID metadataID = UUID.Combine(face.TextureID, TEXTURE_METADATA_MAGIC);
-                AssetBase metadata = m_scene.AssetService.Get(metadataID.ToString());
+                byte[] metadata = m_scene.AssetService.GetData(metadataID.ToString());
                 if (metadata != null)
                 {
                     OSDMap map = null;
                     try
                     {
-                        map = OSDParser.Deserialize(metadata.Data) as OSDMap;
+                        map = OSDParser.Deserialize(metadata) as OSDMap;
                     }
                     catch
                     {
@@ -531,16 +531,16 @@ namespace Aurora.Modules.WorldMap
                 {
                     // Fetch the texture, decode and get the average color,
                     // then save it to a temporary metadata asset
-                    AssetBase textureAsset = m_scene.AssetService.Get(face.TextureID.ToString());
+                    byte[] textureAsset = m_scene.AssetService.GetData(face.TextureID.ToString());
                     if (textureAsset != null)
                     {
                         int width, height;
-                        color = GetAverageColor(textureAsset.ID, textureAsset.Data, m_scene, out width, out height);
+                        color = GetAverageColor(face.TextureID, textureAsset, m_scene, out width, out height);
                         if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))
                             //If we failed, don't save it
                         {
                             OSDMap data = new OSDMap {{"X-JPEG2000-RGBA", OSD.FromColor4(color)}};
-                            metadata = new AssetBase
+                            AssetBase newmetadata = new AssetBase
                                            {
                                                Data = Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data)),
                                                Description = "Avg Color-JPEG2000 texture " + face.TextureID.ToString(),
@@ -550,7 +550,7 @@ namespace Aurora.Modules.WorldMap
                                                TypeAsset = AssetType.Simstate
                                                // Make something up to get around OpenSim's myopic treatment of assets
                                            };
-                            metadata.ID = m_scene.AssetService.Store(metadata);
+                            newmetadata.ID = m_scene.AssetService.Store(newmetadata);
                         }
                         textureAsset = null;
                     }
@@ -605,17 +605,16 @@ namespace Aurora.Modules.WorldMap
         private warp_Texture GetTexture(UUID id)
         {
             warp_Texture ret = null;
-            AssetBase asset = m_scene.AssetService.Get(id.ToString());
+            byte[] asset = m_scene.AssetService.GetData(id.ToString());
             if (asset != null)
             {
                 IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
-                Bitmap img = (Bitmap) imgDecoder.DecodeToImage(asset.Data);
+                Bitmap img = (Bitmap) imgDecoder.DecodeToImage(asset);
                 if (img != null)
                 {
                     ret = new warp_Texture(img);
                     img.Dispose();
                 }
-                asset.Dispose();
             }
             return ret;
         }

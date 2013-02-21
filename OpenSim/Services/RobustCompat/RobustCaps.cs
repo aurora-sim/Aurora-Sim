@@ -86,9 +86,8 @@ namespace OpenSim.Services.Robust
             ISceneManager manager = sp.Scene.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                foreach (var scene in manager.GetAllScenes())
-                    if (dest.RegionID == scene.RegionInfo.RegionID)
-                        return null;
+                if (dest.RegionID == manager.Scene.RegionInfo.RegionID)
+                    return null;
             }
             if (m_userAttachments.ContainsKey(sp.UUID))
             {
@@ -206,7 +205,7 @@ namespace OpenSim.Services.Robust
 
         private bool IsLocal(UserInfo u, IScenePresence presence)
         {
-            return presence.Scene.RequestModuleInterface<ISceneManager>().GetAllScenes().Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
+            return presence.Scene.RequestModuleInterface<ISceneManager>().Scene.GetScenePresence(UUID.Parse(u.UserID)) != null;
         }
 
         private void ReportAgent(IScenePresence presence)

@@ -267,7 +267,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             DetectParams detparam = new DetectParams();
             detparam = new DetectParams { Key = remoteClient.AgentId };
 
-            detparam.Populate(m_scriptEngine.findPrimsScene(part.LocalId));
+            detparam.Populate(part.ParentEntity.Scene);
             detparam.LinkNum = child.LinkNum;
 
             if (surfaceArgs != null)

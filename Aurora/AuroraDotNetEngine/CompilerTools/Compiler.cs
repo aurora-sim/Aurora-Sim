@@ -323,7 +323,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return;
             }
 
-            if (m_scriptEngine.Worlds[0].Permissions.CanCompileScript(ownerID, language) == false)
+            if (m_scriptEngine.Scene.Permissions.CanCompileScript(ownerID, language) == false)
             {
                 // Not allowed to compile to this language!
                 AddError(ownerID +
