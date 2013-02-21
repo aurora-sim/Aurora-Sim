@@ -42,6 +42,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
     {
         #region Declares
 
+        protected IProfileConnector m_profileConnector;
         protected IAuthenticationService m_AuthenticationService;
         protected IUserAccountData m_Database;
         protected GenericAccountCache<UserAccount> m_cache = new GenericAccountCache<UserAccount>();
@@ -104,6 +105,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
         {
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
+            m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
         }
@@ -393,17 +395,16 @@ namespace Aurora.Services.SQLServices.UserAccountService
             string first = MainConsole.Instance.Prompt("First User's name");
             string second = MainConsole.Instance.Prompt("Second User's name");
 
-            IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            if (profileConnector != null)
+            if (m_profileConnector != null)
             {
-                IUserProfileInfo firstProfile = profileConnector.GetUserProfile(GetUserAccount(null, first).PrincipalID);
-                IUserProfileInfo secondProfile = profileConnector.GetUserProfile(GetUserAccount(null, second).PrincipalID);
+                IUserProfileInfo firstProfile = m_profileConnector.GetUserProfile(GetUserAccount(null, first).PrincipalID);
+                IUserProfileInfo secondProfile = m_profileConnector.GetUserProfile(GetUserAccount(null, second).PrincipalID);
 
                 firstProfile.Partner = secondProfile.PrincipalID;
                 secondProfile.Partner = firstProfile.PrincipalID;
 
-                profileConnector.UpdateUserProfile(firstProfile);
-                profileConnector.UpdateUserProfile(secondProfile);
+                m_profileConnector.UpdateUserProfile(firstProfile);
+                m_profileConnector.UpdateUserProfile(secondProfile);
 
                 MainConsole.Instance.Warn("Partner information updated. ");
             }
@@ -427,13 +428,12 @@ namespace Aurora.Services.SQLServices.UserAccountService
             }
             title = cmdparams.Length < 7 ? MainConsole.Instance.Prompt("User Title") : Util.CombineParams(cmdparams, 6);
             account.UserTitle = title;
-            Aurora.Framework.IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IProfileConnector>();
-            if (profileConnector != null)
+            if (m_profileConnector != null)
             {
-                Aurora.Framework.IUserProfileInfo profile = profileConnector.GetUserProfile(account.PrincipalID);
+                Aurora.Framework.IUserProfileInfo profile = m_profileConnector.GetUserProfile(account.PrincipalID);
                 profile.MembershipGroup = title;
                 profile.CustomType = title;
-                profileConnector.UpdateUserProfile(profile);
+                m_profileConnector.UpdateUserProfile(profile);
             }
             bool success = StoreUserAccount(account);
             if (!success)

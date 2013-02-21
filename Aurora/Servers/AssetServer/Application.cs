@@ -25,6 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 
@@ -37,7 +40,10 @@ namespace Aurora.Servers.AssetServer
     {
         public static void Main(string[] args)
         {
-            BaseApplication.BaseMain(args, "Aurora.AssetServer.ini", new MinimalSimulationBase<IAssetDataPlugin, IAssetService>("Aurora.AssetServer "));
+            BaseApplication.BaseMain(args, "Aurora.AssetServer.ini",
+                new MinimalSimulationBase("Aurora.AssetServer ", 
+                    new List<Type>() { typeof(IAssetDataPlugin) }, 
+                    new List<Type>() { typeof(IAssetService) }));
         }
     }
 }

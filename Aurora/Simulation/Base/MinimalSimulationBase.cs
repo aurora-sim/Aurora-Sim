@@ -42,8 +42,7 @@ using Aurora.Services.DataService;
 
 namespace Aurora.Simulation.Base
 {
-    public class MinimalSimulationBase<S,T> : ISimulationBase
-        where S : IAuroraDataPlugin
+    public class MinimalSimulationBase : ISimulationBase
     {
         protected string m_startupCommandsFile;
         protected string m_shutdownCommandsFile;
@@ -117,9 +116,13 @@ namespace Aurora.Simulation.Base
         protected string m_pidFile = String.Empty;
 
         protected string m_consolePrompt = "";
-        public MinimalSimulationBase(string consolePrompt)
+        protected List<Type> m_dataPlugins;
+        protected List<Type> m_servicePlugins;
+        public MinimalSimulationBase(string consolePrompt, List<Type> dataPlugins, List<Type> servicePlugins)
         {
             m_consolePrompt = consolePrompt;
+            m_dataPlugins = dataPlugins;
+            m_servicePlugins = servicePlugins;
         }
 
         /// <summary>
@@ -210,7 +213,7 @@ namespace Aurora.Simulation.Base
 
         public virtual ISimulationBase Copy()
         {
-            return new MinimalSimulationBase<S,T>(m_consolePrompt);
+            return new MinimalSimulationBase(m_consolePrompt, m_dataPlugins, m_servicePlugins);
         }
 
         /// <summary>
@@ -272,15 +275,21 @@ namespace Aurora.Simulation.Base
         public virtual void InitializeModules()
         {
             LocalDataService lds = new LocalDataService();
-            lds.Initialise<S>(ConfigSource, ApplicationRegistry);
+            lds.Initialise(ConfigSource, ApplicationRegistry, m_dataPlugins);
 
-            var modules = Aurora.Framework.AuroraModuleLoader.PickupModules<T>();
-            foreach (T service in modules)
+            List<dynamic> modules = new List<dynamic>();
+            foreach(Type t in m_servicePlugins)
             {
-                ((IService)service).Initialize(ConfigSource, ApplicationRegistry);
-                ((IService)service).Start(ConfigSource, ApplicationRegistry);
-                ((IService)service).FinishedStartup();
+                var mods = Aurora.Framework.AuroraModuleLoader.PickupModules(t);
+                modules.AddRange(mods);
             }
+
+            foreach (dynamic service in modules)
+                ((IService)service).Initialize(ConfigSource, ApplicationRegistry);
+            foreach (dynamic service in modules)
+                ((IService)service).Start(ConfigSource, ApplicationRegistry);
+            foreach (dynamic service in modules)
+                ((IService)service).FinishedStartup();
         }
 
         /// <summary>

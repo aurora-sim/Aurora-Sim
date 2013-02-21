@@ -54,6 +54,7 @@ namespace Aurora.Services.SQLServices.InventoryService
         private bool m_enabled;
         private IRegistryCore m_registry;
         private string pLibName = "Aurora Library";
+        protected IInventoryService m_inventoryService;
 
         #region ILibraryService Members
 
@@ -107,12 +108,13 @@ namespace Aurora.Services.SQLServices.InventoryService
 
         public void FinishedStartup()
         {
-            LoadLibraries(m_registry);
+            m_inventoryService = m_registry.RequestModuleInterface<IInventoryService>();
+            LoadLibraries();
         }
 
         #endregion
 
-        public void LoadLibraries(IRegistryCore registry)
+        public void LoadLibraries()
         {
             if (!m_enabled)
             {
@@ -135,7 +137,7 @@ namespace Aurora.Services.SQLServices.InventoryService
                 {
                     foreach (IDefaultLibraryLoader loader in Loaders)
                     {
-                        loader.LoadLibrary(this, iniSource, registry);
+                        loader.LoadLibrary(this, iniSource, m_registry);
                     }
                 }
             }
@@ -154,20 +156,19 @@ namespace Aurora.Services.SQLServices.InventoryService
 
         public void ClearDefaultInventory()
         {
-            IInventoryService InventoryService = m_registry.RequestModuleInterface<IInventoryService>();
             //Delete the root folders
-            InventoryFolderBase root = InventoryService.GetRootFolder(LibraryOwner);
+            InventoryFolderBase root = m_inventoryService.GetRootFolder(LibraryOwner);
             while (root != null)
             {
                 MainConsole.Instance.Info("Removing folder " + root.Name);
-                InventoryService.ForcePurgeFolder(root);
-                root = InventoryService.GetRootFolder(LibraryOwner);
+                m_inventoryService.ForcePurgeFolder(root);
+                root = m_inventoryService.GetRootFolder(LibraryOwner);
             }
-            List<InventoryFolderBase> rootFolders = InventoryService.GetRootFolders(LibraryOwner);
+            List<InventoryFolderBase> rootFolders = m_inventoryService.GetRootFolders(LibraryOwner);
             foreach (InventoryFolderBase rFolder in rootFolders)
             {
                 MainConsole.Instance.Info("Removing folder " + rFolder.Name);
-                InventoryService.ForcePurgeFolder(rFolder);
+                m_inventoryService.ForcePurgeFolder(rFolder);
             }
             MainConsole.Instance.Info("Finished removing default inventory");
         }

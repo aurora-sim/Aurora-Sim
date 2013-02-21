@@ -94,7 +94,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public void Initialise<T>(IConfigSource source, IRegistryCore simBase) where T : IAuroraDataPlugin
+        public void Initialise(IConfigSource source, IRegistryCore simBase, List<Type> types)
         {
             IConfig m_config = source.Configs["AuroraData"];
             if (m_config != null)
@@ -131,17 +131,20 @@ namespace Aurora.Services.DataService
                 DataConnector = GenericData;
             }
 
-            List<T> Plugins = AuroraModuleLoader.PickupModules<T>();
-            foreach (T plugin in Plugins)
+            foreach (Type t in types)
             {
-                try
+                List<dynamic> Plugins = AuroraModuleLoader.PickupModules(t);
+                foreach (dynamic plugin in Plugins)
                 {
-                    plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
-                }
-                catch (Exception ex)
-                {
-                    if (MainConsole.Instance != null)
-                        MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                    try
+                    {
+                        plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (MainConsole.Instance != null)
+                            MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                    }
                 }
             }
         }

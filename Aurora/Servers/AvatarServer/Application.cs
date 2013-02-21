@@ -25,6 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 
@@ -37,7 +40,10 @@ namespace Aurora.Servers.AvatarServer
     {
         public static void Main(string[] args)
         {
-            BaseApplication.BaseMain(args, "Aurora.AvatarServer.ini", new MinimalSimulationBase<IAvatarData, IAvatarService>("Aurora.AvatarServer "));
+            BaseApplication.BaseMain(args, "Aurora.AvatarServer.ini",
+                new MinimalSimulationBase("Aurora.AvatarServer ", 
+                    new List<Type>() { typeof(IAvatarData), typeof(IInventoryData), typeof(IUserAccountData) },
+                    new List<Type>() { typeof(IAvatarService), typeof(IInventoryService), typeof(IUserAccountService) }));
         }
     }
 }

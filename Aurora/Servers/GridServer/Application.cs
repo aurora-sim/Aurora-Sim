@@ -25,9 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
-using Aurora.Framework;
 
 namespace Aurora.Servers.AssetServer
 {
@@ -38,7 +40,10 @@ namespace Aurora.Servers.AssetServer
     {
         public static void Main(string[] args)
         {
-            BaseApplication.BaseMain(args, "Aurora.GridServer.ini", new MinimalSimulationBase<IRegionData, IGridService>("Aurora.GridServer "));
+            BaseApplication.BaseMain(args, "Aurora.GridServer.ini",
+                new MinimalSimulationBase("Aurora.GridServer ", 
+                    new List<Type>() { typeof(IRegionData) }, 
+                    new List<Type>() { typeof(IGridService) }));
         }
     }
 }

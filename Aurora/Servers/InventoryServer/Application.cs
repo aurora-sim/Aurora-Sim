@@ -25,6 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 
@@ -37,7 +40,10 @@ namespace Aurora.Servers.InventoryServer
     {
         public static void Main(string[] args)
         {
-            BaseApplication.BaseMain(args, "Aurora.InventoryServer.ini", new MinimalSimulationBase<IInventoryData, IInventoryService>("Aurora.InventoryServer "));
+            BaseApplication.BaseMain(args, "Aurora.InventoryServer.ini",
+                new MinimalSimulationBase("Aurora.InventoryServer ", 
+                    new List<Type>() { typeof(IInventoryData), typeof(IUserAccountData), typeof(IAssetDataPlugin) }, 
+                    new List<Type>() { typeof(IInventoryService), typeof(ILibraryService), typeof(IUserAccountService), typeof(IAssetService) }));
         }
     }
 }

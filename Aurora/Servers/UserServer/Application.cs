@@ -25,6 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 
@@ -37,7 +40,10 @@ namespace Aurora.Servers.UserServer
     {
         public static void Main(string[] args)
         {
-            BaseApplication.BaseMain(args, "Aurora.UserServer.ini", new MinimalSimulationBase<IUserAccountData, IUserAccountService>("Aurora.UserServer "));
+            BaseApplication.BaseMain(args, "Aurora.UserServer.ini",
+                new MinimalSimulationBase("Aurora.UserServer ",
+                    new List<Type>() { typeof(IUserAccountData), typeof(IProfileConnector), typeof(IAuthenticationData) }, 
+                    new List<Type>() { typeof(IUserAccountService), typeof(IAuthenticationService) }));
         }
     }
 }

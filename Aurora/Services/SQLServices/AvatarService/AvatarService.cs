@@ -40,6 +40,7 @@ namespace Aurora.Services.SQLServices.AvatarService
         #region Declares
 
         protected IAvatarData m_Database;
+        protected IInventoryService m_invService;
         protected bool m_enableCacheBakedTextures = true;
 
         #endregion
@@ -81,6 +82,7 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         public void FinishedStartup()
         {
+            m_invService = m_registry.RequestModuleInterface<IInventoryService>();
         }
 
         #endregion
@@ -157,8 +159,6 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         private AvatarData FixWearables(UUID userID, AvatarAppearance appearance)
         {
-            IInventoryService invService = m_registry.RequestModuleInterface<IInventoryService>();
-
             for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
             {
                 for (int j = 0; j < appearance.Wearables[j].Count; j++)
@@ -180,14 +180,14 @@ namespace Aurora.Services.SQLServices.AvatarService
                     }
 
                     InventoryItemBase baseItem = new InventoryItemBase(appearance.Wearables[i][j].ItemID, userID);
-                    baseItem = invService.GetItem(baseItem);
+                    baseItem = m_invService.GetItem(baseItem);
 
                     if (baseItem != null)
                     {
                         if (baseItem.AssetType == (int)AssetType.Link)
                         {
                             baseItem = new InventoryItemBase(baseItem.AssetID, userID);
-                            baseItem = invService.GetItem(baseItem);
+                            baseItem = m_invService.GetItem(baseItem);
                         }
                         appearance.Wearables[i].Clear();
                         appearance.Wearables[i].Add(baseItem.ID, baseItem.AssetID);
