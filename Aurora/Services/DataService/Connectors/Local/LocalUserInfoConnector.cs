@@ -176,6 +176,19 @@ namespace Aurora.Services.DataService
             return users;
         }
 
+        public List<UserInfo> GetByCurrentRegion(string regionID)
+        {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["CurrentRegionID"] = regionID;
+            filter.andFilters["IsOnline"] = "1";
+            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
+
+            if (query.Count == 0)
+                return null;
+
+            return ParseQuery(query);
+        }
+
         public UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged)
         {
             onlineStatusChanged = false;

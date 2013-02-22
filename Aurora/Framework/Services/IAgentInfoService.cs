@@ -148,6 +148,13 @@ namespace OpenSim.Services.Interfaces
         List<UserInfo> GetUserInfos(List<string> userIDs);
 
         /// <summary>
+        /// Gets a list of userinfos that are logged into the given region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        List<UserInfo> GetUserInfos(UUID regionID);
+
+        /// <summary>
         ///   Get the HTTP URLs for all root agents of the given users
         /// </summary>
         /// <param name = "requestor"></param>
@@ -207,5 +214,7 @@ namespace OpenSim.Services.Interfaces
 
         uint RecentlyOnline(uint secondsAgo, bool stillOnline);
         List<UserInfo> RecentlyOnline(uint secondsAgo, bool stillOnline, Dictionary<string, bool> sort, uint start, uint count);
+
+        List<UserInfo> GetByCurrentRegion(string regionID);
     }
 }

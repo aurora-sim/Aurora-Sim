@@ -55,18 +55,19 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionOnline", (region.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == (int)Aurora.Framework.RegionFlags.RegionOnline ?
                     translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
 
-                ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
-                IRegionCapsService regionCaps = capsService != null ? capsService.GetCapsForRegion(region.RegionHandle) : null;
-                if (regionCaps != null)
+                IAgentInfoService agentInfoService = webInterface.Registry.RequestModuleInterface<IAgentInfoService>();
+                IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
+                if (agentInfoService != null)
                 {
-                    vars.Add("NumberOfUsersInRegion", regionCaps.GetClients().Count);
+                    List<UserInfo> usersInRegion = agentInfoService.GetUserInfos(region.RegionID);
+                    vars.Add("NumberOfUsersInRegion", usersInRegion.Count);
                     List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
-                    foreach (var client in regionCaps.GetClients())
+                    foreach (var client in usersInRegion)
                     {
                         Dictionary<string, object> user = new Dictionary<string, object>();
                         user.Add("UserNameText", translator.GetTranslatedString("UserNameText"));
-                        user.Add("UserUUID", client.AgentID);
-                        user.Add("UserName", client.ClientCaps.AccountInfo.Name);
+                        user.Add("UserUUID", client.UserID);
+                        user.Add("UserName", userService.GetUserAccount(null, client.UserID).Name);
                         users.Add(user);
                     }
                     vars.Add("UsersInRegion", users);

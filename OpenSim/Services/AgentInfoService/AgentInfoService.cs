@@ -111,9 +111,28 @@ namespace OpenSim.Services
             return infos;
         }
 
+        /// <summary>
+        /// Gets a list of userinfos that are logged into the given region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<UserInfo> GetUserInfos(UUID regionID)
+        {
+            object remoteValue = DoRemote(regionID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<UserInfo>)remoteValue;
+
+            return m_agentInfoConnector.GetByCurrentRegion(regionID.ToString());
+        }
+
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<string> GetAgentsLocations(string requestor, List<string> userIDs)
         {
+            object remoteValue = DoRemote(requestor, userIDs);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<string>)remoteValue;
+
             string[] infos = new string[userIDs.Count];
             for (int i = 0; i < userIDs.Count; i++)
             {

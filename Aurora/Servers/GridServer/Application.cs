@@ -42,8 +42,8 @@ namespace Aurora.Servers.AssetServer
         {
             BaseApplication.BaseMain(args, "Aurora.GridServer.ini",
                 new MinimalSimulationBase("Aurora.GridServer ", 
-                    new List<Type>() { typeof(IRegionData) }, 
-                    new List<Type>() { typeof(IGridService) }));
+                    new List<Type>() { typeof(IRegionData), typeof(IAgentInfoConnector) }, 
+                    new List<Type>() { typeof(IGridService), typeof(IAgentInfoService) }));
         }
     }
 }

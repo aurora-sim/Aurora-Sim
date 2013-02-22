@@ -95,12 +95,13 @@ namespace Aurora.Modules.Web
                 UUID friendID = UUID.Zero;
                 if (friends.Any(f => UUID.TryParse(f.Friend, out friendID) && friendID == ourAccount.PrincipalID))
                 {
-                    ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
-                    IClientCapsService clientCaps = capsService == null ? null : capsService.GetClientCapsService(account.PrincipalID);
-                    if (clientCaps != null)
-                        vars.Add("OnlineLocation", clientCaps.GetRootCapsService().Region.RegionName);
-                    vars.Add("UserIsOnline", clientCaps != null);
-                    vars.Add("IsOnline", clientCaps != null ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
+                    IAgentInfoService agentInfoService = webInterface.Registry.RequestModuleInterface<IAgentInfoService>();
+                    IGridService gridService = webInterface.Registry.RequestModuleInterface<IGridService>();
+                    UserInfo ourInfo = agentInfoService.GetUserInfo(account.PrincipalID.ToString());
+                    if (ourInfo != null && ourInfo.IsOnline)
+                        vars.Add("OnlineLocation", gridService.GetRegionByUUID(null, ourInfo.CurrentRegionID).RegionName);
+                    vars.Add("UserIsOnline", ourInfo != null && ourInfo.IsOnline);
+                    vars.Add("IsOnline", ourInfo != null && ourInfo.IsOnline ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
                 }
                 else
                 {

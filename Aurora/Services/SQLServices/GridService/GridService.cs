@@ -57,6 +57,7 @@ namespace Aurora.Services.SQLServices.GridService
         protected int m_cachedMaxRegionSize = 0;
         protected int m_cachedRegionViewSize = 0;
         protected IRegistryCore m_registryCore;
+        protected IAgentInfoService m_agentInfoService;
         private readonly Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
 
         #endregion
@@ -129,6 +130,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             m_registryCore = registry;
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
+            m_agentInfoService = m_registryCore.RequestModuleInterface<IAgentInfoService>();
 
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
@@ -970,36 +972,24 @@ namespace Aurora.Services.SQLServices.GridService
         {
             GridRegion region = GetRegionByPosition(scopeIDs, X, Y);
             //if the region is down or doesn't exist, don't check it
-            if (region == null || region.Access == (byte) SimAccess.Down ||
-                region.Access == (byte) SimAccess.NonExistent)
-                return new List<mapItemReply>();
-
-            ICapsService capsService = m_registryCore.RequestModuleInterface<ICapsService>();
-            if (capsService == null)
-                return new List<mapItemReply>();
-
-            IRegionCapsService regionCaps = capsService.GetCapsForRegion(regionHandle);
-            if (regionCaps == null)
+            if (region == null)
                 return new List<mapItemReply>();
 
             Dictionary<Vector3, int> Positions = new Dictionary<Vector3, int>();
             //Get a list of all the clients in the region and add them
-            foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
+            foreach (UserInfo userInfo in m_agentInfoService.GetUserInfos(region.RegionID))
             {
-                //Only root agents!
-                if (clientCaps.RootAgent)
-                {
-                    //Normalize the positions to 5 meter blocks so that agents stack instead of cover up each other
-                    Vector3 position = new Vector3(NormalizePosition(clientCaps.LastPosition.X),
-                                                   NormalizePosition(clientCaps.LastPosition.Y), 0);
-                    int Number = 0;
-                    //Find the number of agents currently at this position
-                    if (!Positions.TryGetValue(position, out Number))
-                        Number = 0;
-                    Number++;
-                    Positions[position] = Number;
-                }
+                //Normalize the positions to 5 meter blocks so that agents stack instead of cover up each other
+                Vector3 position = new Vector3(NormalizePosition(userInfo.CurrentPosition.X),
+                                               NormalizePosition(userInfo.CurrentPosition.Y), 0);
+                int Number = 0;
+                //Find the number of agents currently at this position
+                if (!Positions.TryGetValue(position, out Number))
+                    Number = 0;
+                Number++;
+                Positions[position] = Number;
             }
+
             //Build the mapItemReply blocks
             List<mapItemReply> mapItems = Positions.Select(position => new mapItemReply
                                                                            {

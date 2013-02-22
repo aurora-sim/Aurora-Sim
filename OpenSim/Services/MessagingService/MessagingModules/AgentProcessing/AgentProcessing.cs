@@ -94,6 +94,9 @@ namespace OpenSim.Services.MessagingService
             if (!message.ContainsKey("Method"))
                 return null;
 
+            if (m_capsService == null)
+                return null;
+
             UUID AgentID = message["AgentID"].AsUUID();
             ulong requestingRegion = message["RequestingRegion"].AsULong();
 

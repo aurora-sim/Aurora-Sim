@@ -1,4 +1,5 @@
 [Handlers]
+    AgentInfoHandler = AgentInfoService
     AssetHandler = RedisAssetService
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
