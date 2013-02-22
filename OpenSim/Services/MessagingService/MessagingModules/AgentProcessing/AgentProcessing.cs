@@ -42,7 +42,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class AgentProcessing : ConnectorBase, IService, IAgentProcessing
+    public class AgentProcessing : IService, IAgentProcessing
     {
         #region Declares
 
@@ -50,6 +50,7 @@ namespace OpenSim.Services.MessagingService
         protected bool VariableRegionSight;
         protected bool m_enabled = true;
         protected IConfigSource _config;
+        protected IRegistryCore m_registry;
 
         #endregion
 
@@ -68,19 +69,7 @@ namespace OpenSim.Services.MessagingService
                                                             MaxVariableRegionSight);
             }
             if (m_enabled)
-            {
                 m_registry.RegisterModuleInterface<IAgentProcessing>(this);
-
-                IConfig auroraConfig = _config.Configs["AuroraConnectors"];
-                IGenericsConnector genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                if (!auroraConfig.GetBoolean("CapsServiceDoRemoteCalls", false))
-                {
-                    genericsConnector.AddGeneric(UUID.Zero, "CapsServiceURL", "CapsURL", new OSDWrapper { Info = MainServer.Instance.ServerURI }.ToOSD());
-                    genericsConnector.AddGeneric(UUID.Zero, "CapsServiceURL", "CapsPassword", new OSDWrapper { Info = new System.Random().NextDouble() * 1000 }.ToOSD());
-                }
-
-                Init(registry, "CapsService");
-            }
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -801,6 +790,10 @@ namespace OpenSim.Services.MessagingService
                         //if (useCallbacks || oldRegion != destination)//Only close it if we are using callbacks (Aurora region)
                         //Why? OpenSim regions need closed too, even if the protocol is kinda stupid
                         CloseNeighborAgents(regionCaps.Region, destination, AgentID);
+                        IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                        if (agentInfoService != null)
+                            agentInfoService.SetLastPosition(AgentID.ToString(), destination.RegionID,
+                                                         agentData.Position, Vector3.Zero);
                         reason = "";
                     }
                 }
@@ -1127,6 +1120,10 @@ namespace OpenSim.Services.MessagingService
 
                                 CloseNeighborAgents(requestingRegionCaps.Region, crossingRegion, AgentID);
                                 reason = "";
+                                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                                if (agentInfoService != null)
+                                    agentInfoService.SetLastPosition(AgentID.ToString(), crossingRegion.RegionID,
+                                                                 pos, Vector3.Zero);
                             }
                         }
 
@@ -1215,7 +1212,6 @@ namespace OpenSim.Services.MessagingService
 
         #region Login initial agent
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
         public virtual LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit)
         {
             bool success = false;
