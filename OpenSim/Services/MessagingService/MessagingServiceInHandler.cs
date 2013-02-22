@@ -38,8 +38,6 @@ namespace OpenSim.Services.MessagingService
 {
     public class MessagingServiceInHandler : IService, ISyncMessageRecievedService
     {
-        protected bool m_enabled;
-
         private IRegistryCore m_registry;
 
         public string Name
@@ -47,7 +45,7 @@ namespace OpenSim.Services.MessagingService
             get { return GetType().Name; }
         }
 
-        #region IAsyncMessageRecievedService Members
+        #region ISyncMessageRecievedService Members
 
         public event MessageReceived OnMessageReceived;
 
@@ -71,27 +69,11 @@ namespace OpenSim.Services.MessagingService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("MessagingServiceInHandler", "") != Name)
-                return;
             registry.RegisterModuleInterface<ISyncMessageRecievedService>(this);
-            m_enabled = true;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_registry = registry;
-            if (!m_enabled)
-            {
-                ISyncMessageRecievedService service = registry.RequestModuleInterface<ISyncMessageRecievedService>();
-                if (service == null)
-                    registry.RegisterModuleInterface<ISyncMessageRecievedService>(this);
-                        //Register so that we have an internal message handler, but don't add the external handler
-                return;
-            }
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(8003);
-
-            server.AddStreamHandler(new MessagingServiceInPostHandler("/messaging/", m_registry, this));
         }
 
         public void FinishedStartup()
