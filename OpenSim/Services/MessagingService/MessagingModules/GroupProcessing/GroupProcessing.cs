@@ -153,7 +153,7 @@ namespace OpenSim.Services.MessagingService
                             outgoingMessage["GroupID"] = groupID;
                             outgoingMessage["RoleID"] = roleID;
                             outgoingMessage["RegionID"] = region.RegionHandle;
-                            messagePost.Post(region.RegionID, outgoingMessage);
+                            messagePost.Post(region.ServerURI, outgoingMessage);
                         }
                     }
                 }

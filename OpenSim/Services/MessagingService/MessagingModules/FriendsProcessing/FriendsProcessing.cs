@@ -105,7 +105,8 @@ namespace OpenSim.Services.MessagingService
                             //Find the root agent
                             OnlineFriends.Add(FriendToInform);
                             //Post!
-                            asyncPoster.Post(user.CurrentRegionID, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
+                            GridRegion region = gridService.GetRegionByUUID(null, user.CurrentRegionID);
+                            asyncPoster.Post(region.ServerURI, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
                         }
                     }
                     //If the user is coming online, send all their friends online statuses to them
@@ -116,7 +117,7 @@ namespace OpenSim.Services.MessagingService
                         {
                             foreach (UUID onlineFriend in OnlineFriends)
                             {
-                                asyncPoster.Post(ourRegion.RegionID,
+                                asyncPoster.Post(ourRegion.ServerURI,
                                                  SyncMessageHelper.AgentStatusChange(onlineFriend, us, isOnline));
                             }
                         }
@@ -159,7 +160,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipOffered")
@@ -171,7 +172,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendTerminated")
@@ -183,7 +184,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipDenied")
@@ -195,7 +196,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipApproved")
@@ -207,7 +208,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             return null;

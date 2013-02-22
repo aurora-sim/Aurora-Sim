@@ -155,6 +155,11 @@ namespace Aurora.Framework
             return DoRemoteCall(false, url, o);
         }
 
+        public object DoRemoteByURLForced(string url, params object[] o)
+        {
+            return DoRemoteCall(true, url, o);
+        }
+
         public object DoRemoteCall(bool forced, string url, params object[] o)
         {
             if (!m_doRemoteCalls && !forced)
@@ -189,6 +194,8 @@ namespace Aurora.Framework
             }
 
             string serverURL = m_configService.FindValueOf(url);
+            if (serverURL == "")
+                serverURL = url;
             OSDMap response = null;
 
             for (int index = 0; index < m_OSDRequestTryCount; index++)

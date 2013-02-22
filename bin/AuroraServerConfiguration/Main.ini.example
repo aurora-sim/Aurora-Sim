@@ -11,7 +11,6 @@
     AgentInfoHandler = AgentInfoService
     AssetHandler = RedisAssetService
     AssetHandlerUseCache = false
-    AsyncMessagePostServiceHandler = RemoteAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
     CapsHandler = CapsService
@@ -24,6 +23,7 @@
     InventoryHandler = InventoryService
     LoginHandler = LLLoginService
     SimulationHandler = SimulationServiceConnector
+    SyncMessagePosterServiceHandler = SyncMessagePosterService
     UserAccountHandler = UserAccountService
 
     GridServiceOpenServerHandler = false
@@ -40,6 +40,10 @@
 
     AvatarServiceOpenServerHandler = false
     AvatarServiceServerHandlerPort = 8008
+
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8003
+	SyncMessagePosterServiceDoRemote = true
 
     LLLoginHandlerPort = 8002
 

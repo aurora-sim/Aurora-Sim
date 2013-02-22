@@ -43,7 +43,7 @@ namespace OpenSim.Services.Interfaces
         ///   Post a request to all hosts that we have
         /// </summary>
         /// <param name = "request"></param>
-        void Post(UUID regionID, OSDMap request);
+        void Post(string url, OSDMap request);
 
         /// <summary>
         /// Posts a request directly to the messaging server

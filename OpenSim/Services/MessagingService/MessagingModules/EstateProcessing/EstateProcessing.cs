@@ -80,6 +80,9 @@ namespace OpenSim.Services.MessagingService
             {
                 EstateSettings es = (EstateSettings) parameters;
                 IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
+                ISyncMessagePosterService asyncPoster =
+                    m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+                IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                 if (estateConnector != null)
                 {
                     List<UUID> regions = estateConnector.GetRegions((int)es.EstateID);
@@ -88,14 +91,11 @@ namespace OpenSim.Services.MessagingService
                         foreach (UUID region in regions)
                         {
                             //Send the message to update all regions that are in this estate, as a setting changed
-                            ISyncMessagePosterService asyncPoster =
-                                m_registry.RequestModuleInterface<ISyncMessagePosterService>();
-                            IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                             if (gridService != null && asyncPoster != null)
                             {
                                 GridRegion r = gridService.GetRegionByUUID(null, region);
                                 if (r != null)
-                                    asyncPoster.Post(r.RegionID,
+                                    asyncPoster.Post(r.ServerURI,
                                                      SyncMessageHelper.UpdateEstateInfo(es.EstateID, region));
                             }
                         }
