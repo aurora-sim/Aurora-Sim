@@ -566,7 +566,7 @@ namespace OpenSim.Services.LLLoginService
                     else
                     {
                         //Verify that all assets exist now
-                        for (int i = 0; i < avappearance.Wearables.Length; i++)
+                        /*for (int i = 0; i < avappearance.Wearables.Length; i++)
                         {
                             bool messedUp = false;
                             foreach (KeyValuePair<UUID, UUID> item in avappearance.Wearables[i].GetItems())
@@ -599,7 +599,7 @@ namespace OpenSim.Services.LLLoginService
                                     break;
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
                 else
