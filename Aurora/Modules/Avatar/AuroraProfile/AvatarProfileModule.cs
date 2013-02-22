@@ -628,7 +628,7 @@ namespace Aurora.Modules.Profiles
                     {
                         UserInfo GUI =
                             client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
-                        if (GUI != null)
+                        if (GUI != null && GUI.IsOnline)
                         {
                             GridRegion region = GetRegionUserIsIn(client.AgentId).GridService.GetRegionByUUID(
                                 client.AllScopeIDs, GUI.CurrentRegionID);

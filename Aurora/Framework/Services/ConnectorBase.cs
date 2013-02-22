@@ -272,13 +272,11 @@ namespace Aurora.Framework
     {
         protected IRegistryCore m_registry;
         protected Dictionary<string, List<MethodImplementation>> m_methods = null;
-        protected ICapsService m_capsService;
 
         public ServerHandler(string url, IRegistryCore registry, ConnectorBase conn) :
             base("POST", url)
         {
             m_registry = registry;
-            m_capsService = m_registry.RequestModuleInterface<ICapsService>();
             if (m_methods == null)
             {
                 m_methods = new Dictionary<string, List<MethodImplementation>>();

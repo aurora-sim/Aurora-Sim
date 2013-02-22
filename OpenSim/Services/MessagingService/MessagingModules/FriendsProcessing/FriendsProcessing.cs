@@ -167,60 +167,60 @@ namespace OpenSim.Services.MessagingService
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["Target"].AsUUID();
-                IClientCapsService friendSession =
-                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
-                if (friendSession != null && friendSession.GetRootCapsService() != null)
+                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                UserInfo info;
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
+                    asyncPost.Post(info.CurrentRegionURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipOffered")
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["Friend"].AsUUID();
-                IClientCapsService friendSession =
-                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
-                if (friendSession != null && friendSession.GetRootCapsService() != null)
+                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                UserInfo info;
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
+                    asyncPost.Post(info.CurrentRegionURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendTerminated")
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["ExFriend"].AsUUID();
-                IClientCapsService friendSession =
-                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
-                if (friendSession != null && friendSession.GetRootCapsService() != null)
+                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                UserInfo info;
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
+                    asyncPost.Post(info.CurrentRegionURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipDenied")
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["FriendID"].AsUUID();
-                IClientCapsService friendSession =
-                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
-                if (friendSession != null && friendSession.GetRootCapsService() != null)
+                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                UserInfo info;
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
+                    asyncPost.Post(info.CurrentRegionURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipApproved")
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["FriendID"].AsUUID();
-                IClientCapsService friendSession =
-                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
-                if (friendSession != null && friendSession.GetRootCapsService() != null)
+                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                UserInfo info;
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
+                    asyncPost.Post(info.CurrentRegionURI, message);
                 }
             }
             return null;

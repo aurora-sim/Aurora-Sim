@@ -43,7 +43,7 @@ namespace Aurora.Modules.Search
         #region Declares
 
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly List<IScene> m_Scenes = new List<IScene>();
+        private IScene m_Scene;
         private IGroupsModule GroupsModule;
         private IProfileConnector ProfileFrontend;
         private IDirectoryServiceConnector directoryService;
@@ -184,7 +184,7 @@ namespace Aurora.Modules.Search
                                    string queryText, uint queryFlags, int queryStart)
         {
             //Find the user accounts
-            List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(remoteClient.AllScopeIDs,
+            List<UserAccount> accounts = m_Scene.UserAccountService.GetUserAccounts(remoteClient.AllScopeIDs,
                                                                                         queryText);
             List<DirPeopleReplyData> ReturnValues =
                 new List<DirPeopleReplyData>();
@@ -214,7 +214,7 @@ namespace Aurora.Modules.Search
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo =
-                        m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
+                        m_Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
                     if (Pinfo != null && Pinfo.IsOnline) //If it is null, they are offline
                         person.online = true;
                     person.reputation = 0;
@@ -242,7 +242,7 @@ namespace Aurora.Modules.Search
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo =
-                        m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
+                        m_Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
                     if (Pinfo != null && Pinfo.IsOnline)
                         person.online = true;
                     person.reputation = 0;
@@ -336,7 +336,7 @@ namespace Aurora.Modules.Search
             Utils.LongToUInts(remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
             GridRegion GR = null;
 
-            GR = regionhandle == 0 ? new GridRegion(remoteClient.Scene.RegionInfo) : m_Scenes[0].GridService.GetRegionByPosition(remoteClient.AllScopeIDs, (int)xstart, (int)ystart);
+            GR = regionhandle == 0 ? new GridRegion(remoteClient.Scene.RegionInfo) : m_Scene.GridService.GetRegionByPosition(remoteClient.AllScopeIDs, (int)xstart, (int)ystart);
             if (GR == null)
             {
                 //No region???
@@ -396,16 +396,16 @@ namespace Aurora.Modules.Search
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
-                    foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
+                    if (m_Scene.RegionInfo.RegionID == landdata.RegionID)
                     {
                         //Global coords, so add the meters
-                        locX = scene.RegionInfo.RegionLocX;
-                        locY = scene.RegionInfo.RegionLocY;
+                        locX = m_Scene.RegionInfo.RegionLocX;
+                        locY = m_Scene.RegionInfo.RegionLocY;
                     }
-                    if (locY == 0 && locX == 0)
+                    else
                     {
                         //Ask the grid service for the coordinates if the region is not local
-                        GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(remoteClient.AllScopeIDs, landdata.RegionID);
+                        GridRegion r = m_Scene.GridService.GetRegionByUUID(remoteClient.AllScopeIDs, landdata.RegionID);
                         if (r != null)
                         {
                             locX = r.RegionLocX;
@@ -450,26 +450,16 @@ namespace Aurora.Modules.Search
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
-#if (!ISWIN)
-                    foreach (IScene scene in m_Scenes)
+
+                    if(m_Scene.RegionInfo.RegionID == landdata.RegionID)
                     {
-                        if (scene.RegionInfo.RegionID == landdata.RegionID)
-                        {
-                            locX = scene.RegionInfo.RegionLocX;
-                            locY = scene.RegionInfo.RegionLocY;
-                        }
+                        locX = m_Scene.RegionInfo.RegionLocX;
+                        locY = m_Scene.RegionInfo.RegionLocY;
                     }
-#else
-                    foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
-                    {
-                        locX = scene.RegionInfo.RegionLocX;
-                        locY = scene.RegionInfo.RegionLocY;
-                    }
-#endif
-                    if (locY == 0 && locX == 0)
+                    else
                     {
                         //Ask the grid service for the coordinates if the region is not local
-                        GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(remoteClient.AllScopeIDs, landdata.RegionID);
+                        GridRegion r = m_Scene.GridService.GetRegionByUUID(remoteClient.AllScopeIDs, landdata.RegionID);
                         if (r != null)
                         {
                             locX = r.RegionLocX;
@@ -563,7 +553,7 @@ namespace Aurora.Modules.Search
                 foreach (Classified classified in Classifieds)
                 {
                     //Get the region so we have its position
-                    GridRegion region = m_Scenes[0].GridService.GetRegionByName(remoteClient.AllScopeIDs, classified.SimName);
+                    GridRegion region = m_Scene.GridService.GetRegionByName(remoteClient.AllScopeIDs, classified.SimName);
 
                     mapitem = new mapItemReply
                                   {
@@ -687,7 +677,7 @@ namespace Aurora.Modules.Search
             if (!m_SearchEnabled)
                 return;
 
-            m_Scenes.Add(scene);
+            m_Scene = scene;
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
@@ -697,7 +687,7 @@ namespace Aurora.Modules.Search
             if (!m_SearchEnabled)
                 return;
 
-            m_Scenes.Remove(scene);
+            m_Scene = null;
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }

@@ -45,6 +45,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
         protected IRegistryCore m_registry;
         protected ISyncMessagePosterService m_messagePost;
+        protected ICapsService m_capsService;
             
         #endregion
 
@@ -53,8 +54,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         public void KickUser(UUID avatarID, string message)
         {
             //Get required interfaces
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-            IClientCapsService client = capsService.GetClientCapsService(avatarID);
+            IClientCapsService client = m_capsService.GetClientCapsService(avatarID);
             if (client != null)
             {
                 IRegionClientCapsService regionClient = client.GetRootCapsService();
@@ -66,7 +66,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
                     if (agentProcessor != null)
                         agentProcessor.LogoutAgent(regionClient, true);
-                    MainConsole.Instance.Info("User will be kicked in less than 30 seconds.");
+                    MainConsole.Instance.Info("User has been kicked.");
                     return;
                 }
             }
@@ -76,8 +76,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         public void MessageUser(UUID avatarID, string message)
         {
             //Get required interfaces
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-            IClientCapsService client = capsService.GetClientCapsService(avatarID);
+            IClientCapsService client = m_capsService.GetClientCapsService(avatarID);
             if (client != null)
             {
                 IRegionClientCapsService regionClient = client.GetRootCapsService();
@@ -86,7 +85,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     //Send the message to the client
                     m_messagePost.Post(regionClient.Region.ServerURI,
                                      BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
-                    MainConsole.Instance.Info("Message sent, will be delievered in the next 30 seconds to the user.");
+                    MainConsole.Instance.Info("Message sent to the user.");
                     return;
                 }
             }
@@ -96,8 +95,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         public void SendAlert(string message)
         {
             //Get required interfaces
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-            List<IClientCapsService> clients = capsService.GetClientsCapsServices();
+            List<IClientCapsService> clients = m_capsService.GetClientsCapsServices();
 
             //Go through all clients, and send the message asyncly to all agents that are root
             foreach (IRegionClientCapsService regionClient in from client in clients from regionClient in client.GetCapsServices() where regionClient.RootAgent select regionClient)
@@ -107,7 +105,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 m_messagePost.Post(regionClient.Region.ServerURI,
                                  BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
             }
-            MainConsole.Instance.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 3 minutes.");
+            MainConsole.Instance.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid shortly.");
         }
 
         #endregion
@@ -142,6 +140,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         {
             //Also look for incoming messages to display
             m_messagePost = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+            m_capsService = m_registry.RequestModuleInterface<ICapsService>();
             m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 

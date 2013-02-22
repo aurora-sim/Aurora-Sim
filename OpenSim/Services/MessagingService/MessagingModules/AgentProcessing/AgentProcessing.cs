@@ -51,6 +51,7 @@ namespace OpenSim.Services.MessagingService
         protected bool m_enabled = true;
         protected IConfigSource _config;
         protected IRegistryCore m_registry;
+        protected ICapsService m_capsService;
 
         #endregion
 
@@ -78,6 +79,7 @@ namespace OpenSim.Services.MessagingService
 
         public virtual void FinishedStartup()
         {
+            m_capsService = m_registry.RequestModuleInterface<ICapsService>();
             //Also look for incoming messages to display
             if (m_enabled)
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
@@ -94,11 +96,8 @@ namespace OpenSim.Services.MessagingService
 
             UUID AgentID = message["AgentID"].AsUUID();
             ulong requestingRegion = message["RequestingRegion"].AsULong();
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-            if (capsService == null)
-                return new OSDMap();
 
-            IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
 
             IRegionClientCapsService regionCaps = null;
             if (clientCaps != null)
@@ -347,15 +346,12 @@ namespace OpenSim.Services.MessagingService
             if (agentInfoService != null)
                 agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, true, UUID.Zero);
 
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-            if (capsService != null)
-                capsService.RemoveCAPS(regionCaps.AgentID);
+            m_capsService.RemoveCAPS(regionCaps.AgentID);
         }
 
         public virtual void LogOutAllAgentsForRegion(ulong requestingRegion)
         {
-            IRegionCapsService fullregionCaps =
-                m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
+            IRegionCapsService fullregionCaps = m_capsService.GetCapsForRegion(requestingRegion);
             if (fullregionCaps != null)
             {
                 IEventQueueService eqs = m_registry.RequestModuleInterface<IEventQueueService>();
@@ -368,7 +364,7 @@ namespace OpenSim.Services.MessagingService
                     }
                 }
                 //Now kill the region in the caps Service, DO THIS FIRST, otherwise you get an infinite loop later in the IClientCapsService when it tries to remove itself from the IRegionCapsService
-                m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
+                m_capsService.RemoveCapsForRegion(requestingRegion);
                 //Close all regions and remove them from the region
                 fullregionCaps.Close();
             }
@@ -388,8 +384,7 @@ namespace OpenSim.Services.MessagingService
             {
                 //MainConsole.Instance.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
 
-                IRegionCapsService regionCaps =
-                    m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(neighbor.RegionHandle);
+                IRegionCapsService regionCaps = m_capsService.GetCapsForRegion(neighbor.RegionHandle);
                 if (regionCaps == null) //If there isn't a region caps, there isn't an agent in this sim
                     continue;
                 List<UUID> usersInformed = new List<UUID>();
@@ -425,8 +420,7 @@ namespace OpenSim.Services.MessagingService
                                    {
                                        int count = 0;
                                        int x, y;
-                                       ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-                                       IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
+                                       IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
                                        Util.UlongToInts(requestingRegion, out x, out y);
                                        GridRegion ourRegion =
                                            m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(
@@ -482,8 +476,7 @@ namespace OpenSim.Services.MessagingService
                                                                                                             xMin, xMax,
                                                                                                             yMin, yMax);
 
-                                       ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-                                       IClientCapsService clientCaps = capsService.GetClientCapsService(caps.AgentID);
+                                       IClientCapsService clientCaps = m_capsService.GetClientCapsService(caps.AgentID);
                                        foreach (GridRegion neighbor in neighbors)
                                        {
                                            if (neighbor.RegionHandle != caps.RegionHandle &&
@@ -549,8 +542,7 @@ namespace OpenSim.Services.MessagingService
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
             {
-                ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-                IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
+                IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
 
                 IRegionClientCapsService oldRegionService = clientCaps.GetCapsService(neighbor.RegionHandle);
 
@@ -687,8 +679,7 @@ namespace OpenSim.Services.MessagingService
                                           ulong requestingRegion,
                                           out string reason)
         {
-            IClientCapsService clientCaps =
-                m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
             IRegionClientCapsService regionCaps = clientCaps.GetCapsService(requestingRegion);
 
             if (regionCaps == null || !regionCaps.RootAgent)
@@ -822,8 +813,7 @@ namespace OpenSim.Services.MessagingService
                                            return; //Another was enqueued, kill this one
 
                                        //Now do a sanity check on the avatar
-                                       IClientCapsService clientCaps =
-                                           m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(
+                                       IClientCapsService clientCaps = m_capsService.GetClientCapsService(
                                                AgentID);
                                        if (clientCaps == null)
                                            return;
@@ -873,8 +863,7 @@ namespace OpenSim.Services.MessagingService
 
         public virtual void SendCloseChildAgent(UUID agentID, IEnumerable<GridRegion> regionsToClose)
         {
-            IClientCapsService clientCaps =
-                m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(agentID);
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
             //Close all agents that we've been given regions for
             foreach (GridRegion region in regionsToClose)
             {
@@ -890,8 +879,7 @@ namespace OpenSim.Services.MessagingService
 
         protected void ResetFromTransit(UUID AgentID)
         {
-            IClientCapsService clientCaps =
-                m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
             if (clientCaps != null)
             {
                 clientCaps.InTeleport = false;
@@ -902,8 +890,7 @@ namespace OpenSim.Services.MessagingService
 
         protected bool SetUserInTransit(UUID AgentID)
         {
-            IClientCapsService clientCaps =
-                m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
 
             if (clientCaps.InTeleport)
             {
@@ -922,8 +909,7 @@ namespace OpenSim.Services.MessagingService
 
         protected bool WaitForCallback(UUID AgentID, out bool callWasCanceled)
         {
-            IClientCapsService clientCaps =
-                m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
 
             int count = 1000;
             while (!clientCaps.CallbackHasCome && count > 0)
@@ -947,8 +933,7 @@ namespace OpenSim.Services.MessagingService
 
         protected bool WaitForCallback(UUID AgentID)
         {
-            IClientCapsService clientCaps =
-                m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
 
             int count = 100;
             while (!clientCaps.CallbackHasCome && count > 0)
@@ -1039,8 +1024,7 @@ namespace OpenSim.Services.MessagingService
         {
             try
             {
-                IClientCapsService clientCaps =
-                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
+                IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
                 IRegionClientCapsService requestingRegionCaps = clientCaps.GetCapsService(requestingRegion);
                 ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
                 if (SimulationService != null)
@@ -1217,7 +1201,6 @@ namespace OpenSim.Services.MessagingService
             bool success = false;
             string seedCap = "";
             string reason = "Could not find the simulation service";
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
             {
@@ -1226,14 +1209,14 @@ namespace OpenSim.Services.MessagingService
                 //    wants to inform us about, and it includes the Caps SEED url for the region
                 IRegionClientCapsService regionClientCaps = null;
                 IClientCapsService clientCaps = null;
-                if (capsService != null)
+                if (m_capsService != null)
                 {
                     //Remove any previous users
-                    seedCap = capsService.CreateCAPS(aCircuit.AgentID,
+                    seedCap = m_capsService.CreateCAPS(aCircuit.AgentID,
                         CapsUtil.GetCapsSeedPath(aCircuit.CapsPath),
                         region.RegionHandle, true, aCircuit, 0);
 
-                    clientCaps = capsService.GetClientCapsService(aCircuit.AgentID);
+                    clientCaps = m_capsService.GetClientCapsService(aCircuit.AgentID);
                     regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
                 }
 
@@ -1267,15 +1250,15 @@ namespace OpenSim.Services.MessagingService
                     }
                     //Delete the Caps!
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
-                    if (agentProcessor != null && capsService != null)
+                    if (agentProcessor != null && m_capsService != null)
                         agentProcessor.LogoutAgent(regionClientCaps, true);
-                    else if (capsService != null)
-                        capsService.RemoveCAPS(aCircuit.AgentID);
+                    else if (m_capsService != null)
+                        m_capsService.RemoveCAPS(aCircuit.AgentID);
                     return new LoginAgentArgs { Success = success, CircuitData = aCircuit, Reason = reason, SeedCap = seedCap };
                 }
 
                 IPAddress ipAddress = regionClientCaps.Region.ExternalEndPoint.Address;
-                if (capsService != null && reason != "")
+                if (m_capsService != null && reason != "")
                 {
                     try
                     {
@@ -1301,10 +1284,10 @@ namespace OpenSim.Services.MessagingService
                     {
                         //Delete the Caps!
                         IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
-                        if (agentProcessor != null && capsService != null)
+                        if (agentProcessor != null && m_capsService != null)
                             agentProcessor.LogoutAgent(regionClientCaps, true);
-                        else if (capsService != null)
-                            capsService.RemoveCAPS(aCircuit.AgentID);
+                        else if (m_capsService != null)
+                            m_capsService.RemoveCAPS(aCircuit.AgentID);
                         success = false;
                     }
                 }

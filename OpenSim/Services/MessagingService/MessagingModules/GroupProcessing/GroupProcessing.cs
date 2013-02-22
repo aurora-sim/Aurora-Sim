@@ -109,7 +109,7 @@ namespace OpenSim.Services.MessagingService
                     everyone = role;
 #endif
 
-                List<OpenSim.Services.Interfaces.GridRegion> regionsToBeUpdated = new List<OpenSim.Services.Interfaces.GridRegion>();
+                List<UserInfo> regionsToBeUpdated = new List<UserInfo>();
                 foreach (GroupRoleMembersData data in members)
                 {
                     if (data.RoleID == roleID)
@@ -130,12 +130,13 @@ namespace OpenSim.Services.MessagingService
                                     //Set them to the most limited role since their role is gone
                                     con.SetAgentGroupSelectedRole(data.MemberID, groupID, everyone.RoleID);
                                 //Need to update their title inworld
-                                ICapsService caps = m_registry.RequestModuleInterface<ICapsService>();
-                                if (caps != null)
+                                
+                                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                                UserInfo info;
+                                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(agentID.ToString())) != null && info.IsOnline)
                                 {
-                                    IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
-                                    if (clientCaps != null && clientCaps.GetRootCapsService() != null)
-                                        regionsToBeUpdated.Add(clientCaps.GetRootCapsService().Region);
+                                    //Forward the message
+                                    regionsToBeUpdated.Add(info);
                                 }
                                 break;
                         }
@@ -146,14 +147,14 @@ namespace OpenSim.Services.MessagingService
                     ISyncMessagePosterService messagePost = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                     if (messagePost != null)
                     {
-                        foreach (OpenSim.Services.Interfaces.GridRegion region in regionsToBeUpdated)
+                        foreach (UserInfo userInfo in regionsToBeUpdated)
                         {
                             OSDMap outgoingMessage = new OSDMap();
                             outgoingMessage["Method"] = "ForceUpdateGroupTitles";
                             outgoingMessage["GroupID"] = groupID;
                             outgoingMessage["RoleID"] = roleID;
-                            outgoingMessage["RegionID"] = region.RegionHandle;
-                            messagePost.Post(region.ServerURI, outgoingMessage);
+                            outgoingMessage["RegionID"] = userInfo.CurrentRegionID;
+                            messagePost.Post(userInfo.CurrentRegionURI, outgoingMessage);
                         }
                     }
                 }
@@ -163,7 +164,7 @@ namespace OpenSim.Services.MessagingService
                 //COMES IN ON REGION SIDE FROM AURORA.SERVER
                 UUID groupID = message["GroupID"].AsUUID();
                 UUID roleID = message["RoleID"].AsUUID();
-                ulong regionID = message["RegionID"].AsULong();
+                UUID regionID = message["RegionID"].AsUUID();
                 IGroupsModule gm = m_registry.RequestModuleInterface<IGroupsModule>();
                 if (gm != null)
                     gm.UpdateUsersForExternalRoleUpdate(groupID, roleID, regionID);

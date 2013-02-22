@@ -162,9 +162,12 @@ namespace Aurora.Modules.Web
                 }
             }
             bool userOnline = false;
-            ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
-            if (capsService != null)
-                userOnline = capsService.GetClientCapsService(account.PrincipalID) != null;
+            IAgentInfoService agentInfoService = webInterface.Registry.RequestModuleInterface<IAgentInfoService>();
+            if (agentInfoService != null)
+            {
+                UserInfo info = agentInfoService.GetUserInfo(account.PrincipalID.ToString());
+                userOnline = info != null ? info.IsOnline : false;
+            }
             vars.Add("UserOnline", userOnline);
             vars.Add("NotUserBanned", !userBanned);
             vars.Add("UserBanned", userBanned);
