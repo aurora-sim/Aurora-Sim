@@ -269,7 +269,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 if (!AgentTransactions.ContainsKey(userID))
                 {
-                    AgentAssetTransactions transactions = new AgentAssetTransactions(userID, this);
+                    AgentAssetTransactions transactions = new AgentAssetTransactions(userID, m_scene, false);
                     AgentTransactions.Add(userID, transactions);
                 }
 
@@ -313,19 +313,10 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
-            IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
-            if (monitorModule != null)
-            {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
-                networkMonitor.AddPendingUploads(1);
-            }
-
             AssetXferUploader uploader = transactions.RequestXferUploader(transaction);
             if (uploader != null)
             {
-                uploader.Initialise(remoteClient, assetID, transaction, type, data, storeLocal, tempFile);
+                uploader.StartUpload(remoteClient, assetID, transaction, type, data, storeLocal, tempFile);
             }
         }
 
