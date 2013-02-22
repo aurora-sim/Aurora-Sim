@@ -165,13 +165,15 @@ namespace Aurora.Framework
             if (!m_doRemoteCalls && !forced)
                 return null;
             StackTrace stackTrace = new StackTrace();
-            int upStack = 2;
+            int upStack = 1;
+            StackFrame frame = stackTrace.GetFrame(1);
+            if (frame.GetMethod().Name.Contains("DoRemote"))
+                upStack = 2;
             MethodInfo method;
             CanBeReflected reflection;
+            MainConsole.Instance.Warn(stackTrace);
             GetReflection(upStack, stackTrace, out method, out reflection);
             string methodName = reflection != null && reflection.RenamedMethod != "" ? reflection.RenamedMethod : method.Name;
-            if (methodName.Contains("<") && methodName.Contains(">"))
-                methodName = methodName.Substring(methodName.IndexOf('<')+1, methodName.IndexOf('>') - methodName.IndexOf('<') - 1);
             OSDMap map = new OSDMap();
             map["Method"] = methodName;
             if (reflection != null && reflection.UsePassword)
