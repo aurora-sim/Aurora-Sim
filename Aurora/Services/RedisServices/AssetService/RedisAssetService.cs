@@ -273,13 +273,13 @@ namespace Aurora.RedisServices.AssetService
             }
             catch (Exception)
             {
+                try { client.Dispose(); } catch { }
+                m_connectionPool.DestroyItem(client);
                 client = null;
             }
             finally
             {
-                if (client == null)
-                    m_connectionPool.DestroyItem(client);
-                else
+                if (client != null)
                     m_connectionPool.FlagFreeItem(client);
             }
             return default(T);
