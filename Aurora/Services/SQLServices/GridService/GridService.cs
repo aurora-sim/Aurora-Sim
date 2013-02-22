@@ -970,6 +970,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <returns></returns>
         private List<mapItemReply> GetItems(List<UUID> scopeIDs, int X, int Y, ulong regionHandle)
         {
+            List<mapItemReply> mapItems = new List<mapItemReply>();
             GridRegion region = GetRegionByPosition(scopeIDs, X, Y);
             //if the region is down or doesn't exist, don't check it
             if (region == null)
@@ -977,7 +978,22 @@ namespace Aurora.Services.SQLServices.GridService
 
             Dictionary<Vector3, int> Positions = new Dictionary<Vector3, int>();
             //Get a list of all the clients in the region and add them
-            foreach (UserInfo userInfo in m_agentInfoService.GetUserInfos(region.RegionID))
+            List<UserInfo> userInfos = m_agentInfoService.GetUserInfos(region.RegionID);
+            if (userInfos == null)
+            {
+                mapItemReply mapitem = new mapItemReply
+                {
+                    x = (uint)(region.RegionLocX + 1),
+                    y = (uint)(region.RegionLocY + 1),
+                    id = UUID.Zero,
+                    name = Util.Md5Hash(region.RegionName + Environment.TickCount.ToString()),
+                    Extra = 0,
+                    Extra2 = 0
+                };
+                mapItems.Add(mapitem);
+                return mapItems;
+            }
+            foreach (UserInfo userInfo in userInfos)
             {
                 //Normalize the positions to 5 meter blocks so that agents stack instead of cover up each other
                 Vector3 position = new Vector3(NormalizePosition(userInfo.CurrentPosition.X),
@@ -991,7 +1007,7 @@ namespace Aurora.Services.SQLServices.GridService
             }
 
             //Build the mapItemReply blocks
-            List<mapItemReply> mapItems = Positions.Select(position => new mapItemReply
+            mapItems = Positions.Select(position => new mapItemReply
                                                                            {
                                                                                x =
                                                                                    (uint)

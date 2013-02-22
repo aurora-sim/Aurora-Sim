@@ -399,16 +399,16 @@ namespace Aurora.Simulation.Base
                         {
                             // This just dumps a warning for any operation that takes more than 500 ms
                             int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                            if (MainConsole.Instance.IsEnabled(Level.All))
+                            if (MainConsole.Instance.IsEnabled(Level.Trace))
                             {
                                 System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
 
                                 MainConsole.Instance.TraceFormat(
                                     "[WebUtils]: osd request (URI:{0}, METHOD:{1}, UPSTACK(4):{5}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                                    url, method, tickdiff, tickdata, tickserialize, stackTrace.GetFrame(4).GetMethod().Name + " @ " + stackTrace.GetFrame(4).GetFileName() + ":" + stackTrace.GetFrame(4).GetFileLineNumber());
+                                    url, method, tickdiff, tickdata, tickserialize, stackTrace.GetFrame(4).GetMethod().Name);
                             }
                             else
-                                MainConsole.Instance.TraceFormat(
+                                MainConsole.Instance.DebugFormat(
                                     "[WebUtils]: osd request (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
                                     url, method, tickdiff, tickdata, tickserialize);
                             if (tickdiff > 5000)

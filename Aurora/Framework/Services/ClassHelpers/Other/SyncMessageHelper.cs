@@ -149,9 +149,9 @@ namespace Aurora.Framework
             return buildEvent("CancelTeleport", llsdBody, AgentID, requestingRegion);
         }
 
-        public static OSDMap AgentLoggedOut(UUID AgentID, ulong requestingRegion)
+        public static OSDMap AgentLoggedOut(UUID AgentID, ulong requestingRegion, AgentPosition agentpos)
         {
-            OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"RequestingRegion", requestingRegion}};
+            OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"AgentPos", agentpos.Pack()}, {"RequestingRegion", requestingRegion}};
 
             return buildEvent("AgentLoggedOut", llsdBody, AgentID, requestingRegion);
         }

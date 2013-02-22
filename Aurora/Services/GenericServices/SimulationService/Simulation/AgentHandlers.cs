@@ -133,8 +133,7 @@ namespace OpenSim.Services
             }
             else if (method.Equals("DELETE"))
             {
-                if(m_secure)
-                    DoAgentDelete(request, responsedata, agentID, action, regionID);
+                DoAgentDelete(request, responsedata, agentID, action, regionID);
                 return responsedata;
             }
             else if (method.Equals("QUERYACCESS"))

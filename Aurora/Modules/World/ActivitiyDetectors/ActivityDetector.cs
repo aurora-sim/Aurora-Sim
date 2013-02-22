@@ -192,8 +192,7 @@ namespace Aurora.Modules.ActivityDetectors
                 //Send the child agent data update
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
-                    syncPoster.PostToServer(SyncMessageHelper.SendChildAgentUpdate(agentpos, sp.Scene.RegionInfo.RegionHandle));
-                syncPoster.PostToServer(SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle));
+                    syncPoster.PostToServer(SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle, agentpos));
             }
         }
     }

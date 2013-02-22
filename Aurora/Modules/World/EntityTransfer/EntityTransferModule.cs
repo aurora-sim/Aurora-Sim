@@ -1169,17 +1169,7 @@ namespace Aurora.Modules.EntityTransfer
 
             IScenePresence presence = scene.GetScenePresence (agentID);
             if (presence != null)
-            {
-                bool RetVal = scene.RemoveAgent (presence, true);
-
-                ISyncMessagePosterService syncPoster = scene.RequestModuleInterface<ISyncMessagePosterService> ();
-                if (syncPoster != null)
-                {
-                    //Tell the grid that we are logged out
-                    syncPoster.PostToServer(SyncMessageHelper.DisableSimulator(presence.UUID, scene.RegionInfo.RegionHandle));
-                }
-                return RetVal;
-            }
+                return scene.RemoveAgent (presence, true);
             return false;
         }
 

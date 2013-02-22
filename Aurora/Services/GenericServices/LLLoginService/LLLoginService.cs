@@ -369,7 +369,6 @@ namespace OpenSim.Services.LLLoginService
             {
                 string DisplayName = account.Name;
                 AvatarAppearance avappearance = null;
-                bool newAvatar = false;
                 IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
 
                 //
@@ -401,7 +400,6 @@ namespace OpenSim.Services.LLLoginService
                         avappearance.SetWearable((int)WearableType.Shirt, new AvatarWearable(defaultItems[4].ID, defaultItems[4].AssetID));
                         avappearance.SetWearable((int)WearableType.Pants, new AvatarWearable(defaultItems[5].ID, defaultItems[5].AssetID));
                         m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
-                        newAvatar = true;
                     }
                 }
 
@@ -562,44 +560,6 @@ namespace OpenSim.Services.LLLoginService
                             avappearance = new AvatarAppearance(account.PrincipalID);
                             m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
                         }
-                    }
-                    else
-                    {
-                        //Verify that all assets exist now
-                        /*for (int i = 0; i < avappearance.Wearables.Length; i++)
-                        {
-                            bool messedUp = false;
-                            foreach (KeyValuePair<UUID, UUID> item in avappearance.Wearables[i].GetItems())
-                            {
-                                if (!m_AssetService.GetExists(item.Value.ToString()))
-                                {
-                                    InventoryItemBase invItem = m_InventoryService.GetItem(new InventoryItemBase(item.Value));
-                                    if (invItem == null)
-                                    {
-                                        MainConsole.Instance.Warn("[LLOGIN SERVICE]: Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
-                                        messedUp = true;
-                                    }
-                                }
-                            }
-                            if (messedUp)
-                                avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
-                        }
-                        if (!newAvatar)
-                        {
-                            //Also verify that all baked texture indices exist
-                            foreach (byte BakedTextureIndex in AvatarAppearance.BAKE_INDICES)
-                            {
-                                if (BakedTextureIndex == 19) //Skirt isn't used unless you have a skirt
-                                    continue;
-                                if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
-                                {
-                                    MainConsole.Instance.Warn("[LLOGIN SERVICE]: Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
-                                    avappearance = new AvatarAppearance(account.PrincipalID);
-                                    m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
-                                    break;
-                                }
-                            }
-                        }*/
                     }
                 }
                 else

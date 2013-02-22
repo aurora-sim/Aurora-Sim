@@ -175,7 +175,17 @@ namespace OpenSim.Services.MessagingService
             {
                 //ONLY if the agent is root do we even consider it
                 if (regionCaps != null && regionCaps.RootAgent)
+                {
+                    OSDMap body = ((OSDMap)message["Message"]);
+
+                    AgentPosition pos = new AgentPosition();
+                    pos.Unpack((OSDMap)body["AgentPos"]);
+
+                    SendChildAgentUpdate(pos, regionCaps);
+                    regionCaps.Disabled = true;
+
                     LogoutAgent(regionCaps, false); //The root is killing itself
+                }
             }
             else if (message["Method"] == "SendChildAgentUpdate")
             {
@@ -297,6 +307,7 @@ namespace OpenSim.Services.MessagingService
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
             IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+            IEventQueueService eventQueue = m_registry.RequestModuleInterface<IEventQueueService>();
 
             if (SimulationService != null && GridService != null)
             {
@@ -304,6 +315,7 @@ namespace OpenSim.Services.MessagingService
                     Where(regionClient => regionClient.RegionHandle != regionCaps.RegionHandle && regionClient.Region != null))
                 {
                     SimulationService.CloseAgent(regionClient.Region, regionCaps.AgentID);
+                    eventQueue.DisableSimulator(regionCaps.AgentID, regionCaps.RegionHandle);
                 }
             }
             if (kickRootAgent && regionCaps.Region != null) //Kick the root agent then
@@ -699,8 +711,8 @@ namespace OpenSim.Services.MessagingService
             int CloseNeighborCallNum = CloseNeighborCall;
             Util.FireAndForget(delegate
                                    {
-                                       //Sleep for 15 seconds to give the agents a chance to cross and get everything right
-                                       Thread.Sleep(15000);
+                                       //Sleep for 10 seconds to give the agents a chance to cross and get everything right
+                                       Thread.Sleep(10000);
                                        if (CloseNeighborCall != CloseNeighborCallNum)
                                            return; //Another was enqueued, kill this one
 
