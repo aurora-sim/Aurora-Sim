@@ -311,11 +311,11 @@ namespace Aurora.Modules.Groups
             NullCacheInfos(remoteClient.AgentId, groupID);
         }
 
-        public void UpdateUsersForExternalRoleUpdate(UUID groupID, UUID roleID, ulong regionID)
+        public void UpdateUsersForExternalRoleUpdate(UUID groupID, UUID roleID, UUID regionID)
         {
             lock (m_sceneList)
             {
-                foreach (IScene s in from scene in m_sceneList where scene.RegionInfo.RegionHandle == regionID select scene)
+                foreach (IScene s in from scene in m_sceneList where scene.RegionInfo.RegionID == regionID select scene)
                 {
                     foreach (IScenePresence sp in s.GetScenePresences())
                     {
@@ -381,7 +381,7 @@ namespace Aurora.Modules.Groups
                 amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
             }
 
-            UpdateUsersForExternalRoleUpdate(groupID, roleID, remoteClient.Scene.RegionInfo.RegionHandle);
+            UpdateUsersForExternalRoleUpdate(groupID, roleID, remoteClient.Scene.RegionInfo.RegionID);
         }
 
         public void GroupRoleChanges(IClientAPI remoteClient, UUID groupID, UUID roleID, UUID memberID, uint changes)
