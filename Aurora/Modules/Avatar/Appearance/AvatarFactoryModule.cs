@@ -48,7 +48,7 @@ namespace Aurora.Modules.Appearance
         private readonly TimedSaving<AvatarAppearance> _sendQueue = new TimedSaving<AvatarAppearance>();
         private readonly TimedSaving<AvatarAppearance> _initialSendQueue = new TimedSaving<AvatarAppearance>();
         private readonly object m_setAppearanceLock = new object();
-        private int m_initialsendtime = 3; // seconds to wait before sending the initial appearance
+        private int m_initialsendtime = 1; // seconds to wait before sending the initial appearance
         private int m_savetime = 5; // seconds to wait before saving changed appearance
         private int m_sendtime = 2; // seconds to wait before sending appearances
         private IScene m_scene;
@@ -224,65 +224,6 @@ textures 1
             }
         }
 
-        #region Validate Baked Textures
-
-        /// <summary>
-        ///   Check for the existence of the baked texture assets.
-        /// </summary>
-        /// <param name = "client"></param>
-        public bool ValidateBakedTextureCache(IClientAPI client)
-        {
-            return ValidateBakedTextureCache(client, true);
-        }
-
-        /// <summary>
-        ///   Check for the existence of the baked texture assets. Request a rebake
-        ///   unless checkonly is true.
-        /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "checkonly"></param>
-        private bool ValidateBakedTextureCache(IClientAPI client, bool checkonly)
-        {
-            IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
-            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-
-            bool defonly = true; // are we only using default textures
-
-            // Process the texture entry
-            foreach (int idx in AvatarAppearance.BAKE_INDICES)
-            {
-                Primitive.TextureEntryFace face = appearance.Appearance.Texture.FaceTextures[idx];
-
-                // if there is no texture entry, skip it
-                if (face == null)
-                    continue;
-
-                // if the texture is one of the "defaults" then skip it
-                // this should probably be more intelligent (skirt texture doesnt matter
-                // if the avatar isnt wearing a skirt) but if any of the main baked 
-                // textures is default then the rest should be as well
-                if (face.TextureID == UUID.Zero || face.TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
-                    continue;
-
-                defonly = false; // found a non-default texture reference
-
-                if (!CheckBakedTextureAsset(client, face.TextureID, idx))
-                {
-                    // the asset didn't exist if we are only checking, then we found a bad
-                    // one and we're done otherwise, ask for a rebake
-                    if (checkonly) return false;
-
-                    MainConsole.Instance.InfoFormat("[AvatarFactory] missing baked texture {0}, request rebake", face.TextureID);
-                    client.SendRebakeAvatarTextures(face.TextureID);
-                }
-            }
-
-            // If we only found default textures, then the appearance is not cached
-            return (!defonly);
-        }
-
-        #endregion
-
         #region Set Appearance
 
         /// <summary>
@@ -301,28 +242,17 @@ textures 1
             appearance.Appearance.Serial = (int)serial;
             //MainConsole.Instance.InfoFormat("[AVFACTORY]: start SetAppearance for {0}", client.AgentId);
 
+            bool texturesChanged = false;
+            bool visualParamsChanged = false;
+
             // Process the texture entry transactionally, this doesn't guarantee that Appearance is
             // going to be handled correctly but it does serialize the updates to the appearance
             lock (m_setAppearanceLock)
             {
-                bool texturesChanged = false;
-                bool visualParamsChanged = false;
-
                 if (textureEntry != null)
                 {
                     List<UUID> ChangedTextures = new List<UUID>();
                     texturesChanged = appearance.Appearance.SetTextureEntries(textureEntry, out ChangedTextures);
-
-                    // MainConsole.Instance.WarnFormat("[AVFACTORY]: Prepare to check textures for {0}",client.AgentId);
-
-                    //Do this async as it accesses the asset service (could be remote) multiple times
-                    Util.FireAndForget(delegate
-                                           {
-                                               //Validate all the textures now that we've updated
-                                               ValidateBakedTextureCache(client, false);
-                                               //The client wants us to cache the baked textures
-                                               CacheWearableData(sp, textureEntry, wearables);
-                                           });
 
                     // MainConsole.Instance.WarnFormat("[AVFACTORY]: Complete texture check for {0}",client.AgentId);
                 }
@@ -336,46 +266,16 @@ textures 1
                     if (visualParamsChanged && appearance.Appearance.AvatarHeight > 0)
                         sp.SetHeight(appearance.Appearance.AvatarHeight);
                 }
-
-                // If something changed in the appearance then queue an appearance save
-                if (texturesChanged || visualParamsChanged)
-                    QueueAppearanceSave(client.AgentId);
-
             }
-            // And always queue up an appearance update to send out
-            QueueAppearanceSend(client.AgentId);
+
+            // If something changed in the appearance then queue an appearance save
+            if (texturesChanged || visualParamsChanged)
+            {
+                QueueAppearanceSave(client.AgentId);
+                QueueAppearanceSend(client.AgentId);
+            }
 
             // MainConsole.Instance.WarnFormat("[AVFACTORY]: complete SetAppearance for {0}:\n{1}",client.AgentId,sp.Appearance.ToString());
-        }
-
-        /// <summary>
-        ///   Tell the Avatar Service about these baked textures and items
-        /// </summary>
-        /// <param name = "sp"></param>
-        /// <param name = "textureEntry"></param>
-        /// <param name = "wearables"></param>
-        private void CacheWearableData(IScenePresence sp, Primitive.TextureEntry textureEntry, WearableCache[] wearables)
-        {
-            /*if (textureEntry == null || wearables.Length == 0)
-                return;
-
-            AvatarWearable cachedWearable = new AvatarWearable {MaxItems = 0};
-            //Unlimited items
-#if (!ISWIN)
-            foreach (WearableCache item in wearables)
-            {
-                if (textureEntry.FaceTextures[item.TextureIndex] != null)
-                {
-                    cachedWearable.Add(item.CacheID, textureEntry.FaceTextures[item.TextureIndex].TextureID);
-                }
-            }
-#else
-            foreach (WearableCache item in wearables.Where(item => textureEntry.FaceTextures[item.TextureIndex] != null))
-            {
-                cachedWearable.Add(item.CacheID, textureEntry.FaceTextures[item.TextureIndex].TextureID);
-            }
-#endif
-            m_scene.AvatarService.CacheWearableData(sp.UUID, cachedWearable);*/
         }
 
         /// <summary>
@@ -391,24 +291,6 @@ textures 1
             //Send all with UUID zero for now so that we don't confuse the client about baked textures...
 
             client.SendAgentCachedTexture(resp);
-        }
-
-        /// <summary>
-        ///   Checks for the existance of a baked texture asset and
-        ///   requests the viewer rebake if the asset is not found
-        /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "textureID"></param>
-        /// <param name = "idx"></param>
-        private bool CheckBakedTextureAsset(IClientAPI client, UUID textureID, int idx)
-        {
-            if (!m_scene.AssetService.GetExists(textureID.ToString()))
-            {
-                MainConsole.Instance.WarnFormat("[AvatarFactory]: Missing baked texture {0} ({1}) for avatar {2}",
-                                 textureID, idx, client.Name);
-                return false;
-            }
-            return true;
         }
 
         #endregion
@@ -518,17 +400,14 @@ textures 1
             }
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
 
-            //MainConsole.Instance.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
+            MainConsole.Instance.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
 
             //Only set this if we actually have sent the wearables
             appearance.InitialHasWearablesBeenSent = true;
 
             // This agent just became root. We are going to tell everyone about it.
             appearance.SendAvatarDataToAllAgents(true);
-            if (ValidateBakedTextureCache(sp.ControllingClient))
-                appearance.SendAppearanceToAgent(sp);
-            else
-                MainConsole.Instance.ErrorFormat("[AvatarFactory]: baked textures are NOT in the cache for {0}", sp.Name);
+            appearance.SendAppearanceToAgent(sp);
 
             sp.ControllingClient.SendWearables(appearance.Appearance.Wearables, appearance.Appearance.Serial);
 
@@ -908,8 +787,11 @@ textures 1
                 int count = 0;
                 m_sp.Scene.ForEachScenePresence(delegate(IScenePresence scenePresence)
                                                     {
-                                                        SendAvatarDataToAgent(scenePresence, sendAppearance);
-                                                        count++;
+                                                        if (scenePresence.UUID != m_sp.UUID)
+                                                        {
+                                                            SendAvatarDataToAgent(scenePresence, sendAppearance);
+                                                            count++;
+                                                        }
                                                     });
 
                 IAgentUpdateMonitor reporter =

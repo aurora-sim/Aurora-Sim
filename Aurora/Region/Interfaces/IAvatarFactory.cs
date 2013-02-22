@@ -33,13 +33,6 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IAvatarFactory
     {
         /// <summary>
-        ///   Check to make sure that all baked textures and assets exist for the given client
-        /// </summary>
-        /// <param name = "client"></param>
-        /// <returns></returns>
-        bool ValidateBakedTextureCache(IClientAPI client);
-
-        /// <summary>
         ///   Queue the appearance to be sent for the given client
         /// </summary>
         /// <param name = "agentid"></param>

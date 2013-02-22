@@ -171,7 +171,6 @@ namespace Aurora.Framework
                 upStack = 2;
             MethodInfo method;
             CanBeReflected reflection;
-            MainConsole.Instance.Warn(stackTrace);
             GetReflection(upStack, stackTrace, out method, out reflection);
             string methodName = reflection != null && reflection.RenamedMethod != "" ? reflection.RenamedMethod : method.Name;
             OSDMap map = new OSDMap();
