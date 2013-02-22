@@ -231,12 +231,12 @@ namespace Aurora.Services.SQLServices.GridService
         ///   This updates the down flag in the map and blocks it from becoming a 'safe' region fallback
         ///   Only called by LLLoginService
         /// </summary>
-        [CanBeReflected(ThreatLevel = ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual void SetRegionUnsafe(UUID id)
         {
-            object remoteValue = DoRemoteByURL("GridServerURI", id);
+            /*object remoteValue = DoRemoteByURL("GridServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             GridRegion data = m_Database.Get(id, null);
             if (data == null)
@@ -253,12 +253,12 @@ namespace Aurora.Services.SQLServices.GridService
         ///   This updates the down flag in the map and allows it to become a 'safe' region fallback
         ///   Only called by LLLoginService
         /// </summary>
-        [CanBeReflected(ThreatLevel = ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual void SetRegionSafe(UUID id)
         {
-            object remoteValue = DoRemoteByURL("GridServerURI", id);
+            /*object remoteValue = DoRemoteByURL("GridServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             GridRegion data = m_Database.Get(id, null);
             if (data == null)
@@ -1098,7 +1098,6 @@ namespace Aurora.Services.SQLServices.GridService
             return neighbors;
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
         {
             if (m_UseSessionID && r.SessionID != SessionID)

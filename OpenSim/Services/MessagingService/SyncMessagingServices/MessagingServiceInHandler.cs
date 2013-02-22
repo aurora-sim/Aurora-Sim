@@ -38,8 +38,6 @@ namespace OpenSim.Services.MessagingService
 {
     public class MessagingServiceInHandler : IService, ISyncMessageRecievedService
     {
-        private IRegistryCore m_registry;
-
         public string Name
         {
             get { return GetType().Name; }

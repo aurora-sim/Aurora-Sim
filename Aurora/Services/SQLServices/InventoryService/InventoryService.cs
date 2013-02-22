@@ -113,12 +113,12 @@ namespace Aurora.Services.SQLServices.InventoryService
 
         #region IInventoryService Members
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool CreateUserInventory(UUID principalID, bool createDefaultItems)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", principalID, createDefaultItems);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", principalID, createDefaultItems);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;*/
 
             List<InventoryItemBase> items;
             return CreateUserInventory(principalID, createDefaultItems, out items);
@@ -454,12 +454,12 @@ namespace Aurora.Services.SQLServices.InventoryService
             return result;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", principalID);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", principalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<InventoryFolderBase>)remoteValue;
+                return (List<InventoryFolderBase>)remoteValue;*/
 
             List<InventoryFolderBase> allFolders = m_Database.GetFolders(
                 new[] { "agentID" },
@@ -471,12 +471,12 @@ namespace Aurora.Services.SQLServices.InventoryService
             return allFolders;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryFolderBase> GetRootFolders(UUID principalID)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", principalID);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", principalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<InventoryFolderBase>)remoteValue;
+                return (List<InventoryFolderBase>)remoteValue;*/
 
             return m_Database.GetFolders(
                 new[] { "agentID", "parentFolderID" },
@@ -570,12 +570,12 @@ namespace Aurora.Services.SQLServices.InventoryService
             return inventory;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", principalID, folderID);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", principalID, folderID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<InventoryItemBase>)remoteValue;
+                return (List<InventoryItemBase>)remoteValue;*/
 
             if (principalID != UUID.Zero)
                 return m_Database.GetItems(principalID,
@@ -586,12 +586,12 @@ namespace Aurora.Services.SQLServices.InventoryService
                 new[] { folderID.ToString() });
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", principalID, folderID);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", principalID, folderID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (OSDArray)remoteValue;
+                return (OSDArray)remoteValue;*/
 
             // Since we probably don't get a valid principal here, either ...
             //
@@ -718,12 +718,12 @@ namespace Aurora.Services.SQLServices.InventoryService
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
         public virtual bool PurgeFolder(InventoryFolderBase folder)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", folder);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", folder);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;*/
 
             if (!m_AllowDelete && !ParentIsLinkFolder(folder.ID))
                 return false;
@@ -746,12 +746,12 @@ namespace Aurora.Services.SQLServices.InventoryService
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool ForcePurgeFolder(InventoryFolderBase folder)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", folder);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", folder);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;*/
 
             List<InventoryFolderBase> subFolders = m_Database.GetFolders(
                 new[] { "parentFolderID" },
@@ -922,12 +922,12 @@ namespace Aurora.Services.SQLServices.InventoryService
             return items[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual OSDArray GetItem(UUID avatarID, UUID itemID)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", avatarID, itemID);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", avatarID, itemID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (OSDArray)remoteValue;
+                return (OSDArray)remoteValue;*/
             if (avatarID != UUID.Zero)
             {
                 return m_Database.GetLLSDItems(
@@ -973,12 +973,12 @@ namespace Aurora.Services.SQLServices.InventoryService
             return folders[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
         {
-            object remoteValue = DoRemoteByURL("InventoryServerURI", principalID);
+            /*object remoteValue = DoRemoteByURL("InventoryServerURI", principalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<InventoryItemBase>)remoteValue;
+                return (List<InventoryItemBase>)remoteValue;*/
 
             return new List<InventoryItemBase>(m_Database.GetActiveGestures(principalID));
         }

@@ -229,12 +229,12 @@ namespace Aurora.Services.SQLServices.UserAccountService
             return d[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public bool StoreUserAccount(UserAccount data)
         {
-            object remoteValue = DoRemoteByURL("UserAccountServerURI", data);
+            /*object remoteValue = DoRemoteByURL("UserAccountServerURI", data);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;*/
 
             if (data.UserTitle == null)
                 data.UserTitle = "";
@@ -312,7 +312,6 @@ namespace Aurora.Services.SQLServices.UserAccountService
         /// <param name = "lastName"></param>
         /// <param name = "password"></param>
         /// <param name = "email"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public string CreateUser(UUID userID, UUID scopeID, string name, string password, string email)
         {
             return CreateUser(new UserAccount(scopeID, userID, name, email), password);
@@ -322,12 +321,12 @@ namespace Aurora.Services.SQLServices.UserAccountService
         ///   Create a user
         /// </summary>
         /// <param name = "account"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public string CreateUser(UserAccount newAcc, string password)
         {
-            object remoteValue = DoRemoteByURL("UserAccountServerURI", newAcc, password);
+            /*object remoteValue = DoRemoteByURL("UserAccountServerURI", newAcc, password);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? "" : remoteValue.ToString();
+                return remoteValue == null ? "" : remoteValue.ToString();*/
 
             UserAccount account = GetUserAccount(null, newAcc.PrincipalID);
             UserAccount nameaccount = GetUserAccount(null, newAcc.Name);
@@ -366,12 +365,12 @@ namespace Aurora.Services.SQLServices.UserAccountService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
         {
-            object remoteValue = DoRemoteByURL("UserAccountServerURI", userID, password, archiveInformation, wipeFromDatabase);
+            /*object remoteValue = DoRemoteByURL("UserAccountServerURI", userID, password, archiveInformation, wipeFromDatabase);
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             if (password != "" && m_AuthenticationService.Authenticate(userID, "UserAccount", password, 0) == "")
                 return;//Not authed

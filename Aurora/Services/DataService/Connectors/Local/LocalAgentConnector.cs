@@ -118,13 +118,13 @@ namespace Aurora.Services.DataService
         ///   Note: we only allow for this on the grid side
         /// </summary>
         /// <param name = "agent"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void UpdateAgent(IAgentInfo agent)
         {
             CacheAgent(agent);
-            object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
+            /*object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             Dictionary<string, object> values = new Dictionary<string, object>(1);
             values["Value"] = OSDParser.SerializeLLSDXmlString(agent.ToOSD());

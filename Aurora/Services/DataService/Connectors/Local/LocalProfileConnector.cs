@@ -162,12 +162,12 @@ namespace Aurora.Services.DataService
         ///   Create a new profile for a user
         /// </summary>
         /// <param name = "AgentID"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void CreateNewProfile(UUID AgentID)
         {
-            object remoteValue = DoRemote(AgentID);
+            /*object remoteValue = DoRemote(AgentID);
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             List<object> values = new List<object> {AgentID.ToString(), "LLProfile"};
 

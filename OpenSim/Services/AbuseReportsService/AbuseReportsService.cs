@@ -56,12 +56,12 @@ namespace OpenSim.Services.AbuseReports
                 conn.AddAbuseReport(abuse_report);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
-            object remoteValue = DoRemote(Number, Password);
+            /*object remoteValue = DoRemote(Number, Password);
             if (remoteValue != null || m_doRemoteOnly)
-                return (AbuseReport)remoteValue;
+                return (AbuseReport)remoteValue;*/
 
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
             return (conn != null) ? conn.GetAbuseReport(Number, Password) : null;
@@ -79,12 +79,12 @@ namespace OpenSim.Services.AbuseReports
             return (conn != null) ? conn.GetAbuseReport(Number) : null;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
-            object remoteValue = DoRemote(report, Password);
+            /*object remoteValue = DoRemote(report, Password);
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
