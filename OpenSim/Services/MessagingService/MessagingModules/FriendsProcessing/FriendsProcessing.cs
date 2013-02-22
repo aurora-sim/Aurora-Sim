@@ -150,11 +150,8 @@ namespace OpenSim.Services.MessagingService
                         GridRegion ourRegion = gridService.GetRegionByUUID(null, UUID.Parse(info[2].ToString()));
                         if (ourRegion != null)
                         {
-                            foreach (UUID onlineFriend in OnlineFriends)
-                            {
-                                asyncPoster.Post(ourRegion.RegionHandle,
-                                                 SyncMessageHelper.AgentStatusChange(onlineFriend, us, isOnline));
-                            }
+                            asyncPoster.Post(ourRegion.RegionHandle,
+                                                 SyncMessageHelper.AgentStatusChanges(OnlineFriends, us, isOnline));
                         }
                     }
                 }
@@ -183,6 +180,27 @@ namespace OpenSim.Services.MessagingService
                     {
                         //Send the message
                         friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentID, NewStatus);
+                    }
+                }
+            }
+            else if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChanges")
+            {
+                OSDMap innerMessage = (OSDMap)message["Message"];
+                //We got a message, now pass it on to the clients that need it
+                List<UUID> AgentIDs = ((OSDArray)innerMessage["AgentIDs"]).ConvertAll<UUID>((o) => o);
+                UUID FriendToInformID = innerMessage["FriendToInformID"].AsUUID();
+                bool NewStatus = innerMessage["NewStatus"].AsBoolean();
+
+                //Do this since IFriendsModule is a scene module, not a ISimulationBase module (not interchangable)
+                ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
+                if (manager != null && manager.GetAllScenes().Count > 0)
+                {
+                    IFriendsModule friendsModule = manager.GetCurrentOrFirstScene().RequestModuleInterface<IFriendsModule>();
+                    if (friendsModule != null)
+                    {
+                        //Send the message
+                        foreach (UUID agentID in AgentIDs)
+                            friendsModule.SendFriendsStatusMessage(FriendToInformID, agentID, NewStatus);
                     }
                 }
             }
