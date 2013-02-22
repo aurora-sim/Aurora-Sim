@@ -112,6 +112,10 @@ namespace OpenSim.Services
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<string> GetAgentsLocations(string requestor, List<string> userIDs)
         {
+            object remoteValue = DoRemote(requestor, userIDs);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<string>)remoteValue;
+
             string[] infos = new string[userIDs.Count];
             for (int i = 0; i < userIDs.Count; i++)
             {
