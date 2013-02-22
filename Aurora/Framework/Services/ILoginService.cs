@@ -40,6 +40,99 @@ namespace OpenSim.Services.Interfaces
         public abstract OSD ToOSDMap();
     }
 
+    public class LoginResponseEnum
+    {
+        public static string PasswordIncorrect = "key"; //Password is wrong
+        public static string InternalError = "Internal Error"; //Something inside went wrong
+        public static string MessagePopup = "critical"; //Makes a message pop up in the viewer
+        public static string ToSNeedsSent = "tos"; //Pops up the ToS acceptance box
+        public static string Update = "update"; //Informs the client that they must update the viewer to login
+        public static string OptionalUpdate = "optional"; //Informs the client that they have an optional update
+
+        public static string PresenceIssue = "presence";
+        //Used by opensim to tell the viewer that the agent is already logged in
+
+        public static string OK = "true"; //Login went fine
+        public static string Indeterminant = "indeterminate"; //Unknown exactly what this does
+        public static string Redirect = "redirect"; //Redirect! TBA!
+    }
+
+    public class LLFailedLoginResponse : LoginResponse
+    {
+        public static LLFailedLoginResponse AuthenticationProblem;
+        public static LLFailedLoginResponse AccountProblem;
+        public static LLFailedLoginResponse GridProblem;
+        public static LLFailedLoginResponse InventoryProblem;
+        public static LLFailedLoginResponse DeadRegionProblem;
+        public static LLFailedLoginResponse LoginBlockedProblem;
+        public static LLFailedLoginResponse AlreadyLoggedInProblem;
+        public static LLFailedLoginResponse InternalError;
+        public static LLFailedLoginResponse PermanentBannedProblem;
+        protected string m_key;
+        protected bool m_login;
+        protected string m_value;
+
+        static LLFailedLoginResponse()
+        {
+            AuthenticationProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                                                              "Could not authenticate your avatar. Please check your username and password, and check the grid if problems persist.",
+                                                              false);
+            AccountProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                                                       "Could not find an account for your avatar. Please check that your username is correct or make a new account.",
+                                                       false);
+            PermanentBannedProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                                                               "You have been blocked from using this service.",
+                                                               false);
+            GridProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
+                                                    "Error connecting to the desired location. Try connecting to another region.",
+                                                    false);
+            InventoryProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
+                                                         "The inventory service is not responding.  Please notify your login region operator.",
+                                                         false);
+            DeadRegionProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
+                                                          "The region you are attempting to log into is not responding. Please select another region and try again.",
+                                                          false);
+            LoginBlockedProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
+                                                            "Logins are currently restricted. Please try again later.",
+                                                            false);
+            AlreadyLoggedInProblem = new LLFailedLoginResponse(LoginResponseEnum.PresenceIssue,
+                                                               "You appear to be already logged in. " +
+                                                               "If this is not the case please wait for your session to timeout. " +
+                                                               "If this takes longer than a few minutes please contact the grid owner. " +
+                                                               "Please wait 5 minutes if you are going to connect to a region nearby to the region you were at previously.",
+                                                               false);
+            InternalError = new LLFailedLoginResponse(LoginResponseEnum.InternalError, "Error generating Login Response",
+                                                      false);
+        }
+
+        public LLFailedLoginResponse(string key, string value, bool login)
+        {
+            m_key = key;
+            m_value = value;
+            m_login = login;
+        }
+
+        public override Hashtable ToHashtable()
+        {
+            Hashtable loginError = new Hashtable();
+            loginError["reason"] = m_key;
+            loginError["message"] = m_value;
+            loginError["login"] = m_login.ToString().ToLower();
+            return loginError;
+        }
+
+        public override OSD ToOSDMap()
+        {
+            OSDMap map = new OSDMap();
+
+            map["reason"] = OSD.FromString(m_key);
+            map["message"] = OSD.FromString(m_value);
+            map["login"] = OSD.FromString(m_login.ToString().ToLower());
+
+            return map;
+        }
+    }
+
     public interface ILoginModule
     {
         string Name { get; }

@@ -119,7 +119,7 @@ namespace OpenSim.Services.MessagingService
             {
                 Util.FireAndForget((o) =>
                 {
-                    response(Get(regionID, request));
+                    response(Get(true, regionID, request));
                 });
             }
             else
@@ -127,10 +127,10 @@ namespace OpenSim.Services.MessagingService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public OSDMap Get(UUID regionID, OSDMap request)
+        public OSDMap Get(bool remote, UUID regionID, OSDMap request)
         {
-            if (m_doRemote)
-                return DoRemoteByURLForced("MessagingServerURI", regionID, request) as OSDMap;
+            if (remote)
+                return DoRemoteByURLForced("MessagingServerURI", false, regionID, request) as OSDMap;
             return m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
 

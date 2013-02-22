@@ -37,7 +37,6 @@ using Nini.Config;
 using Aurora.DataManager;
 using OpenMetaverse;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.LLLoginService;
 
 namespace Aurora.Modules.Ban
 {

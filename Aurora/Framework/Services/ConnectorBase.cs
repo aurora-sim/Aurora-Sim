@@ -341,7 +341,9 @@ namespace Aurora.Framework
                         int paramNum = 0;
                         foreach (ParameterInfo param in paramInfo)
                         {
-                            if (args[param.Name].Type == OSDType.Unknown)
+                            if (param.ParameterType == typeof(bool) && !args.ContainsKey(param.Name))
+                                parameters[paramNum++] = false;
+                            else if (args[param.Name].Type == OSDType.Unknown)
                                 parameters[paramNum++] = null;
                             else if(param.ParameterType == typeof(OSD))
                                 parameters[paramNum++] = args[param.Name];

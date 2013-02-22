@@ -1058,7 +1058,7 @@ namespace Aurora.Modules.EntityTransfer
             IAuthorizationService AuthorizationService = scene.RequestModuleInterface<IAuthorizationService> ();
             if (AuthorizationService != null)
             {
-                GridRegion ourRegion = new GridRegion (scene.RegionInfo);
+                GridRegion ourRegion = new GridRegion(scene.RegionInfo);
                 if (!AuthorizationService.IsAuthorizedForRegion (ourRegion, agent, !agent.child, out reason))
                 {
                     MainConsole.Instance.WarnFormat ("[ConnectionBegin]: Denied access to {0} at {1} because the user does not have access to the region, reason: {2}",

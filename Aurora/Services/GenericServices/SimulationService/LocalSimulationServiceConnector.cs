@@ -68,15 +68,26 @@ namespace OpenSim.Services.Connectors.Simulation
         public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags,
                                 AgentData data, out int requestedUDPPort, out string reason)
         {
+            OSDMap map = new OSDMap();
             requestedUDPPort = 0;
             if (destination == null || Scene == null)
             {
-                reason = "Given destination was null";
+                map["Reason"] = "Given destination was null";
+                map["Success"] = false;
+                reason = OSDParser.SerializeJsonString(map);
                 return false;
             }
             if (destination.ExternalEndPoint != null) requestedUDPPort = destination.ExternalEndPoint.Port;
 
             //MainConsole.Instance.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Found region {0} to send SendCreateChildAgent", destination.RegionName);
+
+            if (Scene.RegionInfo.RegionID != destination.RegionID)
+            {
+                map["Reason"] = "Did not find region " + destination.RegionName;
+                map["Success"] = false;
+                reason = OSDParser.SerializeJsonString(map);
+                return false;
+            }
             if (data != null)
                 UpdateAgent(destination, data);
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
@@ -86,7 +97,6 @@ namespace OpenSim.Services.Connectors.Simulation
 
             MainConsole.Instance.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Did not find region {0} for CreateAgent",
                               destination.RegionName);
-            OSDMap map = new OSDMap();
             map["Reason"] = "Did not find region " + destination.RegionName;
             map["Success"] = false;
             reason = OSDParser.SerializeJsonString(map);
