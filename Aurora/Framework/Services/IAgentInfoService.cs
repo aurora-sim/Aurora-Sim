@@ -43,6 +43,7 @@ namespace OpenSim.Services.Interfaces
         ///   The region the user is currently active in
         /// </summary>
         public UUID CurrentRegionID;
+        public string CurrentRegionURI;
 
         public Vector3 HomeLookAt;
         public Vector3 HomePosition;
@@ -82,6 +83,7 @@ namespace OpenSim.Services.Interfaces
             OSDMap retVal = new OSDMap();
             retVal["UserID"] = UserID;
             retVal["CurrentRegionID"] = CurrentRegionID;
+            retVal["CurrentRegionURI"] = CurrentRegionURI;
             retVal["CurrentPosition"] = CurrentPosition;
             retVal["CurrentLookAt"] = CurrentLookAt;
             retVal["HomeRegionID"] = HomeRegionID;
@@ -98,6 +100,7 @@ namespace OpenSim.Services.Interfaces
         {
             UserID = retVal["UserID"].AsString();
             CurrentRegionID = retVal["CurrentRegionID"].AsUUID();
+            CurrentRegionURI = retVal["CurrentRegionURI"].AsString();
             CurrentPosition = retVal["CurrentPosition"].AsVector3();
             CurrentLookAt = retVal["CurrentLookAt"].AsVector3();
             HomeRegionID = retVal["HomeRegionID"].AsUUID();
@@ -198,7 +201,7 @@ namespace OpenSim.Services.Interfaces
     {
         bool Set(UserInfo info);
         void Update(string userID, Dictionary<string, object> values);
-        void SetLastPosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
+        void SetLastPosition(string userID, UUID regionID, string regionURI, Vector3 Position, Vector3 LookAt);
         void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged);
 

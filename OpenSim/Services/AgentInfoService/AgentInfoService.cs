@@ -42,6 +42,7 @@ namespace OpenSim.Services
         #region Declares
 
         protected IAgentInfoConnector m_agentInfoConnector;
+        protected IGridService m_gridService;
         protected List<string> m_lockedUsers = new List<string>();
 
         #endregion
@@ -71,6 +72,7 @@ namespace OpenSim.Services
         public virtual void FinishedStartup()
         {
             m_agentInfoConnector = DataManager.RequestPlugin<IAgentInfoConnector>();
+            m_gridService = m_registry.RequestModuleInterface<IGridService>();
         }
 
         #endregion
@@ -117,15 +119,7 @@ namespace OpenSim.Services
             {
                 UserInfo user = GetUserInfo(userIDs[i]);
                 if (user != null && user.IsOnline)
-                {
-                    Interfaces.GridRegion gr =
-                        m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null,
-                                                                                          user.CurrentRegionID);
-                    if (gr != null)
-                        infos[i] = gr.ServerURI;
-                    else
-                        infos[i] = "NotOnline";
-                }
+                    infos[i] = user.CurrentRegionURI;
                 else if (user == null)
                     infos[i] = "NonExistant";
                 else
@@ -152,15 +146,20 @@ namespace OpenSim.Services
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            m_agentInfoConnector.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
+            string uri = "";
+            Interfaces.GridRegion region = m_gridService.GetRegionByUUID(null, regionID);
+            if (region != null)
+                uri = region.ServerURI;
+
+            m_agentInfoConnector.SetLastPosition(userID, regionID, uri, lastPosition, lastLookAt);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual void LockLoggedInStatus(string userID, bool locked)
         {
-            object remoteValue = DoRemote(userID, locked);
+            /*object remoteValue = DoRemote(userID, locked);
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             if (locked && !m_lockedUsers.Contains(userID))
                 m_lockedUsers.Add(userID);
@@ -168,12 +167,12 @@ namespace OpenSim.Services
                 m_lockedUsers.Remove(userID);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
-            object remoteValue = DoRemote(userID, loggingIn, fireLoggedInEvent, enteringRegion);
+            /*object remoteValue = DoRemote(userID, loggingIn, fireLoggedInEvent, enteringRegion);
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             UserInfo userInfo = GetUserInfo(userID, false); //We are changing the status, so don't look
             if (userInfo == null)
@@ -185,6 +184,7 @@ namespace OpenSim.Services
                              CurrentLookAt = Vector3.Zero,
                              CurrentPosition = Vector3.Zero,
                              CurrentRegionID = enteringRegion,
+                             CurrentRegionURI = "",
                              HomeLookAt = Vector3.Zero,
                              HomePosition = Vector3.Zero,
                              HomeRegionID = UUID.Zero,
@@ -205,6 +205,11 @@ namespace OpenSim.Services
                 if (enteringRegion != UUID.Zero)
                 {
                     agentUpdateValues["CurrentRegionID"] = enteringRegion;
+                    string uri = "";
+                    Interfaces.GridRegion region = m_gridService.GetRegionByUUID(null, enteringRegion);
+                    if (region != null)
+                        uri = region.ServerURI;
+                    agentUpdateValues["CurrentRegionURI"] = uri;
                 }
             }
             else

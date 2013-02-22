@@ -78,9 +78,7 @@ namespace OpenSim.Services.MessagingService
 
                 ISyncMessagePosterService asyncPoster = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                 IFriendsService friendsService = m_registry.RequestModuleInterface<IFriendsService>();
-                ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-                IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
-                if (asyncPoster != null && friendsService != null && capsService != null && gridService != null)
+                if (asyncPoster != null && friendsService != null)
                 {
                     //Get all friends
                     object[] info = (object[]) parameters;
@@ -104,19 +102,16 @@ namespace OpenSim.Services.MessagingService
                             //Find the root agent
                             OnlineFriends.Add(FriendToInform);
                             //Post!
-                            GridRegion region = gridService.GetRegionByUUID(null, user.CurrentRegionID);
-                            asyncPoster.Post(region.ServerURI, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
+                            asyncPoster.Post(user.CurrentRegionURI, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
                         }
                     }
                     //If the user is coming online, send all their friends online statuses to them
                     if (isOnline)
                     {
-                        GridRegion ourRegion = gridService.GetRegionByUUID(null, UUID.Parse(info[2].ToString()));
-                        if (ourRegion != null)
-                        {
-                            asyncPoster.Post(ourRegion.ServerURI,
+                        UserInfo user = m_agentInfoService.GetUserInfo(us.ToString());
+                        if (user != null)
+                            asyncPoster.Post(user.CurrentRegionURI,
                                              SyncMessageHelper.AgentStatusChanges(OnlineFriends, us, true));
-                        }
                     }
                 }
             }
