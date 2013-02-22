@@ -43,12 +43,6 @@ namespace OpenSim.Services
                 plugin.Initialize(config, registry.RequestModuleInterface<ISimulationBase>());
             }
 
-            List<INotificationService> NotificationPlugins = AuroraModuleLoader.PickupModules<INotificationService>();
-            foreach (INotificationService plugin in NotificationPlugins)
-            {
-                plugin.Init(config, registry);
-            }
-
             ILoggerRepository repository = LogManager.GetRepository();
             IAppender[] appenders = repository.GetAppenders();
             foreach (IAppender appender in appenders)
@@ -177,20 +171,6 @@ namespace OpenSim.Services
 
             MainConsole.Instance.MaxLogLevel = m_consoleAppender.Threshold;
             MainConsole.Instance.Fatal(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
-        }
-
-        #endregion
-
-        #region INotificationService Members
-
-        public void AddNotification(AlertLevel level, string message)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void AddNotification(AlertLevel level, string message, string identifer)
-        {
-            throw new NotImplementedException();
         }
 
         #endregion

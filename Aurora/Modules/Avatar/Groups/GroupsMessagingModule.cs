@@ -42,7 +42,7 @@ namespace Aurora.Modules.Groups
 {
     public class GroupsMessagingModule : ISharedRegionModule, IGroupsMessagingModule
     {
-        private readonly List<IScene> m_sceneList = new List<IScene>();
+        private IScene m_scene;
         private bool m_debugEnabled = true;
 
         private IGroupsServicesConnector m_groupData;
@@ -152,7 +152,7 @@ namespace Aurora.Modules.Groups
             }
 
 
-            m_sceneList.Add(scene);
+            m_scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -168,7 +168,7 @@ namespace Aurora.Modules.Groups
 
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS-MESSAGING]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            m_sceneList.Remove(scene);
+            m_scene = null;
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
@@ -183,13 +183,8 @@ namespace Aurora.Modules.Groups
 
             if (m_debugEnabled) MainConsole.Instance.Debug("[GROUPS-MESSAGING]: Shutting down GroupsMessagingModule module.");
 
-            foreach (IScene scene in m_sceneList)
-            {
-                scene.EventManager.OnNewClient -= OnNewClient;
-                scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
-            }
-
-            m_sceneList.Clear();
+            m_scene.EventManager.OnNewClient -= OnNewClient;
+            m_scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
 
             m_groupData = null;
             m_msgTransferModule = null;
@@ -296,25 +291,22 @@ namespace Aurora.Modules.Groups
             IClientAPI child = null;
 
             // Try root avatar first
-            foreach (IScene scene in m_sceneList)
+            IScenePresence user;
+            if (m_scene.TryGetScenePresence(agentID, out user))
             {
-                IScenePresence user;
-                if (scene.TryGetScenePresence(agentID, out user))
+                if (!user.IsChildAgent)
                 {
-                    if (!user.IsChildAgent)
-                    {
-                        if (m_debugEnabled)
-                            MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: Found root agent for client : {0}",
-                                             user.ControllingClient.Name);
-                        return user.ControllingClient;
-                    }
-                    else
-                    {
-                        if (m_debugEnabled)
-                            MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: Found child agent for client : {0}",
-                                             user.ControllingClient.Name);
-                        child = user.ControllingClient;
-                    }
+                    if (m_debugEnabled)
+                        MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: Found root agent for client : {0}",
+                                         user.ControllingClient.Name);
+                    return user.ControllingClient;
+                }
+                else
+                {
+                    if (m_debugEnabled)
+                        MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: Found child agent for client : {0}",
+                                         user.ControllingClient.Name);
+                    child = user.ControllingClient;
                 }
             }
 
@@ -563,8 +555,7 @@ namespace Aurora.Modules.Groups
                                                                      "ENTER", otherAgent.Scene.RegionInfo.RegionHandle);
                             else
                             {
-                                ISyncMessagePosterService amps =
-                                    m_sceneList[0].RequestModuleInterface<ISyncMessagePosterService>();
+                                ISyncMessagePosterService amps = m_scene.RequestModuleInterface<ISyncMessagePosterService>();
                                 if (amps != null)
                                 {
                                     OSDMap message = new OSDMap();
@@ -572,7 +563,7 @@ namespace Aurora.Modules.Groups
                                     message["AgentID"] = thismember.AvatarKey;
                                     message["Message"] = ChatterBoxSessionAgentListUpdates(session.SessionID,
                                                                                            Us.ToArray(), "ENTER");
-                                    amps.Post(message, SP.Scene.RegionInfo.RegionHandle);
+                                    amps.PostToServer(message);
                                 }
                             }
                         }
@@ -792,8 +783,7 @@ namespace Aurora.Modules.Groups
                                                                             otherAgent.Scene.RegionInfo.RegionHandle);
                                 else
                                 {
-                                    ISyncMessagePosterService amps =
-                                        m_sceneList[0].RequestModuleInterface<ISyncMessagePosterService>();
+                                    ISyncMessagePosterService amps = m_scene.RequestModuleInterface<ISyncMessagePosterService>();
                                     if (amps != null)
                                     {
                                         OSDMap message = new OSDMap();
@@ -801,7 +791,7 @@ namespace Aurora.Modules.Groups
                                         message["AgentID"] = AgentID;
                                         message["Message"] = ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(),
                                                                                                "ENTER");
-                                        amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
+                                        amps.PostToServer(message);
                                     }
                                 }
                             }

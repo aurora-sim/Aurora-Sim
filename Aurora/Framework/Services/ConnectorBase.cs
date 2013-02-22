@@ -117,7 +117,7 @@ namespace Aurora.Framework
                 CreateServerHandler(serverHandlerPort, serverPath);
         }
 
-        public void CreateServerHandler(uint port, string urlPath)
+        protected void CreateServerHandler(uint port, string urlPath)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
@@ -165,9 +165,11 @@ namespace Aurora.Framework
             CanBeReflected reflection;
             GetReflection(upStack, stackTrace, out method, out reflection);
             string methodName = reflection != null && reflection.RenamedMethod != "" ? reflection.RenamedMethod : method.Name;
+            if (methodName.Contains("<") && methodName.Contains(">"))
+                methodName = methodName.Substring(methodName.IndexOf('<')+1, methodName.IndexOf('>') - methodName.IndexOf('<') - 1);
             OSDMap map = new OSDMap();
             map["Method"] = methodName;
-            if (reflection.UsePassword)
+            if (reflection != null && reflection.UsePassword)
                 map["Password"] = m_password;
             int i = 0;
             var parameters = method.GetParameters();

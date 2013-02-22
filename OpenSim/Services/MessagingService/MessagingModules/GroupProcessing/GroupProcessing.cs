@@ -39,7 +39,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class GroupProcessing : IGroupNotificationService, IService
+    public class GroupProcessing : IService
     {
         #region Declares
 
@@ -52,7 +52,6 @@ namespace OpenSim.Services.MessagingService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
-            m_registry.RegisterModuleInterface<IGroupNotificationService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -62,7 +61,7 @@ namespace OpenSim.Services.MessagingService
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+            m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion
@@ -110,7 +109,7 @@ namespace OpenSim.Services.MessagingService
                     everyone = role;
 #endif
 
-                List<ulong> regionsToBeUpdated = new List<ulong>();
+                List<OpenSim.Services.Interfaces.GridRegion> regionsToBeUpdated = new List<OpenSim.Services.Interfaces.GridRegion>();
                 foreach (GroupRoleMembersData data in members)
                 {
                     if (data.RoleID == roleID)
@@ -136,7 +135,7 @@ namespace OpenSim.Services.MessagingService
                                 {
                                     IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
                                     if (clientCaps != null && clientCaps.GetRootCapsService() != null)
-                                        regionsToBeUpdated.Add(clientCaps.GetRootCapsService().RegionHandle);
+                                        regionsToBeUpdated.Add(clientCaps.GetRootCapsService().Region);
                                 }
                                 break;
                         }
@@ -144,17 +143,17 @@ namespace OpenSim.Services.MessagingService
                 }
                 if (regionsToBeUpdated.Count != 0)
                 {
-                    IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+                    ISyncMessagePosterService messagePost = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                     if (messagePost != null)
                     {
-                        foreach (ulong regionhandle in regionsToBeUpdated)
+                        foreach (OpenSim.Services.Interfaces.GridRegion region in regionsToBeUpdated)
                         {
                             OSDMap outgoingMessage = new OSDMap();
                             outgoingMessage["Method"] = "ForceUpdateGroupTitles";
                             outgoingMessage["GroupID"] = groupID;
                             outgoingMessage["RoleID"] = roleID;
-                            outgoingMessage["RegionID"] = regionhandle;
-                            messagePost.Post(regionhandle, outgoingMessage);
+                            outgoingMessage["RegionID"] = region.RegionHandle;
+                            messagePost.Post(region.RegionID, outgoingMessage);
                         }
                     }
                 }
@@ -169,28 +168,7 @@ namespace OpenSim.Services.MessagingService
                 if (gm != null)
                     gm.UpdateUsersForExternalRoleUpdate(groupID, roleID, regionID);
             }
-            else if (message.ContainsKey("Method") && message["Method"] == "SendGroupNoticeToUsers")
-            {
-                //COMES IN ON REGION SIDE FROM AURORA.SERVER
-                GroupNoticeInfo notice = new GroupNoticeInfo();
-                notice.FromOSD((OSDMap)message["Notice"]);
-                IGroupsModule gm = m_registry.RequestModuleInterface<IGroupsModule>();
-                if (gm != null)
-                    gm.SendGroupNoticeToUsers(null, notice, true);
-            }
             return null;
-        }
-
-        public void InformAllUsersOfNewGroupNotice(GroupNoticeInfo groupNotice)
-        {
-            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
-            if (messagePost != null)
-            {
-                OSDMap outgoingMessage = new OSDMap();
-                outgoingMessage["Method"] = "SendGroupNoticeToUsers";
-                outgoingMessage["Notice"] = groupNotice.ToOSD();
-                messagePost.PostToAll(outgoingMessage);
-            }
         }
     }
 }

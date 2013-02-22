@@ -34,10 +34,8 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class LocalSyncMessagePosterService : ISyncMessagePosterService, IService
+    public class SyncMessagePosterService : ConnectorBase, ISyncMessagePosterService, IService
     {
-        protected IRegistryCore m_registry;
-
         public string Name
         {
             get { return GetType().Name; }
@@ -53,6 +51,7 @@ namespace OpenSim.Services.MessagingService
                 return;
 
             registry.RegisterModuleInterface<ISyncMessagePosterService>(this);
+            Init(registry, Name, serverPath: "/messaging/");
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -67,14 +66,67 @@ namespace OpenSim.Services.MessagingService
 
         #region ISyncMessagePosterService Members
 
-        public void Post(OSDMap request, ulong RegionHandle)
+        public void Post(UUID regionID, OSDMap request)
         {
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request);
+            if (m_doRemoteCalls)
+            {
+                Util.FireAndForget((o) =>
+                {
+                    PostInternal(regionID, request);
+                });
+            }
+            else
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
 
-        public void Get(OSDMap request, UUID userID, ulong RegionHandle, GetResponse response)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public void PostInternal(UUID regionId, OSDMap request)
         {
-            response(m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(request));
+            if (m_doRemoteCalls)
+                DoRemoteByURL("MessagingServerURI", request);
+            else
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+        }
+
+        public void PostToServer(OSDMap request)
+        {
+            if (m_doRemoteCalls)
+            {
+                Util.FireAndForget((o) =>
+                {
+                    PostToServerInternal(request);
+                });
+            }
+            else
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public void PostToServerInternal(OSDMap request)
+        {
+            if(m_doRemoteCalls)
+                DoRemoteByURL("MessagingServerURI", request);
+            else
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+        }
+
+        public void Get(UUID regionID, OSDMap request, GetResponse response)
+        {
+            if (m_doRemoteCalls)
+            {
+                Util.FireAndForget((o) =>
+                {
+                    response(Get(regionID, request));
+                });
+            }
+            else
+                response(m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request));
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public OSDMap Get(UUID regionID, OSDMap request)
+        {
+            return m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
 
         #endregion

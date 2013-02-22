@@ -91,7 +91,7 @@ namespace OpenSim.Services.MessagingService
         {
             //Also look for incoming messages to display
             if (m_enabled)
-                m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion

@@ -61,7 +61,7 @@ namespace Aurora.Modules.Chat
         public Dictionary<UUID, string> IMUsersCache = new Dictionary<UUID, string>();
 
         private bool m_Enabled;
-        protected List<IScene> m_Scenes = new List<IScene>();
+        protected IScene m_Scene;
 
         #region IMessageTransferModule Members
 
@@ -71,18 +71,15 @@ namespace Aurora.Modules.Chat
         {
             //Check for local users first
             List<UUID> RemoveUsers = new List<UUID>();
-            foreach (IScene scene in m_Scenes)
+            foreach (UUID t in AgentsToSendTo)
             {
-                foreach (UUID t in AgentsToSendTo)
+                IScenePresence user;
+                if (!RemoveUsers.Contains(t) &&
+                    m_Scene.TryGetScenePresence(t, out user))
                 {
-                    IScenePresence user;
-                    if (!RemoveUsers.Contains(t) &&
-                        scene.TryGetScenePresence(t, out user))
-                    {
-                        // Local message
-                        user.ControllingClient.SendInstantMessage(im);
-                        RemoveUsers.Add(t);
-                    }
+                    // Local message
+                    user.ControllingClient.SendInstantMessage(im);
+                    RemoveUsers.Add(t);
                 }
             }
             //Clear the local users out
@@ -99,21 +96,18 @@ namespace Aurora.Modules.Chat
             UUID toAgentID = im.toAgentID;
 
             //Look locally first
-            foreach (IScene scene in m_Scenes)
+            IScenePresence user;
+            if (m_Scene.TryGetScenePresence(toAgentID, out user))
             {
-                IScenePresence user;
-                if (scene.TryGetScenePresence(toAgentID, out user))
-                {
-                    user.ControllingClient.SendInstantMessage(im);
-                    return;
-                }
-                ISceneChildEntity childPrim = null;
-                if ((childPrim = scene.GetSceneObjectPart(toAgentID)) != null)
-                {
-                    im.toAgentID = childPrim.OwnerID;
-                    SendInstantMessage(im);
-                    return;
-                }
+                user.ControllingClient.SendInstantMessage(im);
+                return;
+            }
+            ISceneChildEntity childPrim = null;
+            if ((childPrim = m_Scene.GetSceneObjectPart(toAgentID)) != null)
+            {
+                im.toAgentID = childPrim.OwnerID;
+                SendInstantMessage(im);
+                return;
             }
             //MainConsole.Instance.DebugFormat("[INSTANT MESSAGE]: Delivering IM to {0} via XMLRPC", im.toAgentID);
             SendGridInstantMessageViaXMLRPC(im);
@@ -142,12 +136,9 @@ namespace Aurora.Modules.Chat
             if (!m_Enabled)
                 return;
 
-            lock (m_Scenes)
-            {
-                //MainConsole.Instance.Debug("[MESSAGE TRANSFER]: Message transfer module active");
-                scene.RegisterModuleInterface<IMessageTransferModule>(this);
-                m_Scenes.Add(scene);
-            }
+            m_Scene = scene;
+            //MainConsole.Instance.Debug("[MESSAGE TRANSFER]: Message transfer module active");
+            scene.RegisterModuleInterface<IMessageTransferModule>(this);
         }
 
         public virtual void PostInitialise()
@@ -168,8 +159,7 @@ namespace Aurora.Modules.Chat
             if (!m_Enabled)
                 return;
 
-            lock (m_Scenes)
-                m_Scenes.Remove(scene);
+            m_Scene = null;
         }
 
         public virtual void Close()
@@ -372,16 +362,13 @@ namespace Aurora.Modules.Chat
                     gim.dialog = (byte) InstantMessageDialog.RequestTeleport;
 
                 // Trigger the Instant message in the scene.
-                foreach (IScene scene in m_Scenes)
+                IScenePresence user;
+                if (m_Scene.TryGetScenePresence(gim.toAgentID, out user))
                 {
-                    IScenePresence user;
-                    if (scene.TryGetScenePresence(gim.toAgentID, out user))
+                    if (!user.IsChildAgent)
                     {
-                        if (!user.IsChildAgent)
-                        {
-                            scene.EventManager.TriggerIncomingInstantMessage(gim);
-                            successful = true;
-                        }
+                        m_Scene.EventManager.TriggerIncomingInstantMessage(gim);
+                        successful = true;
                     }
                 }
                 if (!successful)
@@ -393,7 +380,7 @@ namespace Aurora.Modules.Chat
                     // a chance to pick it up. We raise that in a random
                     // scene, since the groups module is shared.
                     //
-                    m_Scenes[0].EventManager.TriggerUnhandledInstantMessage(gim);
+                    m_Scene.EventManager.TriggerUnhandledInstantMessage(gim);
                 }
             }
 
@@ -488,7 +475,7 @@ namespace Aurora.Modules.Chat
 
             //Ask for the user new style first
             List<string> AgentLocations =
-                m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(im.fromAgentID.ToString(),
+                m_Scene.RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(im.fromAgentID.ToString(),
                                                                                            Queries);
             //If this is false, this doesn't exist on the presence server and we use the legacy way
             if (AgentLocations.Count != 0)
@@ -622,49 +609,8 @@ namespace Aurora.Modules.Chat
                 }
             }
 
-            var userManagement = m_Scenes[0].RequestModuleInterface<IUserFinder>();
-            if (userManagement != null && !userManagement.IsLocalGridUser(toAgentID)) // foreign user
-                HTTPPath = userManagement.GetUserServerURL(toAgentID, "IMServerURI");
-
-            if (HTTPPath != "")
-            {
-                //We've tried to send an IM to them before, pull out their info
-                //Send the IM to their last location
-                if (!doIMSending(HTTPPath, msgdata))
-                {
-                    msgdata = ConvertGridInstantMessageToXMLRPCXML(im);
-                    if (!doIMSending(HTTPPath, msgdata))
-                    {
-                        //If this fails, the user has either moved from their stored location or logged out
-                        //Since it failed, let it look them up again and rerun
-                        lock (IMUsersCache)
-                        {
-                            IMUsersCache.Remove(toAgentID);
-                        }
-                        //Clear the path and let it continue trying again.
-                        HTTPPath = "";
-                    }
-                    else
-                    {
-                        //Add to the cache
-                        if (!IMUsersCache.ContainsKey(toAgentID))
-                            IMUsersCache.Add(toAgentID, HTTPPath);
-                        //Send the IM, and it made it to the user, return true
-                        return;
-                    }
-                }
-                else
-                {
-                    //Add to the cache
-                    if (!IMUsersCache.ContainsKey(toAgentID))
-                        IMUsersCache.Add(toAgentID, HTTPPath);
-                    //Send the IM, and it made it to the user, return true
-                    return;
-                }
-            }
-
             //Now query the grid server for the agent
-            IAgentInfoService ais = m_Scenes[0].RequestModuleInterface<IAgentInfoService>();
+            IAgentInfoService ais = m_Scene.RequestModuleInterface<IAgentInfoService>();
             List<string> AgentLocations = ais.GetAgentsLocations(im.fromAgentID.ToString(), new List<string>(new[] { toAgentID.ToString() }));
             if (AgentLocations.Count > 0)
             {

@@ -44,7 +44,7 @@ namespace Aurora.Modules.Friends
         protected Dictionary<UUID, UserFriendData> m_Friends =
             new Dictionary<UUID, UserFriendData>();
 
-        protected List<IScene> m_Scenes = new List<IScene>();
+        protected IScene m_scene;
         public bool m_enabled = true;
         protected bool m_firstStart = true;
 
@@ -52,37 +52,30 @@ namespace Aurora.Modules.Friends
 
         protected IFriendsService FriendsService
         {
-            get { return m_Scenes[0].RequestModuleInterface<IFriendsService>(); }
+            get { return m_scene.RequestModuleInterface<IFriendsService>(); }
         }
 
         protected IGridService GridService
         {
             get
             {
-                if (m_Scenes.Count == 0)
-                    return null;
-                return m_Scenes[0].GridService;
+                return m_scene.GridService;
             }
         }
 
         public IUserAccountService UserAccountService
         {
-            get { return m_Scenes[0].UserAccountService; }
-        }
-
-        public IAsyncMessagePostService AsyncMessagePostService
-        {
-            get { return m_Scenes[0].RequestModuleInterface<IAsyncMessagePostService>(); }
+            get { return m_scene.UserAccountService; }
         }
 
         public ISyncMessagePosterService SyncMessagePosterService
         {
-            get { return m_Scenes[0].RequestModuleInterface<ISyncMessagePosterService>(); }
+            get { return m_scene.RequestModuleInterface<ISyncMessagePosterService>(); }
         }
 
-        public IAsyncMessageRecievedService AsyncMessageRecievedService
+        public ISyncMessageRecievedService AsyncMessageRecievedService
         {
-            get { return m_Scenes[0].RequestModuleInterface<IAsyncMessageRecievedService>(); }
+            get { return m_scene.RequestModuleInterface<ISyncMessageRecievedService>(); }
         }
 
         #region IFriendsModule Members
@@ -192,7 +185,7 @@ namespace Aurora.Modules.Friends
             if (!m_enabled)
                 return;
 
-            m_Scenes.Add(scene);
+            m_scene = scene;
             scene.RegisterModuleInterface<IFriendsModule>(this);
 
             scene.EventManager.OnNewClient += OnNewClient;
@@ -212,7 +205,7 @@ namespace Aurora.Modules.Friends
             if (!m_enabled)
                 return;
 
-            m_Scenes.Remove(scene);
+            m_scene = null;
             scene.UnregisterModuleInterface<IFriendsModule>(this);
 
             scene.EventManager.OnNewClient -= OnNewClient;
@@ -339,7 +332,7 @@ namespace Aurora.Modules.Friends
                                                              out secret))
                         continue;
 
-                UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs,
+                UserAccount account = m_scene.UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs,
                                                                                     fromAgentID);
 
                 im.fromAgentID = fromAgentID;
@@ -373,30 +366,9 @@ namespace Aurora.Modules.Friends
         /// </summary>
         public IClientAPI LocateClientObject(UUID agentID)
         {
-            IScene scene = GetClientScene(agentID);
-            if (scene != null)
-            {
-                IScenePresence presence = scene.GetScenePresence(agentID);
-                if (presence != null)
-                    return presence.ControllingClient;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        ///   Find the scene for an agent
-        /// </summary>
-        public IScene GetClientScene(UUID agentId)
-        {
-            lock (m_Scenes)
-            {
-                foreach (IScene scene in from scene in m_Scenes let presence = scene.GetScenePresence(agentId) where presence != null && !presence.IsChildAgent select scene)
-                {
-                    return scene;
-                }
-            }
-
+            IScenePresence presence = m_scene.GetScenePresence(agentID);
+            if (presence != null)
+                return presence.ControllingClient;
             return null;
         }
 
@@ -409,9 +381,9 @@ namespace Aurora.Modules.Friends
                 UUID friendID = im.toAgentID;
 
                 //Can't trust the incoming name for friend offers, so we have to find it ourselves.
-                UserAccount sender = m_Scenes[0].UserAccountService.GetUserAccount(m_Scenes[0].RegionInfo.AllScopeIDs, principalID);
+                UserAccount sender = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, principalID);
                 im.fromAgentName = sender.Name;
-                UserAccount reciever = m_Scenes[0].UserAccountService.GetUserAccount(m_Scenes[0].RegionInfo.AllScopeIDs, friendID);
+                UserAccount reciever = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, friendID);
 
                 MainConsole.Instance.DebugFormat("[FRIENDS]: {0} offered friendship to {1}", sender.Name, reciever.Name);
                 // This user wants to be friends with the other user.
@@ -430,15 +402,14 @@ namespace Aurora.Modules.Friends
             im.imSessionID = im.fromAgentID;
 
             // Try the local sim
-            UserAccount account = UserAccountService.GetUserAccount(m_Scenes[0].RegionInfo.AllScopeIDs, agentID);
+            UserAccount account = UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, agentID);
             im.fromAgentName = (account == null) ? "Unknown" : account.Name;
 
             if (LocalFriendshipOffered(friendID, im))
                 return;
 
             // The prospective friend is not here [as root]. Let's4 forward.
-            SyncMessagePosterService.Post(SyncMessageHelper.FriendshipOffered(
-                agentID, friendID, im, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendshipOffered(agentID, friendID, im, m_scene.RegionInfo.RegionHandle));
             // If the prospective friend is not online, he'll get the message upon login.
         }
 
@@ -475,9 +446,8 @@ namespace Aurora.Modules.Friends
             // Try Local
             if (LocalFriendshipApproved(agentID, client.Name, client, friendID))
                 return;
-            SyncMessagePosterService.Post(SyncMessageHelper.FriendshipApproved(
-                agentID, client.Name, friendID, m_Scenes[0].RegionInfo.RegionHandle),
-                                          m_Scenes[0].RegionInfo.RegionHandle);
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendshipApproved(
+                agentID, client.Name, friendID, m_scene.RegionInfo.RegionHandle));
         }
 
         private void OnDenyFriendRequest(IClientAPI client, UUID agentID, UUID friendID, List<UUID> callingCardFolders)
@@ -509,9 +479,8 @@ namespace Aurora.Modules.Friends
             // Try local
             if (LocalFriendshipDenied(agentID, client.Name, friendID))
                 return;
-            SyncMessagePosterService.Post(SyncMessageHelper.FriendshipDenied(
-                agentID, client.Name, friendID, m_Scenes[0].RegionInfo.RegionHandle),
-                                          m_Scenes[0].RegionInfo.RegionHandle);
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendshipDenied(
+                agentID, client.Name, friendID, m_scene.RegionInfo.RegionHandle));
         }
 
         private void OnTerminateFriendship(IClientAPI client, UUID agentID, UUID exfriendID)
@@ -532,8 +501,8 @@ namespace Aurora.Modules.Friends
             if (LocalFriendshipTerminated(exfriendID, agentID))
                 return;
 
-            SyncMessagePosterService.Post(SyncMessageHelper.FriendTerminated(
-                agentID, exfriendID, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendTerminated(
+                agentID, exfriendID, m_scene.RegionInfo.RegionHandle));
         }
 
         private void OnGrantUserRights(IClientAPI remoteClient, UUID requester, UUID target, int rights)
@@ -581,9 +550,8 @@ namespace Aurora.Modules.Friends
                 // Try local
                 if (!LocalGrantRights(requester, target, myFlags, rights))
                 {
-                    SyncMessagePosterService.Post(SyncMessageHelper.FriendGrantRights(
-                        requester, target, myFlags, rights, m_Scenes[0].RegionInfo.RegionHandle),
-                                                  m_Scenes[0].RegionInfo.RegionHandle);
+                    SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendGrantRights(
+                        requester, target, myFlags, rights, m_scene.RegionInfo.RegionHandle));
                 }
             }
         }
@@ -607,7 +575,7 @@ namespace Aurora.Modules.Friends
                             !HGUtil.ParseUniversalUserIdentifier(fi.Friend, out fromAgentID, out url, out first, out last, out secret))
                             continue;
 
-                    UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs, fromAgentID);
+                    UserAccount account = m_scene.UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs, fromAgentID);
                     im.fromAgentID = fromAgentID;
                     if (account != null)
                         im.fromAgentName = account.Name;
@@ -660,7 +628,7 @@ namespace Aurora.Modules.Friends
                     us.SendAgentOnline(new[] {friendID});
 
                 // the prospective friend in this sim as root agent
-                GridInstantMessage im = new GridInstantMessage(m_Scenes[0], userID, name, friendID,
+                GridInstantMessage im = new GridInstantMessage(m_scene, userID, name, friendID,
                                                                (byte) InstantMessageDialog.FriendshipAccepted,
                                                                userID.ToString(), false, Vector3.Zero);
                 friendClient.SendInstantMessage(im);
@@ -695,7 +663,7 @@ namespace Aurora.Modules.Friends
             if (friendClient != null)
             {
                 // the prospective friend in this sim as root agent
-                GridInstantMessage im = new GridInstantMessage(m_Scenes[0], userID, userName, friendID,
+                GridInstantMessage im = new GridInstantMessage(m_scene, userID, userName, friendID,
                                                                (byte) InstantMessageDialog.FriendshipDeclined,
                                                                userID.ToString(), false, Vector3.Zero);
                 friendClient.SendInstantMessage(im);

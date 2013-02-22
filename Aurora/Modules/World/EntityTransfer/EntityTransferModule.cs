@@ -48,7 +48,7 @@ namespace Aurora.Modules.EntityTransfer
         #region Declares
 
         protected bool m_Enabled = false;
-        protected List<IScene> m_scenes = new List<IScene> ();
+        protected IScene m_scene;
         private readonly Dictionary<IScene, Dictionary<UUID, AgentData>> m_incomingChildAgentData = new Dictionary<IScene, Dictionary<UUID, AgentData>> ();
         
         #endregion
@@ -88,7 +88,7 @@ namespace Aurora.Modules.EntityTransfer
             if (!m_Enabled)
                 return;
 
-            m_scenes.Add(scene);
+            m_scene = scene;
 
             scene.RegisterModuleInterface<IEntityTransferModule>(this);
             scene.EventManager.OnNewClient += OnNewClient;
@@ -122,7 +122,7 @@ namespace Aurora.Modules.EntityTransfer
         {
             if (!m_Enabled)
                 return;
-            m_scenes.Remove(scene);
+            m_scene = null;
 
             scene.UnregisterModuleInterface<IEntityTransferModule>(this);
             scene.EventManager.OnNewClient -= OnNewClient;
@@ -295,9 +295,9 @@ namespace Aurora.Modules.EntityTransfer
                 {
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
-                    syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
+                    syncPoster.Get(UUID.Zero, SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
                         agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle),
-                        sp.UUID, sp.Scene.RegionInfo.RegionHandle, (map) =>
+                        (map) =>
                         {
                             if (map == null || !map["success"].AsBoolean())
                             {
@@ -617,10 +617,9 @@ namespace Aurora.Modules.EntityTransfer
                         agent.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                     if (syncPoster != null)
                     {
-                        syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
+                        syncPoster.Get(UUID.Zero, SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
                             agent.Velocity, agentCircuit, cAgent,
                             agent.Scene.RegionInfo.RegionHandle),
-                            agent.UUID, agent.Scene.RegionInfo.RegionHandle,
                             (map) =>
                             {
                                 if (map == null || !map["success"].AsBoolean())
@@ -858,11 +857,7 @@ namespace Aurora.Modules.EntityTransfer
         /// <returns></returns>
         public virtual bool IncomingCreateObject(UUID regionID, ISceneObject sog)
         {
-            IScene scene = GetScene(regionID);
-            if (scene == null)
-                return false;
-
-            return AddSceneObject(scene, (SceneObjectGroup)sog);
+            return AddSceneObject(m_scene, (SceneObjectGroup)sog);
         }
 
         /// <summary>
@@ -920,29 +915,9 @@ namespace Aurora.Modules.EntityTransfer
 
         public void CancelTeleport(UUID AgentID, ulong RegionHandle)
         {
-            ISyncMessagePosterService syncPoster = m_scenes[0].RequestModuleInterface<ISyncMessagePosterService>();
+            ISyncMessagePosterService syncPoster = m_scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncPoster != null)
-            {
-                syncPoster.Post(SyncMessageHelper.CancelTeleport(AgentID, RegionHandle), RegionHandle);
-            }
-        }
-
-        /// <summary>
-        /// This 'can' return null, so be careful
-        /// </summary>
-        /// <param name="RegionID"></param>
-        /// <returns></returns>
-        public IScene GetScene(UUID RegionID)
-        {
-#if (!ISWIN)
-            foreach (IScene scene in m_scenes)
-            {
-                if (scene.RegionInfo.RegionID == RegionID) return scene;
-            }
-            return null;
-#else
-            return m_scenes.FirstOrDefault(scene => scene.RegionInfo.RegionID == RegionID);
-#endif
+                syncPoster.PostToServer(SyncMessageHelper.CancelTeleport(AgentID, RegionHandle));
         }
 
         #endregion
@@ -1201,7 +1176,7 @@ namespace Aurora.Modules.EntityTransfer
                 if (syncPoster != null)
                 {
                     //Tell the grid that we are logged out
-                    syncPoster.Post (SyncMessageHelper.DisableSimulator (presence.UUID, scene.RegionInfo.RegionHandle), scene.RegionInfo.RegionHandle);
+                    syncPoster.PostToServer(SyncMessageHelper.DisableSimulator(presence.UUID, scene.RegionInfo.RegionHandle));
                 }
                 return RetVal;
             }

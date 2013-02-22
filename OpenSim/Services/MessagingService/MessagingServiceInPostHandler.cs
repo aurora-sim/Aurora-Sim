@@ -39,9 +39,9 @@ namespace OpenSim.Services.MessagingService
 {
     public class MessagingServiceInPostHandler : BaseRequestHandler
     {
-        private readonly IAsyncMessageRecievedService m_handler;
+        private readonly ISyncMessageRecievedService m_handler;
 
-        public MessagingServiceInPostHandler(string url, IRegistryCore registry, IAsyncMessageRecievedService handler) :
+        public MessagingServiceInPostHandler(string url, IRegistryCore registry, ISyncMessageRecievedService handler) :
                                                  base("POST", url)
         {
             m_handler = handler;

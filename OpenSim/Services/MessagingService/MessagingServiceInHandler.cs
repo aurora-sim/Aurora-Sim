@@ -36,7 +36,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class MessagingServiceInHandler : IService, IAsyncMessageRecievedService
+    public class MessagingServiceInHandler : IService, ISyncMessageRecievedService
     {
         protected bool m_enabled;
 
@@ -46,8 +46,6 @@ namespace OpenSim.Services.MessagingService
         {
             get { return GetType().Name; }
         }
-
-        public bool DoMultiplePorts { get { return false; } }
 
         #region IAsyncMessageRecievedService Members
 
@@ -76,7 +74,7 @@ namespace OpenSim.Services.MessagingService
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("MessagingServiceInHandler", "") != Name)
                 return;
-            registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
+            registry.RegisterModuleInterface<ISyncMessageRecievedService>(this);
             m_enabled = true;
         }
 
@@ -85,9 +83,9 @@ namespace OpenSim.Services.MessagingService
             m_registry = registry;
             if (!m_enabled)
             {
-                IAsyncMessageRecievedService service = registry.RequestModuleInterface<IAsyncMessageRecievedService>();
+                ISyncMessageRecievedService service = registry.RequestModuleInterface<ISyncMessageRecievedService>();
                 if (service == null)
-                    registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
+                    registry.RegisterModuleInterface<ISyncMessageRecievedService>(this);
                         //Register so that we have an internal message handler, but don't add the external handler
                 return;
             }

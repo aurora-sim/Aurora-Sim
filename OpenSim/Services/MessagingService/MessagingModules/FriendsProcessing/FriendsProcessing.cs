@@ -44,6 +44,7 @@ namespace OpenSim.Services.MessagingService
         #region Declares
 
         protected IRegistryCore m_registry;
+        protected IAgentInfoService m_agentInfoService;
 
         #endregion
 
@@ -63,7 +64,8 @@ namespace OpenSim.Services.MessagingService
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+            m_agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+            m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion
@@ -74,7 +76,7 @@ namespace OpenSim.Services.MessagingService
             {
                 //A user has logged in or out... we need to update friends lists across the grid
 
-                IAsyncMessagePostService asyncPoster = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+                ISyncMessagePosterService asyncPoster = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                 IFriendsService friendsService = m_registry.RequestModuleInterface<IFriendsService>();
                 ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
                 IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
@@ -92,56 +94,18 @@ namespace OpenSim.Services.MessagingService
                         if (friend.TheirFlags == -1 || friend.MyFlags == -1)
                             continue; //Not validiated yet!
                         UUID FriendToInform = UUID.Zero;
-                        string url, first, last, secret;
                         if (!UUID.TryParse(friend.Friend, out FriendToInform))
-                            HGUtil.ParseUniversalUserIdentifier(friend.Friend, out FriendToInform, out url, out first,
-                                                                out last, out secret);
+                            continue;
+
+                        UserInfo user = m_agentInfoService.GetUserInfo(friend.Friend);
                         //Now find their caps service so that we can find where they are root (and if they are logged in)
                         IClientCapsService clientCaps = capsService.GetClientCapsService(FriendToInform);
-                        if (clientCaps != null)
+                        if (user != null && user.IsOnline)
                         {
                             //Find the root agent
-                            IRegionClientCapsService regionClientCaps = clientCaps.GetRootCapsService();
-                            if (regionClientCaps != null)
-                            {
-                                OnlineFriends.Add(FriendToInform);
-                                //Post!
-                                asyncPoster.Post(regionClientCaps.RegionHandle,
-                                                 SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
-                            }
-                            else
-                            {
-                                //If they don't have a root agent, wtf happened?
-                                capsService.RemoveCAPS(clientCaps.AgentID);
-                            }
-                        }
-                        else
-                        {
-                            IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
-                            if (agentInfoService != null)
-                            {
-                                UserInfo friendinfo = agentInfoService.GetUserInfo(FriendToInform.ToString());
-                                if (friendinfo != null && friendinfo.IsOnline)
-                                {
-                                    OnlineFriends.Add(FriendToInform);
-                                    //Post!
-                                    GridRegion r = gridService.GetRegionByUUID(null, friendinfo.CurrentRegionID);
-                                    if (r != null)
-                                        asyncPoster.Post(r.RegionHandle,
-                                                         SyncMessageHelper.AgentStatusChange(us, FriendToInform,
-                                                                                             isOnline));
-                                }
-                                else
-                                {
-                                    IUserAgentService uas = m_registry.RequestModuleInterface<IUserAgentService>();
-                                    if (uas != null)
-                                    {
-                                        bool online = uas.RemoteStatusNotification(friend, us, isOnline);
-                                        if (online)
-                                            OnlineFriends.Add(FriendToInform);
-                                    }
-                                }
-                            }
+                            OnlineFriends.Add(FriendToInform);
+                            //Post!
+                            asyncPoster.Post(user.CurrentRegionID, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
                         }
                     }
                     //If the user is coming online, send all their friends online statuses to them
@@ -152,7 +116,7 @@ namespace OpenSim.Services.MessagingService
                         {
                             foreach (UUID onlineFriend in OnlineFriends)
                             {
-                                asyncPoster.Post(ourRegion.RegionHandle,
+                                asyncPoster.Post(ourRegion.RegionID,
                                                  SyncMessageHelper.AgentStatusChange(onlineFriend, us, isOnline));
                             }
                         }
@@ -164,7 +128,7 @@ namespace OpenSim.Services.MessagingService
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
-            IAsyncMessagePostService asyncPost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+            ISyncMessagePosterService asyncPost = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
             //We need to check and see if this is an AgentStatusChange
             if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChange")
             {
@@ -195,7 +159,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipOffered")
@@ -207,7 +171,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendTerminated")
@@ -219,7 +183,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipDenied")
@@ -231,7 +195,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipApproved")
@@ -243,7 +207,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.RegionID, message);
                 }
             }
             return null;

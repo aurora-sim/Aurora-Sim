@@ -41,8 +41,6 @@ namespace OpenSim.Services.Interfaces
 
         /// <summary>
         ///   The region the user is currently active in
-        ///   NOTE: In a grid situation, the agent can be active in more than one region
-        ///   as they can be logged in more than once
         /// </summary>
         public UUID CurrentRegionID;
 
@@ -121,11 +119,6 @@ namespace OpenSim.Services.Interfaces
         {
             FromOSD(Util.DictionaryToOSD(KVP));
         }
-    }
-
-    public class AgentInfoHelpers
-    {
-        public static UUID LOGIN_STATUS_LOCKED = UUID.Parse("11111111-2222-3333-4444-555555555555");
     }
 
     public interface IAgentInfoService

@@ -69,7 +69,7 @@ namespace Aurora.Modules.Groups
         ///</summary>
         private readonly Dictionary<UUID, GroupMembershipData> m_cachedGroupTitles = new Dictionary<UUID, GroupMembershipData>();
         private readonly Dictionary<UUID, List<GroupMembershipData>> m_cachedGroupMemberships = new Dictionary<UUID, List<GroupMembershipData>>();
-        private readonly List<IScene> m_sceneList = new List<IScene>();
+        private IScene m_scene;
 
         // Configuration settings
         private bool m_debugEnabled = true;
@@ -313,21 +313,15 @@ namespace Aurora.Modules.Groups
 
         public void UpdateUsersForExternalRoleUpdate(UUID groupID, UUID roleID, ulong regionID)
         {
-            lock (m_sceneList)
+            foreach (IScenePresence sp in m_scene.GetScenePresences())
             {
-                foreach (IScene s in from scene in m_sceneList where scene.RegionInfo.RegionHandle == regionID select scene)
+                if (sp.ControllingClient.ActiveGroupId == groupID)
                 {
-                    foreach (IScenePresence sp in s.GetScenePresences())
-                    {
-                        if (sp.ControllingClient.ActiveGroupId == groupID)
-                        {
-                            m_cachedGroupTitles.Remove(sp.UUID); //Remove the old title
-                            UpdateAllClientsWithGroupInfo(sp.UUID, GetGroupTitle(sp.UUID));
-                        }
-                        //Remove their permissions too
-                        RemoveFromGroupPowersCache(sp.UUID, groupID);
-                    }
+                    m_cachedGroupTitles.Remove(sp.UUID); //Remove the old title
+                    UpdateAllClientsWithGroupInfo(sp.UUID, GetGroupTitle(sp.UUID));
                 }
+                //Remove their permissions too
+                RemoveFromGroupPowersCache(sp.UUID, groupID);
             }
         }
 
@@ -369,7 +363,7 @@ namespace Aurora.Modules.Groups
                     break;
             }
 
-            ISyncMessagePosterService amps = m_sceneList[0].RequestModuleInterface<ISyncMessagePosterService>();
+            ISyncMessagePosterService amps = m_scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (amps != null)
             {
                 OSDMap message = new OSDMap();
@@ -378,7 +372,7 @@ namespace Aurora.Modules.Groups
                 message["RoleID"] = roleID;
                 message["AgentID"] = remoteClient.AgentId;
                 message["Type"] = updateType;
-                amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
+                amps.PostToServer(message);
             }
 
             UpdateUsersForExternalRoleUpdate(groupID, roleID, remoteClient.Scene.RegionInfo.RegionHandle);
@@ -572,27 +566,18 @@ namespace Aurora.Modules.Groups
 
                 else
                 {
-
-                    regionInfo = m_sceneList[0].RegionInfo;
-                    UserAccount acc = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, agentID);
-
+                    regionInfo = m_scene.RegionInfo;
+                    UserAccount acc = m_scene.UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, agentID);
                     if (acc != null)
-                    {
-
                         agentName = acc.FirstName + " " + acc.LastName;
-                    }
                     else
-                    {
                         agentName = "Unknown member";
-                    }
-
                 }
-
             }
 
             GroupRecord groupInfo = m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), groupID, null);
 
-            UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, ejecteeID);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, ejecteeID);
 
             if ((groupInfo == null) || (account == null))
                 return;
@@ -689,17 +674,12 @@ namespace Aurora.Modules.Groups
 
                 else
                 {
-                    regionInfo = m_sceneList[0].RegionInfo;
-                    UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, agentID);
+                    regionInfo = m_scene.RegionInfo;
+                    UserAccount account = m_scene.UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, agentID);
                     if (account != null)
-                    {
                         agentName = account.FirstName + " " + account.LastName;
-                    }
-
                     else
-                    {
                         agentName = "Unknown member";
-                    }
                 }
             }
 
@@ -779,19 +759,16 @@ namespace Aurora.Modules.Groups
             IClientAPI child = null;
 
             // Try root avatar first
-            foreach (IScene scene in m_sceneList)
+            IScenePresence user;
+            if (m_scene.TryGetScenePresence(agentID, out user))
             {
-                IScenePresence user;
-                if (scene.TryGetScenePresence(agentID, out user))
+                if (!user.IsChildAgent)
                 {
-                    if (!user.IsChildAgent)
-                    {
-                        return user.ControllingClient;
-                    }
-                    else
-                    {
-                        child = user.ControllingClient;
-                    }
+                    return user.ControllingClient;
+                }
+                else
+                {
+                    child = user.ControllingClient;
                 }
             }
 
@@ -871,36 +848,13 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled)
                 MainConsole.Instance.DebugFormat("[GROUPS]: Updating scene title for {0} with title: {1}", AgentID, Title);
 
-            IScenePresence presence = null;
-
-            lock (m_sceneList)
+            IScenePresence presence = m_scene.GetScenePresence(AgentID);
+            if (presence != null && !presence.IsChildAgent)
             {
-                foreach (IScene scene in m_sceneList)
+                //Force send a full update
+                foreach (IScenePresence sp in m_scene.GetScenePresences().Where(sp => sp.SceneViewer.Culler.ShowEntityToClient(sp, presence, m_scene)))
                 {
-                    presence = scene.GetScenePresence(AgentID);
-                    if (presence != null)
-                    {
-                        if (!presence.IsChildAgent)
-                        {
-                            //Force send a full update
-                            IScenePresence presence1 = presence;
-                            IScene scene1 = scene;
-#if (!ISWIN)
-                            foreach (IScenePresence sp in scene.GetScenePresences())
-                            {
-                                if (sp.SceneViewer.Culler.ShowEntityToClient(sp, presence1, scene1))
-                                {
-                                    sp.ControllingClient.SendAvatarDataImmediate(presence);
-                                }
-                            }
-#else
-                            foreach (IScenePresence sp in scene.GetScenePresences().Where(sp => sp.SceneViewer.Culler.ShowEntityToClient(sp, presence1, scene1)))
-                            {
-                                sp.ControllingClient.SendAvatarDataImmediate(presence);
-                            }
-#endif
-                        }
-                    }
+                    sp.ControllingClient.SendAvatarDataImmediate(presence);
                 }
             }
         }
@@ -919,11 +873,7 @@ namespace Aurora.Modules.Groups
                                                                                             m_groupData.GetAgentGroupMemberships(dataForAgentID,
                                                                                             dataForAgentID);
 
-            lock (m_sceneList)
-            {
-                foreach (IScene scene in m_sceneList)
-                {
-                    scene.ForEachClient(delegate(IClientAPI client)
+            m_scene.ForEachClient(delegate(IClientAPI client)
                                             {
                                                 if (m_debugEnabled)
                                                     MainConsole.Instance.InfoFormat(
@@ -952,9 +902,7 @@ namespace Aurora.Modules.Groups
 
                                                 SendGroupMembershipInfoViaCaps(client, dataForAgentID, membershipArray);
                                             });
-                }
-                SendScenePresenceUpdate(dataForAgentID, activeGroupTitle);
-            }
+            SendScenePresenceUpdate(dataForAgentID, activeGroupTitle);
         }
 
         /// <summary>
@@ -1161,8 +1109,7 @@ namespace Aurora.Modules.Groups
                 }
             }
 
-            lock (m_sceneList)
-                m_sceneList.Add(scene);
+            m_scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
@@ -1182,8 +1129,7 @@ namespace Aurora.Modules.Groups
 
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            lock (m_sceneList)
-                m_sceneList.Remove(scene);
+            m_scene = null;
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -1551,7 +1497,7 @@ namespace Aurora.Modules.Groups
                         if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: Received an accept invite notice.");
 
                         // and the sessionid is the role
-                        UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(remoteClient.AllScopeIDs,
+                        UserAccount account = m_scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs,
                                                                                                inviteInfo.FromAgentName);
                         if (account != null)
                         {
@@ -1641,7 +1587,7 @@ namespace Aurora.Modules.Groups
                         {
                             ItemID = binBucketOSD["item_id"].AsUUID();
 
-                            InventoryItemBase item = m_sceneList[0].InventoryService.GetItem(new InventoryItemBase(ItemID, GetRequestingAgentID(remoteClient)));
+                            InventoryItemBase item = m_scene.InventoryService.GetItem(new InventoryItemBase(ItemID, GetRequestingAgentID(remoteClient)));
                             if (item != null)
                             {
                                 AssetType = item.AssetType;
@@ -1767,7 +1713,7 @@ namespace Aurora.Modules.Groups
                 if (m_debugEnabled)
                 {
                     UserAccount targetUser =
-                        m_sceneList[0].UserAccountService.GetUserAccount(remoteClient.Scene.RegionInfo.AllScopeIDs,
+                        m_scene.UserAccountService.GetUserAccount(remoteClient.Scene.RegionInfo.AllScopeIDs,
                                                                          member.AgentID);
                     if (targetUser != null)
                     {

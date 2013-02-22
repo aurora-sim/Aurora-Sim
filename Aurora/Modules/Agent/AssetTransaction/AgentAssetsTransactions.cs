@@ -81,15 +81,15 @@ namespace Aurora.Modules.Agent.AssetTransaction
                     uploader = XferUploaders[transactionID];
                 }
             }
-            IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
+
+            IMonitorModule monitorModule = m_Scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
                 INetworkMonitor networkMonitor =
                     (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                    monitorModule.GetMonitor(m_Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
                 networkMonitor.AddPendingUploads(1);
             }
-
 
             return uploader;
         }
