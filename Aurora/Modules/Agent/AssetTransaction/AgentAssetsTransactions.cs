@@ -81,15 +81,6 @@ namespace Aurora.Modules.Agent.AssetTransaction
                     uploader = XferUploaders[transactionID];
                 }
             }
-            IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
-            if (monitorModule != null)
-            {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
-                networkMonitor.AddPendingUploads(1);
-            }
-
 
             return uploader;
         }
