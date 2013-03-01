@@ -1093,7 +1093,7 @@ namespace Aurora.Modules.Land
             //Lets create a new land object with bitmap activated at that point (keeping the old land objects info)
             ILandObject newLand = startLandObject.Copy();
             newLand.LandData.GlobalID = UUID.Random();
-
+            newLand.LandData.Dwell = 0;//Reset dwell info when splitting
             startLandObject.ForceUpdateLandInfo();
 
             IPrimCountModule primCountsModule = m_scene.RequestModuleInterface<IPrimCountModule>();
