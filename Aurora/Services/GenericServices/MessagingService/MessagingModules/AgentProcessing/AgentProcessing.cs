@@ -184,7 +184,7 @@ namespace OpenSim.Services.MessagingService
                     SendChildAgentUpdate(pos, regionCaps);
                     regionCaps.Disabled = true;
 
-                    LogoutAgent(regionCaps, false); //The root is killing itself
+                    Util.FireAndForget((o)=>LogoutAgent(regionCaps, false)); //The root is killing itself
                 }
             }
             else if (message["Method"] == "SendChildAgentUpdate")
@@ -224,16 +224,15 @@ namespace OpenSim.Services.MessagingService
                     AgentData AgentData = new AgentData();
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
-                    
-                    OSDMap result = new OSDMap();
-                    string reason = "";
-                    result["success"] = TeleportAgent(ref destination, TeleportFlags, DrawDistance,
-                                                        Circuit, AgentData, AgentID, requestingRegion, out reason);
-                    result["Reason"] = reason;
-                    //Remove the region flags, not the regions problem
-                    destination.Flags = 0;
-                    result["Destination"] = destination.ToOSD(); //Send back the new destination
-                    return result;
+
+                    //Don't need to wait for this to finish on the main http thread
+                    Util.FireAndForget((o) =>
+                    {
+                        string reason = "";
+                        TeleportAgent(ref destination, TeleportFlags, DrawDistance,
+                                                            Circuit, AgentData, AgentID, requestingRegion, out reason);
+                    });
+                    return null;
                 }
             }
             else if (message["Method"] == "CrossAgent")
@@ -256,30 +255,13 @@ namespace OpenSim.Services.MessagingService
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
 
-                    string ResponseURL = message["ResponseURL"].AsString();
-                    if (ResponseURL == "")
+                    Util.FireAndForget((o) =>
                     {
-                        OSDMap result = new OSDMap();
                         string reason = "";
-                        result["success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
-                                                       AgentID, requestingRegion, out reason);
-                        result["reason"] = reason;
-                        return result;
-                    }
-                    else
-                    {
-                        Util.FireAndForget(delegate
-                        {
-                            OSDMap result = new OSDMap();
-                            string reason = "";
-                            result["success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
-                                                           AgentID, requestingRegion, out reason);
-                            result["reason"] = reason;
-                            if (ResponseURL != null)
-                                WebUtils.PostToService(ResponseURL, result);
-                        });
-                        return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse", true) };
-                    }
+                        CrossAgent(Region, pos, Vel, Circuit, AgentData,
+                                                        AgentID, requestingRegion, out reason);
+                    });
+                    return null;
                 }
                 else if (clientCaps.InTeleport)
                 {
@@ -660,10 +642,14 @@ namespace OpenSim.Services.MessagingService
                     }
                     if (!result)
                     {
+                        reason = !callWasCanceled ? "The teleport timed out" : "Cancelled";
                         if (!callWasCanceled)
                         {
                             MainConsole.Instance.Warn("[AgentProcessing]: Callback never came for teleporting agent " +
                                        AgentID + ". Resetting.");
+                            //Tell the region about it as well
+                            SimulationService.FailedToTeleportAgent(regionCaps.Region, destination.RegionID, 
+                                AgentID, reason, false);
                         }
                         //Close the agent at the place we just created if it isn't a neighbor
                         // 7/22 -- Kill the agent no matter what, it obviously is having issues getting there
@@ -673,7 +659,6 @@ namespace OpenSim.Services.MessagingService
                             SimulationService.CloseAgent(destination, AgentID);
                             clientCaps.RemoveCAPS(destination.RegionHandle);
                         }
-                        reason = !callWasCanceled ? "The teleport timed out" : "Cancelled";
                     }
                     else
                     {
@@ -689,6 +674,8 @@ namespace OpenSim.Services.MessagingService
                         if (agentInfoService != null)
                             agentInfoService.SetLastPosition(AgentID.ToString(), destination.RegionID,
                                                          agentData.Position, Vector3.Zero);
+
+                        SimulationService.MakeChildAgent(AgentID, regionCaps.Region.RegionID, destination, false); 
                         reason = "";
                     }
                 }
@@ -817,7 +804,6 @@ namespace OpenSim.Services.MessagingService
             int count = 1000;
             while (!clientCaps.CallbackHasCome && count > 0)
             {
-                //MainConsole.Instance.Debug("  >>> Waiting... " + count);
                 if (clientCaps.RequestToCancelTeleport)
                 {
                     //If the call was canceled, we need to break here 
@@ -958,6 +944,8 @@ namespace OpenSim.Services.MessagingService
                                 MainConsole.Instance.Warn("[AgentProcessing]: Callback never came in crossing agent " + circuit.AgentID +
                                            ". Resetting.");
                                 reason = "Crossing timed out";
+                                SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region, crossingRegion.RegionID,
+                                    AgentID, reason, true);
                             }
                             else
                             {
@@ -972,6 +960,8 @@ namespace OpenSim.Services.MessagingService
                                 if (agentInfoService != null)
                                     agentInfoService.SetLastPosition(AgentID.ToString(), crossingRegion.RegionID,
                                                                  pos, Vector3.Zero);
+                                SimulationService.MakeChildAgent(AgentID, requestingRegionCaps.Region.RegionID,
+                                    crossingRegion, true); 
                             }
                         }
 

@@ -257,14 +257,9 @@ namespace OpenSim.Services.CapsService
             circuitData.reallyischild = false;
             circuitData.child = false;
 
-            if (m_service.RegionHandle != destination.RegionHandle)
-                simService.MakeChildAgent(m_service.AgentID, m_service.Region.RegionID, destination, false);
-
             if(m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
                 m_service.AgentID, m_service.RegionHandle, out reason) || reason == "")
             {
-                if (m_service.RegionHandle != destination.RegionHandle)
-                    simService.MakeChildAgent(m_service.AgentID, m_service.Region.RegionID, destination, true);
                 retVal.Add("success", OSD.FromBoolean(true));
             }
             else

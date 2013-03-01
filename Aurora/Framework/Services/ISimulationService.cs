@@ -144,6 +144,13 @@ namespace OpenSim.Services.Interfaces
         bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion Region, bool markAgentAsLeaving);
 
         /// <summary>
+        /// Sends that a teleport failed to the given user
+        /// </summary>
+        /// <param name="sp"></param>
+        /// <param name="reason"></param>
+        bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID agentID, string reason, bool isCrossing);
+
+        /// <summary>
         ///   Tells the region that the agent was not able to leave the region and needs to be resumed
         /// </summary>
         /// <param name = "AgentID"></param>

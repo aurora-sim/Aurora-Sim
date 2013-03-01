@@ -195,7 +195,14 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name = "sp"></param>
         /// <param name = "finalDestination"></param>
-        /// <param name = "markAgentAsLeaving"></param>
-        void MakeChildAgent(IScenePresence sp, GridRegion finalDestination, bool markAgentAsLeaving);
+        /// <param name = "isCrossing"></param>
+        void MakeChildAgent(IScenePresence sp, GridRegion finalDestination, bool isCrossing);
+
+        /// <summary>
+        /// Sends that a teleport failed to the given user
+        /// </summary>
+        /// <param name="sp"></param>
+        /// <param name="reason"></param>
+        void FailedToTeleportAgent(GridRegion destination, UUID agentID, string reason, bool isCrossing);
     }
 }

@@ -147,7 +147,7 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion destination, bool markAgentAsLeaving)
+        public bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion destination, bool isCrossing)
         {
             if (Scene == null)
                 return false;
@@ -155,7 +155,20 @@ namespace OpenSim.Services.Connectors.Simulation
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule == null) return false;
-            transferModule.MakeChildAgent(Scene.GetScenePresence(AgentID), destination, markAgentAsLeaving);
+            transferModule.MakeChildAgent(Scene.GetScenePresence(AgentID), destination, isCrossing);
+            return true;
+        }
+
+        public bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID agentID, string reason, bool isCrossing)
+        {
+            if (Scene == null)
+                return false;
+
+            //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send FailedToTeleportAgent");
+            IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+            if (transferModule == null) return false;
+            transferModule.FailedToTeleportAgent(new GridRegion() { RegionID = failedRegionID }, 
+                agentID, reason, isCrossing);
             return true;
         }
 

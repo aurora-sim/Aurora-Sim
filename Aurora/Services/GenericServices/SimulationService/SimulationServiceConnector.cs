@@ -180,9 +180,9 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion destination, bool markAgentAsLeaving)
+        public bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion destination, bool isCrossing)
         {
-            if (m_localBackend.MakeChildAgent(AgentID, leavingRegion, destination, markAgentAsLeaving))
+            if (m_localBackend.MakeChildAgent(AgentID, leavingRegion, destination, isCrossing))
                 return true;
 
             // Eventually, we want to use a caps url instead of the agentID
@@ -190,7 +190,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
             OSDMap data = new OSDMap();
             data["Method"] = "MakeChildAgent";
-            data["MarkAgentAsLeaving"] = markAgentAsLeaving;
+            data["IsCrossing"] = isCrossing;
             data["LeavingRegion"] = leavingRegion;
             try
             {
@@ -200,6 +200,32 @@ namespace OpenSim.Services.Connectors.Simulation
             catch (Exception e)
             {
                 MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: MakeChildAgent failed with exception: " + e);
+            }
+            return false;
+        }
+
+        public bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID AgentID, string reason, bool isCrossing)
+        {
+            if (m_localBackend.FailedToTeleportAgent(destination, failedRegionID, AgentID, reason, isCrossing))
+                return true;
+
+            // Eventually, we want to use a caps url instead of the agentID
+            string uri = MakeUri(destination, true) + AgentID + "/" + destination.RegionID.ToString() + "/";
+
+            OSDMap data = new OSDMap();
+            data["Method"] = "FailedToTeleportAgent";
+            data["Reason"] = reason;
+            data["IsCrossing"] = isCrossing;
+            data["FailedRegionID"] = failedRegionID;
+            data["AgentID"] = AgentID;
+            try
+            {
+                WebUtils.PostToService(uri, data);
+                return true;
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: FailedToTeleportAgent failed with exception: " + e);
             }
             return false;
         }

@@ -118,9 +118,11 @@ namespace OpenSim.Services
                 if (map != null)
                 {
                     if (map["Method"] == "MakeChildAgent")
-                        DoMakeChildAgent(agentID, map["LeavingRegion"].AsUUID(), regionID, map["MarkAgentAsLeaving"].AsBoolean());
+                        DoMakeChildAgent(agentID, map["LeavingRegion"].AsUUID(), regionID, map["IsCrossing"].AsBoolean());
                     else if (map["Method"] == "FailedToMoveAgentIntoNewRegion")
                         FailedToMoveAgentIntoNewRegion(agentID, regionID);
+                    else if (map["Method"] == "FailedToTeleportAgent")
+                        FailedToTeleportAgent(map["FailedRegionID"].AsUUID(), agentID, map["Reason"].AsString(), map["IsCrossing"].AsBoolean());
                     else
                         DoAgentPost(request, responsedata, agentID);
                 }
@@ -158,14 +160,20 @@ namespace OpenSim.Services
             }
         }
 
-        private void DoMakeChildAgent(UUID agentID, UUID leavingRegion, UUID regionID, bool markAgentAsLeaving)
+        private void DoMakeChildAgent(UUID agentID, UUID leavingRegion, UUID regionID, bool isCrossing)
         {
-            m_SimulationService.MakeChildAgent(agentID, leavingRegion, new GridRegion { RegionID = regionID }, markAgentAsLeaving);
+            m_SimulationService.MakeChildAgent(agentID, leavingRegion, new GridRegion { RegionID = regionID }, isCrossing);
         }
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
         {
             return m_SimulationService.FailedToMoveAgentIntoNewRegion(AgentID, RegionID);
+        }
+
+        public bool FailedToTeleportAgent(UUID failedRegionID, UUID AgentID, string reason, bool isCrossing)
+        {
+            return m_SimulationService.FailedToTeleportAgent(null, failedRegionID, 
+                AgentID, reason, isCrossing);
         }
 
         protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)
