@@ -131,30 +131,9 @@ namespace Aurora.RedisServices.AssetService
             return asset;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual AssetBase GetMesh(string id)
         {
-            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (doDatabaseCaching && cache != null)
-            {
-                bool found;
-                AssetBase cachedAsset = cache.Get(id, out found);
-                if (found && (cachedAsset == null || cachedAsset.Data.Length != 0))
-                    return cachedAsset;
-            }
-
-            object remoteValue = DoRemote(id);
-            if (remoteValue != null || m_doRemoteOnly)
-            {
-                if (doDatabaseCaching && cache != null)
-                    cache.Cache(id, (AssetBase)remoteValue);
-                return (AssetBase)remoteValue;
-            }
-
-            AssetBase asset = RedisGetAsset(id);
-            if (doDatabaseCaching && cache != null)
-                cache.Cache(id, asset);
-            return asset;
+            return Get(id);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -261,19 +240,20 @@ namespace Aurora.RedisServices.AssetService
 
         #endregion
 
-        private T RedisEnsureConnection<T>(Func<RedisClient<byte[]>, T> func)
+        private byte[] RedisEnsureConnection(Func<RedisClient<byte[]>, byte[]> func)
         {
             RedisClient<byte[]> client = null;
             try
             {
                 client = m_connectionPool.GetFreeItem();
                 if (func == null)
-                    return default(T);//Checking whether the connection is alive
+                    return null;//Checking whether the connection is alive
                 return func(client);
             }
             catch (Exception)
             {
-                try { client.Dispose(); } catch { }
+                try { client.Dispose(); }
+                catch { }
                 m_connectionPool.DestroyItem(client);
                 client = null;
             }
@@ -282,64 +262,85 @@ namespace Aurora.RedisServices.AssetService
                 if (client != null)
                     m_connectionPool.FlagFreeItem(client);
             }
-            return default(T);
+            return null;
+        }
+
+        private bool RedisEnsureConnection(Func<RedisClient<byte[]>, bool> func)
+        {
+            RedisClient<byte[]> client = null;
+            try
+            {
+                client = m_connectionPool.GetFreeItem();
+                if (func == null)
+                    return false;//Checking whether the connection is alive
+                return func(client);
+            }
+            catch (Exception)
+            {
+                try { client.Dispose(); }
+                catch { }
+                m_connectionPool.DestroyItem(client);
+                client = null;
+            }
+            finally
+            {
+                if (client != null)
+                    m_connectionPool.FlagFreeItem(client);
+            }
+            return false;
         }
 
         public AssetBase RedisGetAsset(string id)
         {
             AssetBase asset = null;
-            int msCount = Environment.TickCount;
-            string lookupID = id;
 
-            byte[] data = RedisEnsureConnection((conn) => conn.Get(lookupID));
-            if (data == null)
-                return CheckForConversion(id);
-
-            // Deduplication...
-
-            if (data.Length == 16)
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            try
             {
-                //It's a reference to another asset
-                Guid reference = new Guid(data);
-                asset = RedisGetAsset(reference.ToString());
-                if(asset != null)
-                    asset.IDString = id;//Fix the ID too
-                return asset;
+                RedisEnsureConnection((conn) =>
+                {
+                    byte[] data = conn.Get(id);
+                    if (data == null)
+                        return null;
+
+                    MemoryStream memStream = new MemoryStream(data);
+                    asset = ProtoBuf.Serializer.Deserialize<AssetBase>(memStream);
+                    memStream.Close();
+                    byte[] assetdata = conn.Get(DATA_PREFIX + asset.HashCode);
+                    if (assetdata == null || asset.HashCode == "")
+                        return null;
+                    asset.Data = assetdata;
+                    return null;
+                });
+
+                if (asset == null)
+                    return CheckForConversion(id);
             }
-
-            // End deduplication
-
-            byte[] assetdata = RedisEnsureConnection((conn) => conn.Get(DATA_PREFIX + lookupID));
-            MemoryStream memStream = new MemoryStream(data);
-            asset = ProtoBuf.Serializer.Deserialize<AssetBase>(memStream);
-            memStream.Close();
-            asset.Data = assetdata;
-
-            int elapsed = Environment.TickCount - msCount;
-            if (MainConsole.Instance != null && elapsed > 50)
-                MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Took " + elapsed + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
+            finally
+            {
+                sw.Stop();
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Warn("[REDIS ASSET SERVICE]: Took " + sw.ElapsedMilliseconds + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
+            }
             return asset;
         }
 
-        private object m_conversionlock = new object();
         private AssetBase CheckForConversion(string id)
         {
             if (!m_doConversion)
                 return null;
 
             AssetBase asset;
-            lock (m_conversionlock)
-            {
-                asset = m_assetService.GetAsset(UUID.Parse(id));
+            asset = m_assetService.GetAsset(UUID.Parse(id));
 
-                if (asset == null)
-                    return null;
+            if (asset == null)
+                return null;
 
-                //Delete first, then restore it with the new local flag attached, so that we know we've converted it
-                m_assetService.Delete(asset.ID, true);
-                asset.Flags = AssetFlags.Local;
-                m_assetService.StoreAsset(asset);
-            }
+            //Delete first, then restore it with the new local flag attached, so that we know we've converted it
+            //m_assetService.Delete(asset.ID, true);
+            //asset.Flags = AssetFlags.Local;
+            //m_assetService.StoreAsset(asset);
 
             //Now store in Redis
             RedisSetAsset(asset);
@@ -357,62 +358,62 @@ namespace Aurora.RedisServices.AssetService
 
         public bool RedisSetAsset(AssetBase asset)
         {
-            //Deduplication...
-
-            //Database+2 holds hashcodes --> UUID, so check it to see whether a hashcode for this object already exists
-            int msCount = Environment.TickCount;
-            byte[] trueAsset = RedisEnsureConnection((conn) => conn.Get(asset.HashCode));
-            int elapsed1 = Environment.TickCount - msCount;
-            if (trueAsset != null)
-            {
-                Guid trueAssetID = new Guid(trueAsset);
-                if(MainConsole.Instance != null)
-                    MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString + " for " + trueAssetID);
-                RedisEnsureConnection((conn) => conn.Set(asset.IDString, trueAssetID.ToByteArray()));
-                return true;
-            }
-
-            int msCount2 = Environment.TickCount;
+            byte[] trueAsset = RedisEnsureConnection((conn) => conn.Get(DATA_PREFIX + asset.HashCode));
+            
             MemoryStream memStream = new MemoryStream();
             byte[] data = asset.Data;
             asset.Data = new byte[0];
             ProtoBuf.Serializer.Serialize<AssetBase>(memStream, asset);
             asset.Data = data;
-            int elapsed2 = Environment.TickCount - msCount2;
 
-            int msCount3 = Environment.TickCount;
-            RedisEnsureConnection((conn) => 
+            try
+            {
+                //Deduplication...
+                if (trueAsset != null)
                 {
-                    conn.Pipeline((c) =>
-                    {
-                        c.Set(asset.IDString, memStream.ToArray());
-                        c.Set(DATA_PREFIX + asset.IDString, data);
-                        //Add us to the hashcode --> UUID database
-                        c.Set(asset.HashCode, new Guid(asset.IDString).ToByteArray());
-                    });
+                    if (MainConsole.Instance != null)
+                        MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString + " for " + asset.IDString);
+
+                    //Only set id --> asset, and not the hashcode --> data to deduplicate
+                    RedisEnsureConnection((conn) => conn.Set(asset.IDString, memStream.ToArray()));
                     return true;
-                });
-            memStream.Close();
-            int elapsed3 = Environment.TickCount - msCount3;
-            /*if ((elapsed1 + elapsed2 + elapsed3) > 10)
-                Console.WriteLine("[REDIS ASSET SERVICE]: Took " + (elapsed1 + elapsed2 + elapsed3) + " (" + elapsed1 + ", " + elapsed2 + ", " + elapsed3 + 
-                    ") to store asset " + asset.IDString + " sized " + asset.Data.Length / (1024) + "kbs");*/
-            return false;
+                }
+
+                RedisEnsureConnection((conn) =>
+                    {
+                        conn.Pipeline((c) =>
+                        {
+                            c.Set(asset.IDString, memStream.ToArray());
+                            c.Set(DATA_PREFIX + asset.HashCode, data);
+                        });
+                        return true;
+                    });
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                memStream.Close();
+            }
         }
 
         public void RedisUpdateAsset(string id, byte[] data)
         {
-            RedisEnsureConnection((conn) => conn.Set(DATA_PREFIX + id, data));
+            AssetBase asset = RedisGetAsset(id);
+            asset.Data = data;
+            RedisSetAsset(asset);
         }
 
         public void RedisDeleteAsset(string id)
         {
             AssetBase asset = RedisGetAsset(id);
             if (asset == null)
-                asset = RedisGetAsset(id);
+                return;
             RedisEnsureConnection((conn) => conn.Del(id) == 1);
-            RedisEnsureConnection((conn) => conn.Del(DATA_PREFIX + id) == 1);
-            RedisEnsureConnection((conn) => conn.Del(asset.HashCode) == 1);
+            RedisEnsureConnection((conn) => conn.Del(DATA_PREFIX + asset.HashCode) == 1);
         }
 
         #region Console Commands

@@ -12,7 +12,6 @@ namespace Aurora.RedisServices.ConnectionHelpers
         private readonly Queue<T> freeItems = new Queue<T>();
         private volatile object _lock = new object();
         private readonly Func<T> createItemAction;
-        private const int _MaxNumber = 1;
 
         public Pool(Func<T> createItemAction)
         {
