@@ -1081,7 +1081,7 @@ namespace OpenSim.Services.GridService
 
         private void FixNeighbors(GridRegion regionInfos, List<GridRegion> neighbors, bool down)
         {
-            IAsyncMessagePostService postService = m_registryCore.RequestModuleInterface<IAsyncMessagePostService>();
+            ISyncMessagePosterService postService = m_registryCore.RequestModuleInterface<ISyncMessagePosterService>();
             foreach (GridRegion r in neighbors)
             {
                 if (m_KnownNeighbors.ContainsKey(r.RegionID))
@@ -1099,8 +1099,7 @@ namespace OpenSim.Services.GridService
                 }
 
                 if (postService != null)
-                    postService.Post(r.RegionHandle,
-                                     SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
+                    postService.PostToServer(SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
             }
 
             if (down)

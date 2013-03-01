@@ -63,7 +63,7 @@ namespace OpenSim.Services.MessagingService
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+            m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion
@@ -88,15 +88,14 @@ namespace OpenSim.Services.MessagingService
                         foreach (UUID region in regions)
                         {
                             //Send the message to update all regions that are in this estate, as a setting changed
-                            IAsyncMessagePostService asyncPoster =
-                                m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+                            ISyncMessagePosterService asyncPoster =
+                                m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                             IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                             if (gridService != null && asyncPoster != null)
                             {
                                 GridRegion r = gridService.GetRegionByUUID(null, region);
                                 if (r != null)
-                                    asyncPoster.Post(r.RegionHandle,
-                                                     SyncMessageHelper.UpdateEstateInfo(es.EstateID, region));
+                                    asyncPoster.PostToServer(SyncMessageHelper.UpdateEstateInfo(es.EstateID, region));
                             }
                         }
                     }

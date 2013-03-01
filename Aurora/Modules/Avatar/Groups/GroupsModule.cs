@@ -378,7 +378,7 @@ namespace Aurora.Modules.Groups
                 message["RoleID"] = roleID;
                 message["AgentID"] = remoteClient.AgentId;
                 message["Type"] = updateType;
-                amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
+                amps.PostToServer(message);
             }
 
             UpdateUsersForExternalRoleUpdate(groupID, roleID, remoteClient.Scene.RegionInfo.RegionID);

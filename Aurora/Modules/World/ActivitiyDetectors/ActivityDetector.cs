@@ -69,8 +69,7 @@ namespace Aurora.Modules.ActivityDetectors
         {
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
-                syncMessage.Post(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle),
-                                 scene.RegionInfo.RegionHandle);
+                syncMessage.PostToServer(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle));
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             m_scenes.Remove(scene);
@@ -128,8 +127,7 @@ namespace Aurora.Modules.ActivityDetectors
             //Just send the RegionIsOnline message, it will log out all the agents for the region as well
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
-                syncMessage.Post(SyncMessageHelper.RegionIsOnline(scene.RegionInfo.RegionHandle),
-                                 scene.RegionInfo.RegionHandle);
+                syncMessage.PostToServer(SyncMessageHelper.RegionIsOnline(scene.RegionInfo.RegionHandle));
         }
 
         public void OnNewClient(IClientAPI client)
@@ -194,11 +192,11 @@ namespace Aurora.Modules.ActivityDetectors
                 //Send the child agent data update
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
-                    syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, sp.Scene.RegionInfo.RegionHandle),
-                                    sp.Scene.RegionInfo.RegionHandle);
-                client.Scene.RequestModuleInterface<ISyncMessagePosterService>().Post(
-                    SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle),
-                    client.Scene.RegionInfo.RegionHandle);
+                {
+                    syncPoster.PostToServer(SyncMessageHelper.SendChildAgentUpdate(agentpos, sp.Scene.RegionInfo.RegionHandle));
+                    syncPoster.PostToServer(
+                        SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle));
+                }
             }
         }
     }

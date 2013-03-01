@@ -21,7 +21,7 @@ namespace Aurora.Framework
         public RegionManagement(string url, string password)
         {
             _url = url;
-            Init(null, GetType().Name, password);
+            Init(null, GetType().Name, password, "");
             SetDoRemoteCalls(true);
         }
 
@@ -41,7 +41,7 @@ namespace Aurora.Framework
                 if (password != "")
                 {
                     m_enabled = true;
-                    Init(m_registry, Name, password);
+                    Init(m_registry, Name, password, "");
                     SetDoRemoteCalls(false);
                 }
             }

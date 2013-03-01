@@ -52,7 +52,7 @@
     GridHandler = GridService
     InventoryHandler = InventoryService
     MessagingServiceInHandler = MessagingServiceInHandler
-    SyncMessagePosterServiceHandler = RemoteSyncMessagePosterService
+    SyncMessagePosterServiceHandler = SyncMessagePosterService
     UserAccountHandler = UserAccountService
 
     SimulationHandler = SimulationServiceConnector
@@ -61,6 +61,10 @@
     ;; If you are in a secure closed grid, you can enable this safely, otherwise, enable at your own risk!
     ;; Disables objects being moved into our regions from regions outside of this instance (works for the ones in our instance)
     AllowIncomingForeignObjects = false
+
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 0
+	SyncMessagePosterServiceDoRemote = true
 
 [WebInterface]
     Module = None

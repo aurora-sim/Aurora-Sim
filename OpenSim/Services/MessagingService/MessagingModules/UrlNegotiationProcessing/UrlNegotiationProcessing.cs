@@ -59,7 +59,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+            m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion
@@ -72,7 +72,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             string message = CombineParams(cmd, 2);
 
             //Get required interfaces
-            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+            ISyncMessagePosterService messagePost = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             List<IRegionCapsService> clients = capsService.GetRegionsCapsServices();
 
@@ -80,7 +80,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             foreach (IRegionCapsService client in clients)
             {
                 //Send the message to the region
-                messagePost.Post(client.RegionHandle, BuildRequest("NegotiateUrl", message, UUID.Zero.ToString()));
+                messagePost.PostToServer(BuildRequest("NegotiateUrl", message, UUID.Zero.ToString()));
             }
         }
 

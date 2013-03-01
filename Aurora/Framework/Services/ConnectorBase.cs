@@ -80,15 +80,22 @@ namespace Aurora.Framework
 
         public void Init(IRegistryCore registry, string name, string password)
         {
-            m_password = password;
-            Init(registry, name);
+            Init(registry, name, password, "");
         }
 
         public void Init(IRegistryCore registry, string name)
         {
+            Init(registry, name, "", "");
+        }
+
+        public void Init(IRegistryCore registry, string name, string password, string serverPath)
+        {
             Enabled = true;
+            m_password = password;
             m_registry = registry;
             m_name = name;
+            bool openServerHandler = false;
+            uint serverHandlerPort = 0;
             ISimulationBase simBase = registry == null ? null : registry.RequestModuleInterface<ISimulationBase>();
             if (simBase != null)
             {
@@ -100,6 +107,12 @@ namespace Aurora.Framework
                         m_doRemoteCalls = config.GetBoolean(name + "DoRemoteCalls", false);
                     else
                         m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+
+                    if ((config = source.Configs["Handlers"]) != null)
+                    {
+                        openServerHandler = config.GetBoolean(name + "OpenServerHandler", false);
+                        serverHandlerPort = config.GetUInt(name + "ServerHandlerPort", serverHandlerPort);
+                    }
                 }
                 if ((config = source.Configs["Configuration"]) != null)
                 {
@@ -110,6 +123,16 @@ namespace Aurora.Framework
             if (m_doRemoteCalls)
                 m_doRemoteOnly = true;//Lock out local + remote for now
             ConnectorRegistry.RegisterConnector(this);
+
+            if (openServerHandler)
+                CreateServerHandler(serverHandlerPort, serverPath);
+        }
+
+        protected void CreateServerHandler(uint port, string urlPath)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            server.AddStreamHandler(new NewServerHandler(urlPath, m_registry, this));
         }
 
         public void SetPassword(string password)
@@ -146,6 +169,11 @@ namespace Aurora.Framework
         public object DoRemoteByHTTP(string url, params object[] o)
         {
             return DoRemoteCall(false, url, true, UUID.Zero.ToString(), o);
+        }
+
+        public object DoRemoteByURLForced(string url, params object[] o)
+        {
+            return DoRemoteCall(true, url, true, UUID.Zero.ToString(), o);
         }
 
         public object DoRemoteCall(bool forced, string url, bool urlOverrides, string userID, params object[] o)
@@ -356,6 +384,135 @@ namespace Aurora.Framework
                             if (args[param.Name].Type == OSDType.Unknown)
                                 parameters[paramNum++] = null;
                             else if(param.ParameterType == typeof(OSD))
+                                parameters[paramNum++] = args[param.Name];
+                            else
+                                parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
+                        }
+
+                        object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
+                        OSDMap response = new OSDMap();
+                        if (o == null)//void method
+                            response["Value"] = "null";
+                        else
+                            response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
+                        response["Success"] = true;
+                        return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.WarnFormat("[ServerHandler]: Error occured for method {0}: {1}", method, ex.ToString());
+                }
+            }
+            else
+                MainConsole.Instance.Warn("[ServerHandler]: Post did not have a method block");
+
+            return MainServer.BadRequest;
+        }
+
+        private bool GetMethodInfo(string method, int parameters, out MethodImplementation methodInfo)
+        {
+            List<MethodImplementation> methods = new List<MethodImplementation>();
+            if (m_methods.TryGetValue(method, out methods))
+            {
+                if (methods.Count == 1)
+                {
+                    methodInfo = methods[0];
+                    return true;
+                }
+                foreach (MethodImplementation m in methods)
+                {
+                    if (m.Method.GetParameters().Length == parameters)
+                    {
+                        methodInfo = m;
+                        return true;
+                    }
+                }
+            }
+            MainConsole.Instance.Warn("COULD NOT FIND METHOD: " + method);
+            methodInfo = null;
+            return false;
+        }
+    }
+
+    public class NewServerHandler : BaseRequestHandler
+    {
+        protected IRegistryCore m_registry;
+        protected Dictionary<string, List<MethodImplementation>> m_methods = null;
+
+        public NewServerHandler(string url, IRegistryCore registry, ConnectorBase conn) :
+            base("POST", url)
+        {
+            m_registry = registry;
+            if (m_methods == null)
+            {
+                m_methods = new Dictionary<string, List<MethodImplementation>>();
+                List<string> alreadyRunPlugins = new List<string>();
+                List<ConnectorBase> connectors = conn == null ? ConnectorRegistry.Connectors : new List<ConnectorBase>() { conn };
+                foreach (ConnectorBase plugin in connectors)
+                {
+                    if (alreadyRunPlugins.Contains(plugin.PluginName))
+                        continue;
+                    alreadyRunPlugins.Add(plugin.PluginName);
+                    foreach (MethodInfo method in plugin.GetType().GetMethods())
+                    {
+                        CanBeReflected reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+                        if (reflection != null)
+                        {
+                            string methodName = reflection.RenamedMethod == "" ? method.Name : reflection.RenamedMethod;
+                            List<MethodImplementation> methods = new List<MethodImplementation>();
+                            MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin, Attribute = reflection };
+                            if (!m_methods.TryGetValue(methodName, out methods))
+                                m_methods.Add(methodName, (methods = new List<MethodImplementation>()));
+
+                            methods.Add(imp);
+                        }
+                    }
+                }
+            }
+        }
+
+        public override byte[] Handle(string path, Stream requestData,
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            StreamReader sr = new StreamReader(requestData);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            body = body.Trim();
+
+            try
+            {
+                OSDMap args = WebUtils.GetOSDMap(body, false);
+                if (args != null)
+                    return HandleMap(args);
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.Warn("[ServerHandler]: Error occured: " + ex.ToString());
+            }
+            return MainServer.BadRequest;
+        }
+
+        public byte[] HandleMap(OSDMap args)
+        {
+            if (args.ContainsKey("Method"))
+            {
+                string method = args["Method"].AsString();
+                try
+                {
+                    MethodImplementation methodInfo;
+                    if (GetMethodInfo(method, args.Count - 1, out methodInfo))
+                    {
+                        ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
+                        object[] parameters = new object[paramInfo.Length];
+                        int paramNum = 0;
+                        foreach (ParameterInfo param in paramInfo)
+                        {
+                            if (param.ParameterType == typeof(bool) && !args.ContainsKey(param.Name))
+                                parameters[paramNum++] = false;
+                            else if (args[param.Name].Type == OSDType.Unknown)
+                                parameters[paramNum++] = null;
+                            else if (param.ParameterType == typeof(OSD))
                                 parameters[paramNum++] = args[param.Name];
                             else
                                 parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);

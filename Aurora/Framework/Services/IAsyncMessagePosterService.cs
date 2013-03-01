@@ -43,7 +43,13 @@ namespace OpenSim.Services.Interfaces
         ///   Post a request to all hosts that we have
         /// </summary>
         /// <param name = "request"></param>
-        void Post(OSDMap request, ulong RegionHandle);
+        void Post(string url, OSDMap request);
+
+        /// <summary>
+        /// Posts a request directly to the messaging server
+        /// </summary>
+        /// <param name="request"></param>
+        void PostToServer(OSDMap request);
 
         /// <summary>
         ///   Post a request to all hosts that we have
@@ -51,7 +57,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "request"></param>
         /// <returns></returns>
-        void Get(OSDMap request, UUID userID, ulong RegionHandle, GetResponse response);
+        void Get(string url, OSDMap request, GetResponse response);
     }
 
     public delegate OSDMap MessageReceived(OSDMap message);
@@ -59,7 +65,7 @@ namespace OpenSim.Services.Interfaces
     /// <summary>
     ///   This is used to deal with incoming requests from the ISyncMessagePosterService
     /// </summary>
-    public interface IAsyncMessageRecievedService
+    public interface ISyncMessageRecievedService
     {
         /// <summary>
         ///   This is fired when a message from the ISyncMessagePosterService
@@ -78,31 +84,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "message"></param>
         /// <returns></returns>
-        OSDMap FireMessageReceived(string SessionID, OSDMap message);
-    }
-
-    /// <summary>
-    ///   This interface is used mainly on Aurora.Server to asyncronously post events to
-    ///   regions in the grid. This can be used to send grid wide notices or other events 
-    ///   that regions need to know about
-    /// </summary>
-    public interface IAsyncMessagePostService
-    {
-        /// <summary>
-        ///   Post a request to the given region asyncronously
-        ///   This request will be picked up by the region normally within 30 seconds
-        /// </summary>
-        /// <param name = "RegionHandle"></param>
-        /// <param name = "request"></param>
-        void Post(ulong RegionHandle, OSDMap request);
-
-        /// <summary>
-        ///   Post a request to all regions asyncronously
-        ///   This request will be picked up by the regions normally within 30 seconds
-        /// </summary>
-        /// <param name = "RegionHandle"></param>
-        /// <param name = "request"></param>
-        void PostToAll(OSDMap request);
+        OSDMap FireMessageReceived(OSDMap message);
     }
 
     public class LoginAgentArgs : IDataTransferable

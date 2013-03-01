@@ -46,12 +46,10 @@
     LLLoginHandlerPort = 0
 
     GridInfoInHandler = GridInfoServerInConnector
-    MessagingServiceInHandler = MessagingServiceInHandler
 
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
     AssetHandlerUseCache = true
-    AsyncMessagePostServiceHandler = LocalAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
     CapsHandler = CapsService
@@ -63,8 +61,12 @@
     InventoryHandler = InventoryService
     LoginHandler = LLLoginService
     SimulationHandler = LocalSimulationServiceConnector
-    SyncMessagePosterServiceHandler = LocalSyncMessagePosterService
+    SyncMessagePosterServiceHandler = SyncMessagePosterService
     UserAccountHandler = UserAccountService
+
+    SyncMessagePosterServiceOpenServerHandler = false
+    SyncMessagePosterServiceServerHandlerPort = 0
+	SyncMessagePosterServiceDoRemote = false
 
 [MapService]
     ;; This controls options about the v2 MapService, which allows v2 viewers to see the map

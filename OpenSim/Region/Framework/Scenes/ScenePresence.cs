@@ -866,7 +866,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService> ();
             if (syncPoster != null)
-                syncPoster.Post (SyncMessageHelper.ArrivedAtDestination (UUID, (int)DrawDistance, agent, Scene.RegionInfo.RegionHandle), Scene.RegionInfo.RegionHandle);
+                syncPoster.PostToServer (SyncMessageHelper.ArrivedAtDestination (UUID, (int)DrawDistance, agent, Scene.RegionInfo.RegionHandle));
         }
 
         /// <summary>
@@ -2075,7 +2075,7 @@ namespace OpenSim.Region.Framework.Scenes
                     //Send the child agent data update
                     ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService> ();
                     if (syncPoster != null)
-                        syncPoster.Post (SyncMessageHelper.SendChildAgentUpdate (agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
+                        syncPoster.PostToServer(SyncMessageHelper.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionHandle));
                 }
                 else
                     Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.Other);//We havn't sent the update yet, keep tainting

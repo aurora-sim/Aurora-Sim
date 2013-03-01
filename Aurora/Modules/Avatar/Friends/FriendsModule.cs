@@ -70,9 +70,9 @@ namespace Aurora.Modules.Friends
             get { return m_Scenes[0].UserAccountService; }
         }
 
-        public IAsyncMessagePostService AsyncMessagePostService
+        public ISyncMessagePosterService AsyncMessagePostService
         {
-            get { return m_Scenes[0].RequestModuleInterface<IAsyncMessagePostService>(); }
+            get { return m_Scenes[0].RequestModuleInterface<ISyncMessagePosterService>(); }
         }
 
         public ISyncMessagePosterService SyncMessagePosterService
@@ -80,9 +80,9 @@ namespace Aurora.Modules.Friends
             get { return m_Scenes[0].RequestModuleInterface<ISyncMessagePosterService>(); }
         }
 
-        public IAsyncMessageRecievedService AsyncMessageRecievedService
+        public ISyncMessageRecievedService AsyncMessageRecievedService
         {
-            get { return m_Scenes[0].RequestModuleInterface<IAsyncMessageRecievedService>(); }
+            get { return m_Scenes[0].RequestModuleInterface<ISyncMessageRecievedService>(); }
         }
 
         #region IFriendsModule Members
@@ -437,8 +437,8 @@ namespace Aurora.Modules.Friends
                 return;
 
             // The prospective friend is not here [as root]. Let's4 forward.
-            SyncMessagePosterService.Post(SyncMessageHelper.FriendshipOffered(
-                agentID, friendID, im, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendshipOffered(
+                agentID, friendID, im, m_Scenes[0].RegionInfo.RegionHandle));
             // If the prospective friend is not online, he'll get the message upon login.
         }
 
@@ -475,9 +475,8 @@ namespace Aurora.Modules.Friends
             // Try Local
             if (LocalFriendshipApproved(agentID, client.Name, client, friendID))
                 return;
-            SyncMessagePosterService.Post(SyncMessageHelper.FriendshipApproved(
-                agentID, client.Name, friendID, m_Scenes[0].RegionInfo.RegionHandle),
-                                          m_Scenes[0].RegionInfo.RegionHandle);
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendshipApproved(
+                agentID, client.Name, friendID, m_Scenes[0].RegionInfo.RegionHandle));
         }
 
         private void OnDenyFriendRequest(IClientAPI client, UUID agentID, UUID friendID, List<UUID> callingCardFolders)
@@ -509,9 +508,8 @@ namespace Aurora.Modules.Friends
             // Try local
             if (LocalFriendshipDenied(agentID, client.Name, friendID))
                 return;
-            SyncMessagePosterService.Post(SyncMessageHelper.FriendshipDenied(
-                agentID, client.Name, friendID, m_Scenes[0].RegionInfo.RegionHandle),
-                                          m_Scenes[0].RegionInfo.RegionHandle);
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendshipDenied(
+                agentID, client.Name, friendID, m_Scenes[0].RegionInfo.RegionHandle));
         }
 
         private void OnTerminateFriendship(IClientAPI client, UUID agentID, UUID exfriendID)
@@ -532,8 +530,8 @@ namespace Aurora.Modules.Friends
             if (LocalFriendshipTerminated(exfriendID, agentID))
                 return;
 
-            SyncMessagePosterService.Post(SyncMessageHelper.FriendTerminated(
-                agentID, exfriendID, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendTerminated(
+                agentID, exfriendID, m_Scenes[0].RegionInfo.RegionHandle));
         }
 
         private void OnGrantUserRights(IClientAPI remoteClient, UUID requester, UUID target, int rights)
@@ -581,9 +579,8 @@ namespace Aurora.Modules.Friends
                 // Try local
                 if (!LocalGrantRights(requester, target, myFlags, rights))
                 {
-                    SyncMessagePosterService.Post(SyncMessageHelper.FriendGrantRights(
-                        requester, target, myFlags, rights, m_Scenes[0].RegionInfo.RegionHandle),
-                                                  m_Scenes[0].RegionInfo.RegionHandle);
+                    SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendGrantRights(
+                        requester, target, myFlags, rights, m_Scenes[0].RegionInfo.RegionHandle));
                 }
             }
         }

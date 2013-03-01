@@ -313,7 +313,7 @@ namespace Aurora.Modules.Startup
 
         public void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            scene.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived +=
+            scene.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived +=
                 RegisterRegionWithGridModule_OnMessageReceived;
         }
 

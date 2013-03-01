@@ -133,4 +133,65 @@ namespace OpenSim.Services
 
         #endregion
     }
+    public class MessagingServerConnector : IService, IGridRegistrationUrlModule
+    {
+        private IRegistryCore m_registry;
+        private IConfigSource m_config;
+
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "SyncMessageServerURI"; }
+        }
+
+        public bool DoMultiplePorts
+        {
+            get { return false; }
+        }
+
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
+        {
+        }
+
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
+        {
+            return "/messaging/";
+        }
+
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
+        {
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_config = config;
+            IConfig handlerConfig = config.Configs["AuroraConnectors"];
+            if (!handlerConfig.GetBoolean("AllowRemoteCalls", false))
+                return;
+
+            m_registry = registry;
+
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+    }
 }

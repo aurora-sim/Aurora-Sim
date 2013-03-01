@@ -34,14 +34,14 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class LocalSyncMessagePosterService : ISyncMessagePosterService, IService
+    public class SyncMessagePosterService : ConnectorBase, ISyncMessagePosterService, IService
     {
-        protected IRegistryCore m_registry;
-
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        protected bool m_doRemote = false;
 
         #region IService Members
 
@@ -52,7 +52,9 @@ namespace OpenSim.Services.MessagingService
             if (handlerConfig.GetString("SyncMessagePosterServiceHandler", "") != Name)
                 return;
 
+            m_doRemote = handlerConfig.GetBoolean("SyncMessagePosterServiceDoRemote", false);
             registry.RegisterModuleInterface<ISyncMessagePosterService>(this);
+            Init(registry, Name, "", "/messaging/");
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -67,16 +69,74 @@ namespace OpenSim.Services.MessagingService
 
         #region ISyncMessagePosterService Members
 
-        public void Post(OSDMap request, ulong RegionHandle)
+        public void Post(string url, OSDMap request)
         {
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(
-                RegionHandle.ToString(), request);
+            if (m_doRemote)
+            {
+                Util.FireAndForget((o) =>
+                {
+                    PostInternal(true, url, request);
+                });
+            }
+            else
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
 
-        public void Get(OSDMap request, UUID userID, ulong RegionHandle, GetResponse response)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public void PostInternal(bool remote, string url, OSDMap request)
         {
-            response(m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(
-                RegionHandle.ToString(), request));
+            if (remote)
+                DoRemoteByURLForced(url + "/messaging/", false, url + "/messaging/", request);
+            else
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+        }
+
+        public void PostToServer(OSDMap request)
+        {
+            if (m_doRemote)
+            {
+                Util.FireAndForget((o) =>
+                {
+                    PostToServerInternal(true, request);
+                });
+            }
+            else
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public void PostToServerInternal(bool remote, OSDMap request)
+        {
+            if (remote)
+                DoRemoteByURL("SyncMessageServerURI", false, request);
+            else
+                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+        }
+
+        public void Get(string url, OSDMap request, GetResponse response)
+        {
+            if (m_doRemote)
+            {
+                Util.FireAndForget((o) =>
+                {
+                    response(GetInternal(true, url, request));
+                });
+            }
+            else
+                response(m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request));
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public OSDMap GetInternal(bool remote, string url, OSDMap request)
+        {
+            if (remote)
+            {
+                if (url != "")
+                    return DoRemoteByURLForced(url + "/messaging/", false, url, request) as OSDMap;
+                else
+                    return DoRemoteByURL("SyncMessageServerURI", false, url, request) as OSDMap;
+            }
+            return m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
 
         #endregion

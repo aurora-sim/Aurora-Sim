@@ -572,7 +572,7 @@ namespace Aurora.Modules.Groups
                                     message["AgentID"] = thismember.AvatarKey;
                                     message["Message"] = ChatterBoxSessionAgentListUpdates(session.SessionID,
                                                                                            Us.ToArray(), "ENTER");
-                                    amps.Post(message, SP.Scene.RegionInfo.RegionHandle);
+                                    amps.PostToServer(message);
                                 }
                             }
                         }
@@ -801,7 +801,7 @@ namespace Aurora.Modules.Groups
                                         message["AgentID"] = AgentID;
                                         message["Message"] = ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(),
                                                                                                "ENTER");
-                                        amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
+                                        amps.PostToServer(message);
                                     }
                                 }
                             }

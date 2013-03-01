@@ -49,7 +49,7 @@ namespace Aurora.Framework
     {
         private IGenericsConnector m_genericsConnector;
 
-        public new void Init(IRegistryCore registry, string name)
+        public void Init(IRegistryCore registry, string name)
         {
             base.Init(registry, name);
             //flip it

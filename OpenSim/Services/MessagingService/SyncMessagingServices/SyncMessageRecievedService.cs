@@ -36,24 +36,18 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class MessagingServiceInHandler : IService, IAsyncMessageRecievedService, IGridRegistrationUrlModule
+    public class SyncMessageRecievedService : IService, ISyncMessageRecievedService
     {
-        protected bool m_enabled;
-
-        private IRegistryCore m_registry;
-
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public bool DoMultiplePorts { get { return false; } }
-
-        #region IAsyncMessageRecievedService Members
+        #region ISyncMessageRecievedService Members
 
         public event MessageReceived OnMessageReceived;
 
-        public OSDMap FireMessageReceived(string SessionID, OSDMap message)
+        public OSDMap FireMessageReceived(OSDMap message)
         {
             OSDMap result = null;
             if (OnMessageReceived != null)
@@ -69,62 +63,15 @@ namespace OpenSim.Services.MessagingService
 
         #endregion
 
-        #region IGridRegistrationUrlModule Members
-
-        public string UrlName
-        {
-            get { return "MessagingServerURI"; }
-        }
-
-        public void AddExistingUrlForClient(string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, SessionID));
-        }
-
-        public string GetUrlForRegisteringClient(string SessionID, uint port)
-        {
-            string url = "/messagingservice" + UUID.Random();
-
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, SessionID));
-
-            return url;
-        }
-
-        public void RemoveUrlForClient(string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
-        }
-
-        #endregion
-
         #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("MessagingServiceInHandler", "") != Name)
-                return;
-            registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
-            m_enabled = true;
+            registry.RegisterModuleInterface<ISyncMessageRecievedService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_registry = registry;
-            if (!m_enabled)
-            {
-                IAsyncMessageRecievedService service = registry.RequestModuleInterface<IAsyncMessageRecievedService>();
-                if (service == null)
-                    registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
-                        //Register so that we have an internal message handler, but don't add the external handler
-                return;
-            }
-            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
         public void FinishedStartup()

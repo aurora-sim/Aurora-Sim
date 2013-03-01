@@ -112,8 +112,6 @@ namespace Aurora.Modules.Land
         private int m_update_land = 200;
                     //Check whether we need to rebuild the parcel prim count and other land related functions
 
-        private bool m_usePrivateParcelAsBan = true;
-
         public int[,] LandIDList
         {
             get { return m_landIDList; }
@@ -138,7 +136,6 @@ namespace Aurora.Modules.Land
                 m_minutesBeforeTimer = config.GetInt("MinutesBeforeTimerUpdate", m_minutesBeforeTimer);
                 _godParcelOwner = config.GetString("GodParcelOwner", "");
                 UseDwell = config.GetBoolean("AllowDwell", true);
-                m_usePrivateParcelAsBan = config.GetBoolean("UsePrivateParcelAsBan", m_usePrivateParcelAsBan);
             }
         }
 

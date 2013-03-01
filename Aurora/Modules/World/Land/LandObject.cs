@@ -475,29 +475,17 @@ namespace Aurora.Modules.Land
                 {
                     ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
                     bool found = false;
-#if (!ISWIN)
-                    foreach (ParcelManager.ParcelAccessEntry pae in LandData.ParcelAccessList)
-                    {
-                        if (avatar == pae.AgentID && AccessList.Access == pae.Flags)
-                        {
-                            found = true;
-                            entry = pae;
-                            break;
-                        }
-                    }
-#else
                     foreach (ParcelManager.ParcelAccessEntry pae in LandData.ParcelAccessList.Where(pae => avatar == pae.AgentID && AccessList.Access == pae.Flags))
                     {
                         found = true;
                         entry = pae;
                         break;
                     }
-#endif
 
                     //If they are not on the access list and are not the owner
                     if (!found)
                     {
-                        if ((LandData.Flags & (uint)ParcelFlags.UseAccessGroup) > 0)
+                        if ((LandData.Flags & (uint)ParcelFlags.UseAccessGroup) != 0)
                         {
                             IScenePresence SP = m_scene.GetScenePresence(avatar);
                             if (SP != null && LandData.GroupID == SP.ControllingClient.ActiveGroupId)
