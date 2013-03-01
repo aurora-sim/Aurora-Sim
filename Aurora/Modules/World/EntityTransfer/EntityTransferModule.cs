@@ -295,7 +295,7 @@ namespace Aurora.Modules.EntityTransfer
                 {
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
-                    syncPoster.Get(UUID.Zero, SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
+                    syncPoster.Get("", SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
                         agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle),
                         (map) =>
                         {
@@ -617,7 +617,7 @@ namespace Aurora.Modules.EntityTransfer
                         agent.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                     if (syncPoster != null)
                     {
-                        syncPoster.Get(UUID.Zero, SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
+                        syncPoster.Get("", SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
                             agent.Velocity, agentCircuit, cAgent,
                             agent.Scene.RegionInfo.RegionHandle),
                             (map) =>

@@ -9,10 +9,10 @@
     ;;
     ;; Change this to your grid-wide grid server
     ServerURI = "http://127.0.0.1:8003/server/"
-    MessagingServerURI = "http://127.0.0.1:8003/messaging/"  
 	
     AssetServerURI = "http://127.0.0.1:8010/asset/"
 	AvatarServerURI = "http://127.0.0.1:8011/avatar/"
     GridServerURI = "http://127.0.0.1:8012/grid/" 
     InventoryServerURI = "http://127.0.0.1:8013/inventory/"
-    UserAccountServerURI = "http://127.0.0.1:8014/user/"
+    SyncMessageServerURI = "http://127.0.0.1:8014/syncmessage/"  
+    UserAccountServerURI = "http://127.0.0.1:8015/user/"

@@ -83,6 +83,7 @@ namespace Aurora.Framework
             Enabled = true;
             m_registry = registry;
             m_name = name;
+            m_password = password;
             bool openServerHandler = false;
             uint serverHandlerPort = 0;
             ISimulationBase simBase = registry == null ? null : registry.RequestModuleInterface<ISimulationBase>();

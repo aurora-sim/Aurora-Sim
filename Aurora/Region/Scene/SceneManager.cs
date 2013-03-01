@@ -226,6 +226,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Do this here so that we don't have issues later when startup complete messages start coming in
             m_scene = scene;
+            MainConsole.Instance.ConsoleScene = scene;
             m_simulationDataService.SetRegion(scene);
 
             if (OnAddedScene != null)

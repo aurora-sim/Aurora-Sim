@@ -57,7 +57,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "request"></param>
         /// <returns></returns>
-        void Get(UUID regionID, OSDMap request, GetResponse response);
+        void Get(string url, OSDMap request, GetResponse response);
     }
 
     public delegate OSDMap MessageReceived(OSDMap message);

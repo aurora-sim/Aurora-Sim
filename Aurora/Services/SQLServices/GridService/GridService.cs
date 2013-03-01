@@ -979,20 +979,6 @@ namespace Aurora.Services.SQLServices.GridService
             Dictionary<Vector3, int> Positions = new Dictionary<Vector3, int>();
             //Get a list of all the clients in the region and add them
             List<UserInfo> userInfos = m_agentInfoService.GetUserInfos(region.RegionID);
-            if (userInfos == null)
-            {
-                mapItemReply mapitem = new mapItemReply
-                {
-                    x = (uint)(region.RegionLocX + 1),
-                    y = (uint)(region.RegionLocY + 1),
-                    id = UUID.Zero,
-                    name = Util.Md5Hash(region.RegionName + Environment.TickCount.ToString()),
-                    Extra = 0,
-                    Extra2 = 0
-                };
-                mapItems.Add(mapitem);
-                return mapItems;
-            }
             foreach (UserInfo userInfo in userInfos)
             {
                 //Normalize the positions to 5 meter blocks so that agents stack instead of cover up each other

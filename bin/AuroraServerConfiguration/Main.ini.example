@@ -26,23 +26,14 @@
     SyncMessagePosterServiceHandler = SyncMessagePosterService
     UserAccountHandler = UserAccountService
 
-    GridServiceOpenServerHandler = false
-    GridServiceServerHandlerPort = 8004
-
     AssetServiceOpenServerHandler = false
-    AssetServiceServerHandlerPort = 8005
-
-    InventoryServiceOpenServerHandler = false
-    InventoryServiceServerHandlerPort = 8006
-
-    UserAccountServiceOpenServerHandler = false
-    UserAccountServiceServerHandlerPort = 8007
-
     AvatarServiceOpenServerHandler = false
-    AvatarServiceServerHandlerPort = 8008
+    GridServiceOpenServerHandler = false
+    InventoryServiceOpenServerHandler = false
+    UserAccountServiceOpenServerHandler = false
 
     SyncMessagePosterServiceOpenServerHandler = true
-    SyncMessagePosterServiceServerHandlerPort = 8003
+    SyncMessagePosterServiceServerHandlerPort = 8014
 	SyncMessagePosterServiceDoRemote = true
 
     LLLoginHandlerPort = 8002

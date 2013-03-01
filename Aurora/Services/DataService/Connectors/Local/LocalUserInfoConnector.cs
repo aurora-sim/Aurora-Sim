@@ -184,7 +184,7 @@ namespace Aurora.Services.DataService
             List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
 
             if (query.Count == 0)
-                return null;
+                return new List<UserInfo>();
 
             return ParseQuery(query);
         }

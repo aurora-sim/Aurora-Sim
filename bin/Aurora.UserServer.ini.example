@@ -11,7 +11,7 @@
 
 [Handlers]
     UserAccountServiceOpenServerHandler = true
-    UserAccountServiceServerHandlerPort = 8014
+    UserAccountServiceServerHandlerPort = 8015
 
 [Includes]
 	Include-Base = Aurora.ServersBase.ini

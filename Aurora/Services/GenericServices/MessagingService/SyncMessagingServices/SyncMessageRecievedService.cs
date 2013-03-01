@@ -36,7 +36,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class MessagingServiceInHandler : IService, ISyncMessageRecievedService
+    public class SyncMessageRecievedService : IService, ISyncMessageRecievedService
     {
         public string Name
         {
