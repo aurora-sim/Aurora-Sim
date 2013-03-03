@@ -65,15 +65,22 @@ namespace OpenSim.Services.CapsService
 
         public virtual bool Enqueue(OSD o, UUID agentID, UUID regionID)
         {
+            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
+            System.Diagnostics.StackFrame frame = stackTrace.GetFrame(1);
+            MainConsole.Instance.Warn("Enqueue - " + frame.GetMethod().Name);
             return Enqueue(OSDParser.SerializeLLSDXmlString(o), agentID, regionID);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool Enqueue(string o, UUID agentID, UUID regionID)
         {
-            object remoteValue = DoRemote(o, agentID, regionID);
-            if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+            if (m_doRemoteCalls && m_doRemoteOnly)
+            {
+                Util.FireAndForget((none) =>
+                    {
+                        EnqueueInternal(o, agentID, regionID);
+                    });
+                return true;
+            }
 
             //Find the CapsService for the user and enqueue the event
             IRegionClientCapsService service = GetRegionClientCapsService(agentID, regionID);
@@ -86,6 +93,15 @@ namespace OpenSim.Services.CapsService
 
             OSD ev = OSDParser.DeserializeLLSDXml(o);
             return eventQueueService.Enqueue(ev);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual void EnqueueInternal(string o, UUID agentID, UUID regionID)
+        {
+            if (m_doRemoteCalls && m_doRemoteOnly)
+                DoRemote(o, agentID, regionID);
+            else
+                Enqueue(o, agentID, regionID);
         }
 
         #endregion
@@ -326,29 +342,12 @@ namespace OpenSim.Services.CapsService
             OSDMap events = new OSDMap();
             try
             {
-                OSD element;
+                OSDArray array = new OSDArray();
                 lock (queue)
                 {
                     if (queue.Count == 0)
                         return NoEvents(requestID, pAgentId);
-                    element = queue.Dequeue();
-                }
 
-                OSDArray array = new OSDArray();
-                if (element == null) // didn't have an event in 15s
-                {
-                    //return NoEvents(requestID, pAgentId);
-                    // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
-                    OSDMap keepAliveEvent = new OSDMap(2)
-                                                {{"body", new OSDMap()}, {"message", new OSDString("FAKEEVENT")}};
-                    element = keepAliveEvent;
-                    array.Add(keepAliveEvent);
-                    //MainConsole.Instance.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
-                }
-
-                array.Add(element);
-                lock (queue)
-                {
                     while (queue.Count > 0)
                     {
                         array.Add(queue.Dequeue());
@@ -356,36 +355,9 @@ namespace OpenSim.Services.CapsService
                     }
                 }
 
-                int removeAt = -1;
-                //Look for disable Simulator EQMs so that we can disable ourselves safely
-                foreach (OSD ev in array)
-                {
-                    try
-                    {
-                        if (ev.Type == OSDType.Map)
-                        {
-                            OSDMap map = (OSDMap) ev;
-                            if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
-                            {
-                                MainConsole.Instance.Debug("[EQService]: Sim Request to Disable Simulator " + m_service.RegionHandle);
-                                removeAt = array.IndexOf(ev);
-                                //This will be the last bunch of EQMs that go through, so we can safely die now
-                                //Except that we can't do this, the client will freak if we do this
-                                //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
-                            }
-                        }
-                    }
-                    catch
-                    {
-                    }
-                }
-                if (removeAt != -1)
-                    array.RemoveAt(removeAt);
-
                 events.Add("events", array);
 
                 events.Add("id", new OSDInteger(m_ids));
-                m_ids++;
             }
             catch (Exception ex)
             {
@@ -421,78 +393,6 @@ namespace OpenSim.Services.CapsService
             return System.Text.Encoding.UTF8.GetBytes("Upstream error: ");
         }
 
-        public byte[] ProcessQueue(OSHttpResponse response, UUID agentID)
-        {
-            // TODO: this has to be redone to not busy-wait (and block the thread),
-            // TODO: as soon as we have a non-blocking way to handle HTTP-requests.
-
-            //            if (MainConsole.Instance.IsDebugEnabled)
-            //            { 
-            //                String debug = "[EVENTQUEUE]: Got request for agent {0} in region {1} from thread {2}: [  ";
-            //                foreach (object key in request.Keys)
-            //                {
-            //                    debug += key.ToString() + "=" + request[key].ToString() + "  ";
-            //                }
-            //                MainConsole.Instance.DebugFormat(debug + "  ]", agentID, m_scene.RegionInfo.RegionName, System.Threading.Thread.CurrentThread.Name);
-            //            }
-            //MainConsole.Instance.Warn("Got EQM get at " + m_handler.CapsURL);
-            OSD element = null;
-            lock (queue)
-            {
-                if (queue.Count != 0)
-                    element = queue.Dequeue();
-            }
-
-            if (element == null)
-            {
-                //MainConsole.Instance.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
-                return NoEvents(response);
-            }
-
-            OSDArray array = new OSDArray {element};
-            lock (queue)
-            {
-                while (queue.Count > 0)
-                {
-                    OSD item = queue.Dequeue();
-                    if (item != null)
-                    {
-                        OSDMap map = (OSDMap) item;
-                        if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
-                        {
-                            continue;
-                        }
-                        array.Add(item);
-                        m_ids++;
-                    }
-                }
-            }
-            //Look for disable Simulator EQMs so that we can disable ourselves safely
-            foreach (OSD ev in array)
-            {
-                try
-                {
-                    OSDMap map = (OSDMap) ev;
-                    if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
-                    {
-                        //Disabled above
-                        //This will be the last bunch of EQMs that go through, so we can safely die now
-                        m_service.ClientCaps.RemoveCAPS(m_service.RegionID);
-                    }
-                }
-                catch
-                {
-                }
-            }
-
-            OSDMap events = new OSDMap {{"events", array}, {"id", new OSDInteger(m_ids)}};
-
-            m_ids++;
-
-            response.ContentType = "application/xml";
-            return OSDParser.SerializeLLSDXmlBytes(events);
-        }
-
         public Hashtable EventQueuePoll(Hashtable request)
         {
             return new Hashtable();
@@ -522,7 +422,7 @@ namespace OpenSim.Services.CapsService
                                                            delegate(string path, System.IO.Stream request,
                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                            {
-                                                               return ProcessQueue(httpResponse, service.AgentID);
+                                                               return new byte[0];
                                                            }));
 
             // This will persist this beyond the expiry of the caps handlers

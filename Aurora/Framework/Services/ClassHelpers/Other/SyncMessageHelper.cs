@@ -235,12 +235,6 @@ namespace Aurora.Framework
             return buildEvent("RegionIsOnline", llsdBody, UUID.Zero, requestingRegion);
         }
 
-        public static OSDMap DisableSimulator(UUID AgentID, UUID requestingRegion)
-        {
-            OSDMap llsdBody = new OSDMap();
-            return buildEvent("DisableSimulator", llsdBody, AgentID, requestingRegion);
-        }
-
         public static OSDMap buildEvent(string eventName, OSD eventBody, UUID AgentID, UUID requestingRegion)
         {
             OSDMap llsdEvent = new OSDMap(2)

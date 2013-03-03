@@ -294,8 +294,9 @@ namespace Aurora.RedisServices.AssetService
         {
             AssetBase asset = null;
 
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
+#if DEBUG
+            long startTime = System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
             try
             {
                 RedisEnsureConnection((conn) =>
@@ -319,9 +320,11 @@ namespace Aurora.RedisServices.AssetService
             }
             finally
             {
-                sw.Stop();
+#if DEBUG
+                long endTime = System.Diagnostics.Stopwatch.GetTimestamp();
                 if (MainConsole.Instance != null && asset != null)
-                    MainConsole.Instance.Warn("[REDIS ASSET SERVICE]: Took " + sw.ElapsedMilliseconds + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
+                    MainConsole.Instance.Warn("[REDIS ASSET SERVICE]: Took " + (endTime - startTime) /10000 + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
+#endif
             }
             return asset;
         }

@@ -122,17 +122,6 @@ namespace OpenSim.Services.MessagingService
                         Util.FireAndForget((o) => EnableChildAgentsForRegion(requestingGridRegion));
                 }
             }
-            else if (message["Method"] == "DisableSimulator")
-            {
-                //KILL IT!
-                if (regionCaps == null || clientCaps == null)
-                    return null;
-                IEventQueueService eventQueue = m_registry.RequestModuleInterface<IEventQueueService>();
-                eventQueue.DisableSimulator(regionCaps.AgentID, regionCaps.RegionHandle, regionCaps.Region.RegionID);
-                //regionCaps.Close();
-                //clientCaps.RemoveCAPS(requestingRegion);
-                regionCaps.Disabled = true;
-            }
             else if (message["Method"] == "ArrivedAtDestination")
             {
                 if (regionCaps == null || clientCaps == null)
@@ -295,7 +284,6 @@ namespace OpenSim.Services.MessagingService
                     Where(regionClient => regionClient.RegionHandle != regionCaps.RegionHandle && regionClient.Region != null))
                 {
                     SimulationService.CloseAgent(regionClient.Region, regionCaps.AgentID);
-                    eventQueue.DisableSimulator(regionCaps.AgentID, regionCaps.RegionHandle, regionCaps.Region.RegionID);
                 }
             }
             if (kickRootAgent && regionCaps.Region != null) //Kick the root agent then

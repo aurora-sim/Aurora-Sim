@@ -270,19 +270,14 @@ namespace Aurora.Modules.EntityTransfer
             //Fix the position
             agent.Position = position;
 
-            IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
-            if (eq != null)
+            ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
+            if (syncPoster != null)
             {
-                ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
-                if (syncPoster != null)
-                {
-                    //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
-                    //  messages if they need to be called and deals with the callback
-                    syncPoster.PostToServer(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
-                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionID));
-                }
+                //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
+                //  messages if they need to be called and deals with the callback
+                syncPoster.PostToServer(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
+                    agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionID));
             }
-
         }
 
         public void FailedToTeleportAgent(GridRegion failedCrossingRegion, UUID agentID, string reason, bool isCrossing)
@@ -581,23 +576,18 @@ namespace Aurora.Modules.EntityTransfer
                 AgentCircuitData agentCircuit = BuildCircuitDataForPresence(agent, attemptedPos);
                 agentCircuit.teleportFlags = (uint)TeleportFlags.ViaRegionID;
 
-                IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
-                if (eq != null)
+                //This does UpdateAgent and closing of child agents
+                //  messages if they need to be called
+                ISyncMessagePosterService syncPoster =
+                    agent.Scene.RequestModuleInterface<ISyncMessagePosterService>();
+                if (syncPoster != null)
                 {
-                    //This does UpdateAgent and closing of child agents
-                    //  messages if they need to be called
-                    ISyncMessagePosterService syncPoster =
-                        agent.Scene.RequestModuleInterface<ISyncMessagePosterService>();
-                    if (syncPoster != null)
-                    {
-                        syncPoster.PostToServer(SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
-                            agent.Velocity, agentCircuit, cAgent,
-                            agent.Scene.RegionInfo.RegionID));
-                    }
+                    syncPoster.PostToServer(SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
+                        agent.Velocity, agentCircuit, cAgent,
+                        agent.Scene.RegionInfo.RegionID));
                 }
-
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MainConsole.Instance.Warn("[EntityTransferModule]: Exception in crossing: " + ex);
             }
