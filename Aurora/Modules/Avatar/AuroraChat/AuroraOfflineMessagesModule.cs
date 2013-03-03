@@ -181,9 +181,7 @@ namespace Aurora.Modules.Chat
                 // invitations
                 //
                 IM.offline = 1;
-                IScene s = FindScene(client.AgentId);
-                if (s != null)
-                    s.EventManager.TriggerIncomingInstantMessage(IM);
+                m_Scene.EventManager.TriggerIncomingInstantMessage(IM);
             }
         }
 

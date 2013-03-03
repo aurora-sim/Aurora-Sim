@@ -512,9 +512,6 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
                 writer.WriteDir("newstylewater");
                 writer.WriteDir("newstylerevertwater");
-                writer.WriteDir("regioninfo");
-                byte[] regionData = OSDParser.SerializeLLSDBinary(m_scene.RegionInfo.PackRegionInfoData());
-                writer.WriteFile("regioninfo/regioninfo", regionData);
 
                 writer.WriteDir("regioninfo");
                 byte[] regionData = OSDParser.SerializeLLSDBinary(m_scene.RegionInfo.PackRegionInfoData());
