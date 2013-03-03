@@ -1273,7 +1273,8 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     //Move has edit permission as well
-                    if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                    if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId) &&
+                        m_parentScene.Permissions.CanObjectEntry(((SceneObjectGroup)entity).UUID, false, pos, remoteClient.AgentId))
                     {
                         ((SceneObjectGroup)entity).UpdateGroupPosition(pos, SaveUpdate);
                     }
@@ -1571,7 +1572,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (TryGetEntity(LocalID, out entity))
             {
                 SceneObjectGroup original = (SceneObjectGroup)entity;
-                if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition))
+                string reason = "You cannot duplicate this object.";
+                if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition) &&
+                    m_parentScene.Permissions.CanRezObject(1, AgentID, original.AbsolutePosition + offset, out reason))
                 {
                     ISceneEntity duplicatedEntity = DuplicateEntity (original);
 
@@ -1621,6 +1624,8 @@ namespace OpenSim.Region.Framework.Scenes
                     duplicatedGroup.AbsolutePosition = duplicatedGroup.AbsolutePosition;
                     return true;
                 }
+                else
+                    GetScenePresence(AgentID).ControllingClient.SendAlertMessage(reason);
             }
             return false;
         }

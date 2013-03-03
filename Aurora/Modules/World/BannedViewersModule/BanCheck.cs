@@ -450,16 +450,6 @@ namespace Aurora.Modules.Ban
                 reason = "Viewer is banned";
                 return false;
             }
-            //Overkill, and perm-bans people who only log in with a bad viewer once
-            //foreach (string mac in info.KnownMacs)
-            {
-                if (info.LastKnownMac.Contains("000"))
-                {
-                    //Ban this asshole
-                    reason = "Viewer is blocked (MAC)";
-                    return false;
-                }
-            }
 
             reason = "";
             return true;

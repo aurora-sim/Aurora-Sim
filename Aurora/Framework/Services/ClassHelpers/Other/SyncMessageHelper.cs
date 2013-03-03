@@ -85,6 +85,25 @@ namespace Aurora.Framework
             return buildEvent("AgentStatusChanges", llsdBody, FriendToInformID, UUID.Zero);
         }
 
+        /// <summary>
+        ///   Tells the region to tell the given agent that the other agent is online
+        /// </summary>
+        /// <param name = "AgentID">Agent that is either logging in or logging out</param>
+        /// <param name = "FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
+        /// <param name = "newStatus">Whether they are logged in or out</param>
+        /// <returns></returns>
+        public static OSDMap AgentStatusChanges(List<UUID> AgentIDs, UUID FriendToInformID, bool newStatus)
+        {
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"AgentIDs", AgentIDs.ToOSDArray()},
+                                      {"FriendToInformID", FriendToInformID},
+                                      {"NewStatus", newStatus}
+                                  };
+
+            return buildEvent("AgentStatusChanges", llsdBody, FriendToInformID, 0);
+        }
+
         public static OSDMap UpdateEstateInfo(uint EstateID, UUID RegionID)
         {
             OSDMap llsdBody = new OSDMap {{"EstateID", EstateID}, {"RegionID", RegionID}};

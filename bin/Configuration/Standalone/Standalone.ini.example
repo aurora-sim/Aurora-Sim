@@ -46,7 +46,6 @@
     LLLoginHandlerPort = 0
 
     GridInfoInHandler = GridInfoServerInConnector
-    MessagingServiceInHandler = MessagingServiceInHandler
 
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService

@@ -516,6 +516,10 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 byte[] regionData = OSDParser.SerializeLLSDBinary(m_scene.RegionInfo.PackRegionInfoData());
                 writer.WriteFile("regioninfo/regioninfo", regionData);
 
+                writer.WriteDir("regioninfo");
+                byte[] regionData = OSDParser.SerializeLLSDBinary(m_scene.RegionInfo.PackRegionInfoData());
+                writer.WriteFile("regioninfo/regioninfo", regionData);
+
                 ITerrainModule tModule = m_scene.RequestModuleInterface<ITerrainModule>();
                 if (tModule != null)
                 {

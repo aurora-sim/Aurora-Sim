@@ -47,7 +47,7 @@ namespace Aurora.Framework
 
         #endregion
 
-        public const string VERSION_NUMBER = "0.5.3";
+        public const string VERSION_NUMBER = "0.5.4";
         public const Flavour VERSION_FLAVOUR = Flavour.Dev;
         public const string VERSION_NAME = "Aurora";
 
@@ -67,7 +67,7 @@ namespace Aurora.Framework
         ///  of the code that is too old. 
         ///
         ///</value>
-        public static readonly int MajorInterfaceVersion = 6;
+        public static readonly int MajorInterfaceVersion = 7;
 
         public static string Version
         {

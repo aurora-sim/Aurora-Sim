@@ -248,7 +248,7 @@ namespace Aurora.Services.DataService
                 row["HasAttachment"] = (ItemID != UUID.Zero) ? 1 : 0;
                 row["ItemID"] = ItemID;
                 row["AssetType"] = AssetType;
-                row["ItemName"] = ItemName;
+                row["ItemName"] = ItemName == null ? "" : ItemName;
 
                 data.Insert("osgroupnotice", row);
             }

@@ -4,7 +4,6 @@
     FreeswitchInHandler = FreeswitchServerConnector
     GridInfoInHandler = GridInfoServerInConnector
     GridInHandler = GridServiceConnector
-    MessagingServiceInHandler = MessagingServiceInHandler
     LLLoginHandler = LLLoginServiceInConnector
     EventQueueInHandler = EventQueueHandler
 
@@ -37,6 +36,10 @@
 	SyncMessagePosterServiceDoRemote = true
 
     LLLoginHandlerPort = 8002
+
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8003
+	SyncMessagePosterServiceDoRemote = true
 
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector
