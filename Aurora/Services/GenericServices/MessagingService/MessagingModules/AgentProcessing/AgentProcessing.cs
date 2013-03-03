@@ -532,6 +532,7 @@ namespace OpenSim.Services.MessagingService
                 else
                 {
                     clientCaps.RemoveCAPS(neighbor.RegionID);
+                    reason = "Could not contact simulator";
                     MainConsole.Instance.Error("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName +
                                 ", reason: " + reason);
                     return false;
@@ -1132,6 +1133,15 @@ namespace OpenSim.Services.MessagingService
                 info.ActiveGroup = groupsConn.GetGroupMembershipData(aCircuit.AgentID, UUID.Zero, aCircuit.AgentID);
                 info.GroupMemberships = groupsConn.GetAgentGroupMemberships(aCircuit.AgentID, aCircuit.AgentID);
             }
+
+            IOfflineMessagesConnector offlineMessConn = Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
+            if (offlineMessConn != null)
+                info.OfflineMessages = offlineMessConn.GetOfflineMessages(aCircuit.AgentID);
+
+            IMuteListConnector muteConn = Aurora.DataManager.DataManager.RequestPlugin<IMuteListConnector>();
+            if (muteConn != null)
+                info.MuteList = muteConn.GetMuteList(aCircuit.AgentID);
+
             aCircuit.OtherInformation["CachedUserInfo"] = info.ToOSD();
             return SimulationService.CreateAgent(region, aCircuit, aCircuit.teleportFlags, null,
                                                     out requestedUDPPort, out reason);

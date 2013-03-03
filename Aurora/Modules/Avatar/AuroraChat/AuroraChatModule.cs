@@ -302,12 +302,24 @@ namespace Aurora.Modules.Chat
             MuteList[] List = new MuteList[0];
             if (MuteListConnector == null)
                 return List;
-            if (!MuteListCache.TryGetValue(AgentID, out List))
-                List = MuteListConnector.GetMuteList(AgentID).ToArray();
-            else
-                Cached = true;
+            lock (MuteListCache)
+            {
+                if (!MuteListCache.TryGetValue(AgentID, out List))
+                {
+                    List = MuteListConnector.GetMuteList(AgentID).ToArray();
+                    MuteListCache.Add(AgentID, List);
+                }
+                else
+                    Cached = true;
+            }
 
             return List;
+        }
+
+        void UpdateCachedInfo(UUID agentID, CachedUserInfo info)
+        {
+            lock (MuteListCache)
+                MuteListCache[agentID] = info.MuteList.ToArray();
         }
 
         /// <summary>
@@ -328,7 +340,8 @@ namespace Aurora.Modules.Chat
                                     MuteType = Flags.ToString()
                                 };
             MuteListConnector.UpdateMute(Mute, AgentID);
-            MuteListCache.Remove(AgentID);
+            lock (MuteListCache)
+                MuteListCache.Remove(AgentID);
         }
 
         /// <summary>
@@ -343,7 +356,8 @@ namespace Aurora.Modules.Chat
             if (MuteID != UUID.Zero)
             {
                 MuteListConnector.DeleteMute(MuteID, AgentID);
-                MuteListCache.Remove(AgentID);
+                lock (MuteListCache)
+                    MuteListCache.Remove(AgentID);
             }
         }
 
@@ -389,6 +403,7 @@ namespace Aurora.Modules.Chat
             scene.EventManager.OnRegisterCaps += RegisterCaps;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             scene.EventManager.OnChatSessionRequest += OnChatSessionRequest;
+            scene.EventManager.OnCachedUserInfo += UpdateCachedInfo;
 
             scene.RegisterModuleInterface<IMuteListModule>(this);
             scene.RegisterModuleInterface<IChatModule>(this);
@@ -429,6 +444,7 @@ namespace Aurora.Modules.Chat
             scene.EventManager.OnRegisterCaps -= RegisterCaps;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
             scene.EventManager.OnChatSessionRequest -= OnChatSessionRequest;
+            scene.EventManager.OnCachedUserInfo -= UpdateCachedInfo;
 
             m_scenes.Remove(scene);
             scene.UnregisterModuleInterface<IMuteListModule>(this);
@@ -659,8 +675,11 @@ namespace Aurora.Modules.Chat
             MuteList[] List = GetMutes(client.AgentId, out cached);
             if (List == null)
                 return;
-            if (cached)
+            /*if (cached)
+            {
                 client.SendUseCachedMuteList();
+                return;
+            }*/
 
             Dictionary<UUID, bool> cache = new Dictionary<UUID, bool>();
             foreach (MuteList mute in List)

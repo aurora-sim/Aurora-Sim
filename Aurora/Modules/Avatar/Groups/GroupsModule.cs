@@ -1117,6 +1117,7 @@ namespace Aurora.Modules.Groups
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             scene.EventManager.OnClientLogin += EventManager_OnClientLogin;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
+            scene.EventManager.OnCachedUserInfo += UpdateCachedData;
             // The InstantMessageModule itself doesn't do this, 
             // so lets see if things explode if we don't do it
             // scene.EventManager.OnClientClosed += OnClientClosed;
@@ -1136,6 +1137,7 @@ namespace Aurora.Modules.Groups
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
             scene.EventManager.OnClientLogin -= EventManager_OnClientLogin;
             scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
+            scene.EventManager.OnCachedUserInfo -= UpdateCachedData;
         }
 
         public void Close()

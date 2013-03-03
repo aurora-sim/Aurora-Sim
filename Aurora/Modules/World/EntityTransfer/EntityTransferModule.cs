@@ -944,9 +944,7 @@ namespace Aurora.Modules.EntityTransfer
 	                conn.CacheAgent(cache.AgentInfo);
 	            scene.UserAccountService.CacheAccount(cache.UserAccount);
 	
-	            IGroupsModule groupsMod = scene.RequestModuleInterface<IGroupsModule>();
-	            if (groupsMod != null)
-	                groupsMod.UpdateCachedData(cache.UserAccount.PrincipalID, cache);
+                scene.EventManager.TriggerOnUserCachedData(cache.UserAccount.PrincipalID, cache);
 			}
         }
 

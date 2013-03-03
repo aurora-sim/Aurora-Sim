@@ -39,13 +39,6 @@ namespace OpenSim.Region.Framework.Interfaces
         event NewGroupNotice OnNewGroupNotice;
 
         /// <summary>
-        /// Update any cached info for the given client
-        /// </summary>
-        /// <param name="agentID"></param>
-        /// <param name="cachedInfo"></param>
-        void UpdateCachedData(UUID agentID, CachedUserInfo cachedInfo);
-
-        /// <summary>
         /// Sends a new notice out to all users in the sim
         /// </summary>
         /// <param name="remoteClient"></param>

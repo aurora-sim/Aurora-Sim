@@ -39,6 +39,8 @@ namespace OpenSim.Services.Interfaces
         public UserAccount UserAccount;
         public GroupMembershipData ActiveGroup;
         public List<GroupMembershipData> GroupMemberships = new List<GroupMembershipData>();
+        public List<GridInstantMessage> OfflineMessages = new List<GridInstantMessage>();
+        public List<MuteList> MuteList = new List<MuteList>();
 
         public override void FromOSD(OSDMap map)
         {
@@ -53,12 +55,24 @@ namespace OpenSim.Services.Interfaces
                 ActiveGroup = new GroupMembershipData();
                 ActiveGroup.FromOSD((OSDMap)(map["ActiveGroup"]));
             }
-            GroupMemberships = ((OSDArray)map["GroupMemberships"]).ConvertAll<GroupMembershipData>((o) => 
-                {
-                    GroupMembershipData group = new GroupMembershipData();
-                    group.FromOSD((OSDMap)o);
-                    return group;
-                });
+            GroupMemberships = ((OSDArray)map["GroupMemberships"]).ConvertAll<GroupMembershipData>((o) =>
+            {
+                GroupMembershipData group = new GroupMembershipData();
+                group.FromOSD((OSDMap)o);
+                return group;
+            });
+            OfflineMessages = ((OSDArray)map["OfflineMessages"]).ConvertAll<GridInstantMessage>((o) =>
+            {
+                GridInstantMessage group = new GridInstantMessage();
+                group.FromOSD((OSDMap)o);
+                return group;
+            });
+            MuteList = ((OSDArray)map["MuteList"]).ConvertAll<MuteList>((o) =>
+            {
+                MuteList group = new MuteList();
+                group.FromOSD((OSDMap)o);
+                return group;
+            });
         }
 
         public override OSDMap ToOSD()
@@ -69,6 +83,8 @@ namespace OpenSim.Services.Interfaces
             if(ActiveGroup != null)
                 map["ActiveGroup"] = ActiveGroup.ToOSD();
             map["GroupMemberships"] = GroupMemberships.ToOSDArray();
+            map["OfflineMessages"] = OfflineMessages.ToOSDArray();
+            map["MuteList"] = MuteList.ToOSDArray();
             return map;
         }
     }

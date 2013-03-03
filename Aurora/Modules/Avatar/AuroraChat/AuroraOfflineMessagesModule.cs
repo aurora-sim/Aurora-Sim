@@ -40,11 +40,12 @@ namespace Aurora.Modules.Chat
     public class AuroraOfflineMessageModule : ISharedRegionModule
     {
         private bool enabled = true;
-        private readonly List<IScene> m_SceneList = new List<IScene> ();
-        IMessageTransferModule m_TransferModule = null;
+        private IScene m_Scene;
+        private IMessageTransferModule m_TransferModule = null;
         private bool m_ForwardOfflineGroupMessages = true;
         private IOfflineMessagesConnector OfflineMessagesConnector;
         private bool m_SendOfflineMessagesToEmail = false;
+        private Dictionary<UUID, List<GridInstantMessage>> m_offlineMessagesCache = new Dictionary<UUID, List<GridInstantMessage>>();
 
         public void Initialise(IConfigSource config)
         {
@@ -65,18 +66,20 @@ namespace Aurora.Modules.Chat
             m_SendOfflineMessagesToEmail = cnf.GetBoolean ("SendOfflineMessagesToEmail", m_SendOfflineMessagesToEmail);
         }
 
-        public void AddRegion (IScene scene)
+        public void PostInitialise()
+        {
+        }
+
+        public void AddRegion(IScene scene)
         {
             if (!enabled)
                 return;
 
-            lock (m_SceneList)
-            {
-                m_SceneList.Add(scene);
+            m_Scene = scene;
 
-                scene.EventManager.OnNewClient += OnNewClient;
-                scene.EventManager.OnClosingClient += OnClosingClient;
-            }
+            scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnCachedUserInfo += UpdateCachedInfo;
         }
 
         public void RegionLoaded (IScene scene)
@@ -94,7 +97,7 @@ namespace Aurora.Modules.Chat
                     scene.EventManager.OnClosingClient -= OnClosingClient;
 
                     enabled = false;
-                    m_SceneList.Clear();
+                    m_Scene = null;
 
                     MainConsole.Instance.Error("[OFFLINE MESSAGING] No message transfer module or OfflineMessagesConnector is enabled. Diabling offline messages");
                     return;
@@ -108,23 +111,15 @@ namespace Aurora.Modules.Chat
             if (!enabled)
                 return;
 
-            lock (m_SceneList)
-                m_SceneList.Remove(scene);
+            m_Scene = null;
 
             if (m_TransferModule != null)
             {
                 scene.EventManager.OnNewClient -= OnNewClient;
                 scene.EventManager.OnClosingClient -= OnClosingClient;
+                scene.EventManager.OnCachedUserInfo -= UpdateCachedInfo;
                 m_TransferModule.OnUndeliveredMessage -= UndeliveredMessage;
             }
-        }
-
-        public void PostInitialise()
-        {
-            if (!enabled)
-                return;
-
-            //MainConsole.Instance.Debug("[OFFLINE MESSAGING] Offline messages enabled");
         }
 
         public string Name
@@ -141,17 +136,16 @@ namespace Aurora.Modules.Chat
         {
         }
 
-        private IScene FindScene(UUID agentID)
-        {
-            return (from s in m_SceneList let presence = s.GetScenePresence(agentID) where presence != null && !presence.IsChildAgent select s).FirstOrDefault();
-        }
-
         private IClientAPI FindClient(UUID agentID)
         {
-            return (from s in m_SceneList
-                    select s.GetScenePresence(agentID)
-                    into presence where presence != null && !presence.IsChildAgent select presence.ControllingClient).
-                FirstOrDefault();
+           IScenePresence presence = m_Scene.GetScenePresence(agentID);
+           return (presence != null && !presence.IsChildAgent) ? presence.ControllingClient : null;
+        }
+
+        void UpdateCachedInfo(UUID agentID, CachedUserInfo info)
+        {
+            lock(m_offlineMessagesCache)
+                m_offlineMessagesCache[agentID] = info.OfflineMessages;
         }
 
         private void OnNewClient(IClientAPI client)
@@ -168,9 +162,16 @@ namespace Aurora.Modules.Chat
         {
             if (OfflineMessagesConnector == null)
                 return;
-            MainConsole.Instance.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
-            List<GridInstantMessage> msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
+            List<GridInstantMessage> msglist;
+            lock (m_offlineMessagesCache)
+            {
+                if (m_offlineMessagesCache.TryGetValue(client.AgentId, out msglist))
+                    m_offlineMessagesCache.Remove(client.AgentId);
+            }
+
+            if(msglist == null)
+                msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
             msglist.Sort(delegate(GridInstantMessage a, GridInstantMessage b)
             {
                 return a.timestamp.CompareTo(b.timestamp);
@@ -189,9 +190,7 @@ namespace Aurora.Modules.Chat
                     // invitations
                     //
                     IM.offline = 1;
-                    IScene s = FindScene(client.AgentId);
-                    if (s != null)
-                        s.EventManager.TriggerIncomingInstantMessage(IM);
+                    m_Scene.EventManager.TriggerIncomingInstantMessage(IM);
                 }
             }
         }
@@ -220,25 +219,25 @@ namespace Aurora.Modules.Chat
             {
                 if (im.dialog == 32) //Group notice
                 {
-                    IGroupsModule module = m_SceneList[0].RequestModuleInterface<IGroupsModule>();
+                    IGroupsModule module = m_Scene.RequestModuleInterface<IGroupsModule>();
                     if (module != null)
                         im = module.BuildOfflineGroupNotice(im);
                     return;
                 }
                 if (client == null) return;
-                IEmailModule emailModule = m_SceneList[0].RequestModuleInterface<IEmailModule> ();
+                IEmailModule emailModule = m_Scene.RequestModuleInterface<IEmailModule>();
                 if (emailModule != null && m_SendOfflineMessagesToEmail)
                 {
                     IUserProfileInfo profile = DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (im.toAgentID);
                     if (profile != null && profile.IMViaEmail)
                     {
-                        UserAccount account = m_SceneList[0].UserAccountService.GetUserAccount(null, im.toAgentID.ToString());
+                        UserAccount account = m_Scene.UserAccountService.GetUserAccount(null, im.toAgentID.ToString());
                         if (account != null && !string.IsNullOrEmpty(account.Email))
                         {
                             emailModule.SendEmail (UUID.Zero, account.Email, string.Format ("Offline Message from {0}", im.fromAgentName),
                                 string.Format ("Time: {0}\n", Util.ToDateTime (im.timestamp).ToShortDateString ()) +
                                 string.Format ("From: {0}\n", im.fromAgentName) +
-                                string.Format("Message: {0}\n", im.message), m_SceneList[0]);
+                                string.Format("Message: {0}\n", im.message), m_Scene);
                         }
                     }
                 }

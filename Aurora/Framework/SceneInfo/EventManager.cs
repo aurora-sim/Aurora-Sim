@@ -241,6 +241,9 @@ namespace Aurora.Framework
         public event RegionUp OnRegionUp;
         public event RegionUp OnRegionDown;
 
+        public delegate void CachedUserInfo(UUID agentID, OpenSim.Services.Interfaces.CachedUserInfo info);
+        public event CachedUserInfo OnCachedUserInfo;
+
         public class LandBuyArgs : EventArgs
         {
             public UUID agentId = UUID.Zero;
@@ -1654,6 +1657,27 @@ namespace Aurora.Framework
                                 "[EVENT MANAGER]: Delegate for StartupComplete failed - continuing.  {0} {1}",
                                 e, e.StackTrace);
                         }
+                    }
+                }
+            }
+        }
+
+        public void TriggerOnUserCachedData(UUID agentID, OpenSim.Services.Interfaces.CachedUserInfo cache)
+        {
+            CachedUserInfo handlerOnCachedUserInfo = OnCachedUserInfo;
+            if (handlerOnCachedUserInfo != null)
+            {
+                foreach (CachedUserInfo d in handlerOnCachedUserInfo.GetInvocationList())
+                {
+                    try
+                    {
+                        d(agentID, cache);
+                    }
+                    catch (Exception e)
+                    {
+                        MainConsole.Instance.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for AddToStartupQueue failed - continuing.  {0} {1}",
+                            e, e.StackTrace);
                     }
                 }
             }
