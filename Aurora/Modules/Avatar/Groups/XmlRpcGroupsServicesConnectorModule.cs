@@ -42,7 +42,7 @@ using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Modules.Groups
 {
-    public class XmlRpcGroupsServicesConnectorModule : ISharedRegionModule, IGroupsServicesConnector
+    public class XmlRpcGroupsServicesConnectorModule : INonSharedRegionModule, IGroupsServicesConnector
     {
         public const GroupPowers m_DefaultEveryonePowers = GroupPowers.AllowSetHome |
                                                            GroupPowers.Accountable |
@@ -745,7 +745,7 @@ namespace Aurora.Modules.Groups
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public string Name
         {
@@ -841,11 +841,6 @@ namespace Aurora.Modules.Groups
         {
             // TODO: May want to consider listenning for Agent Connections so we can pre-cache group info
             // scene.EventManager.OnNewClient += OnNewClient;
-        }
-
-        public void PostInitialise()
-        {
-            // NoOp
         }
 
         #endregion

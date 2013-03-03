@@ -38,7 +38,7 @@ namespace Aurora.Modules.VisitorLogger
     /// <summary>
     ///   This module logs all visitors to the sim to a specified file
     /// </summary>
-    public class VisitorLoggerModule : ISharedRegionModule
+    public class VisitorLoggerModule : INonSharedRegionModule
     {
         #region Declares
 
@@ -48,7 +48,7 @@ namespace Aurora.Modules.VisitorLogger
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
         {
@@ -58,10 +58,6 @@ namespace Aurora.Modules.VisitorLogger
                 m_enabled = config.GetBoolean("Enabled", m_enabled);
                 m_fileName = config.GetString("FileName", m_fileName);
             }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

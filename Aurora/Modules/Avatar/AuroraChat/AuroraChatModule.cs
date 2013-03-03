@@ -45,13 +45,13 @@ using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Modules.Chat
 {
-    public class AuroraChatModule : ISharedRegionModule, IChatModule, IMuteListModule
+    public class AuroraChatModule : INonSharedRegionModule, IChatModule, IMuteListModule
     {
         private const int DEBUG_CHANNEL = 2147483647;
         private const int DEFAULT_CHANNEL = 0;
         private readonly Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
         private readonly Dictionary<UUID, MuteList[]> MuteListCache = new Dictionary<UUID, MuteList[]>();
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_Scene;
 
         private IMuteListConnector MuteListConnector;
         private IMessageTransferModule m_TransferModule;
@@ -68,11 +68,6 @@ namespace Aurora.Modules.Chat
         {
             get { return m_maxChatDistance; }
             set { m_maxChatDistance = value; }
-        }
-
-        public List<IScene> Scenes
-        {
-            get { return m_scenes; }
         }
 
         #region IChatModule Members
@@ -228,9 +223,7 @@ namespace Aurora.Modules.Chat
 
             // MainConsole.Instance.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
 
-            foreach (IScenePresence presence in from s in m_scenes
-                                                select s.GetScenePresences() into ScenePresences
-                                                from presence in ScenePresences
+            foreach (IScenePresence presence in from presence in m_Scene.GetScenePresences()
                                                 where !presence.IsChildAgent
                                                 let fromRegionPos = fromPos + regionPos
                                                 let toRegionPos = presence.AbsolutePosition +
@@ -363,7 +356,7 @@ namespace Aurora.Modules.Chat
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public virtual void Initialise(IConfigSource config)
         {
@@ -397,7 +390,7 @@ namespace Aurora.Modules.Chat
             if (!m_enabled)
                 return;
 
-            m_scenes.Add(scene);
+            m_Scene = scene;
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnRegisterCaps += RegisterCaps;
@@ -428,7 +421,7 @@ namespace Aurora.Modules.Chat
                 {
                     MainConsole.Instance.Error("[CONFERANCE MESSAGE]: No message transfer module, IM will not work!");
 
-                    m_scenes.Clear();
+                    m_Scene = null;
                     m_enabled = false;
                 }
             }
@@ -446,16 +439,12 @@ namespace Aurora.Modules.Chat
             scene.EventManager.OnChatSessionRequest -= OnChatSessionRequest;
             scene.EventManager.OnCachedUserInfo -= UpdateCachedInfo;
 
-            m_scenes.Remove(scene);
+            m_Scene = null;
             scene.UnregisterModuleInterface<IMuteListModule>(this);
             scene.UnregisterModuleInterface<IChatModule>(this);
         }
 
         public virtual void Close()
-        {
-        }
-
-        public virtual void PostInitialise()
         {
         }
 
@@ -755,7 +744,7 @@ namespace Aurora.Modules.Chat
         {
             OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
-            return Encoding.UTF8.GetBytes(findScene(Agent).EventManager.TriggerChatSessionRequest(Agent, rm));
+            return Encoding.UTF8.GetBytes(m_Scene.EventManager.TriggerChatSessionRequest(Agent, rm));
         }
 
         private string OnChatSessionRequest(UUID Agent, OSDMap rm)
@@ -807,8 +796,11 @@ namespace Aurora.Modules.Chat
                             MuteVoice = false,
                             Transition = "ENTER"
                         };
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, Agent, "ENTER",
-                                                     findScene(Agent).RegionInfo.RegionID);
+                //eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, Agent, "ENTER",
+                //                                     findScene(Agent).RegionInfo.RegionID);
+                //WRONG
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, Agent, "ENTER",
+                                                     m_Scene.RegionInfo.RegionID);
 
                 ChatterBoxSessionStartReplyMessage cs = new ChatterBoxSessionStartReplyMessage
                                                             {
@@ -865,7 +857,7 @@ namespace Aurora.Modules.Chat
                                                                  ? NotUsAgents.ToArray()
                                                                  : Us.ToArray(),
                                                              member.AvatarKey, "ENTER",
-                                                             findScene(Agent).RegionInfo.RegionID);
+                                                             m_Scene.RegionInfo.RegionID);
                     }
                     return "Accepted";
                 }
@@ -903,7 +895,7 @@ namespace Aurora.Modules.Chat
 
                 // Send an update to the affected user
                 eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, AgentID, "",
-                                                     findScene(Agent).RegionInfo.RegionID);
+                                                     m_Scene.RegionInfo.RegionID);
 
                 return "Accepted";
             }
@@ -914,11 +906,6 @@ namespace Aurora.Modules.Chat
             }
         }
 
-        private IScene findScene(UUID agentID)
-        {
-            return (from scene in m_scenes let SP = scene.GetScenePresence(agentID) where SP != null && !SP.IsChildAgent select scene).FirstOrDefault();
-        }
-
         /// <summary>
         ///   Find the presence from all the known sims
         /// </summary>
@@ -926,19 +913,7 @@ namespace Aurora.Modules.Chat
         /// <returns></returns>
         public IScenePresence findScenePresence(UUID avID)
         {
-#if (!ISWIN)
-            foreach (IScene s in m_scenes)
-            {
-                IScenePresence SP = s.GetScenePresence(avID);
-                if (SP != null)
-                {
-                    return SP;
-                }
-            }
-            return null;
-#else
-            return m_scenes.Select(s => s.GetScenePresence(avID)).FirstOrDefault(SP => SP != null);
-#endif
+            return m_Scene.GetScenePresence(avID);
         }
 
         private void OnGridInstantMessage(GridInstantMessage msg)
@@ -1073,8 +1048,11 @@ namespace Aurora.Modules.Chat
             IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
             foreach (ChatSessionMember sessionMember in session.Members)
             {
-                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] {block}, sessionMember.AvatarKey, "LEAVE",
-                                                     findScene(sessionMember.AvatarKey).RegionInfo.RegionID);
+                //eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] { block }, sessionMember.AvatarKey, "LEAVE",
+                //                                     findScene(sessionMember.AvatarKey).RegionInfo.RegionID);
+                //WRONG
+                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] { block }, sessionMember.AvatarKey, "LEAVE",
+                                                     m_Scene.RegionInfo.RegionID);
             }
         }
 
@@ -1104,6 +1082,25 @@ namespace Aurora.Modules.Chat
                 else
                 {
                     im.toAgentID = member.AvatarKey;
+                    /*eq.ChatterboxInvitation(
+                        session.SessionID
+                        , session.Name
+                        , im.fromAgentID
+                        , im.message
+                        , im.toAgentID
+                        , im.fromAgentName
+                        , im.dialog
+                        , im.timestamp
+                        , im.offline == 1
+                        , (int)im.ParentEstateID
+                        , im.Position
+                        , 1
+                        , im.imSessionID
+                        , false
+                        , Utils.StringToBytes(session.Name)
+                        , findScene(member.AvatarKey).RegionInfo.RegionID
+                        );*/
+                    //WRONG
                     eq.ChatterboxInvitation(
                         session.SessionID
                         , session.Name
@@ -1120,7 +1117,7 @@ namespace Aurora.Modules.Chat
                         , im.imSessionID
                         , false
                         , Utils.StringToBytes(session.Name)
-                        , findScene(member.AvatarKey).RegionInfo.RegionID
+                        , m_Scene.RegionInfo.RegionID
                         );
                 }
             }

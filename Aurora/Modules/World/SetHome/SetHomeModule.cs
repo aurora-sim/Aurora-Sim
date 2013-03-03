@@ -90,10 +90,6 @@ namespace Aurora.Modules.SetHome
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         private void EventManager_OnNewClient(IClientAPI client)
         {
             client.OnSetStartLocationRequest += SetHomeRezPoint;

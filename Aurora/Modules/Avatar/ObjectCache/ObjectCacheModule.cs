@@ -52,7 +52,7 @@ namespace Aurora.Modules.ObjectCache
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public virtual void Initialise(IConfigSource source)
         {

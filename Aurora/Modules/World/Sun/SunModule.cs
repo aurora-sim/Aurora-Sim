@@ -329,10 +329,6 @@ namespace Aurora.Modules.Sun
             get { return "SunModule"; }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         private void EventManager_OnStartupComplete(IScene scene, List<string> data)
         {
             //Get the old sun data

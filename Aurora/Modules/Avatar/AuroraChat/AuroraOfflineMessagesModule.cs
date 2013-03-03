@@ -37,7 +37,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Chat
 {
-    public class AuroraOfflineMessageModule : ISharedRegionModule
+    public class AuroraOfflineMessageModule : INonSharedRegionModule
     {
         private bool enabled = true;
         private IScene m_Scene;
@@ -64,10 +64,6 @@ namespace Aurora.Modules.Chat
 
             m_ForwardOfflineGroupMessages = cnf.GetBoolean ("ForwardOfflineGroupMessages", m_ForwardOfflineGroupMessages);
             m_SendOfflineMessagesToEmail = cnf.GetBoolean ("SendOfflineMessagesToEmail", m_SendOfflineMessagesToEmail);
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void AddRegion(IScene scene)

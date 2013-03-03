@@ -61,7 +61,7 @@ namespace Aurora.Modules.Scripting
         public string uri;
     }
 
-    public class UrlModule : ISharedRegionModule, IUrlModule
+    public class UrlModule : INonSharedRegionModule, IUrlModule
     {
         private readonly Dictionary<UUID, UrlData> m_RequestMap =
                 new Dictionary<UUID, UrlData>();
@@ -71,8 +71,6 @@ namespace Aurora.Modules.Scripting
 
 
         private const int m_TotalUrls = 100;
-
-        private IHttpServer m_HttpServer = null;
 
         public string ExternalHostNameForLSL
         {
@@ -98,19 +96,8 @@ namespace Aurora.Modules.Scripting
         {
         }
 
-        public void PostInitialise()
-        {
-        }
-
         public void AddRegion (IScene scene)
         {
-            if (m_HttpServer == null)
-            {
-                // There can only be one
-                //
-                m_HttpServer = MainServer.Instance;
-            }
-
             scene.RegisterModuleInterface<IUrlModule>(this);
         }
 
@@ -136,7 +123,7 @@ namespace Aurora.Modules.Scripting
                     engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
                     return urlcode;
                 }
-                string url = m_HttpServer.ServerURI + "/lslhttp/" + urlcode.ToString() + "/";
+                string url = MainServer.Instance.ServerURI + "/lslhttp/" + urlcode.ToString() + "/";
 
                 UrlData urlData = new UrlData
                                       {
@@ -152,7 +139,7 @@ namespace Aurora.Modules.Scripting
                 m_UrlMap[url] = urlData;
                 
                 string uri = "/lslhttp/" + urlcode.ToString() + "/";
-                m_HttpServer.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
+                MainServer.Instance.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
                         new PollServiceEventArgs(HttpRequestHandler,HasEvents, GetEvents, NoEvents, Valid,
                             urlcode));
 
@@ -288,7 +275,7 @@ namespace Aurora.Modules.Scripting
 
         private void RemoveUrl(UrlData data)
         {
-            m_HttpServer.RemovePollServiceHTTPHandler("", "/lslhttp/"+data.urlcode.ToString()+"/");
+            MainServer.Instance.RemovePollServiceHTTPHandler("", "/lslhttp/"+data.urlcode.ToString()+"/");
         }
 
         private Hashtable NoEvents(UUID requestID, UUID sessionID)
@@ -412,7 +399,7 @@ namespace Aurora.Modules.Scripting
 
                     string pathInfo = uri.Substring(pos3);
 
-                    UrlData url = m_UrlMap[m_HttpServer.ServerURI + uri_tmp];
+                    UrlData url = m_UrlMap[MainServer.Instance.ServerURI + uri_tmp];
 
                     //for llGetHttpHeader support we need to store original URI here
                     //to make x-path-info / x-query-string / x-script-url / x-remote-ip headers 

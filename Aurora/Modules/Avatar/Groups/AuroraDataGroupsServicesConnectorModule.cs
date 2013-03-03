@@ -39,7 +39,7 @@ using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Modules.Groups
 {
-    public class AuroraDataGroupsServicesConnectorModule : ISharedRegionModule, IGroupsServicesConnector
+    public class AuroraDataGroupsServicesConnectorModule : INonSharedRegionModule, IGroupsServicesConnector
     {
         private readonly Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
         private IGroupsServiceConnector GroupsConnector;
@@ -348,7 +348,7 @@ namespace Aurora.Modules.Groups
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public string Name
         {
@@ -420,11 +420,6 @@ namespace Aurora.Modules.Groups
 
         public void RegionLoaded(IScene scene)
         {
-        }
-
-        public void PostInitialise()
-        {
-            // NoOp
         }
 
         #endregion

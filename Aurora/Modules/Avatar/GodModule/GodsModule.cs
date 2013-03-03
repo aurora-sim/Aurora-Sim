@@ -199,10 +199,6 @@ namespace Aurora.Modules.Gods
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         public void SubscribeToClientEvents(IClientAPI client)
         {
             client.OnGodKickUser += KickUser;

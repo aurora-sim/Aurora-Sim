@@ -40,7 +40,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules.Profiles
 {
-    public class AuroraProfileModule : ISharedRegionModule
+    public class AuroraProfileModule : INonSharedRegionModule
     {
         #region Declares
 
@@ -57,14 +57,14 @@ namespace Aurora.Modules.Profiles
             Online = 16
         }
 
-        private readonly List<IScene> m_Scenes = new List<IScene>();
+        private IScene m_Scene;
         private IProfileConnector ProfileFrontend;
         private bool m_ProfileEnabled = true;
         private IFriendsModule m_friendsModule;
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -88,7 +88,7 @@ namespace Aurora.Modules.Profiles
             if (ProfileFrontend == null)
                 return;
 
-            m_Scenes.Add(scene);
+            m_Scene = scene;
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
@@ -98,7 +98,7 @@ namespace Aurora.Modules.Profiles
             if (!m_ProfileEnabled)
                 return;
 
-            m_Scenes.Remove(scene);
+            m_Scene = null;
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
@@ -111,10 +111,6 @@ namespace Aurora.Modules.Profiles
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -620,7 +616,7 @@ namespace Aurora.Modules.Profiles
             bool isFriend = IsFriendOfUser(target, hunter);
             if (isFriend)
             {
-                IFriendsModule module = m_Scenes[0].RequestModuleInterface<IFriendsModule>();
+                IFriendsModule module = m_Scene.RequestModuleInterface<IFriendsModule>();
                 if (module != null)
                 {
                     int perms = module.GetFriendPerms(hunter, target);
@@ -630,7 +626,7 @@ namespace Aurora.Modules.Profiles
                             client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
                         if (GUI != null && GUI.IsOnline)
                         {
-                            GridRegion region = GetRegionUserIsIn(client.AgentId).GridService.GetRegionByUUID(
+                            GridRegion region = m_Scene.GridService.GetRegionByUUID(
                                 client.AllScopeIDs, GUI.CurrentRegionID);
 
                             client.SendScriptTeleportRequest(client.Name, region.RegionName,
@@ -646,50 +642,19 @@ namespace Aurora.Modules.Profiles
 
         #region Helpers
 
-        private IScene GetRegionUserIsIn(UUID uUID)
-        {
-#if (!ISWIN)
-            foreach (IScene scene in m_Scenes)
-            {
-                if (scene.GetScenePresence(uUID) != null) return scene;
-            }
-            return null;
-#else
-            return m_Scenes.FirstOrDefault(scene => scene.GetScenePresence(uUID) != null);
-#endif
-        }
-
         private bool IsFriendOfUser(UUID friend, UUID requested)
         {
             if (friend == requested)
                 return true;
             if (m_friendsModule.GetFriendPerms(requested, friend) == -1) //They aren't a friend
             {
-                IScenePresence SP = findScenePresence(friend);
+                IScenePresence SP = m_Scene.GetScenePresence(friend);
                 if (SP != null && SP.Scene.Permissions.IsGod(friend)) //Check is admin
                     return true;
 
                 return false;
             }
             return true;
-        }
-
-        public IScenePresence findScenePresence(UUID avID)
-        {
-#if (!ISWIN)
-            foreach (IScene s in m_Scenes)
-            {
-                IScenePresence SP = s.GetScenePresence (avID);
-                if (SP != null)
-                {
-                    return SP;
-                }
-            }
-            return null;
-#else
-            return m_Scenes.Select(s => s.GetScenePresence(avID)).FirstOrDefault(SP => SP != null);
-#endif
-
         }
 
         #endregion

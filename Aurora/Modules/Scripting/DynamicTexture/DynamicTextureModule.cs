@@ -38,7 +38,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class DynamicTextureModule : ISharedRegionModule, IDynamicTextureManager
+    public class DynamicTextureModule : INonSharedRegionModule, IDynamicTextureManager
     {
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -224,7 +224,7 @@ namespace Aurora.Modules.Scripting
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -250,10 +250,6 @@ namespace Aurora.Modules.Scripting
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

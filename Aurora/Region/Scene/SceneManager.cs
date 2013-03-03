@@ -644,9 +644,7 @@ namespace OpenSim.Region.Framework.Scenes
             IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController> ();
             foreach (IRegionModuleBase irm in controller.AllModules)
             {
-                if (irm is ISharedRegionModule)
-                    MainConsole.Instance.Info (String.Format ("Shared region module: {0}", irm.Name));
-                else if (irm is INonSharedRegionModule)
+                if (irm is INonSharedRegionModule)
                     MainConsole.Instance.Info (String.Format ("Nonshared region module: {0}", irm.Name));
                 else
                     MainConsole.Instance.Info (String.Format ("Unknown type " + irm.GetType () + " region module: {0}", irm.Name));

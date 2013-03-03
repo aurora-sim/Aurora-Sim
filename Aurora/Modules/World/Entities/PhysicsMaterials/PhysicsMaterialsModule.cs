@@ -84,10 +84,6 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
             OSDMap retVal = new OSDMap();

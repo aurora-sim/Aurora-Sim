@@ -36,19 +36,19 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Gods
 {
-    public class GodModifiers : ISharedRegionModule
+    public class GodModifiers : INonSharedRegionModule
     {
         #region Declares 
 
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_Scene;
         private bool m_Enabled = true;
         private IConfigSource m_config;
         private string m_oar_directory = "";
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
         {
@@ -71,7 +71,7 @@ namespace Aurora.Modules.Gods
             if (!m_Enabled)
                 return;
 
-            m_scenes.Add(scene);
+            m_Scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -82,7 +82,7 @@ namespace Aurora.Modules.Gods
             if (!m_Enabled)
                 return;
 
-            m_scenes.Remove(scene);
+            m_Scene = null;
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -95,10 +95,6 @@ namespace Aurora.Modules.Gods
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public string Name

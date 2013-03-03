@@ -38,7 +38,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class LoadImageURLModule : ISharedRegionModule, IDynamicTextureRender
+    public class LoadImageURLModule : INonSharedRegionModule, IDynamicTextureRender
     {
         private string m_name = "LoadImageURL";
         private string m_proxyexcepts = "";
@@ -98,7 +98,7 @@ namespace Aurora.Modules.Scripting
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -108,10 +108,7 @@ namespace Aurora.Modules.Scripting
 
         public void AddRegion(IScene scene)
         {
-            if (m_scene == null)
-            {
-                m_scene = scene;
-            }
+            m_scene = scene;
         }
 
         public void RemoveRegion(IScene scene)
@@ -122,18 +119,12 @@ namespace Aurora.Modules.Scripting
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)
-            {
                 m_textureManager.RegisterRender(GetContentType(), this);
-            }
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

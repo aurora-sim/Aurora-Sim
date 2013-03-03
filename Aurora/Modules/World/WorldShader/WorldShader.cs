@@ -11,7 +11,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.WorldShader
 {
-    public class WorldShader : ISharedRegionModule
+    public class WorldShader : INonSharedRegionModule
     {
         private readonly Dictionary<UUID, UUID> m_previouslyConverted = new Dictionary<UUID, UUID>();
         private readonly Dictionary<UUID, UUID> m_revertConverted = new Dictionary<UUID, UUID>();
@@ -20,10 +20,6 @@ namespace Aurora.Modules.WorldShader
         #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 

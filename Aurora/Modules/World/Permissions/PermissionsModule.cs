@@ -745,10 +745,6 @@ namespace Aurora.Modules.Permissions
             }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         public bool PropagatePermissions()
         {
             if (m_bypassPermissions)

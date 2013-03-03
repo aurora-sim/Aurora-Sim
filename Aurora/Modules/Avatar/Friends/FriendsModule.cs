@@ -39,7 +39,7 @@ using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
 namespace Aurora.Modules.Friends
 {
-    public class FriendsModule : ISharedRegionModule, IFriendsModule
+    public class FriendsModule : INonSharedRegionModule, IFriendsModule
     {
         protected Dictionary<UUID, UserFriendData> m_Friends =
             new Dictionary<UUID, UserFriendData>();
@@ -166,13 +166,9 @@ namespace Aurora.Modules.Friends
         }
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 

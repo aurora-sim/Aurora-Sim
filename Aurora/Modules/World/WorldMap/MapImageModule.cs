@@ -239,10 +239,6 @@ namespace Aurora.Modules.WorldMap
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         public void StartupComplete(IScene scene, List<string> data)
         {
             //Startup complete, we can generate a tile now

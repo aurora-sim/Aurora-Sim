@@ -47,7 +47,7 @@ using Timer = System.Timers.Timer;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     [Serializable]
-    public class ScriptEngine : ISharedRegionModule, IScriptModulePlugin
+    public class ScriptEngine : INonSharedRegionModule, IScriptModulePlugin
     {
         #region Declares
 
@@ -223,10 +223,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (ScriptProtection != null)
                 ScriptProtection.Initialize(this, Config);
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void AddRegion(IScene scene)

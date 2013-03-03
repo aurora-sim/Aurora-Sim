@@ -38,19 +38,15 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.ActivityDetectors
 {
-    public class ActivityDetector : ISharedRegionModule
+    public class ActivityDetector : INonSharedRegionModule
     {
         private IScene m_scene;
         private readonly List<UUID> m_zombieAgents = new List<UUID>();
         private Timer m_presenceUpdateTimer;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 

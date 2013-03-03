@@ -36,15 +36,11 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules.Scripting
 {
-    public class ScriptControllerModule : ISharedRegionModule
+    public class ScriptControllerModule : INonSharedRegionModule
     {
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 

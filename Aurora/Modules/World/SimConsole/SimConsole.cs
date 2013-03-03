@@ -46,12 +46,12 @@ namespace Aurora.Modules.SimConsole
     ///   This module allows for the console to be accessed in V2 viewers that support SimConsole
     ///   This will eventually be extended in Imprudence so that full console support can be added into the viewer (this module already supports the eventual extension)
     /// </summary>
-    public class SimConsole : ISharedRegionModule
+    public class SimConsole : INonSharedRegionModule
     {
         #region Declares
 
         private readonly Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access>();
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_Scene;
         private readonly Dictionary<string, Access> m_userKeys = new Dictionary<string, Access>();
         private readonly Dictionary<UUID, string> m_userLogLevel = new Dictionary<UUID, string>();
         private bool m_enabled;
@@ -70,7 +70,7 @@ namespace Aurora.Modules.SimConsole
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
         {
@@ -96,10 +96,6 @@ namespace Aurora.Modules.SimConsole
             }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         public void AddRegion(IScene scene)
         {
             if (!m_enabled)
@@ -108,7 +104,7 @@ namespace Aurora.Modules.SimConsole
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
             scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
-            m_scenes.Add(scene);
+            m_Scene = scene;
         }
 
         public void RegionLoaded(IScene scene)
@@ -117,7 +113,7 @@ namespace Aurora.Modules.SimConsole
 
         public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove(scene);
+            m_Scene = null;
             scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent -= EventManager_OnMakeRootAgent;
             scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
@@ -157,7 +153,7 @@ namespace Aurora.Modules.SimConsole
 
         private byte[] SimConsoleAsyncResponder(Stream request, UUID agentID)
         {
-            IScenePresence SP = findScene(agentID).GetScenePresence(agentID);
+            IScenePresence SP = m_Scene.GetScenePresence(agentID);
             if (SP == null)
                 return new byte[0]; //They don't exist
 
@@ -309,15 +305,9 @@ namespace Aurora.Modules.SimConsole
         private void SendConsoleEventEQM(UUID AgentID, string text)
         {
             OSDMap item = new OSDMap {{"body", text}, {"message", OSD.FromString("SimConsoleResponse")}};
-            IEventQueueService eq = m_scenes[0].RequestModuleInterface<IEventQueueService>();
-            IScene scene = findScene(AgentID);
-            if (eq != null && scene != null)
-                eq.Enqueue(item, AgentID, scene.RegionInfo.RegionID);
-        }
-
-        private IScene findScene(UUID agentID)
-        {
-            return (from scene in m_scenes let SP = scene.GetScenePresence(agentID) where SP != null && !SP.IsChildAgent select scene).FirstOrDefault();
+            IEventQueueService eq = m_Scene.RequestModuleInterface<IEventQueueService>();
+            if (eq != null)
+                eq.Enqueue(item, AgentID, m_Scene.RegionInfo.RegionID);
         }
     }
 }

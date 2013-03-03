@@ -128,10 +128,6 @@ namespace Aurora.Modules.SimProtection
             TimerToCheckHeartbeat.Start();
         }
 
-        public void PostInitialise()
-        {
-        }
-
         #endregion
 
         #region Protection

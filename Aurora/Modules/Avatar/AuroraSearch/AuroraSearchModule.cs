@@ -38,7 +38,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules.Search
 {
-    public class AuroraSearchModule : ISharedRegionModule
+    public class AuroraSearchModule : INonSharedRegionModule
     {
         #region Declares
 
@@ -662,7 +662,7 @@ namespace Aurora.Modules.Search
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -710,10 +710,6 @@ namespace Aurora.Modules.Search
         public bool IsSharedModule
         {
             get { return false; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

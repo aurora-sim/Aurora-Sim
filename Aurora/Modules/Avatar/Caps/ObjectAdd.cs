@@ -85,10 +85,6 @@ namespace Aurora.Modules.Caps
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
             OSDMap retVal = new OSDMap();

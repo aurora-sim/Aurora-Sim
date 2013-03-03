@@ -41,7 +41,7 @@ namespace Aurora.Modules.Archivers
     /// <summary>
     ///   This module loads/saves the avatar's profile from/into a "AvatarProfile Archive"
     /// </summary>
-    public class AuroraAvatarProfileArchiver : ISharedRegionModule
+    public class AuroraAvatarProfileArchiver : INonSharedRegionModule
     {
         private IScene m_scene;
 
@@ -55,7 +55,7 @@ namespace Aurora.Modules.Archivers
             get { return true; }
         }
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -90,10 +90,6 @@ namespace Aurora.Modules.Archivers
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

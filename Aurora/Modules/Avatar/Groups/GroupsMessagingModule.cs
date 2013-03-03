@@ -40,7 +40,7 @@ using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Modules.Groups
 {
-    public class GroupsMessagingModule : ISharedRegionModule, IGroupsMessagingModule
+    public class GroupsMessagingModule : INonSharedRegionModule, IGroupsMessagingModule
     {
         private IScene m_scene;
         private bool m_debugEnabled = true;
@@ -84,7 +84,7 @@ namespace Aurora.Modules.Groups
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -198,11 +198,6 @@ namespace Aurora.Modules.Groups
         public string Name
         {
             get { return "GroupsMessagingModule"; }
-        }
-
-        public void PostInitialise()
-        {
-            // NoOp
         }
 
         #endregion

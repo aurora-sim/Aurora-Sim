@@ -42,7 +42,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules.Chat
 {
-    public class MessageTransferModule : ISharedRegionModule, IMessageTransferModule
+    public class MessageTransferModule : INonSharedRegionModule, IMessageTransferModule
     {
         #region Delegates
 
@@ -115,7 +115,7 @@ namespace Aurora.Modules.Chat
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public virtual void Initialise(IConfigSource config)
         {
@@ -129,6 +129,9 @@ namespace Aurora.Modules.Chat
             }
 
             m_Enabled = true;
+
+            MainServer.Instance.AddXmlRPCHandler(
+                "grid_instant_message", processXMLRPCGridInstantMessage);
         }
 
         public virtual void AddRegion(IScene scene)
@@ -139,15 +142,6 @@ namespace Aurora.Modules.Chat
             m_Scene = scene;
             //MainConsole.Instance.Debug("[MESSAGE TRANSFER]: Message transfer module active");
             scene.RegisterModuleInterface<IMessageTransferModule>(this);
-        }
-
-        public virtual void PostInitialise()
-        {
-            if (!m_Enabled)
-                return;
-
-            MainServer.Instance.AddXmlRPCHandler(
-                "grid_instant_message", processXMLRPCGridInstantMessage);
         }
 
         public virtual void RegionLoaded(IScene scene)

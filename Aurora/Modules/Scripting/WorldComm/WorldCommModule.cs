@@ -351,10 +351,6 @@ namespace Aurora.Modules.Scripting
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         /// <summary>
         ///   This method scans over the objects which registered an interest in listen callbacks.
         ///   For everyone it finds, it checks if it fits the given filter. If it does,  then

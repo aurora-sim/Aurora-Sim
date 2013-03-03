@@ -44,7 +44,7 @@ namespace Aurora.Modules.SampleCurrencyModule
     ///                to the command line parameters you use to start up your client
     ///                This commonly looks like -helperuri http://127.0.0.1:9000/
     /// </summary>
-    public class CurrencyModule : IMoneyModule, ISharedRegionModule
+    public class CurrencyModule : IMoneyModule, INonSharedRegionModule
     {
         private bool m_enabled;
         private IConfigSource m_config;
@@ -98,7 +98,7 @@ namespace Aurora.Modules.SampleCurrencyModule
 
 #pragma warning restore 67
 
-        #region IRegionModuleBase Members
+        #region INonSharedRegionModule Members
 
         /// <summary>
         ///   Startup
@@ -147,10 +147,6 @@ namespace Aurora.Modules.SampleCurrencyModule
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

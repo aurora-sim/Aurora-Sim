@@ -38,12 +38,12 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Voice
 {
-    public class GenericVoiceModule : ISharedRegionModule
+    public class GenericVoiceModule : INonSharedRegionModule
     {
         private string configToSend = "SLVoice";
         private bool m_enabled = true;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -88,11 +88,6 @@ namespace Aurora.Modules.Voice
         // Called to indicate that the region is going away.
         public void RemoveRegion(IScene scene)
         {
-        }
-
-        public void PostInitialise()
-        {
-            // Do nothing.
         }
 
         public void Close()

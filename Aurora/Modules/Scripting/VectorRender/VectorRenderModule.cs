@@ -43,7 +43,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class VectorRenderModule : ISharedRegionModule, IDynamicTextureRender
+    public class VectorRenderModule : INonSharedRegionModule, IDynamicTextureRender
     {
         private string m_fontName = "Arial";
         private Graphics m_graph;
@@ -110,7 +110,7 @@ namespace Aurora.Modules.Scripting
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -123,16 +123,10 @@ namespace Aurora.Modules.Scripting
 
         public void AddRegion(IScene scene)
         {
-            if (m_scene == null)
-            {
-                m_scene = scene;
-            }
+            m_scene = scene;
 
-            if (m_graph == null)
-            {
-                Bitmap bitmap = new Bitmap(1024, 1024, PixelFormat.Format32bppArgb);
-                m_graph = Graphics.FromImage(bitmap);
-            }
+            Bitmap bitmap = new Bitmap(1024, 1024, PixelFormat.Format32bppArgb);
+            m_graph = Graphics.FromImage(bitmap);
         }
 
         public void RemoveRegion(IScene scene)
@@ -143,18 +137,12 @@ namespace Aurora.Modules.Scripting
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)
-            {
                 m_textureManager.RegisterRender(GetContentType(), this);
-            }
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

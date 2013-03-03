@@ -36,11 +36,11 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.BotManager
 {
-    public class BotManager : ISharedRegionModule, IBotManager
+    public class BotManager : INonSharedRegionModule, IBotManager
     {
         private readonly Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot>();
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -57,10 +57,6 @@ namespace Aurora.BotManager
         }
 
         public void RegionLoaded(IScene scene)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 

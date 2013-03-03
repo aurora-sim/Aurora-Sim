@@ -1456,10 +1456,6 @@ namespace Aurora.Modules.Estate
             get { return null; }
         }
         
-        public void PostInitialise()
-        {
-        }
-
         public void Close()
         {
         }

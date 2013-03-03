@@ -41,7 +41,7 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Groups
 {
-    public class GroupsModule : ISharedRegionModule, IGroupsModule
+    public class GroupsModule : INonSharedRegionModule, IGroupsModule
     {
         ///<summary>
         ///  ; To use this module, you must specify the following in your Aurora.ini
@@ -1033,7 +1033,7 @@ namespace Aurora.Modules.Groups
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -1156,11 +1156,6 @@ namespace Aurora.Modules.Groups
         public string Name
         {
             get { return "GroupsModule"; }
-        }
-
-        public void PostInitialise()
-        {
-            // NoOp
         }
 
         #endregion

@@ -115,10 +115,6 @@ namespace Aurora.Modules.Agent.Xfer
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         public void NewClient(IClientAPI client)
         {
             client.OnRequestXfer += RequestXfer;

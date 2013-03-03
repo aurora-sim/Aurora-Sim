@@ -131,10 +131,6 @@ namespace Aurora.Modules.Vegetation
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         protected void AdaptTree(ref PrimitiveBaseShape tree)
         {
             // Tree size has to be adapted depending on its type

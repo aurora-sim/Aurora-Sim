@@ -89,14 +89,14 @@ namespace Aurora.Modules.AbuseReports
     /// <summary>
     ///   Enables the saving of abuse reports to the database
     /// </summary>
-    public class AbuseReportsModule : ISharedRegionModule
+    public class AbuseReportsModule : INonSharedRegionModule
     {
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private readonly List<IScene> m_SceneList = new List<IScene>();
+        private IScene m_Scene;
         private bool m_enabled;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -110,11 +110,7 @@ namespace Aurora.Modules.AbuseReports
             if (!m_enabled)
                 return;
 
-            lock (m_SceneList)
-            {
-                if (!m_SceneList.Contains(scene))
-                    m_SceneList.Add(scene);
-            }
+            m_Scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -127,11 +123,9 @@ namespace Aurora.Modules.AbuseReports
             if (!m_enabled)
                 return;
 
-            lock (m_SceneList)
-            {
-                if (m_SceneList.Contains(scene))
-                    m_SceneList.Remove(scene);
-            }
+
+            m_Scene = null;
+
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             //Disabled until complete
@@ -139,10 +133,6 @@ namespace Aurora.Modules.AbuseReports
         }
 
         public void RegionLoaded(IScene scene)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 
@@ -250,7 +240,7 @@ namespace Aurora.Modules.AbuseReports
             //If the abuse email is set up and the email module is available, send the email
             if (ES.AbuseEmailToEstateOwner && ES.AbuseEmail != "")
             {
-                IEmailModule Email = m_SceneList[0].RequestModuleInterface<IEmailModule>();
+                IEmailModule Email = m_Scene.RequestModuleInterface<IEmailModule>();
                 if (Email != null)
                     Email.SendEmail(UUID.Zero, ES.AbuseEmail, "Abuse Report", "This abuse report was submitted by " +
                                                                               report.ReporterName + " against " +
@@ -261,7 +251,7 @@ namespace Aurora.Modules.AbuseReports
                                                                               ". Details: " + report.AbuseDetails + ".", client.Scene);
             }
             //Tell the DB about it
-            IAbuseReports conn = m_SceneList[0].RequestModuleInterface<IAbuseReports>();
+            IAbuseReports conn = m_Scene.RequestModuleInterface<IAbuseReports>();
             if (conn != null)
                 conn.AddAbuseReport(report);
         }
@@ -305,17 +295,7 @@ namespace Aurora.Modules.AbuseReports
 
         public IScenePresence findScenePresence(UUID avID)
         {
-#if (!ISWIN)
-            foreach (IScene s in m_SceneList)
-            {
-                IScenePresence SP = s.GetScenePresence(avID);
-                if (SP != null)
-                    return SP;
-            }
-            return null;
-#else
-            return m_SceneList.Select(s => s.GetScenePresence(avID)).FirstOrDefault(SP => SP != null);
-#endif
+            return m_Scene.GetScenePresence(avID);
         }
 
         #endregion

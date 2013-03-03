@@ -142,10 +142,6 @@ namespace Aurora.Modules.Land
             }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         public void AddRegion(IScene scene)
         {
             m_scene = scene;

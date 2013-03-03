@@ -74,10 +74,10 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class XMLRPCModule : ISharedRegionModule, IXMLRPC
+    public class XMLRPCModule : INonSharedRegionModule, IXMLRPC
     {
         private readonly object XMLRPCListLock = new object();
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_Scene;
         private int RemoteReplyScriptTimeout = 9000;
         private int RemoteReplyScriptWait = 300;
         private bool m_httpServerStarted;
@@ -93,12 +93,7 @@ namespace Aurora.Modules.Scripting
         private Dictionary<UUID, RPCRequestInfo> m_rpcPendingResponses;
         private IScriptModule m_scriptModule;
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -119,15 +114,11 @@ namespace Aurora.Modules.Scripting
 
         public void AddRegion(IScene scene)
         {
-            m_scenes.Add(scene);
-
             scene.RegisterModuleInterface<IXMLRPC>(this);
         }
 
         public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove(scene);
-
             scene.UnregisterModuleInterface<IXMLRPC>(this);
         }
 
@@ -151,10 +142,6 @@ namespace Aurora.Modules.Scripting
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

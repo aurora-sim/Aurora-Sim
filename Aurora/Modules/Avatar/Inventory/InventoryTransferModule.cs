@@ -37,14 +37,14 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Inventory
 {
-    public class InventoryTransferModule : ISharedRegionModule
+    public class InventoryTransferModule : INonSharedRegionModule
     {
-        private readonly List<IScene> m_Scenelist = new List<IScene>();
+        private IScene m_Scene;
 
         private bool m_Enabled = true;
         private IMessageTransferModule m_TransferModule;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -67,7 +67,7 @@ namespace Aurora.Modules.Inventory
             if (!m_Enabled)
                 return;
 
-            m_Scenelist.Add(scene);
+            m_Scene = scene;
 
             scene.RegisterModuleInterface(this);
 
@@ -80,13 +80,13 @@ namespace Aurora.Modules.Inventory
         {
             if (m_TransferModule == null)
             {
-                m_TransferModule = m_Scenelist[0].RequestModuleInterface<IMessageTransferModule>();
+                m_TransferModule = m_Scene.RequestModuleInterface<IMessageTransferModule>();
                 if (m_TransferModule == null)
                 {
                     MainConsole.Instance.Error("[INVENTORY TRANSFER]: No Message transfer module found, transfers will be local only");
                     m_Enabled = false;
 
-                    m_Scenelist.Clear();
+                    m_Scene = null;
                     scene.EventManager.OnNewClient -= OnNewClient;
                     scene.EventManager.OnClosingClient -= OnClosingClient;
                     scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
@@ -96,14 +96,10 @@ namespace Aurora.Modules.Inventory
 
         public void RemoveRegion(IScene scene)
         {
-            m_Scenelist.Remove(scene);
+            m_Scene = null;
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -133,26 +129,9 @@ namespace Aurora.Modules.Inventory
             client.OnInstantMessage -= OnInstantMessage;
         }
 
-        private IScene FindClientScene(UUID agentId)
-        {
-            lock (m_Scenelist)
-            {
-                foreach (IScene scene in from scene in m_Scenelist let presence = scene.GetScenePresence(agentId) where presence != null select scene)
-                {
-                    return scene;
-                }
-            }
-            return null;
-        }
-
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             //MainConsole.Instance.InfoFormat("[INVENTORY TRANSFER]: OnInstantMessage {0}", im.dialog);
-
-            IScene scene = FindClientScene(client.AgentId);
-
-            if (scene == null) // Something seriously wrong here.
-                return;
 
             if (im.dialog == (byte) InstantMessageDialog.InventoryOffered)
             {
@@ -162,7 +141,7 @@ namespace Aurora.Modules.Inventory
                     return;
 
                 UUID receipientID = im.toAgentID;
-                IScenePresence user = scene.GetScenePresence(receipientID);
+                IScenePresence user = m_Scene.GetScenePresence(receipientID);
                 UUID copyID;
 
                 // Send the IM to the recipient. The item is already
@@ -182,7 +161,7 @@ namespace Aurora.Modules.Inventory
                                           "into agent {1}'s inventory",
                                           folderID, im.toAgentID);
 
-                        scene.InventoryService.GiveInventoryFolderAsync(receipientID, client.AgentId,
+                        m_Scene.InventoryService.GiveInventoryFolderAsync(receipientID, client.AgentId,
                             folderID, UUID.Zero, (folder) =>
                             {
 
@@ -218,7 +197,7 @@ namespace Aurora.Modules.Inventory
                                           "into agent {1}'s inventory",
                                           itemID, im.toAgentID);
 
-                        scene.InventoryService.GiveInventoryItemAsync(
+                        m_Scene.InventoryService.GiveInventoryItemAsync(
                                 im.toAgentID,
                                 im.fromAgentID, itemID, UUID.Zero, false, (itemCopy) =>
                         {
@@ -249,7 +228,7 @@ namespace Aurora.Modules.Inventory
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
             {
-                IScenePresence user = scene.GetScenePresence(im.toAgentID);
+                IScenePresence user = m_Scene.GetScenePresence(im.toAgentID);
 
                 if (user != null) // Local
                 {
@@ -267,7 +246,7 @@ namespace Aurora.Modules.Inventory
                 // inventory is loaded. Courtesy of the above bulk update,
                 // It will have been pushed to the client, too
                 //
-                IInventoryService invService = scene.InventoryService;
+                IInventoryService invService = m_Scene.InventoryService;
 
                 InventoryFolderBase trashFolder =
                     invService.GetFolderForType(client.AgentId, InventoryType.Unknown, AssetType.TrashFolder);
@@ -317,7 +296,7 @@ namespace Aurora.Modules.Inventory
                                                  "received inventory" + reason, false);
                 }
 
-                IScenePresence user = scene.GetScenePresence(im.toAgentID);
+                IScenePresence user = m_Scene.GetScenePresence(im.toAgentID);
 
                 if (user != null) // Local
                 {
@@ -336,16 +315,9 @@ namespace Aurora.Modules.Inventory
         ///<param name = "msg"></param>
         private void OnGridInstantMessage(GridInstantMessage msg)
         {
-            // Check if this is ours to handle
-            //
-            IScene scene = FindClientScene(msg.toAgentID);
-
-            if (scene == null)
-                return;
-
             // Find agent to deliver to
             //
-            IScenePresence user = scene.GetScenePresence(msg.toAgentID);
+            IScenePresence user = m_Scene.GetScenePresence(msg.toAgentID);
 
             // Just forward to local handling
             OnInstantMessage(user.ControllingClient, msg);

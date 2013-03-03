@@ -364,10 +364,6 @@ namespace Aurora.Modules.Scripting
             return true;
         }
 
-        public void PostInitialise()
-        {
-        }
-
         #region Nested type: HTTPMax
 
         public class HTTPMax

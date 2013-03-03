@@ -290,10 +290,6 @@ namespace Aurora.Modules.Chat
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         /// <summary>
         ///   Handle an alert command from the console.
         /// </summary>

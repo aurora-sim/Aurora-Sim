@@ -36,9 +36,9 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Chat
 {
-    public class InstantMessageModule : ISharedRegionModule
+    public class InstantMessageModule : INonSharedRegionModule
     {
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_Scene;
 
         private IMessageTransferModule m_TransferModule;
 
@@ -47,7 +47,7 @@ namespace Aurora.Modules.Chat
         /// </value>
         private bool m_enabled;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -67,13 +67,10 @@ namespace Aurora.Modules.Chat
             if (!m_enabled)
                 return;
 
-            lock (m_scenes)
-            {
-                m_scenes.Add(scene);
-                scene.EventManager.OnNewClient += EventManager_OnNewClient;
-                scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
-                scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
-            }
+            m_Scene = scene;
+            scene.EventManager.OnNewClient += EventManager_OnNewClient;
+            scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
+            scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
         public void RegionLoaded(IScene scene)
@@ -93,7 +90,7 @@ namespace Aurora.Modules.Chat
                     scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
                     scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
 
-                    m_scenes.Clear();
+                    m_Scene = null;
                     m_enabled = false;
                 }
             }
@@ -104,12 +101,7 @@ namespace Aurora.Modules.Chat
             if (!m_enabled)
                 return;
 
-            lock (m_scenes)
-                m_scenes.Remove(scene);
-        }
-
-        public void PostInitialise()
-        {
+            m_Scene = null;
         }
 
         public void Close()
@@ -155,7 +147,7 @@ namespace Aurora.Modules.Chat
             {
                 if (client == null)
                 {
-                    UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.AllScopeIDs,
+                    UserAccount account = m_Scene.UserAccountService.GetUserAccount(m_Scene.RegionInfo.AllScopeIDs,
                                                                                         im.fromAgentID);
                     if (account != null)
                         im.fromAgentName = account.Name;
@@ -186,26 +178,17 @@ namespace Aurora.Modules.Chat
 
             if (m_TransferModule != null)
             {
-                UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.AllScopeIDs,
+                UserAccount account = m_Scene.UserAccountService.GetUserAccount(m_Scene.RegionInfo.AllScopeIDs,
                                                                                     msg.fromAgentID);
                 if (account != null)
                     msg.fromAgentName = account.Name;
                 else
                     msg.fromAgentName = msg.fromAgentName + "(No account found for this user)";
 
-                foreach (IScene scene in m_scenes)
+                IScenePresence presence = null;
+                if (m_Scene.TryGetScenePresence(msg.toAgentID, out presence))
                 {
-                    IScenePresence presence = null;
-                    if (scene.TryGetScenePresence(msg.toAgentID, out presence))
-                    {
-                        presence.ControllingClient.SendInstantMessage(msg);
-                        return;
-                    }
-                }
-                if (dialog == (uint) InstantMessageDialog.StartTyping ||
-                    dialog == (uint) InstantMessageDialog.StopTyping ||
-                    dialog == (uint) InstantMessageDialog.MessageFromObject)
-                {
+                    presence.ControllingClient.SendInstantMessage(msg);
                     return;
                 }
             }

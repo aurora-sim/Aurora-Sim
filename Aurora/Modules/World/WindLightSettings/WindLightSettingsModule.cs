@@ -205,10 +205,6 @@ namespace Aurora.Modules.WindlightSettings
             m_preivouslySentWindLight.Remove(sp.UUID);
         }
 
-        public void PostInitialise()
-        {
-        }
-
         public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
             OSDMap retVal = new OSDMap();

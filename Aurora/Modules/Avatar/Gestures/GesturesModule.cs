@@ -84,10 +84,6 @@ namespace Aurora.Modules.Gestures
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         private void OnNewClient(IClientAPI client)
         {
             client.OnActivateGesture += ActivateGesture;

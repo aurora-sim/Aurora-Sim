@@ -34,7 +34,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.VersionControl
 {
-    public class VersionControlModule : ISharedRegionModule
+    public class VersionControlModule : INonSharedRegionModule
     {
         private bool m_Enabled;
 
@@ -42,10 +42,11 @@ namespace Aurora.Modules.VersionControl
         private bool m_autoOAREnabled;
         private float m_autoOARTime = 1; //In days
         private Timer m_autoOARTimer;
+        private IScene m_Scene;
 
         private int nextVersion = 1;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public string Name
         {
@@ -73,16 +74,13 @@ namespace Aurora.Modules.VersionControl
         {
         }
 
-        public void PostInitialise()
-        {
-        }
-
         public void AddRegion(IScene scene)
         {
         }
 
         public void RemoveRegion(IScene scene)
         {
+            m_Scene = null;
         }
 
         public void RegionLoaded(IScene scene)
@@ -95,6 +93,7 @@ namespace Aurora.Modules.VersionControl
                 m_autoOARTimer = new Timer(m_autoOARTime*1000*60*60*24); //Time in days
                 m_autoOARTimer.Elapsed += SaveOAR;
                 m_autoOARTimer.Enabled = true;
+                m_Scene = scene;
             }
             //scene.AddCommand(this, "save version", "save version <description>", "Saves the current region as the next incremented version in the version control module.", SaveVersion);
         }
@@ -103,7 +102,7 @@ namespace Aurora.Modules.VersionControl
 
         private void SaveOAR(object sender, ElapsedEventArgs e)
         {
-            SaveNext(MainConsole.Instance.ConsoleScene, "AutomaticBackup");
+            Save("AutomaticBackup");
         }
 
         protected void SaveVersion(string module, string[] cmdparams)
@@ -113,33 +112,19 @@ namespace Aurora.Modules.VersionControl
 
             cmdparams[0] = "";
             cmdparams[1] = "";
-#if (!ISWIN)
-            string Desc = "";
-            foreach (string param in cmdparams)
-            {
-                Desc += param;
-            }
-#else
-            string Desc = cmdparams.Aggregate("", (current, param) => current + param);
-#endif
-
-            SaveNext(MainConsole.Instance.ConsoleScene, Desc);
+            Save(cmdparams.Aggregate("", (current, param) => current + param));
         }
 
-        public void SaveNext(IScene nextScene, string Description)
+        public void Save(string Description)
         {
-            IScene scene = MainConsole.Instance.ConsoleScene; //Switch back later
-            MainConsole.Instance.RunCommand("change region " + nextScene.RegionInfo.RegionName);
             string tag = "";
-            tag += "Region." + nextScene.RegionInfo.RegionName;
+            tag += "Region." + m_Scene.RegionInfo.RegionName;
             tag += ".Desc." + Description;
             tag += ".Version." + nextVersion;
             tag += ".Date." + DateTime.Now.Year + "." + DateTime.Now.Month + "." + DateTime.Now.Day + "." +
                    DateTime.Now.Hour;
             nextVersion++;
             MainConsole.Instance.RunCommand("save oar " + tag + ".vc.oar");
-            //Change back
-            MainConsole.Instance.RunCommand("change region " + scene.RegionInfo.RegionName);
         }
     }
 }

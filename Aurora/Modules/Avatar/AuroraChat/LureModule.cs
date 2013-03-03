@@ -40,7 +40,7 @@ namespace Aurora.Modules.Chat
     /// <summary>
     /// This just supports god TP's and thats about it
     /// </summary>
-	public class LureModule : ISharedRegionModule
+    public class LureModule : INonSharedRegionModule
     {
         #region Declares
 
@@ -52,7 +52,7 @@ namespace Aurora.Modules.Chat
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
 		{
@@ -103,10 +103,6 @@ namespace Aurora.Modules.Chat
         {
             get { return null; }
         }
-
-		public void PostInitialise()
-		{
-		}
 
 		public void Close()
 		{

@@ -43,7 +43,7 @@ using Nini.Config;
 
 namespace Aurora.Modules.EntityTransfer
 {
-    public class EntityTransferModule : ISharedRegionModule, IEntityTransferModule
+    public class EntityTransferModule : INonSharedRegionModule, IEntityTransferModule
     {
         #region Declares
 
@@ -53,7 +53,7 @@ namespace Aurora.Modules.EntityTransfer
         
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public Type ReplaceableInterface
         {
@@ -77,10 +77,6 @@ namespace Aurora.Modules.EntityTransfer
                     //MainConsole.Instance.InfoFormat("[ENTITY TRANSFER MODULE]: {0} enabled.", Name);
                 }
             }
-        }
-
-        public virtual void PostInitialise()
-        {
         }
 
         public virtual void AddRegion (IScene scene)

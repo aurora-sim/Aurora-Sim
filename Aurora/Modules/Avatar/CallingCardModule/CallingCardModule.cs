@@ -36,17 +36,17 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.CallingCards
 {
-    public class CallingCardModule : ISharedRegionModule, ICallingCardModule
+    public class CallingCardModule : INonSharedRegionModule, ICallingCardModule
     {
         #region Declares
 
         protected bool m_Enabled = true;
         protected Dictionary<UUID, UUID> m_pendingCallingcardRequests = new Dictionary<UUID, UUID>();
-        protected List<IScene> m_scenes = new List<IScene>();
+        protected IScene m_Scene;
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
         {
@@ -60,7 +60,7 @@ namespace Aurora.Modules.CallingCards
             if (!m_Enabled)
                 return;
 
-            m_scenes.Add(scene);
+            m_Scene = scene;
 
             scene.RegisterModuleInterface<ICallingCardModule>(this);
         }
@@ -70,7 +70,8 @@ namespace Aurora.Modules.CallingCards
             if (!m_Enabled)
                 return;
 
-            m_scenes.Remove(scene);
+            m_Scene = null;
+
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
 
@@ -83,10 +84,6 @@ namespace Aurora.Modules.CallingCards
                 return;
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -268,25 +265,11 @@ namespace Aurora.Modules.CallingCards
         /// <returns></returns>
         public IClientAPI LocateClientObject(UUID agentID)
         {
-            IScene scene = GetClientScene(agentID);
-            if (scene == null)
-                return null;
-
-            IScenePresence presence = scene.GetScenePresence(agentID);
+            IScenePresence presence = m_Scene.GetScenePresence(agentID);
             if (presence == null)
                 return null;
 
             return presence.ControllingClient;
-        }
-
-        /// <summary>
-        ///   Find the scene for an agent
-        /// </summary>
-        /// <param name = "agentId"></param>
-        /// <returns></returns>
-        private IScene GetClientScene(UUID agentId)
-        {
-            return (from scene in m_scenes let presence = scene.GetScenePresence(agentId) where presence != null where !presence.IsChildAgent select scene).FirstOrDefault();
         }
 
         #endregion

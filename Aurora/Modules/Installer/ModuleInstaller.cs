@@ -297,7 +297,6 @@ namespace Aurora.Modules.Installer
         {
             List<IService> services = AuroraModuleLoader.LoadPlugins<IService>(copiedDllFile);
             List<IApplicationPlugin> appPlugins = AuroraModuleLoader.LoadPlugins<IApplicationPlugin>(copiedDllFile);
-            List<ISharedRegionModule> sregionModule = AuroraModuleLoader.LoadPlugins<ISharedRegionModule>(copiedDllFile);
             List<INonSharedRegionModule> nsregionModule = AuroraModuleLoader.LoadPlugins<INonSharedRegionModule>(copiedDllFile);
             foreach (IService service in services)
             {
@@ -317,14 +316,6 @@ namespace Aurora.Modules.Installer
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                foreach (ISharedRegionModule srm in sregionModule)
-                {
-                    srm.Initialise(m_config);
-                    srm.PostInitialise();
-                    srm.AddRegion(manager.Scene);
-                    srm.RegionLoaded(manager.Scene);
-                    rmc.AllModules.Add(srm);
-                }
                 foreach (INonSharedRegionModule nsrm in nsregionModule)
                 {
                     nsrm.Initialise(m_config);

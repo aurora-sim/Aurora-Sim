@@ -37,7 +37,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Selection
 {
-    public class SelectionModule : ISharedRegionModule
+    public class SelectionModule : INonSharedRegionModule
     {
         #region Declares
 
@@ -50,7 +50,7 @@ namespace Aurora.Modules.Selection
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -59,10 +59,6 @@ namespace Aurora.Modules.Selection
             {
                 m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
             }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void AddRegion(IScene scene)

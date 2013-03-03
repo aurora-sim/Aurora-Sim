@@ -193,10 +193,6 @@ namespace Aurora.Modules.Wind
             get { return "WindModule"; }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         #endregion
 
         #region Console Commands

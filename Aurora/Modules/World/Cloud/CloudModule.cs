@@ -135,10 +135,6 @@ namespace Aurora.Modules.Cloud
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         private void UpdateCloudCover()
         {
             float[] newCover = new float[16*16];

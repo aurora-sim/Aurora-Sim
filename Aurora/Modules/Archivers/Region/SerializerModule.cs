@@ -35,7 +35,7 @@ using OpenSim.Region.Framework.Scenes.Serialization;
 
 namespace Aurora.Modules.Archivers
 {
-    public class SerialiserModule : ISharedRegionModule, IRegionSerialiserModule
+    public class SerializerModule : INonSharedRegionModule, IRegionSerialiserModule
     {
         #region IRegionSerialiserModule Members
 
@@ -68,7 +68,7 @@ namespace Aurora.Modules.Archivers
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public Type ReplaceableInterface
         {
@@ -78,11 +78,6 @@ namespace Aurora.Modules.Archivers
         public void Initialise(IConfigSource source)
         {
         }
-
-        public void PostInitialise()
-        {
-        }
-
 
         public void AddRegion(IScene scene)
         {

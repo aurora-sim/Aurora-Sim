@@ -28,7 +28,7 @@
 namespace Aurora.Modules.Weather
 {
     /*#region Weather Module
-    public class WeatherModule : ISharedRegionModule
+    public class WeatherModule : INonSharedRegionModule
     {
         #region Declares
         private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -42,7 +42,7 @@ namespace Aurora.Modules.Weather
         private IConfig m_config = null;
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -81,8 +81,6 @@ namespace Aurora.Modules.Weather
         public void Close()
         {
         }
-
-        public void PostInitialise() { }
 
         public string Name
         {

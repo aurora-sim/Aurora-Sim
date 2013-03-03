@@ -34,7 +34,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Agent.AssetTransaction
 {
-    public class AssetTransactionModule : ISharedRegionModule, IAgentAssetTransactions
+    public class AssetTransactionModule : INonSharedRegionModule, IAgentAssetTransactions
     {
 //        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -58,7 +58,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             get { return true; }
         }
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -66,36 +66,24 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
         public void AddRegion(IScene scene)
         {
-            if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
-            {
-                // MainConsole.Instance.Debug("initialising AgentAssetTransactionModule");
-                RegisteredScenes.Add(scene.RegionInfo.RegionID, scene);
-                scene.RegisterModuleInterface<IAgentAssetTransactions>(this);
+            scene.RegisterModuleInterface<IAgentAssetTransactions>(this);
 
-                scene.EventManager.OnNewClient += NewClient;
-                scene.EventManager.OnClosingClient += OnClosingClient;
-                scene.EventManager.OnRemovePresence += OnRemovePresence;
-            }
+            scene.EventManager.OnNewClient += NewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnRemovePresence += OnRemovePresence;
 
-            // EVIL HACK!
-            // This needs killing!
-            //
-            if (m_scene == null)
-                m_scene = scene;
+            m_scene = scene;
         }
 
         public void RemoveRegion(IScene scene)
         {
-            if (RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
-            {
-                // MainConsole.Instance.Debug("initialising AgentAssetTransactionModule");
-                RegisteredScenes.Remove(scene.RegionInfo.RegionID);
-                scene.UnregisterModuleInterface<IAgentAssetTransactions>(this);
+            scene.UnregisterModuleInterface<IAgentAssetTransactions>(this);
 
-                scene.EventManager.OnNewClient -= NewClient;
-                scene.EventManager.OnClosingClient -= OnClosingClient;
-                scene.EventManager.OnRemovePresence -= OnRemovePresence;
-            }
+            scene.EventManager.OnNewClient -= NewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnRemovePresence -= OnRemovePresence;
+
+            m_scene = null;
         }
 
         public void RegionLoaded(IScene scene)
@@ -105,10 +93,6 @@ namespace Aurora.Modules.Agent.AssetTransaction
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
