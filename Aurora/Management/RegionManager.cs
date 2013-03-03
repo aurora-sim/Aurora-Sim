@@ -577,6 +577,11 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             t.Start();
             while (!done)
                 Thread.Sleep(100);
+            if (manager.RegionInfo == null)
+            {
+                MessageBox.Show("You did not create a region, try again (if you did, make sure you presed the Update button!)");
+                return StartSynchronously(killWindowOnRegionCreation, page, config, regionManagement, startingRegionInfo);
+            }
             return manager.RegionInfo;
         }
     }

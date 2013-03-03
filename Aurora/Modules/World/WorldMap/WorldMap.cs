@@ -183,7 +183,8 @@ namespace Aurora.Modules.WorldMap
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
             uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
         {
-            if (remoteClient.Scene.GetScenePresence (remoteClient.AgentId).IsChildAgent)
+            IScenePresence presence = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
+            if (presence == null || presence.IsChildAgent)
                 return;//No child agent requests
 
             uint xstart;
