@@ -40,7 +40,7 @@ namespace OpenSim.Services.CapsService
     {
         #region Declares
 
-        private ulong m_RegionHandle;
+        private UUID m_RegionID;
         private GridRegion m_cachedRegion;
 
         protected Dictionary<UUID, IRegionClientCapsService> m_clientsInThisRegion =
@@ -55,28 +55,12 @@ namespace OpenSim.Services.CapsService
 
         public ulong RegionHandle
         {
-            get { return m_RegionHandle; }
+            get { return Region.RegionHandle; }
         }
 
-        public int RegionX
-        {
-            get
-            {
-                int x, y;
-                Util.UlongToInts(m_RegionHandle, out x, out y);
-                return x;
-            }
-        }
+        public int RegionX { get { return Region.RegionLocX; } }
 
-        public int RegionY
-        {
-            get
-            {
-                int x, y;
-                Util.UlongToInts(m_RegionHandle, out x, out y);
-                return y;
-            }
-        }
+        public int RegionY { get { return Region.RegionLocY; } }
 
         public GridRegion Region
         {
@@ -86,9 +70,7 @@ namespace OpenSim.Services.CapsService
                     return m_cachedRegion;
                 else
                 {
-                    m_cachedRegion = Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(null,
-                                                                                                         RegionX,
-                                                                                                         RegionY);
+                    m_cachedRegion = Registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null, m_RegionID);
                     return m_cachedRegion;
                 }
             }
@@ -103,9 +85,9 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name = "regionHandle"></param>
         /// <param name = "regionID"></param>
-        public void Initialise(ulong regionHandle, IRegistryCore registry)
+        public void Initialise(UUID regionID, IRegistryCore registry)
         {
-            m_RegionHandle = regionHandle;
+            m_RegionID = regionID;
             m_registry = registry;
         }
 
@@ -113,7 +95,7 @@ namespace OpenSim.Services.CapsService
         {
             foreach (IRegionClientCapsService regionC in m_clientsInThisRegion.Values)
             {
-                regionC.ClientCaps.RemoveCAPS(m_RegionHandle);
+                regionC.ClientCaps.RemoveCAPS(m_RegionID);
             }
             m_clientsInThisRegion.Clear();
         }

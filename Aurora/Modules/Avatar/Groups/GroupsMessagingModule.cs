@@ -239,7 +239,7 @@ namespace Aurora.Modules.Groups
                             , im.imSessionID
                             , true
                             , Utils.StringToBytes(session.Name)
-                            , client.Scene.RegionInfo.RegionHandle
+                            , client.Scene.RegionInfo.RegionID
                             );
                     }
                     else
@@ -257,7 +257,7 @@ namespace Aurora.Modules.Groups
             if (queue != null)
             {
                 queue.ChatterBoxSessionStartReply(groupName, groupID,
-                                                  remoteClient.AgentId, remoteClient.Scene.RegionInfo.RegionHandle);
+                                                  remoteClient.AgentId, remoteClient.Scene.RegionInfo.RegionID);
             }
         }
 
@@ -477,7 +477,7 @@ namespace Aurora.Modules.Groups
                                         , msg.imSessionID
                                         , true
                                         , Utils.StringToBytes(session.Name)
-                                        , msgclient.Scene.RegionInfo.RegionHandle
+                                        , msgclient.Scene.RegionInfo.RegionID
                                         );
                                 // Deliver locally, directly
                                 if (m_debugEnabled)
@@ -544,7 +544,7 @@ namespace Aurora.Modules.Groups
                             //Tell 'us' about all the other agents in the group
                             eq.ChatterBoxSessionAgentListUpdates(session.SessionID, NotUsAgents.ToArray(),
                                                                  member.AvatarKey, "ENTER",
-                                                                 SP.Scene.RegionInfo.RegionHandle);
+                                                                 SP.Scene.RegionInfo.RegionID);
                         }
                         else
                         {
@@ -552,7 +552,7 @@ namespace Aurora.Modules.Groups
                             IClientAPI otherAgent = GetActiveClient(member.AvatarKey);
                             if (otherAgent != null) //Local, so we can send it directly
                                 eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey,
-                                                                     "ENTER", otherAgent.Scene.RegionInfo.RegionHandle);
+                                                                     "ENTER", otherAgent.Scene.RegionInfo.RegionID);
                             else
                             {
                                 ISyncMessagePosterService amps = m_scene.RequestModuleInterface<ISyncMessagePosterService>();
@@ -617,7 +617,7 @@ namespace Aurora.Modules.Groups
             IClientAPI affectedUser = GetActiveClient(thismember.AvatarKey);
             if (affectedUser != null)
                 eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, AgentID, "ENTER",
-                                                     affectedUser.Scene.RegionInfo.RegionHandle);
+                                                     affectedUser.Scene.RegionInfo.RegionID);
             else if (forward)
                 SendMutedUserIM(thismember, sessionid);
         }
@@ -771,7 +771,7 @@ namespace Aurora.Modules.Groups
                                 //Tell 'us' about all the other agents in the group
                                 queue.ChatterBoxSessionAgentListUpdates(GroupID, NotUsAgents.ToArray(), member.AvatarKey,
                                                                         "ENTER",
-                                                                        remoteClient.Scene.RegionInfo.RegionHandle);
+                                                                        remoteClient.Scene.RegionInfo.RegionID);
                             }
                             else
                             {
@@ -780,7 +780,7 @@ namespace Aurora.Modules.Groups
                                 if (otherAgent != null) //Local, so we can send it directly
                                     queue.ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), member.AvatarKey,
                                                                             "ENTER",
-                                                                            otherAgent.Scene.RegionInfo.RegionHandle);
+                                                                            otherAgent.Scene.RegionInfo.RegionID);
                                 else
                                 {
                                     ISyncMessagePosterService amps = m_scene.RequestModuleInterface<ISyncMessagePosterService>();
@@ -810,7 +810,7 @@ namespace Aurora.Modules.Groups
                                 Transition = "ENTER"
                             };
                     queue.ChatterBoxSessionAgentListUpdates(GroupID, new[] {ourblock}, AgentID, "ENTER",
-                                                            remoteClient.Scene.RegionInfo.RegionHandle);
+                                                            remoteClient.Scene.RegionInfo.RegionID);
                 }
             }
                 // Send a message from locally connected client to a group
@@ -931,7 +931,7 @@ namespace Aurora.Modules.Groups
                 IClientAPI user = GetActiveClient(sessionMember.AvatarKey);
                 if (user != null)
                     eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] {block}, sessionMember.AvatarKey,
-                                                         "LEAVE", user.Scene.RegionInfo.RegionHandle);
+                                                         "LEAVE", user.Scene.RegionInfo.RegionID);
                 else
                     usersToForwardTo.Add(sessionMember.AvatarKey);
             }

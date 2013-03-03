@@ -312,7 +312,7 @@ namespace Aurora.Modules.SimConsole
             IEventQueueService eq = m_scenes[0].RequestModuleInterface<IEventQueueService>();
             IScene scene = findScene(AgentID);
             if (eq != null && scene != null)
-                eq.Enqueue(item, AgentID, scene.RegionInfo.RegionHandle);
+                eq.Enqueue(item, AgentID, scene.RegionInfo.RegionID);
         }
 
         private IScene findScene(UUID agentID)

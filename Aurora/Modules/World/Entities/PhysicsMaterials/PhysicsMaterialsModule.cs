@@ -118,7 +118,7 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
                 eqs.ObjectPhysicsProperties(list.ToArray(),
                                             agentID, m_scene.RegionInfo.RegionHandle);
 #else
-                eqs.ObjectPhysicsProperties(keys.Select(key => m_scene.GetSceneObjectPart(key.AsUUID())).ToArray(), agentID, m_scene.RegionInfo.RegionHandle);
+                eqs.ObjectPhysicsProperties(keys.Select(key => m_scene.GetSceneObjectPart(key.AsUUID())).ToArray(), agentID, m_scene.RegionInfo.RegionID);
 #endif
             }
             //Send back data

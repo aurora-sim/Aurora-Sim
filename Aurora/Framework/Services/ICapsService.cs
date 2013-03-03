@@ -71,7 +71,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "circuitData">The circuit data of the agent that is being created</param>
         /// <param name = "port">The port to use for the CAPS service</param>
         /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
-        string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent,
+        string CreateCAPS(UUID AgentID, string CAPSBase, UUID regionHandle, bool IsRootAgent,
                           AgentCircuitData circuitData, uint port);
 
         /// <summary>
@@ -93,19 +93,19 @@ namespace OpenSim.Services.Interfaces
         ///   Create a caps handler for the given region
         /// </summary>
         /// <param name = "RegionHandle"></param>
-        void AddCapsForRegion(ulong RegionHandle);
+        void AddCapsForRegion(UUID RegionHandle);
 
         /// <summary>
         ///   Remove the handler for the given region
         /// </summary>
         /// <param name = "RegionHandle"></param>
-        void RemoveCapsForRegion(ulong RegionHandle);
+        void RemoveCapsForRegion(UUID RegionHandle);
 
         /// <summary>
         ///   Get a region handler for the given region
         /// </summary>
         /// <param name = "RegionHandle"></param>
-        IRegionCapsService GetCapsForRegion(ulong regionID);
+        IRegionCapsService GetCapsForRegion(UUID regionID);
 
         /// <summary>
         ///   Get all agents caps services across the grid
@@ -212,7 +212,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "regionID"></param>
         /// <returns></returns>
-        IRegionClientCapsService GetCapsService(ulong regionHandle);
+        IRegionClientCapsService GetCapsService(UUID regionHandle);
 
         /// <summary>
         ///   Get the root agent's caps service
@@ -235,14 +235,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "UrlToInform"></param>
         /// <param name = "port"></param>
         /// <returns></returns>
-        IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, AgentCircuitData circuitData,
+        IRegionClientCapsService GetOrCreateCapsService(UUID regionID, string CAPSBase, AgentCircuitData circuitData,
                                                         uint port);
 
         /// <summary>
         ///   Remove the caps for this user from the given region
         /// </summary>
         /// <param name = "regionHandle"></param>
-        void RemoveCAPS(ulong regionHandle);
+        void RemoveCAPS(UUID regionHandle);
     }
 
     /// <summary>
@@ -265,6 +265,11 @@ namespace OpenSim.Services.Interfaces
         ///   The Region Y Location (in meters)
         /// </summary>
         int RegionY { get; }
+
+        /// <summary>
+        ///   The UUID of the Region
+        /// </summary>
+        UUID RegionID { get; }
 
         /// <summary>
         ///   The Region for this caps
@@ -430,7 +435,7 @@ namespace OpenSim.Services.Interfaces
         ///   Initialise the service
         /// </summary>
         /// <param name = "regionHandle"></param>
-        void Initialise(ulong regionHandle, IRegistryCore registry);
+        void Initialise(UUID RegionID, IRegistryCore registry);
 
         /// <summary>
         ///   Close the service and all underlieing services

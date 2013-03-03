@@ -49,7 +49,7 @@ namespace OpenSim.Services.CapsService
         /// <summary>
         /// A list of all regions Caps Services
         /// </summary>
-        protected Dictionary<ulong, IRegionCapsService> m_RegionCapsServices = new Dictionary<ulong, IRegionCapsService>();
+        protected Dictionary<UUID, IRegionCapsService> m_RegionCapsServices = new Dictionary<UUID, IRegionCapsService>();
 
         protected IRegistryCore m_registry;
         public IRegistryCore Registry
@@ -164,11 +164,11 @@ namespace OpenSim.Services.CapsService
         /// <param name="circuitData"></param>
         /// <param name = "port">The port to use for the CAPS service</param>
         /// <returns></returns>
-        public string CreateCAPS (UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData, uint port)
+        public string CreateCAPS(UUID AgentID, string CAPSBase, UUID regionID, bool IsRootAgent, AgentCircuitData circuitData, uint port)
         {
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
-            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, circuitData, port);
+            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionID, CAPSBase, circuitData, port);
             
             //Fix the root agent status
             clientService.RootAgent = IsRootAgent;
@@ -234,10 +234,10 @@ namespace OpenSim.Services.CapsService
         /// Get a region handler for the given region
         /// </summary>
         /// <param name="RegionHandle"></param>
-        public IRegionCapsService GetCapsForRegion(ulong RegionHandle)
+        public IRegionCapsService GetCapsForRegion(UUID regionID)
         {
             IRegionCapsService service;
-            if (m_RegionCapsServices.TryGetValue(RegionHandle, out service))
+            if (m_RegionCapsServices.TryGetValue(regionID, out service))
             {
                 return service;
             }
@@ -248,14 +248,14 @@ namespace OpenSim.Services.CapsService
         /// Create a caps handler for the given region
         /// </summary>
         /// <param name="RegionHandle"></param>
-        public void AddCapsForRegion(ulong RegionHandle)
+        public void AddCapsForRegion(UUID regionID)
         {
-            if (!m_RegionCapsServices.ContainsKey(RegionHandle))
+            if (!m_RegionCapsServices.ContainsKey(regionID))
             {
                 IRegionCapsService service = new PerRegionCapsService();
-                service.Initialise(RegionHandle, Registry);
+                service.Initialise(regionID, Registry);
 
-                m_RegionCapsServices.Add(RegionHandle, service);
+                m_RegionCapsServices.Add(regionID, service);
             }
         }
 
@@ -263,10 +263,10 @@ namespace OpenSim.Services.CapsService
         /// Remove the handler for the given region
         /// </summary>
         /// <param name="RegionHandle"></param>
-        public void RemoveCapsForRegion(ulong RegionHandle)
+        public void RemoveCapsForRegion(UUID regionID)
         {
-            if (m_RegionCapsServices.ContainsKey(RegionHandle))
-                m_RegionCapsServices.Remove(RegionHandle);
+            if (m_RegionCapsServices.ContainsKey(regionID))
+                m_RegionCapsServices.Remove(regionID);
         }
 
         public List<IRegionCapsService> GetRegionsCapsServices()

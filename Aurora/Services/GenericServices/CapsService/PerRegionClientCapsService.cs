@@ -65,12 +65,20 @@ namespace OpenSim.Services.CapsService
             get { return m_disabled; }
             set { m_disabled = value; }
         }
-        
+
         public ulong RegionHandle
         {
             get
             {
                 return m_regionCapsService.RegionHandle;
+            }
+        }
+
+        public UUID RegionID
+        {
+            get
+            {
+                return m_regionCapsService.Region.RegionID;
             }
         }
 

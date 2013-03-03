@@ -771,7 +771,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
         protected virtual void ReadBackup(IScene scene)
         {
-            MainConsole.Instance.Debug("[FileBasedSimulationData]: Restoring sim backup...");
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Restoring sim backup...");
             List<uint> foundLocalIDs = new List<uint>();
             var stream = ArchiveHelpers.GetStream((m_loadDirectory == "" || m_loadDirectory == "/")
                                                       ? m_fileName

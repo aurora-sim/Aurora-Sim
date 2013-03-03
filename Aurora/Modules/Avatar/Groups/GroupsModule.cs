@@ -833,7 +833,7 @@ namespace Aurora.Modules.Groups
 
             if (queue != null)
                 queue.Enqueue(buildEvent("AgentGroupDataUpdate", llDataStruct), GetRequestingAgentID(remoteClient),
-                              remoteClient.Scene.RegionInfo.RegionHandle);
+                              remoteClient.Scene.RegionInfo.RegionID);
         }
 
         public OSD buildEvent(string eventName, OSD eventBody)

@@ -258,7 +258,7 @@ namespace OpenSim.Services.CapsService
             circuitData.child = false;
 
             if(m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
-                m_service.AgentID, m_service.RegionHandle, out reason) || reason == "")
+                m_service.AgentID, m_service.RegionID, out reason) || reason == "")
             {
                 retVal.Add("success", OSD.FromBoolean(true));
             }

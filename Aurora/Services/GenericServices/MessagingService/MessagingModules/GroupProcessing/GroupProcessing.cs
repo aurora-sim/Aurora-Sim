@@ -79,12 +79,12 @@ namespace OpenSim.Services.MessagingService
                 {
                     UUID agentID = message["AgentID"];
                     IEventQueueService eqs = m_registry.RequestModuleInterface<IEventQueueService>();
-                    ICapsService caps = m_registry.RequestModuleInterface<ICapsService>();
-                    if (caps != null)
+                    IAgentInfoService agentInfo = m_registry.RequestModuleInterface<IAgentInfoService>();
+                    if (agentInfo != null)
                     {
-                        IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
-                        if (clientCaps != null && clientCaps.GetRootCapsService() != null)
-                            eqs.Enqueue(innerMessage, agentID, clientCaps.GetRootCapsService().RegionHandle);
+                        UserInfo user = agentInfo.GetUserInfo(agentID.ToString());
+                        if (user != null && user.IsOnline)
+                            eqs.Enqueue(innerMessage, agentID, user.CurrentRegionID);
                     }
                 }
             }

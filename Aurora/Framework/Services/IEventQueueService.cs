@@ -48,7 +48,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "avatarID"></param>
         /// <param name = "RegionHandle"></param>
         /// <returns>Whether it was added successfully</returns>
-        bool Enqueue(OSD o, UUID avatarID, ulong RegionHandle);
+        bool Enqueue(OSD o, UUID avatarID, UUID regionID);
 
         // These are required to decouple Scenes from EventQueueHelper
 
@@ -57,47 +57,47 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "avatarID"></param>
         /// <param name = "RegionHandle"></param>
-        void DisableSimulator(UUID avatarID, ulong RegionHandle);
+        void DisableSimulator(UUID avatarID, ulong RegionHandle, UUID regionID);
 
         void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY,
-                             ulong RegionHandle);
+                             UUID regionID);
 
         void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl,
-                                         int RegionSizeX, int RegionSizeY, ulong RegionHandle);
+                                         int RegionSizeX, int RegionSizeY, UUID regionID);
 
         void TeleportFinishEvent(ulong regionHandle, byte simAccess,
                                  IPAddress address, int port, string capsURL,
                                  uint locationID, UUID agentID, uint teleportFlags, int RegionSizeX, int RegionSizeY,
-                                 ulong RegionHandle);
+                                 UUID regionID);
 
         void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                          IPAddress address, int port, string capsURL,
-                         UUID avatarID, UUID sessionID, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
+                         UUID avatarID, UUID sessionID, int RegionSizeX, int RegionSizeY, UUID regionID);
 
-        void ChatterBoxSessionStartReply(string groupName, UUID groupID, UUID AgentID, ulong RegionHandle);
+        void ChatterBoxSessionStartReply(string groupName, UUID groupID, UUID AgentID, UUID regionID);
 
         void ChatterboxInvitation(UUID sessionID, string sessionName,
                                   UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog,
                                   uint timeStamp, bool offline, int parentEstateID, Vector3 position,
-                                  uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket, ulong RegionHandle);
+                                  uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket, UUID regionID);
 
         void ChatterBoxSessionAgentListUpdates(UUID sessionID, UUID fromAgent, UUID toAgent, bool canVoiceChat,
-                                               bool isModerator, bool textMute, ulong RegionHandle);
+                                               bool isModerator, bool textMute, UUID regionID);
 
-        void ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage, UUID avatarID, ulong RegionHandle);
-        void ParcelObjectOwnersReply(ParcelObjectOwnersReplyMessage parcelMessage, UUID avatarID, ulong RegionHandle);
-        void LandStatReply(LandStatReplyMessage message, UUID avatarID, ulong RegionHandle);
+        void ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage, UUID avatarID, UUID regionID);
+        void ParcelObjectOwnersReply(ParcelObjectOwnersReplyMessage parcelMessage, UUID avatarID, UUID regionID);
+        void LandStatReply(LandStatReplyMessage message, UUID avatarID, UUID regionID);
 
         void ChatterBoxSessionAgentListUpdates(UUID sessionID,
                                                ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] message,
-                                               UUID toAgent, string Transition, ulong RegionHandle);
+                                               UUID toAgent, string Transition, UUID regionID);
 
-        void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, ulong RegionHandle);
-        void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, ulong RegionHandle);
+        void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, UUID regionID);
+        void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, UUID regionID);
 
         void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
-                                UUID avatarID, ulong RegionHandle);
+                                UUID avatarID, UUID regionID);
 
-        void ObjectPhysicsProperties(ISceneChildEntity[] entities, UUID avatarID, ulong RegionHandle);
+        void ObjectPhysicsProperties(ISceneChildEntity[] entities, UUID avatarID, UUID regionID);
     }
 }

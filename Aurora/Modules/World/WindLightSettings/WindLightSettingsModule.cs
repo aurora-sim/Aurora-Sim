@@ -653,7 +653,7 @@ namespace Aurora.Modules.WindlightSettings
             OSD item = BuildSendEQMessage(wl.ToOSD());
             IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();
             if (eq != null)
-                eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionHandle);
+                eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionID);
         }
 
         private OSD BuildSendEQMessage(OSDMap body)

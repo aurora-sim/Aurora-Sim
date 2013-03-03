@@ -789,7 +789,7 @@ namespace Aurora.Modules.Chat
                             Transition = "ENTER"
                         };
                 eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, Agent, "ENTER",
-                                                     findScene(Agent).RegionInfo.RegionHandle);
+                                                     findScene(Agent).RegionInfo.RegionID);
 
                 ChatterBoxSessionStartReplyMessage cs = new ChatterBoxSessionStartReplyMessage
                                                             {
@@ -846,7 +846,7 @@ namespace Aurora.Modules.Chat
                                                                  ? NotUsAgents.ToArray()
                                                                  : Us.ToArray(),
                                                              member.AvatarKey, "ENTER",
-                                                             findScene(Agent).RegionInfo.RegionHandle);
+                                                             findScene(Agent).RegionInfo.RegionID);
                     }
                     return "Accepted";
                 }
@@ -884,7 +884,7 @@ namespace Aurora.Modules.Chat
 
                 // Send an update to the affected user
                 eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, AgentID, "",
-                                                     findScene(Agent).RegionInfo.RegionHandle);
+                                                     findScene(Agent).RegionInfo.RegionID);
 
                 return "Accepted";
             }
@@ -1055,7 +1055,7 @@ namespace Aurora.Modules.Chat
             foreach (ChatSessionMember sessionMember in session.Members)
             {
                 eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] {block}, sessionMember.AvatarKey, "LEAVE",
-                                                     findScene(sessionMember.AvatarKey).RegionInfo.RegionHandle);
+                                                     findScene(sessionMember.AvatarKey).RegionInfo.RegionID);
             }
         }
 
@@ -1101,7 +1101,7 @@ namespace Aurora.Modules.Chat
                         , im.imSessionID
                         , false
                         , Utils.StringToBytes(session.Name)
-                        , findScene(member.AvatarKey).RegionInfo.RegionHandle
+                        , findScene(member.AvatarKey).RegionInfo.RegionID
                         );
                 }
             }

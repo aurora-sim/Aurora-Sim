@@ -35,7 +35,7 @@ namespace Aurora.Framework
     public class SyncMessageHelper
     {
         public static OSDMap ArrivedAtDestination(UUID AgentID, int DrawDistance, AgentCircuitData circuit,
-                                                  ulong requestingRegion)
+                                                  UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -63,7 +63,7 @@ namespace Aurora.Framework
                                       {"NewStatus", newStatus}
                                   };
 
-            return buildEvent("AgentStatusChange", llsdBody, AgentID, 0);
+            return buildEvent("AgentStatusChange", llsdBody, AgentID, UUID.Zero);
         }
 
         /// <summary>
@@ -82,14 +82,14 @@ namespace Aurora.Framework
                                       {"NewStatus", newStatus}
                                   };
 
-            return buildEvent("AgentStatusChanges", llsdBody, FriendToInformID, 0);
+            return buildEvent("AgentStatusChanges", llsdBody, FriendToInformID, UUID.Zero);
         }
 
         public static OSDMap UpdateEstateInfo(uint EstateID, UUID RegionID)
         {
             OSDMap llsdBody = new OSDMap {{"EstateID", EstateID}, {"RegionID", RegionID}};
 
-            return buildEvent("UpdateEstateInfo", llsdBody, UUID.Zero, 0);
+            return buildEvent("UpdateEstateInfo", llsdBody, UUID.Zero, UUID.Zero);
         }
 
         public static OSDMap NeighborChange(UUID TargetRegionID, UUID RegionID, bool down)
@@ -100,12 +100,12 @@ namespace Aurora.Framework
             llsdBody["Region"] = RegionID;
             llsdBody["Down"] = down;
 
-            return buildEvent("NeighborChange", llsdBody, UUID.Zero, 0);
+            return buildEvent("NeighborChange", llsdBody, UUID.Zero, UUID.Zero);
         }
 
         public static OSDMap CrossAgent(GridRegion crossingRegion, Vector3 pos,
                                         Vector3 velocity, AgentCircuitData circuit, AgentData cAgent,
-                                        ulong RequestingRegion)
+                                        UUID RequestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -121,7 +121,7 @@ namespace Aurora.Framework
 
         public static OSDMap TeleportAgent(int DrawDistance, AgentCircuitData circuit,
                                            AgentData data, uint TeleportFlags,
-                                           GridRegion destination, ulong requestingRegion)
+                                           GridRegion destination, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -135,21 +135,21 @@ namespace Aurora.Framework
             return buildEvent("TeleportAgent", llsdBody, circuit.AgentID, requestingRegion);
         }
 
-        public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, ulong requestingRegion)
+        public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap {{"AgentPos", agentpos.Pack()}};
 
             return buildEvent("SendChildAgentUpdate", llsdBody, agentpos.AgentID, requestingRegion);
         }
 
-        public static OSDMap CancelTeleport(UUID AgentID, ulong requestingRegion)
+        public static OSDMap CancelTeleport(UUID AgentID, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"RequestingRegion", requestingRegion}};
 
             return buildEvent("CancelTeleport", llsdBody, AgentID, requestingRegion);
         }
 
-        public static OSDMap AgentLoggedOut(UUID AgentID, ulong requestingRegion, AgentPosition agentpos)
+        public static OSDMap AgentLoggedOut(UUID AgentID, UUID requestingRegion, AgentPosition agentpos)
         {
             OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"AgentPos", agentpos.Pack()}, {"RequestingRegion", requestingRegion}};
 
@@ -157,7 +157,7 @@ namespace Aurora.Framework
         }
 
         public static OSDMap FriendGrantRights(UUID requester, UUID target, int myFlags, int rights,
-                                               ulong requestingRegion)
+                                               UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -171,7 +171,7 @@ namespace Aurora.Framework
             return buildEvent("FriendGrantRights", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap FriendTerminated(UUID requester, UUID exfriend, ulong requestingRegion)
+        public static OSDMap FriendTerminated(UUID requester, UUID exfriend, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -184,7 +184,7 @@ namespace Aurora.Framework
         }
 
         public static OSDMap FriendshipOffered(UUID requester, UUID friend, GridInstantMessage im,
-                                               ulong requestingRegion)
+                                               UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -197,7 +197,7 @@ namespace Aurora.Framework
             return buildEvent("FriendshipOffered", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap FriendshipDenied(UUID requester, string clientName, UUID friendID, ulong requestingRegion)
+        public static OSDMap FriendshipDenied(UUID requester, string clientName, UUID friendID, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -210,7 +210,7 @@ namespace Aurora.Framework
             return buildEvent("FriendshipDenied", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap FriendshipApproved(UUID requester, string clientName, UUID friendID, ulong requestingRegion)
+        public static OSDMap FriendshipApproved(UUID requester, string clientName, UUID friendID, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -223,25 +223,25 @@ namespace Aurora.Framework
             return buildEvent("FriendshipApproved", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap LogoutRegionAgents(ulong requestingRegion)
+        public static OSDMap LogoutRegionAgents(UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();
             return buildEvent("LogoutRegionAgents", llsdBody, UUID.Zero, requestingRegion);
         }
 
-        public static OSDMap RegionIsOnline(ulong requestingRegion)
+        public static OSDMap RegionIsOnline(UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();
             return buildEvent("RegionIsOnline", llsdBody, UUID.Zero, requestingRegion);
         }
 
-        public static OSDMap DisableSimulator(UUID AgentID, ulong requestingRegion)
+        public static OSDMap DisableSimulator(UUID AgentID, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();
             return buildEvent("DisableSimulator", llsdBody, AgentID, requestingRegion);
         }
 
-        public static OSDMap buildEvent(string eventName, OSD eventBody, UUID AgentID, ulong requestingRegion)
+        public static OSDMap buildEvent(string eventName, OSD eventBody, UUID AgentID, UUID requestingRegion)
         {
             OSDMap llsdEvent = new OSDMap(2)
                                    {

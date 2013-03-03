@@ -40,8 +40,8 @@ namespace OpenSim.Services.CapsService
     {
         protected ICapsService m_CapsService;
 
-        protected Dictionary<ulong, IRegionClientCapsService> m_RegionCapsServices =
-            new Dictionary<ulong, IRegionClientCapsService>();
+        protected Dictionary<UUID, IRegionClientCapsService> m_RegionCapsServices =
+            new Dictionary<UUID, IRegionClientCapsService>();
 
         protected UserAccount m_account;
         protected UUID m_agentID;
@@ -112,10 +112,10 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         public void Close()
         {
-            List<ulong> handles = new List<ulong>(m_RegionCapsServices.Keys);
-            foreach (ulong regionHandle in handles)
+            List<UUID> handles = new List<UUID>(m_RegionCapsServices.Keys);
+            foreach (UUID regionID in handles)
             {
-                RemoveCAPS(regionHandle);
+                RemoveCAPS(regionID);
             }
             m_RegionCapsServices.Clear();
         }
@@ -126,7 +126,7 @@ namespace OpenSim.Services.CapsService
         /// <param name = "regionID"></param>
         /// <param name = "agentID"></param>
         /// <returns></returns>
-        public IRegionClientCapsService GetCapsService(ulong regionID)
+        public IRegionClientCapsService GetCapsService(UUID regionID)
         {
             if (m_RegionCapsServices.ContainsKey(regionID))
                 return m_RegionCapsServices[regionID];
@@ -141,15 +141,7 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public IRegionClientCapsService GetRootCapsService()
         {
-#if (!ISWIN)
-            foreach (IRegionClientCapsService clientCaps in m_RegionCapsServices.Values)
-            {
-                if (clientCaps.RootAgent) return clientCaps;
-            }
-            return null;
-#else
             return m_RegionCapsServices.Values.FirstOrDefault(clientCaps => clientCaps.RootAgent);
-#endif
         }
 
         public List<IRegionClientCapsService> GetCapsServices()
@@ -162,7 +154,7 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name = "regionID"></param>
         /// <returns></returns>
-        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase,
+        public IRegionClientCapsService GetOrCreateCapsService(UUID regionID, string CAPSBase,
                                                                AgentCircuitData circuitData, uint port)
         {
             //If one already exists, don't add a new one
@@ -186,7 +178,7 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name = "AgentID"></param>
         /// <param name = "regionHandle"></param>
-        public void RemoveCAPS(ulong regionHandle)
+        public void RemoveCAPS(UUID regionHandle)
         {
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
                 return;
@@ -207,7 +199,7 @@ namespace OpenSim.Services.CapsService
         ///   Add a new Caps Service for the given region if one does not already exist
         /// </summary>
         /// <param name = "regionHandle"></param>
-        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, AgentCircuitData circuitData,
+        protected void AddCapsServiceForRegion(UUID regionID, string CAPSBase, AgentCircuitData circuitData,
                                                uint port)
         {
             if (m_clientEndPoint == null && circuitData.ClientIPEndPoint != null)
@@ -219,16 +211,16 @@ namespace OpenSim.Services.CapsService
                 if (IPAddress.TryParse(circuitData.IPAddress, out test))
                     m_clientEndPoint = new IPEndPoint(test, 0); //Dunno the port, so leave it alone
             }
-            if (!m_RegionCapsServices.ContainsKey(regionHandle))
+            if (!m_RegionCapsServices.ContainsKey(regionID))
             {
                 //Now add this client to the region caps
                 //Create if needed
-                m_CapsService.AddCapsForRegion(regionHandle);
-                IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
+                m_CapsService.AddCapsForRegion(regionID);
+                IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionID);
 
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
                 regionClient.Initialise(this, regionCaps, CAPSBase, circuitData, port);
-                m_RegionCapsServices[regionHandle] = regionClient;
+                m_RegionCapsServices[regionID] = regionClient;
 
                 //Now get and add them
                 regionCaps.AddClientToRegion(regionClient);

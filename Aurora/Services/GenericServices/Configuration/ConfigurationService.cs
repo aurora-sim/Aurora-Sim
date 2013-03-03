@@ -125,7 +125,7 @@ namespace OpenSim.Services.ConfigurationService
             GetConfigFor("AvatarServerURI", request);
             GetConfigFor("UserAccountServerURI", request);
             GetConfigFor("ServerURI", request);
-            GetConfigFor("MessagingServerURI", request);
+            GetConfigFor("SyncMessageServerURI", request);
             m_urls = request;
         }
 

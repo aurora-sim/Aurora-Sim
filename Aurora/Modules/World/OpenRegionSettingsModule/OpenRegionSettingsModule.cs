@@ -441,7 +441,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             OSD item = BuildOpenRegionInfo(presence);
             IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();
             if (eq != null)
-                eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionHandle);
+                eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionID);
         }
 
         public OSD BuildOpenRegionInfo(IScenePresence sp)

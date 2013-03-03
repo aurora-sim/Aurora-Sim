@@ -279,7 +279,7 @@ namespace Aurora.Modules.EntityTransfer
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
                     syncPoster.PostToServer(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
-                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle));
+                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionID));
                 }
             }
 
@@ -380,7 +380,7 @@ namespace Aurora.Modules.EntityTransfer
 
         public void RequestTeleportCancel(IClientAPI client)
         {
-            CancelTeleport(client.AgentId, client.Scene.RegionInfo.RegionHandle);
+            CancelTeleport(client.AgentId, client.Scene.RegionInfo.RegionID);
         }
 
         /// <summary>
@@ -592,7 +592,7 @@ namespace Aurora.Modules.EntityTransfer
                     {
                         syncPoster.PostToServer(SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
                             agent.Velocity, agentCircuit, cAgent,
-                            agent.Scene.RegionInfo.RegionHandle));
+                            agent.Scene.RegionInfo.RegionID));
                     }
                 }
 
@@ -853,11 +853,11 @@ namespace Aurora.Modules.EntityTransfer
 
         #region Misc
 
-        public void CancelTeleport(UUID AgentID, ulong RegionHandle)
+        public void CancelTeleport(UUID AgentID, UUID RegionID)
         {
             ISyncMessagePosterService syncPoster = m_scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncPoster != null)
-                syncPoster.PostToServer(SyncMessageHelper.CancelTeleport(AgentID, RegionHandle));
+                syncPoster.PostToServer(SyncMessageHelper.CancelTeleport(AgentID, RegionID));
         }
 
         #endregion

@@ -320,7 +320,7 @@ namespace Aurora.RedisServices.AssetService
             finally
             {
                 sw.Stop();
-                if (MainConsole.Instance != null)
+                if (MainConsole.Instance != null && asset != null)
                     MainConsole.Instance.Warn("[REDIS ASSET SERVICE]: Took " + sw.ElapsedMilliseconds + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
             }
             return asset;

@@ -252,7 +252,7 @@ namespace OpenSim.Services.CapsService
                 OSD item = DisplayNameUpdate(newDisplayName, oldDisplayName, InfoFromAv.PrincipalID, isDefaultName,
                                              InfoFromAv.FirstName, InfoFromAv.LastName,
                                              InfoFromAv.FirstName + "." + InfoFromAv.LastName);
-                m_eventQueue.Enqueue(item, ToAgentID, m_service.RegionHandle);
+                m_eventQueue.Enqueue(item, ToAgentID, m_service.Region.RegionID);
             }
         }
 
@@ -281,7 +281,7 @@ namespace OpenSim.Services.CapsService
                 OSD item = DisplayNameReply(newDisplayName, oldDisplayName, m_avatar.PrincipalID, isDefaultName,
                                             m_avatar.FirstName, m_avatar.LastName,
                                             m_avatar.FirstName + "." + m_avatar.LastName);
-                m_eventQueue.Enqueue(item, m_avatar.PrincipalID, m_service.RegionHandle);
+                m_eventQueue.Enqueue(item, m_avatar.PrincipalID, m_service.Region.RegionID);
             }
         }
 

@@ -961,15 +961,15 @@ namespace Aurora.Framework.Servers.HttpServer
                 //
                 // An alternative may be to turn off all response write exceptions on the HttpListener, but let's go
                 // with the minimum first
-                MainConsole.Instance.Warn(String.Format("[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux ", e.Message), e);
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux ", e.ToString());
             }
             catch (IOException e)
             {
-                MainConsole.Instance.Error(String.Format("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.StackTrace), e);
+                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error(String.Format("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.StackTrace), e);
+                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
                 SendHTML500(response);
             }
             finally

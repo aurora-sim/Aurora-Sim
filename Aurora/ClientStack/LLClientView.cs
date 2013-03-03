@@ -2767,7 +2767,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
-                    eq.GroupMembership(Groupupdate, AgentId, Scene.RegionInfo.RegionHandle);
+                    eq.GroupMembership(Groupupdate, AgentId, Scene.RegionInfo.RegionID);
                 }
             }
             catch (Exception ex)
@@ -2825,7 +2825,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IEventQueueService eventService = m_scene.RequestModuleInterface<IEventQueueService>();
             if (eventService != null)
             {
-                eventService.LandStatReply(message, AgentId, m_scene.RegionInfo.RegionHandle);
+                eventService.LandStatReply(message, AgentId, m_scene.RegionInfo.RegionID);
             }
         }
 
@@ -3397,7 +3397,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
             if (eq != null)
             {
-                eq.Enqueue(BuildEvent("AvatarGroupsReply", llsd), AgentId, Scene.RegionInfo.RegionHandle);
+                eq.Enqueue(BuildEvent("AvatarGroupsReply", llsd), AgentId, Scene.RegionInfo.RegionID);
             }
         }
 
@@ -4908,7 +4908,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
-                    eq.ParcelProperties(updateMessage, AgentId, Scene.RegionInfo.RegionHandle);
+                    eq.ParcelProperties(updateMessage, AgentId, Scene.RegionInfo.RegionID);
                 }
                 else
                 {
@@ -5027,7 +5027,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IEventQueueService eventQueueService = m_scene.RequestModuleInterface<IEventQueueService>();
             if (eventQueueService != null)
             {
-                eventQueueService.ParcelObjectOwnersReply(message, AgentId, m_scene.RegionInfo.RegionHandle);
+                eventQueueService.ParcelObjectOwnersReply(message, AgentId, m_scene.RegionInfo.RegionID);
             }
         }
 

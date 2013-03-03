@@ -63,20 +63,20 @@ namespace OpenSim.Services.CapsService
             get { return this; }
         }
 
-        public virtual bool Enqueue(OSD o, UUID agentID, ulong regionHandle)
+        public virtual bool Enqueue(OSD o, UUID agentID, UUID regionID)
         {
-            return Enqueue(OSDParser.SerializeLLSDXmlString(o), agentID, regionHandle);
+            return Enqueue(OSDParser.SerializeLLSDXmlString(o), agentID, regionID);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public virtual bool Enqueue(string o, UUID agentID, ulong regionHandle)
+        public virtual bool Enqueue(string o, UUID agentID, UUID regionID)
         {
-            object remoteValue = DoRemote(o, agentID, regionHandle);
+            object remoteValue = DoRemote(o, agentID, regionID);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
             //Find the CapsService for the user and enqueue the event
-            IRegionClientCapsService service = GetRegionClientCapsService(agentID, regionHandle);
+            IRegionClientCapsService service = GetRegionClientCapsService(agentID, regionID);
             if (service == null)
                 return false;
             RegionClientEventQueueService eventQueueService = service.GetServiceConnectors().
@@ -113,74 +113,73 @@ namespace OpenSim.Services.CapsService
 
         #endregion
 
-        private IRegionClientCapsService GetRegionClientCapsService(UUID agentID, ulong RegionHandle)
+        private IRegionClientCapsService GetRegionClientCapsService(UUID agentID, UUID RegionHandle)
         {
             IClientCapsService clientCaps = m_service.GetClientCapsService(agentID);
             if (clientCaps == null)
                 return null;
-            IRegionClientCapsService regionCaps = clientCaps.GetCapsService(RegionHandle);
             //If it doesn't exist, it will be null anyway, so we don't need to check anything else
-            return regionCaps;
+            return clientCaps.GetCapsService(RegionHandle);
         }
 
         #region EventQueue Message Enqueue
 
-        public virtual void DisableSimulator(UUID avatarID, ulong RegionHandle)
+        public virtual void DisableSimulator(UUID avatarID, ulong RegionHandle, UUID regionID)
         {
             OSD item = EventQueueHelper.DisableSimulator(RegionHandle);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
         public virtual void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX,
-                                            int RegionSizeY, ulong RegionHandle)
+                                            int RegionSizeY, UUID regionID)
         {
             OSD item = EventQueueHelper.EnableSimulator(handle, IPAddress, Port, RegionSizeX, RegionSizeY);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
-        public virtual void ObjectPhysicsProperties(ISceneChildEntity[] entities, UUID avatarID, ulong RegionHandle)
+        public virtual void ObjectPhysicsProperties(ISceneChildEntity[] entities, UUID avatarID, UUID regionID)
         {
             OSD item = EventQueueHelper.ObjectPhysicsProperties(entities);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
         public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port,
                                                         string CapsUrl, int RegionSizeX, int RegionSizeY,
-                                                        ulong RegionHandle)
+                                                        UUID regionID)
         {
             IPEndPoint endPoint = new IPEndPoint(new IPAddress(IPAddress), Port);
             OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), CapsUrl,
                                                                     RegionSizeX, RegionSizeY);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
         public virtual void TeleportFinishEvent(ulong regionHandle, byte simAccess,
                                                 IPAddress address, int port, string capsURL,
                                                 uint locationID,
                                                 UUID avatarID, uint teleportFlags, int RegionSizeX, int RegionSizeY,
-                                                ulong RegionHandle)
+                                                UUID regionID)
         {
             //Blank (for the CapsUrl) as we do not know what the CapsURL is on the sim side, it will be fixed when it reaches the grid server
             OSD item = EventQueueHelper.TeleportFinishEvent(regionHandle, simAccess, address, port,
                                                             locationID, capsURL, avatarID, teleportFlags, RegionSizeX,
                                                             RegionSizeY);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
         public virtual void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                                         IPAddress address, int port, string capsURL,
                                         UUID avatarID, UUID sessionID, int RegionSizeX, int RegionSizeY,
-                                        ulong RegionHandle)
+                                        UUID regionID)
         {
             OSD item = EventQueueHelper.CrossRegion(handle, pos, lookAt, address, port,
                                                     capsURL, avatarID, sessionID, RegionSizeX, RegionSizeY);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
-        public virtual void ChatterBoxSessionStartReply(string groupName, UUID groupID, UUID AgentID, ulong RegionHandle)
+        public virtual void ChatterBoxSessionStartReply(string groupName, UUID groupID, UUID AgentID, UUID regionID)
         {
             OSD Item = EventQueueHelper.ChatterBoxSessionStartReply(groupName, groupID);
-            Enqueue(Item, AgentID, RegionHandle);
+            Enqueue(Item, AgentID, regionID);
         }
 
         public virtual void ChatterboxInvitation(UUID sessionID, string sessionName,
@@ -188,74 +187,74 @@ namespace OpenSim.Services.CapsService
                                                  byte dialog,
                                                  uint timeStamp, bool offline, int parentEstateID, Vector3 position,
                                                  uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket,
-                                                 ulong RegionHandle)
+                                                 UUID regionID)
         {
             OSD item = EventQueueHelper.ChatterboxInvitation(sessionID, sessionName, fromAgent, message, toAgent,
                                                              fromName, dialog,
                                                              timeStamp, offline, parentEstateID, position, ttl,
                                                              transactionID,
                                                              fromGroup, binaryBucket);
-            Enqueue(item, toAgent, RegionHandle);
+            Enqueue(item, toAgent, regionID);
             //MainConsole.Instance.InfoFormat("########### eq ChatterboxInvitation #############\n{0}", item);
         }
 
         public virtual void ChatterBoxSessionAgentListUpdates(UUID sessionID, UUID fromAgent, UUID toAgent,
                                                               bool canVoiceChat,
-                                                              bool isModerator, bool textMute, ulong RegionHandle)
+                                                              bool isModerator, bool textMute, UUID regionID)
         {
             OSD item = EventQueueHelper.ChatterBoxSessionAgentListUpdates(sessionID, fromAgent, canVoiceChat,
                                                                           isModerator, textMute);
-            Enqueue(item, toAgent, RegionHandle);
+            Enqueue(item, toAgent, regionID);
             //MainConsole.Instance.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
         }
 
         public virtual void ChatterBoxSessionAgentListUpdates(UUID sessionID,
                                                               ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
                                                                   [] messages, UUID toAgent, string Transition,
-                                                              ulong RegionHandle)
+                                                              UUID regionID)
         {
             OSD item = EventQueueHelper.ChatterBoxSessionAgentListUpdates(sessionID, messages, Transition);
-            Enqueue(item, toAgent, RegionHandle);
+            Enqueue(item, toAgent, regionID);
             //MainConsole.Instance.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
         }
 
         public virtual void ParcelProperties(ParcelPropertiesMessage parcelPropertiesPacket, UUID avatarID,
-                                             ulong RegionHandle)
+                                             UUID regionID)
         {
             OSD item = EventQueueHelper.ParcelProperties(parcelPropertiesPacket);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
         public void ParcelObjectOwnersReply(ParcelObjectOwnersReplyMessage parcelMessage, UUID AgentID,
-                                            ulong RegionHandle)
+                                            UUID regionID)
         {
             OSD item = EventQueueHelper.ParcelObjectOwnersReply(parcelMessage);
-            Enqueue(item, AgentID, RegionHandle);
+            Enqueue(item, AgentID, regionID);
         }
 
-        public void LandStatReply(LandStatReplyMessage message, UUID AgentID, ulong RegionHandle)
+        public void LandStatReply(LandStatReplyMessage message, UUID AgentID, UUID regionID)
         {
             OSD item = EventQueueHelper.LandStatReply(message);
-            Enqueue(item, AgentID, RegionHandle);
+            Enqueue(item, AgentID, regionID);
         }
 
-        public virtual void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, ulong RegionHandle)
+        public virtual void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, UUID regionID)
         {
             OSD item = EventQueueHelper.GroupMembership(groupUpdate);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
-        public virtual void QueryReply(PlacesReplyPacket groupUpdate, UUID avatarID, string[] info, ulong RegionHandle)
+        public virtual void QueryReply(PlacesReplyPacket groupUpdate, UUID avatarID, string[] info, UUID regionID)
         {
             OSD item = EventQueueHelper.PlacesQuery(groupUpdate, info);
-            Enqueue(item, avatarID, RegionHandle);
+            Enqueue(item, avatarID, regionID);
         }
 
         public virtual void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
-                                               UUID avatarID, ulong RegionHandle)
+                                               UUID avatarID, UUID regionID)
         {
             OSD Item = EventQueueHelper.ScriptRunningReplyEvent(objectID, itemID, running, true);
-            Enqueue(Item, avatarID, RegionHandle);
+            Enqueue(Item, avatarID, regionID);
         }
 
         #endregion
@@ -478,7 +477,7 @@ namespace OpenSim.Services.CapsService
                     {
                         //Disabled above
                         //This will be the last bunch of EQMs that go through, so we can safely die now
-                        m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                        m_service.ClientCaps.RemoveCAPS(m_service.RegionID);
                     }
                 }
                 catch

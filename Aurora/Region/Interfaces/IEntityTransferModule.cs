@@ -75,8 +75,8 @@ namespace OpenSim.Region.Framework.Interfaces
         ///   Cancel the given teleport for the given agent in the current region (the region the agent started in)
         /// </summary>
         /// <param name = "AgentID">The agent whose teleport will be canceled</param>
-        /// <param name = "RegionHandle">The region that the agent first asked to be teleported from</param>
-        void CancelTeleport(UUID AgentID, ulong RegionHandle);
+        /// <param name = "RegionID">The region that the agent first asked to be teleported from</param>
+        void CancelTeleport(UUID AgentID, UUID RegionID);
 
         /// <summary>
         ///   Teleports the given client to the given region at position/rotation

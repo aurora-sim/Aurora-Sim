@@ -136,7 +136,7 @@ namespace OpenSim.Services.Interfaces
         ///   Logout all agents in the given region
         /// </summary>
         /// <param name = "requestingRegion"></param>
-        void LogOutAllAgentsForRegion(ulong requestingRegion);
+        void LogOutAllAgentsForRegion(UUID requestingRegion);
 
         /// <summary>
         ///   Enable any child agents that might need added for the restarted region
@@ -153,7 +153,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "DrawDistance"></param>
         /// <param name = "circuit"></param>
         /// <returns></returns>
-        void EnableChildAgents(UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit);
+        void EnableChildAgents(UUID AgentID, UUID requestingRegion, int DrawDistance, AgentCircuitData circuit);
 
         /// <summary>
         ///   Teleport the given agent to another sim
@@ -168,7 +168,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "reason"></param>
         /// <returns></returns>
         bool TeleportAgent(ref GridRegion destination, uint TeleportFlags, int DrawDistance,
-                           AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion,
+                           AgentCircuitData circuit, AgentData agentData, UUID AgentID, UUID requestingRegion,
                            out string reason);
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
                         Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, UUID AgentID,
-                        ulong requestingRegion, out string reason);
+                        UUID requestingRegion, out string reason);
 
         /// <summary>
         ///   Send an agent update to all neighbors for the given agent

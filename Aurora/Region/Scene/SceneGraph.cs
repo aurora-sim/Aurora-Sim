@@ -1453,7 +1453,7 @@ namespace OpenSim.Region.Framework.Scenes
                     //Update the client here as well... we changed restitution and friction in the physics engine probably
                     Services.Interfaces.IEventQueueService eqs = m_parentScene.RequestModuleInterface<Services.Interfaces.IEventQueueService> ();
                     if (eqs != null)
-                        eqs.ObjectPhysicsProperties (new[] { part }, remoteClient.AgentId, m_parentScene.RegionInfo.RegionHandle);
+                        eqs.ObjectPhysicsProperties(new[] { part }, remoteClient.AgentId, m_parentScene.RegionInfo.RegionID);
 
                     ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
                 }
