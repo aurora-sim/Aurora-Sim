@@ -528,13 +528,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             uint ack;
 
-            if (udpClient.PendingAcks.Dequeue(out ack))
+            if (udpClient.PendingAcks.TryDequeue(out ack))
             {
                 List<PacketAckPacket.PacketsBlock> blocks = new List<PacketAckPacket.PacketsBlock>();
                 PacketAckPacket.PacketsBlock block = new PacketAckPacket.PacketsBlock {ID = ack};
                 blocks.Add(block);
 
-                while (udpClient.PendingAcks.Dequeue(out ack))
+                while (udpClient.PendingAcks.TryDequeue(out ack))
                 {
                     block = new PacketAckPacket.PacketsBlock {ID = ack};
                     blocks.Add(block);
@@ -694,7 +694,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // no more ACKs to append
                 uint ackCount = 0;
                 uint ack;
-                while (dataLength + 5 < buffer.Data.Length && udpClient.PendingAcks.Dequeue(out ack))
+                while (dataLength + 5 < buffer.Data.Length && udpClient.PendingAcks.TryDequeue(out ack))
                 {
                     Utils.UIntToBytesBig(ack, buffer.Data, dataLength);
                     dataLength += 4;

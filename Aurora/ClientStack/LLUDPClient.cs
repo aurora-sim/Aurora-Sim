@@ -33,6 +33,7 @@ using System.Reflection;
 using System.Threading;
 using OpenMetaverse;
 using Aurora.Framework;
+using System.Collections.Concurrent;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
@@ -64,17 +65,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public int nlevels;
         public int[] promotioncntr;
         public int promotionratemask;
-        public Aurora.Framework.LocklessQueue<object>[] queues;
+        public ConcurrentQueue<object>[] queues;
 
         public UDPprioQueue(int NumberOfLevels, int PromRateMask)
         {
             // PromRatemask:  0x03 promotes on each 4 calls, 0x1 on each 2 calls etc
             nlevels = NumberOfLevels;
-            queues = new Aurora.Framework.LocklessQueue<object>[nlevels];
+            queues = new ConcurrentQueue<object>[nlevels];
             promotioncntr = new int[nlevels];
             for (int i = 0; i < nlevels; i++)
             {
-                queues[i] = new Aurora.Framework.LocklessQueue<object>();
+                queues[i] = new ConcurrentQueue<object>();
                 promotioncntr[i] = 0;
             }
             promotionratemask = PromRateMask;
@@ -102,7 +103,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 while (--i >= 0)
                 {
                     object ob;
-                    if (queues[i].Dequeue(out ob))
+                    if(queues[i].TryDequeue(out ob))
                         queues[i + 1].Enqueue(ob);
                 }
             }
@@ -117,7 +118,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             while (--i >= 0) // go down levels looking for data
             {
                 object o;
-                if (!queues[i].Dequeue(out o)) continue;
+                if (!queues[i].TryDequeue(out o)) continue;
                 if (!(o is OutgoingPacket)) continue;
                 pack = (OutgoingPacket) o;
                 Interlocked.Decrement(ref Count);
@@ -181,7 +182,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         ///   ACKs that are queued up, waiting to be sent to the client
         /// </summary>
-        public readonly Aurora.Framework.LocklessQueue<uint> PendingAcks = new Aurora.Framework.LocklessQueue<uint>();
+        public readonly ConcurrentQueue<uint> PendingAcks = new ConcurrentQueue<uint>();
 
         private readonly int[] Rates;
 

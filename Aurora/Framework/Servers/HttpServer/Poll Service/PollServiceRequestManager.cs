@@ -48,6 +48,8 @@ namespace Aurora.Framework.Servers.HttpServer
         private int m_pollTimeout;
         private readonly object m_queueSync = new object();
 
+        public bool Started { get { return m_running; } }
+
         public PollServiceRequestManager(IHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
         {
             m_server = pSrv;

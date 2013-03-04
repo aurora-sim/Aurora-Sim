@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -13,13 +14,13 @@ namespace Aurora.Framework.Servers.HttpServer
         private readonly Thread _listenerThread;
         private readonly Thread[] _workers;
         private readonly ManualResetEvent _stop, _ready;
-        private Queue<HttpListenerContext> _queue;
+        private ConcurrentQueue<HttpListenerContext> _queue;
         public event Action<HttpListenerContext> ProcessRequest;
 
         public NewHttpServer(int maxThreads)
         {
             _workers = new Thread[maxThreads];
-            _queue = new Queue<HttpListenerContext>();
+            _queue = new ConcurrentQueue<HttpListenerContext>();
             _stop = new ManualResetEvent(false);
             _ready = new ManualResetEvent(false);
             _listener = new HttpListener();
@@ -66,11 +67,8 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             try
             {
-                lock (_queue)
-                {
-                    _queue.Enqueue(_listener.EndGetContext(ar));
-                    _ready.Set();
-                }
+                _queue.Enqueue(_listener.EndGetContext(ar));
+                _ready.Set();
             }
             catch { return; }
         }
@@ -81,15 +79,10 @@ namespace Aurora.Framework.Servers.HttpServer
             while (0 == WaitHandle.WaitAny(wait))
             {
                 HttpListenerContext context;
-                lock (_queue)
+                if (!_queue.TryDequeue(out context))
                 {
-                    if (_queue.Count > 0)
-                        context = _queue.Dequeue();
-                    else
-                    {
-                        _ready.Reset();
-                        continue;
-                    }
+                    _ready.Reset();
+                    continue;
                 }
 
                 try { ProcessRequest(context); }
