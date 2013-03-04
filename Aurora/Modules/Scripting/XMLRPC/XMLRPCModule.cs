@@ -77,7 +77,6 @@ namespace Aurora.Modules.Scripting
     public class XMLRPCModule : INonSharedRegionModule, IXMLRPC
     {
         private readonly object XMLRPCListLock = new object();
-        private IScene m_Scene;
         private int RemoteReplyScriptTimeout = 9000;
         private int RemoteReplyScriptWait = 300;
         private bool m_httpServerStarted;
@@ -131,7 +130,7 @@ namespace Aurora.Modules.Scripting
                 // Attach xmlrpc handlers
                 MainConsole.Instance.Info("[XMLRPC MODULE]: " +
                            "Starting up XMLRPC Server on port " + m_remoteDataPort + " for llRemoteData commands.");
-                BaseHttpServer httpServer = new BaseHttpServer((uint) m_remoteDataPort, MainServer.Instance.HostName,
+                IHttpServer httpServer = new BaseHttpServer((uint)m_remoteDataPort, MainServer.Instance.HostName,
                                                                false);
                 httpServer.AddXmlRPCHandler("llRemoteData", XmlRpcRemoteData);
                 httpServer.Start();

@@ -34,17 +34,15 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Web;
-using HttpServer;
 using log4net;
 using Aurora.Framework;
-using HTTPFile = HttpServer.HttpFile;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
     public class OSHttpRequest
     {
-        protected IHttpRequest _request = null;
-        protected IHttpClientContext _context = null;
+        protected HttpListenerRequest _request = null;
+        protected HttpListenerContext _context = null;
         protected Dictionary<string, HttpFile> _files = new Dictionary<string, HttpFile>();
 
         public class HttpFile : IDisposable
@@ -98,7 +96,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public long ContentLength
         {
-            get { return _request.ContentLength; }
+            get { return _request.ContentLength64; }
         }
 
         public long ContentLength64
@@ -116,17 +114,12 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get
             {
-                RequestCookies cookies = _request.Cookies;
+                CookieCollection cookies = _request.Cookies;
                 HttpCookieCollection httpCookies = new HttpCookieCollection();
-                foreach (RequestCookie cookie in cookies)
+                foreach (Cookie cookie in cookies)
                     httpCookies.Add(new HttpCookie(cookie.Name, cookie.Value));
                 return httpCookies;
             }
-        }
-
-        public bool HasEntityBody
-        {
-            get { return _request.ContentLength != 0; }
         }
 
         public NameValueCollection Headers
@@ -136,23 +129,17 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public string HttpMethod
         {
-            get { return _request.Method; }
+            get { return _request.HttpMethod; }
         }
 
         public Stream InputStream
         {
-            get { return _request.Body; }
-            set { _request.Body = value; }
-        }
-
-        public bool IsSecured
-        {
-            get { return _context.IsSecured; }
+            get { return _request.InputStream; }
         }
 
         public bool KeepAlive
         {
-            get { return ConnectionType.KeepAlive == _request.Connection; }
+            get { return _request.KeepAlive; }
         }
 
         public NameValueCollection QueryString
@@ -174,18 +161,17 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public string RawUrl
         {
-            get { return _request.Uri.AbsolutePath; }
+            get { return _request.RawUrl; }
         }
 
         public IPEndPoint RemoteIPEndPoint
         {
-            get { return _remoteIPEndPoint; }
+            get { return _request.RemoteEndPoint; }
         }
-        private IPEndPoint _remoteIPEndPoint;
 
         public Uri Url
         {
-            get { return _request.Uri; }
+            get { return _request.Url; }
         }
 
         public string UserAgent
@@ -193,16 +179,6 @@ namespace Aurora.Framework.Servers.HttpServer
             get { return _userAgent; }
         }
         private string _userAgent;
-
-        internal IHttpRequest IHttpRequest
-        {
-            get { return _request; }
-        }
-
-        internal IHttpClientContext IHttpClientContext
-        {
-            get { return _context; }
-        }
 
         /// <summary>
         /// Internal whiteboard for handlers to store temporary stuff
@@ -216,54 +192,31 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public OSHttpRequest() { }
 
-        public OSHttpRequest(IHttpClientContext context, IHttpRequest req)
+        public OSHttpRequest(HttpListenerContext context)
         {
-            _request = req;
+            _request = context.Request;
             _context = context;
 
-            if (null != req.Headers["content-encoding"])
+            if (null != _request.Headers["content-encoding"])
                 _contentEncoding = Encoding.GetEncoding(_request.Headers["content-encoding"]);
-            if (null != req.Headers["content-type"])
+            if (null != _request.Headers["content-type"])
                 _contentType = _request.Headers["content-type"];
-            if (null != req.Headers["user-agent"])
-                _userAgent = req.Headers["user-agent"];
-            if (null != req.Headers["remote_addr"])
-            {
-                try
-                {
-                    IPAddress addr = IPAddress.Parse(req.Headers["remote_addr"]);
-                    // sometimes req.Headers["remote_port"] returns a comma separated list, so use
-                    // the first one in the list and log it 
-                    string[] strPorts = req.Headers["remote_port"].Split(new char[] { ',' });
-                    if (strPorts.Length > 1)
-                    {
-                        MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
-                                     req.Headers["remote_addr"], req.Headers["remote_port"]);
-                    }
-                    int port = Int32.Parse(strPorts[0]);
-                    _remoteIPEndPoint = new IPEndPoint(addr, port);
-                }
-                catch (FormatException)
-                {
-                    MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
-                                     req.Headers["remote_addr"], req.Headers["remote_port"]);
-                }
-            }
-
+            if (null != _request.Headers["user-agent"])
+                _userAgent = _request.Headers["user-agent"];
             _queryString = new NameValueCollection();
             _query = new Hashtable();
             try
             {
-                foreach (HttpInputItem item in req.QueryString)
+                foreach (string item in _request.QueryString.Keys)
                 {
                     try
                     {
-                        _queryString.Add(item.Name, item.Value);
-                        _query[item.Name] = item.Value;
+                        _queryString.Add(item, _request.QueryString[item]);
+                        _query[item] = _request.QueryString[item];
                     }
                     catch (InvalidCastException)
                     {
-                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it", item.Name);
+                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it", item);
                         continue;
                     }
                 }

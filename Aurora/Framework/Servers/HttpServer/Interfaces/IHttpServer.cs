@@ -167,5 +167,11 @@ namespace Aurora.Framework.Servers.HttpServer
         void RemoveStreamHandler(string httpMethod, string path);
 
         void RemoveXmlRPCHandler(string method);
+
+        byte[] DoHTTPGruntWork(System.Collections.Hashtable responsedata, OSHttpResponse response);
+
+        void Start();
+
+        void Stop();
     }
 }

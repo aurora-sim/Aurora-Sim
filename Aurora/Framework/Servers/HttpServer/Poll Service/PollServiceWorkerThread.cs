@@ -30,7 +30,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using HttpServer;
 using OpenMetaverse;
 using System.Reflection;
 using log4net;
@@ -47,12 +46,12 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public event ReQueuePollServiceItem ReQueue;
 
-        private readonly BaseHttpServer m_server;
+        private readonly IHttpServer m_server;
         private BlockingQueue<PollServiceHttpRequest> m_request;
         private bool m_running = true;
         private int m_timeout = 250;
 
-        public PollServiceWorkerThread(BaseHttpServer pSrv, int pTimeout)
+        public PollServiceWorkerThread(IHttpServer pSrv, int pTimeout)
         {
             m_request = new BlockingQueue<PollServiceHttpRequest>();
             m_server = pSrv;
@@ -77,7 +76,7 @@ namespace Aurora.Framework.Servers.HttpServer
                         StreamReader str;
                         try
                         {
-                            str = new StreamReader(req.Request.Body);
+                            str = new StreamReader(req.Context.Request.InputStream);
                         }
                         catch (System.ArgumentException)
                         {
@@ -122,10 +121,9 @@ namespace Aurora.Framework.Servers.HttpServer
         /// <summary>
         /// FIXME: This should be part of BaseHttpServer
         /// </summary>
-        internal static void DoHTTPGruntWork(BaseHttpServer server, PollServiceHttpRequest req, Hashtable responsedata)
+        internal static void DoHTTPGruntWork(IHttpServer server, PollServiceHttpRequest req, Hashtable responsedata)
         {
-            OSHttpResponse response
-                = new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext);
+            OSHttpResponse response = new OSHttpResponse(req.Context);
 
             byte[] buffer = server.DoHTTPGruntWork(responsedata, response);
 
@@ -146,7 +144,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 //response.OutputStream.Close();
                 try
                 {
-                    response.OutputStream.Flush();
+                    response.OutputStream.Close();
                     response.Send();
 
                     //if (!response.KeepAlive && response.ReuseContext)

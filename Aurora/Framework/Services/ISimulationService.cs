@@ -94,6 +94,7 @@ namespace OpenSim.Services.Interfaces
         #region Local
 
         IScene Scene { get; }
+        ISimulationService InnerService { get; }
 
         #endregion
 

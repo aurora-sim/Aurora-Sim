@@ -64,7 +64,6 @@ namespace Aurora.Modules.Groups
 
         // Used to track which agents are have dropped from a group chat session
         // Should be reset per agent, on logon
-        // TODO: move this to Flotsam XmlRpc Service
         // SessionID, List<AgentID>
         private Dictionary<UUID, List<UUID>> m_groupsAgentsDroppedFromChatSession = new Dictionary<UUID, List<UUID>>();
         private Dictionary<UUID, List<UUID>> m_groupsAgentsInvitedToChatSession = new Dictionary<UUID, List<UUID>>();
@@ -978,13 +977,9 @@ namespace Aurora.Modules.Groups
 
             if (resp == null)
             {
-                string UserService;
-                UUID SessionID;
-                GetClientGroupRequestID(requestingAgentID, out UserService, out SessionID);
-
                 param.Add("RequestingAgentID", requestingAgentID.ToString());
-                param.Add("RequestingAgentUserService", UserService);
-                param.Add("RequestingSessionID", SessionID.ToString());
+                param.Add("RequestingAgentUserService", "");
+                param.Add("RequestingSessionID", "");
                 param.Add("ReadKey", m_groupReadKey);
                 param.Add("WriteKey", m_groupWriteKey);
 
@@ -1076,19 +1071,6 @@ namespace Aurora.Modules.Groups
                     MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0}", line);
                 }
             }
-        }
-
-        /// <summary>
-        ///   Group Request Tokens are an attempt to allow the groups service to authenticate 
-        ///   requests.
-        ///   TODO: This broke after the big grid refactor, either find a better way, or discard this
-        /// </summary>
-        /// <param name = "client"></param>
-        /// <returns></returns>
-        private void GetClientGroupRequestID(UUID AgentID, out string UserServiceURL, out UUID SessionID)
-        {
-            UserServiceURL = "";
-            SessionID = UUID.Zero;
         }
     }
 }

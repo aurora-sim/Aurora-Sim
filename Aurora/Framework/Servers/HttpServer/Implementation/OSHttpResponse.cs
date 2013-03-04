@@ -28,7 +28,6 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using HttpServer;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -79,12 +78,12 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get
             {
-                return _httpResponse.ContentLength;
+                return _httpResponse.ContentLength64;
             }
 
             set
             {
-                _httpResponse.ContentLength = value;
+                _httpResponse.ContentLength64 = value;
             }
         }
 
@@ -104,37 +103,16 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get
             {
-                return _httpResponse.Encoding;
+                return _httpResponse.ContentEncoding;
             }
 
             set
             {
-                _httpResponse.Encoding = value;
+                _httpResponse.ContentEncoding = value;
             }
         }
 
         public bool KeepAlive
-        {
-            get
-            {
-                return _httpResponse.Connection == ConnectionType.KeepAlive;
-            }
-
-            set
-            {
-                if (value)
-                    _httpResponse.Connection = ConnectionType.KeepAlive;
-                else
-                    _httpResponse.Connection = ConnectionType.Close;
-            }
-        }
-
-        /// <summary>
-        /// Get or set the keep alive timeout property (default is
-        /// 20). Setting this to 0 also disables KeepAlive. Setting
-        /// this to something else but 0 also enable KeepAlive.
-        /// </summary>
-        public int KeepAliveTimeout
         {
             get
             {
@@ -143,16 +121,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             set
             {
-                if (value == 0)
-                {
-                    _httpResponse.Connection = ConnectionType.Close;
-                    _httpResponse.KeepAlive = 0;
-                }
-                else
-                {
-                    _httpResponse.Connection = ConnectionType.KeepAlive;
-                    _httpResponse.KeepAlive = value;
-                }
+                _httpResponse.KeepAlive = value;
             }
         }
 
@@ -166,7 +135,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get
             {
-                return _httpResponse.Body;
+                return _httpResponse.OutputStream;
             }
         }
 
@@ -174,23 +143,12 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get
             {
-                return _httpResponse.ProtocolVersion;
+                return _httpResponse.ProtocolVersion.ToString();
             }
 
             set
             {
-                _httpResponse.ProtocolVersion = value;
-            }
-        }
-
-        /// <summary>
-        /// Return the output stream feeding the body.
-        /// </summary>
-        public Stream Body
-        {
-            get
-            {
-                return _httpResponse.Body;
+                _httpResponse.ProtocolVersion = new System.Version(value);
             }
         }
 
@@ -214,12 +172,12 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get
             {
-                return _httpResponse.Chunked;
+                return _httpResponse.SendChunked;
             }
 
             set
             {
-                _httpResponse.Chunked = value;
+                _httpResponse.SendChunked = value;
             }
         }
 
@@ -230,12 +188,12 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get
             {
-                return (int)_httpResponse.Status;
+                return _httpResponse.StatusCode;
             }
 
             set
             {
-                _httpResponse.Status = (HttpStatusCode)value;
+                _httpResponse.StatusCode = value;
             }
         }
 
@@ -247,31 +205,12 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get
             {
-                return _httpResponse.Reason;
+                return _httpResponse.StatusDescription;
             }
 
             set
             {
-                _httpResponse.Reason = value;
-            }
-        }
-
-        public bool ReuseContext
-        {
-            get
-            {
-                if (_httpClientContext != null)
-                {
-                    return !_httpClientContext.EndWhenDone;
-                }
-                return true;
-            }
-            set
-            {
-                if (_httpClientContext != null)
-                {
-                    _httpClientContext.EndWhenDone = !value;
-                }
+                _httpResponse.StatusDescription = value;
             }
         }
 
@@ -281,42 +220,24 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 var cookies = _httpResponse.Cookies;
                 System.Web.HttpCookieCollection httpCookies = new System.Web.HttpCookieCollection();
-                foreach (var cookie in cookies)
-                    httpCookies.Add(new System.Web.HttpCookie(((ResponseCookie)cookie).Name, ((ResponseCookie)cookie).Value));
+                foreach (Cookie cookie in cookies)
+                    httpCookies.Add(new System.Web.HttpCookie(cookie.Name, cookie.Value));
                 return httpCookies;
             }
         }
 
         public void AddCookie(System.Web.HttpCookie cookie)
         {
-            _httpResponse.Cookies[cookie.Name] = new ResponseCookie(cookie.Name, cookie.Value, cookie.Expires, cookie.Path, cookie.Domain);
+            _httpResponse.Cookies.Add(new Cookie(cookie.Name, cookie.Value, cookie.Path, cookie.Domain) { Expires = cookie.Expires });
         }
 
-        protected IHttpResponse _httpResponse;
-        private IHttpClientContext _httpClientContext;
+        protected HttpListenerResponse _httpResponse;
+        private HttpListenerContext _httpClientContext;
 
-        public OSHttpResponse() { }
-
-        public OSHttpResponse(IHttpResponse resp)
+        public OSHttpResponse(HttpListenerContext context)
         {
-            _httpResponse = resp;
-        }
-
-        /// <summary>
-        /// Instantiate an OSHttpResponse object from an OSHttpRequest
-        /// object.
-        /// </summary
-        /// <param name="req">Incoming OSHttpRequest to which we are
-        /// replying</param>
-        public OSHttpResponse(OSHttpRequest req)
-        {
-            _httpResponse = new HttpResponse(req.IHttpClientContext, req.IHttpRequest);
-            _httpClientContext = req.IHttpClientContext;
-        }
-        public OSHttpResponse(HttpResponse resp, IHttpClientContext clientContext)
-        {
-            _httpResponse = resp;
-            _httpClientContext = clientContext;
+            _httpResponse = context.Response;
+            _httpClientContext = context;
         }
 
         /// <summary>
@@ -336,14 +257,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public void Send()
         {
-            _httpResponse.Body.Flush();
-            _httpResponse.Send();
-        }
-
-        public void FreeContext()
-        {
-            if (_httpClientContext != null)
-                _httpClientContext.Close();
+            _httpResponse.Close();
         }
     }
 }

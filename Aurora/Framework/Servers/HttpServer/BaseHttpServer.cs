@@ -39,10 +39,6 @@ using Nwc.XmlRpc;
 using OpenMetaverse.StructuredData;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
-using HttpServer;
-using CoolHTTPListener = HttpServer.HttpListener;
-using HttpListener = System.Net.HttpListener;
-using LogPrio = HttpServer.LogPrio;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -50,8 +46,7 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         public volatile bool HTTPDRunning = false;
 
-        protected CoolHTTPListener m_httpListener2;
-        private HttpServerLogWriter httpserverlog = new HttpServerLogWriter();
+        protected NewHttpServer m_internalServer;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
         protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
@@ -646,20 +641,20 @@ namespace Aurora.Framework.Servers.HttpServer
 
         #region Logging
 
-        private void LogIncomingToStreamHandler(OSHttpRequest request, IStreamedRequestHandler requestHandler)
+        private void LogIncomingToStreamHandler(HttpListenerRequest request, IStreamedRequestHandler requestHandler)
         {
             MainConsole.Instance.DebugFormat(
                 "[BASE HTTP SERVER]: HTTP IN :{0} stream handler {1} {2} from {3}",
                 Port,
                 request.HttpMethod,
                 request.Url.PathAndQuery,
-                request.RemoteIPEndPoint);
+                request.RemoteEndPoint.ToString());
 
             if (DebugLevel >= 5)
                 LogIncomingInDetail(request);
         }
 
-        private void LogIncomingToContentTypeHandler(OSHttpRequest request)
+        private void LogIncomingToContentTypeHandler(HttpListenerRequest request)
         {
             MainConsole.Instance.DebugFormat(
                 "[BASE HTTP SERVER]: HTTP IN :{0} {1} content type handler {2} {3} from {4}",
@@ -667,26 +662,26 @@ namespace Aurora.Framework.Servers.HttpServer
                 (request.ContentType == null || request.ContentType == "") ? "not set" : request.ContentType,
                 request.HttpMethod,
                 request.Url.PathAndQuery,
-                request.RemoteIPEndPoint);
+                request.RemoteEndPoint.ToString());
 
             if (DebugLevel >= 5)
                 LogIncomingInDetail(request);
         }
 
-        private void LogIncomingToXmlRpcHandler(OSHttpRequest request)
+        private void LogIncomingToXmlRpcHandler(HttpListenerRequest request)
         {
             MainConsole.Instance.DebugFormat(
                 "[BASE HTTP SERVER]: HTTP IN :{0} assumed generic XMLRPC request {1} {2} from {3}",
                 Port,
                 request.HttpMethod,
                 request.Url.PathAndQuery,
-                request.RemoteIPEndPoint);
+                request.RemoteEndPoint.ToString());
 
             if (DebugLevel >= 5)
                 LogIncomingInDetail(request);
         }
 
-        private void LogIncomingInDetail(OSHttpRequest request)
+        private void LogIncomingInDetail(HttpListenerRequest request)
         {
             using (StreamReader reader = new StreamReader(Util.Copy(request.InputStream), Encoding.UTF8))
             {
@@ -713,22 +708,19 @@ namespace Aurora.Framework.Servers.HttpServer
 
         #endregion
 
-        private void OnRequest(object source, RequestEventArgs args)
+        private void OnRequest(HttpListenerContext context)
         {
             try
             {
-                IHttpClientContext context = (IHttpClientContext)source;
-                IHttpRequest request = args.Request;
-
                 PollServiceEventArgs psEvArgs;
 
-                if (TryGetPollServiceHTTPHandler(request.UriPath.ToString(), out psEvArgs))
+                if (TryGetPollServiceHTTPHandler(context.Request.Url.AbsolutePath, out psEvArgs))
                 {
-                    PollServiceHttpRequest psreq = new PollServiceHttpRequest(psEvArgs, context, request);
+                    PollServiceHttpRequest psreq = new PollServiceHttpRequest(psEvArgs, context);
 
                     if (psEvArgs.Request != null)
                     {
-                        OSHttpRequest req = new OSHttpRequest(context, request);
+                        OSHttpRequest req = new OSHttpRequest(context);
 
                         Stream requestStream = req.InputStream;
 
@@ -768,7 +760,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 else
                 {
-                    OnHandleRequestIOThread(context, request);
+                    HandleRequest(context);
                 }
             }
             catch (Exception e)
@@ -777,27 +769,17 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        public void OnHandleRequestIOThread(IHttpClientContext context, IHttpRequest request)
-        {
-            OSHttpRequest req = new OSHttpRequest(context, request);
-            OSHttpResponse resp = new OSHttpResponse(new HttpResponse(context, request), context);
-            HandleRequest(req, resp);
-
-            // !!!HACK ALERT!!!
-            // There seems to be a bug in the underlying http code that makes subsequent requests
-            // come up with trash in Accept headers. Until that gets fixed, we're cleaning them up here.
-            if (request.AcceptTypes != null)
-                for (int i = 0; i < request.AcceptTypes.Length; i++)
-                    request.AcceptTypes[i] = string.Empty;
-        }
-
         /// <summary>
         /// This methods is the start of incoming HTTP request handling.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="response"></param>
-        public virtual void HandleRequest(OSHttpRequest request, OSHttpResponse response)
+        public virtual void HandleRequest(HttpListenerContext context)
         {
+            HttpListenerRequest request = context.Request;
+            HttpListenerResponse response = context.Response;
+            OSHttpRequest req = new OSHttpRequest(context);
+            OSHttpResponse resp = new OSHttpResponse(context);
             if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
             {
                 try
@@ -813,7 +795,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             string requestMethod = request.HttpMethod;
             string uriString = request.RawUrl;
-
+            string remoteIP = request.RemoteEndPoint.ToString();
             int requestStartTick = Environment.TickCount;
 
             // Will be adjusted later on.
@@ -861,7 +843,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                     response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
 
-                    buffer = requestHandler.Handle(path, request.InputStream, request, response);
+                    buffer = requestHandler.Handle(path, request.InputStream, req, resp);
                 }
                 else
                 {
@@ -872,7 +854,7 @@ namespace Aurora.Framework.Servers.HttpServer
                             if (DebugLevel >= 3)
                                 LogIncomingToContentTypeHandler(request);
 
-                            buffer = HandleHTTPRequest(request, response);
+                            buffer = HandleHTTPRequest(req, resp);
                             break;
 
                         case "application/llsd+xml":
@@ -881,7 +863,7 @@ namespace Aurora.Framework.Servers.HttpServer
                             if (DebugLevel >= 3)
                                 LogIncomingToContentTypeHandler(request);
 
-                            buffer = HandleLLSDRequests(request, response);
+                            buffer = HandleLLSDRequests(req, resp);
                             break;
 
                         case "text/xml":
@@ -900,7 +882,7 @@ namespace Aurora.Framework.Servers.HttpServer
                                 if (DebugLevel >= 3)
                                     LogIncomingToContentTypeHandler(request);
 
-                                buffer = HandleLLSDRequests(request, response);
+                                buffer = HandleLLSDRequests(req, resp);
                             }
                             else if (GetXmlRPCHandler(request.RawUrl) != null)
                             {
@@ -908,7 +890,7 @@ namespace Aurora.Framework.Servers.HttpServer
                                     LogIncomingToXmlRpcHandler(request);
 
                                 // generic login request.
-                                buffer = HandleXmlRpcRequests(request, response);
+                                buffer = HandleXmlRpcRequests(req, resp);
                             }
                             //                        MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Checking for HTTP Handler for request {0}", request.RawUrl);
                             else if (DoWeHaveAHTTPHandler(request.RawUrl))
@@ -916,7 +898,7 @@ namespace Aurora.Framework.Servers.HttpServer
                                 if (DebugLevel >= 3)
                                     LogIncomingToContentTypeHandler(request);
 
-                                buffer = HandleHTTPRequest(request, response);
+                                buffer = HandleHTTPRequest(req, resp);
                             }
                             else
                             {
@@ -924,7 +906,7 @@ namespace Aurora.Framework.Servers.HttpServer
                                     LogIncomingToXmlRpcHandler(request);
 
                                 // generic login request.
-                                buffer = HandleXmlRpcRequests(request, response);
+                                buffer = HandleXmlRpcRequests(req, resp);
                             }
 
                             break;
@@ -941,14 +923,13 @@ namespace Aurora.Framework.Servers.HttpServer
                     response.OutputStream.Write(buffer, 0, buffer.Length);
                 }
 
+                response.OutputStream.Close();
+                response.Close();
+
                 // Do not include the time taken to actually send the response to the caller in the measurement
                 // time.  This is to avoid logging when it's the client that is slow to process rather than the
                 // server
                 requestEndTick = Environment.TickCount;
-
-                response.Send();
-
-                //response.OutputStream.Close();
 
                 //response.FreeContext();
             }
@@ -970,7 +951,8 @@ namespace Aurora.Framework.Servers.HttpServer
             catch (Exception e)
             {
                 MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-                SendHTML500(response);
+                if(response.OutputStream.CanWrite)//Only send if we haven't sent a request already
+                    SendHTML500(response);
             }
             finally
             {
@@ -983,7 +965,7 @@ namespace Aurora.Framework.Servers.HttpServer
                         "[BASE HTTP SERVER]: Slow handling of {0} {1} from {2} took {3}ms",
                         requestMethod,
                         uriString,
-                        request.RemoteIPEndPoint,
+                        remoteIP,
                         tickdiff);
                 }
                 else if (DebugLevel >= 4)
@@ -1305,17 +1287,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             byte[] buffer;
 
-            Stream requestStream = request.InputStream;
-
             Encoding encoding = Encoding.UTF8;
-            StreamReader reader = new StreamReader(requestStream, encoding);
-
-            string requestBody = reader.ReadToEnd();
-            // avoid warning for now
-            reader.ReadToEnd();
-            reader.Close();
-            requestStream.Close();
-
             Hashtable keysvals = new Hashtable();
             Hashtable headervals = new Hashtable();
 
@@ -1326,7 +1298,6 @@ namespace Aurora.Framework.Servers.HttpServer
             string[] querystringkeys = request.QueryString.AllKeys;
             string[] rHeaders = request.Headers.AllKeys;
 
-            keysvals.Add("body", requestBody);
             keysvals.Add("uri", request.RawUrl);
             keysvals.Add("content-type", request.ContentType);
             keysvals.Add("http-method", request.HttpMethod);
@@ -1364,6 +1335,17 @@ namespace Aurora.Framework.Servers.HttpServer
                 IStreamedRequestHandler streamProcessor;
                 if (TryGetHTTPHandler(method, out requestprocessor))
                 {
+                    Stream requestStream = request.InputStream;
+
+                    StreamReader reader = new StreamReader(requestStream, encoding);
+
+                    string requestBody = reader.ReadToEnd();
+                    // avoid warning for now
+                    reader.ReadToEnd();
+                    reader.Close();
+                    requestStream.Close();
+                    keysvals.Add("body", requestBody);
+
                     Hashtable responsedata1 = requestprocessor(keysvals);
                     buffer = DoHTTPGruntWork(responsedata1, response);
 
@@ -1371,12 +1353,6 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 else if (TryGetStreamHTTPHandler(method, out streamProcessor))
                 {
-                    if (request.InputStream != null)
-                    {
-                        request.InputStream.Close();
-                        MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(requestBody));
-                        request.InputStream = stream;
-                    }
                     buffer = streamProcessor.Handle(request.RawUrl, request.InputStream, request, response);
                 }
                 else
@@ -1392,6 +1368,17 @@ namespace Aurora.Framework.Servers.HttpServer
                 bool foundHandler = TryGetHTTPHandlerPathBased(request.RawUrl, out requestprocessor);
                 if (foundHandler)
                 {
+                    Stream requestStream = request.InputStream;
+
+                    StreamReader reader = new StreamReader(requestStream, encoding);
+
+                    string requestBody = reader.ReadToEnd();
+                    // avoid warning for now
+                    reader.ReadToEnd();
+                    reader.Close();
+                    requestStream.Close();
+                    keysvals.Add("body", requestBody);
+
                     Hashtable responsedata2 = requestprocessor(keysvals);
                     buffer = DoHTTPGruntWork(responsedata2, response);
 
@@ -1399,12 +1386,6 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 else if (TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
                 {
-                    if (request.InputStream != null)
-                    {
-                        request.InputStream.Close();
-                        MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(requestBody));
-                        request.InputStream = stream;
-                    }
                     buffer = streamProcessor.Handle(request.RawUrl, request.InputStream, request, response);
                 }
                 else
@@ -1417,7 +1398,7 @@ namespace Aurora.Framework.Servers.HttpServer
             return buffer;
         }
 
-        internal byte[] DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response)
+        public byte[] DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response)
         {
             //MainConsole.Instance.Info("[BASE HTTP SERVER]: Doing HTTP Grunt work with response");
             int responsecode = (int)responsedata["int_response_code"];
@@ -1440,8 +1421,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
             }
 
-            if (responsedata.ContainsKey("reusecontext"))
-                response.ReuseContext = (bool)responsedata["reusecontext"];
+            //if (responsedata.ContainsKey("reusecontext"))
+            //    response.ReuseContext = (bool)responsedata["reusecontext"];
 
             // Cross-Origin Resource Sharing with simple requests
             if (responsedata.ContainsKey("access_control_allow_origin"))
@@ -1506,7 +1487,7 @@ namespace Aurora.Framework.Servers.HttpServer
             return buffer;
         }
 
-        public byte[] SendHTML500(OSHttpResponse response)
+        public byte[] SendHTML500(HttpListenerResponse response)
         {
             // I know this statuscode is dumb, but the client doesn't respond to 404s and 500s
             response.StatusCode = (int)OSHttpStatusCode.SuccessOk;
@@ -1520,20 +1501,6 @@ namespace Aurora.Framework.Servers.HttpServer
             response.ContentEncoding = Encoding.UTF8;
 
             return buffer;
-        }
-
-        public void httpServerException(object source, Exception exception)
-        {
-            MainConsole.Instance.Error(String.Format("[BASE HTTP SERVER]: {0} had an exception: {1} ", source.ToString(), exception.Message), exception);
-            /*
-             if (HTTPDRunning)// && NotSocketErrors > 5)
-             {
-                 Stop();
-                 Thread.Sleep(200);
-                 StartHTTP();
-                 MainConsole.Instance.Warn("[HTTPSERVER]: Died.  Trying to kick.....");
-             }
-             */
         }
 
         public void Start()
@@ -1550,28 +1517,11 @@ namespace Aurora.Framework.Servers.HttpServer
                 {
                     //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
                     //m_httpListener.Prefixes.Add("http://10.1.1.5:" + m_port + "/");
-                    m_httpListener2 = CoolHTTPListener.Create(m_listenIPAddress, (int)m_port);
-                    m_httpListener2.ExceptionThrown += httpServerException;
-                    m_httpListener2.LogWriter = httpserverlog;
-
-                    // Uncomment this line in addition to those in HttpServerLogWriter
-                    // if you want more detailed trace information from the HttpServer
-                    //m_httpListener2.UseTraceLogs = true;
-
-                    //m_httpListener2.DisconnectHandler = httpServerDisconnectMonitor;
-                }
-                else
-                {
-                    //m_httpListener.Prefixes.Add("https://+:" + (m_sslport) + "/");
-                    //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
-                    m_httpListener2 = CoolHTTPListener.Create(IPAddress.Any, (int)m_port, m_cert);
-                    m_httpListener2.ExceptionThrown += httpServerException;
-                    m_httpListener2.LogWriter = httpserverlog;
+                    m_internalServer = new NewHttpServer(10);
+                    m_internalServer.ProcessRequest += OnRequest;
                 }
 
-                m_httpListener2.RequestReceived += OnRequest;
-                //m_httpListener.Start();
-                m_httpListener2.Start(64);
+                m_internalServer.Start(m_port);
 
                 // Long Poll Service Manager with 3 worker threads a 25 second timeout for no events
                 m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
@@ -1602,12 +1552,7 @@ namespace Aurora.Framework.Servers.HttpServer
             try
             {
                 m_PollServiceManager.Stop();
-                m_httpListener2.ExceptionThrown -= httpServerException;
-                //m_httpListener2.DisconnectHandler = null;
-
-                m_httpListener2.LogWriter = null;
-                m_httpListener2.RequestReceived -= OnRequest;
-                m_httpListener2.Stop();
+                m_internalServer.Stop();
             }
             catch (NullReferenceException)
             {
@@ -1683,48 +1628,5 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Relays HttpServer log messages to our own logging mechanism.
-    /// </summary>
-    /// To use this you must uncomment the switch section
-    ///
-    /// You may also be able to get additional trace information from HttpServer if you uncomment the UseTraceLogs
-    /// property in StartHttp() for the HttpListener
-    public class HttpServerLogWriter : ILogWriter
-    {
-        //        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        public void Write(object source, LogPrio priority, string message)
-        {
-            /*
-            switch (priority)
-            {
-                case LogPrio.Trace:
-                    MainConsole.Instance.DebugFormat("[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Debug:
-                    MainConsole.Instance.DebugFormat("[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Error:
-                    MainConsole.Instance.ErrorFormat("[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Info:
-                    MainConsole.Instance.InfoFormat("[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Warning:
-                    MainConsole.Instance.WarnFormat("[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Fatal:
-                    MainConsole.Instance.ErrorFormat("[{0}]: FATAL! - {1}", source, message);
-                    break;
-                default:
-                    break;
-            }
-            */
-
-            return;
-        }
     }
 }

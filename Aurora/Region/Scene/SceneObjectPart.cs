@@ -169,7 +169,6 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_notpidActive;
         protected Vector3 m_offsetPosition;
 
-        // FIXME, TODO, ERROR: 'ParentGroup' can't be in here, move it out.
         protected SceneObjectGroup m_parentGroup;
         [XmlIgnore] private float m_partBSphereRadiusSQ; // the square of the radius of a sphere containing the oob
 

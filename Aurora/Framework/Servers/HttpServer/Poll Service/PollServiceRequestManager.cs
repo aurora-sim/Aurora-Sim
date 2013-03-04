@@ -30,7 +30,6 @@ using System.Collections;
 using System.Threading;
 using System.Reflection;
 using log4net;
-using HttpServer;
 using Aurora.Framework;
 
 namespace Aurora.Framework.Servers.HttpServer
@@ -39,7 +38,7 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private readonly BaseHttpServer m_server;
+        private readonly IHttpServer m_server;
         private static Queue m_requests = Queue.Synchronized(new Queue());
         private uint m_WorkerThreadCount = 0;
         private Thread[] m_workerThreads;
@@ -49,7 +48,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private int m_pollTimeout;
         private readonly object m_queueSync = new object();
 
-        public PollServiceRequestManager(BaseHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
+        public PollServiceRequestManager(IHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
         {
             m_server = pSrv;
             m_WorkerThreadCount = pWorkerThreadCount;

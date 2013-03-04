@@ -43,6 +43,7 @@ using Aurora.Modules.WorldMap.Warp3DMap;
 using Rednettle.Warp3D;
 using RegionSettings = Aurora.Framework.RegionSettings;
 using WarpRenderer = Warp3D.Warp3D;
+using System.IO;
 
 namespace Aurora.Modules.WorldMap
 {
@@ -63,6 +64,7 @@ namespace Aurora.Modules.WorldMap
         {
             m_scene = scene;
             m_config = config;
+            ReadCacheMap();
         }
 
         public Bitmap TerrainToBitmap(Bitmap mapbmp)
@@ -195,6 +197,7 @@ namespace Aurora.Modules.WorldMap
             terrainObj.fasttriangle = null;
             terrainObj = null;
             m_colors.Clear();
+            SaveCache();
 
             //Force GC to try to clean this mess up
             GC.GetTotalMemory(true);
@@ -500,65 +503,17 @@ namespace Aurora.Modules.WorldMap
 
             if (!m_colors.TryGetValue(face.TextureID, out color))
             {
-                bool fetched = false;
-
-                // Attempt to fetch the texture metadata
-                UUID metadataID = UUID.Combine(face.TextureID, TEXTURE_METADATA_MAGIC);
-                byte[] metadata = m_scene.AssetService.GetData(metadataID.ToString());
-                if (metadata != null)
+                // Fetch the texture, decode and get the average color,
+                // then save it to a temporary metadata asset
+                byte[] textureAsset = m_scene.AssetService.GetData(face.TextureID.ToString());
+                if (textureAsset != null)
                 {
-                    OSDMap map = null;
-                    try
-                    {
-                        map = OSDParser.Deserialize(metadata) as OSDMap;
-                    }
-                    catch
-                    {
-                    }
-
-                    if (map != null)
-                    {
-                        color = map["X-JPEG2000-RGBA"].AsColor4();
-                        if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))
-                            //If we failed, don't save it
-                            fetched = true;
-                    }
-                    map = null;
-                    metadata = null;
+                    int width, height;
+                    color = GetAverageColor(face.TextureID, textureAsset, m_scene, out width, out height);
+                    textureAsset = null;
                 }
-
-                if (!fetched)
-                {
-                    // Fetch the texture, decode and get the average color,
-                    // then save it to a temporary metadata asset
-                    byte[] textureAsset = m_scene.AssetService.GetData(face.TextureID.ToString());
-                    if (textureAsset != null)
-                    {
-                        int width, height;
-                        color = GetAverageColor(face.TextureID, textureAsset, m_scene, out width, out height);
-                        if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))
-                            //If we failed, don't save it
-                        {
-                            OSDMap data = new OSDMap {{"X-JPEG2000-RGBA", OSD.FromColor4(color)}};
-                            AssetBase newmetadata = new AssetBase
-                                           {
-                                               Data = Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data)),
-                                               Description = "Avg Color-JPEG2000 texture " + face.TextureID.ToString(),
-                                               Flags = AssetFlags.Collectable | AssetFlags.Temporary | AssetFlags.Local,
-                                               ID = metadataID,
-                                               Name = String.Empty,
-                                               TypeAsset = AssetType.Simstate
-                                               // Make something up to get around OpenSim's myopic treatment of assets
-                                           };
-                            newmetadata.ID = m_scene.AssetService.Store(newmetadata);
-                        }
-                        textureAsset = null;
-                    }
-                    else
-                    {
-                        color = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
-                    }
-                }
+                else
+                    color = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
 
                 m_colors[face.TextureID] = color;
             }
@@ -594,9 +549,7 @@ namespace Aurora.Modules.WorldMap
                 }
                 warp_Texture texture = GetTexture(textureID);
                 if (texture != null)
-                {
                     renderer.Scene.material(materialName).setTexture(texture);
-                }
             }
 
             return materialName;
@@ -620,6 +573,82 @@ namespace Aurora.Modules.WorldMap
         }
 
         #endregion Rendering Methods
+
+        #region Cache methods
+
+        private void ReadCacheMap()
+        {
+            if (!Directory.Exists("assetcache"))
+                Directory.CreateDirectory("assetcache");
+            if (!Directory.Exists(System.IO.Path.Combine("assetcache", "mapTileTextureCache")))
+                Directory.CreateDirectory(System.IO.Path.Combine("assetcache", "mapTileTextureCache"));
+
+            FileStream stream =
+                new FileStream(
+                    System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
+                                 m_scene.RegionInfo.RegionName + ".tc"), FileMode.OpenOrCreate);
+            StreamReader m_streamReader = new StreamReader(stream);
+            string file = m_streamReader.ReadToEnd();
+            m_streamReader.Close();
+            //Read file here
+            if (file != "") //New file
+            {
+                bool loaded = DeserializeCache(file);
+                if (!loaded)
+                {
+                    //Something went wrong, delete the file
+                    try
+                    {
+                        File.Delete(System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
+                                                 m_scene.RegionInfo.RegionName + ".tc"));
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+        private bool DeserializeCache(string file)
+        {
+            OSDMap map = OSDParser.DeserializeJson(file) as OSDMap;
+            if (map == null)
+                return false;
+
+            foreach (KeyValuePair<string, OSD> kvp in map)
+            {
+                Color4 c = kvp.Value.AsColor4();
+                UUID key = UUID.Parse(kvp.Key);
+                if (!m_colors.ContainsKey(key))
+                    m_colors.Add(key, c);
+            }
+
+            return true;
+        }
+
+        private void SaveCache()
+        {
+            OSDMap map = SerializeCache();
+            FileStream stream =
+                new FileStream(
+                    System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
+                                 m_scene.RegionInfo.RegionName + ".tc"), FileMode.Create);
+            StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine(OSDParser.SerializeJsonString(map));
+            writer.Close();
+        }
+
+        private OSDMap SerializeCache()
+        {
+            OSDMap map = new OSDMap();
+            foreach (KeyValuePair<UUID, Color4> kvp in m_colors)
+            {
+                map.Add(kvp.Key.ToString(), kvp.Value);
+            }
+            return map;
+        }
+
+        #endregion
 
         #region Static Helpers
 

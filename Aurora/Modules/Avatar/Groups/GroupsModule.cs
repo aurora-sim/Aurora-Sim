@@ -73,8 +73,6 @@ namespace Aurora.Modules.Groups
 
         // Configuration settings
         private bool m_debugEnabled = true;
-        //private Dictionary<UUID, UUID> GroupAttachmentCache = new Dictionary<UUID, UUID> ();
-        //private Dictionary<UUID, UUID> GroupSessionIDCache = new Dictionary<UUID, UUID> (); //For offline messages
         private IGroupsServicesConnector m_groupData;
         private bool m_groupNoticesEnabled = true;
         private bool m_groupsEnabled;
@@ -446,7 +444,6 @@ namespace Aurora.Modules.Groups
                 //Save the sessionID for the callback by the client (reject or accept)
                 //Only save if has attachment
                 msg.imSessionID = info.noticeData.ItemID;
-                //GroupAttachmentCache[msg.imSessionID] = info.noticeData.ItemID;
             }
             else
             {
@@ -732,10 +729,6 @@ namespace Aurora.Modules.Groups
         public GridInstantMessage BuildOfflineGroupNotice(GridInstantMessage msg)
         {
             msg.dialog = 211; //We set this so that it isn't taken the wrong way later
-            //Unknown what this did...
-            //UUID NoticeID = GroupSessionIDCache[msg.imSessionID];
-            //GroupSessionIDCache.Remove(msg.imSessionID);
-            //msg.imSessionID = NoticeID;
             return msg;
         }
 
@@ -1521,8 +1514,6 @@ namespace Aurora.Modules.Groups
 
                             OutgoingInstantMessage(msg, inviteInfo.AgentID);
 
-                            //WTH??? noone but the invitee needs to know
-                            //The other client wants to know too...
                             GroupMembershipData gmd =
                                 AttemptFindGroupMembershipData(inviteInfo.AgentID, inviteInfo.AgentID, inviteInfo.GroupID);
                             m_cachedGroupTitles[inviteInfo.AgentID] = gmd;
@@ -1530,9 +1521,6 @@ namespace Aurora.Modules.Groups
                             RemoveFromGroupPowersCache(inviteInfo.AgentID, inviteInfo.GroupID);
                             UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, gmd.GroupTitle);
                             SendAgentGroupDataUpdate(remoteClient);
-                            // XTODO: If the inviter is still online, they need an agent dataupdate 
-                            // and maybe group membership updates for the invitee
-                            // Reply: why do they need that? they will get told about the new user when they reopen the groups panel
 
                             m_groupData.RemoveAgentToGroupInvite(GetRequestingAgentID(remoteClient), inviteID);
                         }
@@ -1624,7 +1612,6 @@ namespace Aurora.Modules.Groups
             else if ((im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryDeclined) ||
                      (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryDeclined))
             {
-                //GroupAttachmentCache.Remove(im.imSessionID);
             }
             else if ((im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted) ||
                      (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted))
@@ -1638,7 +1625,6 @@ namespace Aurora.Modules.Groups
                         if (item != null)
                             remoteClient.SendBulkUpdateInventory(item);
                     });
-                //GroupAttachmentCache.Remove(im.imSessionID);
             }
             else if ((im.dialog == 210))
             {
@@ -1679,7 +1665,6 @@ namespace Aurora.Modules.Groups
                     //Save the sessionID for the callback by the client (reject or accept)
                     //Only save if has attachment
                     im.imSessionID = GND.noticeData.ItemID;
-                    //GroupAttachmentCache[im.imSessionID] = GND.noticeData.ItemID;
                 }
                 else
                 {
@@ -1822,7 +1807,6 @@ namespace Aurora.Modules.Groups
                 //Save the sessionID for the callback by the client (reject or accept)
                 //Only save if has attachment
                 msg.imSessionID = data.noticeData.ItemID;
-                //GroupAttachmentCache[msg.imSessionID] = data.noticeData.ItemID;
             }
             else
             {

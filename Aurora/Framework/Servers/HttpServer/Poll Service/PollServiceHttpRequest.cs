@@ -27,24 +27,22 @@
 
 using System;
 using OpenMetaverse;
-using HttpServer;
+using System.Net;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
     public class PollServiceHttpRequest
     {
         public readonly PollServiceEventArgs PollServiceArgs;
-        public readonly IHttpClientContext HttpContext;
-        public readonly IHttpRequest Request;
+        public readonly HttpListenerContext Context;
         public readonly int RequestTime;
         public readonly UUID RequestID;
 
         public PollServiceHttpRequest(
-            PollServiceEventArgs pPollServiceArgs, IHttpClientContext pHttpContext, IHttpRequest pRequest)
+            PollServiceEventArgs pPollServiceArgs, HttpListenerContext context)
         {
             PollServiceArgs = pPollServiceArgs;
-            HttpContext = pHttpContext;
-            Request = pRequest;
+            Context = context;
             RequestTime = System.Environment.TickCount;
             RequestID = UUID.Random();
         }

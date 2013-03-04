@@ -99,8 +99,8 @@ namespace Aurora.Simulation.Base
             get { return m_BaseHTTPServer; }
         }
 
-        protected Dictionary<uint, BaseHttpServer> m_Servers =
-            new Dictionary<uint, BaseHttpServer>();
+        protected Dictionary<uint, IHttpServer> m_Servers =
+            new Dictionary<uint, IHttpServer>();
 
         protected uint m_Port;
         public uint DefaultPort
@@ -236,7 +236,7 @@ namespace Aurora.Simulation.Base
             if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
 
-            BaseHttpServer server;
+            IHttpServer server;
             if(m_Servers.TryGetValue(port, out server) && server.Secure == secure)
                 return server;
 
@@ -545,7 +545,7 @@ namespace Aurora.Simulation.Base
                 try
                 {
                     //Stop the HTTP server(s)
-                    foreach (BaseHttpServer server in m_Servers.Values)
+                    foreach (IHttpServer server in m_Servers.Values)
                     {
                         server.Stop();
                     }
