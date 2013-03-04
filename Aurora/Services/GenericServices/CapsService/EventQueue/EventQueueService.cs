@@ -381,7 +381,7 @@ namespace OpenSim.Services.CapsService
             responsedata["keepalive"] = true;
             responsedata["str_response_string"] = "Upstream error: ";
             responsedata["error_status_text"] = "Upstream error:";
-            responsedata["http_protocol_version"] = "HTTP/1.0";
+            responsedata["http_protocol_version"] = "1.1";
             return responsedata;
         }
 
