@@ -544,11 +544,6 @@ namespace OpenSim.Services.Robust
                 new string[1] { ItemID.ToString() });
         }
 
-        public OSDArray GetLLSDFolderItems(UUID folderID, UUID parentID)
-        {
-            return null;
-        }
-
         public bool UpdateAssetIDForItem(UUID itemID, UUID assetID)
         {
             return false;

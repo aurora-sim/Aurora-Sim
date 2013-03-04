@@ -450,6 +450,9 @@ namespace OpenSim.Services
             {
                 Stream s = File.Open(filename, FileMode.Open);
                 asset = ProtoBuf.Serializer.Deserialize<AssetBase>(s);
+                if (asset.Type == -1)
+                    //This is a bug... it's because Texture is 0, and because it is the default value, it doesn't set it, even though we set it to -1 in the initialization of AssetBase
+                    asset.Type = 0;
                 s.Close();
             }
             catch
