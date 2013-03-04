@@ -238,14 +238,6 @@ namespace OpenSim.Services.Interfaces
         #region OSD methods
 
         /// <summary>
-        ///   Get an OSDArray of the items in the given folder - local only
-        /// </summary>
-        /// <param name = "principalID"></param>
-        /// <param name = "folderID"></param>
-        /// <returns></returns>
-        OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID);
-
-        /// <summary>
         ///   Get the item serialized as an OSDArray - local only
         /// </summary>
         /// <param name = "itemID"></param>
