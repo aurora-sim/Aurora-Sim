@@ -54,7 +54,7 @@ namespace OpenSim.Services
             if (simulationConfig != null)
                 m_allowForeignIncomingObjects = simulationConfig.GetBoolean("AllowIncomingForeignObjects",
                                                                             m_allowForeignIncomingObjects);
-            m_SimulationService = sim;
+            m_SimulationService = sim.InnerService;
         }
 
         public Hashtable Handler(Hashtable request)

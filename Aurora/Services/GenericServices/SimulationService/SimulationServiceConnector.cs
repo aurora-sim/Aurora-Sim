@@ -53,6 +53,11 @@ namespace OpenSim.Services.Connectors.Simulation
             get { return null; }
         }
 
+        public ISimulationService InnerService
+        {
+            get { return m_localBackend; }
+        }
+
         #region IService Members
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)

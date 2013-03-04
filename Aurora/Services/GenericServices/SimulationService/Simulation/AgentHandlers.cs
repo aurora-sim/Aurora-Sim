@@ -53,7 +53,7 @@ namespace OpenSim.Services
         public AgentHandler(ISimulationService sim, IRegistryCore registry, bool secure)
         {
             m_registry = registry;
-            m_SimulationService = sim;
+            m_SimulationService = sim.InnerService;
             m_secure = secure;
         }
 

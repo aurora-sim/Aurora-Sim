@@ -61,6 +61,11 @@ namespace OpenSim.Services.Connectors.Simulation
             }
         }
 
+        public ISimulationService InnerService
+        {
+            get { return this; }
+        }
+
         /**
          * Agent-related communications
          */
