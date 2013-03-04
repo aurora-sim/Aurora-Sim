@@ -506,7 +506,7 @@ namespace Aurora.Services.DataService
                 {
                     values["Title"] = Title;
                 }
-                values["Powers"] = Powers;
+                values["Powers"] = Powers.ToString();
 
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["GroupID"] = GroupID;
