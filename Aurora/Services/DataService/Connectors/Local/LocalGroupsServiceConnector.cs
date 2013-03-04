@@ -554,9 +554,13 @@ namespace Aurora.Services.DataService
                 //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
                 if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMemberLimited))
                 {
-                    MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
-                               " to group " + GroupID + ", but did not have permissions to do so!");
-                    return;
+                    GroupProfileData profile = GetGroupProfile(requestingAgentID, GroupID);
+                    if (profile == null || !profile.OpenEnrollment || RoleID != UUID.Zero)//For open enrollment adding
+                    {
+                        MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
+                                   " to group " + GroupID + ", but did not have permissions to do so!");
+                        return;
+                    }
                 }
             }
 
