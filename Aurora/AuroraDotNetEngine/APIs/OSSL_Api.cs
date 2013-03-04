@@ -1917,7 +1917,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                            + textLength.ToString(CultureInfo.InvariantCulture) + "\n" + notecardData + "}\n";
 
             asset.Data = Util.UTF8.GetBytes(notecardData);
-            asset.FillHash();
             asset.ID = World.AssetService.Store(asset);
 
             // Create Task Entry

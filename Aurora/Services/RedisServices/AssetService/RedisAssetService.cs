@@ -407,11 +407,10 @@ namespace Aurora.RedisServices.AssetService
 
         public bool RedisUpdateAsset(string id, byte[] data)
         {
-            AssetBase asset = RedisGetAsset(id);
-            if (asset == null)
-                return false;
-            asset.Data = data;
-            return RedisSetAsset(asset);
+            return RedisEnsureConnection((conn) =>
+            {
+                return conn.Set(DATA_PREFIX + AssetBase.FillHash(data), data);
+            });
         }
 
         public void RedisDeleteAsset(string id)

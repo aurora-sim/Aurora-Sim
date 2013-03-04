@@ -529,7 +529,6 @@ textures 1
                             m_underPantsUUID = UUID.Random();
                             AssetBase asset = new AssetBase(m_underPantsUUID, "Default Underpants", AssetType.Clothing,
                                                             UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderPants)};
-                            asset.FillHash();
                             asset.ID = m_scene.AssetService.Store(asset);
                             m_underPantsUUID = asset.ID;
                         }
@@ -585,7 +584,6 @@ textures 1
                             m_underShirtUUID = UUID.Random();
                             AssetBase asset = new AssetBase(m_underShirtUUID, "Default Undershirt", AssetType.Clothing,
                                                             UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderShirt)};
-                            asset.FillHash();
                             asset.ID = m_scene.AssetService.Store(asset);
                             m_underShirtUUID = asset.ID;
                         }

@@ -779,10 +779,7 @@ namespace Aurora.Services.SQLServices.GridService
             m_AllowNewRegistrations = enabled;
             IConfig gridConfig = m_config.Configs["GridService"];
             if (gridConfig != null)
-            {
                 gridConfig.Set("AllowNewRegistrations", enabled);
-                m_config.Save();
-            }
             MainConsole.Instance.Info("[GridService]: Registrations have been " + (enabled ? "enabled" : "disabled") + " for new regions");
         }
 

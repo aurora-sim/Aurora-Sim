@@ -202,7 +202,7 @@ namespace Aurora.Framework
                 {
                     MetaOnly = (myData.Length == 0);
                     if (!MetaOnly)
-                        FillHash();
+                        HashCode = FillHash(myData);
                 }
                 else
                     HashCode = "";
@@ -282,10 +282,9 @@ namespace Aurora.Framework
         // should run this if your filling out a new asset
         // ensures we don't try to pull it from the database when saving the asset
         // because we need to know if it changed.
-        public string FillHash()
+        public static string FillHash(byte[] data)
         {
-            HashCode = Convert.ToBase64String(SHA256Managed.ComputeHash(myData)) + myData.Length;
-            return HashCode;
+            return Convert.ToBase64String(SHA256Managed.ComputeHash(data)) + data.Length;
         }
 
         public override string ToString()

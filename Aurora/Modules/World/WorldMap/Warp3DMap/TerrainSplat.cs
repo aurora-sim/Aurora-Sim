@@ -162,7 +162,6 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                                                              Name = String.Empty,
                                                              TypeString = "image/png"
                                                          };
-                                newAsset.FillHash();
                                 newAsset.ID = assetService.Store(newAsset);
                             }
                         }
