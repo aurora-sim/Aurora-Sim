@@ -1282,21 +1282,6 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = GroupID;
-            filter.andFilters["AgentID"] = requestingAgentID;
-
-            //Permissions
-            List<string> OtherPermiss = data.Query(new string[4] { 
-                "AcceptNotices",
-                "Contribution",
-                "ListInProfile", 
-                "SelectedRoleID"
-            }, "osgroupmembership", filter, null, null, null);
-
-            if (OtherPermiss.Count == 0)
-            {
-                return null;
-            }
-
             filter.andFilters["AgentID"] = AgentID;
 
             List<string> Membership = data.Query(new string[4] { 
@@ -1825,7 +1810,7 @@ namespace Aurora.Services.DataService
             GroupRecord record = GetGroupRecord(AgentID, GroupID, null);
             if (Permissions == 0)
             {
-                if (GMD != null || record.FounderID == AgentID)
+                if (GMD != null || record.FounderID == AgentID || record.OpenEnrollment)
                     return true;
                 return false;
             }
