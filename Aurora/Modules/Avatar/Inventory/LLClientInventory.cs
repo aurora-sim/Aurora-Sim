@@ -1142,20 +1142,6 @@ namespace Aurora.Modules.Inventory
                 }
                 else // Updating existing item with new perms etc
                 {
-                    IAgentAssetTransactions agentTransactions = m_scene.RequestModuleInterface<IAgentAssetTransactions>();
-                    if (agentTransactions != null)
-                    {
-                        agentTransactions.HandleTaskItemUpdateFromTransaction(
-                            remoteClient, part, transactionID, currentItem);
-
-                        if ((InventoryType)itemInfo.InvType == InventoryType.Notecard)
-                            remoteClient.SendAgentAlertMessage("Notecard saved", false);
-                        else if ((InventoryType)itemInfo.InvType == InventoryType.LSL)
-                            remoteClient.SendAgentAlertMessage("Script saved", false);
-                        else
-                            remoteClient.SendAgentAlertMessage("Item saved", false);
-                    }
-
                     // Base ALWAYS has move
                     currentItem.BasePermissions |= (uint)PermissionMask.Move;
 
