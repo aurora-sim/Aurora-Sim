@@ -7,6 +7,17 @@
     ;; If you want to use MySQL, select this file.
     ;Include-MySQL = AuroraServerConfiguration/Data/MySQL.ini
 
+[RedisConnection]
+	;; If you're running this on the same computer as Aurora.Server, 
+	;;  and you haven't changed the port for it, leave this alone
+	ConnectionString = localhost:6379
+	
+	;; If you've set a password (which is recommended) on Redis server, 
+	;;  set it here
+	;ConnectionPassword =
+	
+	DoConversion = true
+	
 [AuroraConnectors]
     ;; If you want to disable the verification and backup of tables before running migrations, set this to false
     ;; Default is true

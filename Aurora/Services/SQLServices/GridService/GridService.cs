@@ -121,6 +121,16 @@ namespace Aurora.Services.SQLServices.GridService
                                                          "grid clear region [RegionName]",
                                                          "Clears the regions with the given name from the database",
                                                          HandleClearRegion);
+
+                MainConsole.Instance.Commands.AddCommand("grid enable region registration",
+                                                         "grid enable region registration",
+                                                         "Allows new regions to be registered with the grid",
+                                                         HandleRegionRegistration);
+
+                MainConsole.Instance.Commands.AddCommand("grid disable region registration",
+                                                         "grid disable region registration",
+                                                         "Disallows new regions to be registered with the grid",
+                                                         HandleRegionRegistration);
             }
             registry.RegisterModuleInterface<IGridService>(this);
             Init(registry, Name, serverPath: "/grid/");
@@ -761,6 +771,19 @@ namespace Aurora.Services.SQLServices.GridService
                 return;
             }
             m_Database.Delete(r.RegionID);
+        }
+
+        private void HandleRegionRegistration(string[] cmd)
+        {
+            bool enabled = cmd[1] == "enable";
+            m_AllowNewRegistrations = enabled;
+            IConfig gridConfig = m_config.Configs["GridService"];
+            if (gridConfig != null)
+            {
+                gridConfig.Set("AllowNewRegistrations", enabled);
+                m_config.Save();
+            }
+            MainConsole.Instance.Info("[GridService]: Registrations have been " + (enabled ? "enabled" : "disabled") + " for new regions");
         }
 
         private void HandleClearAllDownRegions(string[] cmd)

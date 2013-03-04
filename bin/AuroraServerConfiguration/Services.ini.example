@@ -1,0 +1,70 @@
+[LibraryService]
+    ;;  Set this if you want to change the name of the Aurora Library
+    LibraryName = "Aurora Library"
+    LibraryOwnerName = "Library Owner"
+    
+[GridService]
+    ;; Next, we can specify properties of regions, including default and fallback regions
+    ;; The syntax is: Region_<RegionName> = "<flags>"
+    ;; or:            Region_<RegionID> = "<flags>"
+    ;; where <flags> can be DefaultRegion, FallbackRegion, NoDirectLogin, Persistent, LockedOut,Reservation,NoMove,Authenticate
+    ;; For example if your RegionName is "Welcome Area" you have 
+    ;; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
+    ;; (replacing spaces with underscores)
+    ;Region_RegionName = "DefaultRegion, FallbackRegion"
+	
+    AllowDuplicateNames = false
+    
+    ;; Disable the checking of session ID's in the Grid Service
+    ;; This disables the security behind the Grid Service and allows regions to be registered and deregistered without verifying their identity.
+    DisableSessionID = false;
+    
+    ;; The maximum size a region can be
+    ;; Note: 0 disables this check
+    ;; Default is 0
+    MaxRegionSize = 0;
+	
+	;; How many regions away should we allow child agents
+    ;; This sets the number of regions in any direction we can see. 
+	;; The default is to be able to see in any direction 1 region. 
+	;; You can set this number to 2 or greater so that you can see X regions in every direction from the sim the agent is in. 
+	;; For example, if you have a 4 by 4 region setup, and you wish to be able to see into all of them, 
+	;; you would set the setting to 4 so that you can see across all of your regions. 
+	;; This is figured by the region in the southwest corner region position's X - the max region position's X, which in our test case is 4.
+    ;; Default: 1
+    RegionSightSize = 1
+
+    ;; Should registration of new regions (existing regions can still connect) be allowed currently?
+    AllowNewRegistrations = true
+	
+	;; You can allow a region to register with the grid passing a password that must match
+	AllowNewRegistrationsWithPass = false
+	RegisterRegionPassword = 
+    
+    ;; Should any registrations be allowed currently?
+    DisableRegistrations = false
+	
+[AgentProcessing]
+	;; Changes how many regions the agent can see into by letting the distance that they can see be based on how far the Draw Distance is set in the viewer.
+    ;; This option will allow you to see into any regions nearby within your draw distance (configurable per user).
+    ;; Default: false
+    UseVariableRegionSightDistance = false
+    
+    ;; The maximum distance the user is allowed to see based on their draw distance (only works if UseVariableRegionSightDistance is enabled)
+    ;; Default: 512 (meters)
+    MaxDistanceVariableRegionSightDistance = 512
+    
+[AuthenticationService]
+    ;; Should we check user passwords? If this is set to false, there will be NO password checking.
+    AuthenticateUsers = true
+
+[AssetService]
+    AllowRemoteDelete = true
+
+[DisplayNamesModule]
+    ;; This allows for display names to be used
+    Enabled = true
+
+    ;; Blocks all user names in this list from being used as display names. Names are NOT case sensitive. Seperate names by commas.
+    ;; Example "Linden,Admin"
+    BannedUserNames = "Linden"

@@ -15,4 +15,3 @@
 
 [Includes]
 	Include-Base = Aurora.ServersBase.ini
-    Include-Data = AuroraServerConfiguration/Data/Data.ini

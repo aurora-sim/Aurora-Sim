@@ -46,3 +46,13 @@
 
     ;; Should we restart Aurora if the sim crashes?
     AutoRestartOnCrash = false
+	
+[Includes]
+    ;;Other .ini files to add...
+    Include-Login = AuroraServerConfiguration/Login.ini
+    Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
+    Include-AutoConfiguration = AuroraServerConfiguration/AutoConfiguration.ini
+    Include-Data = AuroraServerConfiguration/Data/Data.ini
+	Include-Protection = AuroraServerConfiguration/Protection.ini
+	Include-Services = AuroraServerConfiguration/Services.ini
+	Include-Modules = AuroraServerConfiguration/Modules/*.ini
