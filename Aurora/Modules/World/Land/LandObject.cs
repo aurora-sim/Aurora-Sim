@@ -516,8 +516,20 @@ namespace Aurora.Modules.Land
                         }
                     }
                 }
-                else
-                    return true;
+                else if ((LandData.Flags & (uint)ParcelFlags.UseAccessGroup) > 0)
+                {
+                    IScenePresence SP = m_scene.GetScenePresence(avatar);
+                    if (SP != null && LandData.GroupID == SP.ControllingClient.ActiveGroupId)
+                    {
+                        //They are a part of the group, let them in
+                        return false;
+                    }
+                    else
+                    {
+                        //They are not allowed in this parcel, but not banned, so lets send them a notice about this parcel
+                        return true;
+                    }
+                }
             }
             return false;
         }
