@@ -1834,7 +1834,8 @@ namespace OpenSim.Region.Framework.Scenes
                     // These are not in affected groups and will not be
                     // handled further. Do the honors here.
                     child.ParentEntity.HasGroupChanged = true;
-                    child.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                    if (!affectedGroups.Contains(child.ParentEntity))
+                        affectedGroups.Add(child.ParentEntity);
                 }
 
                 foreach (ISceneChildEntity root in rootParts)

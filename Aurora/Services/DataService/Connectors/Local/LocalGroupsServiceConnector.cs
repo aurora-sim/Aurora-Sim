@@ -506,7 +506,7 @@ namespace Aurora.Services.DataService
                 {
                     values["Title"] = Title;
                 }
-                values["Powers"] = Powers;
+                values["Powers"] = Powers.ToString();
 
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["GroupID"] = GroupID;
@@ -554,9 +554,13 @@ namespace Aurora.Services.DataService
                 //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
                 if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMemberLimited))
                 {
-                    MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
-                               " to group " + GroupID + ", but did not have permissions to do so!");
-                    return;
+                    GroupProfileData profile = GetGroupProfile(requestingAgentID, GroupID);
+                    if (profile == null || !profile.OpenEnrollment || RoleID != UUID.Zero)//For open enrollment adding
+                    {
+                        MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
+                                   " to group " + GroupID + ", but did not have permissions to do so!");
+                        return;
+                    }
                 }
             }
 
@@ -1278,21 +1282,6 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = GroupID;
-            filter.andFilters["AgentID"] = requestingAgentID;
-
-            //Permissions
-            List<string> OtherPermiss = data.Query(new string[4] { 
-                "AcceptNotices",
-                "Contribution",
-                "ListInProfile", 
-                "SelectedRoleID"
-            }, "osgroupmembership", filter, null, null, null);
-
-            if (OtherPermiss.Count == 0)
-            {
-                return null;
-            }
-
             filter.andFilters["AgentID"] = AgentID;
 
             List<string> Membership = data.Query(new string[4] { 
@@ -1821,7 +1810,7 @@ namespace Aurora.Services.DataService
             GroupRecord record = GetGroupRecord(AgentID, GroupID, null);
             if (Permissions == 0)
             {
-                if (GMD != null || record.FounderID == AgentID)
+                if (GMD != null || record.FounderID == AgentID || record.OpenEnrollment)
                     return true;
                 return false;
             }

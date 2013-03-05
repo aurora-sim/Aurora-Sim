@@ -585,19 +585,7 @@ namespace Aurora.Services.SQLServices.InventoryService
                 new[] { folderID.ToString() });
         }
 
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public virtual OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID)
-        {
-            /*object remoteValue = DoRemoteByURL("InventoryServerURI", principalID, folderID);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (OSDArray)remoteValue;*/
 
-            // Since we probably don't get a valid principal here, either ...
-            //
-            return m_Database.GetLLSDItems(
-                new[] { "parentFolderID", "avatarID" },
-                new[] { folderID.ToString(), principalID.ToString() });
-        }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<InventoryFolderBase> GetFolderFolders(UUID principalID, UUID folderID)

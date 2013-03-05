@@ -2044,14 +2044,14 @@ namespace Aurora.Modules.Permissions
             if ((land.LandData.Flags & ((int) ParcelFlags.CreateGroupObjects)) ==
                 (int) ParcelFlags.CreateGroupObjects &&
                 land.LandData.GroupID != UUID.Zero &&
-                IsGroupMember(land.LandData.GroupID, attemptedRezzer, (ulong) GroupPowers.AllowRez))
+                IsGroupMember(land.LandData.GroupID, attemptedRezzer, 0))
                 permission = true;
 
             if (IsAdministrator(attemptedRezzer))
                 return true;
 
             // Powers are zero, because GroupPowers.AllowRez is not a precondition for rezzing objects
-            if (GenericParcelPermission(attemptedRezzer, land, 0))
+            if (GenericParcelPermission(attemptedRezzer, land, (ulong)GroupPowers.AllowRez))
                 permission = true;
 
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();

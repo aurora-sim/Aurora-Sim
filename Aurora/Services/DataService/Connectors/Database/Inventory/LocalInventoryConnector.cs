@@ -256,6 +256,16 @@ namespace Aurora.Services.DataService
                             InventoryType invType = (InventoryType)int.Parse(retVal.DataReader["invType"].ToString());
                             contents["inv_type"] = Utils.InventoryTypeToString(invType);
 
+                            if ((int)invType == -1)
+                            {
+                                //Asset problem, fix it, it's supposed to be 0
+                                List<InventoryItemBase> itms = GetItems(AgentID,
+                                    new string[2] { "inventoryID", "avatarID" },
+                                    new string[2] { inventoryID.ToString(), avatarID.ToString() });
+                                itms[0].InvType = 0;
+                                StoreItem(itms[0]);
+                            }
+
                             if (addToCount)
                                 count++;
                             contents.WriteEndMap( /*"item"*/); //end array items
@@ -615,6 +625,12 @@ namespace Aurora.Services.DataService
                                                  GroupPermissions =
                                                      uint.Parse(retVal["inventoryGroupPermissions"].ToString())
                                              };
+                if (item.InvType == -1)
+                {
+                    //Fix the bad invType
+                    item.InvType = 0;
+                    StoreItem(item);
+                }
                 items.Add(item);
             }
             //retVal.Close();

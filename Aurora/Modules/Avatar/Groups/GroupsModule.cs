@@ -478,6 +478,7 @@ namespace Aurora.Modules.Groups
                                             UUID.Zero);
 
                 m_cachedGroupMemberships.Remove(remoteClient.AgentId);
+                RemoveFromGroupPowersCache(remoteClient.AgentId, groupID);
                 remoteClient.SendJoinGroupReply(groupID, true);
 
                 ActivateGroup(remoteClient, groupID);
@@ -500,6 +501,7 @@ namespace Aurora.Modules.Groups
             remoteClient.SendLeaveGroupReply(groupID, true);
 
             remoteClient.SendAgentDropGroup(groupID);
+            RemoveFromGroupPowersCache(remoteClient.AgentId, groupID);
 
             if (remoteClient.ActiveGroupId == groupID)
                 GroupTitleUpdate(remoteClient, UUID.Zero, UUID.Zero);
@@ -1175,7 +1177,10 @@ namespace Aurora.Modules.Groups
         {
             // Send client their groups information.
             if (sp != null && !sp.IsChildAgent)
+            {
+                RemoveFromGroupPowersCache(sp.UUID, UUID.Zero);
                 SendNewAgentGroupDataUpdate(sp.ControllingClient);
+            }
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -1192,7 +1197,7 @@ namespace Aurora.Modules.Groups
 
             //Remove them from the cache
             m_cachedGroupTitles.Remove(client.AgentId);
-            RemoveFromGroupPowersCache(client.AgentId, client.ActiveGroupId);
+            RemoveFromGroupPowersCache(client.AgentId, UUID.Zero);
         }
 
         private void GroupProposalBallotRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID,
@@ -1532,6 +1537,7 @@ namespace Aurora.Modules.Groups
                         if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: Received a reject invite notice.");
                         m_groupData.RemoveAgentToGroupInvite(GetRequestingAgentID(remoteClient), inviteID);
                     }
+                    RemoveFromGroupPowersCache(remoteClient.AgentId, inviteInfo.GroupID);
                 }
             }
 
@@ -1644,6 +1650,7 @@ namespace Aurora.Modules.Groups
                     ejectee.SendAgentDropGroup(groupID);
                     if (ejectee.ActiveGroupId == groupID)
                         GroupTitleUpdate(ejectee, UUID.Zero, UUID.Zero);
+                    RemoveFromGroupPowersCache(ejecteeID, groupID);
                 }
             }
 

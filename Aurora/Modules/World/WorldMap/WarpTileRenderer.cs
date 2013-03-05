@@ -117,7 +117,7 @@ namespace Aurora.Modules.WorldMap
 
             WarpRenderer renderer = new WarpRenderer();
             warp_Object terrainObj = null;
-            renderer.CreateScene(m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeX);
+            renderer.CreateScene(width, height);
             renderer.Scene.autoCalcNormals = false;
 
             #region Camera
@@ -154,14 +154,14 @@ namespace Aurora.Modules.WorldMap
                 terrainObj = CreateTerrain(renderer, textureTerrain);
                 if (drawPrimVolume && m_primMesher != null)
                 {
-#if (!ISWIN)
+//#if (!ISWIN)
                     foreach (ISceneEntity ent in m_scene.Entities.GetEntities())
                         foreach (ISceneChildEntity part in ent.ChildrenEntities())
                             CreatePrim(renderer, part);
-#else
-                    foreach (ISceneChildEntity part in m_scene.Entities.GetEntities().SelectMany(ent => ent.ChildrenEntities()))
-                        CreatePrim(renderer, part);
-#endif
+//#else
+//                    foreach (ISceneChildEntity part in m_scene.Entities.GetEntities().SelectMany(ent => ent.ChildrenEntities()))
+//                        CreatePrim(renderer, part);
+//#endif
                 }
                     
             }
@@ -172,22 +172,12 @@ namespace Aurora.Modules.WorldMap
 
             renderer.Render();
             Bitmap bitmap = renderer.Scene.getImage();
-            //bitmap = ImageUtils.ResizeImage(bitmap, Constants.RegionSize, Constants.RegionSize);
+            bitmap = ImageUtils.ResizeImage(bitmap, Constants.RegionSize, Constants.RegionSize);
             foreach (var o in renderer.Scene.objectData.Values)
             {
                 warp_Object obj = (warp_Object)o;
                 obj.vertexData = null;
                 obj.triangleData = null;
-            
-            }
-            foreach(var t in renderer.Scene.materialData.Values)
-            {
-                warp_Material mat = (warp_Material)t;
-                if (mat.texture != null)
-                {
-                    mat.texture.pixel = null;
-                    mat.texture = null;
-                }
             }
             renderer.Scene.removeAllObjects();
             renderer = null;
@@ -219,6 +209,7 @@ namespace Aurora.Modules.WorldMap
 
             RegionLightShareData rls = m_scene.RequestModuleInterface<IWindLightSettingsModule>().FindRegionWindLight();
 
+            AssetBase textureAsset = m_scene.AssetService.Get(rls.normalMapTexture.ToString());
             warp_Material waterColormaterial;
             if (rls != null)
                 waterColormaterial =
@@ -233,9 +224,7 @@ namespace Aurora.Modules.WorldMap
             renderer.Scene.addMaterial("WaterColor", waterColormaterial);
             renderer.SetObjectMaterial("Water", "WaterColor");
 
-            /*
-            AssetBase textureAsset = m_scene.AssetService.Get(rls.normalMapTexture.ToString());
-            if (textureAsset != null)
+            /*if (textureAsset != null)
             {
                 IJ2KDecoder decoder = m_scene.RequestModuleInterface<IJ2KDecoder> ();
                 Bitmap bitmap = (Bitmap)decoder.DecodeToImage (textureAsset.Data);
@@ -334,31 +323,13 @@ namespace Aurora.Modules.WorldMap
             Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out globalX, out globalY);
 
             Bitmap image = TerrainSplat.Splat(terrain, textureIDs, startHeights, heightRanges,
-                                              new Vector3d(globalX, globalY, 0.0),
-                                              m_scene.AssetService, textureTerrain, 
-                                              m_scene.RegionInfo);
+                                              new Vector3d(globalX, globalY, 0.0), m_scene.AssetService, textureTerrain);
             warp_Texture texture = new warp_Texture(image);
-            image.Dispose();
             warp_Material material = new warp_Material(texture);
             material.setReflectivity(0); // reduces tile seams a bit thanks lkalif
             renderer.Scene.addMaterial("TerrainColor", material);
             renderer.SetObjectMaterial("Terrain", "TerrainColor");
             return obj;
-        }
-
-        private Bitmap FixVariableSizedRegionTerrainSize(RegionInfo region, Bitmap image)
-        {
-            if(region.RegionSizeX == Constants.RegionSize && region.RegionSizeY == Constants.RegionSize)
-                return image;
-            Bitmap destImage = new Bitmap(region.RegionSizeX, region.RegionSizeY);
-            using (TextureBrush brush = new TextureBrush(image, WrapMode.Tile))
-            using (Graphics g = Graphics.FromImage(destImage))
-            {
-                // do your painting in here
-                g.FillRectangle(brush, 0, 0, destImage.Width, destImage.Height);
-            }
-            image.Dispose();
-            return destImage;
         }
 
         private static Vector3 SurfaceNormal(Vector3 c1, Vector3 c2, Vector3 c3)
@@ -565,8 +536,7 @@ namespace Aurora.Modules.WorldMap
                 Bitmap img = (Bitmap) imgDecoder.DecodeToImage(asset);
                 if (img != null)
                 {
-                    ret = new warp_Texture(img);
-                    img.Dispose();
+                    return new warp_Texture(img);
                 }
             }
             return ret;
