@@ -1384,9 +1384,9 @@ namespace Aurora.Framework.Servers.HttpServer
 
                     //SendHTML500(response);
                 }
-                else if (TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
+                else if (TryGetStreamHTTPHandler(request.Url.AbsolutePath, out streamProcessor))
                 {
-                    buffer = streamProcessor.Handle(request.RawUrl, request.InputStream, request, response);
+                    buffer = streamProcessor.Handle(request.Url.AbsolutePath, request.InputStream, request, response);
                 }
                 else
                 {
