@@ -106,7 +106,7 @@ namespace OpenSim.Services.MessagingService
                             {
                                 OnlineFriends.Add(FriendToInform);
                                 //Post!
-                                asyncPoster.PostToServer(SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
+                                asyncPoster.Post(regionClientCaps.Region.ServerURI, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
                             }
                             else
                             {
@@ -126,7 +126,7 @@ namespace OpenSim.Services.MessagingService
                                     //Post!
                                     GridRegion r = gridService.GetRegionByUUID(null, friendinfo.CurrentRegionID);
                                     if (r != null)
-                                        asyncPoster.PostToServer(SyncMessageHelper.AgentStatusChange(us, FriendToInform,
+                                        asyncPoster.Post(r.ServerURI, SyncMessageHelper.AgentStatusChange(us, FriendToInform,
                                                                                              isOnline));
                                 }
                                 else
@@ -143,12 +143,12 @@ namespace OpenSim.Services.MessagingService
                         }
                     }
                     //If the user is coming online, send all their friends online statuses to them
-                    if (isOnline)
+                    if (isOnline && OnlineFriends.Count > 0)
                     {
                         GridRegion ourRegion = gridService.GetRegionByUUID(null, UUID.Parse(info[2].ToString()));
                         if (ourRegion != null)
                         {
-                            asyncPoster.PostToServer(SyncMessageHelper.AgentStatusChanges(OnlineFriends, us, isOnline));
+                            asyncPoster.Post(ourRegion.ServerURI, SyncMessageHelper.AgentStatusChanges(OnlineFriends, us, isOnline));
                         }
                     }
                 }
