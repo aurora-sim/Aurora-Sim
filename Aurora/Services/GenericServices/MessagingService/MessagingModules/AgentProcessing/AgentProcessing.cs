@@ -558,7 +558,8 @@ namespace OpenSim.Services.MessagingService
         {
             IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
             IRegionClientCapsService regionCaps = clientCaps.GetCapsService(requestingRegion);
-
+            ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
+                
             if (regionCaps == null || !regionCaps.RootAgent)
             {
                 reason = "";
@@ -571,13 +572,14 @@ namespace OpenSim.Services.MessagingService
             {
                 bool callWasCanceled = false;
 
-                ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
                 if (SimulationService != null)
                 {
                     //Set the user in transit so that we block duplicate tps and reset any cancelations
                     if (!SetUserInTransit(AgentID))
                     {
                         reason = "Already in a teleport";
+                        SimulationService.FailedToTeleportAgent(regionCaps.Region, destination.RegionID,
+                            AgentID, reason, false);
                         return false;
                     }
 
@@ -598,6 +600,8 @@ namespace OpenSim.Services.MessagingService
                     {
                         reason = "Could not find the grid service";
                         ResetFromTransit(AgentID);
+                        SimulationService.FailedToTeleportAgent(regionCaps.Region, destination.RegionID,
+                            AgentID, reason, false);
                         return false;
                     }
 
@@ -664,6 +668,9 @@ namespace OpenSim.Services.MessagingService
             {
                 MainConsole.Instance.WarnFormat("[AgentProcessing]: Exception occured during agent teleport, {0}", ex);
                 reason = "Exception occured.";
+                if(SimulationService != null)
+                    SimulationService.FailedToTeleportAgent(regionCaps.Region, destination.RegionID,
+                        AgentID, reason, false);
             }
             //All done
             ResetFromTransit(AgentID);
@@ -851,104 +858,104 @@ namespace OpenSim.Services.MessagingService
                                        Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, UUID AgentID,
                                        UUID requestingRegion, out string reason)
         {
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
+            IRegionClientCapsService requestingRegionCaps = clientCaps.GetCapsService(requestingRegion);
+            ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
+            IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
             try
             {
-                IClientCapsService clientCaps = m_capsService.GetClientCapsService(AgentID);
-                IRegionClientCapsService requestingRegionCaps = clientCaps.GetCapsService(requestingRegion);
-                ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
-                if (SimulationService != null)
+                if (SimulationService != null || GridService != null)
                 {
-                    //Note: we have to pull the new grid region info as the one from the region cannot be trusted
-                    IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
-                    if (GridService != null)
+                    //Set the user in transit so that we block duplicate tps and reset any cancelations
+                    if (!SetUserInTransit(AgentID))
                     {
-                        //Set the user in transit so that we block duplicate tps and reset any cancelations
-                        if (!SetUserInTransit(AgentID))
+                        reason = "Already in a teleport";
+                        SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region, crossingRegion.RegionID,
+                            AgentID, reason, true);
+                        return false;
+                    }
+
+                    bool result = false;
+
+                    //We need to get it from the grid service again so that we can get the simulation service urls correctly
+                    // as regions don't get that info
+                    crossingRegion = GridService.GetRegionByUUID(clientCaps.AccountInfo.AllScopeIDs, crossingRegion.RegionID);
+                    cAgent.IsCrossing = true;
+                    if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
+                    {
+                        MainConsole.Instance.Warn("[AgentProcessing]: Failed to cross agent " + AgentID +
+                                    " because region did not accept it. Resetting.");
+                        reason = "Failed to update an agent";
+                        SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region, crossingRegion.RegionID,
+                            AgentID, reason, true);
+                    }
+                    else
+                    {
+                        IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
+
+                        //Add this for the viewer, but not for the sim, seems to make the viewer happier
+                        int XOffset = crossingRegion.RegionLocX - requestingRegionCaps.RegionX;
+                        pos.X += XOffset;
+
+                        int YOffset = crossingRegion.RegionLocY - requestingRegionCaps.RegionY;
+                        pos.Y += YOffset;
+
+                        IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionID);
+                            
+                        if (otherRegion == null)
                         {
-                            reason = "Already in a teleport";
-                            return false;
+                            if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref crossingRegion, 0, cAgent, out reason))
+                            {
+                                ResetFromTransit(AgentID);
+                                SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region, crossingRegion.RegionID,
+                                    AgentID, reason, true);
+                                return false;
+                            }
+                            else
+                                otherRegion = clientCaps.GetCapsService(crossingRegion.RegionID);
                         }
+                            
+                        //Tell the client about the transfer
+                        EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity,
+                                                otherRegion.LoopbackRegionIP,
+                                                otherRegion.CircuitData.RegionUDPPort,
+                                                otherRegion.CapsUrl,
+                                                AgentID,
+                                                circuit.SessionID,
+                                                crossingRegion.RegionSizeX,
+                                                crossingRegion.RegionSizeY,
+                                                requestingRegionCaps.Region.RegionID);
 
-                        bool result = false;
-
-                        //We need to get it from the grid service again so that we can get the simulation service urls correctly
-                        // as regions don't get that info
-                        crossingRegion = GridService.GetRegionByUUID(clientCaps.AccountInfo.AllScopeIDs, crossingRegion.RegionID);
-                        cAgent.IsCrossing = true;
-                        if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
+                        result = WaitForCallback(AgentID);
+                        if (!result)
                         {
-                            MainConsole.Instance.Warn("[AgentProcessing]: Failed to cross agent " + AgentID +
-                                       " because region did not accept it. Resetting.");
-                            reason = "Failed to update an agent";
+                            MainConsole.Instance.Warn("[AgentProcessing]: Callback never came in crossing agent " + circuit.AgentID +
+                                        ". Resetting.");
+                            reason = "Crossing timed out";
+                            SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region, crossingRegion.RegionID,
+                                AgentID, reason, true);
                         }
                         else
                         {
-                            IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
+                            // Next, let's close the child agent connections that are too far away.
+                            //Fix the root agent status
+                            otherRegion.RootAgent = true;
+                            requestingRegionCaps.RootAgent = false;
 
-                            //Add this for the viewer, but not for the sim, seems to make the viewer happier
-                            int XOffset = crossingRegion.RegionLocX - requestingRegionCaps.RegionX;
-                            pos.X += XOffset;
-
-                            int YOffset = crossingRegion.RegionLocY - requestingRegionCaps.RegionY;
-                            pos.Y += YOffset;
-
-                            IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionID);
-                            
-                            if (otherRegion == null)
-                            {
-                                if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref crossingRegion, 0, cAgent, out reason))
-                                {
-                                    ResetFromTransit(AgentID);
-                                    return false;
-                                }
-                                else
-                                    otherRegion = clientCaps.GetCapsService(crossingRegion.RegionID);
-                            }
-                            
-                            //Tell the client about the transfer
-                            EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity,
-                                                  otherRegion.LoopbackRegionIP,
-                                                  otherRegion.CircuitData.RegionUDPPort,
-                                                  otherRegion.CapsUrl,
-                                                  AgentID,
-                                                  circuit.SessionID,
-                                                  crossingRegion.RegionSizeX,
-                                                  crossingRegion.RegionSizeY,
-                                                  requestingRegionCaps.Region.RegionID);
-
-                            result = WaitForCallback(AgentID);
-                            if (!result)
-                            {
-                                MainConsole.Instance.Warn("[AgentProcessing]: Callback never came in crossing agent " + circuit.AgentID +
-                                           ". Resetting.");
-                                reason = "Crossing timed out";
-                                SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region, crossingRegion.RegionID,
-                                    AgentID, reason, true);
-                            }
-                            else
-                            {
-                                // Next, let's close the child agent connections that are too far away.
-                                //Fix the root agent status
-                                otherRegion.RootAgent = true;
-                                requestingRegionCaps.RootAgent = false;
-
-                                CloseNeighborAgents(requestingRegionCaps.Region, crossingRegion, AgentID);
-                                reason = "";
-                                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
-                                if (agentInfoService != null)
-                                    agentInfoService.SetLastPosition(AgentID.ToString(), crossingRegion.RegionID,
-                                                                 pos, Vector3.Zero);
-                                SimulationService.MakeChildAgent(AgentID, requestingRegionCaps.Region.RegionID,
-                                    requestingRegionCaps.Region, true); 
-                            }
+                            CloseNeighborAgents(requestingRegionCaps.Region, crossingRegion, AgentID);
+                            reason = "";
+                            IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+                            if (agentInfoService != null)
+                                agentInfoService.SetLastPosition(AgentID.ToString(), crossingRegion.RegionID,
+                                                                pos, Vector3.Zero);
+                            SimulationService.MakeChildAgent(AgentID, requestingRegionCaps.Region.RegionID,
+                                requestingRegionCaps.Region, true); 
                         }
-
-                        //All done
-                        ResetFromTransit(AgentID);
-                        return result;
                     }
-                    else
-                        reason = "Could not find the GridService";
+
+                    //All done
+                    ResetFromTransit(AgentID);
+                    return result;
                 }
                 else
                     reason = "Could not find the SimulationService";
@@ -956,6 +963,9 @@ namespace OpenSim.Services.MessagingService
             catch (Exception ex)
             {
                 MainConsole.Instance.WarnFormat("[AgentProcessing]: Failed to cross an agent into a new region. {0}", ex);
+                if(SimulationService != null)
+                    SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region, crossingRegion.RegionID,
+                        AgentID, "Exception occured", true);
             }
             ResetFromTransit(AgentID);
             reason = "Exception occured";
