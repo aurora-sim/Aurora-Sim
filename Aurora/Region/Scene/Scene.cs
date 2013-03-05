@@ -441,6 +441,7 @@ namespace OpenSim.Region.Framework.Scenes
             IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.TotalPhysicsFrameTime);
             ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.PhysicsUpdateFrameTime);
             IPhysicsMonitor physicsMonitor = RequestModuleInterface<IPhysicsMonitor>();
+            ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
             while (true)
             {
                 if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
@@ -454,16 +455,17 @@ namespace OpenSim.Region.Framework.Scenes
                 try
                 {
                     int OtherFrameTime = Util.EnvironmentTickCount();
-                    if (PhysicsReturns.Count != 0)
+                    ISceneEntity[] entities = null;
+                    lock (PhysicsReturns)
                     {
-                        lock (PhysicsReturns)
+                        if (PhysicsReturns.Count != 0)
                         {
-                            ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
-                            if (inventoryModule != null)
-                                inventoryModule.ReturnObjects(PhysicsReturns.ToArray(), UUID.Zero);
+                            entities = PhysicsReturns.ToArray();
                             PhysicsReturns.Clear();
                         }
                     }
+                    if (entities != null && inventoryModule != null)
+                        inventoryModule.ReturnObjects(entities, UUID.Zero);
 
                     if (m_frame % m_update_entities == 0)
                         m_sceneGraph.UpdateEntities();

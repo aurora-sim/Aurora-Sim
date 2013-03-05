@@ -433,23 +433,25 @@ namespace OpenSim.Region.Framework.Scenes
             IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.TotalPhysicsFrameTime);
             ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.PhysicsUpdateFrameTime);
             IPhysicsMonitor monitor2 = RequestModuleInterface<IPhysicsMonitor>();
-            while(true)
+            ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
+            while (true)
             {
                 if(!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
                     return false;
                 int maintc = Util.EnvironmentTickCount();
                 int BeginningFrameTime = maintc;
 
-                if(PhysicsReturns.Count != 0)
+                ISceneEntity[] entities = null;
+                lock (PhysicsReturns)
                 {
-                    lock(PhysicsReturns)
+                    if (PhysicsReturns.Count != 0)
                     {
-                        ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
-                        if(inventoryModule != null)
-                            inventoryModule.ReturnObjects(PhysicsReturns.ToArray(), UUID.Zero);
+                        entities = PhysicsReturns.ToArray();
                         PhysicsReturns.Clear();
                     }
                 }
+                if (entities != null && inventoryModule != null)
+                    inventoryModule.ReturnObjects(entities, UUID.Zero);
 
                 int PhysicsUpdateTime = Util.EnvironmentTickCount();
 
@@ -496,10 +498,16 @@ namespace OpenSim.Region.Framework.Scenes
             return (a - b + approx) > 0;
         }
 
-        private readonly List<BlankHandler> m_events = new List<BlankHandler>();
-        public List<BlankHandler> Events
+        private readonly List<Action> m_events = new List<Action>();
+        public List<Action> Events
         {
             get { return m_events; }
+        }
+
+        public void AddAsyncEvent(Action action)
+        {
+            lock (m_events)
+                m_events.Add(action);
         }
 
         private bool Update()
@@ -530,23 +538,21 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             // Send coarse locations to clients 
                             foreach(IScenePresence presence in GetScenePresences())
-                            {
                                 presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
-                            }
                         }
                     }
                     
                     if(m_frame % m_update_entities == 0)
                         m_sceneGraph.UpdateEntities();
 
-                    BlankHandler[] events;
+                    Action[] events;
                     lock(m_events)
                     {
-                        events = new BlankHandler[m_events.Count];
+                        events = new Action[m_events.Count];
                         m_events.CopyTo(events);
                         m_events.Clear();
                     }
-                    foreach(BlankHandler h in events)
+                    foreach (Action h in events)
                         try { h(); }
                         catch { }
 
@@ -679,9 +685,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="completed"></param>
         public void AddNewClient (IClientAPI client, BlankHandler completed)
         {
-            lock(m_events)
-                m_events.Add(delegate
-                                 {
+            AddAsyncEvent(delegate
+                 {
                     try
                     {
                         System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
@@ -758,9 +763,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public bool RemoveAgent (IScenePresence presence, bool forceClose)
         {
-            lock(m_events)
-                m_events.Add(delegate
-                                 {
+            AddAsyncEvent(delegate
+                {
                     presence.ControllingClient.Close(forceClose);
                     foreach(IClientNetworkServer cns in m_clientServers)
                         cns.RemoveClient(presence.ControllingClient);
@@ -830,16 +834,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="action"></param>
         public void ForEachScenePresence (Action<IScenePresence> action)
         {
-            lock(Events)
-            {
-                Events.Add(delegate
-                               {
-                    if(m_sceneGraph != null)
-                    {
-                        m_sceneGraph.ForEachScenePresence(action);
-                    }
-                });
-            }
+            AddAsyncEvent(() => m_sceneGraph.ForEachScenePresence(action));
         }
 
         public List<IScenePresence> GetScenePresences ()
@@ -905,17 +900,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ForEachClient(Action<IClientAPI> action)
         {
-            lock(Events)
-            {
-#if (!ISWIN)
-                Events.Add(delegate()
-                {
-                    m_clientManager.ForEachSync(action);
-                });
-#else
-                Events.Add(() => m_clientManager.ForEachSync(action));
-#endif
-            }
+            AddAsyncEvent(() => m_clientManager.ForEachSync(action));
         }
 
         public bool TryGetClient(UUID avatarID, out IClientAPI client)
@@ -930,17 +915,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ForEachSceneEntity (Action<ISceneEntity> action)
         {
-            lock(Events)
-            {
-#if (!ISWIN)
-                Events.Add(delegate()
-                {
-                    m_sceneGraph.ForEachSceneEntity(action);
-                });
-#else
-                Events.Add(() => m_sceneGraph.ForEachSceneEntity(action));
-#endif
-            }
+            AddAsyncEvent(() => m_sceneGraph.ForEachSceneEntity(action));
         }
 
         #endregion
