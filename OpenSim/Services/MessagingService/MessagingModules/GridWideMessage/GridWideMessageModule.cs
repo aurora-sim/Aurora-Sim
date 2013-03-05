@@ -61,7 +61,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 if (regionClient != null)
                 {
                     //Send the message to the client
-                    messagePost.PostToServer(BuildRequest("KickUserMessage", message, regionClient.AgentID.ToString()));
+                    messagePost.Post(regionClient.Region.ServerURI, BuildRequest("KickUserMessage", message, regionClient.AgentID.ToString()));
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
                     if (agentProcessor != null)
                         agentProcessor.LogoutAgent(regionClient, true);
@@ -84,7 +84,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 if (regionClient != null)
                 {
                     //Send the message to the client
-                    messagePost.PostToServer(BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
+                    messagePost.Post(regionClient.Region.ServerURI, BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
                     MainConsole.Instance.Info("Message sent, will be delievered in the next 30 seconds to the user.");
                     return;
                 }
@@ -104,7 +104,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             {
                 MainConsole.Instance.Debug("[GridWideMessageModule]: Informed " + regionClient.ClientCaps.AccountInfo.Name);
                 //Send the message to the client
-                messagePost.PostToServer(BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
+                messagePost.Post(regionClient.Region.ServerURI, BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
             }
             MainConsole.Instance.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 3 minutes.");
         }

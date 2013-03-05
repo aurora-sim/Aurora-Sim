@@ -95,7 +95,7 @@ namespace OpenSim.Services.MessagingService
                             {
                                 GridRegion r = gridService.GetRegionByUUID(null, region);
                                 if (r != null)
-                                    asyncPoster.PostToServer(SyncMessageHelper.UpdateEstateInfo(es.EstateID, region));
+                                    asyncPoster.Post(r.ServerURI, SyncMessageHelper.UpdateEstateInfo(es.EstateID, region));
                             }
                         }
                     }

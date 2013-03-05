@@ -210,7 +210,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.PostToServer(message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipOffered")
@@ -222,7 +222,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.PostToServer(message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendTerminated")
@@ -234,7 +234,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.PostToServer(message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipDenied")
@@ -246,7 +246,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.PostToServer(message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipApproved")
@@ -258,7 +258,7 @@ namespace OpenSim.Services.MessagingService
                 if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
                     //Forward the message
-                    asyncPost.PostToServer(message);
+                    asyncPost.Post(friendSession.GetRootCapsService().Region.ServerURI, message);
                 }
             }
             return null;

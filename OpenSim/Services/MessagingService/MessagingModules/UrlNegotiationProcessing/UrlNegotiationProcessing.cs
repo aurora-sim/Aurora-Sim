@@ -80,7 +80,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             foreach (IRegionCapsService client in clients)
             {
                 //Send the message to the region
-                messagePost.PostToServer(BuildRequest("NegotiateUrl", message, UUID.Zero.ToString()));
+                messagePost.Post(client.Region.ServerURI, BuildRequest("NegotiateUrl", message, UUID.Zero.ToString()));
             }
         }
 

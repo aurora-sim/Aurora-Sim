@@ -1099,7 +1099,7 @@ namespace OpenSim.Services.GridService
                 }
 
                 if (postService != null)
-                    postService.PostToServer(SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
+                    postService.Post(r.ServerURI, SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
             }
 
             if (down)
