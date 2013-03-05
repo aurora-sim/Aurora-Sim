@@ -394,7 +394,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     {
                         if (m_saveChanges && m_saveBackups && !m_shutdown)
                         {
-                            SaveBackup(m_saveDirectory, m_keepOldSave && !m_oldSaveHasBeenSaved);
+                            SaveBackup(m_saveDirectory, false);
                         }
                     }
                 }
@@ -424,7 +424,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 {
                     if(!m_shutdown)
                     {
-                        SaveBackup(m_oldSaveDirectory, true);
+                        SaveBackup(m_oldSaveDirectory, false);
                     }
                 }
             }

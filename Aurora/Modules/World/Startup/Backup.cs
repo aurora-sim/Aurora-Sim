@@ -634,8 +634,8 @@ namespace Aurora.Modules.Startup
                         writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
                         xml = null;
                         count++;
-                        if (count % 5 == 0)
-                            Thread.Sleep (1);
+                        if (count % 3 == 0)
+                            Thread.Sleep (5);
                         //Get all the assets too
                         if (saveAssets)
                             assetGatherer.GatherAssetUuids (entity, assets, scene);
