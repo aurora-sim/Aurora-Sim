@@ -78,7 +78,7 @@ namespace Aurora.Services.DataService
 
         public bool Set(UserInfo info)
         {
-            object[] values = new object[13];
+            object[] values = new object[14];
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
             values[2] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
@@ -93,6 +93,7 @@ namespace Aurora.Services.DataService
             values[10] = info.HomeRegionID.ToString();
             values[11] = info.HomePosition.ToString();
             values[12] = info.HomeLookAt.ToString();
+            values[13] = info.CurrentRegionURI;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UserID"] = info.UserID;
@@ -108,10 +109,11 @@ namespace Aurora.Services.DataService
             GD.Update(m_realm, values, null, filter, null, null);
         }
 
-        public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+        public void SetLastPosition(string userID, UUID regionID, string regionURI, Vector3 lastPosition, Vector3 lastLookAt)
         {
             Dictionary<string, object> values = new Dictionary<string, object>(5);
             values["CurrentRegionID"] = regionID;
+            values["CurrentRegionURI"] = regionURI;
             values["CurrentPosition"] = lastPosition;
             values["CurrentLookat"] = lastLookAt;
             values["LastSeen"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
@@ -136,9 +138,9 @@ namespace Aurora.Services.DataService
         {
             List<UserInfo> users = new List<UserInfo>();
 
-            if (query.Count % 13 == 0)
+            if (query.Count % 14 == 0)
             {
-                for (int i = 0; i < query.Count; i += 13)
+                for (int i = 0; i < query.Count; i += 14)
                 {
 
                     UserInfo user = new UserInfo
@@ -162,6 +164,7 @@ namespace Aurora.Services.DataService
                             user.HomePosition = Vector3.Parse(query[i + 11]);
                         if (query[i + 12] != "")
                             user.HomeLookAt = Vector3.Parse(query[i + 12]);
+                        user.CurrentRegionURI = query[i + 13];
                     }
                     catch
                     {

@@ -42,6 +42,7 @@ namespace OpenSim.Services
         #region Declares
 
         protected IAgentInfoConnector m_agentInfoConnector;
+        protected IGridService m_gridService;
         protected List<string> m_lockedUsers = new List<string>();
 
         #endregion
@@ -71,6 +72,7 @@ namespace OpenSim.Services
         public virtual void FinishedStartup()
         {
             m_agentInfoConnector = DataManager.RequestPlugin<IAgentInfoConnector>();
+            m_gridService = m_registry.RequestModuleInterface<IGridService>();
         }
 
         #endregion
@@ -156,7 +158,12 @@ namespace OpenSim.Services
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            m_agentInfoConnector.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
+            string uri = "";
+            Interfaces.GridRegion region = m_gridService.GetRegionByUUID(null, regionID);
+            if (region != null)
+                uri = region.ServerURI;
+
+            m_agentInfoConnector.SetLastPosition(userID, regionID, uri, lastPosition, lastLookAt);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
@@ -189,6 +196,7 @@ namespace OpenSim.Services
                              CurrentLookAt = Vector3.Zero,
                              CurrentPosition = Vector3.Zero,
                              CurrentRegionID = enteringRegion,
+                             CurrentRegionURI = "",
                              HomeLookAt = Vector3.Zero,
                              HomePosition = Vector3.Zero,
                              HomeRegionID = UUID.Zero,
@@ -209,6 +217,11 @@ namespace OpenSim.Services
                 if (enteringRegion != UUID.Zero)
                 {
                     agentUpdateValues["CurrentRegionID"] = enteringRegion;
+                    string uri = "";
+                    Interfaces.GridRegion region = m_gridService.GetRegionByUUID(null, enteringRegion);
+                    if (region != null)
+                        uri = region.ServerURI;
+                    agentUpdateValues["CurrentRegionURI"] = uri;
                 }
             }
             else
