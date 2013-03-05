@@ -1067,7 +1067,7 @@ namespace Aurora.Services.SQLServices.GridService
                 }
 
                 if (postService != null)
-                    postService.Post(regionInfos.ServerURI, SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
+                    postService.Post(r.ServerURI, SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
             }
 
             if (down)
