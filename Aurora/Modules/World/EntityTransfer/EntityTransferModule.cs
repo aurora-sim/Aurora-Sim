@@ -876,6 +876,8 @@ namespace Aurora.Modules.EntityTransfer
                 scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                 agent.circuitcode, teleportFlags);
 
+            CacheUserInfo(scene, agent.OtherInformation);
+
             if (!AuthorizeUser (scene, agent, out reason))
             {
                 OSDMap map = new OSDMap ();
@@ -884,8 +886,6 @@ namespace Aurora.Modules.EntityTransfer
                 reason = OSDParser.SerializeJsonString (map);
                 return false;
             }
-
-            CacheUserInfo(scene, agent.OtherInformation);
 
             if (sp != null && !sp.IsChildAgent)
             {

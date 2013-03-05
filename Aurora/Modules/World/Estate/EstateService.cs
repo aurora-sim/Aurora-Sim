@@ -703,14 +703,7 @@ namespace Aurora.Modules.Estate
             #region Incoming Agent Checks
 
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.AllScopeIDs, agent.AgentID);
-            bool foreign = false;
             IScenePresence Sp = scene.GetScenePresence(agent.AgentID);
-            if (account == null)
-            {
-                IUserAgentService uas = scene.RequestModuleInterface<IUserAgentService>();
-                if (uas != null) //SOO hate doing this...
-                    foreign = true;
-            }
 
             if (LoginsDisabled)
             {
@@ -769,8 +762,7 @@ namespace Aurora.Modules.Estate
 
                 UserInfo pinfo = presence.GetUserInfo(agent.AgentID.ToString());
 
-                if (!foreign &&
-                    (pinfo == null || (!pinfo.IsOnline && ((agent.teleportFlags & (uint) TeleportFlags.ViaLogin) == 0))))
+                if (pinfo == null || (!pinfo.IsOnline && ((agent.teleportFlags & (uint) TeleportFlags.ViaLogin) == 0)))
                 {
                     reason =
                         String.Format(

@@ -756,8 +756,6 @@ namespace Aurora.Framework.Servers.HttpServer
                         psEvArgs.Request(psreq.RequestID, keysvals);
                     }
 
-                    if (!m_PollServiceManager.Started)
-                        m_PollServiceManager.Start();
                     m_PollServiceManager.Enqueue(psreq);
                 }
                 else
@@ -1527,6 +1525,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 // Long Poll Service Manager with 3 worker threads a 25 second timeout for no events
                 m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
+                m_PollServiceManager.Start();
                 HTTPDRunning = true;
 
                 //HttpListenerContext context;

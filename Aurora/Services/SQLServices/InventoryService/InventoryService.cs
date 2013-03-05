@@ -464,7 +464,6 @@ namespace Aurora.Services.SQLServices.InventoryService
             List<InventoryFolderBase> allFolders = m_Database.GetFolders(
                 new[] { "agentID" },
                 new[] { principalID.ToString() });
-
             if (allFolders.Count == 0)
                 return null;
 
