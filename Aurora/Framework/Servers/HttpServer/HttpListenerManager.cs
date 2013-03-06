@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public class NewHttpServer : IDisposable
+    public class HttpListenerManager : IDisposable
     {
         private readonly HttpListener _listener;
         private readonly Thread _listenerThread;
@@ -17,7 +17,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private ConcurrentQueue<HttpListenerContext> _queue;
         public event Action<HttpListenerContext> ProcessRequest;
 
-        public NewHttpServer(int maxThreads)
+        public HttpListenerManager(int maxThreads)
         {
             _workers = new Thread[maxThreads];
             _queue = new ConcurrentQueue<HttpListenerContext>();

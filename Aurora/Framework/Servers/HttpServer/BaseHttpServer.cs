@@ -46,7 +46,7 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         public volatile bool HTTPDRunning = false;
 
-        protected NewHttpServer m_internalServer;
+        protected HttpListenerManager m_internalServer;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
         protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
@@ -1408,7 +1408,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 {
                     //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
                     //m_httpListener.Prefixes.Add("http://10.1.1.5:" + m_port + "/");
-                    m_internalServer = new NewHttpServer(10);
+                    m_internalServer = new HttpListenerManager(10);
                     m_internalServer.ProcessRequest += OnRequest;
                 }
 
@@ -1428,8 +1428,13 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[BASE HTTP SERVER]: Error - " + e.Message);
-                MainConsole.Instance.Error("[BASE HTTP SERVER]: Tip: Do you have permission to listen on port " + m_port + "?");
+                if (e is HttpListenerException && ((HttpListenerException)e).Message == "Access is denied")
+                    MainConsole.Instance.Error("[BASE HTTP SERVER]: You must run this program as an administrator.");
+                else
+                {
+                    MainConsole.Instance.Error("[BASE HTTP SERVER]: Error - " + e.Message);
+                    MainConsole.Instance.Error("[BASE HTTP SERVER]: Tip: Do you have permission to listen on port " + m_port + "?");
+                }
 
                 // We want this exception to halt the entire server since in current configurations we aren't too
                 // useful without inbound HTTP.
