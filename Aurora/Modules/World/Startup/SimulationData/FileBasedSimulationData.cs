@@ -681,30 +681,20 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 m_saveStream.Close();
                 writer.Close();
                 GC.Collect();
-            }
-            File.Move(fileName + ".tmp", fileName);
-            ISceneEntity[] entities = m_scene.Entities.GetEntities();
-            try
-            { 
-#if (!ISWIN)
-                foreach (ISceneEntity entity in entities)
+                ISceneEntity[] entities = m_scene.Entities.GetEntities();
+                try
                 {
-                    if (entity.HasGroupChanged)
+                    foreach (ISceneEntity entity in entities.Where(entity => entity.HasGroupChanged))
                     {
                         entity.HasGroupChanged = false;
                     }
                 }
-#else
-                foreach (ISceneEntity entity in entities.Where(entity => entity.HasGroupChanged))
+                catch (Exception ex)
                 {
-                    entity.HasGroupChanged = false;
+                    MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
                 }
-#endif
             }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
-            }
+            File.Move(fileName + ".tmp", fileName);
             //Now make it the full file again
             MapTileNeedsGenerated = true;
             MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);

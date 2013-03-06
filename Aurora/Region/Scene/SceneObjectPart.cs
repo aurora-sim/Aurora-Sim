@@ -2894,9 +2894,6 @@ namespace OpenSim.Region.Framework.Scenes
                     tex.FaceTextures[face].RGBA = texcolor;
                     UpdateTexture(tex, true);
                 }
-                //WRONG.... fixed with updateTexture
-                //TriggerScriptChangedEvent(Changed.COLOR);
-                return;
             }
             else if (face == ALL_SIDES)
             {
@@ -2927,7 +2924,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (changed)
                     UpdateTexture(tex, true);
-                return;
             }
         }
 

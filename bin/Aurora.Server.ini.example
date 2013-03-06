@@ -94,15 +94,14 @@
     InventoryServiceOpenServerHandler = false
     UserAccountServiceOpenServerHandler = false
 
+    LLLoginHandlerPort = 8002
+
     SyncMessagePosterServiceOpenServerHandler = true
     SyncMessagePosterServiceServerHandlerPort = 8014
 	SyncMessagePosterServiceDoRemote = true
 
-    LLLoginHandlerPort = 8002
-
-    SyncMessagePosterServiceOpenServerHandler = true
-    SyncMessagePosterServiceServerHandlerPort = 8003
-	SyncMessagePosterServiceDoRemote = true
+    InstantMessagingServiceOpenServerHandler = true
+    InstantMessagingServiceServerHandlerPort = 8014
 
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector

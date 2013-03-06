@@ -89,12 +89,6 @@ namespace Aurora.Framework
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
         void AddGroupProposal(UUID agentID, GroupProposalInfo info);
 
-        bool CreateSession(ChatSession chatSession);
-        void AddMemberToGroup(ChatSessionMember chatSessionMember, UUID GroupID);
-        ChatSession GetSession(UUID sessionid);
-        ChatSessionMember FindMember(UUID sessionid, UUID Agent);
-        void RemoveSession(UUID sessionid);
-
         List<GroupTitlesData> GetGroupTitles(UUID agentID, UUID groupID);
 
         List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID);
@@ -125,7 +119,14 @@ namespace Aurora.Framework
         // Summary:
         //     True if user has voice chat enabled
         public bool CanVoiceChat;
+        /// <summary>
+        /// Whether the user has accepted being added to the group chat
+        /// </summary>
         public bool HasBeenAdded;
+        /// <summary>
+        /// Whether the user has asked to be removed from the chat
+        /// </summary>
+        public bool RequestedRemoval;
         //
         // Summary:
         //     True of Avatar has moderator abilities

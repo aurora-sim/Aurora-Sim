@@ -35,7 +35,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Modules.Groups
 {
@@ -267,85 +266,6 @@ namespace Aurora.Modules.Groups
             return GroupsConnector.GetInactiveProposals(agentID, groupID);
         }
 
-        /// <summary>
-        ///   Add this member to the friend conference
-        /// </summary>
-        /// <param name = "member"></param>
-        /// <param name = "SessionID"></param>
-        public void AddMemberToGroup(ChatSessionMember member, UUID SessionID)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(SessionID, out session);
-            ChatSessionMember oldMember = FindMember(SessionID, member.AvatarKey);
-            if ((oldMember == null) || (oldMember.AvatarKey == UUID.Zero))
-                session.Members.Add(member);
-            else
-                oldMember.HasBeenAdded = true; //Reset this
-        }
-
-        /// <summary>
-        ///   Create a new friend conference session
-        /// </summary>
-        /// <param name = "session"></param>
-        public bool CreateSession(ChatSession session)
-        {
-            ChatSession oldSession = null;
-            if (ChatSessions.TryGetValue(session.SessionID, out oldSession))
-                if (GetMemeberCount(session) == 0)
-                    RemoveSession(session.SessionID);
-                else
-                    return false; //Already have one
-            ChatSessions.Add(session.SessionID, session);
-            return true;
-        }
-
-        public void RemoveSession(UUID sessionid)
-        {
-            ChatSessions.Remove(sessionid);
-        }
-
-        /// <summary>
-        ///   Get a session by a user's sessionID
-        /// </summary>
-        /// <param name = "SessionID"></param>
-        /// <returns></returns>
-        public ChatSession GetSession(UUID SessionID)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(SessionID, out session);
-            return session;
-        }
-
-        /// <summary>
-        ///   Find the member from X sessionID
-        /// </summary>
-        /// <param name = "sessionid"></param>
-        /// <param name = "Agent"></param>
-        /// <returns></returns>
-        public ChatSessionMember FindMember(UUID sessionid, UUID Agent)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(sessionid, out session);
-            if (session == null)
-                return null;
-            ChatSessionMember thismember = new ChatSessionMember {AvatarKey = UUID.Zero};
-#if (!ISWIN)
-            foreach (ChatSessionMember testmember in session.Members)
-            {
-                if (testmember.AvatarKey == Agent)
-                {
-                    thismember = testmember;
-                }
-            }
-#else
-            foreach (ChatSessionMember testmember in session.Members.Where(testmember => testmember.AvatarKey == Agent))
-            {
-                thismember = testmember;
-            }
-#endif
-            return thismember;
-        }
-
         #endregion
 
         #region INonSharedRegionModule Members
@@ -434,41 +354,6 @@ namespace Aurora.Modules.Groups
             MemberGroupProfile.PowersMask = MemberInfo.GroupPowers;
 
             return MemberGroupProfile;
-        }
-
-        private int GetMemeberCount(ChatSession session)
-        {
-#if (!ISWIN)
-            int count = 0;
-            foreach (ChatSessionMember member in session.Members)
-            {
-                if (member.HasBeenAdded) count++;
-            }
-            return count;
-#else
-            return session.Members.Count(member => member.HasBeenAdded);
-#endif
-        }
-
-        /// <summary>
-        ///   Add the agent to the in-memory session lists and give them the default permissions
-        /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "SessionID"></param>
-        private void AddDefaultPermsMemberToSession(UUID AgentID, UUID SessionID)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(SessionID, out session);
-            ChatSessionMember member = new ChatSessionMember
-                                           {
-                                               AvatarKey = AgentID,
-                                               CanVoiceChat = true,
-                                               IsModerator = false,
-                                               MuteText = false,
-                                               MuteVoice = false,
-                                               HasBeenAdded = false
-                                           };
-            session.Members.Add(member);
         }
     }
 }

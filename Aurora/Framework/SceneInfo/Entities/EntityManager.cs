@@ -184,9 +184,7 @@ namespace Aurora.Framework
         {
             lock (m_objectEntitiesLock)
             {
-                List<ISceneEntity> tmp = new List<ISceneEntity>(m_objectEntities.Count);
-                m_objectEntities.ForEach(tmp.Add);
-                return tmp.ToArray();
+                return m_objectEntities.Values;
             }
         }
 

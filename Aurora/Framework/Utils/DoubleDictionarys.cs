@@ -322,5 +322,18 @@ namespace Aurora.Framework
                 return list.Count;
             }
         }
+
+        public TValue[] Values
+        {
+            get 
+            {
+                lock (m_lock)
+                {
+                    TValue[] values = new TValue[Dictionary1.Count];
+                    Dictionary1.Values.CopyTo(values, 0);
+                    return values;
+                }
+            }
+        }
     }
 }

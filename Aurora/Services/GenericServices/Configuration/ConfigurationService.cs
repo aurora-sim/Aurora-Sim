@@ -119,13 +119,14 @@ namespace OpenSim.Services.ConfigurationService
 
             OSDMap request = new OSDMap();
             //Get the urls from the config
-            GetConfigFor("GridServerURI", request);
             GetConfigFor("AssetServerURI", request);
-            GetConfigFor("InventoryServerURI", request);
             GetConfigFor("AvatarServerURI", request);
-            GetConfigFor("UserAccountServerURI", request);
+            GetConfigFor("GridServerURI", request);
+            GetConfigFor("InventoryServerURI", request);
             GetConfigFor("ServerURI", request);
             GetConfigFor("SyncMessageServerURI", request);
+            GetConfigFor("InstantMessageServerURI", request);
+            GetConfigFor("UserAccountServerURI", request);
             m_urls = request;
         }
 

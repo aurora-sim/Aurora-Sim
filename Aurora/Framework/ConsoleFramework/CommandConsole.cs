@@ -846,7 +846,6 @@ namespace Aurora.Framework
 
         public bool Processing = true;
         private delegate void PromptEvent();
-        private readonly Object m_consoleLock = new Object();
         protected static bool m_reading;
         private Thread m_consoleReadingThread;
         protected readonly Object m_readingLock = new Object();
@@ -872,34 +871,31 @@ namespace Aurora.Framework
                 {
                     throw new Exception("Restart");
                 }
-                lock (m_consoleLock)
+                if (m_consoleReadingThread == null)
+                    m_consoleReadingThread = StartReadingThread();
+                try
                 {
-                    if(m_consoleReadingThread == null)
-                        m_consoleReadingThread = StartReadingThread();
-                    try
+                    if (m_reading)
                     {
-                        if (m_reading)
-                        {
-                            if (m_consoleReadingThread.ThreadState == ThreadState.Running)
-                                m_consoleReadingThread.Abort();
-                            continue;
-                        }
-                        else if (m_consoleReadingThread.ThreadState == ThreadState.Stopped ||
-                            m_consoleReadingThread.ThreadState == ThreadState.Aborted)
-                        {
-                            m_consoleReadingThread = null;
-                            continue;
-                        }
-                        if (m_consoleReadingThread.Join(1000))
-                        {
-                            continue;
-                        }
+                        if (m_consoleReadingThread.ThreadState == ThreadState.Running)
+                            m_consoleReadingThread.Abort();
+                        continue;
                     }
-                    catch (Exception ex)
+                    else if (m_consoleReadingThread.ThreadState == ThreadState.Stopped ||
+                        m_consoleReadingThread.ThreadState == ThreadState.Aborted)
                     {
-                        //Eat the exception and go on
-                        Output("[Console]: Failed to execute command: " + ex);
+                        m_consoleReadingThread = null;
+                        continue;
                     }
+                    if (m_consoleReadingThread.Join(1000))
+                    {
+                        continue;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    //Eat the exception and go on
+                    Output("[Console]: Failed to execute command: " + ex);
                 }
             }
         }

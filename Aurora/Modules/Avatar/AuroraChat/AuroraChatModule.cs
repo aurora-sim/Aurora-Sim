@@ -54,7 +54,7 @@ namespace Aurora.Modules.Chat
         private IScene m_Scene;
 
         private IMuteListConnector MuteListConnector;
-        private IMessageTransferModule m_TransferModule;
+        private IInstantMessagingService m_imService;
         internal IConfig m_config;
 
         private bool m_enabled = true;
@@ -392,10 +392,7 @@ namespace Aurora.Modules.Chat
 
             m_Scene = scene;
             scene.EventManager.OnNewClient += OnNewClient;
-            scene.EventManager.OnClosingClient += OnClosingClient;
-            scene.EventManager.OnRegisterCaps += RegisterCaps;
-            scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
-            scene.EventManager.OnChatSessionRequest += OnChatSessionRequest;
+            scene.EventManager.OnClosingClient += OnClosingClient;;
             scene.EventManager.OnCachedUserInfo += UpdateCachedInfo;
 
             scene.RegisterModuleInterface<IMuteListModule>(this);
@@ -412,19 +409,7 @@ namespace Aurora.Modules.Chat
             if (m_useMuteListModule)
                 MuteListConnector = DataManager.DataManager.RequestPlugin<IMuteListConnector>();
 
-            if (m_TransferModule == null)
-            {
-                m_TransferModule =
-                    scene.RequestModuleInterface<IMessageTransferModule>();
-
-                if (m_TransferModule == null)
-                {
-                    MainConsole.Instance.Error("[CONFERANCE MESSAGE]: No message transfer module, IM will not work!");
-
-                    m_Scene = null;
-                    m_enabled = false;
-                }
-            }
+            m_imService = scene.RequestModuleInterface<IInstantMessagingService>();
         }
 
         public virtual void RemoveRegion(IScene scene)
@@ -434,9 +419,6 @@ namespace Aurora.Modules.Chat
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
-            scene.EventManager.OnRegisterCaps -= RegisterCaps;
-            scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
-            scene.EventManager.OnChatSessionRequest -= OnChatSessionRequest;
             scene.EventManager.OnCachedUserInfo -= UpdateCachedInfo;
 
             m_Scene = null;
@@ -722,191 +704,6 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   Set up the CAPS for friend conferencing
-        /// </summary>
-        /// <param name = "agentID"></param>
-        /// <param name = "caps"></param>
-        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
-        {
-            OSDMap retVal = new OSDMap();
-            retVal["ChatSessionRequest"] = CapsUtil.CreateCAPS("ChatSessionRequest", "");
-
-            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ChatSessionRequest"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return ProcessChatSessionRequest(request, agentID);
-                                                      }));
-            return retVal;
-        }
-
-        private byte[] ProcessChatSessionRequest(Stream request, UUID Agent)
-        {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
-
-            return Encoding.UTF8.GetBytes(m_Scene.EventManager.TriggerChatSessionRequest(Agent, rm));
-        }
-
-        private string OnChatSessionRequest(UUID Agent, OSDMap rm)
-        {
-            string method = rm["method"].AsString();
-
-            UUID sessionid = UUID.Parse(rm["session-id"].AsString());
-
-            IScenePresence SP = findScenePresence(Agent);
-            IEventQueueService eq = SP.Scene.RequestModuleInterface<IEventQueueService>();
-
-            if (method == "start conference")
-            {
-                //Create the session.
-                CreateSession(new ChatSession
-                                  {
-                                      Members = new List<ChatSessionMember>(),
-                                      SessionID = sessionid,
-                                      Name = SP.Name + " Conference"
-                                  });
-
-                OSDArray parameters = (OSDArray) rm["params"];
-                //Add other invited members.
-                foreach (OSD param in parameters)
-                {
-                    AddDefaultPermsMemberToSession(param.AsUUID(), sessionid);
-                }
-
-                //Add us to the session!
-                AddMemberToGroup(new ChatSessionMember
-                                     {
-                                         AvatarKey = Agent,
-                                         CanVoiceChat = true,
-                                         IsModerator = true,
-                                         MuteText = false,
-                                         MuteVoice = false,
-                                         HasBeenAdded = true
-                                     }, sessionid);
-
-
-                //Inform us about our room
-                ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
-                    new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
-                        {
-                            AgentID = Agent,
-                            CanVoiceChat = true,
-                            IsModerator = true,
-                            MuteText = false,
-                            MuteVoice = false,
-                            Transition = "ENTER"
-                        };
-                //eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, Agent, "ENTER",
-                //                                     findScene(Agent).RegionInfo.RegionID);
-                //WRONG
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, Agent, "ENTER",
-                                                     m_Scene.RegionInfo.RegionID);
-
-                ChatterBoxSessionStartReplyMessage cs = new ChatterBoxSessionStartReplyMessage
-                                                            {
-                                                                VoiceEnabled = true,
-                                                                TempSessionID = UUID.Random(),
-                                                                Type = 1,
-                                                                Success = true,
-                                                                SessionID = sessionid,
-                                                                SessionName = SP.Name + " Conference",
-                                                                ModeratedVoice = true
-                                                            };
-
-                return cs.Serialize().ToString();
-            }
-            else if (method == "accept invitation")
-            {
-                //They would like added to the group conversation
-                List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> Us =
-                    new List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
-                List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents =
-                    new List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
-
-                ChatSession session = GetSession(sessionid);
-                if (session != null)
-                {
-                    ChatSessionMember thismember = FindMember(sessionid, Agent);
-                    //Tell all the other members about the incoming member
-                    foreach (ChatSessionMember sessionMember in session.Members)
-                    {
-                        ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
-                            new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
-                                {
-                                    AgentID = sessionMember.AvatarKey,
-                                    CanVoiceChat = sessionMember.CanVoiceChat,
-                                    IsModerator = sessionMember.IsModerator,
-                                    MuteText = sessionMember.MuteText,
-                                    MuteVoice = sessionMember.MuteVoice,
-                                    Transition = "ENTER"
-                                };
-                        if (sessionMember.AvatarKey == thismember.AvatarKey)
-                            Us.Add(block);
-                        else
-                        {
-                            if (sessionMember.HasBeenAdded)
-                                // Don't add not joined yet agents. They don't want to be here.
-                                NotUsAgents.Add(block);
-                        }
-                    }
-                    thismember.HasBeenAdded = true;
-                    foreach (ChatSessionMember member in session.Members)
-                    {
-                        eq.ChatterBoxSessionAgentListUpdates(session.SessionID,
-                                                             member.AvatarKey == thismember.AvatarKey
-                                                                 ? NotUsAgents.ToArray()
-                                                                 : Us.ToArray(),
-                                                             member.AvatarKey, "ENTER",
-                                                             m_Scene.RegionInfo.RegionID);
-                    }
-                    return "Accepted";
-                }
-                else
-                    return ""; //not this type of session
-            }
-            else if (method == "mute update")
-            {
-                //Check if the user is a moderator
-                if (!CheckModeratorPermission(Agent, sessionid))
-                {
-                    return "";
-                }
-
-                OSDMap parameters = (OSDMap) rm["params"];
-                UUID AgentID = parameters["agent_id"].AsUUID();
-                OSDMap muteInfoMap = (OSDMap) parameters["mute_info"];
-
-                ChatSessionMember thismember = FindMember(sessionid, AgentID);
-                if (muteInfoMap.ContainsKey("text"))
-                    thismember.MuteText = muteInfoMap["text"].AsBoolean();
-                if (muteInfoMap.ContainsKey("voice"))
-                    thismember.MuteVoice = muteInfoMap["voice"].AsBoolean();
-
-                ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
-                    new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
-                        {
-                            AgentID = thismember.AvatarKey,
-                            CanVoiceChat = thismember.CanVoiceChat,
-                            IsModerator = thismember.IsModerator,
-                            MuteText = thismember.MuteText,
-                            MuteVoice = thismember.MuteVoice,
-                            Transition = "ENTER"
-                        };
-
-                // Send an update to the affected user
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, AgentID, "",
-                                                     m_Scene.RegionInfo.RegionID);
-
-                return "Accepted";
-            }
-            else
-            {
-                MainConsole.Instance.Warn("ChatSessionRequest : " + method);
-                return "";
-            }
-        }
-
-        /// <summary>
         ///   Find the presence from all the known sims
         /// </summary>
         /// <param name = "avID"></param>
@@ -916,265 +713,20 @@ namespace Aurora.Modules.Chat
             return m_Scene.GetScenePresence(avID);
         }
 
-        private void OnGridInstantMessage(GridInstantMessage msg)
-        {
-            OnInstantMessage(findScenePresence(msg.toAgentID).ControllingClient, msg);
-        }
-
         /// <summary>
         ///   If its a message we deal with, pull it from the client here
         /// </summary>
         /// <param name = "client"></param>
         /// <param name = "im"></param>
-        public void OnInstantMessage(IClientAPI client, GridInstantMessage im)
+        private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             byte dialog = im.dialog;
-            //We only deal with friend IM sessions here, groups module handles group IM sessions
-            if (dialog == (byte) InstantMessageDialog.SessionSend)
-                SendChatToSession(client, im);
-
-            if (dialog == (byte) InstantMessageDialog.SessionDrop)
-                DropMemberFromSession(client, im);
-        }
-
-        /// <summary>
-        ///   Find the member from X sessionID
-        /// </summary>
-        /// <param name = "sessionid"></param>
-        /// <param name = "Agent"></param>
-        /// <returns></returns>
-        private ChatSessionMember FindMember(UUID sessionid, UUID Agent)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(sessionid, out session);
-            if (session == null)
-                return null;
-            ChatSessionMember thismember = new ChatSessionMember {AvatarKey = UUID.Zero};
-#if (!ISWIN)
-            foreach (ChatSessionMember testmember in session.Members)
-            {
-                if (testmember.AvatarKey == Agent)
-                {
-                    thismember = testmember;
-                }
-            }
-#else
-            foreach (ChatSessionMember testmember in session.Members.Where(testmember => testmember.AvatarKey == Agent))
-            {
-                thismember = testmember;
-            }
-#endif
-            return thismember;
-        }
-
-        /// <summary>
-        ///   Check whether the user has moderator permissions
-        /// </summary>
-        /// <param name = "Agent"></param>
-        /// <param name = "sessionid"></param>
-        /// <returns></returns>
-        public bool CheckModeratorPermission(UUID Agent, UUID sessionid)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(sessionid, out session);
-            if (session == null)
-                return false;
-            ChatSessionMember thismember = new ChatSessionMember {AvatarKey = UUID.Zero};
-#if (!ISWIN)
-            foreach (ChatSessionMember testmember in session.Members)
-            {
-                if (testmember.AvatarKey == Agent)
-                {
-                    thismember = testmember;
-                }
-            }
-#else
-             foreach (ChatSessionMember testmember in session.Members.Where(testmember => testmember.AvatarKey == Agent))
-            {
-                thismember = testmember;
-            }
-#endif
-            if (thismember == null)
-                return false;
-            return thismember.IsModerator;
-        }
-
-        /// <summary>
-        ///   Remove the member from this session
-        /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "im"></param>
-        public void DropMemberFromSession(IClientAPI client, GridInstantMessage im)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(im.imSessionID, out session);
-            if (session == null)
-                return;
-            ChatSessionMember member = new ChatSessionMember {AvatarKey = UUID.Zero};
-#if (!ISWIN)
-            foreach (ChatSessionMember testmember in session.Members)
-            {
-                if (testmember.AvatarKey == im.fromAgentID)
-                {
-                    member = testmember;
-                }
-            }
-#else
-            foreach (ChatSessionMember testmember in session.Members.Where(testmember => testmember.AvatarKey == im.fromAgentID))
-            {
-                member = testmember;
-            }
-#endif
-
-            if (member.AvatarKey != UUID.Zero)
-                session.Members.Remove(member);
-
-            if (session.Members.Count == 0)
-            {
-                ChatSessions.Remove(session.SessionID);
-                return;
-            }
-
-            ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
-                new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
-                    {
-                        AgentID = member.AvatarKey,
-                        CanVoiceChat = member.CanVoiceChat,
-                        IsModerator = member.IsModerator,
-                        MuteText = member.MuteText,
-                        MuteVoice = member.MuteVoice,
-                        Transition = "LEAVE"
-                    };
-            IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
-            foreach (ChatSessionMember sessionMember in session.Members)
-            {
-                //eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] { block }, sessionMember.AvatarKey, "LEAVE",
-                //                                     findScene(sessionMember.AvatarKey).RegionInfo.RegionID);
-                //WRONG
-                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] { block }, sessionMember.AvatarKey, "LEAVE",
-                                                     m_Scene.RegionInfo.RegionID);
-            }
-        }
-
-        /// <summary>
-        ///   Send chat to all the members of this friend conference
-        /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "im"></param>
-        public void SendChatToSession(IClientAPI client, GridInstantMessage im)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(im.imSessionID, out session);
-            if (session == null)
-                return;
-            IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
-            foreach (ChatSessionMember member in session.Members)
-            {
-                if (member.HasBeenAdded)
-                {
-                    im.toAgentID = member.AvatarKey;
-                    im.binaryBucket = Utils.StringToBytes(session.Name);
-                    im.RegionID = UUID.Zero;
-                    im.ParentEstateID = 0;
-                    //im.timestamp = 0;
-                    m_TransferModule.SendInstantMessage(im);
-                }
-                else
-                {
-                    im.toAgentID = member.AvatarKey;
-                    /*eq.ChatterboxInvitation(
-                        session.SessionID
-                        , session.Name
-                        , im.fromAgentID
-                        , im.message
-                        , im.toAgentID
-                        , im.fromAgentName
-                        , im.dialog
-                        , im.timestamp
-                        , im.offline == 1
-                        , (int)im.ParentEstateID
-                        , im.Position
-                        , 1
-                        , im.imSessionID
-                        , false
-                        , Utils.StringToBytes(session.Name)
-                        , findScene(member.AvatarKey).RegionInfo.RegionID
-                        );*/
-                    //WRONG
-                    eq.ChatterboxInvitation(
-                        session.SessionID
-                        , session.Name
-                        , im.fromAgentID
-                        , im.message
-                        , im.toAgentID
-                        , im.fromAgentName
-                        , im.dialog
-                        , im.timestamp
-                        , im.offline == 1
-                        , (int) im.ParentEstateID
-                        , im.Position
-                        , 1
-                        , im.imSessionID
-                        , false
-                        , Utils.StringToBytes(session.Name)
-                        , m_Scene.RegionInfo.RegionID
-                        );
-                }
-            }
-        }
-
-        /// <summary>
-        ///   Add this member to the friend conference
-        /// </summary>
-        /// <param name = "member"></param>
-        /// <param name = "SessionID"></param>
-        public void AddMemberToGroup(ChatSessionMember member, UUID SessionID)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(SessionID, out session);
-            session.Members.Add(member);
-        }
-
-        /// <summary>
-        ///   Create a new friend conference session
-        /// </summary>
-        /// <param name = "session"></param>
-        public void CreateSession(ChatSession session)
-        {
-            ChatSessions.Add(session.SessionID, session);
-        }
-
-        /// <summary>
-        ///   Get a session by a user's sessionID
-        /// </summary>
-        /// <param name = "SessionID"></param>
-        /// <returns></returns>
-        public ChatSession GetSession(UUID SessionID)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(SessionID, out session);
-            return session;
-        }
-
-        /// <summary>
-        ///   Add the agent to the in-memory session lists and give them the default permissions
-        /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "SessionID"></param>
-        private void AddDefaultPermsMemberToSession(UUID AgentID, UUID SessionID)
-        {
-            ChatSession session;
-            ChatSessions.TryGetValue(SessionID, out session);
-            ChatSessionMember member = new ChatSessionMember
-                                           {
-                                               AvatarKey = AgentID,
-                                               CanVoiceChat = true,
-                                               IsModerator = false,
-                                               MuteText = false,
-                                               MuteVoice = false,
-                                               HasBeenAdded = false
-                                           };
-            session.Members.Add(member);
+            if ((im.dialog == (byte)InstantMessageDialog.SessionGroupStart))
+                m_imService.CreateGroupChat(client.AgentId, im);
+            else if (dialog == (byte) InstantMessageDialog.SessionSend)
+                m_imService.SendChatToSession(client.AgentId, im);
+            else if (dialog == (byte) InstantMessageDialog.SessionDrop)
+                m_imService.DropMemberFromSession(client.AgentId, im);
         }
     }
 }

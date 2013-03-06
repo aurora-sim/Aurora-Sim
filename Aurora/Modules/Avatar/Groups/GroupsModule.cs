@@ -76,8 +76,8 @@ namespace Aurora.Modules.Groups
         private IGroupsServicesConnector m_groupData;
         private bool m_groupNoticesEnabled = true;
         private bool m_groupsEnabled;
-        private IGroupsMessagingModule m_groupsMessagingModule;
         private IMessageTransferModule m_msgTransferModule;
+        private IInstantMessagingService m_imService;
 
         #region IGroupsModule Members
 
@@ -508,7 +508,7 @@ namespace Aurora.Modules.Groups
 
             SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
 
-            if (m_groupsMessagingModule != null)
+            if (m_imService != null)
             {
                 // SL sends out notifications to the group messaging session that the person has left
                 GridInstantMessage im = new GridInstantMessage
@@ -526,8 +526,8 @@ namespace Aurora.Modules.Groups
                                                 toAgentID = UUID.Zero
                                             };
 
-                m_groupsMessagingModule.EnsureGroupChatIsStarted(groupID);
-                m_groupsMessagingModule.SendMessageToGroup(im, groupID);
+                m_imService.EnsureSessionIsStarted(groupID);
+                m_imService.SendChatToSession(UUID.Zero, im);
             }
         }
 
@@ -622,7 +622,7 @@ namespace Aurora.Modules.Groups
             RemoveFromGroupPowersCache(ejecteeID, groupID);
             UpdateAllClientsWithGroupInfo(ejecteeID, "");
 
-            if (m_groupsMessagingModule != null)
+            if (m_imService != null)
             {
                 // SL sends out notifcations to the group messaging session that the person has left
                 GridInstantMessage im = new GridInstantMessage
@@ -640,8 +640,8 @@ namespace Aurora.Modules.Groups
                     toAgentID = UUID.Zero
                 };
 
-                m_groupsMessagingModule.EnsureGroupChatIsStarted(groupID);
-                m_groupsMessagingModule.SendMessageToGroup(im, groupID);
+                m_imService.EnsureSessionIsStarted(groupID);
+                m_imService.SendChatToSession(groupID, im);
             }
         }
 
@@ -1074,34 +1074,27 @@ namespace Aurora.Modules.Groups
 
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
+            m_groupData = scene.RequestModuleInterface<IGroupsServicesConnector>();
+
+            // No Groups Service Connector, then nothing works...
             if (m_groupData == null)
             {
-                m_groupData = scene.RequestModuleInterface<IGroupsServicesConnector>();
-
-                // No Groups Service Connector, then nothing works...
-                if (m_groupData == null)
-                {
-                    m_groupsEnabled = false;
-                    MainConsole.Instance.Error("[GROUPS]: Could not get IGroupsServicesConnector");
-                    Close();
-                    return;
-                }
-
-                m_groupsMessagingModule = scene.RequestModuleInterface<IGroupsMessagingModule>();
+                m_groupsEnabled = false;
+                MainConsole.Instance.Error("[GROUPS]: Could not get IGroupsServicesConnector");
+                Close();
+                return;
             }
 
+            m_msgTransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
+            m_imService = scene.RequestModuleInterface<IInstantMessagingService>();
+
+            // No message transfer module, no notices, group invites, rejects, ejects, etc
             if (m_msgTransferModule == null)
             {
-                m_msgTransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
-
-                // No message transfer module, no notices, group invites, rejects, ejects, etc
-                if (m_msgTransferModule == null)
-                {
-                    m_groupsEnabled = false;
-                    MainConsole.Instance.Error("[GROUPS]: Could not get MessageTransferModule");
-                    Close();
-                    return;
-                }
+                m_groupsEnabled = false;
+                MainConsole.Instance.Error("[GROUPS]: Could not get MessageTransferModule");
+                Close();
+                return;
             }
 
             m_scene = scene;
