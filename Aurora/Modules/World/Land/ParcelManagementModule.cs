@@ -169,7 +169,7 @@ namespace Aurora.Modules.Land
             m_scene.EventManager.OnValidateBuyLand += EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnNewClient += EventManagerOnNewClient;
             m_scene.EventManager.OnMakeRootAgent += CheckEnteringNewParcel;
-            m_scene.EventManager.OnSignificantClientMovement += EventManagerOnSignificantClientMovement;
+            m_scene.EventManager.OnClientMovement += EventManagerOnSignificantClientMovement;
             m_scene.EventManager.OnSignificantObjectMovement += EventManagerOnSignificantObjectMovement;
             m_scene.EventManager.OnIncomingLandDataFromStorage += EventManagerOnIncomingLandDataFromStorage;
             m_scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
@@ -874,6 +874,7 @@ namespace Aurora.Modules.Land
                         Vector3 pos = clientAvatar.LastKnownAllowedPosition == Vector3.Zero
                                           ? GetNearestAllowedPosition(clientAvatar)
                                           : clientAvatar.LastKnownAllowedPosition;
+                        pos.Z = clientAvatar.AbsolutePosition.Z - 3;
                         clientAvatar.Teleport(pos);
                     }
                     CheckEnteringNewParcel(clientAvatar, over);

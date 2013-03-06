@@ -88,6 +88,8 @@ namespace Aurora.Framework
         public delegate void SignificantClientMovement(IScenePresence sp);
         public event SignificantClientMovement OnSignificantClientMovement;
 
+        public event SignificantClientMovement OnClientMovement;
+
         public delegate void SignificantObjectMovement(ISceneEntity group);
         public event SignificantObjectMovement OnSignificantObjectMovement;
 
@@ -1179,6 +1181,27 @@ namespace Aurora.Framework
             if (handlerSignificantClientMovement != null)
             {
                 foreach (SignificantClientMovement d in handlerSignificantClientMovement.GetInvocationList())
+                {
+                    try
+                    {
+                        d(presence);
+                    }
+                    catch (Exception e)
+                    {
+                        MainConsole.Instance.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerSignificantClientMovement failed - continuing.  {0} {1}",
+                            e, e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        public void TriggerClientMovement(IScenePresence presence)
+        {
+            SignificantClientMovement handlerClientMovement = OnClientMovement;
+            if (handlerClientMovement != null)
+            {
+                foreach (SignificantClientMovement d in handlerClientMovement.GetInvocationList())
                 {
                     try
                     {
