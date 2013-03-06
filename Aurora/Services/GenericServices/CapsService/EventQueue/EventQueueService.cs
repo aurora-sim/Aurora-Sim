@@ -65,9 +65,6 @@ namespace OpenSim.Services.CapsService
 
         public virtual bool Enqueue(OSD o, UUID agentID, UUID regionID)
         {
-            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
-            System.Diagnostics.StackFrame frame = stackTrace.GetFrame(1);
-            MainConsole.Instance.Warn("Enqueue - " + frame.GetMethod().Name);
             return Enqueue(OSDParser.SerializeLLSDXmlString(o), agentID, regionID);
         }
 
