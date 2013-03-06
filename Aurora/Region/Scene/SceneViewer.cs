@@ -858,16 +858,18 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //NO LOCKING REQUIRED HERE, THE PRIORITYQUEUE IS LOCAL
             //Enqueue them all
-            List<ISceneEntity> sortableList = new List<ISceneEntity>(entsqueue);
+            List<KeyValuePair<double, ISceneEntity>> sortableList = new List<KeyValuePair<double, ISceneEntity>>();
+            foreach (ISceneEntity ent in entsqueue)
+                sortableList.Add(new KeyValuePair<double, ISceneEntity>(m_prioritizer.GetUpdatePriority(m_presence, ent), ent));
             sortableList.Sort(sortPriority);
             lock (m_objectUpdatesToSendLock)
             {
-                foreach (ISceneEntity t in sortableList)
+                foreach (KeyValuePair<double, ISceneEntity> t in sortableList)
                 {
                     //Always send the root child first!
-                    EntityUpdate update = new EntityUpdate(t.RootChild, PrimUpdateFlags.ForcedFullUpdate);
+                    EntityUpdate update = new EntityUpdate(t.Value.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                     QueueEntityUpdate(update);
-                    foreach (ISceneChildEntity child in t.ChildrenEntities().Where(child => !child.IsRoot))
+                    foreach (ISceneChildEntity child in t.Value.ChildrenEntities().Where(child => !child.IsRoot))
                     {
                         update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
                         QueueEntityUpdate(update);
@@ -880,11 +882,9 @@ namespace OpenSim.Region.Framework.Scenes
                                   : m_presence.CameraPosition;
         }
 
-        private int sortPriority(ISceneEntity a, ISceneEntity b)
+        private int sortPriority(KeyValuePair<double, ISceneEntity> a, KeyValuePair<double, ISceneEntity> b)
         {
-            int prioA = (int) m_prioritizer.GetUpdatePriority(m_presence, a);
-            int prioB = (int) m_prioritizer.GetUpdatePriority(m_presence, b);
-            return prioB.CompareTo(prioA);
+            return a.Key.CompareTo(b.Key);
         }
 
         #endregion

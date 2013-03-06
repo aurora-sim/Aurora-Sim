@@ -399,7 +399,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // If this is an update for our own avatar give it the highest priority
             if (presence == entity)
-                return 0.0;
+                return -double.MaxValue;
 
             // Use the camera position for local agents and avatar position for remote agents
             Vector3 presencePos = (presence.IsChildAgent)
@@ -415,6 +415,8 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectGroup g = (SceneObjectGroup) entity;
                 entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
                 distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
+                if (g.IsAttachment)
+                    return -double.MaxValue;
             }
             else if (entity is SceneObjectPart)
             {
@@ -424,10 +426,14 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup g = p.ParentGroup;
                     entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
                     distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
+                    if (g.IsAttachment)
+                        return -double.MaxValue;
                 }
                 else
                 {
                     distsq = -p.clampedAABdistanceToSQ(presencePos) + 1.0f;
+                    if (p.ParentGroup.RootChild.IsAttachment)
+                        return -double.MaxValue + 0.5;
                 }
             }
             else
