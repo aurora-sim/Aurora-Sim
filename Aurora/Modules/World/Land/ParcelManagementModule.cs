@@ -770,12 +770,14 @@ namespace Aurora.Modules.Land
                     {
                         SendYouAreBannedNotice(avatar);
                         Vector3 pos = GetNearestAllowedPosition(avatar);
+                        pos.Z -= avatar.PhysicsActor.Size.Z;
                         avatar.Teleport(pos);
                     }
                     else if (avatar.CurrentParcel.IsRestrictedFromLand(avatar.UUID))
                     {
                         SendYouAreRestrictedNotice(avatar);
                         Vector3 pos = GetNearestAllowedPosition(avatar);
+                        pos.Z -= avatar.PhysicsActor.Size.Z;
                         avatar.Teleport(pos);
                     }
                 }
@@ -874,7 +876,7 @@ namespace Aurora.Modules.Land
                         Vector3 pos = clientAvatar.LastKnownAllowedPosition == Vector3.Zero
                                           ? GetNearestAllowedPosition(clientAvatar)
                                           : clientAvatar.LastKnownAllowedPosition;
-                        pos.Z = clientAvatar.AbsolutePosition.Z - 3;
+                        pos.Z = clientAvatar.AbsolutePosition.Z - clientAvatar.PhysicsActor.Size.Z;
                         clientAvatar.Teleport(pos);
                     }
                     CheckEnteringNewParcel(clientAvatar, over);
