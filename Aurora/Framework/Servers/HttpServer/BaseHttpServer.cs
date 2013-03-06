@@ -69,14 +69,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
         private PollServiceRequestManager m_PollServiceManager;
 
-        /// <summary>
-        /// Gets or sets the debug level.
-        /// </summary>
-        /// <value>
-        /// See MainServer.DebugLevel.
-        /// </value>
-        public int DebugLevel { get; set; }
-
         public uint Port
         {
             get { return m_port; }
@@ -639,75 +631,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
         #endregion
 
-        #region Logging
-
-        private void LogIncomingToStreamHandler(HttpListenerRequest request, IStreamedRequestHandler requestHandler)
-        {
-            MainConsole.Instance.DebugFormat(
-                "[BASE HTTP SERVER]: HTTP IN :{0} stream handler {1} {2} from {3}",
-                Port,
-                request.HttpMethod,
-                request.Url.PathAndQuery,
-                request.RemoteEndPoint.ToString());
-
-            if (DebugLevel >= 5)
-                LogIncomingInDetail(request);
-        }
-
-        private void LogIncomingToContentTypeHandler(HttpListenerRequest request)
-        {
-            MainConsole.Instance.DebugFormat(
-                "[BASE HTTP SERVER]: HTTP IN :{0} {1} content type handler {2} {3} from {4}",
-                Port,
-                (request.ContentType == null || request.ContentType == "") ? "not set" : request.ContentType,
-                request.HttpMethod,
-                request.Url.PathAndQuery,
-                request.RemoteEndPoint.ToString());
-
-            if (DebugLevel >= 5)
-                LogIncomingInDetail(request);
-        }
-
-        private void LogIncomingToXmlRpcHandler(HttpListenerRequest request)
-        {
-            MainConsole.Instance.DebugFormat(
-                "[BASE HTTP SERVER]: HTTP IN :{0} assumed generic XMLRPC request {1} {2} from {3}",
-                Port,
-                request.HttpMethod,
-                request.Url.PathAndQuery,
-                request.RemoteEndPoint.ToString());
-
-            if (DebugLevel >= 5)
-                LogIncomingInDetail(request);
-        }
-
-        private void LogIncomingInDetail(HttpListenerRequest request)
-        {
-            using (StreamReader reader = new StreamReader(Util.Copy(request.InputStream), Encoding.UTF8))
-            {
-                string output;
-
-                if (DebugLevel == 5)
-                {
-                    const int sampleLength = 80;
-                    char[] sampleChars = new char[sampleLength + 3];
-                    reader.Read(sampleChars, 0, sampleLength);
-                    sampleChars[80] = '.';
-                    sampleChars[81] = '.';
-                    sampleChars[82] = '.';
-                    output = new string(sampleChars);
-                }
-                else
-                {
-                    output = reader.ReadToEnd();
-                }
-
-                MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: {0}", output.Replace("\n", @"\n"));
-            }
-        }
-
-        #endregion
-
         private void OnRequest(HttpListenerContext context)
         {
             try
@@ -838,9 +761,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 if (TryGetStreamHandler(handlerKey, out requestHandler))
                 {
-                    if (DebugLevel >= 3)
-                        LogIncomingToStreamHandler(request, requestHandler);
-
                     response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
 
                     buffer = requestHandler.Handle(path, request.InputStream, req, resp);
@@ -851,18 +771,12 @@ namespace Aurora.Framework.Servers.HttpServer
                     {
                         case null:
                         case "text/html":
-                            if (DebugLevel >= 3)
-                                LogIncomingToContentTypeHandler(request);
-
                             buffer = HandleHTTPRequest(req, resp);
                             break;
 
                         case "application/llsd+xml":
                         case "application/xml+llsd":
                         case "application/llsd+json":
-                            if (DebugLevel >= 3)
-                                LogIncomingToContentTypeHandler(request);
-
                             buffer = HandleLLSDRequests(req, resp);
                             break;
 
@@ -879,32 +793,20 @@ namespace Aurora.Framework.Servers.HttpServer
                             //MainConsole.Instance.Info("[Debug BASE HTTP SERVER]: Checking for LLSD Handler");
                             if (DoWeHaveALLSDHandler(request.RawUrl))
                             {
-                                if (DebugLevel >= 3)
-                                    LogIncomingToContentTypeHandler(request);
-
                                 buffer = HandleLLSDRequests(req, resp);
                             }
                             else if (GetXmlRPCHandler(request.RawUrl) != null)
                             {
-                                if (DebugLevel >= 3)
-                                    LogIncomingToXmlRpcHandler(request);
-
                                 // generic login request.
                                 buffer = HandleXmlRpcRequests(req, resp);
                             }
                             //                        MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Checking for HTTP Handler for request {0}", request.RawUrl);
                             else if (DoWeHaveAHTTPHandler(request.RawUrl))
                             {
-                                if (DebugLevel >= 3)
-                                    LogIncomingToContentTypeHandler(request);
-
                                 buffer = HandleHTTPRequest(req, resp);
                             }
                             else
                             {
-                                if (DebugLevel >= 3)
-                                    LogIncomingToXmlRpcHandler(request);
-
                                 // generic login request.
                                 buffer = HandleXmlRpcRequests(req, resp);
                             }
@@ -951,8 +853,7 @@ namespace Aurora.Framework.Servers.HttpServer
             catch (Exception e)
             {
                 MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-                if(response.OutputStream.CanWrite)//Only send if we haven't sent a request already
-                    SendHTML500(response);
+                response.Close();
             }
             finally
             {
@@ -968,11 +869,13 @@ namespace Aurora.Framework.Servers.HttpServer
                         remoteIP,
                         tickdiff);
                 }
-                else if (DebugLevel >= 4)
+                else if (MainConsole.Instance.IsEnabled(log4net.Core.Level.Trace))
                 {
-                    MainConsole.Instance.DebugFormat(
-                        "[BASE HTTP SERVER]: HTTP IN :{0} took {1}ms",
-                        Port,
+                    MainConsole.Instance.InfoFormat(
+                        "[BASE HTTP SERVER]: Handling {0} {1} from {2} took {3}ms",
+                        requestMethod,
+                        uriString,
+                        remoteIP,
                         tickdiff);
                 }
             }
@@ -1022,21 +925,9 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (XmlException e)
             {
-                if (DebugLevel >= 1)
-                {
-                    if (DebugLevel >= 2)
-                        MainConsole.Instance.Warn(
-                            string.Format(
-                                "[BASE HTTP SERVER]: Got XMLRPC request with invalid XML from {0}.  XML was '{1}'.  Sending blank response.  Exception ",
-                                request.RemoteIPEndPoint, requestBody),
-                            e);
-                    else
-                    {
-                        MainConsole.Instance.WarnFormat(
-                            "[BASE HTTP SERVER]: Got XMLRPC request with invalid XML from {0}, length {1}.  Sending blank response.",
-                            request.RemoteIPEndPoint, requestBody.Length);
-                    }
-                }
+                MainConsole.Instance.WarnFormat(
+                        "[BASE HTTP SERVER]: Got XMLRPC request with invalid XML from {0}.  XML was '{1}'.  Sending blank response.  Exception: {2}",
+                        request.RemoteIPEndPoint, requestBody, e.ToString());
             }
 
             if (xmlRprcRequest != null)
