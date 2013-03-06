@@ -230,7 +230,7 @@ namespace Aurora.Modules.Chat
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("[Aurora Translator]: Error in requesting translation, " + ex);
+                        MainConsole.Instance.Debug("[Aurora Translator]: Error in requesting translation, " + ex);
                     }
                     if (!UInfo.ShowNonTranslated)
                         c.Message = translated;

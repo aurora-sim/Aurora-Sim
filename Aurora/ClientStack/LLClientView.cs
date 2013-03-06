@@ -13075,7 +13075,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 ".  Dumping Params:");
                     foreach (GenericMessagePacket.ParamListBlock t in gmParams)
                     {
-                        Console.WriteLine(t.ToString());
+                        MainConsole.Instance.Debug(t.ToString());
                     }
                     //gmpack.MethodData.
                     break;

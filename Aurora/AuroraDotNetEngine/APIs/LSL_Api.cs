@@ -940,7 +940,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (m_scriptConsoleChannelEnabled && (channelID == m_scriptConsoleChannel))
             {
-                Console.WriteLine(text);
+                MainConsole.Instance.Debug(text);
             }
             else
             {

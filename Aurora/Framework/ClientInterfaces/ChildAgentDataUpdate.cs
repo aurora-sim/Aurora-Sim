@@ -527,10 +527,10 @@ namespace Aurora.Framework
 
         public void Dump()
         {
-            Console.WriteLine("------------ AgentData ------------");
-            Console.WriteLine("UUID: " + AgentID);
-            Console.WriteLine("Region: " + RegionID);
-            Console.WriteLine("Position: " + Position);
+            MainConsole.Instance.Debug("------------ AgentData ------------");
+            MainConsole.Instance.Debug("UUID: " + AgentID);
+            MainConsole.Instance.Debug("Region: " + RegionID);
+            MainConsole.Instance.Debug("Position: " + Position);
         }
     }
 }

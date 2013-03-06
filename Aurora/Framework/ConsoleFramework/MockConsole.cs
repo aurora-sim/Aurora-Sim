@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using log4net.Core;
+using Nini.Config;
 
 namespace Aurora.Framework
 {
@@ -36,6 +38,19 @@ namespace Aurora.Framework
     /// </summary>
     public class MockConsole : CommandConsole
     {
+        public override void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
+        {
+            if (source.Configs["Console"] == null || source.Configs["Console"].GetString("Console", String.Empty) != "MockConsole")
+            {
+                return;
+            }
+
+            baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
+            MainConsole.Instance = this;
+
+            m_Commands.AddCommand("help", "help", "Get a general command list", Help);
+        }
+
         public override void Output(string text)
         {
         }
