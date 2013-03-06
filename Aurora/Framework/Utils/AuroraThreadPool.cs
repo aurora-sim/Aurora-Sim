@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -43,16 +45,10 @@ namespace Aurora.Framework
 
     public class AuroraThreadPool
     {
-        #region Delegates
-
-        public delegate void QueueItem();
-
-        #endregion
-
         private readonly int[] Sleeping;
         private readonly Thread[] Threads;
         private readonly AuroraThreadPoolStartInfo m_info;
-        private readonly Queue<QueueItem> queue = new Queue<QueueItem>();
+        private readonly ConcurrentQueue<Action> queue = new ConcurrentQueue<Action>();
         public long nSleepingthreads;
         public long nthreads;
 
@@ -78,14 +74,8 @@ namespace Aurora.Framework
             {
                 try
                 {
-                    QueueItem item = null;
-                    lock (queue)
-                    {
-                        if (queue.Count != 0)
-                            item = queue.Dequeue();
-                    }
-
-                    if (item == null)
+                    Action item = null;
+                    if (!queue.TryDequeue(out item))
                     {
                         OurSleepTime += m_info.SleepIncrementTime;
                         if (m_info.KillThreadAfterQueueClear || OurSleepTime > m_info.MaxSleepTime)
@@ -131,12 +121,12 @@ namespace Aurora.Framework
             }
         }
 
-        public void QueueEvent(QueueItem delegat, int Priority)
+        public void QueueEvent(Action delegat, int Priority)
         {
             if (delegat == null)
                 return;
-            lock (queue)
-                queue.Enqueue(delegat);
+            
+            queue.Enqueue(delegat);
 
             if (nthreads == 0 || (nthreads - nSleepingthreads < queue.Count - 1 && nthreads < Threads.Length))
             {
@@ -212,8 +202,7 @@ namespace Aurora.Framework
 
         public void Restart()
         {
-            lock (queue)
-                queue.Clear();
+            ClearEvents();
             var threads = new Thread[0];
             lock (Threads)
             {
@@ -228,8 +217,8 @@ namespace Aurora.Framework
 
         public void ClearEvents()
         {
-            lock (queue)
-                queue.Clear();
+            Action itm;
+            while (queue.TryDequeue(out itm)) ;
         }
 
         public Thread[] GetThreads()

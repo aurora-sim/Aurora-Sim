@@ -530,6 +530,7 @@ namespace Aurora.Modules.Land
                         return true;
                     }
                 }
+                return true;
             }
             return false;
         }
