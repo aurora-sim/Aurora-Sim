@@ -201,7 +201,7 @@ namespace Aurora.Modules.Land
                                        IClientAPI remote_client)
         {
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
-            uint regionFlags = 336723974 & ~((uint) (OpenMetaverse.RegionFlags.AllowLandmark | OpenMetaverse.RegionFlags.AllowSetHome));
+            ulong regionFlags = 336723974 & ~((uint) (OpenMetaverse.RegionFlags.AllowLandmark | OpenMetaverse.RegionFlags.AllowSetHome));
             if (estateModule != null)
                 regionFlags = estateModule.GetRegionFlags();
 
@@ -225,7 +225,7 @@ namespace Aurora.Modules.Land
                                              snap_selection, request_result, LandData,
                                              (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                              MaxPrimCounts,
-                                             m_scene.RegionInfo.ObjectCapacity, regionFlags);
+                                             m_scene.RegionInfo.ObjectCapacity, (uint)regionFlags);
         }
 
         public void UpdateLandProperties(LandUpdateArgs args, IClientAPI remote_client)

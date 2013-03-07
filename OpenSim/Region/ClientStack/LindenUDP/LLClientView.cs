@@ -783,7 +783,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                            TerrainStartHeight11 = args.terrainStartHeight3,
                                            SimAccess = args.simAccess,
                                            WaterHeight = args.waterHeight,
-                                           RegionFlags = args.regionFlags,
+                                           RegionFlags = (uint)args.regionFlags,
                                            SimName = Util.StringToBytes256(args.regionName),
                                            SimOwner = args.SimOwner,
                                            TerrainBase0 = args.terrainBase0,
@@ -799,7 +799,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             //I guess this is for the client to remember an old setting?
             handshake.RegionInfo2 = new RegionHandshakePacket.RegionInfo2Block {RegionID = regionInfo.RegionID};
-
+            handshake.RegionInfo4 = new RegionHandshakePacket.RegionInfo4Block[1] 
+                                        { 
+                                            new RegionHandshakePacket.RegionInfo4Block
+                                            {
+                                                RegionFlagsExtended = args.regionFlags,
+                                                RegionProtocols = (ulong)RegionProtocols.AgentAppearanceService
+                                            }
+                                        };
             handshake.RegionInfo3 = new RegionHandshakePacket.RegionInfo3Block
                                         {
                                             CPUClassID = 9,
@@ -6756,7 +6763,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         ///  Send a response back to a client when it asks the asset server (via the region server) if it has
         ///  its appearance texture cached.
         ///
-        ///  At the moment, we always reply that there is no cached texture.
         ///</summary>
         ///<param name = "simclient"></param>
         ///<param name = "packet"></param>

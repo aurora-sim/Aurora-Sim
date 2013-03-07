@@ -36,7 +36,7 @@ namespace Aurora.Framework
         public UUID SimOwner;
         public float billableFactor;
         public bool isEstateManager;
-        public uint regionFlags;
+        public ulong regionFlags;
         public string regionName;
         public byte simAccess;
         public UUID terrainBase0;
