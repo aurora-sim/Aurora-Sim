@@ -3727,7 +3727,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 AvatarAppearancePacket.VisualParamBlock avblock = new AvatarAppearancePacket.VisualParamBlock {ParamValue = visualParams[i]};
                 avp.VisualParam[i] = avblock;
             }
-
+            avp.AppearanceData = new AvatarAppearancePacket.AppearanceDataBlock[1] { new AvatarAppearancePacket.AppearanceDataBlock() };
             avp.Sender.IsTrial = false;
             avp.Sender.ID = agentID;
             //MainConsole.Instance.InfoFormat("[LLClientView]: Sending appearance for {0} to {1}", agentID.ToString(), AgentId.ToString());
@@ -4495,7 +4495,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_sendingSimStatsPacket = true;
 
             SimStatsPacket pack = new SimStatsPacket
-                                      {Region = stats.RegionBlock, Stat = stats.StatsBlock, Header = {Reliable = false}};
+                                      {Region = stats.RegionBlock, 
+                                          RegionInfo=new SimStatsPacket.RegionInfoBlock[1] { new SimStatsPacket.RegionInfoBlock() { RegionFlagsExtended = stats.RegionBlock.RegionFlags } },
+                                          Stat = stats.StatsBlock, Header = {Reliable = false}};
 
 
             OutPacket(pack, ThrottleOutPacketType.Task, true, null,
