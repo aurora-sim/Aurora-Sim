@@ -91,7 +91,7 @@ namespace Aurora.Framework
         IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt, uint flags);
 
     public delegate void TeleportLandmarkRequest(
-        IClientAPI remoteClient, UUID regionID, string gatekeeper, Vector3 position);
+        IClientAPI remoteClient, UUID regionID, Vector3 position);
 
     public delegate void DisconnectUser();
 

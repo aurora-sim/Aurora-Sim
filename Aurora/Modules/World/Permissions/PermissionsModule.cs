@@ -2238,8 +2238,7 @@ namespace Aurora.Modules.Permissions
             if (objectID == UUID.Zero) // User inventory
             {
                 IInventoryService invService = m_scene.InventoryService;
-                InventoryItemBase assetRequestItem = new InventoryItemBase(script, user);
-                assetRequestItem = invService.GetItem(assetRequestItem);
+                InventoryItemBase assetRequestItem = invService.GetItem(user, script);
                 if (assetRequestItem == null)
                 {
                     //Can't find, can't read
@@ -2342,8 +2341,7 @@ namespace Aurora.Modules.Permissions
             if (objectID == UUID.Zero) // User inventory
             {
                 IInventoryService invService = m_scene.InventoryService;
-                InventoryItemBase assetRequestItem = new InventoryItemBase(notecard, user);
-                assetRequestItem = invService.GetItem(assetRequestItem);
+                InventoryItemBase assetRequestItem = invService.GetItem(user, notecard);
                 if (assetRequestItem == null) // Library item
                 {
                     //Can't find, can't read

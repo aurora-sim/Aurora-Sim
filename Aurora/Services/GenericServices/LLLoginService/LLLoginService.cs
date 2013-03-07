@@ -535,6 +535,8 @@ namespace OpenSim.Services.LLLoginService
                     return LLFailedLoginResponse.DeadRegionProblem;
                 }
 
+                #region Appearance
+
                 //
                 // Get the avatar
                 //
@@ -558,8 +560,11 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
 
+                //Makes sure that all links are properly placed in the current outfit folder for v2 viewers
                 avappearance = FixCurrentOutFitFolder(account.PrincipalID, avappearance);
-                
+
+                #endregion
+
                 //
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
@@ -1180,7 +1185,7 @@ namespace OpenSim.Services.LLLoginService
             foreach (var i in ic)
             {
                 InventoryItemBase linkedItem = null;
-                if ((linkedItem = m_InventoryService.GetItem(new InventoryItemBase(i.AssetID))) == null)
+                if ((linkedItem = m_InventoryService.GetItem(user, i.AssetID)) == null)
                     brokenLinks.Add(i.ID);
                 else if (linkedItem.ID == AvatarWearable.DEFAULT_EYES_ITEM ||
                             linkedItem.ID == AvatarWearable.DEFAULT_BODY_ITEM ||
@@ -1201,7 +1206,7 @@ namespace OpenSim.Services.LLLoginService
                     if (!OtherStuff.Contains(wearable[ii].ItemID))
                     {
                         InventoryItemBase linkedItem2 = null;
-                        if ((linkedItem2 = m_InventoryService.GetItem(new InventoryItemBase(wearable[ii].ItemID))) != null)
+                        if ((linkedItem2 = m_InventoryService.GetItem(user, wearable[ii].ItemID)) != null)
                         {
                             InventoryItemBase linkedItem3 = (InventoryItemBase)linkedItem2.Clone();
                             linkedItem3.AssetID = linkedItem2.ID;
@@ -1228,7 +1233,7 @@ namespace OpenSim.Services.LLLoginService
                     if (!OtherStuff.Contains(attachment.ItemID))
                     {
                         InventoryItemBase linkedItem2 = null;
-                        if ((linkedItem2 = m_InventoryService.GetItem(new InventoryItemBase(attachment.ItemID))) != null)
+                        if ((linkedItem2 = m_InventoryService.GetItem(user, attachment.ItemID)) != null)
                         {
                             InventoryItemBase linkedItem3 = (InventoryItemBase)linkedItem2.Clone();
                             linkedItem3.AssetID = linkedItem2.ID;

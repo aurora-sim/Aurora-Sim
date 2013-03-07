@@ -146,8 +146,7 @@ namespace Aurora.Modules.InventoryAccess
         /// <returns></returns>
         public virtual string CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data)
         {
-            InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem(item);
+            InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
 
             if (item != null)
             {
@@ -330,8 +329,7 @@ namespace Aurora.Modules.InventoryAccess
                     
             if (DeRezAction.SaveToExistingUserInventoryItem == action)
             {
-                item = new InventoryItemBase(objectGroups[0].RootChild.FromUserInventoryItemID, userID);
-                item = m_scene.InventoryService.GetItem(item);
+                item = m_scene.InventoryService.GetItem(userID, objectGroups[0].RootChild.FromUserInventoryItemID);
 
                 //item = userInfo.RootFolder.FindItem(
                 //        objectGroup.RootPart.FromUserInventoryItemID);
@@ -583,7 +581,7 @@ namespace Aurora.Modules.InventoryAccess
         public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, out InventoryItemBase item)
         {
             XmlDocument doc;
-            item = m_scene.InventoryService.GetItem(new InventoryItemBase(itemID, remoteClient.AgentId));
+            item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
             UUID itemId = UUID.Zero;
 
             // If we have permission to copy then link the rezzed object back to the user inventory
@@ -707,8 +705,7 @@ namespace Aurora.Modules.InventoryAccess
             bRayEndIsIntersection = (byte) (RayEndIsIntersection ? 1 : 0);
 
             XmlDocument doc;
-            InventoryItemBase item = new InventoryItemBase (itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem (item);
+            InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
             SceneObjectGroup group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
 
             Vector3 pos = m_scene.SceneGraph.GetNewRezLocation (
@@ -1124,8 +1121,7 @@ namespace Aurora.Modules.InventoryAccess
         protected virtual InventoryItemBase GetItem(UUID agentID, UUID itemID)
         {
             IInventoryService invService = m_scene.RequestModuleInterface<IInventoryService> ();
-            InventoryItemBase assetRequestItem = new InventoryItemBase (itemID, agentID);
-            assetRequestItem = invService.GetItem (assetRequestItem);
+            InventoryItemBase assetRequestItem = invService.GetItem(agentID, itemID);
 
             if (assetRequestItem != null &&
                 assetRequestItem.CreatorData != null && 

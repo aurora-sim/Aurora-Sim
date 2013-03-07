@@ -192,6 +192,8 @@ textures 1
 
         #endregion
 
+        #region OnNewClient Events
+
         public void NewClient(IClientAPI client)
         {
             client.OnRequestWearables += RequestWearables;
@@ -224,6 +226,8 @@ textures 1
             }
         }
 
+        #endregion
+
         #region Set Appearance
 
         /// <summary>
@@ -253,8 +257,6 @@ textures 1
                 {
                     List<UUID> ChangedTextures = new List<UUID>();
                     texturesChanged = appearance.Appearance.SetTextureEntries(textureEntry, out ChangedTextures);
-
-                    // MainConsole.Instance.WarnFormat("[AVFACTORY]: Complete texture check for {0}",client.AgentId);
                 }
                 // Process the visual params, this may change height as well
                 if (visualParams != null)
@@ -274,8 +276,6 @@ textures 1
                 QueueAppearanceSave(client.AgentId);
                 QueueAppearanceSend(client.AgentId);
             }
-
-            // MainConsole.Instance.WarnFormat("[AVFACTORY]: complete SetAppearance for {0}:\n{1}",client.AgentId,sp.Appearance.ToString());
         }
 
         /// <summary>
@@ -421,16 +421,6 @@ textures 1
 
         #region Wearables
 
-        //private Dictionary<UUID, UUID> incomingLinks = new Dictionary<UUID, UUID>();
-
-        public void NewAppearanceLink(InventoryItemBase item)
-        {
-            /*if (item.InvType == (int)InventoryType.Wearable)
-            {
-                incomingLinks[item.AssetID] = item.ID;
-            }*/
-        }
-
         /// <summary>
         ///   Tell the client for this scene presence what items it should be wearing now
         /// </summary>
@@ -445,7 +435,6 @@ textures 1
 
             //Don't send the wearables immediately, make sure that everything is loaded first
             QueueInitialAppearanceSend(client.AgentId);
-            //client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
         }
 
         /// <summary>
@@ -467,6 +456,8 @@ textures 1
             // operate on a copy of the appearance so we don't have to lock anything
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
             AvatarAppearance avatAppearance = new AvatarAppearance(appearance.Appearance, false);
+
+            #region Teen Mode Stuff
 
             IOpenRegionSettingsModule module = m_scene.RequestModuleInterface<IOpenRegionSettingsModule>();
 
@@ -588,12 +579,10 @@ textures 1
                 }
             }
 
+            #endregion
+
             foreach (AvatarWearingArgs.Wearable wear in e.NowWearing.Where(wear => wear.Type < AvatarWearable.MAX_WEARABLES))
             {
-                /*if (incomingLinks.ContainsKey (wear.ItemID))
-                {
-                    wear.ItemID = incomingLinks[wear.ItemID];
-                }*/
                 avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
             }
 
@@ -607,27 +596,19 @@ textures 1
             // since the "iswearing" will trigger a new set of visual param and baked texture changes
             // when those complete, the new appearance will be sent
             appearance.Appearance = avatAppearance;
+
+            //This only occurs if something has been forced on afterwards (teen mode stuff)
             if (NeedsRebake)
             {
                 //Tell the client about the new things it is wearing
                 sp.ControllingClient.SendWearables(appearance.Appearance.Wearables, appearance.Appearance.Serial);
                 //Then forcefully tell it to rebake
-#if (!ISWIN)
-                foreach (Primitive.TextureEntryFace t in appearance.Appearance.Texture.FaceTextures)
-                {
-                    Primitive.TextureEntryFace face = (t);
-                    if (face != null)
-                    {
-                        sp.ControllingClient.SendRebakeAvatarTextures(face.TextureID);
-                    }
-                }
-#else
                 foreach (Primitive.TextureEntryFace face in appearance.Appearance.Texture.FaceTextures.Select(t => (t)).Where(face => face != null))
                 {
                     sp.ControllingClient.SendRebakeAvatarTextures(face.TextureID);
                 }
-#endif
             }
+
             QueueAppearanceSave(sp.UUID);
             //Send the wearables HERE so that the client knows what it is wearing
             //sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
@@ -646,34 +627,13 @@ textures 1
                     if (appearance.Wearables[i][j].ItemID == UUID.Zero)
                         continue;
 
-                    // Ignore ruth's assets
-                    if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][j].ItemID)
-                    {
-                        //MainConsole.Instance.ErrorFormat(
-                        //    "[AvatarFactory]: Found an asset for the default avatar, itemID {0}, wearable {1}, asset {2}" +
-                        //    ", setting to default asset {3}.",
-                        //    appearance.Wearables[i][j].ItemID, (WearableType)i, appearance.Wearables[i][j].AssetID,
-                        //    AvatarWearable.DefaultWearables[i][j].AssetID);
-                        appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID,
-                                                    appearance.Wearables[i][j].AssetID);
-                        continue;
-                    }
-
                     if (nowWearing[i].ItemID == oldAppearance.Wearables[i][j].ItemID)
                         continue;//Don't relookup items that are the same and have already been found earlier
 
-                    InventoryItemBase baseItem = new InventoryItemBase(appearance.Wearables[i][j].ItemID, userID);
-                    baseItem = invService.GetItem(baseItem);
+                    InventoryItemBase baseItem = invService.GetItem(userID, appearance.Wearables[i][j].ItemID);
 
                     if (baseItem != null)
-                    {
-                        if (baseItem.AssetType == (int) AssetType.Link)
-                        {
-                            baseItem = new InventoryItemBase(baseItem.AssetID, userID);
-                            baseItem = invService.GetItem(baseItem);
-                        }
                         appearance.Wearables[i].Add(baseItem.ID, baseItem.AssetID);
-                    }
                     else
                     {
                         MainConsole.Instance.ErrorFormat(

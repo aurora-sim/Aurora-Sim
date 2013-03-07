@@ -1571,7 +1571,7 @@ namespace Aurora.Modules.Groups
                         {
                             ItemID = binBucketOSD["item_id"].AsUUID();
 
-                            InventoryItemBase item = m_scene.InventoryService.GetItem(new InventoryItemBase(ItemID, GetRequestingAgentID(remoteClient)));
+                            InventoryItemBase item = m_scene.InventoryService.GetItem(GetRequestingAgentID(remoteClient), ItemID);
                             if (item != null)
                             {
                                 AssetType = item.AssetType;

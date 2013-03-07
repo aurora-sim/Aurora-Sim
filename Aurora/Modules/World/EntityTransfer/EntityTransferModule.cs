@@ -439,7 +439,7 @@ namespace Aurora.Modules.EntityTransfer
         /// <param name="gatekeeperURL"></param>
         /// <param name="position"></param>
         /// <param name="regionID"></param>
-        public void RequestTeleportLandmark (IClientAPI remoteClient, UUID regionID, string gatekeeperURL, Vector3 position)
+        public void RequestTeleportLandmark (IClientAPI remoteClient, UUID regionID, Vector3 position)
         {
             GridRegion info = null;
             try
@@ -452,23 +452,9 @@ namespace Aurora.Modules.EntityTransfer
             }
             if (info == null)
             {
-                if (!string.IsNullOrEmpty(gatekeeperURL))
-                {
-                    info = new GridRegion
-                               {
-                                   ServerURI = gatekeeperURL,
-                                   RegionID = regionID,
-                                   Flags =
-                                       (int)
-                                       (Aurora.Framework.RegionFlags.Foreign | Aurora.Framework.RegionFlags.Hyperlink)
-                               };
-                }
-                else
-                {
-                    // can't find the region: Tell viewer and abort
-                    remoteClient.SendTeleportFailed ("The teleport destination could not be found.");
-                    return;
-                }
+                // can't find the region: Tell viewer and abort
+                remoteClient.SendTeleportFailed("The teleport destination could not be found.");
+                return;
             }
 
             RequestTeleportLocation(remoteClient, info, position, Vector3.Zero, (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaLandmark));

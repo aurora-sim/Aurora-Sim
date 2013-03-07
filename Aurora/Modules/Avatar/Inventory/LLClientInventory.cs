@@ -515,7 +515,7 @@ namespace Aurora.Modules.Inventory
                                              Description = asset.Description,
                                              Name = name,
                                              Flags = flags,
-                                             AssetType = asset.Type,
+                                             AssetType = asset.Type == -1 ? -1 : asset.Type,
                                              InvType = invType,
                                              Folder = folderID,
                                              CurrentPermissions = currentMask,
@@ -527,9 +527,6 @@ namespace Aurora.Modules.Inventory
                                          };
             m_scene.InventoryService.AddItemAsync(item, () =>
             {
-                IAvatarFactory avFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
-                if (avFactory != null)
-                    avFactory.NewAppearanceLink(item);
                 remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
             });
         }
@@ -711,8 +708,7 @@ namespace Aurora.Modules.Inventory
                 "[AGENT INVENTORY]: CopyInventoryItem received by {0} with oldAgentID {1}, oldItemID {2}, new FolderID {3}, newName {4}",
                 remoteClient.AgentId, oldAgentID, oldItemID, newFolderID, newName);
 
-            InventoryItemBase item = new InventoryItemBase(oldItemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem(item);
+            InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, oldItemID);
             if (item == null)
             {
                 MainConsole.Instance.Error("[AGENT INVENTORY]: Failed to find item " + oldItemID.ToString());
@@ -777,8 +773,7 @@ namespace Aurora.Modules.Inventory
             // inventory. Rut-Roh. Whatever. Make this secure. Yeah.
             //
             // Passing something to another avatar or a an object will already
-            InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem(item);
+            InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
 
             if (item != null)
             {
@@ -891,8 +886,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="Flags"></param>
         protected void ChangeInventoryItemFlags(IClientAPI remoteClient, UUID itemID, uint Flags)
         {
-            InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem(item);
+            InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
 
             if (item != null)
             {
@@ -1100,8 +1094,7 @@ namespace Aurora.Modules.Inventory
                     UUID copyID = UUID.Random();
                     if (itemID != UUID.Zero)
                     {
-                        InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                        item = m_scene.InventoryService.GetItem(item);
+                        InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
 
                         // If we've found the item in the user's inventory or in the library
                         if (item != null)
@@ -1190,8 +1183,7 @@ namespace Aurora.Modules.Inventory
 
             if (itemID != UUID.Zero)  // transferred from an avatar inventory to the prim's inventory
             {
-                InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                item = m_scene.InventoryService.GetItem(item);
+                InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
 
                 if (item != null)
                 {

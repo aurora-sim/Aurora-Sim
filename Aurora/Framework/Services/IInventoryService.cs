@@ -208,7 +208,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "item"></param>
         /// <returns></returns>
-        InventoryItemBase GetItem(InventoryItemBase item);
+        InventoryItemBase GetItem(UUID userID, UUID inventoryID);
 
         /// <summary>
         ///   Get a folder, given by its UUID
@@ -242,7 +242,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "itemID"></param>
         /// <returns></returns>
-        OSDArray GetItem(UUID avatarID, UUID itemID);
+        OSDArray GetOSDItem(UUID avatarID, UUID itemID);
 
         #endregion
 

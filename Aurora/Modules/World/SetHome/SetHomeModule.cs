@@ -150,7 +150,7 @@ namespace Aurora.Modules.SetHome
                 }
             }
             else
-                notecardItem = m_scene.InventoryService.GetItem(new InventoryItemBase(NotecardID));
+                notecardItem = m_scene.InventoryService.GetItem(agentID, NotecardID);
             if (notecardItem != null && notecardItem.Owner == agentID)
             {
                 byte[] asset = m_scene.AssetService.GetData(notecardItem.AssetID.ToString());

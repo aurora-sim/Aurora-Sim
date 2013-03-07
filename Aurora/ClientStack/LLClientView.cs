@@ -9439,7 +9439,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         TeleportLandmarkRequest handlerTeleportLandmarkRequest = OnTeleportLandmarkRequest;
                         if (handlerTeleportLandmarkRequest != null)
                         {
-                            handlerTeleportLandmarkRequest(this, lm.RegionID, lm.Gatekeeper, lm.Position);
+                            handlerTeleportLandmarkRequest(this, lm.RegionID, lm.Position);
                         }
                         else
                         {

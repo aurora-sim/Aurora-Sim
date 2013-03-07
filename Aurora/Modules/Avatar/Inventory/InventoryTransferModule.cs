@@ -253,8 +253,7 @@ namespace Aurora.Modules.Inventory
 
                 UUID inventoryID = im.imSessionID; // The inventory item/folder, back from it's trip
 
-                InventoryItemBase item = new InventoryItemBase(inventoryID, client.AgentId);
-                item = invService.GetItem(item);
+                InventoryItemBase item = invService.GetItem(client.AgentId, inventoryID);
                 InventoryFolderBase folder = null;
 
                 if (item != null && trashFolder != null)

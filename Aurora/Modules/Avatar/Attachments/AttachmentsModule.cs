@@ -389,10 +389,7 @@ namespace Aurora.Modules.Attachments
                         if (m_scene.Permissions.PropagatePermissions())
                         {
                             if (item == null)
-                            {
-                                item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                                item = m_scene.InventoryService.GetItem(item);
-                            }
+                                item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
                             if (item == null)
                                 return null;
                             if ((item.CurrentPermissions & 8) != 0)
@@ -845,8 +842,7 @@ namespace Aurora.Modules.Attachments
             // XXYY!!
             if (assetID == UUID.Zero)
             {
-                InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                item = m_scene.InventoryService.GetItem(item);
+                InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
                 //Update the ItemID with the new item
                 group.SetFromItemID(itemID, item.AssetID);
             }

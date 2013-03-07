@@ -95,7 +95,8 @@ namespace Aurora.Services.SQLServices.InventoryService
                     foreach (AddInventoryItemStore item in itemsToAdd)
                     {
                         AddItem(item.Item);
-                        _tempItemCache.Remove(item.Item.ID);
+                        lock(_tempItemCache)
+                            _tempItemCache.Remove(item.Item.ID);
                     }
                 });
             _moveInventoryItemQueue.Start(0.5, (agentID, itemsToMove) =>
@@ -832,8 +833,7 @@ namespace Aurora.Services.SQLServices.InventoryService
             {
                 foreach (UUID id in itemIDs)
                 {
-                    InventoryItemBase item = new InventoryItemBase(id);
-                    item = GetItem(item);
+                    InventoryItemBase item = GetItem(principalID, id);
                     m_Database.IncrementFolder(item.Folder);
                     if (!ParentIsLinkFolder(item.Folder))
                         continue;
@@ -854,54 +854,20 @@ namespace Aurora.Services.SQLServices.InventoryService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public virtual InventoryItemBase GetItem(InventoryItemBase item)
+        public virtual InventoryItemBase GetItem(UUID userID, UUID inventoryID)
         {
-            if (_tempItemCache.ContainsKey(item.ID))
-                return _tempItemCache[item.ID];
-            object remoteValue = DoRemoteByURL("InventoryServerURI", item);
+            lock (_tempItemCache)
+            {
+                if (_tempItemCache.ContainsKey(inventoryID))
+                    return _tempItemCache[inventoryID];
+            }
+            object remoteValue = DoRemoteByURL("InventoryServerURI", userID, inventoryID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryItemBase)remoteValue;
 
-            List<InventoryItemBase> items = m_Database.GetItems(item.Owner,
-                new[] { "inventoryID" },
-                new[] { item.ID.ToString() });
-
-            foreach (InventoryItemBase xitem in items)
-            {
-                UUID nn;
-                if (!UUID.TryParse(xitem.CreatorId, out nn))
-                {
-                    try
-                    {
-                        if (xitem.CreatorId != string.Empty)
-                        {
-                            string FullName = xitem.CreatorId.Remove(0, 7);
-                            string[] FirstLast = FullName.Split(' ');
-                            UserAccount account = m_UserAccountService.GetUserAccount(null, FirstLast[0],
-                                                                                      FirstLast[1]);
-                            if (account == null)
-                            {
-                                xitem.CreatorId = UUID.Zero.ToString();
-                                m_Database.StoreItem(xitem);
-                            }
-                            else
-                            {
-                                xitem.CreatorId = account.PrincipalID.ToString();
-                                m_Database.StoreItem(xitem);
-                            }
-                        }
-                        else
-                        {
-                            xitem.CreatorId = UUID.Zero.ToString();
-                            m_Database.StoreItem(xitem);
-                        }
-                    }
-                    catch
-                    {
-                        xitem.CreatorId = UUID.Zero.ToString();
-                    }
-                }
-            }
+            List<InventoryItemBase> items = m_Database.GetItems(userID,
+                new[] { "inventoryID","avatarID" },
+                new[] { inventoryID.ToString(), userID.ToString() });
 
             if (items.Count == 0)
                 return null;
@@ -910,7 +876,7 @@ namespace Aurora.Services.SQLServices.InventoryService
         }
 
         //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public virtual OSDArray GetItem(UUID avatarID, UUID itemID)
+        public virtual OSDArray GetOSDItem(UUID avatarID, UUID itemID)
         {
             /*object remoteValue = DoRemoteByURL("InventoryServerURI", avatarID, itemID);
             if (remoteValue != null || m_doRemoteOnly)
@@ -1012,8 +978,11 @@ namespace Aurora.Services.SQLServices.InventoryService
                 }
             }
 
-            if (!_tempItemCache.ContainsKey(item.ID))
-                _tempItemCache.Add(item.ID, item);
+            lock (_tempItemCache)
+            {
+                if (!_tempItemCache.ContainsKey(item.ID))
+                    _tempItemCache.Add(item.ID, item);
+            }
             _addInventoryItemQueue.Add(item.Owner, new AddInventoryItemStore(item, null));
             if (success != null)
                 success();
@@ -1108,8 +1077,7 @@ namespace Aurora.Services.SQLServices.InventoryService
         {
             Util.FireAndForget(o =>
             {
-                InventoryItemBase item = new InventoryItemBase(itemId, senderId);
-                item = GetItem(item);
+                InventoryItemBase item = GetItem(senderId, itemId);
                 success(InnerGiveInventoryItem(recipient, senderId,
                     item, recipientFolderId, doOwnerCheck));
             });
@@ -1411,7 +1379,7 @@ namespace Aurora.Services.SQLServices.InventoryService
                     foreach (InventoryItemBase item in items)
                     {
                         InventoryItemBase linkedItem = null;
-                        if ((linkedItem = GetItem(new InventoryItemBase(item.AssetID))) == null)
+                        if ((linkedItem = GetItem(account.PrincipalID, item.AssetID)) == null)
                         {
                             //Broken link...
                             brokenLinks.Add(item.ID);

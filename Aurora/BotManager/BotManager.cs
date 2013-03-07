@@ -113,7 +113,7 @@ namespace Aurora.BotManager
             m_aCircuitData.Appearance.ClearAttachments();
             foreach (AvatarAttachment t in attachments)
             {
-                InventoryItemBase item = scene.InventoryService.GetItem(new InventoryItemBase(t.ItemID));
+                InventoryItemBase item = scene.InventoryService.GetItem(UUID.Zero, t.ItemID);
                 if (item != null)
                 {
                     item.ID = UUID.Random();

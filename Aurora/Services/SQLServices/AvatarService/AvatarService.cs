@@ -96,25 +96,6 @@ namespace Aurora.Services.SQLServices.AvatarService
             get { return this; }
         }
 
-        /*private void RemoveOldBaked(UUID principalID, AvatarData newdata)
-        {
-            if (!newdata.Data.ContainsKey("Textures")) return;
-            AvatarData olddata = m_Database.Get("PrincipalID", principalID.ToString());
-            if ((olddata == null) || (!olddata.Data.ContainsKey("Textures"))) return;
-
-            Primitive.TextureEntry old_textures = Primitive.TextureEntry.FromOSD(OSDParser.DeserializeJson(olddata.Data["Textures"]));
-            Primitive.TextureEntry new_textures = Primitive.TextureEntry.FromOSD(OSDParser.DeserializeJson(newdata.Data["Textures"]));
-            IAssetService service = m_registry.RequestModuleInterface<IAssetService>();
-            for (uint i = 0; i < old_textures.FaceTextures.Length; i++)
-            {
-                if ((old_textures.FaceTextures[i] == null) || ((new_textures.FaceTextures[i] != null) &&
-                    (old_textures.FaceTextures[i].TextureID == new_textures.FaceTextures[i].TextureID))) continue;
-                AssetBase ab = service.Get(old_textures.FaceTextures[i].TextureID.ToString());
-                if ((ab != null) && (ab.Name == "Baked Texture"))
-                    service.Delete(old_textures.FaceTextures[i].TextureID);
-            }
-        }*/
-
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AvatarAppearance GetAppearance(UUID principalID)
         {
@@ -160,48 +141,9 @@ namespace Aurora.Services.SQLServices.AvatarService
                                                                                                               principalID,
                                                                                                               appearance
                                                                                                           });
-            //RemoveOldBaked(principalID, avatar);
-            //avatar = FixWearables(principalID, avatar.ToAvatarAppearance(principalID));
+            RemoveOldBaked(principalID, appearance);
             return m_Database.Store(principalID, appearance);
         }
-
-        /*private AvatarAppearance FixWearables(UUID userID, AvatarAppearance appearance)
-        {
-            for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
-            {
-                for (int j = 0; j < appearance.Wearables[j].Count; j++)
-                {
-                    if (appearance.Wearables[i][j].ItemID == UUID.Zero)
-                        continue;
-
-                    InventoryItemBase baseItem = new InventoryItemBase(appearance.Wearables[i][j].ItemID, userID);
-                    baseItem = m_invService.GetItem(baseItem);
-
-                    if (baseItem != null)
-                    {
-                        if (baseItem.AssetType == (int)AssetType.Link)
-                        {
-                            baseItem = new InventoryItemBase(baseItem.AssetID, userID);
-                            baseItem = m_invService.GetItem(baseItem);
-                        }
-                        appearance.Wearables[i].Clear();
-                        appearance.Wearables[i].Add(baseItem.ID, baseItem.AssetID);
-                    }
-                    else
-                    {
-                        MainConsole.Instance.ErrorFormat(
-                            "[AvatarFactory]: Can't find inventory item {0} for {1}, setting to default",
-                            appearance.Wearables[i][j].ItemID, (WearableType)i);
-
-                        appearance.Wearables[i].RemoveItem(appearance.Wearables[i][j].ItemID);
-                        appearance.Wearables[i].Add(AvatarWearable.DefaultWearables[i][j].ItemID,
-                                                    AvatarWearable.DefaultWearables[i][j].AssetID);
-                    }
-                }
-            }
-
-            return new AvatarData(appearance);
-        }*/
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool ResetAvatar(UUID principalID)
@@ -213,7 +155,23 @@ namespace Aurora.Services.SQLServices.AvatarService
             return m_Database.Delete(principalID);
         }
 
-        public object DeleteUserInformation(string name, object param)
+        private void RemoveOldBaked(UUID principalID, AvatarAppearance newdata)
+        {
+            AvatarAppearance olddata = m_Database.Get(principalID);
+
+            IAssetService service = m_registry.RequestModuleInterface<IAssetService>();
+            for (uint i = 0; i < olddata.Texture.FaceTextures.Length; i++)
+            {
+                if ((olddata.Texture.FaceTextures[i] == null) || ((newdata.Texture.FaceTextures[i] != null) &&
+                    (olddata.Texture.FaceTextures[i].TextureID == newdata.Texture.FaceTextures[i].TextureID))) continue;
+
+                AssetBase ab = service.Get(olddata.Texture.FaceTextures[i].TextureID.ToString());
+                if ((ab != null) && (ab.Name == "Baked Texture"))
+                    service.Delete(olddata.Texture.FaceTextures[i].TextureID);
+            }
+        }
+
+        private object DeleteUserInformation(string name, object param)
         {
             UUID user = (UUID)param;
             ResetAvatar(user);

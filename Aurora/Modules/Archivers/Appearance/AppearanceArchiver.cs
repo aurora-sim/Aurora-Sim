@@ -168,8 +168,7 @@ namespace Aurora.Modules.Archivers
                     if (wearable[ii].ItemID != UUID.Zero)
                     {
                         // Get inventory item and copy it
-                        InventoryItemBase item = new InventoryItemBase(wearable[ii].ItemID);
-                        item = InventoryService.GetItem(item);
+                        InventoryItemBase item = InventoryService.GetItem(agentid, wearable[ii].ItemID);
 
                         if (item != null)
                         {
@@ -207,8 +206,7 @@ namespace Aurora.Modules.Archivers
                 if (itemID != UUID.Zero)
                 {
                     // Get inventory item and copy it
-                    InventoryItemBase item = new InventoryItemBase(itemID, source);
-                    item = InventoryService.GetItem(item);
+                    InventoryItemBase item = InventoryService.GetItem(source, itemID);
 
                     if (item != null)
                     {
@@ -502,7 +500,7 @@ namespace Aurora.Modules.Archivers
 
         private void SaveItem(UUID ItemID, OSDMap itemMap, OSDMap assets)
         {
-            InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
+            InventoryItemBase saveItem = InventoryService.GetItem(UUID.Zero, ItemID);
             if (saveItem == null)
             {
                 MainConsole.Instance.Warn("[AvatarArchive]: Could not find item to save: " + ItemID);
