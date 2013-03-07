@@ -287,6 +287,8 @@ namespace OpenSim.Services.Interfaces
             UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId, GiveFolderParam success);
 
         #endregion
+
+        UUID GetItemAssetID(UUID uUID, UUID itemID);
     }
 
     public delegate void GiveFolderParam(InventoryFolderBase folder);
@@ -316,5 +318,7 @@ namespace OpenSim.Services.Interfaces
 
         void IncrementFolder(UUID folderID);
         void IncrementFolderByItem(UUID folderID);
+
+        List<UUID> GetItemAssetIDs(UUID userID, string[] p1, string[] p2);
     }
 }

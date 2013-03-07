@@ -705,7 +705,13 @@ namespace Aurora.Modules.InventoryAccess
             bRayEndIsIntersection = (byte) (RayEndIsIntersection ? 1 : 0);
 
             XmlDocument doc;
-            InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
+            //It might be a library item, send UUID.Zero
+            InventoryItemBase item = m_scene.InventoryService.GetItem(UUID.Zero, itemID);
+            if (item == null)
+            {
+                remoteClient.SendAlertMessage("Failed to find the item you requested.");
+                return null;
+            }
             SceneObjectGroup group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
 
             Vector3 pos = m_scene.SceneGraph.GetNewRezLocation (
@@ -1052,7 +1058,8 @@ namespace Aurora.Modules.InventoryAccess
 
         public virtual bool GetAgentInventoryItem(IClientAPI remoteClient, UUID itemID, UUID requestID)
         {
-            InventoryItemBase assetRequestItem = GetItem(remoteClient.AgentId, itemID);
+            //Attempt to just get the item with no owner, as it might be a library item
+            InventoryItemBase assetRequestItem = GetItem(UUID.Zero, itemID);
             if (assetRequestItem == null)
             {
                 return false;
@@ -1121,17 +1128,7 @@ namespace Aurora.Modules.InventoryAccess
         protected virtual InventoryItemBase GetItem(UUID agentID, UUID itemID)
         {
             IInventoryService invService = m_scene.RequestModuleInterface<IInventoryService> ();
-            InventoryItemBase assetRequestItem = invService.GetItem(agentID, itemID);
-
-            if (assetRequestItem != null &&
-                assetRequestItem.CreatorData != null && 
-                assetRequestItem.CreatorData != string.Empty)
-            {
-                IUserFinder userManagement = m_scene.RequestModuleInterface<IUserFinder>();
-                if (userManagement != null)
-                    userManagement.AddUser (assetRequestItem.CreatorIdAsUuid, assetRequestItem.CreatorData);
-            }
-            return assetRequestItem;
+            return invService.GetItem(agentID, itemID);
         }
 
         #endregion

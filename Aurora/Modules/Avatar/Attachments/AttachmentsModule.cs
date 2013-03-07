@@ -842,9 +842,9 @@ namespace Aurora.Modules.Attachments
             // XXYY!!
             if (assetID == UUID.Zero)
             {
-                InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
+                assetID = m_scene.InventoryService.GetItemAssetID(remoteClient.AgentId, itemID);
                 //Update the ItemID with the new item
-                group.SetFromItemID(itemID, item.AssetID);
+                group.SetFromItemID(itemID, assetID);
             }
 
             AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();

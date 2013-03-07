@@ -81,12 +81,10 @@ namespace Aurora.Services.DataService
 
         public virtual List<InventoryItemBase> GetItems(UUID avatarID, string[] fields, string[] vals)
         {
-            string query = "";
+            string query = "where ";
             for (int i = 0; i < fields.Length; i++)
-            {
-                query += String.Format("where {0} = '{1}' and ", fields[i], vals[i]);
-                i++;
-            }
+                query += String.Format("{0} = '{1}' and ", fields[i], vals[i]);
+
             query = query.Remove(query.Length - 5);
             using (DataReaderConnection reader = GD.QueryData(query, m_itemsrealm, "*"))
             {
@@ -105,13 +103,24 @@ namespace Aurora.Services.DataService
             return null;
         }
 
+        public virtual List<UUID> GetItemAssetIDs(UUID avatarID, string[] fields, string[] vals)
+        {
+            QueryFilter filter = new QueryFilter();
+            for (int i = 0; i < fields.Length; i++)
+                filter.andFilters.Add(fields[i], vals[i]);
+
+            List<string> data = GD.Query(new string[1] { "assetID" }, m_itemsrealm, filter, null, null, null);
+            if (data == null)
+                return null;
+            return data.ConvertAll<UUID>((s) => UUID.Parse(s));
+        }
+        
         public virtual OSDArray GetLLSDItems(string[] fields, string[] vals)
         {
-            string query = "";
+            string query = "where ";
             for (int i = 0; i < fields.Length; i++)
             {
-                query += String.Format("where {0} = '{1}' and ", fields[i], vals[i]);
-                i++;
+                query += String.Format("{0} = '{1}' and ", fields[i], vals[i]);
             }
             query = query.Remove(query.Length - 5);
             using (DataReaderConnection reader = GD.QueryData(query, m_itemsrealm, "*"))

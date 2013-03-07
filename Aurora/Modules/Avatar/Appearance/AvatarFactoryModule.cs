@@ -630,10 +630,10 @@ textures 1
                     if (nowWearing[i].ItemID == oldAppearance.Wearables[i][j].ItemID)
                         continue;//Don't relookup items that are the same and have already been found earlier
 
-                    InventoryItemBase baseItem = invService.GetItem(userID, appearance.Wearables[i][j].ItemID);
+                    UUID assetID = invService.GetItemAssetID(userID, appearance.Wearables[i][j].ItemID);
 
-                    if (baseItem != null)
-                        appearance.Wearables[i].Add(baseItem.ID, baseItem.AssetID);
+                    if (assetID != UUID.Zero)
+                        appearance.Wearables[i].Add(nowWearing[i].ItemID, assetID);
                     else
                     {
                         MainConsole.Instance.ErrorFormat(

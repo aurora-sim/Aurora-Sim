@@ -708,7 +708,8 @@ namespace Aurora.Modules.Inventory
                 "[AGENT INVENTORY]: CopyInventoryItem received by {0} with oldAgentID {1}, oldItemID {2}, new FolderID {3}, newName {4}",
                 remoteClient.AgentId, oldAgentID, oldItemID, newFolderID, newName);
 
-            InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, oldItemID);
+            //Use UUID.Zero as it might be a library item
+            InventoryItemBase item = m_scene.InventoryService.GetItem(UUID.Zero, oldItemID);
             if (item == null)
             {
                 MainConsole.Instance.Error("[AGENT INVENTORY]: Failed to find item " + oldItemID.ToString());
@@ -1183,7 +1184,8 @@ namespace Aurora.Modules.Inventory
 
             if (itemID != UUID.Zero)  // transferred from an avatar inventory to the prim's inventory
             {
-                InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
+                //Might be a library item, use UUID.Zero
+                InventoryItemBase item = m_scene.InventoryService.GetItem(UUID.Zero, itemID);
 
                 if (item != null)
                 {

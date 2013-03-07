@@ -865,12 +865,36 @@ namespace Aurora.Services.SQLServices.InventoryService
             if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryItemBase)remoteValue;
 
+            string[] fields = userID != UUID.Zero ? new[] { "inventoryID", "avatarID" } : new[] { "inventoryID" };
+            string[] vals = userID != UUID.Zero ? new[] { inventoryID.ToString(), userID.ToString() } : new[] { inventoryID.ToString() };
             List<InventoryItemBase> items = m_Database.GetItems(userID,
+                fields,
+                vals);
+
+            if (items.Count == 0)
+                return null;
+
+            return items[0];
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual UUID GetItemAssetID(UUID userID, UUID inventoryID)
+        {
+            lock (_tempItemCache)
+            {
+                if (_tempItemCache.ContainsKey(inventoryID))
+                    return _tempItemCache[inventoryID].AssetID;
+            }
+            object remoteValue = DoRemoteByURL("InventoryServerURI", userID, inventoryID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (UUID)remoteValue;
+
+            List<UUID> items = m_Database.GetItemAssetIDs(userID,
                 new[] { "inventoryID","avatarID" },
                 new[] { inventoryID.ToString(), userID.ToString() });
 
             if (items.Count == 0)
-                return null;
+                return UUID.Zero;
 
             return items[0];
         }

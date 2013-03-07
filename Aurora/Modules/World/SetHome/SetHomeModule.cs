@@ -136,7 +136,7 @@ namespace Aurora.Modules.SetHome
             UUID ItemID = rm["item-id"].AsUUID();
             UUID NotecardID = rm["notecard-id"].AsUUID();
             UUID ObjectID = rm["object-id"].AsUUID();
-            InventoryItemBase notecardItem = null;
+            UUID notecardAssetID = UUID.Zero;
             if (ObjectID != UUID.Zero)
             {
                 ISceneChildEntity part = m_scene.GetSceneObjectPart(ObjectID);
@@ -144,16 +144,14 @@ namespace Aurora.Modules.SetHome
                 {
                     TaskInventoryItem item = part.Inventory.GetInventoryItem(NotecardID);
                     if (m_scene.Permissions.CanCopyObjectInventory(NotecardID, ObjectID, agentID))
-                    {
-                        notecardItem = new InventoryItemBase(NotecardID, agentID) {AssetID = item.AssetID};
-                    }
+                        notecardAssetID = item.AssetID;
                 }
             }
             else
-                notecardItem = m_scene.InventoryService.GetItem(agentID, NotecardID);
-            if (notecardItem != null && notecardItem.Owner == agentID)
+                notecardAssetID = m_scene.InventoryService.GetItemAssetID(agentID, NotecardID);
+            if (notecardAssetID != UUID.Zero)
             {
-                byte[] asset = m_scene.AssetService.GetData(notecardItem.AssetID.ToString());
+                byte[] asset = m_scene.AssetService.GetData(notecardAssetID.ToString());
                 if (asset != null)
                 {
                     AssetNotecard noteCardAsset = new AssetNotecard(UUID.Zero, asset);
