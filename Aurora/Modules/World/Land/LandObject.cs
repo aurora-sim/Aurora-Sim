@@ -465,7 +465,7 @@ namespace Aurora.Modules.Land
 
         public bool IsRestrictedFromLand(UUID avatar)
         {
-            if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong) GroupPowers.LandManageAllowed))
+            if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong) 1))
                 return false;
 
             if ((LandData.Flags & (uint)ParcelFlags.UsePassList) > 0 ||

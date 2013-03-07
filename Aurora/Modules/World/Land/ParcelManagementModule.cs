@@ -471,6 +471,20 @@ namespace Aurora.Modules.Land
         {
             AddLandObjectToSearch(lo);
             m_scene.EventManager.TriggerLandObjectAdded(lo.LandData);
+
+            foreach (IScenePresence sp in m_scene.GetScenePresences())
+            {
+                if (sp.CurrentParcelUUID == lo.LandData.GlobalID)
+                {
+                    if (lo.IsEitherBannedOrRestricted(sp.UUID))
+                    {
+                        SendYouAreRestrictedNotice(sp);
+                        Vector3 pos = GetNearestAllowedPosition(sp);
+                        pos.Z -= sp.PhysicsActor.Size.Z;
+                        sp.Teleport(pos);
+                    }
+                }
+            }
         }
 
         /// <summary>
