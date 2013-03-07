@@ -363,10 +363,11 @@ namespace Aurora.RedisServices.AssetService
 
         public bool RedisSetAsset(AssetBase asset)
         {
-            byte[] trueAsset = RedisEnsureConnection((conn) => conn.Get(DATA_PREFIX + asset.HashCode));
+            bool duplicate = RedisEnsureConnection((conn) => conn.Exists(DATA_PREFIX + asset.HashCode));
             
             MemoryStream memStream = new MemoryStream();
             byte[] data = asset.Data;
+            string hash = asset.HashCode;
             asset.Data = new byte[0];
             ProtoBuf.Serializer.Serialize<AssetBase>(memStream, asset);
             asset.Data = data;
@@ -374,7 +375,7 @@ namespace Aurora.RedisServices.AssetService
             try
             {
                 //Deduplication...
-                if (trueAsset != null)
+                if (duplicate)
                 {
                     if (MainConsole.Instance != null)
                         MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString + " for " + asset.IDString);
@@ -389,7 +390,7 @@ namespace Aurora.RedisServices.AssetService
                         conn.Pipeline((c) =>
                         {
                             c.Set(asset.IDString, memStream.ToArray());
-                            c.Set(DATA_PREFIX + asset.HashCode, data);
+                            c.Set(DATA_PREFIX + hash, data);
                         });
                         return true;
                     });
