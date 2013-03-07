@@ -570,7 +570,7 @@ namespace Aurora.Modules.Inventory
                     {
                         if (m_scene.Permissions.CanTakeLandmark(remoteClient.AgentId))
                         {
-                            data = BuildLandmark (presence, ref name);
+                            data = BuildLandmark (presence);
                         }
                         else
                         {
@@ -621,27 +621,17 @@ namespace Aurora.Modules.Inventory
             }
         }
 
-        private byte[] BuildLandmark (IScenePresence presence, ref string name)
+        private byte[] BuildLandmark (IScenePresence presence)
         {
             //See whether we have a gatekeeperURL
             IConfigurationService configService = m_scene.RequestModuleInterface<IConfigurationService> ();
-            List<string> mainGridURLs = configService.FindValueOf ("MainGridURL");
-            string gatekeeperURL = MainServer.Instance.ServerURI + "/";//Assume the default
-            if (mainGridURLs.Count > 0)//Then check whether we were given one
-                gatekeeperURL = mainGridURLs[0];
             //We have one!
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, presence.UUID);
-            if (account == null)
-                name = "HG " + name;//We don't have an account for them, add the HG ref 
-            name += " @ " + gatekeeperURL;
-            string gatekeeperdata = string.Format ("gatekeeper {0}\n", gatekeeperURL);
             Vector3 pos = presence.AbsolutePosition;
             string strdata = String.Format (
-                "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}\n{5}",
+                "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}",
                 presence.Scene.RegionInfo.RegionID,
                 pos.X, pos.Y, pos.Z,
-                presence.Scene.RegionInfo.RegionHandle,
-                gatekeeperdata);
+                presence.Scene.RegionInfo.RegionHandle);
             return Encoding.ASCII.GetBytes (strdata);
         }
 
