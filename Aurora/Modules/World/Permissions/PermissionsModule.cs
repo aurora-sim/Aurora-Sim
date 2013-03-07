@@ -1793,7 +1793,7 @@ namespace Aurora.Modules.Permissions
             {
                 return true;
             }
-            IEntity ent;
+            IEntity ent = null;
             //If the object is entering the region, its not here yet and we can't check for it
             if (!enteringRegion && !m_scene.Entities.TryGetValue(objectID, out ent))
             {
@@ -1805,11 +1805,15 @@ namespace Aurora.Modules.Permissions
                 return true;
 
             ILandObject land = m_parcelManagement.GetLandObject(newPoint.X, newPoint.Y);
+            ILandObject oldland = m_parcelManagement.GetLandObject(ent.AbsolutePosition.X, ent.AbsolutePosition.Y);
 
             if (land == null)
             {
                 return false;
             }
+
+            if (oldland.LandData.GlobalID == land.LandData.GlobalID)
+                return true;//Same parcel
 
             if ((land.LandData.Flags & ((int) ParcelFlags.AllowAPrimitiveEntry)) != 0)
             {
@@ -2054,8 +2058,8 @@ namespace Aurora.Modules.Permissions
             if (IsAdministrator(attemptedRezzer))
                 return true;
 
-            // Powers are zero, because GroupPowers.AllowRez is not a precondition for rezzing objects
-            if (GenericParcelPermission(attemptedRezzer, land, (ulong)GroupPowers.AllowRez))
+            // Powers are zero (invalid), because GroupPowers.AllowRez is not a precondition for rezzing objects
+            if (GenericParcelPermission(attemptedRezzer, land, 1))
                 permission = true;
 
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
