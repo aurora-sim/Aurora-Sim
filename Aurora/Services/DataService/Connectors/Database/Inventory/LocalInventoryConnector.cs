@@ -178,182 +178,190 @@ namespace Aurora.Services.DataService
                 //UUID agent_id = invFetch["agent_id"].AsUUID();
                 UUID owner_id = invFetch["owner_id"].AsUUID();
                 UUID folder_id = invFetch["folder_id"].AsUUID();
-                //bool fetch_folders = invFetch["fetch_folders"].AsBoolean();
-                //bool fetch_items = invFetch["fetch_items"].AsBoolean();
+                bool fetch_folders = invFetch["fetch_folders"].AsBoolean();
+                bool fetch_items = invFetch["fetch_items"].AsBoolean();
                 //int sort_order = invFetch["sort_order"].AsInteger();
 
                 //Set the normal stuff
                 contents["agent_id"] = AgentID;
                 contents["owner_id"] = owner_id;
                 contents["folder_id"] = folder_id;
-
-                contents.WriteKey("items"); //Start array items
-                contents.WriteStartArray("items");
-                List<UUID> moreLinkedItems = new List<UUID>();
+                
                 int count = 0;
-                bool addToCount = true;
-                string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id);
-                redoQuery:
-                using (DataReaderConnection retVal = GD.QueryData(query, m_itemsrealm, "*"))
+                string query = "";
+
+                if (fetch_items)
                 {
-                    try
+                    contents.WriteKey("items"); //Start array items
+                    contents.WriteStartArray("items");
+                    List<UUID> moreLinkedItems = new List<UUID>();
+                    bool addToCount = true;
+                    query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id);
+                redoQuery:
+                    using (DataReaderConnection retVal = GD.QueryData(query, m_itemsrealm, "*"))
                     {
-                        while (retVal.DataReader.Read())
+                        try
                         {
-                            contents.WriteStartMap("item"); //Start item kvp
-                            UUID assetID = UUID.Parse(retVal.DataReader["assetID"].ToString());
-                            contents["asset_id"] = assetID;
-                            contents["name"] = retVal.DataReader["inventoryName"].ToString();
-                            contents["desc"] = retVal.DataReader["inventoryDescription"].ToString();
-
-
-                            contents.WriteKey("permissions"); //Start permissions kvp
-                            contents.WriteStartMap("permissions");
-                            contents["group_id"] = UUID.Parse(retVal.DataReader["groupID"].ToString());
-                            contents["is_owner_group"] = int.Parse(retVal.DataReader["groupOwned"].ToString()) == 1;
-                            contents["group_mask"] = uint.Parse(retVal.DataReader["inventoryGroupPermissions"].ToString());
-                            contents["owner_id"] = forceOwnerID == UUID.Zero
-                                                       ? UUID.Parse(retVal.DataReader["avatarID"].ToString())
-                                                       : forceOwnerID;
-                            contents["last_owner_id"] = UUID.Parse(retVal.DataReader["avatarID"].ToString());
-                            contents["next_owner_mask"] = uint.Parse(retVal.DataReader["inventoryNextPermissions"].ToString());
-                            contents["owner_mask"] = uint.Parse(retVal.DataReader["inventoryCurrentPermissions"].ToString());
-                            UUID creator;
-                            if (UUID.TryParse(retVal.DataReader["creatorID"].ToString(), out creator))
-                                contents["creator_id"] = creator;
-                            else
-                                contents["creator_id"] = UUID.Zero;
-                            contents["base_mask"] = uint.Parse(retVal.DataReader["inventoryBasePermissions"].ToString());
-                            contents["everyone_mask"] = uint.Parse(retVal.DataReader["inventoryEveryOnePermissions"].ToString());
-                            contents.WriteEndMap( /*Permissions*/);
-
-                            contents.WriteKey("sale_info"); //Start permissions kvp
-                            contents.WriteStartMap("sale_info"); //Start sale_info kvp
-                            contents["sale_price"] = int.Parse(retVal.DataReader["salePrice"].ToString());
-                            switch (byte.Parse(retVal.DataReader["saleType"].ToString()))
+                            while (retVal.DataReader.Read())
                             {
-                                default:
-                                    contents["sale_type"] = "not";
-                                    break;
-                                case 1:
-                                    contents["sale_type"] = "original";
-                                    break;
-                                case 2:
-                                    contents["sale_type"] = "copy";
-                                    break;
-                                case 3:
-                                    contents["sale_type"] = "contents";
-                                    break;
+                                contents.WriteStartMap("item"); //Start item kvp
+                                UUID assetID = UUID.Parse(retVal.DataReader["assetID"].ToString());
+                                contents["asset_id"] = assetID;
+                                contents["name"] = retVal.DataReader["inventoryName"].ToString();
+                                contents["desc"] = retVal.DataReader["inventoryDescription"].ToString();
+
+
+                                contents.WriteKey("permissions"); //Start permissions kvp
+                                contents.WriteStartMap("permissions");
+                                contents["group_id"] = UUID.Parse(retVal.DataReader["groupID"].ToString());
+                                contents["is_owner_group"] = int.Parse(retVal.DataReader["groupOwned"].ToString()) == 1;
+                                contents["group_mask"] = uint.Parse(retVal.DataReader["inventoryGroupPermissions"].ToString());
+                                contents["owner_id"] = forceOwnerID == UUID.Zero
+                                                           ? UUID.Parse(retVal.DataReader["avatarID"].ToString())
+                                                           : forceOwnerID;
+                                contents["last_owner_id"] = UUID.Parse(retVal.DataReader["avatarID"].ToString());
+                                contents["next_owner_mask"] = uint.Parse(retVal.DataReader["inventoryNextPermissions"].ToString());
+                                contents["owner_mask"] = uint.Parse(retVal.DataReader["inventoryCurrentPermissions"].ToString());
+                                UUID creator;
+                                if (UUID.TryParse(retVal.DataReader["creatorID"].ToString(), out creator))
+                                    contents["creator_id"] = creator;
+                                else
+                                    contents["creator_id"] = UUID.Zero;
+                                contents["base_mask"] = uint.Parse(retVal.DataReader["inventoryBasePermissions"].ToString());
+                                contents["everyone_mask"] = uint.Parse(retVal.DataReader["inventoryEveryOnePermissions"].ToString());
+                                contents.WriteEndMap( /*Permissions*/);
+
+                                contents.WriteKey("sale_info"); //Start permissions kvp
+                                contents.WriteStartMap("sale_info"); //Start sale_info kvp
+                                contents["sale_price"] = int.Parse(retVal.DataReader["salePrice"].ToString());
+                                switch (byte.Parse(retVal.DataReader["saleType"].ToString()))
+                                {
+                                    default:
+                                        contents["sale_type"] = "not";
+                                        break;
+                                    case 1:
+                                        contents["sale_type"] = "original";
+                                        break;
+                                    case 2:
+                                        contents["sale_type"] = "copy";
+                                        break;
+                                    case 3:
+                                        contents["sale_type"] = "contents";
+                                        break;
+                                }
+                                contents.WriteEndMap( /*sale_info*/);
+
+
+                                contents["created_at"] = int.Parse(retVal.DataReader["creationDate"].ToString());
+                                contents["flags"] = uint.Parse(retVal.DataReader["flags"].ToString());
+                                UUID inventoryID = UUID.Parse(retVal.DataReader["inventoryID"].ToString());
+                                contents["item_id"] = inventoryID;
+                                contents["parent_id"] = UUID.Parse(retVal.DataReader["parentFolderID"].ToString());
+                                UUID avatarID = forceOwnerID == UUID.Zero
+                                                    ? UUID.Parse(retVal.DataReader["avatarID"].ToString())
+                                                    : forceOwnerID;
+                                contents["agent_id"] = avatarID;
+
+                                AssetType assetType = (AssetType)int.Parse(retVal.DataReader["assetType"].ToString());
+                                if (assetType == AssetType.Link)
+                                    moreLinkedItems.Add(assetID);
+                                if (assetType == AssetType.Unknown)
+                                    assetType = AssetType.Link;
+                                contents["type"] = Utils.AssetTypeToString((AssetType)Util.CheckMeshType((sbyte)assetType));
+                                InventoryType invType = (InventoryType)int.Parse(retVal.DataReader["invType"].ToString());
+                                contents["inv_type"] = Utils.InventoryTypeToString(invType);
+
+                                if ((int)invType == -1)
+                                {
+                                    //Asset problem, fix it, it's supposed to be 0
+                                    List<InventoryItemBase> itms = GetItems(AgentID,
+                                        new string[2] { "inventoryID", "avatarID" },
+                                        new string[2] { inventoryID.ToString(), avatarID.ToString() });
+                                    itms[0].InvType = 0;
+                                    StoreItem(itms[0]);
+                                }
+
+                                if (addToCount)
+                                    count++;
+                                contents.WriteEndMap( /*"item"*/); //end array items
                             }
-                            contents.WriteEndMap( /*sale_info*/);
-
-
-                            contents["created_at"] = int.Parse(retVal.DataReader["creationDate"].ToString());
-                            contents["flags"] = uint.Parse(retVal.DataReader["flags"].ToString());
-                            UUID inventoryID = UUID.Parse(retVal.DataReader["inventoryID"].ToString());
-                            contents["item_id"] = inventoryID;
-                            contents["parent_id"] = UUID.Parse(retVal.DataReader["parentFolderID"].ToString());
-                            UUID avatarID = forceOwnerID == UUID.Zero
-                                                ? UUID.Parse(retVal.DataReader["avatarID"].ToString())
-                                                : forceOwnerID;
-                            contents["agent_id"] = avatarID;
-
-                            AssetType assetType = (AssetType)int.Parse(retVal.DataReader["assetType"].ToString());
-                            if (assetType == AssetType.Link)
-                                moreLinkedItems.Add(assetID);
-                            if (assetType == AssetType.Unknown)
-                                assetType = AssetType.Link;
-                            contents["type"] = Utils.AssetTypeToString((AssetType) Util.CheckMeshType((sbyte) assetType));
-                            InventoryType invType = (InventoryType)int.Parse(retVal.DataReader["invType"].ToString());
-                            contents["inv_type"] = Utils.InventoryTypeToString(invType);
-
-                            if ((int)invType == -1)
-                            {
-                                //Asset problem, fix it, it's supposed to be 0
-                                List<InventoryItemBase> itms = GetItems(AgentID,
-                                    new string[2] { "inventoryID", "avatarID" },
-                                    new string[2] { inventoryID.ToString(), avatarID.ToString() });
-                                itms[0].InvType = 0;
-                                StoreItem(itms[0]);
-                            }
-
-                            if (addToCount)
-                                count++;
-                            contents.WriteEndMap( /*"item"*/); //end array items
+                        }
+                        catch
+                        {
+                        }
+                        finally
+                        {
+                            GD.CloseDatabase(retVal);
                         }
                     }
-                    catch
+                    if (moreLinkedItems.Count > 0)
                     {
-                    }
-                    finally
-                    {
-                        GD.CloseDatabase(retVal);
-                    }
-                }
-                if (moreLinkedItems.Count > 0)
-                {
-                    addToCount = false;
-                    query = String.Format("where {0} = '{1}' and (", "avatarID", AgentID);
+                        addToCount = false;
+                        query = String.Format("where {0} = '{1}' and (", "avatarID", AgentID);
 #if (!ISWIN)
                     foreach (UUID item in moreLinkedItems)
                         query = query + String.Format("{0} = '{1}' or ", "inventoryID", item);
 #else
-                    query = moreLinkedItems.Aggregate(query, (current, t) => current + String.Format("{0} = '{1}' or ", "inventoryID", t));
+                        query = moreLinkedItems.Aggregate(query, (current, t) => current + String.Format("{0} = '{1}' or ", "inventoryID", t));
 #endif
-                    query = query.Remove(query.Length - 4, 4);
-                    query += ")";
-                    moreLinkedItems.Clear();
-                    goto redoQuery;
+                        query = query.Remove(query.Length - 4, 4);
+                        query += ")";
+                        moreLinkedItems.Clear();
+                        goto redoQuery;
+                    }
+                    contents.WriteEndArray( /*"items"*/); //end array items
                 }
-                contents.WriteEndArray( /*"items"*/); //end array items
-
-                contents.WriteStartArray("categories"); //We don't send any folders
-                int version = 0;
-                QueryFilter filter = new QueryFilter();
-                filter.andFilters["folderID"] = folder_id;
-                List<string> versionRetVal = GD.Query(new[]{
+                    contents.WriteStartArray("categories"); //We don't send any folders
+                    int version = 0;
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["folderID"] = folder_id;
+                    List<string> versionRetVal = GD.Query(new[]{
                     "version",
                     "type"
                 }, m_foldersrealm, filter, null, null, null);
 
-                if (versionRetVal.Count > 0)
-                {
-                    version = int.Parse(versionRetVal[0]);
-                    if (int.Parse(versionRetVal[1]) == (int) AssetType.TrashFolder ||
-                        int.Parse(versionRetVal[1]) == (int) AssetType.CurrentOutfitFolder ||
-                        int.Parse(versionRetVal[1]) == (int) AssetType.LinkFolder)
+                    if (versionRetVal.Count > 0)
                     {
-                        //If it is the trash folder, we need to send its descendents, because the viewer wants it
-                        query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,
-                                              "agentID", AgentID);
-                        using (DataReaderConnection retVal = GD.QueryData(query, m_foldersrealm, "*"))
-                        {
-                            try
-                            {
-                                while (retVal.DataReader.Read())
-                                {
-                                    contents.WriteStartMap("folder"); //Start item kvp
-                                    contents["folder_id"] = UUID.Parse(retVal.DataReader["folderID"].ToString());
-                                    contents["parent_id"] = UUID.Parse(retVal.DataReader["parentFolderID"].ToString());
-                                    contents["name"] = retVal.DataReader["folderName"].ToString();
-                                    int type = int.Parse(retVal.DataReader["type"].ToString());
-                                    contents["type"] = type;
-                                    contents["preferred_type"] = type;
+                        version = int.Parse(versionRetVal[0]);
 
-                                    count++;
-                                    contents.WriteEndMap( /*"folder"*/); //end array items
+                        if (fetch_folders)
+                        {
+                            if (int.Parse(versionRetVal[1]) == (int)AssetType.TrashFolder ||
+                                int.Parse(versionRetVal[1]) == (int)AssetType.CurrentOutfitFolder ||
+                                int.Parse(versionRetVal[1]) == (int)AssetType.LinkFolder)
+                            {
+                                //If it is the trash folder, we need to send its descendents, because the viewer wants it
+                                query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,
+                                                      "agentID", AgentID);
+                                using (DataReaderConnection retVal = GD.QueryData(query, m_foldersrealm, "*"))
+                                {
+                                    try
+                                    {
+                                        while (retVal.DataReader.Read())
+                                        {
+                                            contents.WriteStartMap("folder"); //Start item kvp
+                                            contents["folder_id"] = UUID.Parse(retVal.DataReader["folderID"].ToString());
+                                            contents["parent_id"] = UUID.Parse(retVal.DataReader["parentFolderID"].ToString());
+                                            contents["name"] = retVal.DataReader["folderName"].ToString();
+                                            int type = int.Parse(retVal.DataReader["type"].ToString());
+                                            contents["type"] = type;
+                                            contents["preferred_type"] = type;
+
+                                            count++;
+                                            contents.WriteEndMap( /*"folder"*/); //end array items
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+                                    finally
+                                    {
+                                        GD.CloseDatabase(retVal);
+                                    }
                                 }
-                            }
-                            catch
-                            {
-                            }
-                            finally
-                            {
-                                GD.CloseDatabase(retVal);
                             }
                         }
                     }
-                }
 
                 contents.WriteEndArray( /*"categories"*/);
                 contents["descendents"] = count;
@@ -493,15 +501,8 @@ namespace Aurora.Services.DataService
                 try
                 {
                     items = ParseInventoryItems(reader.DataReader);
-#if (!ISWIN)
-                    items.RemoveAll(delegate(InventoryItemBase item)
-                    {
-                        return (item.Flags & 1) != 1; //1 means that it is active, so remove all ones that do not have a 1
-                    });
-#else
                     items.RemoveAll(
                         item => (item.Flags & 1) != 1);
-#endif
                 }
                 catch
                 {
@@ -644,7 +645,6 @@ namespace Aurora.Services.DataService
                 }
                 items.Add(item);
             }
-            //retVal.Close();
             return items;
         }
 

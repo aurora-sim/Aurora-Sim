@@ -47,6 +47,7 @@ namespace OpenSim.Services.CapsService
         private IInventoryService m_inventoryService;
         private ILibraryService m_libraryService;
         private IRegionClientCapsService m_service;
+        private IInventoryData m_inventoryData;
 
         #region ICapsServiceConnector Members
 
@@ -56,6 +57,7 @@ namespace OpenSim.Services.CapsService
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
+            m_inventoryData = DataManager.RequestPlugin<IInventoryData>();
 
             HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                                     OSHttpResponse httpResponse)
@@ -168,7 +170,7 @@ namespace OpenSim.Services.CapsService
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
-                return DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID,
+                return m_inventoryData.FetchInventoryReply(foldersrequested, AgentID,
                                                                                        UUID.Zero, m_libraryService.LibraryOwner);
             }
             catch (Exception ex)
@@ -195,7 +197,7 @@ namespace OpenSim.Services.CapsService
 
                 OSDArray foldersrequested = (OSDArray) map["folders"];
 
-                return DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested,
+                return m_inventoryData.FetchInventoryReply(foldersrequested,
                                                                                        m_libraryService.LibraryOwner,
                                                                                        AgentID, m_libraryService.LibraryOwner);
             }
