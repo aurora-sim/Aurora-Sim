@@ -41,6 +41,7 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         protected IAvatarData m_Database;
         protected IInventoryService m_invService;
+        protected IAvatarAppearanceArchiver m_ArchiveService;
         protected bool m_enableCacheBakedTextures = true;
 
         #endregion
@@ -77,6 +78,7 @@ namespace Aurora.Services.SQLServices.AvatarService
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAvatarData>();
+            m_ArchiveService = registry.RequestModuleInterface<IAvatarAppearanceArchiver>();
             registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);
         }
 
@@ -94,7 +96,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             get { return this; }
         }
 
-        private void RemoveOldBaked(UUID principalID, AvatarData newdata)
+        /*private void RemoveOldBaked(UUID principalID, AvatarData newdata)
         {
             if (!newdata.Data.ContainsKey("Textures")) return;
             AvatarData olddata = m_Database.Get("PrincipalID", principalID.ToString());
@@ -111,38 +113,44 @@ namespace Aurora.Services.SQLServices.AvatarService
                 if ((ab != null) && (ab.Name == "Baked Texture"))
                     service.Delete(old_textures.FaceTextures[i].TextureID);
             }
-        }
+        }*/
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AvatarAppearance GetAppearance(UUID principalID)
         {
-            AvatarData avatar = GetAvatar(principalID);
-            if (avatar == null || avatar.Data.Count == 0)
-                return null;
-            return avatar.ToAvatarAppearance(principalID);
+            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (AvatarAppearance)remoteValue;
+
+            return m_Database.Get(principalID);
+        }
+
+        public AvatarAppearance GetAndEnsureAppearance(UUID principalID, string avatarName, string defaultUserAvatarArchive, out bool loadedArchive)
+        {
+            loadedArchive = false;
+            AvatarAppearance avappearance = GetAppearance(principalID);
+            if (avappearance == null)
+            {
+                //Create an appearance for the user if one doesn't exist
+                if (defaultUserAvatarArchive != "")
+                {
+                    avappearance = m_ArchiveService.LoadAvatarArchive(defaultUserAvatarArchive, avatarName);
+                    SetAppearance(principalID, avappearance);
+                    loadedArchive = true;
+                }
+                else
+                {
+                    avappearance = new AvatarAppearance(principalID);
+                    SetAppearance(principalID, avappearance);
+                }
+            }
+            return avappearance;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool SetAppearance(UUID principalID, AvatarAppearance appearance)
         {
-            AvatarData avatar = new AvatarData(appearance);
-            return SetAvatar(principalID, avatar);
-        }
-
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public AvatarData GetAvatar(UUID principalID)
-        {
-            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (AvatarData)remoteValue;
-
-            return m_Database.Get("PrincipalID", principalID.ToString());
-        }
-
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public bool SetAvatar(UUID principalID, AvatarData avatar)
-        {
-            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID, avatar);
+            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID, appearance);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
@@ -150,14 +158,14 @@ namespace Aurora.Services.SQLServices.AvatarService
                                                                                                       new object[2]
                                                                                                           {
                                                                                                               principalID,
-                                                                                                              avatar
+                                                                                                              appearance
                                                                                                           });
-            RemoveOldBaked(principalID, avatar);
-            avatar = FixWearables(principalID, avatar.ToAvatarAppearance(principalID));
-            return m_Database.Store(principalID, avatar);
+            //RemoveOldBaked(principalID, avatar);
+            //avatar = FixWearables(principalID, avatar.ToAvatarAppearance(principalID));
+            return m_Database.Store(principalID, appearance);
         }
 
-        private AvatarData FixWearables(UUID userID, AvatarAppearance appearance)
+        /*private AvatarAppearance FixWearables(UUID userID, AvatarAppearance appearance)
         {
             for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
             {
@@ -165,19 +173,6 @@ namespace Aurora.Services.SQLServices.AvatarService
                 {
                     if (appearance.Wearables[i][j].ItemID == UUID.Zero)
                         continue;
-
-                    // Ignore ruth's assets
-                    if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][j].ItemID)
-                    {
-                        //MainConsole.Instance.ErrorFormat(
-                        //    "[AvatarFactory]: Found an asset for the default avatar, itemID {0}, wearable {1}, asset {2}" +
-                        //    ", setting to default asset {3}.",
-                        //    appearance.Wearables[i][j].ItemID, (WearableType)i, appearance.Wearables[i][j].AssetID,
-                        //    AvatarWearable.DefaultWearables[i][j].AssetID);
-                        appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID,
-                                                    appearance.Wearables[i][j].AssetID);
-                        continue;
-                    }
 
                     InventoryItemBase baseItem = new InventoryItemBase(appearance.Wearables[i][j].ItemID, userID);
                     baseItem = m_invService.GetItem(baseItem);
@@ -206,7 +201,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             }
 
             return new AvatarData(appearance);
-        }
+        }*/
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool ResetAvatar(UUID principalID)
@@ -215,7 +210,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            return m_Database.Delete("PrincipalID", principalID.ToString());
+            return m_Database.Delete(principalID);
         }
 
         public object DeleteUserInformation(string name, object param)
@@ -240,6 +235,11 @@ namespace Aurora.Services.SQLServices.AvatarService
                 return;
             }
             ResetAvatar(acc.PrincipalID);
+            InventoryFolderBase folder = m_invService.GetFolderForType(acc.PrincipalID, (InventoryType)0, AssetType.CurrentOutfitFolder);
+            if (folder != null)
+            {
+                m_invService.ForcePurgeFolder(folder);
+            }
             MainConsole.Instance.Output("Reset avatar's appearance successfully.");
         }
 

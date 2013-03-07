@@ -31,15 +31,15 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Services.Interfaces;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.DataService
 {
     public class LocalAvatarConnector : IAvatarData
     {
         private IGenericData GD;
-        private string m_realm = "avatars";
-        //private string m_cacherealm = "avatarscache";
-        private PreAddedDictionary<UUID, object> m_locks = new PreAddedDictionary<UUID, object>(() => new object());
+        private string m_realm = "appearance";
+        private object m_lock = new object();
 
         #region IAvatarData Members
 
@@ -66,62 +66,45 @@ namespace Aurora.Services.DataService
             get { return "IAvatarData"; }
         }
 
-        public AvatarData Get(string field, string val)
-        {
-            return InternalGet(m_realm, field, val);
-        }
-
-        public bool Store(UUID PrincipalID, AvatarData data)
-        {
-            lock (m_locks[PrincipalID])
-            {
-                QueryFilter filter = new QueryFilter();
-                filter.andFilters["PrincipalID"] = PrincipalID;
-                GD.Delete(m_realm, filter);
-                List<object[]> insertList = new List<object[]>();
-                foreach (KeyValuePair<string, string> kvp in data.Data)
-                {
-                    insertList.Add(new object[3]{
-                        PrincipalID,
-                        kvp.Key,
-                        kvp.Value
-                    });
-                }
-                GD.InsertMultiple(m_realm, insertList);
-            }
-            return true;
-        }
-
-        public bool Delete(string field, string val)
-        {
-            QueryFilter filter = new QueryFilter();
-            filter.andFilters[field] = val;
-            return GD.Delete(m_realm, filter);
-        }
-
         #endregion
 
         public void Dispose()
         {
         }
 
-        private AvatarData InternalGet(string realm, string field, string val)
+        public AvatarAppearance Get(UUID PrincipalID)
         {
             QueryFilter filter = new QueryFilter();
-            filter.andFilters[field] = val;
-            List<string> data = GD.Query(new string[]{
-                "Name",
-                "`Value`"
-            }, realm, filter, null, null, null);
-            AvatarData retVal = new AvatarData {
-                AvatarType = 1,
-                Data = new Dictionary<string, string>()
-            };
-            for (int i = 0; i < data.Count; i += 2)
+            filter.andFilters["PrincipalID"] = PrincipalID;
+            List<string> data;
+            lock(m_lock)
             {
-                retVal.Data[data[i]] = data[i + 1];
+                data = GD.Query(new string[]{ "Appearance" }, m_realm, filter, null, null, null);
             }
-            return retVal;
+            if(data.Count == 0)
+                return null;
+            AvatarAppearance appearance = new AvatarAppearance();
+            appearance.FromOSD((OSDMap)OSDParser.DeserializeJson(data[0]));
+            return appearance;
+        }
+
+        public bool Store(UUID PrincipalID, AvatarAppearance data)
+        {
+            lock (m_lock)
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["PrincipalID"] = PrincipalID;
+                GD.Delete(m_realm, filter);
+                GD.Insert(m_realm, new[] { PrincipalID.ToString(), OSDParser.SerializeJsonString(data.ToOSD()) });
+            }
+            return true;
+        }
+
+        public bool Delete(UUID PrincipalID)
+        {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PrincipalID"] = PrincipalID;
+            return GD.Delete(m_realm, filter);
         }
     }
 }

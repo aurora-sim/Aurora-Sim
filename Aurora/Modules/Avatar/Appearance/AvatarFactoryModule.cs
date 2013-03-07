@@ -363,22 +363,14 @@ textures 1
         /// <param name="app"></param>
         private void HandleAppearanceSave(UUID agentid, AvatarAppearance app)
         {
-            //If the avatar changes appearance, then proptly logs out, this will break!
-            //ScenePresence sp = m_scene.GetScenePresence(agentid);
-            //if (sp == null)
-            //{
-            //    MainConsole.Instance.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
-            //    return;
-            //}
-
-            // MainConsole.Instance.WarnFormat("[AvatarFactory] avatar {0} save appearance",agentid);
-
             IScenePresence sp = m_scene.GetScenePresence(agentid);
             if (sp == null)
                 return;
 
-            AvatarAppearance appearance = sp != null
-                                                ? sp.RequestModuleInterface<IAvatarAppearanceModule>().Appearance
+            IAvatarAppearanceModule appearanceModule = sp.RequestModuleInterface<IAvatarAppearanceModule>();
+
+            AvatarAppearance appearance = appearanceModule != null
+                                                ? appearanceModule.Appearance
                                                 : app;
 
             m_scene.AvatarService.SetAppearance(agentid, appearance);

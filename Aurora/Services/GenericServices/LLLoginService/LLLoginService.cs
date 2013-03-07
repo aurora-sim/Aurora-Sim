@@ -399,7 +399,7 @@ namespace OpenSim.Services.LLLoginService
                         avappearance.SetWearable((int)WearableType.Eyes, new AvatarWearable(defaultItems[3].ID, defaultItems[3].AssetID));
                         avappearance.SetWearable((int)WearableType.Shirt, new AvatarWearable(defaultItems[4].ID, defaultItems[4].AssetID));
                         avappearance.SetWearable((int)WearableType.Pants, new AvatarWearable(defaultItems[5].ID, defaultItems[5].AssetID));
-                        m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
+                        m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
                     }
                 }
 
@@ -540,27 +540,11 @@ namespace OpenSim.Services.LLLoginService
                 //
                 if (m_AvatarService != null)
                 {
-                    if(avappearance == null)
-                        avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
-                    if (avappearance == null)
-                    {
-                        //Create an appearance for the user if one doesn't exist
-                        if (m_DefaultUserAvatarArchive != "")
-                        {
-                            MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name +
-                                ", loading the default avatar from " + m_DefaultUserAvatarArchive + ".");
-                            avappearance = m_ArchiveService.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
-                            m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
-                            //Must reload this, as we created a new folder
-                            inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
-                        }
-                        else
-                        {
-                            MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
-                            avappearance = new AvatarAppearance(account.PrincipalID);
-                            m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
-                        }
-                    }
+                    bool loadedArchive;
+                    avappearance = m_AvatarService.GetAndEnsureAppearance(account.PrincipalID, account.Name, m_DefaultUserAvatarArchive, out loadedArchive);
+                    if (loadedArchive)
+                        //Must reload this, as we created a new folder
+                        inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                 }
                 else
                     avappearance = new AvatarAppearance(account.PrincipalID);

@@ -468,9 +468,8 @@ namespace OpenSim.Services.CapsService
             //MainConsole.Instance.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
             AssetBase asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_service.AgentID)
                                   {Data = data, Flags = AssetFlags.Deletable | AssetFlags.Temporary};
-            newAssetID = m_assetService.Store(asset);
-            MainConsole.Instance.DebugFormat("[AssetCAPS]: Baked texture new id {0}", asset.ID.ToString());
-            asset.ID = newAssetID;
+            newAssetID = asset.ID = m_assetService.Store(asset);
+            MainConsole.Instance.DebugFormat("[AssetCAPS]: Baked texture new id {0}", newAssetID.ToString());
         }
 
         public byte[] ProcessGetMesh(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)

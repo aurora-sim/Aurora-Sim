@@ -82,9 +82,8 @@ namespace Aurora.Modules.Ban
             {
                 object[] p = (object[])parameters;
                 UUID avatarID = (UUID)p[0];
-                AvatarData avatarData = (AvatarData)p[1];
+                AvatarAppearance app = (AvatarAppearance)p[1];
 
-                AvatarAppearance app = avatarData.ToAvatarAppearance (avatarID);
                 CheckForBannedViewer (avatarID, app.Texture);
             }
             return null;

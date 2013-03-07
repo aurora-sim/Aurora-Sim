@@ -284,7 +284,7 @@ namespace Aurora.Modules.WorldMap
                         //Update the cache
                         foreach (KeyValuePair<ulong, List<mapItemReply>> kvp in allmapitems.items)
                         {
-                            m_mapItemCache.AddOrUpdate(kvp.Key, kvp.Value, 3 * 60); //5 mins
+                            m_mapItemCache.AddOrUpdate(kvp.Key, kvp.Value, 3 * 60); //3 mins
                         }
                     }
                 }
