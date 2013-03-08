@@ -1,0 +1,61 @@
+[Currency]
+    ;; The SimpleCurrency module supports basic buying/selling of objects and land
+	;; 
+	;; WARNING:
+	;;* Do NOT use this module in a production environment.
+    ;;* Do NOT use this module with real money.
+    ;;* This module is for educational purposes only, and can NOT be
+    ;;  used with real money or in a production enviroment!
+    ;;* By using this module you agree that Skidz Tweak, Revolution Smythe, Aurora-Sim, or
+    ;;  other contributing developers ARE IN NO WAY responsible for any");
+    ;;  damages that may occur as a result of using this module.");
+    ;;* By using this module you agree that you understand the risks of
+    ;;  running this module and are fully willing to accept those risks
+    ;;  and any consequences that may occur.
+    ;;* By downing and using this module you are agreeing to everything
+    ;;  listed above. If you do not agree, stop useing it.
+	;;
+	;;Uncomment this line to enable currency if you agree to the above
+	;Module = SimpleCurrency
+	RunServer = true
+	
+	;;The URI to send when something goes wrong
+	ErrorURI = http://localhost:8002/
+	;;The URI to send if someone needs to upgrade their membership to buy land
+	UpgradeMembershipUri = http://localhost:8002/
+	
+	;;Price to upload a new object
+	;; Default is 0
+	PriceUpload = 0
+	;;Price to create a new group
+	;; Default is 0
+	PriceGroupCreate = 0
+	
+	;;The port to start the server on
+	;; Default is 8002
+	ClientPort = 8002
+	
+	;;Should users be able to buy currency inworld?
+	;; Default is true
+	CanBuyCurrencyInworld = true
+	
+	;;Should we give out stipends?
+	;; Default is false
+	GiveStipends = false
+	;; Stipend amount to give
+	;; Default is 0
+	Stipend = 0
+	;; Only send stipends to premium users?
+	;; Default is false
+	StipendsPremiumOnly = false
+	;; Amount of time before stipends are given out
+	;; Valid values are: second,minute,hours,days,weeks,months,years,decades,centuries,millennium,Kilenniums,Centrenniums,Megaannum
+	;; Default is weeks
+	StipendsEveryType = weeks
+	;; Number of type (set above) before a stipid is given out
+	;; Default is 1
+	StipendsEvery = 1
+	
+[Handlers]
+	ISimpleCurrencyConnectorOpenServerHandler = true
+	ISimpleCurrencyConnectorServerHandlerPort = 8002

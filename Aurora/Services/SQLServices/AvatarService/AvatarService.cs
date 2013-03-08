@@ -160,6 +160,8 @@ namespace Aurora.Services.SQLServices.AvatarService
             AvatarAppearance olddata = m_Database.Get(principalID);
 
             IAssetService service = m_registry.RequestModuleInterface<IAssetService>();
+            if (olddata == null || olddata.Texture == null)
+                return;
             for (uint i = 0; i < olddata.Texture.FaceTextures.Length; i++)
             {
                 if ((olddata.Texture.FaceTextures[i] == null) || ((newdata.Texture.FaceTextures[i] != null) &&

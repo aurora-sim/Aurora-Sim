@@ -1,35 +1,60 @@
 [Currency]
-    ;; The basic (no money) currency module, allows for selling for 0$
-    Module = BaseCurrency
-
-[Economy]
-    ;; These economy values get used in the BetaGridLikeMoneyModule.  - This module is for demonstration only -
-    ;; Enables selling things for $0
-    SellEnabled = true
-
-    ;; Money Unit fee to upload textures, animations etc
-    PriceUpload = 0
-
-    ;; Money Unit fee to create groups
-    PriceGroupCreate = 0
-
-    ;; We don't really know what the rest of these values do.  These get sent to the client
-    ;; These taken from Agni at a Public Telehub.  Change at your own risk.
-    PriceEnergyUnit = 100
-    PriceObjectClaim = 10
-    PricePublicObjectDecay = 4
-    PricePublicObjectDelete = 4
-    PriceParcelClaim = 1
-    PriceParcelClaimFactor = 1
-    PriceRentLight = 5
-    TeleportMinPrice = 2
-    TeleportPriceExponent = 2
-    EnergyEfficiency = 1
-    PriceObjectRent = 1
-    PriceObjectScaleFactor = 10
-    PriceParcelRent = 1
-    
-[GroupMoney]
-    ;;Enables getting and sending back the group money information if the money module exists
-    ;; Does not do anything if the money module that is enabled does not support group currency
-    Enabled = true
+    ;; The SimpleCurrency module supports basic buying/selling of objects and land
+	;; 
+	;; WARNING:
+	;;* Do NOT use this module in a production environment.
+    ;;* Do NOT use this module with real money.
+    ;;* This module is for educational purposes only, and can NOT be
+    ;;  used with real money or in a production enviroment!
+    ;;* By using this module you agree that Skidz Tweak, Revolution Smythe, Aurora-Sim, or
+    ;;  other contributing developers ARE IN NO WAY responsible for any");
+    ;;  damages that may occur as a result of using this module.");
+    ;;* By using this module you agree that you understand the risks of
+    ;;  running this module and are fully willing to accept those risks
+    ;;  and any consequences that may occur.
+    ;;* By downing and using this module you are agreeing to everything
+    ;;  listed above. If you do not agree, stop useing it.
+	;;
+	;;Uncomment this line to enable currency if you agree to the above
+	;Module = SimpleCurrency
+	RunServer = false
+	
+	;; These values only need changing if you are running in standalone mode
+	;;  Otherwise, set them in AuroraServerConfiguration/Economy.ini
+	
+	;;The URI to send when something goes wrong
+	ErrorURI = http://localhost:8002/
+	;;The URI to send if someone needs to upgrade their membership to buy land
+	UpgradeMembershipUri = http://localhost:8002/
+	
+	;;Price to upload a new object
+	;; Default is 0
+	PriceUpload = 0
+	;;Price to create a new group
+	;; Default is 0
+	PriceGroupCreate = 0
+	
+	;;The port to start the server on
+	;; Default is 8002
+	ClientPort = 8002
+	
+	;;Should users be able to buy currency inworld?
+	;; Default is true
+	CanBuyCurrencyInworld = true
+	
+	;;Should we give out stipends?
+	;; Default is false
+	GiveStipends = false
+	;; Stipend amount to give
+	;; Default is 0
+	Stipend = 0
+	;; Only send stipends to premium users?
+	;; Default is false
+	StipendsPremiumOnly = false
+	;; Amount of time before stipends are given out
+	;; Valid values are: second,minute,hours,days,weeks,months,years,decades,centuries,millennium,Kilenniums,Centrenniums,Megaannum
+	;; Default is weeks
+	StipendsEveryType = weeks
+	;; Number of type (set above) before a stipid is given out
+	;; Default is 1
+	StipendsEvery = 1

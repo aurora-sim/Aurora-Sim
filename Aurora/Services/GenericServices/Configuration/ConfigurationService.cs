@@ -127,6 +127,7 @@ namespace OpenSim.Services.ConfigurationService
             GetConfigFor("SyncMessageServerURI", request);
             GetConfigFor("InstantMessageServerURI", request);
             GetConfigFor("UserAccountServerURI", request);
+            GetConfigFor("CurrencyServerURI", request);
             m_urls = request;
         }
 

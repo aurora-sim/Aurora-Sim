@@ -169,9 +169,11 @@ namespace OpenSim.Services.CapsService
                 IUserProfileInfo profileInfo = DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
                 map["display_name"] = (profileInfo == null || profileInfo.DisplayName == "") ? account.Name : profileInfo.DisplayName;
                 map["username"] = account.Name;
+                map["slid"] = account.PrincipalID;
+                map["born_on"] = Util.ToDateTime(account.Created).ToShortDateString();
+                map["profile"] = "stuff";
                 array.Add(map);
             }
-
             body["agents"] = array;
             return OSDParser.SerializeLLSDXmlBytes(body);
         }
