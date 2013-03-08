@@ -43,6 +43,7 @@ using Aurora.Modules.WorldMap.Warp3DMap;
 using Rednettle.Warp3D;
 using RegionSettings = Aurora.Framework.RegionSettings;
 using WarpRenderer = Warp3D.Warp3D;
+using System.IO;
 
 namespace Aurora.Modules.WorldMap
 {
@@ -63,6 +64,7 @@ namespace Aurora.Modules.WorldMap
         {
             m_scene = scene;
             m_config = config;
+            ReadCacheMap();
         }
 
         public Bitmap TerrainToBitmap(Bitmap mapbmp)
@@ -95,9 +97,9 @@ namespace Aurora.Modules.WorldMap
             m_texturePrims = m_config.Configs["MapModule"].GetBoolean("WarpTexturePrims", false);
             m_colors.Clear();
 
-            int scaledRemovalFactor = m_scene.RegionInfo.RegionSizeX/(Constants.RegionSize/2);
-            Vector3 camPos = new Vector3(m_scene.RegionInfo.RegionSizeX/2 - 0.5f,
-                                         m_scene.RegionInfo.RegionSizeY/2 - 0.5f, 221.7025033688163f);
+            int scaledRemovalFactor = m_scene.RegionInfo.RegionSizeX / (Constants.RegionSize / 2);
+            Vector3 camPos = new Vector3(m_scene.RegionInfo.RegionSizeX / 2 - 0.5f,
+                                         m_scene.RegionInfo.RegionSizeY / 2 - 0.5f, 221.7025033688163f);
             Viewport viewport = new Viewport(camPos, -Vector3.UnitZ, 1024f, 0.1f,
                                              m_scene.RegionInfo.RegionSizeX - scaledRemovalFactor,
                                              m_scene.RegionInfo.RegionSizeY - scaledRemovalFactor,
@@ -152,16 +154,16 @@ namespace Aurora.Modules.WorldMap
                 terrainObj = CreateTerrain(renderer, textureTerrain);
                 if (drawPrimVolume && m_primMesher != null)
                 {
-//#if (!ISWIN)
+                    //#if (!ISWIN)
                     foreach (ISceneEntity ent in m_scene.Entities.GetEntities())
                         foreach (ISceneChildEntity part in ent.ChildrenEntities())
                             CreatePrim(renderer, part);
-//#else
-//                    foreach (ISceneChildEntity part in m_scene.Entities.GetEntities().SelectMany(ent => ent.ChildrenEntities()))
-//                        CreatePrim(renderer, part);
-//#endif
+                    //#else
+                    //                    foreach (ISceneChildEntity part in m_scene.Entities.GetEntities().SelectMany(ent => ent.ChildrenEntities()))
+                    //                        CreatePrim(renderer, part);
+                    //#endif
                 }
-                    
+
             }
             catch (Exception ex)
             {
@@ -185,6 +187,7 @@ namespace Aurora.Modules.WorldMap
             terrainObj.fasttriangle = null;
             terrainObj = null;
             m_colors.Clear();
+            SaveCache();
 
             //Force GC to try to clean this mess up
             GC.GetTotalMemory(true);
@@ -198,11 +201,11 @@ namespace Aurora.Modules.WorldMap
 
         private void CreateWater(WarpRenderer renderer)
         {
-            float waterHeight = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
+            float waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
 
-            renderer.AddPlane("Water", m_scene.RegionInfo.RegionSizeX*0.5f);
-            renderer.Scene.sceneobject("Water").setPos((m_scene.RegionInfo.RegionSizeX/2) - 0.5f, waterHeight,
-                                                       (m_scene.RegionInfo.RegionSizeY/2) - 0.5f);
+            renderer.AddPlane("Water", m_scene.RegionInfo.RegionSizeX * 0.5f);
+            renderer.Scene.sceneobject("Water").setPos((m_scene.RegionInfo.RegionSizeX / 2) - 0.5f, waterHeight,
+                                                       (m_scene.RegionInfo.RegionSizeY / 2) - 0.5f);
 
             RegionLightShareData rls = m_scene.RequestModuleInterface<IWindLightSettingsModule>().FindRegionWindLight();
 
@@ -211,12 +214,12 @@ namespace Aurora.Modules.WorldMap
             if (rls != null)
                 waterColormaterial =
                     new warp_Material(
-                        ConvertColor(new Color4(rls.waterColor.X/256, rls.waterColor.Y/256, rls.waterColor.Z/256,
+                        ConvertColor(new Color4(rls.waterColor.X / 256, rls.waterColor.Y / 256, rls.waterColor.Z / 256,
                                                 WATER_COLOR.A)));
             else
                 waterColormaterial = new warp_Material(ConvertColor(WATER_COLOR));
 
-            waterColormaterial.setTransparency((byte) ((1f - WATER_COLOR.A)*255f)*2);
+            waterColormaterial.setTransparency((byte)((1f - WATER_COLOR.A) * 255f) * 2);
             waterColormaterial.setReflectivity(50);
             renderer.Scene.addMaterial("WaterColor", waterColormaterial);
             renderer.SetObjectMaterial("Water", "WaterColor");
@@ -247,7 +250,7 @@ namespace Aurora.Modules.WorldMap
             float diff = (float)m_scene.RegionInfo.RegionSizeY / (float)Constants.RegionSize;
             warp_Object obj =
                 new warp_Object(Constants.RegionSize * Constants.RegionSize,
-                                ((Constants.RegionSize - 1) * (Constants.RegionSize - 1) *2));
+                                ((Constants.RegionSize - 1) * (Constants.RegionSize - 1) * 2));
 
             for (float y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
             {
@@ -268,7 +271,7 @@ namespace Aurora.Modules.WorldMap
                     float newY = y / diff;
                     if (newX < Constants.RegionSize - 1 && newY < Constants.RegionSize - 1)
                     {
-                        int v = (int)(newY*Constants.RegionSize + newX);
+                        int v = (int)(newY * Constants.RegionSize + newX);
 
                         // Normal
                         Vector3 v1 = new Vector3(newX, newY, (terrain[(int)x, (int)y]) / Constants.TerrainCompression);
@@ -306,15 +309,15 @@ namespace Aurora.Modules.WorldMap
             textureIDs[2] = regionInfo.TerrainTexture3;
             textureIDs[3] = regionInfo.TerrainTexture4;
 
-            startHeights[0] = (float) regionInfo.Elevation1SW;
-            startHeights[1] = (float) regionInfo.Elevation1NW;
-            startHeights[2] = (float) regionInfo.Elevation1SE;
-            startHeights[3] = (float) regionInfo.Elevation1NE;
+            startHeights[0] = (float)regionInfo.Elevation1SW;
+            startHeights[1] = (float)regionInfo.Elevation1NW;
+            startHeights[2] = (float)regionInfo.Elevation1SE;
+            startHeights[3] = (float)regionInfo.Elevation1NE;
 
-            heightRanges[0] = (float) regionInfo.Elevation2SW;
-            heightRanges[1] = (float) regionInfo.Elevation2NW;
-            heightRanges[2] = (float) regionInfo.Elevation2SE;
-            heightRanges[3] = (float) regionInfo.Elevation2NE;
+            heightRanges[0] = (float)regionInfo.Elevation2SW;
+            heightRanges[1] = (float)regionInfo.Elevation2NW;
+            heightRanges[2] = (float)regionInfo.Elevation2SE;
+            heightRanges[3] = (float)regionInfo.Elevation2NE;
 
             uint globalX, globalY;
             Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out globalX, out globalY);
@@ -346,9 +349,9 @@ namespace Aurora.Modules.WorldMap
             {
                 const float MIN_SIZE = 2f;
 
-                if ((PCode) prim.Shape.PCode != PCode.Prim)
+                if ((PCode)prim.Shape.PCode != PCode.Prim)
                     return;
-                if (prim.Scale.LengthSquared() < MIN_SIZE*MIN_SIZE)
+                if (prim.Scale.LengthSquared() < MIN_SIZE * MIN_SIZE)
                     return;
 
                 Primitive omvPrim = prim.Shape.ToOmvPrimitive(prim.OffsetPosition, prim.RotationOffset);
@@ -358,22 +361,22 @@ namespace Aurora.Modules.WorldMap
                 if (omvPrim.Sculpt != null && omvPrim.Sculpt.SculptTexture != UUID.Zero)
                 {
                     // Try fetchinng the asset
-                    AssetBase sculptAsset = m_scene.AssetService.Get(omvPrim.Sculpt.SculptTexture.ToString());
+                    byte[] sculptAsset = m_scene.AssetService.GetData(omvPrim.Sculpt.SculptTexture.ToString());
                     if (sculptAsset != null)
                     {
                         // Is it a mesh?
                         if (omvPrim.Sculpt.Type == SculptType.Mesh)
                         {
-                            AssetMesh meshAsset = new AssetMesh(omvPrim.Sculpt.SculptTexture, sculptAsset.Data);
+                            AssetMesh meshAsset = new AssetMesh(omvPrim.Sculpt.SculptTexture, sculptAsset);
                             FacetedMesh.TryDecodeFromAsset(omvPrim, meshAsset, DetailLevel.Highest, out renderMesh);
                         }
                         else // It's sculptie
                         {
                             IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
-                            Image sculpt = imgDecoder.DecodeToImage(sculptAsset.Data);
+                            Image sculpt = imgDecoder.DecodeToImage(sculptAsset);
                             if (sculpt != null)
                             {
-                                renderMesh = m_primMesher.GenerateFacetedSculptMesh(omvPrim, (Bitmap) sculpt,
+                                renderMesh = m_primMesher.GenerateFacetedSculptMesh(omvPrim, (Bitmap)sculpt,
                                                                                     DetailLevel.Medium);
                                 sculpt.Dispose();
                             }
@@ -410,7 +413,7 @@ namespace Aurora.Modules.WorldMap
                     Face face = renderMesh.Faces[i];
                     string meshName = primID + "-Face-" + i.ToString();
 
-                    warp_Object faceObj = new warp_Object(face.Vertices.Count, face.Indices.Count/3);
+                    warp_Object faceObj = new warp_Object(face.Vertices.Count, face.Indices.Count / 3);
 
                     foreach (Vertex v in face.Vertices)
                     {
@@ -424,7 +427,7 @@ namespace Aurora.Modules.WorldMap
                         faceObj.addVertex(vert);
                     }
 
-                    for (int j = 0; j < face.Indices.Count;)
+                    for (int j = 0; j < face.Indices.Count; )
                     {
                         faceObj.addTriangle(
                             face.Indices[j++],
@@ -432,11 +435,11 @@ namespace Aurora.Modules.WorldMap
                             face.Indices[j++]);
                     }
 
-                    Primitive.TextureEntryFace teFace = prim.Shape.Textures.GetFace((uint) i);
+                    Primitive.TextureEntryFace teFace = prim.Shape.Textures.GetFace((uint)i);
                     string materialName;
                     Color4 faceColor = GetFaceColor(teFace);
 
-                    if (m_texturePrims && prim.Scale.LengthSquared() > 48*48)
+                    if (m_texturePrims && prim.Scale.LengthSquared() > 48 * 48)
                     {
                         materialName = GetOrCreateMaterial(renderer, faceColor, teFace.TextureID);
                     }
@@ -471,70 +474,22 @@ namespace Aurora.Modules.WorldMap
 
             if (!m_colors.TryGetValue(face.TextureID, out color))
             {
-                bool fetched = false;
-
-                // Attempt to fetch the texture metadata
-                UUID metadataID = UUID.Combine(face.TextureID, TEXTURE_METADATA_MAGIC);
-                AssetBase metadata = m_scene.AssetService.Get(metadataID.ToString());
-                if (metadata != null)
+                // Fetch the texture, decode and get the average color,
+                // then save it to a temporary metadata asset
+                byte[] textureAsset = m_scene.AssetService.GetData(face.TextureID.ToString());
+                if (textureAsset != null)
                 {
-                    OSDMap map = null;
-                    try
-                    {
-                        map = OSDParser.Deserialize(metadata.Data) as OSDMap;
-                    }
-                    catch
-                    {
-                    }
-
-                    if (map != null)
-                    {
-                        color = map["X-JPEG2000-RGBA"].AsColor4();
-                        if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))
-                            //If we failed, don't save it
-                            fetched = true;
-                    }
-                    map = null;
-                    metadata = null;
+                    int width, height;
+                    color = GetAverageColor(face.TextureID, textureAsset, m_scene, out width, out height);
+                    textureAsset = null;
                 }
-
-                if (!fetched)
-                {
-                    // Fetch the texture, decode and get the average color,
-                    // then save it to a temporary metadata asset
-                    AssetBase textureAsset = m_scene.AssetService.Get(face.TextureID.ToString());
-                    if (textureAsset != null)
-                    {
-                        int width, height;
-                        color = GetAverageColor(textureAsset.ID, textureAsset.Data, m_scene, out width, out height);
-                        if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))
-                            //If we failed, don't save it
-                        {
-                            OSDMap data = new OSDMap {{"X-JPEG2000-RGBA", OSD.FromColor4(color)}};
-                            metadata = new AssetBase
-                                           {
-                                               Data = Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data)),
-                                               Description = "Avg Color-JPEG2000 texture " + face.TextureID.ToString(),
-                                               Flags = AssetFlags.Collectable | AssetFlags.Temporary | AssetFlags.Local,
-                                               ID = metadataID,
-                                               Name = String.Empty,
-                                               TypeAsset = AssetType.Simstate
-                                               // Make something up to get around OpenSim's myopic treatment of assets
-                                           };
-                            metadata.ID = m_scene.AssetService.Store(metadata);
-                        }
-                        textureAsset = null;
-                    }
-                    else
-                    {
-                        color = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
-                    }
-                }
+                else
+                    color = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
 
                 m_colors[face.TextureID] = color;
             }
 
-            return color*face.RGBA;
+            return color * face.RGBA;
         }
 
         private string GetOrCreateMaterial(WarpRenderer renderer, Color4 color)
@@ -547,7 +502,7 @@ namespace Aurora.Modules.WorldMap
 
             renderer.AddMaterial(name, ConvertColor(color));
             if (color.A < 1f)
-                renderer.Scene.material(name).setTransparency((byte) ((1f - color.A)*255f));
+                renderer.Scene.material(name).setTransparency((byte)((1f - color.A) * 255f));
             return name;
         }
 
@@ -561,13 +516,11 @@ namespace Aurora.Modules.WorldMap
                 renderer.AddMaterial(materialName, ConvertColor(faceColor));
                 if (faceColor.A < 1f)
                 {
-                    renderer.Scene.material(materialName).setTransparency((byte) ((1f - faceColor.A)*255f));
+                    renderer.Scene.material(materialName).setTransparency((byte)((1f - faceColor.A) * 255f));
                 }
                 warp_Texture texture = GetTexture(textureID);
                 if (texture != null)
-                {
                     renderer.Scene.material(materialName).setTexture(texture);
-                }
             }
 
             return materialName;
@@ -576,11 +529,11 @@ namespace Aurora.Modules.WorldMap
         private warp_Texture GetTexture(UUID id)
         {
             warp_Texture ret = null;
-            AssetBase asset = m_scene.AssetService.Get(id.ToString());
+            byte[] asset = m_scene.AssetService.GetData(id.ToString());
             if (asset != null)
             {
                 IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
-                Bitmap img = (Bitmap) imgDecoder.DecodeToImage(asset.Data);
+                Bitmap img = (Bitmap)imgDecoder.DecodeToImage(asset);
                 if (img != null)
                 {
                     return new warp_Texture(img);
@@ -590,6 +543,82 @@ namespace Aurora.Modules.WorldMap
         }
 
         #endregion Rendering Methods
+
+        #region Cache methods
+
+        private void ReadCacheMap()
+        {
+            if (!Directory.Exists("assetcache"))
+                Directory.CreateDirectory("assetcache");
+            if (!Directory.Exists(System.IO.Path.Combine("assetcache", "mapTileTextureCache")))
+                Directory.CreateDirectory(System.IO.Path.Combine("assetcache", "mapTileTextureCache"));
+
+            FileStream stream =
+                new FileStream(
+                    System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
+                                 m_scene.RegionInfo.RegionName + ".tc"), FileMode.OpenOrCreate);
+            StreamReader m_streamReader = new StreamReader(stream);
+            string file = m_streamReader.ReadToEnd();
+            m_streamReader.Close();
+            //Read file here
+            if (file != "") //New file
+            {
+                bool loaded = DeserializeCache(file);
+                if (!loaded)
+                {
+                    //Something went wrong, delete the file
+                    try
+                    {
+                        File.Delete(System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
+                                                 m_scene.RegionInfo.RegionName + ".tc"));
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+        private bool DeserializeCache(string file)
+        {
+            OSDMap map = OSDParser.DeserializeJson(file) as OSDMap;
+            if (map == null)
+                return false;
+
+            foreach (KeyValuePair<string, OSD> kvp in map)
+            {
+                Color4 c = kvp.Value.AsColor4();
+                UUID key = UUID.Parse(kvp.Key);
+                if (!m_colors.ContainsKey(key))
+                    m_colors.Add(key, c);
+            }
+
+            return true;
+        }
+
+        private void SaveCache()
+        {
+            OSDMap map = SerializeCache();
+            FileStream stream =
+                new FileStream(
+                    System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
+                                 m_scene.RegionInfo.RegionName + ".tc"), FileMode.Create);
+            StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine(OSDParser.SerializeJsonString(map));
+            writer.Close();
+        }
+
+        private OSDMap SerializeCache()
+        {
+            OSDMap map = new OSDMap();
+            foreach (KeyValuePair<UUID, Color4> kvp in m_colors)
+            {
+                map.Add(kvp.Key.ToString(), kvp.Value);
+            }
+            return map;
+        }
+
+        #endregion
 
         #region Static Helpers
 
@@ -610,9 +639,9 @@ namespace Aurora.Modules.WorldMap
 
         private static int ConvertColor(Color4 color)
         {
-            int c = warp_Color.getColor((byte) (color.R*255f), (byte) (color.G*255f), (byte) (color.B*255f));
+            int c = warp_Color.getColor((byte)(color.R * 255f), (byte)(color.G * 255f), (byte)(color.B * 255f));
             if (color.A < 1f)
-                c |= (byte) (color.A*255f) << 24;
+                c |= (byte)(color.A * 255f) << 24;
 
             return c;
         }
@@ -628,7 +657,7 @@ namespace Aurora.Modules.WorldMap
             {
                 IJ2KDecoder decoder = scene.RequestModuleInterface<IJ2KDecoder>();
 
-                bitmap = (Bitmap) decoder.DecodeToImage(j2kData);
+                bitmap = (Bitmap)decoder.DecodeToImage(j2kData);
                 width = 0;
                 height = 0;
                 if (bitmap == null)
@@ -648,14 +677,14 @@ namespace Aurora.Modules.WorldMap
                     {
                         for (int y = 0; y < height; y++)
                         {
-                            byte* row = (byte*) bitmapData.Scan0 + (y*bitmapData.Stride);
+                            byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride);
 
                             for (int x = 0; x < width; x++)
                             {
-                                b += row[x*pixelBytes + 0];
-                                g += row[x*pixelBytes + 1];
-                                r += row[x*pixelBytes + 2];
-                                a += row[x*pixelBytes + 3];
+                                b += row[x * pixelBytes + 0];
+                                g += row[x * pixelBytes + 1];
+                                r += row[x * pixelBytes + 2];
+                                a += row[x * pixelBytes + 3];
                             }
                         }
                     }
@@ -663,31 +692,31 @@ namespace Aurora.Modules.WorldMap
                     {
                         for (int y = 0; y < height; y++)
                         {
-                            byte* row = (byte*) bitmapData.Scan0 + (y*bitmapData.Stride);
+                            byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride);
 
                             for (int x = 0; x < width; x++)
                             {
-                                b += row[x*pixelBytes + 0];
-                                g += row[x*pixelBytes + 1];
-                                r += row[x*pixelBytes + 2];
+                                b += row[x * pixelBytes + 0];
+                                g += row[x * pixelBytes + 1];
+                                r += row[x * pixelBytes + 2];
                             }
                         }
                     }
                 }
 
                 // Get the averages for each channel
-                const decimal OO_255 = 1m/255m;
-                decimal totalPixels = (width*height);
+                const decimal OO_255 = 1m / 255m;
+                decimal totalPixels = (width * height);
 
-                decimal rm = (r/totalPixels)*OO_255;
-                decimal gm = (g/totalPixels)*OO_255;
-                decimal bm = (b/totalPixels)*OO_255;
-                decimal am = (a/totalPixels)*OO_255;
+                decimal rm = (r / totalPixels) * OO_255;
+                decimal gm = (g / totalPixels) * OO_255;
+                decimal bm = (b / totalPixels) * OO_255;
+                decimal am = (a / totalPixels) * OO_255;
 
                 if (pixelBytes == 3)
                     am = 1m;
 
-                return new Color4((float) rm, (float) gm, (float) bm, (float) am);
+                return new Color4((float)rm, (float)gm, (float)bm, (float)am);
             }
             catch (Exception ex)
             {
