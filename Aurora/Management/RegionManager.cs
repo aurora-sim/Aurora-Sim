@@ -102,7 +102,6 @@ namespace Aurora.Management
                 textBox11.Text = "";
                 textBox6.Text = "50000"; 
                 textBox4.Text = "Adult";
-                DisabledEdit.Checked = false;
                 textBox7.Text = "9000";
                 textBox3.Text = "1000";
                 textBox5.Text = "1000";

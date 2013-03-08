@@ -176,7 +176,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
                 info.ObjectCapacity = int.Parse(section.GetValue("MaxPrims"));
                 info.RegionType = section.GetValue("RegionType");
-                info.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(section.GetValue("MaturityLevel"));
+                info.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(section.GetValue("MaturityLevel")));
                 info.InfiniteRegion = section.GetValue("InfiniteRegion").ToLower() == "true";
                 info.Startup = section.GetValue("StartupType") == "Normal" ? StartupType.Normal : StartupType.Medium;
                 info.ScopeID = UUID.Parse(section.GetValue("ScopeID"));

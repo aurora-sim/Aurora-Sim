@@ -57,7 +57,6 @@ namespace Aurora.Framework
         public UUID RegionID = UUID.Zero;
         public UUID Password = UUID.Random();
         private UUID m_GridSecureSessionID = UUID.Zero;
-        public int NumberStartup = 0;
         public StartupType Startup = StartupType.Normal;
         public bool InfiniteRegion = false;
         public bool NewRegion = false;
