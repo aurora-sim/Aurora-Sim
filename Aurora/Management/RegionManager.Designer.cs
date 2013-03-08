@@ -79,8 +79,6 @@ namespace Aurora.Management
             this.RSizeXHelp = new System.Windows.Forms.Button();
             this.RegionSizeX = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
-            this.DisabledEdit = new System.Windows.Forms.CheckBox();
-            this.DisabledHelp = new System.Windows.Forms.Button();
             this.MaturityHelp = new System.Windows.Forms.Button();
             this.MaxPrimsHelp = new System.Windows.Forms.Button();
             this.RegionTypeHelp = new System.Windows.Forms.Button();
@@ -89,7 +87,6 @@ namespace Aurora.Management
             this.RegionLocationX = new System.Windows.Forms.Button();
             this.RegionNameHelp = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.label22 = new System.Windows.Forms.Label();
@@ -261,8 +258,6 @@ namespace Aurora.Management
             this.groupBox3.Controls.Add(this.RSizeXHelp);
             this.groupBox3.Controls.Add(this.RegionSizeX);
             this.groupBox3.Controls.Add(this.label19);
-            this.groupBox3.Controls.Add(this.DisabledEdit);
-            this.groupBox3.Controls.Add(this.DisabledHelp);
             this.groupBox3.Controls.Add(this.MaturityHelp);
             this.groupBox3.Controls.Add(this.MaxPrimsHelp);
             this.groupBox3.Controls.Add(this.RegionTypeHelp);
@@ -271,7 +266,6 @@ namespace Aurora.Management
             this.groupBox3.Controls.Add(this.RegionLocationX);
             this.groupBox3.Controls.Add(this.RegionNameHelp);
             this.groupBox3.Controls.Add(this.textBox1);
-            this.groupBox3.Controls.Add(this.label20);
             this.groupBox3.Controls.Add(this.label21);
             this.groupBox3.Controls.Add(this.textBox3);
             this.groupBox3.Controls.Add(this.label22);
@@ -295,7 +289,7 @@ namespace Aurora.Management
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(259, 322);
+            this.button1.Location = new System.Drawing.Point(259, 303);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(145, 23);
             this.button1.TabIndex = 57;
@@ -306,7 +300,7 @@ namespace Aurora.Management
             // einfiniteRegion
             // 
             this.einfiniteRegion.AutoSize = true;
-            this.einfiniteRegion.Location = new System.Drawing.Point(247, 302);
+            this.einfiniteRegion.Location = new System.Drawing.Point(247, 283);
             this.einfiniteRegion.Name = "einfiniteRegion";
             this.einfiniteRegion.Size = new System.Drawing.Size(15, 14);
             this.einfiniteRegion.TabIndex = 55;
@@ -314,7 +308,7 @@ namespace Aurora.Management
             // 
             // button13
             // 
-            this.button13.Location = new System.Drawing.Point(80, 299);
+            this.button13.Location = new System.Drawing.Point(87, 279);
             this.button13.Name = "button13";
             this.button13.Size = new System.Drawing.Size(21, 20);
             this.button13.TabIndex = 54;
@@ -325,7 +319,7 @@ namespace Aurora.Management
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(6, 303);
+            this.label17.Location = new System.Drawing.Point(6, 284);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(75, 13);
             this.label17.TabIndex = 53;
@@ -337,7 +331,7 @@ namespace Aurora.Management
             this.startupType.Items.AddRange(new object[] {
             "Normal",
             "Medium"});
-            this.startupType.Location = new System.Drawing.Point(247, 266);
+            this.startupType.Location = new System.Drawing.Point(247, 247);
             this.startupType.Name = "startupType";
             this.startupType.Size = new System.Drawing.Size(157, 30);
             this.startupType.TabIndex = 37;
@@ -346,7 +340,7 @@ namespace Aurora.Management
             // 
             // button17
             // 
-            this.button17.Location = new System.Drawing.Point(93, 266);
+            this.button17.Location = new System.Drawing.Point(80, 247);
             this.button17.Name = "button17";
             this.button17.Size = new System.Drawing.Size(21, 20);
             this.button17.TabIndex = 52;
@@ -357,7 +351,7 @@ namespace Aurora.Management
             // label36
             // 
             this.label36.AutoSize = true;
-            this.label36.Location = new System.Drawing.Point(6, 270);
+            this.label36.Location = new System.Drawing.Point(6, 251);
             this.label36.Name = "label36";
             this.label36.Size = new System.Drawing.Size(68, 13);
             this.label36.TabIndex = 51;
@@ -418,27 +412,6 @@ namespace Aurora.Management
             this.label19.Size = new System.Drawing.Size(74, 13);
             this.label19.TabIndex = 46;
             this.label19.Text = "Region Size X";
-            // 
-            // DisabledEdit
-            // 
-            this.DisabledEdit.AutoSize = true;
-            this.DisabledEdit.Location = new System.Drawing.Point(247, 246);
-            this.DisabledEdit.Name = "DisabledEdit";
-            this.DisabledEdit.Size = new System.Drawing.Size(15, 14);
-            this.DisabledEdit.TabIndex = 41;
-            this.DisabledEdit.UseVisualStyleBackColor = true;
-            this.DisabledEdit.CheckStateChanged += new System.EventHandler(this.startupType_TextChanged);
-            this.DisabledEdit.Leave += new System.EventHandler(this.startupType_Leave);
-            // 
-            // DisabledHelp
-            // 
-            this.DisabledHelp.Location = new System.Drawing.Point(56, 243);
-            this.DisabledHelp.Name = "DisabledHelp";
-            this.DisabledHelp.Size = new System.Drawing.Size(21, 20);
-            this.DisabledHelp.TabIndex = 39;
-            this.DisabledHelp.Text = "?";
-            this.DisabledHelp.UseVisualStyleBackColor = true;
-            this.DisabledHelp.Click += new System.EventHandler(this.DisabledHelp_Click);
             // 
             // MaturityHelp
             // 
@@ -518,15 +491,6 @@ namespace Aurora.Management
             this.textBox1.TabIndex = 2;
             this.textBox1.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.textBox1.Leave += new System.EventHandler(this.startupType_Leave);
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(6, 247);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(48, 13);
-            this.label20.TabIndex = 24;
-            this.label20.Text = "Disabled";
             // 
             // label21
             // 
@@ -888,8 +852,6 @@ namespace Aurora.Management
         private System.Windows.Forms.Button RSizeXHelp;
         private System.Windows.Forms.TextBox RegionSizeX;
         private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.CheckBox DisabledEdit;
-        private System.Windows.Forms.Button DisabledHelp;
         private System.Windows.Forms.Button MaturityHelp;
         private System.Windows.Forms.Button MaxPrimsHelp;
         private System.Windows.Forms.Button RegionTypeHelp;
@@ -898,7 +860,6 @@ namespace Aurora.Management
         private System.Windows.Forms.Button RegionLocationX;
         private System.Windows.Forms.Button RegionNameHelp;
         private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.Label label22;

@@ -1,52 +1,46 @@
-;; * This file should be renamed to RegionConfig.ini (removing the .example)
-;; * You can put multiple regions into one file by adding another [] section with a region name in it
-;;   or make a new file like this one under a different name (ending with the .ini file extention)
-;; * The section name is the region name
 ;; *
-;; * Please Note that using region.ini files is depricated, and the region database loader is highly recommended
+;; * Using this file is not recommended, as the region manager GUI will do
+;; * this same functionality, so only use this if the GUI does not work for you.
+;; * To use this file, this file should be renamed to RegionConfig.ini and "NoGUI"
+;; * should be set to true in Aurora.ini under [Startup]
 ;; *
-[Default Region]
-;; *
-;; * You MUST change this RegionUUID! It will NOT be done for you!
-;; *
-RegionUUID = "11111111-2222-3333-4444-555555555555"
-Location = "1000,1000"
-RegionSizeX = 256
-RegionSizeY = 256
-InternalPort = 9000
-AllowAlternatePorts = False
-;; *
-;; * Prim data
-;; * This allows limiting the sizes of prims and the region prim count
-;; *
-;NonphysicalPrimMax = 256
-;PhysicalPrimMax = 10
-;ClampPrimSize = False
-;MaxPrims = 15000
-;; if you would like to allow prims to be physical and move by physics with the physical checkbox in the client set this to true.
-;AllowPhysicalPrims = true
-;; *
-;; * Product name (used in search from viewer 1.23
-;; *
-;RegionType = "Mainland"
-;; * 
-;; * Other Advanced Settings
-;; *
-;; Should avatars in neighbor sims see objects in this sim?
-;SeeIntoThisSimFromNeighbor = true
-;; Region crossing
-;AllowScriptCrossing = false
-;; Trust Script Binaries. Enabling this can allow foreign agents to execute binary code on your simulator!
-;TrustBinariesFromForeignSims = false
-;; *
-;; * Multi-Tenancy. Only set if needed
-;; *
-;ScopeID = "00000000-0000-0000-0000-000000000000"
-;;
-;; If you want to enable On-Demand running for this sim (only runs parts of the sim when it is needed),
-;; Choose from the options below.
-;; Soft - Only loads terrain and parcels during startup
-;; Medium - Loads terrain and parcels during startup
-;; Both of the above methods do not run the heartbeat (but do runs scripts!)
-;; Normal - A normal region
-;StartupType = Normal
+[Region]
+	;; *
+	;; * You MUST change this RegionUUID! It will NOT be done for you!
+	;; *
+	RegionID = "11111111-2222-3333-4444-555555555555"
+	RegionName = "Test Region"
+	RegionLocX = 1000
+	RegionLocY = 1000
+	RegionSizeX = 256
+	RegionSizeY = 256
+	InternalAddress = 0.0.0.0
+	InternalPort = 9000
+	;MaxPrims = 15000
+
+	;; *
+	;; * Product name (used in search from viewer 1.23
+	;; *
+	;RegionType = "Mainland"
+
+	;; *
+	;; * Maturity level of this region (2 is adult, 1 is Mature, 0 is PG)
+	;; *
+	;MaturityLevel = 2
+
+	;; *
+	;; * Whether this region should be infinitely sized (you can walk off the borders)
+	;; *
+	;InfiniteRegion = false
+
+	;; *
+	;; * Multi-Tenancy. Only set if needed
+	;; *
+	;ScopeID = "00000000-0000-0000-0000-000000000000"
+
+	;; If you want to enable On-Demand running for this sim (only runs parts of the sim when it is needed),
+	;; Choose from the options below.
+	;; Medium - Loads terrain and parcels during startup
+	;; Both of the above methods do not run the heartbeat (but do runs scripts!)
+	;; Normal - A normal region
+	;StartupType = Normal

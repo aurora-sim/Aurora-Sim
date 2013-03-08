@@ -134,14 +134,55 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             if (info == null)
             {
             retry:
-                info = Aurora.Management.RegionManagerHelper.StartSynchronously(true,
-                    Management.RegionManagerPage.CreateRegion,
-                    simBase.ConfigSource, simBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), null);
+                bool noGui = false;
+                IConfig startupconfig = simBase.ConfigSource.Configs["Startup"];
+                if (startupconfig != null)
+                    noGui = startupconfig.GetBoolean("NoGUI", false);
+
+                if (noGui)
+                {
+                    info = ReadRegionInfoFromFile();
+                }
+                else
+                {
+                    info = Aurora.Management.RegionManagerHelper.StartSynchronously(true,
+                        Management.RegionManagerPage.CreateRegion,
+                        simBase.ConfigSource, simBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), null);
+                }
                 if (info == null)
                     goto retry;
                 newRegion = true;
             }
             return info;
+        }
+
+        private RegionInfo ReadRegionInfoFromFile()
+        {
+            try
+            {
+                Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument("/Regions/RegionConfig.ini");
+                RegionInfo info = new RegionInfo();
+                Nini.Ini.IniSection section = doc.Sections["Region"];
+                info.RegionID = UUID.Parse(section.GetValue("RegionID"));
+                info.RegionName = section.GetValue("RegionName");
+                info.RegionLocX = int.Parse(section.GetValue("RegionLocX"));
+                info.RegionLocY = int.Parse(section.GetValue("RegionLocY"));
+                info.RegionSizeX = int.Parse(section.GetValue("RegionSizeX"));
+                info.RegionSizeY = int.Parse(section.GetValue("RegionSizeY"));
+
+                System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(section.GetValue("InternalAddress"));
+                int intPort = int.Parse(section.GetValue("InternalPort"));
+                info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
+
+                info.ObjectCapacity = int.Parse(section.GetValue("MaxPrims"));
+                info.RegionType = section.GetValue("RegionType");
+                info.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(section.GetValue("MaturityLevel"));
+                info.InfiniteRegion = section.GetValue("InfiniteRegion").ToLower() == "true";
+                info.Startup = section.GetValue("StartupType") == "Normal" ? StartupType.Normal : StartupType.Medium;
+                info.ScopeID = UUID.Parse(section.GetValue("ScopeID"));
+            }
+            catch {  }
+            return null;
         }
 
         public virtual void SetRegion(IScene scene)

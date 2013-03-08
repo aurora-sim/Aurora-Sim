@@ -123,7 +123,6 @@ namespace Aurora.Management
                 textBox4.Text = "Mature";
             else
                 textBox4.Text = "Adult";
-            DisabledEdit.Checked = region.Disabled;
 #if (!ISWIN)
             textBox7.Text = string.Join(", ", region.UDPPorts.ConvertAll<string>(delegate(int i) { return i.ToString(); }).ToArray());
 #else
@@ -236,7 +235,6 @@ namespace Aurora.Management
                     maturityLevel = 0;
             }
             region.RegionSettings.Maturity = maturityLevel;
-            region.Disabled = DisabledEdit.Checked;
             int.TryParse(RegionSizeX.Text, out region.RegionSizeX);
             int.TryParse(RegionSizeY.Text, out region.RegionSizeY);
             region.Startup = ConvertIntToStartupType(startupType.SelectedIndex);
@@ -440,7 +438,6 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 vars.Add("Region Size X", region.RegionSizeX.ToString());
                 vars.Add("Region Size Y", region.RegionSizeY.ToString());
                 vars.Add("Maturity", region.AccessLevel.ToString());
-                vars.Add("Disabled", region.Disabled ? "checked" : "");
                 vars.Add("Startup Type", "");//Placeholder for the list later
                 vars.Add("Normal", region.Startup == StartupType.Normal ? "selected" : "");
                 vars.Add("Medium", region.Startup == StartupType.Medium ? "selected" : "");
@@ -468,7 +465,6 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             _startingRegionInfo.RegionSizeX = int.Parse(vars["Region Size X"]);
             _startingRegionInfo.RegionSizeY = int.Parse(vars["Region Size Y"]);
             _startingRegionInfo.AccessLevel = byte.Parse(vars["Maturity"]);
-            _startingRegionInfo.Disabled = vars["Disabled"] != null;
             _startingRegionInfo.Startup = vars["Startup Type"] == "Normal" ? StartupType.Normal : StartupType.Medium;
             _startingRegionInfo.InfiniteRegion = vars["Infinite Region"] != null;
             return BuildRegionManagerHTTPPage(_startingRegionInfo.RegionID);

@@ -43,9 +43,6 @@ namespace Aurora.Framework
 
     public class RegionInfo : AllScopeIDImpl
     {
-        public string RegionFile = String.Empty;
-        public bool Disabled = false;
-
         private RegionSettings m_regionSettings;
 
         private int m_objectCapacity = 0;
@@ -193,83 +190,6 @@ namespace Aurora.Framework
             get { return Utils.UIntsToLong((uint)RegionLocX, (uint)RegionLocY); }
         }
 
-        public void WriteNiniConfig(IConfigSource source)
-        {
-            try
-            {
-                //MUST reload or it will overwrite other changes!
-                source = new IniConfigSource(RegionFile, Nini.Ini.IniFileType.AuroraStyle);
-            }
-            catch (FileNotFoundException)
-            {
-                //If this happens, it is the first time a user has opened Aurora and the RegionFile doesn't exist 
-                // yet, so just let it gracefully fail and create itself later
-                return;
-            }
-
-            CreateIConfig(source);
-
-            source.Save();
-        }
-
-        public void CreateIConfig(IConfigSource source)
-        {
-            IConfig config = source.Configs[RegionName];
-
-            if (config != null)
-                source.Configs.Remove(config);
-
-            config = source.AddConfig(RegionName);
-
-            config.Set("RegionUUID", RegionID.ToString());
-
-            string location = String.Format("{0},{1}", m_regionLocX / 256, m_regionLocY / 256);
-            config.Set("Location", location);
-
-            config.Set("InternalAddress", m_internalEndPoint.Address.ToString());
-            config.Set("InternalPort", m_internalEndPoint.Port);
-
-            if (m_objectCapacity != 0)
-                config.Set("MaxPrims", m_objectCapacity);
-
-            if (ScopeID != UUID.Zero)
-                config.Set("ScopeID", ScopeID.ToString());
-
-            if (RegionType != String.Empty)
-                config.Set("RegionType", RegionType);
-
-            config.Set("AllowPhysicalPrims", AllowPhysicalPrims);
-            config.Set("AllowScriptCrossing", AllowScriptCrossing);
-            config.Set("TrustBinariesFromForeignSims", TrustBinariesFromForeignSims);
-            config.Set("SeeIntoThisSimFromNeighbor", SeeIntoThisSimFromNeighbor);
-            config.Set("RegionSizeX", RegionSizeX);
-            config.Set ("RegionSizeY", RegionSizeY);
-            config.Set ("RegionSizeZ", RegionSizeZ);
-
-            config.Set ("StartupType", Startup.ToString());
-
-            config.Set("NeighborPassword", Password.ToString());
-        }
-
-        public void SaveRegionToFile(string description, string filename)
-        {
-            if (filename.ToLower().EndsWith(".ini"))
-            {
-                IniConfigSource source = new IniConfigSource();
-                try
-                {
-                    source = new IniConfigSource(filename, Nini.Ini.IniFileType.AuroraStyle); // Load if it exists
-                }
-                catch (Exception)
-                {
-                }
-
-                WriteNiniConfig(source);
-
-                source.Save(filename);
-            }
-        }
-
         public OSDMap PackRegionInfoData()
         {
             OSDMap args = new OSDMap();
@@ -289,7 +209,6 @@ namespace Aurora.Framework
             OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(a => a));
             args["UDPPorts"] = ports;
             args["InfiniteRegion"] = OSD.FromBoolean(InfiniteRegion);
-            args["disabled"] = OSD.FromBoolean(Disabled);
             args["scope_id"] = OSD.FromUUID(ScopeID);
             args["all_scope_ids"] = AllScopeIDs.ToOSDArray();
             args["object_capacity"] = OSD.FromInteger(m_objectCapacity);
@@ -301,7 +220,8 @@ namespace Aurora.Framework
             args["startupType"] = OSD.FromInteger((int)Startup);
             args["RegionSettings"] = RegionSettings.ToOSD();
             args["GridSecureSessionID"] = GridSecureSessionID;
-            args["EnvironmentSettings"] = EnvironmentSettings;
+            if(EnvironmentSettings != null)
+                args["EnvironmentSettings"] = EnvironmentSettings;
             args["OpenRegionSettings"] = OpenRegionSettings.ToOSD();
             return args;
         }
@@ -342,8 +262,6 @@ namespace Aurora.Framework
             if (args.ContainsKey("password"))
                 Password = args["password"].AsUUID();
 
-            if (args.ContainsKey("disabled"))
-                Disabled = args["disabled"].AsBoolean();
             if (args.ContainsKey("scope_id"))
                 ScopeID = args["scope_id"].AsUUID();
             if (args.ContainsKey("all_scope_ids"))
