@@ -35,7 +35,6 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Modules.Appearance

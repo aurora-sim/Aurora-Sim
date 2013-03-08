@@ -72,7 +72,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel=OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel=ThreatLevel.Low)]
         public IAgentInfo GetAgent(UUID agentID)
         {
             IAgentInfo agent = new IAgentInfo();
@@ -119,7 +119,7 @@ namespace Aurora.Services.DataService
         ///   Note: we only allow for this on the grid side
         /// </summary>
         /// <param name = "agent"></param>
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public void UpdateAgent(IAgentInfo agent)
         {
             CacheAgent(agent);

@@ -33,10 +33,9 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class MapCAPS : ICapsServiceConnector
     {

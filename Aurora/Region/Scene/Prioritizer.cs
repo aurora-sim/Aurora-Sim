@@ -31,8 +31,7 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 /*
  * Steps to add a new prioritization policy:

@@ -33,9 +33,7 @@ using System.Reflection;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -473,7 +471,6 @@ namespace Aurora.Modules.EntityTransfer
         {
             //MainConsole.Instance.DebugFormat("[ENTITY TRANSFER MODULE]: Request to teleport {0} {1} home", client.FirstName, client.LastName);
 
-            //OpenSim.Services.Interfaces.PresenceInfo pinfo = m_aScene.PresenceService.GetAgent(client.SessionId);
             UserInfo uinfo = client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(client.AgentId.ToString());
             IUserAgentService uas = client.Scene.RequestModuleInterface<IUserAgentService> ();
                 

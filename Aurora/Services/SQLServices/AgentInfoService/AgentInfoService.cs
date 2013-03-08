@@ -33,9 +33,8 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class AgentInfoService : ConnectorBase, IService, IAgentInfoService
     {
@@ -71,7 +70,7 @@ namespace OpenSim.Services
 
         public virtual void FinishedStartup()
         {
-            m_agentInfoConnector = DataManager.RequestPlugin<IAgentInfoConnector>();
+            m_agentInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
             m_gridService = m_registry.RequestModuleInterface<IGridService>();
         }
 
@@ -84,7 +83,7 @@ namespace OpenSim.Services
             get { return this; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual UserInfo GetUserInfo(string userID)
         {
             object remoteValue = DoRemote(userID);
@@ -94,7 +93,7 @@ namespace OpenSim.Services
             return GetUserInfo(userID, true);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<UserInfo> GetUserInfos(List<string> userIDs)
         {
             object remoteValue = DoRemote(userIDs);
@@ -116,7 +115,7 @@ namespace OpenSim.Services
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<UserInfo> GetUserInfos(UUID regionID)
         {
             object remoteValue = DoRemote(regionID);
@@ -126,7 +125,7 @@ namespace OpenSim.Services
             return m_agentInfoConnector.GetByCurrentRegion(regionID.ToString());
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<string> GetAgentsLocations(string requestor, List<string> userIDs)
         {
             object remoteValue = DoRemote(requestor, userIDs);
@@ -147,7 +146,7 @@ namespace OpenSim.Services
             return new List<string>(infos);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
         {
             object remoteValue = DoRemote(userID, homeID, homePosition, homeLookAt);
@@ -158,7 +157,7 @@ namespace OpenSim.Services
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
             object remoteValue = DoRemote(userID, regionID, lastPosition, lastLookAt);
@@ -166,14 +165,14 @@ namespace OpenSim.Services
                 return;
 
             string uri = "";
-            Interfaces.GridRegion region = m_gridService.GetRegionByUUID(null, regionID);
+            Aurora.Framework.GridRegion region = m_gridService.GetRegionByUUID(null, regionID);
             if (region != null)
                 uri = region.ServerURI;
 
             m_agentInfoConnector.SetLastPosition(userID, regionID, uri, lastPosition, lastLookAt);
         }
 
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual void LockLoggedInStatus(string userID, bool locked)
         {
             /*object remoteValue = DoRemote(userID, locked);
@@ -186,7 +185,7 @@ namespace OpenSim.Services
                 m_lockedUsers.Remove(userID);
         }
 
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
             /*object remoteValue = DoRemote(userID, loggingIn, fireLoggedInEvent, enteringRegion);
@@ -225,7 +224,7 @@ namespace OpenSim.Services
                 {
                     agentUpdateValues["CurrentRegionID"] = enteringRegion;
                     string uri = "";
-                    Interfaces.GridRegion region = m_gridService.GetRegionByUUID(null, enteringRegion);
+                    Aurora.Framework.GridRegion region = m_gridService.GetRegionByUUID(null, enteringRegion);
                     if (region != null)
                         uri = region.ServerURI;
                     agentUpdateValues["CurrentRegionURI"] = uri;

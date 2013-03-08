@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Management
 {

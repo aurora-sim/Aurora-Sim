@@ -81,7 +81,7 @@ namespace Aurora.Services.DataService
 
         #region IGroupsServiceConnector Members
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID, UUID OwnerRoleID)
         {
             object remoteValue = DoRemote(groupID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, founderID, OwnerRoleID);
@@ -179,7 +179,7 @@ namespace Aurora.Services.DataService
             SetAgentActiveGroup(founderID, groupID);
         }
 
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public void UpdateGroupFounder(UUID groupID, UUID newOwner, bool keepOldOwnerInGroup)
         {
             /*object remoteValue = DoRemote(groupID, newOwner, keepOldOwnerInGroup);
@@ -205,7 +205,7 @@ namespace Aurora.Services.DataService
                 RemoveAgentFromGroup(newOwner, record.FounderID, groupID);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID, int membershipFee, int openEnrollment, int allowPublish, int maturePublish)
         {
             object remoteValue = DoRemote(requestingAgentID, groupID, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish);
@@ -230,7 +230,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
         {
             object remoteValue = DoRemote(requestingAgentID, groupID, noticeID, fromName, subject, message, ItemID, AssetType, ItemName);
@@ -255,7 +255,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public bool EditGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string subject, string message)
         {
             object remoteValue = DoRemote(requestingAgentID, groupID, noticeID, subject, message);
@@ -297,7 +297,7 @@ namespace Aurora.Services.DataService
             return data.Update("osgroupnotice", update, null, filter, null, null);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public bool RemoveGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID)
         {
             object remoteValue = DoRemote(requestingAgentID, groupID, noticeID);
@@ -331,7 +331,7 @@ namespace Aurora.Services.DataService
             return data.Delete("osgroupnotice", filter);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(AgentID, GroupID);
@@ -358,7 +358,7 @@ namespace Aurora.Services.DataService
             return gdata == null ? "" : gdata.Title;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID)
         {
             object remoteValue = DoRemote(RequestingAgentID, AgentID);
@@ -372,7 +372,7 @@ namespace Aurora.Services.DataService
             return (groups.Count != 0) ? UUID.Parse(groups[0]) : UUID.Zero;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public string SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID)
         {
             object remoteValue = DoRemote(AgentID, GroupID, RoleID);
@@ -392,7 +392,7 @@ namespace Aurora.Services.DataService
             return gdata == null ? "" : gdata.Title;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
@@ -430,7 +430,7 @@ namespace Aurora.Services.DataService
             SetAgentActiveGroup(AgentID, GroupID);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
             //Allow kicking yourself
@@ -464,7 +464,7 @@ namespace Aurora.Services.DataService
             return false;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string NameOf, string Description, string Title, ulong Powers)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, NameOf, Description, Title, Powers);
@@ -484,7 +484,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string NameOf, string Desc, string Title, ulong Powers)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, NameOf, Desc, Title, Powers);
@@ -517,7 +517,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void RemoveRoleFromGroup(UUID requestingAgentID, UUID RoleID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, RoleID, GroupID);
@@ -543,7 +543,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void AddAgentToRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
@@ -580,7 +580,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void RemoveAgentFromRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
@@ -605,7 +605,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices, int ListInProfile)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, AcceptNotices, ListInProfile);
@@ -630,7 +630,7 @@ namespace Aurora.Services.DataService
             data.Update("osgroupmembership", values, null, filter, null, null);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void AddAgentGroupInvite(UUID requestingAgentID, UUID inviteID, UUID GroupID, UUID roleID, UUID AgentID, string FromAgentName)
         {
             object remoteValue = DoRemote(requestingAgentID, inviteID, GroupID, roleID, AgentID, FromAgentName);
@@ -655,7 +655,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void RemoveAgentInvite(UUID requestingAgentID, UUID inviteID)
         {
             object remoteValue = DoRemote(requestingAgentID, inviteID);
@@ -667,7 +667,7 @@ namespace Aurora.Services.DataService
             data.Delete("osgroupinvite", filter);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
         {
             object remoteValue = DoRemote(agentID, info);
@@ -678,7 +678,7 @@ namespace Aurora.Services.DataService
                 GenericUtils.AddGeneric(info.GroupID, "Proposal", info.VoteID.ToString(), info.ToOSD(), data);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID)
         {
             object remoteValue = DoRemote(agentID, groupID);
@@ -696,7 +696,7 @@ namespace Aurora.Services.DataService
             return proposals;//Return only ones that are still running
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID)
         {
             object remoteValue = DoRemote(agentID, groupID);
@@ -744,7 +744,7 @@ namespace Aurora.Services.DataService
             return "";
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote)
         {
             object remoteValue = DoRemote(agentID, groupID, proposalID, vote);
@@ -759,7 +759,7 @@ namespace Aurora.Services.DataService
             GenericUtils.AddGeneric(groupID, proposalID.ToString(), agentID.ToString(), map, data);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
@@ -770,7 +770,7 @@ namespace Aurora.Services.DataService
             return GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupIDs);
@@ -813,7 +813,7 @@ namespace Aurora.Services.DataService
             return uint.Parse(data.Query(new[] { "COUNT(NoticeID)" }, "osgroupnotice", filter, null, null, null)[0]);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields)
         {
             object remoteValue = DoRemote(requestingAgentID, boolFields);
@@ -852,7 +852,7 @@ namespace Aurora.Services.DataService
             };
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, GroupName);
@@ -889,7 +889,7 @@ namespace Aurora.Services.DataService
             return (osgroupsData.Count == 0) ? null : GroupRecordQueryResult2GroupRecord(osgroupsData);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
         {
             //            List<string> filter = new List<string>();
@@ -946,7 +946,7 @@ namespace Aurora.Services.DataService
             return Reply;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, List<UUID> GroupIDs)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupIDs);
@@ -991,7 +991,7 @@ namespace Aurora.Services.DataService
             return Reply;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
@@ -1049,7 +1049,7 @@ namespace Aurora.Services.DataService
             return GPD;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupMembershipData GetGroupMembershipData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
@@ -1118,7 +1118,7 @@ namespace Aurora.Services.DataService
             return GMD;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupTitlesData> GetGroupTitles(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
@@ -1150,7 +1150,7 @@ namespace Aurora.Services.DataService
             return titles;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupMembershipData> GetAgentGroupMemberships(UUID requestingAgentID, UUID AgentID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID);
@@ -1213,7 +1213,7 @@ namespace Aurora.Services.DataService
             return results;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupInviteInfo GetAgentToGroupInvite(UUID requestingAgentID, UUID inviteID)
         {
             object remoteValue = DoRemote(requestingAgentID, inviteID);
@@ -1244,7 +1244,7 @@ namespace Aurora.Services.DataService
             return invite;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
         {
             QueryFilter filter = new QueryFilter();
@@ -1273,7 +1273,7 @@ namespace Aurora.Services.DataService
             return invites;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
@@ -1338,7 +1338,7 @@ namespace Aurora.Services.DataService
             return GMD;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
@@ -1359,8 +1359,8 @@ namespace Aurora.Services.DataService
             {
                 GroupMembersData d = GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent));
                 if (d == null) continue;
-                OpenSim.Services.Interfaces.UserInfo info =
-                    m_registry.RequestModuleInterface<OpenSim.Services.Interfaces.IAgentInfoService>().GetUserInfo(
+                UserInfo info =
+                    m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(
                         d.AgentID.ToString());
                 if (info != null && !info.IsOnline)
                     d.OnlineStatus = info.LastLogin.ToShortDateString();
@@ -1373,7 +1373,7 @@ namespace Aurora.Services.DataService
             return list;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, uint? start, uint? count, uint queryflags)
         {
             object remoteValue = DoRemote(requestingAgentID, search, start, count, queryflags);
@@ -1418,7 +1418,7 @@ namespace Aurora.Services.DataService
             return Reply;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupRolesData> GetAgentGroupRoles(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
             // I couldn't actually get this function to call when testing changes
@@ -1465,7 +1465,7 @@ namespace Aurora.Services.DataService
             return RolesData;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID GroupID)
         {
             // Can't use joins here without a group by as well
@@ -1511,7 +1511,7 @@ namespace Aurora.Services.DataService
             return GroupRoles;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupRoleMembersData> GetGroupRoleMembers(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
@@ -1552,7 +1552,7 @@ namespace Aurora.Services.DataService
             return RoleMembers;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupNoticeData GetGroupNoticeData(UUID requestingAgentID, UUID noticeID)
         {
             object remoteValue = DoRemote(requestingAgentID, noticeID);
@@ -1600,7 +1600,7 @@ namespace Aurora.Services.DataService
             return GND;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID)
         {
             object remoteValue = DoRemote(requestingAgentID, noticeID);
@@ -1673,7 +1673,7 @@ namespace Aurora.Services.DataService
             return GND;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, start, count, GroupID);
@@ -1683,7 +1683,7 @@ namespace Aurora.Services.DataService
             return GetGroupNotices(requestingAgentID, start, count, new List<UUID>(new[] { GroupID }));
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, List<UUID> GroupIDs)
         {
             object remoteValue = DoRemote(requestingAgentID, start, count, GroupIDs);
@@ -1752,7 +1752,7 @@ namespace Aurora.Services.DataService
             return AllNotices;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupProfileData GetGroupProfile(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);

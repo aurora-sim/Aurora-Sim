@@ -37,9 +37,8 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class InventoryCAPS : ICapsServiceConnector
     {
@@ -57,7 +56,7 @@ namespace OpenSim.Services.CapsService
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
-            m_inventoryData = DataManager.RequestPlugin<IInventoryData>();
+            m_inventoryData = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
 
             HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                                     OSHttpResponse httpResponse)

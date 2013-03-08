@@ -11,7 +11,6 @@ using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Web
 {

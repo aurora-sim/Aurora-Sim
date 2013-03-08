@@ -36,7 +36,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Modules.Estate

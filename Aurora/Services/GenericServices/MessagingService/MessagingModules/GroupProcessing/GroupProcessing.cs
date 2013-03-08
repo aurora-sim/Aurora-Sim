@@ -35,9 +35,8 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.MessagingService
+namespace Aurora.Services
 {
     public class GroupProcessing : IService
     {
@@ -95,7 +94,7 @@ namespace OpenSim.Services.MessagingService
                 UUID agentID = message["AgentID"].AsUUID();
                 UUID roleID = message["RoleID"].AsUUID();
                 byte type = (byte) message["Type"].AsInteger();
-                IGroupsServiceConnector con = DataManager.RequestPlugin<IGroupsServiceConnector>();
+                IGroupsServiceConnector con = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
                 List<GroupRoleMembersData> members = con.GetGroupRoleMembers(agentID, groupID);
                 List<GroupRolesData> roles = con.GetGroupRoles(agentID, groupID);
                 GroupRolesData everyone = null;

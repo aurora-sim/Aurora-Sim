@@ -28,7 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using OpenSim.Services.Interfaces;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {

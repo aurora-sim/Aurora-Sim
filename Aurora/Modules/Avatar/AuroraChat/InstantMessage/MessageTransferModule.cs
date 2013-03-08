@@ -37,8 +37,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.Chat
 {

@@ -37,7 +37,6 @@ using Nwc.XmlRpc;
 using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Modules.Groups

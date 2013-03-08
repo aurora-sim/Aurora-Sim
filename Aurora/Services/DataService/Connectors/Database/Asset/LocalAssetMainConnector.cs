@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService.Connectors.Database.Asset
 {

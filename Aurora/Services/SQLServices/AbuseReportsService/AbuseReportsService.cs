@@ -31,9 +31,8 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.AbuseReports
+namespace Aurora.Services
 {
     public class AbuseReportsService : ConnectorBase, IAbuseReports, IService
     {
@@ -44,26 +43,26 @@ namespace OpenSim.Services.AbuseReports
 
         #region IAbuseReports Members
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void AddAbuseReport(AbuseReport abuse_report)
         {
             object remoteValue = DoRemote(abuse_report);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 conn.AddAbuseReport(abuse_report);
         }
 
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
             /*object remoteValue = DoRemote(Number, Password);
             if (remoteValue != null || m_doRemoteOnly)
                 return (AbuseReport)remoteValue;*/
 
-            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             return (conn != null) ? conn.GetAbuseReport(Number, Password) : null;
         }
 
@@ -75,18 +74,18 @@ namespace OpenSim.Services.AbuseReports
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number)
         {
-            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             return (conn != null) ? conn.GetAbuseReport(Number) : null;
         }
 
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
             /*object remoteValue = DoRemote(report, Password);
             if (remoteValue != null || m_doRemoteOnly)
                 return;*/
 
-            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 conn.UpdateAbuseReport(report, Password);
         }
@@ -97,7 +96,7 @@ namespace OpenSim.Services.AbuseReports
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<AbuseReport>)remoteValue;
 
-            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 return conn.GetAbuseReports(start, count, active);
             else
@@ -106,7 +105,7 @@ namespace OpenSim.Services.AbuseReports
 
         public void UpdateAbuseReport(AbuseReport report)
         {
-            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 conn.UpdateAbuseReport(report);
         }

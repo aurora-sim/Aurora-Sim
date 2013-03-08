@@ -27,7 +27,7 @@
 
 using Aurora.Framework;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     // Generic Authorization service used for authorizing principals in a particular region
 

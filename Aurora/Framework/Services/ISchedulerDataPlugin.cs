@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using Aurora.Framework;
 using OpenMetaverse;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public interface ISchedulerDataPlugin : IAuroraDataPlugin
     {

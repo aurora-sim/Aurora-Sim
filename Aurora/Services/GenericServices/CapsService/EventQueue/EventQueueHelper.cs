@@ -34,7 +34,7 @@ using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class EventQueueHelper
     {

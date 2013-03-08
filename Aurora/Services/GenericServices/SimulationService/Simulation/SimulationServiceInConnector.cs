@@ -30,9 +30,8 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class SimulationServiceInConnector : IService
     {

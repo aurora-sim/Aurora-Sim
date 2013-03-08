@@ -34,10 +34,9 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
-namespace OpenSim.Services.MessagingService
+namespace Aurora.Services
 {
     public class EstateProcessing : IService
     {
@@ -79,7 +78,7 @@ namespace OpenSim.Services.MessagingService
             if (FunctionName == "EstateUpdated")
             {
                 EstateSettings es = (EstateSettings) parameters;
-                IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
                 ISyncMessagePosterService asyncPoster =
                     m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                 IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
@@ -124,7 +123,7 @@ namespace OpenSim.Services.MessagingService
                 {
                     if (manager.Scene.RegionInfo.EstateSettings.EstateID == estateID)
                     {
-                        IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
+                        IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
                         if (estateConnector != null)
                         {
                             EstateSettings es = null;

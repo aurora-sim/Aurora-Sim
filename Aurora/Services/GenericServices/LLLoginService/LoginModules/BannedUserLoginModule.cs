@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Aurora.Framework;
-using OpenSim.Services.LLLoginService;
-using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using Nini.Config;
 using System.Collections;
 using System.IO;
 
-namespace OpenSim.Services.LLLoginService
+namespace Aurora.Services
 {
     public class BannedUserLoginModule : ILoginModule
     {

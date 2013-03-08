@@ -31,7 +31,6 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Gestures
 {

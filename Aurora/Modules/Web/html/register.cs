@@ -8,7 +8,6 @@ using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Web
 {

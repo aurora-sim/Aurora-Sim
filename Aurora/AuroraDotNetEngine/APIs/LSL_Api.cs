@@ -44,8 +44,7 @@ using OpenSim.Region.Framework.Scenes.Serialization;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 using PrimType = Aurora.Framework.PrimType;
 using AssetLandmark = Aurora.Framework.AssetLandmark;
 

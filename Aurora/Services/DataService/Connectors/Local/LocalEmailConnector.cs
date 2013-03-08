@@ -70,7 +70,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<Email> GetEmails(UUID objectID)
         {
             object remoteValue = DoRemote(objectID);
@@ -87,7 +87,7 @@ namespace Aurora.Services.DataService
         ///   Adds a new offline message for the user.
         /// </summary>
         /// <param name = "message"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void InsertEmail(Email email)
         {
             object remoteValue = DoRemote(email);

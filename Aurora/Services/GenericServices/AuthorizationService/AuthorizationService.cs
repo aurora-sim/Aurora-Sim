@@ -31,9 +31,8 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.AuthorizationService
+namespace Aurora.Services
 {
     public class AuthorizationService : IAuthorizationService, IService
     {

@@ -33,7 +33,7 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     /// <summary>
     ///   This controls what regions and users have Caps SEED requests and all of the Cap handlers associated with those requests

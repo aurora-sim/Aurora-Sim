@@ -37,10 +37,9 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Capabilities;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
-namespace OpenSim.Services.MessagingService
+namespace Aurora.Services
 {
     public class AgentProcessing : IService, IAgentProcessing
     {

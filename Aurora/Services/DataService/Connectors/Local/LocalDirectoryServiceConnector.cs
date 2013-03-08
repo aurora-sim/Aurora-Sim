@@ -38,9 +38,7 @@ using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using EventFlags = OpenMetaverse.DirectoryManager.EventFlags;
-
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services.DataService
 {

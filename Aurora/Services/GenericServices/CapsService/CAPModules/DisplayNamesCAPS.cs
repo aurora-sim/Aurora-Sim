@@ -41,9 +41,8 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class DisplayNamesCAPS : ICapsServiceConnector
     {
@@ -69,7 +68,7 @@ namespace OpenSim.Services.CapsService
                     bannedNames = new List<string>(bannedNamesString.Split(','));
             }
             m_service = service;
-            m_profileConnector = DataManager.RequestPlugin<IProfileConnector>();
+            m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
             m_eventQueue = service.Registry.RequestModuleInterface<IEventQueueService>();
             m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
 
@@ -179,7 +178,7 @@ namespace OpenSim.Services.CapsService
                     if (account != null)
                     {
                         IUserProfileInfo info =
-                            DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
+                            Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
                         if (info != null)
                             PackUserInfo(info, account, ref agents);
                         else
@@ -195,7 +194,7 @@ namespace OpenSim.Services.CapsService
                 if (account != null)
                 {
                     IUserProfileInfo info =
-                        DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
+                        Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
                     if (info != null)
                         PackUserInfo(info, account, ref agents);
                     else

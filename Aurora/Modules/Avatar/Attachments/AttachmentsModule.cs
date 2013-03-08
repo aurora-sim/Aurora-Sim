@@ -94,7 +94,7 @@ namespace Aurora.Modules.Attachments
             RemoveRegion(m_scene);
         }
 
-        protected void AgentIsLeaving(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+        protected void AgentIsLeaving(IScenePresence presence, Aurora.Framework.GridRegion destination)
         {
             //If its a root agent, we need to save all attachments as well
             if(!presence.IsChildAgent)
@@ -173,7 +173,7 @@ namespace Aurora.Modules.Attachments
             }
         }
 
-        public void SuspendAvatar(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+        public void SuspendAvatar(IScenePresence presence, Aurora.Framework.GridRegion destination)
         {
             presence.AttachmentsLoaded = false;
             ISceneEntity[] attachments = GetAttachmentsForAvatar(presence.UUID);
@@ -214,7 +214,7 @@ namespace Aurora.Modules.Attachments
                 bool sendUpdates = destination == null;
                 if (!sendUpdates)
                 {
-                    List<OpenSim.Services.Interfaces.GridRegion> regions = presence.Scene.RequestModuleInterface<IGridRegisterModule>().GetNeighbors(presence.Scene);
+                    List<Aurora.Framework.GridRegion> regions = presence.Scene.RequestModuleInterface<IGridRegisterModule>().GetNeighbors(presence.Scene);
                     regions.RemoveAll((r) => r.RegionID != destination.RegionID);
                     sendUpdates = regions.Count == 0;
                 }

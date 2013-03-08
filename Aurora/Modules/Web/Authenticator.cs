@@ -5,7 +5,7 @@ using System.Text;
 using System.Net;
 using OpenMetaverse;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
+using Aurora.Framework;
 
 namespace Aurora.Modules.Web
 {

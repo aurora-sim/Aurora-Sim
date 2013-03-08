@@ -34,9 +34,8 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class Scheduler : ConnectorBase, IScheduleService, IService
     {
@@ -76,7 +75,7 @@ namespace OpenSim.Services
         {
             if (!m_doRemoteCalls)
             {
-                m_database = DataManager.RequestPlugin<ISchedulerDataPlugin>();
+                m_database = Aurora.DataManager.DataManager.RequestPlugin<ISchedulerDataPlugin>();
                 if (m_database != null)
                     m_enabled = true;
 

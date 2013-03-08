@@ -35,7 +35,6 @@ using System.Text;
 using System.Xml;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes.Serialization
 {

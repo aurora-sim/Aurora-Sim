@@ -5,8 +5,7 @@ using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Framework
 {/// <summary>
@@ -243,7 +242,7 @@ namespace Aurora.Framework
         public event RegionUp OnRegionUp;
         public event RegionUp OnRegionDown;
 
-        public delegate void CachedUserInfo(UUID agentID, OpenSim.Services.Interfaces.CachedUserInfo info);
+        public delegate void CachedUserInfo(UUID agentID, Aurora.Framework.CachedUserInfo info);
         public event CachedUserInfo OnCachedUserInfo;
 
         public class LandBuyArgs : EventArgs
@@ -1685,7 +1684,7 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerOnUserCachedData(UUID agentID, OpenSim.Services.Interfaces.CachedUserInfo cache)
+        public void TriggerOnUserCachedData(UUID agentID, Aurora.Framework.CachedUserInfo cache)
         {
             CachedUserInfo handlerOnCachedUserInfo = OnCachedUserInfo;
             if (handlerOnCachedUserInfo != null)

@@ -35,7 +35,6 @@ using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Modules.Archivers;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.DefaultInventoryIARLoader
 {

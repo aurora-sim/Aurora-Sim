@@ -30,9 +30,9 @@ using System.Collections;
 using System.IO;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
+using Aurora.Framework;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class SimulatorFeatures : ICapsServiceConnector
     {

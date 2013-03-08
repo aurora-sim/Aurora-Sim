@@ -34,8 +34,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using FriendInfo = Aurora.Framework.FriendInfo;
 
 namespace Aurora.Modules.Friends
 {
@@ -303,15 +302,8 @@ namespace Aurora.Modules.Friends
             FriendInfo[] friends = GetFriends(agentID);
             foreach (FriendInfo fi in friends)
             {
-                UUID friendID;
-                string url = "", first = "", last = "", secret = "";
-                HGUtil.ParseUniversalUserIdentifier(fi.Friend, out friendID, out url, out first, out last,
-                                                        out secret);
-                if (friendID != UUID.Zero)
-                {
-                    if (fi.TheirFlags == -1)
-                        outstanding.Add(fi.Friend);
-                }
+                if (fi.TheirFlags == -1)
+                    outstanding.Add(fi.Friend);
             }
 
             GridInstantMessage im = new GridInstantMessage(client.Scene, UUID.Zero, String.Empty, agentID,
@@ -321,12 +313,8 @@ namespace Aurora.Modules.Friends
             foreach (string fid in outstanding)
             {
                 UUID fromAgentID;
-                string url = "", first = "", last = "", secret = "";
                 if (!UUID.TryParse(fid, out fromAgentID))
-                    if (
-                        !HGUtil.ParseUniversalUserIdentifier(fid, out fromAgentID, out url, out first, out last,
-                                                             out secret))
-                        continue;
+                    continue;
 
                 UserAccount account = m_scene.UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs,
                                                                                     fromAgentID);
@@ -334,8 +322,6 @@ namespace Aurora.Modules.Friends
                 im.fromAgentID = fromAgentID;
                 if (account != null)
                     im.fromAgentName = account.Name;
-                else
-                    im.fromAgentName = first + " " + last;
                 im.offline = 1;
                 im.imSessionID = im.fromAgentID;
 
@@ -457,11 +443,8 @@ namespace Aurora.Modules.Friends
                 if (fi.MyFlags == 0)
                 {
                     UUID fromAgentID;
-                    string url = "", first = "", last = "", secret = "";
                     if (!UUID.TryParse(fi.Friend, out fromAgentID))
-                        if (
-                            !HGUtil.ParseUniversalUserIdentifier(fi.Friend, out fromAgentID, out url, out first, out last, out secret))
-                            continue;
+                        continue;
                     if (fromAgentID == friendID)//Get those pesky HG travelers as well
                         FriendsService.Delete(agentID, fi.Friend);
                 }
@@ -565,18 +548,13 @@ namespace Aurora.Modules.Friends
                 if(fi.MyFlags == 0)
                 {
                     UUID fromAgentID;
-                    string url = "", first = "", last = "", secret = "";
                     if (!UUID.TryParse(fi.Friend, out fromAgentID))
-                        if (
-                            !HGUtil.ParseUniversalUserIdentifier(fi.Friend, out fromAgentID, out url, out first, out last, out secret))
-                            continue;
+                        continue;
 
                     UserAccount account = m_scene.UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs, fromAgentID);
                     im.fromAgentID = fromAgentID;
                     if (account != null)
                         im.fromAgentName = account.Name;
-                    else
-                        im.fromAgentName = first + " " + last;
                     im.offline = 1;
                     im.imSessionID = im.fromAgentID;
 

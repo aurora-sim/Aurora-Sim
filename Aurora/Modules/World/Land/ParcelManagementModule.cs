@@ -41,8 +41,7 @@ using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.Land
 {

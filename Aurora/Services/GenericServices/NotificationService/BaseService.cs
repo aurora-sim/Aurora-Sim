@@ -12,7 +12,7 @@ using log4net.Repository;
 using Nini.Config;
 using log4net;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class BaseService : IApplicationPlugin
     {

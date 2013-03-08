@@ -78,7 +78,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GridInstantMessage> GetOfflineMessages(UUID agentID)
         {
             object remoteValue = DoRemote(agentID);
@@ -98,7 +98,7 @@ namespace Aurora.Services.DataService
         ///   Adds a new offline message for the user.
         /// </summary>
         /// <param name = "message"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool AddOfflineMessage(GridInstantMessage message)
         {
             object remoteValue = DoRemote(message);

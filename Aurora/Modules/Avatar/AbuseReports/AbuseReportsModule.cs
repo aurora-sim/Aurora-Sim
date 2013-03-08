@@ -41,7 +41,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.AbuseReports
 {

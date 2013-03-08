@@ -34,7 +34,6 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.SQLServices.UserAccountService
 {
@@ -121,7 +120,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             get { return this; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public UserAccount GetUserAccount(List<UUID> scopeIDs, string firstName, string lastName)
         {
             UserAccount account;
@@ -158,7 +157,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             m_cache.Cache(account.PrincipalID, account);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public UserAccount GetUserAccount(List<UUID> scopeIDs, string name)
         {
             UserAccount account;
@@ -194,7 +193,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             return d[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low, RenamedMethod="GetUserAccountUUID")]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod="GetUserAccountUUID")]
         public UserAccount GetUserAccount(List<UUID> scopeIDs, UUID principalID)
         {
             UserAccount account;
@@ -227,7 +226,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             return d[0];
         }
 
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public bool StoreUserAccount(UserAccount data)
         {
             /*object remoteValue = DoRemoteByURL("UserAccountServerURI", data);
@@ -240,7 +239,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             return m_Database.Store(data);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query)
         {
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
@@ -256,7 +255,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             return ret;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query, uint? start, uint? count)
         {
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
@@ -272,7 +271,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             return ret;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, int level, int flags)
         {
             object remoteValue = DoRemoteByURL("UserAccountServerURI", level, flags);
@@ -288,7 +287,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             return ret;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public uint NumberOfUserAccounts(List<UUID> scopeIDs, string query)
         {
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
@@ -319,7 +318,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
         ///   Create a user
         /// </summary>
         /// <param name = "account"></param>
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public string CreateUser(UserAccount newAcc, string password)
         {
             /*object remoteValue = DoRemoteByURL("UserAccountServerURI", newAcc, password);
@@ -363,7 +362,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             }
         }
 
-        //[CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
         {
             /*object remoteValue = DoRemoteByURL("UserAccountServerURI", userID, password, archiveInformation, wipeFromDatabase);

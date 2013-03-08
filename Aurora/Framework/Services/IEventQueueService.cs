@@ -32,7 +32,7 @@ using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public interface IEventQueueService
     {

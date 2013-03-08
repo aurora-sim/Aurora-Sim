@@ -33,11 +33,10 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using FriendInfo = Aurora.Framework.FriendInfo;
+using GridRegion = Aurora.Framework.GridRegion;
 
-namespace OpenSim.Services.MessagingService
+namespace Aurora.Services
 {
     public class FriendsProcessing : IService
     {

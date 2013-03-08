@@ -32,7 +32,7 @@ using GlynnTucker.Cache;
 using Nini.Config;
 using Aurora.Framework;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class GlynnTuckerAssetCache : IService, IImprovedAssetCache
     {

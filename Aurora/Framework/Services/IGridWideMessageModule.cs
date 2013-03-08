@@ -27,7 +27,7 @@
 
 using OpenMetaverse;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public interface IGridWideMessageModule
     {

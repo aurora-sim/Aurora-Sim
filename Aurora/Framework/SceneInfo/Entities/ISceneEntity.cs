@@ -31,7 +31,6 @@ using System.Drawing;
 using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Framework
 {

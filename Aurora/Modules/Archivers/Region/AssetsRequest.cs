@@ -32,7 +32,6 @@ using System.Reflection;
 using System.Timers;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {

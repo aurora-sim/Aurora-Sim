@@ -193,7 +193,7 @@ namespace Aurora.Simulation.Base
                 Util.InitThreadPool(stpMaxThreads);
 
             //Set up console forcefully
-            OpenSim.Services.BaseService consoleService = new OpenSim.Services.BaseService();
+            Aurora.Services.BaseService consoleService = new Aurora.Services.BaseService();
             consoleService.PreStartup(this);
 
             //Fix the default prompt

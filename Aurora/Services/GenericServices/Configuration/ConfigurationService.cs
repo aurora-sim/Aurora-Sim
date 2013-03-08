@@ -31,9 +31,8 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.ConfigurationService
+namespace Aurora.Services
 {
     /// <summary>
     ///   This is an application plugin so that it loads asap as it is used by many things (IService modules especially)

@@ -39,9 +39,8 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class ServerConnector : IService
     {

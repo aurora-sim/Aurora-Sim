@@ -62,7 +62,7 @@ namespace Aurora.Services.DataService
             get { return "IAssetConnector"; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void UpdateLSLData(string token, string key, string value)
         {
             object remoteValue = DoRemote(token, key, value);
@@ -84,7 +84,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)] 
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)] 
         public List<string> FindLSLData(string token, string key)
         {
             object remoteValue = DoRemote(token, key);

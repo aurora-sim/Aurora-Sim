@@ -32,9 +32,8 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.MessagingService
+namespace Aurora.Services
 {
     public class SyncMessageRecievedService : IService, ISyncMessageRecievedService
     {

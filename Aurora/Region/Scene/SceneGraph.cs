@@ -1452,7 +1452,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ISceneChildEntity part = m_parentScene.GetSceneObjectPart (LocalID);
                     part.Material = Convert.ToByte(material);
                     //Update the client here as well... we changed restitution and friction in the physics engine probably
-                    Services.Interfaces.IEventQueueService eqs = m_parentScene.RequestModuleInterface<Services.Interfaces.IEventQueueService> ();
+                    IEventQueueService eqs = m_parentScene.RequestModuleInterface<IEventQueueService> ();
                     if (eqs != null)
                         eqs.ObjectPhysicsProperties(new[] { part }, remoteClient.AgentId, m_parentScene.RegionInfo.RegionID);
 

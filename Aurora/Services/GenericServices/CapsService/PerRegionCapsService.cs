@@ -28,10 +28,9 @@
 using System.Collections.Generic;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     /// <summary>
     ///   This keeps track of what clients are in the given region

@@ -32,7 +32,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public delegate void AssetRetrieved(string id, Object sender, AssetBase asset);
 

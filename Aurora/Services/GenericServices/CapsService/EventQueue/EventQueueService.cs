@@ -39,9 +39,8 @@ using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class EventQueueService : ConnectorBase, IService, IEventQueueService
     {
@@ -92,7 +91,7 @@ namespace OpenSim.Services.CapsService
             return eventQueueService.Enqueue(ev);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual void EnqueueInternal(string o, UUID agentID, UUID regionID)
         {
             if (m_doRemoteCalls && m_doRemoteOnly)

@@ -34,7 +34,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Permissions
 {

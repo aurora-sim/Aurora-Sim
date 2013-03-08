@@ -31,14 +31,13 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 using Nwc.XmlRpc;
 using System.Net;
 using System.Collections;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class LLLoginServiceInConnector : IService
     {

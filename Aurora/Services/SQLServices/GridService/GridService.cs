@@ -35,8 +35,7 @@ using Aurora.Framework.Servers.HttpServer;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Services.SQLServices.GridService
@@ -302,7 +301,7 @@ namespace Aurora.Services.SQLServices.GridService
             return ret;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual int GetRegionFlags(List<UUID> scopeIDs, UUID regionID)
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionID);

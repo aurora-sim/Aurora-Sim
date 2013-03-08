@@ -541,7 +541,7 @@ namespace Aurora.Modules.Startup
             private readonly List<LandData> m_parcels = new List<LandData>();
             private bool m_merge = false;
             private bool m_loadAssets = false;
-            private GenericAccountCache<OpenSim.Services.Interfaces.UserAccount> m_cache = new GenericAccountCache<OpenSim.Services.Interfaces.UserAccount>();
+            private GenericAccountCache<UserAccount> m_cache = new GenericAccountCache<UserAccount>();
             private List<SceneObjectGroup> m_groups = new List<SceneObjectGroup>();
 
             public bool IsArchiving
@@ -895,7 +895,7 @@ namespace Aurora.Modules.Startup
 
             private bool ResolveUserUuid (UUID uuid)
             {
-                OpenSim.Services.Interfaces.UserAccount acc;
+                UserAccount acc;
                 if (m_cache.Get(uuid, out acc))
                     return acc != null;
                 acc = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, uuid);

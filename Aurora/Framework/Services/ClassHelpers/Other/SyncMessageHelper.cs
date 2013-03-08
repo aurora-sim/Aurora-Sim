@@ -28,7 +28,7 @@
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Framework
 {

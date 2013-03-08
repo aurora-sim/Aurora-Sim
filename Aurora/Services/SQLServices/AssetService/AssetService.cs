@@ -32,7 +32,6 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.SQLServices.AssetService
 {
@@ -105,13 +104,13 @@ namespace Aurora.Services.SQLServices.AssetService
             get { return this; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase GetMesh(string id)
         {
             return Get(id);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase Get(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -136,7 +135,7 @@ namespace Aurora.Services.SQLServices.AssetService
             return asset;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase GetCached(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -145,7 +144,7 @@ namespace Aurora.Services.SQLServices.AssetService
             return null;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual byte[] GetData(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -168,7 +167,7 @@ namespace Aurora.Services.SQLServices.AssetService
             return new byte[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool GetExists(string id)
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
@@ -178,7 +177,7 @@ namespace Aurora.Services.SQLServices.AssetService
             return m_database.ExistsAsset(UUID.Parse(id));
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual void Get(String id, Object sender, AssetRetrieved handler)
         {
             Util.FireAndForget((o) =>
@@ -187,7 +186,7 @@ namespace Aurora.Services.SQLServices.AssetService
                 });
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual UUID Store(AssetBase asset)
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", asset);
@@ -209,7 +208,7 @@ namespace Aurora.Services.SQLServices.AssetService
             return asset != null ? asset.ID : UUID.Zero;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual UUID UpdateContent(UUID id, byte[] data)
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id, data);
@@ -224,7 +223,7 @@ namespace Aurora.Services.SQLServices.AssetService
             return newID;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool Delete(UUID id)
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id);

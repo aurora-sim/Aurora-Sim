@@ -32,9 +32,8 @@ using System.Net;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class PerClientBasedCapsService : IClientCapsService
     {

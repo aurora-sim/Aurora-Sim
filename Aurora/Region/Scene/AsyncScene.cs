@@ -33,7 +33,6 @@ using Nini.Config;
 using Aurora.Framework;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {

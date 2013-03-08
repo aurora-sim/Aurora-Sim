@@ -69,7 +69,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "telehub"></param>
         /// <param name="regionhandle"> </param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void AddTelehub(Telehub telehub, ulong regionhandle)
         {
             object remoteValue = DoRemote(telehub, regionhandle);
@@ -121,7 +121,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "regionID"></param>
         /// <param name="regionHandle"> </param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void RemoveTelehub(UUID regionID, ulong regionHandle)
         {
             object remoteValue = DoRemote(regionID, regionHandle);
@@ -144,7 +144,7 @@ namespace Aurora.Services.DataService
         /// <param name = "regionID">Region ID</param>
         /// <param name="regionHandle"> </param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public Telehub FindTelehub(UUID regionID, ulong regionHandle)
         {
             object remoteValue = DoRemote(regionID, regionHandle);

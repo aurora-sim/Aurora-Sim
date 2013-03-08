@@ -35,9 +35,8 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
+namespace Aurora.Services
 {
     public class GridWideMessageModule : IService, IGridWideMessageModule
     {

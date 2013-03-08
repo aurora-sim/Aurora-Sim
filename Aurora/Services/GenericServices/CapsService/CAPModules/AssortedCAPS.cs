@@ -30,17 +30,16 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Web;
-using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 using OpenMetaverse;
 using Aurora.DataManager;
 using OpenMetaverse.StructuredData;
 using System.Text;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class AssortedCAPS : ICapsServiceConnector
     {
@@ -137,7 +136,7 @@ namespace OpenSim.Services.CapsService
             OSDMap rm = OSDParser.DeserializeLLSDXml(request) as OSDMap;
             if (rm == null)
                 return MainServer.BadRequest;
-            IAgentConnector AgentFrontend = DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend != null)
             {
                 IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
@@ -166,7 +165,7 @@ namespace OpenSim.Services.CapsService
             {
                 OSDMap map = new OSDMap();
                 map["agent_id"] = account.PrincipalID;
-                IUserProfileInfo profileInfo = DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
+                IUserProfileInfo profileInfo = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
                 map["display_name"] = (profileInfo == null || profileInfo.DisplayName == "") ? account.Name : profileInfo.DisplayName;
                 map["username"] = account.Name;
                 map["slid"] = account.PrincipalID;
@@ -191,7 +190,7 @@ namespace OpenSim.Services.CapsService
                 maxLevel = 1;
             if (Level == "A")
                 maxLevel = 2;
-            IAgentConnector data = DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector data = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
             if (data != null)
             {
                 IAgentInfo agent = data.GetAgent(agentID);

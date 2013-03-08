@@ -32,7 +32,7 @@ using Nini.Config;
 using Aurora.Framework;
 using OpenMetaverse;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     /// <summary>
     ///   Cenome memory asset cache.

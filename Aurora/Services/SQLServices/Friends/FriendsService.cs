@@ -32,10 +32,9 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using FriendInfo = Aurora.Framework.FriendInfo;
 
-namespace OpenSim.Services.Friends
+namespace Aurora.Services
 {
     public class FriendsService : ConnectorBase, IFriendsService, IService
     {
@@ -65,7 +64,7 @@ namespace OpenSim.Services.Friends
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_Database = DataManager.RequestPlugin<IFriendsData>();
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IFriendsData>();
         }
 
         public virtual void FinishedStartup()
@@ -81,7 +80,7 @@ namespace OpenSim.Services.Friends
             get { return this; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<FriendInfo> GetFriends(UUID PrincipalID)
         {
             object remoteValue = DoRemote(PrincipalID);
@@ -91,7 +90,7 @@ namespace OpenSim.Services.Friends
             return new List<FriendInfo>(m_Database.GetFriends(PrincipalID));
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<FriendInfo> GetFriendsRequest(UUID PrincipalID)
         {
             object remoteValue = DoRemote(PrincipalID);
@@ -101,7 +100,7 @@ namespace OpenSim.Services.Friends
             return new List<FriendInfo>(m_Database.GetFriendsRequest(PrincipalID));
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
             object remoteValue = DoRemote(PrincipalID, Friend, flags);
@@ -111,7 +110,7 @@ namespace OpenSim.Services.Friends
             return m_Database.Store(PrincipalID, Friend, flags, 0);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool Delete(UUID PrincipalID, string Friend)
         {
             object remoteValue = DoRemote(PrincipalID, Friend);

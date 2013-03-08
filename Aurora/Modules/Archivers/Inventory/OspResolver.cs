@@ -29,7 +29,6 @@ using System.Reflection;
 using System.Text;
 using Aurora.Framework;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {

@@ -30,7 +30,7 @@ using System.Reflection;
 using OpenMetaverse;
 using Aurora.Framework;
 
-namespace OpenSim.Services.AuthenticationService
+namespace Aurora.Services
 {
     // Generic Authentication service used for identifying
     // and authenticating principals.

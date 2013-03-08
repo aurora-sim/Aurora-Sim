@@ -32,7 +32,6 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Chat

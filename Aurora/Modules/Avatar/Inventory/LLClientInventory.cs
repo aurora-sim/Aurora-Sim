@@ -40,7 +40,6 @@ using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
 
 namespace Aurora.Modules.Inventory

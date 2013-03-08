@@ -37,8 +37,7 @@ using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.SimConsole
 {

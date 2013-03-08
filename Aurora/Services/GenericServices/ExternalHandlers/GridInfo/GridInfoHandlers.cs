@@ -35,9 +35,8 @@ using Nini.Config;
 using Nwc.XmlRpc;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class GridInfoHandlers : IGridInfo
     {

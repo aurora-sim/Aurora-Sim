@@ -29,7 +29,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public delegate void GetResponse(OSDMap response);
     /// <summary>

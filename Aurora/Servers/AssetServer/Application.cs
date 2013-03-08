@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Servers.AssetServer
 {

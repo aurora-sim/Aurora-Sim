@@ -33,8 +33,7 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Animation;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Services.Interfaces;
+using GridRegion = Aurora.Framework.GridRegion;
 using PrimType = Aurora.Framework.PrimType;
 
 namespace OpenSim.Region.Framework.Scenes

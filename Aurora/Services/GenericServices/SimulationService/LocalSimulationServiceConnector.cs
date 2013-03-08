@@ -35,10 +35,9 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
-namespace OpenSim.Services.Connectors.Simulation
+namespace Aurora.Services
 {
     public class LocalSimulationServiceConnector : IService, ISimulationService
     {

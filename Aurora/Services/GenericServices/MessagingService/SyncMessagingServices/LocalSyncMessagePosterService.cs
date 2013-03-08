@@ -30,9 +30,8 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.MessagingService
+namespace Aurora.Services
 {
     public class SyncMessagePosterService : ConnectorBase, ISyncMessagePosterService, IService
     {
@@ -82,7 +81,7 @@ namespace OpenSim.Services.MessagingService
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void PostInternal(bool remote, string url, OSDMap request)
         {
             if (remote)
@@ -104,7 +103,7 @@ namespace OpenSim.Services.MessagingService
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void PostToServerInternal(bool remote, OSDMap request)
         {
             if (remote)
@@ -126,7 +125,7 @@ namespace OpenSim.Services.MessagingService
                 response(m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request));
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public OSDMap GetInternal(bool remote, string url, OSDMap request)
         {
             if (remote)

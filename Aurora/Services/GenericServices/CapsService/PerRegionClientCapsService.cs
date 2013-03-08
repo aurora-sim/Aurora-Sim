@@ -33,11 +33,10 @@ using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 using Aurora.Framework;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     /// <summary>
     /// CapsHandlers is a cap handler container but also takes

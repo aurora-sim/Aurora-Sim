@@ -34,14 +34,13 @@ using System.IO;
 using System.Linq;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 
-namespace OpenSim.Services.Handlers.Map
+namespace Aurora.Services
 {
     public class MapService : IService, IMapService
     {

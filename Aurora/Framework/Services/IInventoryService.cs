@@ -30,7 +30,7 @@ using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     /// <summary>
     ///   Callback used when a user's inventory is received from the inventory service

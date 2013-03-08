@@ -10,10 +10,9 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 using Aurora.Simulation.Base;
 
-namespace OpenSim.Services.CapsService.CAPModules
+namespace Aurora.Services
 {
     public class StatsModule : ICapsServiceConnector
     {

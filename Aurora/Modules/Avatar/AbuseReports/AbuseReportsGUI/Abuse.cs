@@ -30,7 +30,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using Aurora.Framework;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.AbuseReportsGUI
 {

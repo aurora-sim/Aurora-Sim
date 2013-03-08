@@ -34,7 +34,6 @@ using System.Reflection;
 using CSJ2K;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.WorldMap.Warp3DMap
 {

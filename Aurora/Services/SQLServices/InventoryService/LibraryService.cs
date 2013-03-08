@@ -33,7 +33,6 @@ using Nini.Ini;
 using Nini.Config;
 
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
 using Aurora.Framework;
 using Aurora.Simulation.Base;

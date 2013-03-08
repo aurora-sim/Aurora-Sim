@@ -3,7 +3,7 @@ using System.Net;
 using OpenMetaverse;
 using Aurora.Framework;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     /// <summary>
     ///   HG1.5 only

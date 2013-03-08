@@ -36,7 +36,6 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.OpenRegionSettingsModule
 {

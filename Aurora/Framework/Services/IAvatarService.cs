@@ -32,7 +32,7 @@ using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public interface IAvatarService
     {

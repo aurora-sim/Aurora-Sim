@@ -32,7 +32,7 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.GridRegion;
 using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Services.DataService

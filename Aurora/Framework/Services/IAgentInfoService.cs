@@ -32,7 +32,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public class UserInfo : IDataTransferable
     {

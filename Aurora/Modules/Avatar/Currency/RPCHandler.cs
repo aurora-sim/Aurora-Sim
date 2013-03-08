@@ -9,7 +9,6 @@ using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Services.Interfaces;
 using System.Threading;
 
 namespace Simple.Currency

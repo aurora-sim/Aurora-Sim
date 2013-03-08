@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     /// <summary>
     ///   This gets the HTTP based Map Service set up

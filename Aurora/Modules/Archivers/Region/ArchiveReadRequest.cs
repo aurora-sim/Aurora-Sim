@@ -38,7 +38,6 @@ using Aurora.Framework.Serialization;
 using Aurora.Framework.Serialization.External;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 using System.Linq;
 
 namespace Aurora.Modules.Archivers
@@ -506,27 +505,6 @@ namespace Aurora.Modules.Archivers
                     m_validUserUuids.Add(uuid, uuid);
                     return uuid;
                 }
-                if (uuid == creatorID)
-                {
-                    UUID hid;
-                    string first, last, url, secret;
-                    if (HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
-                    {
-                        account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, first, last);
-                        if (account != null)
-                        {
-                            m_validUserUuids.Add(uuid, account.PrincipalID);
-                            return account.PrincipalID;//Fix the UUID
-                        }
-                    }
-                }
-                IUserFinder uf = m_scene.RequestModuleInterface<IUserFinder>();
-                if (uf != null)
-                    if (!uf.IsLocalGridUser(uuid))//Foreign user, don't remove their info
-                    {
-                        m_validUserUuids.Add(uuid, uuid);
-                        return uuid;
-                    }
                 UUID id = UUID.Zero;
                 if (m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
                 {

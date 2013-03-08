@@ -5,7 +5,6 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -105,7 +104,7 @@ namespace Aurora.RedisServices.AssetService
             get { return this; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase Get(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -136,7 +135,7 @@ namespace Aurora.RedisServices.AssetService
             return Get(id);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase GetCached(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -145,7 +144,7 @@ namespace Aurora.RedisServices.AssetService
             return null;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual byte[] GetData(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -168,7 +167,7 @@ namespace Aurora.RedisServices.AssetService
             return new byte[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool GetExists(string id)
         {
             object remoteValue = DoRemote(id);
@@ -178,7 +177,7 @@ namespace Aurora.RedisServices.AssetService
             return RedisExistsAsset(id);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual void Get(String id, Object sender, AssetRetrieved handler)
         {
             Util.FireAndForget((o) =>
@@ -187,7 +186,7 @@ namespace Aurora.RedisServices.AssetService
             });
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual UUID Store(AssetBase asset)
         {
             if (asset == null)
@@ -213,7 +212,7 @@ namespace Aurora.RedisServices.AssetService
             return asset != null ? asset.ID : UUID.Zero;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual UUID UpdateContent(UUID id, byte[] data)
         {
             object remoteValue = DoRemote(id, data);
@@ -229,7 +228,7 @@ namespace Aurora.RedisServices.AssetService
             return id;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool Delete(UUID id)
         {
             object remoteValue = DoRemote(id);

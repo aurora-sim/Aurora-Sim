@@ -34,7 +34,6 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;

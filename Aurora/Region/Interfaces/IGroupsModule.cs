@@ -28,7 +28,6 @@
 using System.Collections.Generic;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.Framework.Interfaces
 {

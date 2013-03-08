@@ -33,9 +33,8 @@ using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class MeshUploadFlag : ICapsServiceConnector
     {
@@ -49,7 +48,7 @@ namespace OpenSim.Services.CapsService
         {
             m_service = service;
             m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
-            m_profileConnector = DataManager.RequestPlugin<IProfileConnector>();
+            m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
             m_service.AddStreamHandler("MeshUploadFlag",
                                        new GenericStreamHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),
                                                            MeshUploadFlagCAP));

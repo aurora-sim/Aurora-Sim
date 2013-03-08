@@ -3,7 +3,6 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,7 +71,7 @@ namespace Simple.Currency
 
         #region Service Members
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public SimpleCurrencyConfig GetConfig()
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI");
@@ -82,7 +81,7 @@ namespace Simple.Currency
             return m_config;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public UserCurrency GetUserCurrency(UUID agentId)
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", agentId);
@@ -106,7 +105,7 @@ namespace Simple.Currency
             return currency;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool UserCurrencyUpdate(UserCurrency agent)
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", agent);
@@ -117,7 +116,7 @@ namespace Simple.Currency
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public GroupBalance GetGroupBalance(UUID groupID)
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", groupID);
@@ -151,7 +150,7 @@ namespace Simple.Currency
             return gb;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount, string description, TransactionType type, UUID transactionID)
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, fromObjectID, amount, description, type, transactionID);

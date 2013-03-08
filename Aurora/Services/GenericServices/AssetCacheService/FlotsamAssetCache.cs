@@ -41,10 +41,9 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 using ProtoBuf;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class FlotsamAssetCache : IService, IImprovedAssetCache
     {

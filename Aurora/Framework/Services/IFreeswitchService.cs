@@ -27,7 +27,7 @@
 
 using System.Collections;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public interface IFreeswitchService
     {

@@ -31,7 +31,6 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using OpenMetaverse.StructuredData;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.SQLServices.AvatarService
 {
@@ -96,7 +95,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             get { return this; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public AvatarAppearance GetAppearance(UUID principalID)
         {
             object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);
@@ -128,7 +127,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             return avappearance;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool SetAppearance(UUID principalID, AvatarAppearance appearance)
         {
             object remoteValue = DoRemoteByURL("AvatarServerURI", principalID, appearance);
@@ -145,7 +144,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             return m_Database.Store(principalID, appearance);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool ResetAvatar(UUID principalID)
         {
             object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);

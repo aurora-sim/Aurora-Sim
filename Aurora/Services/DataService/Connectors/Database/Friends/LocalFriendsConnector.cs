@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using FriendInfo = Aurora.Framework.FriendInfo;
 
 namespace Aurora.Services.DataService
 {

@@ -71,7 +71,7 @@ namespace Aurora.Services.DataService
             get { return "IEstateConnector"; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public EstateSettings GetEstateSettings(UUID regionID)
         {
             object remoteValue = DoRemote(regionID);
@@ -112,7 +112,7 @@ namespace Aurora.Services.DataService
             );
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public int CreateNewEstate(EstateSettings es, UUID RegionID)
         {
             object remoteValue = DoRemote(es.ToOSD(), RegionID);
@@ -133,7 +133,7 @@ namespace Aurora.Services.DataService
             return (int)es.EstateID;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void SaveEstateSettings(EstateSettings es)
         {
             object remoteValue = DoRemote(es.ToOSD());
@@ -143,7 +143,7 @@ namespace Aurora.Services.DataService
             SaveEstateSettings(es, false);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool LinkRegion(UUID regionID, int estateID)
         {
             object remoteValue = DoRemote(regionID, estateID);
@@ -158,7 +158,7 @@ namespace Aurora.Services.DataService
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool DelinkRegion(UUID regionID)
         {
             object remoteValue = DoRemote(regionID);
@@ -172,7 +172,7 @@ namespace Aurora.Services.DataService
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public bool DeleteEstate(int estateID)
         {
             object remoteValue = DoRemote(estateID);
@@ -187,7 +187,7 @@ namespace Aurora.Services.DataService
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public int GetEstate(UUID ownerID, string name)
         {
             object remoteValue = DoRemote(ownerID, name);
@@ -205,7 +205,7 @@ namespace Aurora.Services.DataService
             return 0;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<UUID> GetRegions(int estateID)
         {
             object remoteValue = DoRemote(estateID);
@@ -217,13 +217,13 @@ namespace Aurora.Services.DataService
             return GD.Query(new string[1] { "RegionID" }, m_estateRegionsTable, filter, null, null, null).ConvertAll(x => UUID.Parse(x));
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
             return GetEstates(OwnerID, new Dictionary<string,bool>(0));
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields)
         {
             object remoteValue = DoRemote(OwnerID, boolFields);

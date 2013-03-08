@@ -41,7 +41,6 @@ using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 using RegionFlags = OpenMetaverse.RegionFlags;
 using Amib.Threading;
 

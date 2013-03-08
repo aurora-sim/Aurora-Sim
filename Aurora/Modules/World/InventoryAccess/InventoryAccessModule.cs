@@ -34,7 +34,6 @@ using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
-using OpenSim.Services.Interfaces;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse;
 using Nini.Config;

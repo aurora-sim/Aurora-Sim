@@ -70,7 +70,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "AgentID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<MuteList> GetMuteList(UUID AgentID)
         {
             object remoteValue = DoRemote(AgentID);
@@ -85,7 +85,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "mute"></param>
         /// <param name = "AgentID"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void UpdateMute(MuteList mute, UUID AgentID)
         {
             object remoteValue = DoRemote(mute, AgentID);
@@ -100,7 +100,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "muteID"></param>
         /// <param name = "AgentID"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void DeleteMute(UUID muteID, UUID AgentID)
         {
             object remoteValue = DoRemote(muteID, AgentID);
@@ -116,7 +116,7 @@ namespace Aurora.Services.DataService
         /// <param name = "AgentID"></param>
         /// <param name = "PossibleMuteID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool IsMuted(UUID AgentID, UUID PossibleMuteID)
         {
             object remoteValue = DoRemote(AgentID, PossibleMuteID);

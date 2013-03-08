@@ -32,9 +32,8 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.AuthenticationService
+namespace Aurora.Services
 {
     // Generic Authentication service used for identifying
     // and authenticating principals.
@@ -122,7 +121,7 @@ namespace OpenSim.Services.AuthenticationService
                 m_authenticateUsers = authConfig.GetBoolean("AuthenticateUsers", m_authenticateUsers);
             }
 
-            m_Database = DataManager.RequestPlugin<IAuthenticationData>();
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAuthenticationData>();
             registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 

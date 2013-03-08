@@ -27,7 +27,7 @@
 
 using Aurora.Framework;
 using OpenMetaverse;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using FriendInfo = Aurora.Framework.FriendInfo;
 
 namespace Aurora.Framework
 {

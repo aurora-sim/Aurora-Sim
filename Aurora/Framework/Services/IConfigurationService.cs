@@ -28,7 +28,7 @@
 using System.Collections.Generic;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     /// <summary>
     ///   This service helps to automate the remote grid mode for users so that they do not have to input so many URLs

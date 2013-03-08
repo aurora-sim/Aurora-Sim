@@ -7,7 +7,6 @@ using OpenSim.Region.Framework.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Services.Interfaces;
 
 namespace Simple.Currency
 {

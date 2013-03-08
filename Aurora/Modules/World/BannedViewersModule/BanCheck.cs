@@ -36,7 +36,6 @@ using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
 using Aurora.DataManager;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Ban
 {

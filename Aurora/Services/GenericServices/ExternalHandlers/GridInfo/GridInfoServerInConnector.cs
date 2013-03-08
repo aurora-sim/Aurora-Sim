@@ -30,7 +30,7 @@ using Nini.Config;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 
-namespace OpenSim.Services
+namespace Aurora.Services
 {
     public class GridInfoServerInConnector : IService
     {

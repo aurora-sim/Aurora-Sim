@@ -32,7 +32,6 @@ using Mischel.Collections;
 using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {

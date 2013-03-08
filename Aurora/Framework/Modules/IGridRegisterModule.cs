@@ -26,7 +26,6 @@
  */
 
 using System.Collections.Generic;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Framework
 {

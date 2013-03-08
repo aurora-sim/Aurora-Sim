@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Simulation.Base;
 using Nini.Config;
@@ -74,7 +73,7 @@ namespace Aurora.Framework
         {
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword=true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword=true)]
         public bool GetWhetherRegionIsOnline(UUID regionID)
         {
             object remoteValue = InternalDoRemote(regionID);
@@ -84,7 +83,7 @@ namespace Aurora.Framework
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public void StartNewRegion(RegionInfo region)
         {
             InternalDoRemote(region);
@@ -99,7 +98,7 @@ namespace Aurora.Framework
             region.NewRegion = false;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public void StartRegion(RegionInfo region)
         {
             InternalDoRemote(region);
@@ -112,7 +111,7 @@ namespace Aurora.Framework
             });
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public bool StopRegion(UUID regionID, int secondsBeforeShutdown)
         {
             object remoteValue = InternalDoRemote(regionID, secondsBeforeShutdown);
@@ -123,7 +122,7 @@ namespace Aurora.Framework
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public void ResetRegion(UUID regionID)
         {
             InternalDoRemote(regionID);
@@ -133,7 +132,7 @@ namespace Aurora.Framework
             _sceneManager.ResetRegion();
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public void DeleteRegion(UUID regionID)
         {
             InternalDoRemote(regionID);
@@ -143,7 +142,7 @@ namespace Aurora.Framework
             _sceneManager.RemoveRegion(true);//Deletes the .abackup file, all prims in the region, and the info from all region loaders
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod = "GetRegionInfoByUUID")]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true, RenamedMethod = "GetRegionInfoByUUID")]
         public RegionInfo GetRegionInfo(UUID regionID)
         {
             object remoteValue = InternalDoRemote(regionID);
@@ -153,7 +152,7 @@ namespace Aurora.Framework
             return _sceneManager.Scene.RegionInfo;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public string GetOpenRegionSettingsHTMLPage(UUID regionID)
         {
             object remoteValue = InternalDoRemote(regionID);
@@ -233,7 +232,7 @@ namespace Aurora.Framework
 
         #endregion
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public List<string> GetEstatesForUser(string name)
         {
             object remoteValue = InternalDoRemote(name);
@@ -255,7 +254,7 @@ namespace Aurora.Framework
             return estateItems;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public List<UserAccount> GetUserAccounts(string name)
         {
             object remoteValue = InternalDoRemote(name);
@@ -265,7 +264,7 @@ namespace Aurora.Framework
             return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(null, name);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public void CreateUser(string name, string password, string email, UUID userID, UUID scopeID)
         {
             InternalDoRemote(name);
@@ -276,7 +275,7 @@ namespace Aurora.Framework
                 scopeID, name, Util.Md5Hash(password), email);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public void ChangeEstate(string ownerName, string estateToJoin, UUID regionID)
         {
             InternalDoRemote(ownerName, estateToJoin, regionID);
@@ -292,7 +291,7 @@ namespace Aurora.Framework
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod="CreateNewEstateWithInformation")]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true, RenamedMethod="CreateNewEstateWithInformation")]
         public bool CreateNewEstate(UUID regionID, string estateName, string ownerName)
         {
             object remoteValue = InternalDoRemote(regionID, estateName, ownerName);
@@ -314,7 +313,7 @@ namespace Aurora.Framework
             return false;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public string GetCurrentEstate(UUID regionID)
         {
             object remoteValue = InternalDoRemote(regionID);
@@ -333,7 +332,7 @@ namespace Aurora.Framework
             return "";
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public string GetEstateOwnerName(UUID regionID)
         {
             object remoteValue = InternalDoRemote(regionID);
@@ -352,7 +351,7 @@ namespace Aurora.Framework
             return "";
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
         public bool ConnectionIsWorking()
         {
             object remoteValue = InternalDoRemote();

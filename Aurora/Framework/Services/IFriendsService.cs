@@ -31,7 +31,7 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public class FriendInfo : IDataTransferable
     {

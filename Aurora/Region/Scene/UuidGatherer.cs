@@ -36,7 +36,6 @@ using OpenMetaverse;
 using OpenMetaverse.Assets;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes.Serialization;
-using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {

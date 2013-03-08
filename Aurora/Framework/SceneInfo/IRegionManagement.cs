@@ -109,7 +109,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        List<OpenSim.Services.Interfaces.UserAccount> GetUserAccounts(string name);
+        List<UserAccount> GetUserAccounts(string name);
 
         /// <summary>
         /// Creates a user for the grid

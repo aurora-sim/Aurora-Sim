@@ -39,12 +39,11 @@ using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using GridRegion = Aurora.Framework.GridRegion;
+using FriendInfo = Aurora.Framework.FriendInfo;
 using Aurora.DataManager;
 
-namespace OpenSim.Services.LLLoginService
+namespace Aurora.Services
 {
     public class LLLoginService : ILoginService, IService
     {
@@ -293,7 +292,7 @@ namespace OpenSim.Services.LLLoginService
             }
 
             IAgentInfo agent = null;
-            IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
             if (agentData != null)
             {
                 agent = agentData.GetAgent(account.PrincipalID);
@@ -344,7 +343,7 @@ namespace OpenSim.Services.LLLoginService
             }
 
             IAgentInfo agent = null;
-            IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
             if (agentData != null)
                 agent = agentData.GetAgent(account.PrincipalID);
             if (agent == null)
@@ -369,7 +368,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 string DisplayName = account.Name;
                 AvatarAppearance avappearance = null;
-                IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
+                IProfileConnector profileData = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
 
                 //
                 // Get the user's inventory

@@ -4,7 +4,6 @@ using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -302,7 +301,7 @@ namespace Aurora.Services
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void EnsureSessionIsStarted(UUID groupID)
         {
             if (m_doRemoteOnly)
@@ -337,7 +336,7 @@ namespace Aurora.Services
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void CreateGroupChat(UUID AgentID, GridInstantMessage im)
         {
             if (m_doRemoteOnly)
@@ -478,7 +477,7 @@ namespace Aurora.Services
         /// </summary>
         /// <param name = "client"></param>
         /// <param name = "im"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void DropMemberFromSession(UUID agentID, GridInstantMessage im)
         {
             if (m_doRemoteOnly)
@@ -536,7 +535,7 @@ namespace Aurora.Services
         /// </summary>
         /// <param name = "client"></param>
         /// <param name = "im"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void SendChatToSession(UUID agentID, GridInstantMessage im)
         {
             if (m_doRemoteOnly)

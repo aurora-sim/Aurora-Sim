@@ -41,7 +41,6 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine

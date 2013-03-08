@@ -38,7 +38,6 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework.Serialization.External;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 using Aurora.Simulation.Base;
 
 namespace Aurora.Modules.Archivers

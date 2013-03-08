@@ -28,7 +28,7 @@
 using Nini.Config;
 using Aurora.Framework;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework
 {
     public interface IDefaultLibraryLoader
     {

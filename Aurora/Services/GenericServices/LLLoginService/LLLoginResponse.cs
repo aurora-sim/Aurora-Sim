@@ -35,11 +35,10 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using FriendInfo = Aurora.Framework.FriendInfo;
+using GridRegion = Aurora.Framework.GridRegion;
 
-namespace OpenSim.Services.LLLoginService
+namespace Aurora.Services
 {
     /// <summary>
     ///   A class to handle LL login response.
@@ -95,7 +94,7 @@ namespace OpenSim.Services.LLLoginService
             SetDefaultValues();
         }
 
-        public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, Interfaces.UserInfo pinfo,
+        public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, Aurora.Framework.UserInfo pinfo,
                                GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList,
                                IInventoryService invService, ILibraryService libService,
                                string where, string startlocation, Vector3 position, Vector3 lookAt,
@@ -197,7 +196,7 @@ namespace OpenSim.Services.LLLoginService
             ActiveGestures = list;
         }
 
-        private void FillOutHomeData(Interfaces.UserInfo pinfo, GridRegion home)
+        private void FillOutHomeData(Aurora.Framework.UserInfo pinfo, GridRegion home)
         {
             int x = 1000*Constants.RegionSize, y = 1000*Constants.RegionSize;
             if (home != null)

@@ -30,12 +30,11 @@ using System.Linq;
 using System.Reflection;
 using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class CapsService : ICapsService, IService
     {

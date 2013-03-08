@@ -30,7 +30,6 @@ using System.Linq;
 using System.Text;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {
