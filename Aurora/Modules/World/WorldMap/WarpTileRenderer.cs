@@ -95,7 +95,6 @@ namespace Aurora.Modules.WorldMap
             }
 
             m_texturePrims = m_config.Configs["MapModule"].GetBoolean("WarpTexturePrims", false);
-            m_colors.Clear();
 
             int scaledRemovalFactor = m_scene.RegionInfo.RegionSizeX/(Constants.RegionSize/2);
             Vector3 camPos = new Vector3(m_scene.RegionInfo.RegionSizeX/2 - 0.5f,
@@ -163,7 +162,6 @@ namespace Aurora.Modules.WorldMap
 //                        CreatePrim(renderer, part);
 //#endif
                 }
-                    
             }
             catch (Exception ex)
             {
@@ -186,8 +184,8 @@ namespace Aurora.Modules.WorldMap
             terrainObj.fastvertex = null;
             terrainObj.fasttriangle = null;
             terrainObj = null;
-            m_colors.Clear();
             SaveCache();
+            m_colors.Clear();
 
             //Force GC to try to clean this mess up
             GC.GetTotalMemory(true);
