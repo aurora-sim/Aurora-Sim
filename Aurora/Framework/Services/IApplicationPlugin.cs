@@ -642,16 +642,6 @@ namespace Aurora.Framework
         {
             return new List<T>(0);
         }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
     }
 
     public interface IAuroraDataPlugin

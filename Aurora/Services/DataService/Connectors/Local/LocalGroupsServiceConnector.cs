@@ -59,8 +59,9 @@ namespace Aurora.Services.DataService
                 agentsCanBypassGroupNoticePermsCheck = Util.ConvertToList(source.Configs["Groups"].GetString("AgentsCanBypassGroupNoticePermsCheck", "")).ConvertAll(x => new UUID(x));
             }
 
-            data.ConnectToDatabase(defaultConnectionString, "Groups",
-                                   source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            if(data != null)
+                data.ConnectToDatabase(defaultConnectionString, "Groups",
+                                       source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 

@@ -52,7 +52,8 @@ namespace Aurora.Modules.Ban
                     DefaultConnectionString = source.Configs[Name].GetString("ConnectionString", DefaultConnectionString);
                     DatabaseToAuthTable = source.Configs[Name].GetString("DatabasePathToAuthTable", DatabaseToAuthTable);
                 }
-                GD.ConnectToDatabase(DefaultConnectionString, "PresenceInfo", true);
+                if(GD != null)
+                    GD.ConnectToDatabase(DefaultConnectionString, "PresenceInfo", true);
                 DataManager.DataManager.RegisterPlugin(this);
             }
         }

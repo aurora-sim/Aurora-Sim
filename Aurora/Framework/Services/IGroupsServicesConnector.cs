@@ -156,31 +156,6 @@ namespace Aurora.Framework
         {
         }
 
-        public GroupInviteInfo(Dictionary<string, object> values)
-        {
-            FromKVP(values);
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values["GroupID"] = GroupID;
-            values["RoleID"] = RoleID;
-            values["AgentID"] = AgentID;
-            values["InviteID"] = InviteID;
-            values["FromAgentName"] = FromAgentName;
-            return values;
-        }
-
-        public override void FromKVP(Dictionary<string, object> values)
-        {
-            GroupID = UUID.Parse(values["GroupID"].ToString());
-            RoleID = UUID.Parse(values["RoleID"].ToString());
-            AgentID = UUID.Parse(values["AgentID"].ToString());
-            InviteID = UUID.Parse(values["InviteID"].ToString());
-            FromAgentName = values["FromAgentName"].ToString();
-        }
-
         public override OSDMap ToOSD()
         {
             OSDMap values = new OSDMap();
@@ -211,29 +186,6 @@ namespace Aurora.Framework
 
         public GroupNoticeInfo()
         {
-        }
-
-        public GroupNoticeInfo(Dictionary<string, object> values)
-        {
-            FromKVP(values);
-        }
-
-        public override void FromKVP(Dictionary<string, object> values)
-        {
-            noticeData = new GroupNoticeData(values["noticeData"] as Dictionary<string, object>);
-            GroupID = UUID.Parse(values["GroupID"].ToString());
-            Message = values["Message"].ToString();
-            BinaryBucket = Utils.HexStringToBytes(values["BinaryBucket"].ToString(), true);
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values["noticeData"] = noticeData.ToKVP();
-            values["GroupID"] = GroupID;
-            values["Message"] = Message;
-            values["BinaryBucket"] = Utils.BytesToHexString(BinaryBucket, "BinaryBucket");
-            return values;
         }
 
         public override OSDMap ToOSD()
@@ -323,16 +275,6 @@ namespace Aurora.Framework
             map["NumVotes"] = NumVotes;
             map["HasCalculatedResult"] = HasCalculatedResult;
             return map;
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
         }
     }
 }

@@ -58,45 +58,12 @@ namespace OpenSim.Services.Interfaces
         public FriendInfo()
         {
         }
-
-        public FriendInfo(Dictionary<string, object> kvp)
-        {
-            FromKVP(kvp);
-        }
-
-        public override void FromKVP(Dictionary<string, object> kvp)
-        {
-            PrincipalID = UUID.Zero;
-            if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
-                UUID.TryParse(kvp["PrincipalID"].ToString(), out PrincipalID);
-            Friend = string.Empty;
-            if (kvp.ContainsKey("Friend") && kvp["Friend"] != null)
-                Friend = kvp["Friend"].ToString();
-            MyFlags = 0;
-            if (kvp.ContainsKey("MyFlags") && kvp["MyFlags"] != null)
-                Int32.TryParse(kvp["MyFlags"].ToString(), out MyFlags);
-            TheirFlags = 0;
-            if (kvp.ContainsKey("TheirFlags") && kvp["TheirFlags"] != null)
-                Int32.TryParse(kvp["TheirFlags"].ToString(), out TheirFlags);
-        }
-
         public override void FromOSD(OpenMetaverse.StructuredData.OSDMap map)
         {
             PrincipalID = map["PrincipalID"];
             Friend = map["Friend"];
             MyFlags = map["MyFlags"];
             TheirFlags = map["TheirFlags"];
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            result["PrincipalID"] = PrincipalID.ToString();
-            result["Friend"] = Friend;
-            result["MyFlags"] = MyFlags.ToString();
-            result["TheirFlags"] = TheirFlags.ToString();
-
-            return result;
         }
 
         public override OpenMetaverse.StructuredData.OSDMap ToOSD()

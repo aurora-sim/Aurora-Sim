@@ -296,9 +296,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_eventManager = new EventManager();
             m_permissions = new ScenePermissions(this);
 
-            // Load region settings
-            m_regInfo.RegionSettings = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector> ().LoadRegionSettings (m_regInfo.RegionID);
-
             m_sceneGraph = new SceneGraph(this, m_regInfo);
 
             #region Region Config

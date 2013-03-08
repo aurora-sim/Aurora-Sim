@@ -141,9 +141,6 @@ namespace Aurora.Services.SQLServices.GridService
             m_registryCore = registry;
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
             m_agentInfoService = m_registryCore.RequestModuleInterface<IAgentInfoService>();
-
-            if (m_Database == null)
-                throw new Exception("Could not find a storage interface in the given module");
         }
 
         public virtual void FinishedStartup()

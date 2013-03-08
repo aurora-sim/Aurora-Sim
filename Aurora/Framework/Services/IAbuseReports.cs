@@ -55,49 +55,6 @@ namespace OpenSim.Services.Interfaces
         public AbuseReport()
         {
         }
-
-        public override void FromKVP(Dictionary<string, object> DicCol)
-        {
-            AbuseDetails = DicCol["AbuseDetails"].ToString();
-            AbuseLocation = DicCol["AbuseLocation"].ToString();
-            AbuserName = DicCol["AbuserName"].ToString();
-            AbuseSummary = DicCol["AbuseSummary"].ToString();
-            Active = Convert.ToBoolean(DicCol["Active"].ToString());
-            AssignedTo = DicCol["AssignedTo"].ToString();
-            Category = DicCol["Category"].ToString();
-            Checked = Convert.ToBoolean(DicCol["Checked"]);
-            Notes = DicCol["Notes"].ToString();
-            Number = int.Parse(DicCol["Number"].ToString());
-            ObjectName = DicCol["ObjectName"].ToString();
-            ObjectPosition = DicCol["ObjectPosition"].ToString();
-            ObjectUUID = new UUID(DicCol["ObjectUUID"].ToString());
-            RegionName = DicCol["RegionName"].ToString();
-            ReporterName = DicCol["ReporterName"].ToString();
-            ScreenshotID = new UUID(DicCol["ScreenshotID"].ToString());
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> NewDicCol = new Dictionary<string, object>();
-            NewDicCol["AbuseDetails"] = AbuseDetails;
-            NewDicCol["AbuseLocation"] = AbuseLocation;
-            NewDicCol["AbuserName"] = AbuserName;
-            NewDicCol["AbuseSummary"] = AbuseSummary;
-            NewDicCol["Active"] = Active;
-            NewDicCol["AssignedTo"] = AssignedTo;
-            NewDicCol["Category"] = Category;
-            NewDicCol["Checked"] = Checked;
-            NewDicCol["Notes"] = Notes;
-            NewDicCol["Number"] = Number;
-            NewDicCol["ObjectName"] = ObjectName;
-            NewDicCol["ObjectPosition"] = ObjectPosition;
-            NewDicCol["ObjectUUID"] = ObjectUUID;
-            NewDicCol["RegionName"] = RegionName;
-            NewDicCol["ReporterName"] = ReporterName;
-            NewDicCol["ScreenshotID"] = ScreenshotID;
-            return NewDicCol;
-        }
-
         public override void FromOSD(OSDMap DicCol)
         {
             AbuseDetails = DicCol["AbuseDetails"].AsString();

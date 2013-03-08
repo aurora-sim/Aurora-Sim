@@ -60,15 +60,5 @@ namespace Aurora.Framework
             OSDMap map = new OSDMap {{"MuteName", MuteName}, {"MuteID", MuteID}, {"MuteType", MuteType}};
             return map;
         }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
-        }
     }
 }

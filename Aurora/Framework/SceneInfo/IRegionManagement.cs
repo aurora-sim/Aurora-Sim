@@ -47,26 +47,6 @@ namespace Aurora.Framework
         void DeleteRegion(UUID regionID);
 
         /// <summary>
-        /// Returns all region infos that we have
-        /// </summary>
-        /// <param name="nonDisabledOnly">Whether we return only non-disabled regions</param>
-        /// <returns></returns>
-        List<RegionInfo> GetRegionInfos(bool nonDisabledOnly);
-
-        /// <summary>
-        /// Update a region in the region database
-        /// </summary>
-        /// <param name="region"></param>
-        void UpdateRegionInfo(RegionInfo region);
-
-        /// <summary>
-        /// Returns a region with the given name
-        /// </summary>
-        /// <param name="regionName"></param>
-        /// <returns></returns>
-        RegionInfo GetRegionInfo(string regionName);
-
-        /// <summary>
         /// Returns a region with the given UUID
         /// </summary>
         /// <param name="regionID"></param>
@@ -85,28 +65,6 @@ namespace Aurora.Framework
         /// </summary>
         /// <returns></returns>
         bool ConnectionIsWorking();
-
-        /// <summary>
-        /// Gets a list of all default regions that the instance has
-        /// </summary>
-        /// <returns></returns>
-        List<string> GetDefaultRegionNames();
-
-        /// <summary>
-        /// Moves a default region for the given region
-        /// </summary>
-        /// <param name="regionName"></param>
-        /// <param name="fileName"></param>
-        /// <param name="p"></param>
-        /// <returns></returns>
-        bool MoveDefaultRegion(string regionName, string fileName, bool p);
-
-        /// <summary>
-        /// Gets a picture to display the default region
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        System.Drawing.Image GetDefaultRegionImage(string name);
 
         /// <summary>
         /// Gets a list of all estates that the user has

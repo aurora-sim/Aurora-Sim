@@ -74,34 +74,20 @@ namespace Aurora.Modules.Startup
         {
             GridRegion region = BuildGridRegion(scene.RegionInfo);
 
-            IGenericsConnector g = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            GridSessionID s = null;
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            if (g != null) //Get the sessionID from the database if possible
-                s = g.GetGeneric<GridSessionID>(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID");
-
-            if (s == null)
-            {
-                s = new GridSessionID {SessionID = scene.RegionInfo.GridSecureSessionID};
-                //Set it from the regionInfo if it knows anything
-            }
 
             scene.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("PreRegisterRegion", region);
 
             //Tell the grid service about us
-            RegisterRegion error = GridService.RegisterRegion(region, s.SessionID, password);
+            RegisterRegion error = GridService.RegisterRegion(region, scene.RegionInfo.GridSecureSessionID, password);
             if (error.Error == String.Empty)
             {
-                s.SessionID = error.SessionID;
                 //If it registered ok, we save the sessionID to the database and tlel the neighbor service about it
                 scene.RegionInfo.GridSecureSessionID = error.SessionID;
                 //Update our local copy of what our region flags are
                 scene.RegionInfo.RegionFlags = error.RegionFlags;
                 scene.RegionInfo.ScopeID = error.Region.ScopeID;
                 scene.RegionInfo.AllScopeIDs = error.Region.AllScopeIDs;
-
-                //Save the new SessionID to the database
-                if (g != null) g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID", s.ToOSD());
 
                 m_knownNeighbors[scene.RegionInfo.RegionID] = error.Neighbors;
                 return true; //Success
@@ -232,39 +218,6 @@ namespace Aurora.Modules.Startup
         public void AddGenericInfo(string key, string value)
         {
             genericInfo[key] = value;
-        }
-
-        #endregion
-
-        #region GridSessionID class
-
-        /// <summary>
-        ///   This class is used to save the GridSessionID for the given region/grid service
-        /// </summary>
-        public class GridSessionID : IDataTransferable
-        {
-            public UUID SessionID;
-
-            public override void FromOSD(OSDMap map)
-            {
-                SessionID = map["SessionID"].AsUUID();
-            }
-
-            public override OSDMap ToOSD()
-            {
-                OSDMap map = new OSDMap {{"SessionID", SessionID}};
-                return map;
-            }
-
-            public override Dictionary<string, object> ToKVP()
-            {
-                return Util.OSDToDictionary(ToOSD());
-            }
-
-            public override void FromKVP(Dictionary<string, object> KVP)
-            {
-                FromOSD(Util.DictionaryToOSD(KVP));
-            }
         }
 
         #endregion

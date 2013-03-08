@@ -635,11 +635,6 @@ namespace Aurora.Framework
 
         #region IDataTransferable
 
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
@@ -739,11 +734,6 @@ namespace Aurora.Framework
                 (OSDMap)map["GenericDataMap"] : new OSDMap();
 				
 			if ((IsGroupOwned) && (GroupID != OwnerID)) OwnerID = GroupID;
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
         }
 
         #endregion

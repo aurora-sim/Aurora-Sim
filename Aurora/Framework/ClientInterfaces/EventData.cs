@@ -52,50 +52,6 @@ namespace Aurora.Framework
         {
         }
 
-        public EventData(Dictionary<string, object> KVP)
-        {
-            FromKVP(KVP);
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["eventID"] = eventID;
-            KVP["creator"] = creator;
-            KVP["name"] = name;
-            KVP["category"] = category;
-            KVP["description"] = description;
-            KVP["date"] = date;
-            KVP["dateUTC"] = dateUTC;
-            KVP["duration"] = duration;
-            KVP["cover"] = cover;
-            KVP["amount"] = amount;
-            KVP["simName"] = simName;
-            KVP["globalPos"] = globalPos.ToRawString();
-            KVP["eventFlags"] = eventFlags;
-            KVP["maturity"] = maturity;
-            return KVP;
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            eventID = uint.Parse(KVP["eventID"].ToString());
-            creator = KVP["creator"].ToString();
-            name = KVP["name"].ToString();
-            category = KVP["category"].ToString();
-            description = KVP["description"].ToString();
-            date = KVP["date"].ToString();
-            dateUTC = uint.Parse(KVP["dateUTC"].ToString());
-            duration = uint.Parse(KVP["duration"].ToString());
-            cover = uint.Parse(KVP["cover"].ToString());
-            amount = uint.Parse(KVP["amount"].ToString());
-            simName = KVP["simName"].ToString();
-            string[] Pos = KVP["globalPos"].ToString().Split(' ');
-            globalPos = new Vector3(float.Parse(Pos[0]), float.Parse(Pos[1]), float.Parse(Pos[2]));
-            eventFlags = uint.Parse(KVP["eventFlags"].ToString());
-            maturity = int.Parse(KVP["maturity"].ToString());
-        }
-
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();

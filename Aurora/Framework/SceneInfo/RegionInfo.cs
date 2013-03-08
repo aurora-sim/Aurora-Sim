@@ -65,6 +65,9 @@ namespace Aurora.Framework
         public bool InfiniteRegion = false;
         public bool NewRegion = false;
 
+        public OpenRegionSettings OpenRegionSettings = null;
+        public OSD EnvironmentSettings = null;
+
         /// <summary>
         /// The X length (in meters) that the region is
         /// The default is 256m
@@ -269,11 +272,6 @@ namespace Aurora.Framework
 
         public OSDMap PackRegionInfoData()
         {
-            return PackRegionInfoData(false);
-        }
-
-        public OSDMap PackRegionInfoData(bool secure)
-        {
             OSDMap args = new OSDMap();
             args["region_id"] = OSD.FromUUID(RegionID);
             if ((RegionName != null) && !RegionName.Equals(""))
@@ -288,27 +286,23 @@ namespace Aurora.Framework
             args["region_size_x"] = OSD.FromInteger(RegionSizeX);
             args["region_size_y"] = OSD.FromInteger(RegionSizeY);
             args["region_size_z"] = OSD.FromInteger(RegionSizeZ);
-#if (!ISWIN)
-            OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(delegate(int a) { return a; }));
-#else
             OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(a => a));
-#endif
             args["UDPPorts"] = ports;
             args["InfiniteRegion"] = OSD.FromBoolean(InfiniteRegion);
-            if (secure)
-            {
-                args["disabled"] = OSD.FromBoolean(Disabled);
-                args["scope_id"] = OSD.FromUUID(ScopeID);
-                args["all_scope_ids"] = AllScopeIDs.ToOSDArray();
-                args["object_capacity"] = OSD.FromInteger(m_objectCapacity);
-                args["region_type"] = OSD.FromString(RegionType);
-                args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
-                args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
-                args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
-                args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
-                args["startupType"] = OSD.FromInteger((int)Startup);
-                args["RegionSettings"] = RegionSettings.ToOSD();
-            }
+            args["disabled"] = OSD.FromBoolean(Disabled);
+            args["scope_id"] = OSD.FromUUID(ScopeID);
+            args["all_scope_ids"] = AllScopeIDs.ToOSDArray();
+            args["object_capacity"] = OSD.FromInteger(m_objectCapacity);
+            args["region_type"] = OSD.FromString(RegionType);
+            args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
+            args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
+            args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
+            args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
+            args["startupType"] = OSD.FromInteger((int)Startup);
+            args["RegionSettings"] = RegionSettings.ToOSD();
+            args["GridSecureSessionID"] = GridSecureSessionID;
+            args["EnvironmentSettings"] = EnvironmentSettings;
+            args["OpenRegionSettings"] = OpenRegionSettings.ToOSD();
             return args;
         }
 
@@ -383,12 +377,23 @@ namespace Aurora.Framework
                 RegionSettings = new RegionSettings();
                 RegionSettings.FromOSD((OSDMap)args["RegionSettings"]);
             }
+            if (args.ContainsKey("GridSecureSessionID"))
+                GridSecureSessionID = args["GridSecureSessionID"];
             if (args.ContainsKey ("UDPPorts"))
             {
                 OSDArray ports = (OSDArray)args["UDPPorts"];
                 foreach (OSD p in ports)
                     m_UDPPorts.Add (p.AsInteger ());
             }
+            if (args.ContainsKey("OpenRegionSettings"))
+            {
+                OpenRegionSettings = new OpenRegionSettings();
+                OpenRegionSettings.FromOSD((OSDMap)args["OpenRegionSettings"]);
+            }
+            else
+                OpenRegionSettings = new OpenRegionSettings();
+            if (args.ContainsKey("EnvironmentSettings"))
+                EnvironmentSettings = args["EnvironmentSettings"];
             if (!m_UDPPorts.Contains (InternalEndPoint.Port))
                 m_UDPPorts.Add (InternalEndPoint.Port);
         }
@@ -400,7 +405,7 @@ namespace Aurora.Framework
 
         public override OSDMap ToOSD()
         {
-            return PackRegionInfoData(true);
+            return PackRegionInfoData();
         }
     }
 }

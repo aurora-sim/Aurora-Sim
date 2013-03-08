@@ -315,7 +315,6 @@ namespace Aurora.Modules.WorldMap
                     m_scene.RegionInfo.RegionSettings.TerrainImageID = staticMapTileUUID;
                 }
                 m_scene.RegionInfo.RegionSettings.TerrainMapLastRegenerated = DateTime.Now;
-                m_scene.RegionInfo.RegionSettings.Save();
                 return;
             }
 
@@ -424,7 +423,6 @@ namespace Aurora.Modules.WorldMap
                 m_scene.RegionInfo.RegionSettings.ParcelMapImageID = UUID.Zero;
 
             m_scene.RegionInfo.RegionSettings.TerrainMapLastRegenerated = DateTime.Now;
-            m_scene.RegionInfo.RegionSettings.Save();
 
             //Update the grid map
             IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();

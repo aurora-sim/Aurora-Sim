@@ -639,17 +639,6 @@ namespace OpenSim.Services.Interfaces
             }
         }
 
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
-        }
-
-
         #endregion
     }
 

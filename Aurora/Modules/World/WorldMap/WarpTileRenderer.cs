@@ -205,40 +205,11 @@ namespace Aurora.Modules.WorldMap
             renderer.Scene.sceneobject("Water").setPos((m_scene.RegionInfo.RegionSizeX/2) - 0.5f, waterHeight,
                                                        (m_scene.RegionInfo.RegionSizeY/2) - 0.5f);
 
-            RegionLightShareData rls = m_scene.RequestModuleInterface<IWindLightSettingsModule>().FindRegionWindLight();
-
-            AssetBase textureAsset = m_scene.AssetService.Get(rls.normalMapTexture.ToString());
-            warp_Material waterColormaterial;
-            if (rls != null)
-                waterColormaterial =
-                    new warp_Material(
-                        ConvertColor(new Color4(rls.waterColor.X/256, rls.waterColor.Y/256, rls.waterColor.Z/256,
-                                                WATER_COLOR.A)));
-            else
-                waterColormaterial = new warp_Material(ConvertColor(WATER_COLOR));
-
+            warp_Material waterColormaterial = new warp_Material(ConvertColor(WATER_COLOR));
             waterColormaterial.setTransparency((byte) ((1f - WATER_COLOR.A)*255f)*2);
             waterColormaterial.setReflectivity(50);
             renderer.Scene.addMaterial("WaterColor", waterColormaterial);
             renderer.SetObjectMaterial("Water", "WaterColor");
-
-            /*if (textureAsset != null)
-            {
-                IJ2KDecoder decoder = m_scene.RequestModuleInterface<IJ2KDecoder> ();
-                Bitmap bitmap = (Bitmap)decoder.DecodeToImage (textureAsset.Data);
-                if (bitmap != null)
-                {
-                    textureAsset = null;
-                    warp_Texture texture = new warp_Texture (bitmap);
-                    warp_Material waterTextmaterial = new warp_Material (texture);
-                    waterTextmaterial.setTransparency ((byte)((1f - WATER_COLOR.A) * 255f) * 4);
-                    waterTextmaterial.setReflectivity (0);
-                    renderer.AddPlane ("Water2", m_scene.RegionInfo.RegionSizeX * 0.5f);
-                    renderer.Scene.sceneobject ("Water2").setPos ((m_scene.RegionInfo.RegionSizeX / 2) - 0.5f, waterHeight, (m_scene.RegionInfo.RegionSizeY / 2) - 0.5f);
-                    renderer.Scene.addMaterial ("WaterColor2", waterTextmaterial);
-                    renderer.SetObjectMaterial ("Water2", "WaterColor2");
-                }
-            }*/
         }
 
         private warp_Object CreateTerrain(WarpRenderer renderer, bool textureTerrain)

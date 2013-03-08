@@ -129,7 +129,6 @@ namespace Aurora.Modules.Estate
 
             m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide = allowParcelChanges;
 
-            m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
 
             sendRegionInfoPacketToAll();
@@ -243,7 +242,6 @@ namespace Aurora.Modules.Estate
             m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide = allow_parcel_changes;
             m_scene.RegionInfo.RegionSettings.BlockShowInSearch = block_parcel_search;
 
-            m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
 
             sendRegionInfoPacketToAll();
@@ -312,7 +310,6 @@ namespace Aurora.Modules.Estate
 
         private void handleCommitEstateTerrainTextureRequest(IClientAPI remoteClient)
         {
-            m_scene.RegionInfo.RegionSettings.Save ();
             TriggerRegionInfoChange ();
             sendRegionHandshakeToAll ();
             //sendRegionInfoPacketToAll ();
@@ -347,7 +344,6 @@ namespace Aurora.Modules.Estate
                 //MainConsole.Instance.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
 
                 sendRegionInfoPacketToAll();
-                m_scene.RegionInfo.RegionSettings.Save();
                 TriggerRegionInfoChange();
             }
         }
@@ -377,7 +373,6 @@ namespace Aurora.Modules.Estate
         {
             m_scene.RegionInfo.RegionSettings.Covenant = estateCovenantID;
             m_scene.RegionInfo.RegionSettings.CovenantLastUpdated = Util.UnixTimeSinceEpoch();
-            m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
         }
 
@@ -784,15 +779,10 @@ namespace Aurora.Modules.Estate
         private void handleEstateDebugRegionRequest(IClientAPI remote_client, UUID invoice, UUID senderID, bool scripted, bool collisionEvents, bool physics)
         {
             m_scene.RegionInfo.RegionSettings.DisablePhysics = physics;
-
             m_scene.RegionInfo.RegionSettings.DisableScripts = scripted;
-
             m_scene.RegionInfo.RegionSettings.DisableCollisions = collisionEvents;
 
-
-            m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
-
             SetSceneCoreDebug(scripted, collisionEvents, physics);
         }
 
@@ -1349,10 +1339,8 @@ namespace Aurora.Modules.Estate
                             m_scene.RegionInfo.RegionSettings.TerrainTexture4 = texture;
                             break;
                     }
-                    m_scene.RegionInfo.RegionSettings.Save();
                     TriggerRegionInfoChange();
                     sendRegionInfoPacketToAll();
-
                 }
             }
          }
@@ -1395,7 +1383,6 @@ namespace Aurora.Modules.Estate
                             m_scene.RegionInfo.RegionSettings.Elevation2NE = highValue;
                             break;
                     }
-                    m_scene.RegionInfo.RegionSettings.Save();
                     TriggerRegionInfoChange();
                     sendRegionHandshakeToAll();
                 }

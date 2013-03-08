@@ -66,11 +66,6 @@ namespace Aurora.Framework
         {
         }
 
-        public EstateSettings(Dictionary<string, object> values)
-        {
-            FromKVP(values);
-        }
-
         public uint EstateID { get; set; }
 
         public string EstateName
@@ -356,16 +351,6 @@ namespace Aurora.Framework
             values["EstateAccess"] = Access;
 
             return values;
-        }
-
-        public override void FromKVP(Dictionary<string, object> values)
-        {
-            FromOSD(Util.DictionaryToOSD(values));
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
         }
 
         public void Save()

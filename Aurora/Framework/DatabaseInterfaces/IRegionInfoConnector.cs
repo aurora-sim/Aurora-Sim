@@ -64,30 +64,5 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="regionInfo"></param>
         void Delete(RegionInfo regionInfo);
-
-        /// <summary>
-        /// Loads stored WindLight settings for the given region
-        /// </summary>
-        /// <param name="regionUUID"></param>
-        /// <returns></returns>
-        Dictionary<float, RegionLightShareData> LoadRegionWindlightSettings(UUID regionUUID);
-
-        /// <summary>
-        /// Stores WindLight settings for the given region
-        /// </summary>
-        void StoreRegionWindlightSettings (UUID RegionID, UUID ID, RegionLightShareData lsd);
-
-        /// <summary>
-        /// Store the given regions settings (this includes some of the Region/Estate pieces)
-        /// </summary>
-        /// <param name="rs"></param>
-        void StoreRegionSettings (RegionSettings rs);
-
-        /// <summary>
-        /// Load stored region settings from the database
-        /// </summary>
-        /// <param name="regionUUID"></param>
-        /// <returns></returns>
-        RegionSettings LoadRegionSettings (UUID regionUUID);
     }
 }

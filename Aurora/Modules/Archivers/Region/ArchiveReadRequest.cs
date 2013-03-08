@@ -695,8 +695,6 @@ namespace Aurora.Modules.Archivers
             currentRegionSettings.UseEstateSun = loadedRegionSettings.UseEstateSun;
             currentRegionSettings.WaterHeight = loadedRegionSettings.WaterHeight;
 
-            currentRegionSettings.Save();
-
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
 
             if (estateModule != null)
@@ -761,10 +759,7 @@ namespace Aurora.Modules.Archivers
                         currentRegionSettings.LoadedCreationID = xtr.ReadElementContentAsString();
                     }
                 }
-
             }
-
-            currentRegionSettings.Save();
         }
     }
 }

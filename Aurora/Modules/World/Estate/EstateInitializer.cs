@@ -285,9 +285,8 @@ namespace Aurora.Modules.Estate
             EstateSettings settings = scene.RegionInfo.EstateSettings;
             if (settings == null)
                 return;
-            writer.WriteDir("estate");
-            string xmlData = WebUtils.BuildXmlResponse(settings.ToKVP());
-            writer.WriteFile("estate/" + scene.RegionInfo.RegionName, xmlData);
+            writer.WriteDir("estatesettings");
+            writer.WriteFile("estatesettings/" + scene.RegionInfo.RegionName, OSDParser.SerializeLLSDBinary(settings.ToOSD()));
 
             MainConsole.Instance.Debug("[Archive]: Finished writing estates to archive");
             MainConsole.Instance.Debug("[Archive]: Writing region info to archive");
@@ -295,17 +294,17 @@ namespace Aurora.Modules.Estate
             writer.WriteDir("regioninfo");
             RegionInfo regionInfo = scene.RegionInfo;
 
-            writer.WriteFile("regioninfo/" + scene.RegionInfo.RegionName, OSDParser.SerializeLLSDBinary(regionInfo.PackRegionInfoData(true)));
+            writer.WriteFile("regioninfo/" + scene.RegionInfo.RegionName, OSDParser.SerializeLLSDBinary(regionInfo.PackRegionInfoData()));
 
             MainConsole.Instance.Debug("[Archive]: Finished writing region info to archive");
         }
 
         public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
         {
-            if (filePath.StartsWith("estate/"))
+            if (filePath.StartsWith("estatesettings/"))
             {
-                string estateData = Encoding.UTF8.GetString(data);
-                EstateSettings settings = new EstateSettings(WebUtils.ParseXmlResponse(estateData));
+                EstateSettings settings = new EstateSettings();
+                settings.FromOSD((OSDMap)OSDParser.DeserializeLLSDBinary(data));
                 scene.RegionInfo.EstateSettings = settings;
             }
             else if (filePath.StartsWith("regioninfo/"))

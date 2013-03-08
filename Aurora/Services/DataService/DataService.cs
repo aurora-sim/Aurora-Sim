@@ -84,7 +84,7 @@ namespace Aurora.Services.DataService
             {
                 try
                 {
-                    plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
+                    plugin.Initialize(DataConnector == null ? null : DataConnector.Copy(), source, simBase, ConnectionString);
                 }
                 catch(Exception ex)
                 {

@@ -53,7 +53,8 @@ namespace Aurora.Services.DataService
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
                 }
 
-                GD.ConnectToDatabase(defaultConnectionString, "AvatarArchive",
+                if (GD != null)
+                    GD.ConnectToDatabase(defaultConnectionString, "AvatarArchive",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
                 DataManager.DataManager.RegisterPlugin(this);
             }

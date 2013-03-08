@@ -238,21 +238,6 @@ namespace Aurora.Modules.Gods
 
             //Save the changes
             client.Scene.RegionInfo.EstateSettings.Save();
-            client.Scene.RegionInfo.RegionSettings.Save();
-
-            //Save the changes
-            IConfig config = m_config.Configs["RegionStartup"];
-            if (config != null)
-            {
-                //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                    SaveChangesDatabase(client.Scene.RegionInfo);
-                else
-                    SaveChangesFile(oldRegionName, client.Scene.RegionInfo);
-            }
-            else
-                SaveChangesFile(oldRegionName, client.Scene.RegionInfo);
-
 
             //Tell the clients to update all references to the new settings
             foreach (IScenePresence sp in client.Scene.GetScenePresences())
@@ -269,67 +254,6 @@ namespace Aurora.Modules.Gods
         #endregion
 
         #region Helpers
-
-        /// <summary>
-        ///   Save the config files
-        /// </summary>
-        /// <param name = "OldRegionName"></param>
-        /// <param name = "regionInfo"></param>
-        private void SaveChangesFile(string OldRegionName, RegionInfo regionInfo)
-        {
-            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
-
-            try
-            {
-                IConfig startupConfig = m_config.Configs["RegionStartup"];
-                regionConfigPath = startupConfig.GetString("RegionsDirectory", regionConfigPath).Trim();
-            }
-            catch (Exception)
-            {
-                // No INI setting recorded.
-            }
-            if (!Directory.Exists(regionConfigPath))
-                return;
-
-            string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
-            int i = 0;
-            foreach (string file in iniFiles)
-            {
-                IConfigSource source = new IniConfigSource(file, IniFileType.AuroraStyle);
-                IConfig cnf = source.Configs[OldRegionName];
-                if (cnf != null) //Does the old one exist in this file?
-                {
-                    IConfig check = source.Configs[regionInfo.RegionName];
-                    if (check == null) //Is the new name non existant as well?
-                    {
-                        cnf.Set("Location",
-                                (regionInfo.RegionLocX/Constants.RegionSize) + "," +
-                                (regionInfo.RegionLocY/Constants.RegionSize));
-                        cnf.Name = regionInfo.RegionName;
-                        source.Save();
-                    }
-                    else
-                    {
-                        //The new region exists too, no name change
-                        check.Set("Location",
-                                  (regionInfo.RegionLocX/Constants.RegionSize) + "," +
-                                  (regionInfo.RegionLocY/Constants.RegionSize));
-                    }
-                }
-                i++;
-            }
-        }
-
-        /// <summary>
-        ///   Save the database configs
-        /// </summary>
-        /// <param name = "regionInfo"></param>
-        private void SaveChangesDatabase(RegionInfo regionInfo)
-        {
-            IRegionInfoConnector connector = DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
-            if (connector != null)
-                connector.UpdateRegionInfo(regionInfo);
-        }
 
         /// <summary>
         ///   Tell the client about the changes

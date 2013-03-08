@@ -248,10 +248,8 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             m_scene = scene;
             scene.EventManager.OnMakeRootAgent += OnNewClient;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
+            m_settings = scene.RegionInfo.OpenRegionSettings;
             scene.RegisterModuleInterface<IOpenRegionSettingsModule>(this);
-            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-            if (orsc != null)
-                m_settings = orsc.GetSettings(scene.RegionInfo.RegionID);
             ReadConfig(scene);
         }
 
@@ -262,7 +260,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
         public void RegionLoaded(IScene scene)
         {
             IChatModule chatmodule = scene.RequestModuleInterface<IChatModule>();
-            if (chatmodule != null)
+            if (chatmodule != null && m_settings != null)
             {
                 //Set default chat ranges
                 m_settings.WhisperDistance = chatmodule.WhisperDistance;
@@ -338,12 +336,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             m_settings.EnableTeenMode = rm["enable_teen_mode"].AsBoolean();
             m_settings.ClampPrimSizes = rm["enforce_max_build"].AsBoolean();
 
-            IOpenRegionSettingsConnector connector =
-                DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-
-            //Update the database
-            if (connector != null)
-                connector.SetSettings(m_scene.RegionInfo.RegionID, m_settings);
+            m_scene.RegionInfo.OpenRegionSettings = m_settings;
 
             //Update all clients about changes
             SendToAllClients();
@@ -450,14 +443,9 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
             OSDMap body = new OSDMap();
 
-
-            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-            if (orsc != null)
-            {
-                if (sp.Scene.Permissions.CanIssueEstateCommand(sp.UUID, false))
-                    body.Add("EditURL", OSD.FromString(orsc.AddOpenRegionSettingsHTMLPage(sp.Scene.RegionInfo.RegionID)));
-            }
-
+            if (sp.Scene.Permissions.CanIssueEstateCommand(sp.UUID, false))
+                body.Add("EditURL", OSD.FromString(AddOpenRegionSettingsHTMLPage(sp.Scene)));
+            
             if (m_settings.MaxDragDistance != -1)
                 body.Add("MaxDragDistance", OSD.FromReal(m_settings.MaxDragDistance));
 
@@ -519,6 +507,75 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             map.Add("body", body);
             map.Add("message", OSD.FromString("OpenRegionInfo"));
             return map;
+        }
+
+        #endregion
+
+        #region ORS HTML
+
+        public string AddOpenRegionSettingsHTMLPage(IScene scene)
+        {
+            Dictionary<string, object> vars = new Dictionary<string, object>();
+            OpenRegionSettings settings = scene.RegionInfo.OpenRegionSettings;
+            vars.Add("Default Draw Distance", settings.DefaultDrawDistance.ToString());
+            vars.Add("Force Draw Distance", settings.ForceDrawDistance ? "checked" : "");
+            vars.Add("Max Drag Distance", settings.MaxDragDistance.ToString());
+            vars.Add("Max Prim Scale", settings.MaximumPrimScale.ToString());
+            vars.Add("Min Prim Scale", settings.MinimumPrimScale.ToString());
+            vars.Add("Max Physical Prim Scale", settings.MaximumPhysPrimScale.ToString());
+            vars.Add("Max Hollow Size", settings.MaximumHollowSize.ToString());
+            vars.Add("Min Hole Size", settings.MinimumHoleSize.ToString());
+            vars.Add("Max Link Count", settings.MaximumLinkCount.ToString());
+            vars.Add("Max Link Count Phys", settings.MaximumLinkCountPhys.ToString());
+            vars.Add("Max Inventory Items To Transfer", settings.MaximumInventoryItemsTransfer.ToString());
+            vars.Add("Terrain Scale", settings.TerrainDetailScale.ToString());
+            vars.Add("Show Tags", settings.ShowTags.ToString());
+            vars.Add("Render Water", settings.RenderWater ? "checked" : "");
+            vars.Add("Allow Minimap", settings.DisplayMinimap ? "checked" : "");
+            vars.Add("Allow Physical Prims", settings.AllowPhysicalPrims ? "checked" : "");
+            vars.Add("Enable Teen Mode", settings.EnableTeenMode ? "checked" : "");
+            vars.Add("Enforce Max Build Constraints", settings.ClampPrimSizes ? "checked" : "");
+            string HTMLPage = "";
+            string path = Util.BasePathCombine(System.IO.Path.Combine("data", "OpenRegionSettingsPage.html"));
+            if (System.IO.File.Exists(path))
+                HTMLPage = System.IO.File.ReadAllText(path);
+            return CSHTMLCreator.AddHTMLPage(HTMLPage, "", "OpenRegionSettings", vars, (newVars) =>
+            {
+                ParseUpdatedList(scene, newVars);
+                return AddOpenRegionSettingsHTMLPage(scene);
+            });
+        }
+
+        private void ParseUpdatedList(IScene scene, Dictionary<string, string> vars)
+        {
+            OpenRegionSettings settings = scene.RegionInfo.OpenRegionSettings;
+            settings.DefaultDrawDistance = floatParse(vars["Default Draw Distance"]);
+            settings.ForceDrawDistance = vars["Force Draw Distance"] != null;
+            settings.MaxDragDistance = floatParse(vars["Max Drag Distance"]);
+            settings.MaximumPrimScale = floatParse(vars["Max Prim Scale"]);
+            settings.MinimumPrimScale = floatParse(vars["Min Prim Scale"]);
+            settings.MaximumPhysPrimScale = floatParse(vars["Max Physical Prim Scale"]);
+            settings.MaximumHollowSize = floatParse(vars["Max Hollow Size"]);
+            settings.MinimumHoleSize = floatParse(vars["Min Hole Size"]);
+            settings.MaximumLinkCount = (int)floatParse(vars["Max Link Count"]);
+            settings.MaximumLinkCountPhys = (int)floatParse(vars["Max Link Count Phys"]);
+            settings.MaximumInventoryItemsTransfer = (int)floatParse(vars["Max Inventory Items To Transfer"]);
+            settings.TerrainDetailScale = floatParse(vars["Terrain Scale"]);
+            settings.ShowTags = (int)floatParse(vars["Show Tags"]);
+            settings.RenderWater = vars["Render Water"] != null;
+            settings.DisplayMinimap = vars["Allow Minimap"] != null;
+            settings.AllowPhysicalPrims = vars["Allow Physical Prims"] != null;
+            settings.EnableTeenMode = vars["Enable Teen Mode"] != null;
+            settings.ClampPrimSizes = vars["Enforce Max Build Constraints"] != null;
+            scene.RegionInfo.OpenRegionSettings = settings;
+        }
+
+        private float floatParse(string p)
+        {
+            float d = 0;
+            if (!float.TryParse(p, out d))
+                d = 0;
+            return d;
         }
 
         #endregion

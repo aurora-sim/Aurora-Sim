@@ -106,8 +106,6 @@ namespace Aurora.Services.SQLServices.UserAccountService
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
             m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            if (m_Database == null)
-                throw new Exception("Could not find a storage interface in the given module");
         }
 
         public void FinishedStartup()

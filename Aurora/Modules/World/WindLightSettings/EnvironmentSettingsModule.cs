@@ -15,7 +15,6 @@ namespace Aurora.Modules
 {
     public class EnvironmentSettingsModule : IEnvironmentSettingsModule, INonSharedRegionModule
     {
-        private OSD m_info;
         private IScene m_scene;
 
         #region INonSharedRegionModule Members
@@ -85,11 +84,7 @@ namespace Aurora.Modules
             string fail_reason = "";
             if (SP.Scene.Permissions.CanIssueEstateCommand(agentID, false))
             {
-                m_info = OSDParser.DeserializeLLSDXml(request);
-                IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                if (gc != null)
-                    gc.AddGeneric(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "",
-                                  (new OSDWrapper { Info = m_info }).ToOSD());
+                m_scene.RegionInfo.EnvironmentSettings = OSDParser.DeserializeLLSDXml(request);
                 success = true;
 
                 //Tell everyone about the changes
@@ -118,18 +113,8 @@ namespace Aurora.Modules
             if (SP == null)
                 return new byte[0]; //They don't exist
 
-            if (m_info == null)
-            {
-                IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                if (gc != null)
-                {
-                    OSDWrapper d = gc.GetGeneric<OSDWrapper>(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "");
-                    if (d != null)
-                        m_info = d.Info;
-                }
-            }
-            if (m_info != null)
-                return OSDParser.SerializeLLSDXmlBytes(m_info);
+            if (m_scene.RegionInfo.EnvironmentSettings != null)
+                return OSDParser.SerializeLLSDXmlBytes(m_scene.RegionInfo.EnvironmentSettings);
             return new byte[0];
         }
 
@@ -144,7 +129,7 @@ namespace Aurora.Modules
             }
         }
 
-        public OSD BuildEQM(int interpolate)
+        private OSD BuildEQM(int interpolate)
         {
             OSDMap map = new OSDMap();
 
@@ -155,6 +140,22 @@ namespace Aurora.Modules
             map.Add("body", body);
             map.Add("message", OSD.FromString("WindLightRefresh"));
             return map;
+        }
+
+        public WindlightDayCycle GetCurrentDayCycle()
+        {
+            if (m_scene.RegionInfo.EnvironmentSettings != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(m_scene.RegionInfo.EnvironmentSettings);
+                return cycle;
+            }
+            return null;
+        }
+
+        public void SetDayCycle(WindlightDayCycle cycle)
+        {
+            m_scene.RegionInfo.EnvironmentSettings = cycle.ToOSD();
         }
     }
 }

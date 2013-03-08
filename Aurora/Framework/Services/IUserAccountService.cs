@@ -91,65 +91,6 @@ namespace OpenSim.Services.Interfaces
             }
         }
 
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            result["FirstName"] = FirstName;
-            result["LastName"] = LastName;
-            result["Email"] = Email;
-            result["PrincipalID"] = PrincipalID.ToString();
-            result["ScopeID"] = ScopeID.ToString();
-            result["Created"] = Created.ToString();
-            result["UserLevel"] = UserLevel.ToString();
-            result["UserFlags"] = UserFlags.ToString();
-            result["UserTitle"] = UserTitle;
-
-            string str = ServiceURLs.Aggregate(string.Empty, (current, kvp) => current + (kvp.Key + "*" + (kvp.Value ?? "") + ";"));
-            result["ServiceURLs"] = str;
-
-            return result;
-        }
-
-        public override void FromKVP(Dictionary<string, object> kvp)
-        {
-            if (kvp.ContainsKey("FirstName") && kvp.ContainsKey("LastName"))
-                Name = kvp["FirstName"] + " " + kvp["LastName"];
-            if (kvp.ContainsKey("Name"))
-                Name = kvp["Name"].ToString();
-            if (kvp.ContainsKey("Email"))
-                Email = kvp["Email"].ToString();
-            if (kvp.ContainsKey("PrincipalID"))
-            {
-                UUID id;
-                if (UUID.TryParse(kvp["PrincipalID"].ToString(), out id))
-                    PrincipalID = id;
-            }
-            if (kvp.ContainsKey("ScopeID"))
-                UUID.TryParse(kvp["ScopeID"].ToString(), out ScopeID);
-            if (kvp.ContainsKey("UserLevel"))
-                UserLevel = Convert.ToInt32(kvp["UserLevel"].ToString());
-            if (kvp.ContainsKey("UserFlags"))
-                UserFlags = Convert.ToInt32(kvp["UserFlags"].ToString());
-            if (kvp.ContainsKey("UserTitle"))
-                UserTitle = kvp["UserTitle"].ToString();
-
-            if (kvp.ContainsKey("Created"))
-                Created = Convert.ToInt32(kvp["Created"].ToString());
-            if (kvp.ContainsKey("ServiceURLs") && kvp["ServiceURLs"] != null)
-            {
-                ServiceURLs = new Dictionary<string, object>();
-                string str = kvp["ServiceURLs"].ToString();
-                if (str != string.Empty)
-                {
-                    string[] parts = str.Split(new[] { ';' });
-                    foreach (string[] parts2 in parts.Select(s => s.Split(new[] {'*'})).Where(parts2 => parts2.Length == 2))
-                    {
-                        ServiceURLs[parts2[0]] = parts2[1];
-                    }
-                }
-            }
-        }
-
         public override OSDMap ToOSD()
         {
             OSDMap result = new OSDMap();

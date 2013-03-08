@@ -30,7 +30,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            genericData.ConnectToDatabase(defaultConnectionString, "Asset",
+            if (genericData != null)
+                genericData.ConnectToDatabase(defaultConnectionString, "Asset",
                                           source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
             DataManager.DataManager.RegisterPlugin(this);
         }

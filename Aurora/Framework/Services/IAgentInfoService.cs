@@ -112,16 +112,6 @@ namespace OpenSim.Services.Interfaces
             if (retVal["Info"].Type == OSDType.Map)
                 Info = (OSDMap) retVal["Info"];
         }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
-        }
     }
 
     public interface IAgentInfoService

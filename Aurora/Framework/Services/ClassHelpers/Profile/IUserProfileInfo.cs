@@ -96,11 +96,6 @@ namespace Aurora.Framework
         /// </summary>
         public string Name { get; set; }
 
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap
@@ -132,11 +127,6 @@ namespace Aurora.Framework
             LanguageIsPublic = map["LanguageIsPublic"].AsBoolean();
             if (map.ContainsKey("OtherAgentInformation"))
                 OtherAgentInformation = (OSDMap) OSDParser.DeserializeLLSDXml(map["OtherAgentInformation"].AsString());
-        }
-
-        public override void FromKVP(Dictionary<string, object> RetVal)
-        {
-            FromOSD(Util.DictionaryToOSD(RetVal));
         }
     }
 
@@ -251,11 +241,6 @@ namespace Aurora.Framework
         /// </summary>
         public string WebURL = String.Empty;
 
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
         public override OSDMap ToOSD()
         {
             return ToOSD(true);
@@ -344,11 +329,6 @@ namespace Aurora.Framework
             IsNewUser = map["IsNewUser"].AsBoolean();
             MembershipGroup = map["MembershipGroup"].AsString();
         }
-
-        public override void FromKVP(Dictionary<string, object> RetVal)
-        {
-            FromOSD(Util.DictionaryToOSD(RetVal));
-        }
     }
 
     public class ProfileInterests
@@ -422,16 +402,6 @@ namespace Aurora.Framework
             ClassifiedFlags = (byte) map["ClassifiedFlags"].AsInteger();
             PriceForListing = map["PriceForListing"].AsInteger();
         }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
     }
 
     public class ProfilePickInfo : IDataTransferable
@@ -486,16 +456,6 @@ namespace Aurora.Framework
             GlobalPos = map["GlobalPos"].AsVector3();
             SortOrder = map["SortOrder"].AsInteger();
             Enabled = map["Enabled"].AsInteger();
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
         }
     }
 }

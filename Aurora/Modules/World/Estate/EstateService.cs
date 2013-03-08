@@ -195,7 +195,6 @@ namespace Aurora.Modules.Estate
                     MainConsole.Instance.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
                     return;
                 }
-                scene.RegionInfo.RegionSettings.Save();
                 //Tell the grid about the changes
                 IGridRegisterModule gridRegModule = scene.RequestModuleInterface<IGridRegisterModule>();
                 if (gridRegModule != null)
@@ -249,7 +248,6 @@ namespace Aurora.Modules.Estate
 
             #endregion
 
-            scene.RegionInfo.RegionSettings.Save();
             scene.RegionInfo.EstateSettings.Save();
         }
 

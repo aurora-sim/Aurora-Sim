@@ -64,7 +64,8 @@ namespace Aurora.Services.DataService
                         source.Configs[Name].GetBoolean("CheckLastSeen",
                                                         m_checkLastSeen);
                 }
-                GD.ConnectToDatabase(connectionString, "UserInfo",
+                if (GD != null)
+                    GD.ConnectToDatabase(connectionString, "UserInfo",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(this);

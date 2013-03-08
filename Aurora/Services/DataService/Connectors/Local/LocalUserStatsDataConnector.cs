@@ -52,7 +52,8 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(defaultConnectionString, "Stats", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                if (GD != null)
+                    GD.ConnectToDatabase(defaultConnectionString, "Stats", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }

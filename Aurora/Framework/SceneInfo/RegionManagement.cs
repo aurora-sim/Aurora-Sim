@@ -13,7 +13,6 @@ namespace Aurora.Framework
     public class RegionManagement : ConnectorBase, IRegionManagement, IApplicationPlugin
     {
         private ISceneManager _sceneManager;
-        private IRegionInfoConnector _regionInfoConnector;
         private string _url = "";
         private bool m_enabled = false;
 
@@ -49,7 +48,6 @@ namespace Aurora.Framework
 
         public void Initialize(ISimulationBase simBase)
         {
-            _regionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             _sceneManager = m_registry.RequestModuleInterface<ISceneManager>();
         }
 
@@ -145,36 +143,6 @@ namespace Aurora.Framework
             _sceneManager.RemoveRegion(true);//Deletes the .abackup file, all prims in the region, and the info from all region loaders
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
-        public List<RegionInfo> GetRegionInfos(bool nonDisabledOnly)
-        {
-            object remoteValue = InternalDoRemote(nonDisabledOnly);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (List<RegionInfo>)remoteValue;
-
-            return new List<RegionInfo>(_regionInfoConnector.GetRegionInfos(nonDisabledOnly));
-        }
-
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
-        public void UpdateRegionInfo(RegionInfo region)
-        {
-            InternalDoRemote(region);
-            if (m_doRemoteOnly)
-                return;
-
-            _regionInfoConnector.UpdateRegionInfo(region);
-        }
-
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod="GetRegionInfoByName")]
-        public RegionInfo GetRegionInfo(string regionName)
-        {
-            object remoteValue = InternalDoRemote(regionName);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (RegionInfo)remoteValue;
-
-            return _regionInfoConnector.GetRegionInfo(regionName);
-        }
-
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod = "GetRegionInfoByUUID")]
         public RegionInfo GetRegionInfo(UUID regionID)
         {
@@ -182,7 +150,7 @@ namespace Aurora.Framework
             if (remoteValue != null || m_doRemoteOnly)
                 return (RegionInfo)remoteValue;
 
-            return _regionInfoConnector.GetRegionInfo(regionID);
+            return _sceneManager.Scene.RegionInfo;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
@@ -192,83 +160,78 @@ namespace Aurora.Framework
             if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
-            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-            if (orsc != null)
-                return orsc.AddOpenRegionSettingsHTMLPage(regionID);
+            AddOpenRegionSettingsHTMLPage(_sceneManager.Scene);
             return "";
         }
 
-        private string _defaultRegionsLocation = "DefaultRegions";
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
-        public List<string> GetDefaultRegionNames()
+        #region ORS HTML
+
+        public string AddOpenRegionSettingsHTMLPage(IScene scene)
         {
-            object remoteValue = InternalDoRemote();
-            if (remoteValue != null || m_doRemoteOnly)
-                return (List<string>)remoteValue;
-            IConfig config = _sceneManager.ConfigSource.Configs["RegionManager"];
-            if (config != null)
-                _defaultRegionsLocation = config.GetString("DefaultRegionsLocation", _defaultRegionsLocation);
-
-            if (!Directory.Exists(_defaultRegionsLocation))
-                return new List<string>();
-
-            return new List<string>(Directory.GetFiles(_defaultRegionsLocation, "*.abackup"));
-        }
-
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
-        public System.Drawing.Image GetDefaultRegionImage(string name)
-        {
-            object remoteValue = InternalDoRemote(name);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (System.Drawing.Image)remoteValue;
-
-            IConfig config = _sceneManager.ConfigSource.Configs["RegionManager"];
-            if (config != null)
-                _defaultRegionsLocation = config.GetString("DefaultRegionsLocation", _defaultRegionsLocation);
-
-            System.Drawing.Image b = null;
-            if (File.Exists(Path.Combine(_defaultRegionsLocation, name + ".png")))
-                b = System.Drawing.Image.FromFile(Path.Combine(_defaultRegionsLocation, name + ".png"));
-            else if (File.Exists(Path.Combine(_defaultRegionsLocation, name + ".jpg")))
-                b = System.Drawing.Image.FromFile(Path.Combine(_defaultRegionsLocation, name + ".jpg"));
-            else if (File.Exists(Path.Combine(_defaultRegionsLocation, name + ".jpeg")))
-                b = System.Drawing.Image.FromFile(Path.Combine(_defaultRegionsLocation, name + ".jpeg"));
-
-            return b;
-        }
-
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
-        public bool MoveDefaultRegion(string regionName, string fileName, bool forced)
-        {
-            object remoteValue = InternalDoRemote(regionName, fileName, forced);
-            if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
-
-            string name = Path.Combine(_defaultRegionsLocation, fileName + ".abackup");//Full name
-            if (!File.Exists(name))
-                return true;//None selected, it can't be done, just don't do anything about it
-
-            string loadAppenedFileName = "";
-            string newFilePath = "";
-            IConfig simData = _sceneManager.ConfigSource.Configs["FileBasedSimulationData"];
-            if (simData != null)
+            Dictionary<string, object> vars = new Dictionary<string, object>();
+            OpenRegionSettings settings = scene.RegionInfo.OpenRegionSettings;
+            vars.Add("Default Draw Distance", settings.DefaultDrawDistance.ToString());
+            vars.Add("Force Draw Distance", settings.ForceDrawDistance ? "checked" : "");
+            vars.Add("Max Drag Distance", settings.MaxDragDistance.ToString());
+            vars.Add("Max Prim Scale", settings.MaximumPrimScale.ToString());
+            vars.Add("Min Prim Scale", settings.MinimumPrimScale.ToString());
+            vars.Add("Max Physical Prim Scale", settings.MaximumPhysPrimScale.ToString());
+            vars.Add("Max Hollow Size", settings.MaximumHollowSize.ToString());
+            vars.Add("Min Hole Size", settings.MinimumHoleSize.ToString());
+            vars.Add("Max Link Count", settings.MaximumLinkCount.ToString());
+            vars.Add("Max Link Count Phys", settings.MaximumLinkCountPhys.ToString());
+            vars.Add("Max Inventory Items To Transfer", settings.MaximumInventoryItemsTransfer.ToString());
+            vars.Add("Terrain Scale", settings.TerrainDetailScale.ToString());
+            vars.Add("Show Tags", settings.ShowTags.ToString());
+            vars.Add("Render Water", settings.RenderWater ? "checked" : "");
+            vars.Add("Allow Minimap", settings.DisplayMinimap ? "checked" : "");
+            vars.Add("Allow Physical Prims", settings.AllowPhysicalPrims ? "checked" : "");
+            vars.Add("Enable Teen Mode", settings.EnableTeenMode ? "checked" : "");
+            vars.Add("Enforce Max Build Constraints", settings.ClampPrimSizes ? "checked" : "");
+            string HTMLPage = "";
+            string path = Util.BasePathCombine(System.IO.Path.Combine("data", "OpenRegionSettingsPage.html"));
+            if (System.IO.File.Exists(path))
+                HTMLPage = System.IO.File.ReadAllText(path);
+            return CSHTMLCreator.AddHTMLPage(HTMLPage, "", "OpenRegionSettings", vars, (newVars) =>
             {
-                loadAppenedFileName = simData.GetString("ApendedLoadFileName", loadAppenedFileName);
-                newFilePath = simData.GetString("LoadBackupDirectory", newFilePath);
-            }
-            string newFileName = newFilePath == "" || newFilePath == "/" ?
-                regionName + loadAppenedFileName + ".abackup" :
-                Path.Combine(newFilePath, regionName + loadAppenedFileName + ".abackup");
-            if (File.Exists(newFileName))
-            {
-                if (!forced)
-                    return false;
-                else
-                    File.Delete(newFileName);
-            }
-            File.Copy(name, newFileName);
-            return true;
+                ParseUpdatedList(scene, newVars);
+                return AddOpenRegionSettingsHTMLPage(scene);
+            });
         }
+
+        private void ParseUpdatedList(IScene scene, Dictionary<string, string> vars)
+        {
+            OpenRegionSettings settings = scene.RegionInfo.OpenRegionSettings;
+            settings.DefaultDrawDistance = floatParse(vars["Default Draw Distance"]);
+            settings.ForceDrawDistance = vars["Force Draw Distance"] != null;
+            settings.MaxDragDistance = floatParse(vars["Max Drag Distance"]);
+            settings.MaximumPrimScale = floatParse(vars["Max Prim Scale"]);
+            settings.MinimumPrimScale = floatParse(vars["Min Prim Scale"]);
+            settings.MaximumPhysPrimScale = floatParse(vars["Max Physical Prim Scale"]);
+            settings.MaximumHollowSize = floatParse(vars["Max Hollow Size"]);
+            settings.MinimumHoleSize = floatParse(vars["Min Hole Size"]);
+            settings.MaximumLinkCount = (int)floatParse(vars["Max Link Count"]);
+            settings.MaximumLinkCountPhys = (int)floatParse(vars["Max Link Count Phys"]);
+            settings.MaximumInventoryItemsTransfer = (int)floatParse(vars["Max Inventory Items To Transfer"]);
+            settings.TerrainDetailScale = floatParse(vars["Terrain Scale"]);
+            settings.ShowTags = (int)floatParse(vars["Show Tags"]);
+            settings.RenderWater = vars["Render Water"] != null;
+            settings.DisplayMinimap = vars["Allow Minimap"] != null;
+            settings.AllowPhysicalPrims = vars["Allow Physical Prims"] != null;
+            settings.EnableTeenMode = vars["Enable Teen Mode"] != null;
+            settings.ClampPrimSizes = vars["Enforce Max Build Constraints"] != null;
+            scene.RegionInfo.OpenRegionSettings = settings;
+        }
+
+        private float floatParse(string p)
+        {
+            float d = 0;
+            if (!float.TryParse(p, out d))
+                d = 0;
+            return d;
+        }
+
+        #endregion
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
         public List<string> GetEstatesForUser(string name)

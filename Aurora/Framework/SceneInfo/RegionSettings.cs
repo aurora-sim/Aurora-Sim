@@ -316,14 +316,6 @@ namespace Aurora.Framework
             set { m_LoadedCreationID = value; }
         }
 
-        public event SaveDelegate OnSave;
-
-        public void Save()
-        {
-            if (OnSave != null)
-                OnSave(this);
-        }
-
         public void AddGeneric(string key, OSD value)
         {
             m_Generic[key] = value;

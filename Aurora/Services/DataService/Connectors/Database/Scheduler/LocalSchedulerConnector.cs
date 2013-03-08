@@ -71,7 +71,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
             if (source.Configs[Name] != null)
                 DefaultConnectionString = source.Configs[Name].GetString("ConnectionString", DefaultConnectionString);
-            GenericData.ConnectToDatabase(DefaultConnectionString, "Scheduler",
+            if (GenericData != null)
+                GenericData.ConnectToDatabase(DefaultConnectionString, "Scheduler",
                                           source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             m_Gd = GenericData;

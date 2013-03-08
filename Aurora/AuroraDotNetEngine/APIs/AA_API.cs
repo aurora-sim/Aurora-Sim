@@ -886,68 +886,60 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List aaWindlightGetScene(LSL_List rules)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+
+            if (!cycle.Cycle.IsStaticDayCycle)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC });
+
+            LSL_List list = new LSL_List();
+            for (int i = 0; i < rules.Data.Length; i++)
             {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
+                int rule = rules.GetLSLIntegerItem(i);
 
-                if (!cycle.Cycle.IsStaticDayCycle)
-                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC });
-
-                LSL_List list = new LSL_List();
-                for (int i = 0; i < rules.Data.Length; i++)
-                {
-                    int rule = rules.GetLSLIntegerItem(i);
-
-                    ConvertWindlightDayCycle(cycle, 0, rule, ref list);
-                }
-                return list;
+                ConvertWindlightDayCycle(cycle, 0, rule, ref list);
             }
-
-            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            return list;
         }
 
         public LSL_List aaWindlightGetScene(int dayCycleIndex, LSL_List rules)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+
+            if (cycle.Cycle.IsStaticDayCycle)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_NOT_BE_STATIC });
+
+            if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_PRESET_FOUND });
+
+            LSL_List list = new LSL_List();
+            for (int i = 0; i < rules.Data.Length; i++)
             {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
+                int rule = rules.GetLSLIntegerItem(i);
 
-                if (cycle.Cycle.IsStaticDayCycle)
-                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_NOT_BE_STATIC });
-
-                if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
-                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_PRESET_FOUND });
-
-                LSL_List list = new LSL_List();
-                for (int i = 0; i < rules.Data.Length; i++)
-                {
-                    int rule = rules.GetLSLIntegerItem(i);
-
-                    ConvertWindlightDayCycle(cycle, dayCycleIndex, rule, ref list);
-                }
-                return list;
+                ConvertWindlightDayCycle(cycle, dayCycleIndex, rule, ref list);
             }
-
-            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            return list;
         }
 
         public LSL_Integer aaWindlightGetSceneIsStatic()
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
-            {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
-                return new LSL_Integer(cycle.Cycle.IsStaticDayCycle ? 1 : 0);
-            }
-            return new LSL_Integer(-1);
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_Integer(-1);
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_Integer(-1);
+            return new LSL_Integer(cycle.Cycle.IsStaticDayCycle ? 1 : 0);
         }
 
         #endregion
@@ -956,132 +948,112 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Integer aaWindlightGetSceneDayCycleKeyFrameCount()
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
-            {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
-                return new LSL_Integer(cycle.Cycle.DataSettings.Count);
-            }
-            return new LSL_Integer(-1);
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_Integer(-1);
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_Integer(-1);
+            return new LSL_Integer(cycle.Cycle.DataSettings.Count);
         }
 
         public LSL_List aaWindlightGetDayCycle()
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+
+            if (cycle.Cycle.IsStaticDayCycle)
+                return new LSL_List(new object[3] { 0, -1, cycle.Cycle.DataSettings["-1"].preset_name });
+
+            LSL_List list = new LSL_List();
+
+            int i = 0;
+            foreach (var key in cycle.Cycle.DataSettings)
             {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
-                if (cycle.Cycle.IsStaticDayCycle)
-                    return new LSL_List(new object[3] { 0, -1, cycle.Cycle.DataSettings["-1"].preset_name });
-
-                LSL_List list = new LSL_List();
-
-                int i = 0;
-                foreach (var key in cycle.Cycle.DataSettings)
-                {
-                    list.Add(i++);
-                    list.Add(key.Key);
-                    list.Add(key.Value.preset_name);
-                }
-                return list;
+                list.Add(i++);
+                list.Add(key.Key);
+                list.Add(key.Value.preset_name);
             }
-
-            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            return list;
         }
 
         public LSL_Integer aaWindlightRemoveDayCycleFrame(int dayCycleFrame)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
-            {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return LSL_Integer.FALSE;
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return LSL_Integer.FALSE;
 
-                if (cycle.Cycle.IsStaticDayCycle || dayCycleFrame >= cycle.Cycle.DataSettings.Count)
-                    return LSL_Integer.FALSE;
+            if (cycle.Cycle.IsStaticDayCycle || dayCycleFrame >= cycle.Cycle.DataSettings.Count)
+                return LSL_Integer.FALSE;
 
-                var data = cycle.Cycle.DataSettings.Keys.ToList();
-                string keyToRemove = data[dayCycleFrame];
-                cycle.Cycle.DataSettings.Remove(keyToRemove);
-                gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
-                return LSL_Integer.TRUE;
-            }
-            return LSL_Integer.FALSE;
+            var data = cycle.Cycle.DataSettings.Keys.ToList();
+            string keyToRemove = data[dayCycleFrame];
+            cycle.Cycle.DataSettings.Remove(keyToRemove);
+            environmentSettings.SetDayCycle(cycle);
+            return LSL_Integer.TRUE;
         }
 
         public LSL_Integer aaWindlightAddDayCycleFrame(LSL_Float dayCyclePosition, int dayCycleFrameToCopy)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
-            {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return LSL_Integer.FALSE;
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if(cycle == null)
+                return LSL_Integer.FALSE;
 
-                if (cycle.Cycle.IsStaticDayCycle || dayCycleFrameToCopy >= cycle.Cycle.DataSettings.Count)
-                    return LSL_Integer.FALSE;
+            if (cycle.Cycle.IsStaticDayCycle || dayCycleFrameToCopy >= cycle.Cycle.DataSettings.Count)
+                return LSL_Integer.FALSE;
 
-                var data = cycle.Cycle.DataSettings.Keys.ToList();
-                cycle.Cycle.DataSettings.Add(dayCyclePosition.ToString(), cycle.Cycle.DataSettings[data[dayCycleFrameToCopy]]);
-                gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
-                return LSL_Integer.TRUE;
-            }
-            return LSL_Integer.FALSE;
+            var data = cycle.Cycle.DataSettings.Keys.ToList();
+            cycle.Cycle.DataSettings.Add(dayCyclePosition.ToString(), cycle.Cycle.DataSettings[data[dayCycleFrameToCopy]]);
+            environmentSettings.SetDayCycle(cycle);
+            return LSL_Integer.TRUE;
         }
 
         #endregion
 
         public LSL_Integer aaWindlightSetScene(LSL_List list)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            WindlightDayCycle cycle = new WindlightDayCycle();
-            if (d != null)
-            {
-                cycle.FromOSD(d.Info);
-                if (!cycle.Cycle.IsStaticDayCycle)
-                    return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
-            }
-            else
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
                 return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if(cycle == null)
+                return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+            if (!cycle.Cycle.IsStaticDayCycle)
+                return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
 
             ConvertLSLToWindlight(ref cycle, 0, list);
-            gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
-
-            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
-            if (environmentSettings != null)
-                environmentSettings.TriggerWindlightUpdate(1);
+            environmentSettings.SetDayCycle(cycle);
+            environmentSettings.TriggerWindlightUpdate(1);
             
             return ScriptBaseClass.WL_OK;
         }
 
         public LSL_Integer aaWindlightSetScene(int dayCycleIndex, LSL_List list)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            WindlightDayCycle cycle = new WindlightDayCycle();
-            if (d != null)
-            {
-                cycle.FromOSD(d.Info);
-                if (cycle.Cycle.IsStaticDayCycle)
-                    return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
-                if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
-                    return ScriptBaseClass.WL_ERROR_BAD_SETTING;
-            }
-            else
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
                 return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if(cycle == null)
+                return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+            if (!cycle.Cycle.IsStaticDayCycle)
+                return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
+            if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
+                return ScriptBaseClass.WL_ERROR_BAD_SETTING;
 
             ConvertLSLToWindlight(ref cycle, dayCycleIndex, list);
-            gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
-
-            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
-            if (environmentSettings != null)
-                environmentSettings.TriggerWindlightUpdate(1);
+            environmentSettings.SetDayCycle(cycle);
+            environmentSettings.TriggerWindlightUpdate(1);
             
             return ScriptBaseClass.WL_OK;
         }

@@ -66,8 +66,6 @@ namespace Aurora.Services.SQLServices.AssetService
             m_registry = registry;
 
             m_database = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
-            if (m_database == null)
-                throw new Exception("Could not find a storage interface in the given module");
 
             registry.RegisterModuleInterface<IAssetService>(this);
 
