@@ -151,14 +151,19 @@ namespace Aurora.Services.SQLServices.AssetService
             if (doDatabaseCaching && cache != null)
             {
                 bool found;
-                AssetBase cachedAsset = cache.Get(id, out found);
-                if (found && (cachedAsset == null || cachedAsset.Data.Length != 0))
-                    return cachedAsset.Data;
+                byte[] cachedAsset = cache.GetData(id, out found);
+                if (found)
+                    return cachedAsset;
             }
 
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return (byte[])remoteValue;
+            {
+                byte[] data = (byte[])remoteValue;
+                if (doDatabaseCaching && cache != null)
+                    cache.CacheData(id, data);
+                return data;
+            }
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
             if (doDatabaseCaching && cache != null)

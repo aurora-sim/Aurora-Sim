@@ -349,6 +349,60 @@ namespace Aurora.Services
             }
         }
 
+        public void CacheData(string assetID, byte[] data)
+        {
+            string filename = GetFileName("DataOnly" + assetID);
+
+            try
+            {
+                // If the file is already cached just update access time
+                if (File.Exists(filename))
+                {
+                    lock (m_CurrentlyWriting)
+                    {
+                        if (!m_CurrentlyWriting.Contains(filename))
+                            File.SetLastAccessTime(filename, DateTime.Now);
+                    }
+                }
+                else
+                {
+                    // Once we start writing, make sure we flag that we're writing
+                    // that object to the cache so that we don't try to write the 
+                    // same file multiple times.
+                    lock (m_CurrentlyWriting)
+                    {
+#if WAIT_ON_INPROGRESS_REQUESTS
+                        if (m_CurrentlyWriting.ContainsKey(filename))
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            m_CurrentlyWriting.Add(filename, new ManualResetEvent(false));
+                        }
+
+#else
+                        if (m_CurrentlyWriting.Contains(filename))
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            m_CurrentlyWriting.Add(filename);
+                        }
+#endif
+                    }
+
+                    Util.FireAndForget(
+                        delegate { WriteFileCache(filename, data); });
+                }
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+            }
+        }
+
         public AssetBase Get(string id)
         {
             bool found;
@@ -441,6 +495,68 @@ namespace Aurora.Services
                 _assetMonitor.AddAsset(asset);
 
             return asset;
+        }
+
+        public byte[] GetData(string id, out bool found)
+        {
+            m_assetRequests[id].Amt++;
+            m_Requests++;
+
+            AssetBase asset = Get(id, out found);
+            if (found)
+                return asset.Data;
+
+            byte[] data = null;
+            
+            string filename = GetFileName("DataOnly" + id);
+            if (File.Exists(filename))
+            {
+                try
+                {
+                    data = ExtractData(filename);
+                    found = true;
+                }
+                catch (Exception e)
+                {
+                    LogException(e);
+
+                    // If there was a problem deserializing the asset, the asset may 
+                    // either be corrupted OR was serialized under an old format 
+                    // {different version of AssetBase} -- we should attempt to
+                    // delete it and re-cache
+                    File.Delete(filename);
+                }
+            }
+
+
+#if WAIT_ON_INPROGRESS_REQUESTS
+    // Check if we're already downloading this asset.  If so, try to wait for it to 
+    // download.
+            if (m_WaitOnInprogressTimeout > 0)
+            {
+                m_RequestsForInprogress++;
+
+                ManualResetEvent waitEvent;
+                if (m_CurrentlyWriting.TryGetValue(filename, out waitEvent))
+                {
+                    waitEvent.WaitOne(m_WaitOnInprogressTimeout);
+                    return Get(id);
+                }
+            }
+#else
+            // Track how often we have the problem that an asset is requested while
+            // it is still being downloaded by a previous request.
+            if (m_CurrentlyWriting.Contains(filename))
+            {
+                m_RequestsForInprogress++;
+            }
+#endif
+            return data;
+        }
+
+        private byte[] ExtractData(string filename)
+        {
+            return File.ReadAllBytes(filename);
         }
 
         private AssetBase ExtractAsset(string id, AssetBase asset, string filename, bool forceMemCache)
@@ -668,6 +784,71 @@ namespace Aurora.Services
                     if (stream != null)
                         stream.Close();
 
+                    // Even if the write fails with an exception, we need to make sure
+                    // that we release the lock on that file, otherwise it'll never get
+                    // cached
+                    lock (m_CurrentlyWriting)
+                    {
+#if WAIT_ON_INPROGRESS_REQUESTS
+                    ManualResetEvent waitEvent;
+                    if (m_CurrentlyWriting.TryGetValue(filename, out waitEvent))
+                    {
+                        m_CurrentlyWriting.Remove(filename);
+                        waitEvent.Set();
+                    }
+#else
+                        if (m_CurrentlyWriting.Contains(filename))
+                            m_CurrentlyWriting.Remove(filename);
+#endif
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        ///   Writes a file to the file cache, creating any nessesary 
+        ///   tier directories along the way
+        /// </summary>
+        /// <param name = "filename"></param>
+        /// <param name = "asset"></param>
+        private void WriteFileCache(string filename, byte[] data)
+        {
+            // Make sure the target cache directory exists
+            string directory = Path.GetDirectoryName(filename);
+
+            // Write file first to a temp name, so that it doesn't look 
+            // like it's already cached while it's still writing.
+            if (directory != null)
+            {
+                string tempname = Path.Combine(directory, Path.GetRandomFileName());
+
+                try
+                {
+                    lock (m_fileCacheLock)
+                    {
+                        if (!Directory.Exists(directory))
+                            Directory.CreateDirectory(directory);
+
+                        File.WriteAllBytes(tempname, data);
+                        // Now that it's written, rename it so that it can be found.
+                        if (File.Exists(filename))
+                            File.Delete(filename);
+                        try
+                        {
+                            File.Move(tempname, filename);
+                        }
+                        catch
+                        {
+                            File.Delete(tempname);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogException(e);
+                }
+                finally
+                {
                     // Even if the write fails with an exception, we need to make sure
                     // that we release the lock on that file, otherwise it'll never get
                     // cached

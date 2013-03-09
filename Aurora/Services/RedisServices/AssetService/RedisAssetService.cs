@@ -116,7 +116,7 @@ namespace Aurora.RedisServices.AssetService
                     return cachedAsset;
             }
 
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 if (doDatabaseCaching && cache != null)
@@ -135,7 +135,6 @@ namespace Aurora.RedisServices.AssetService
             return Get(id);
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase GetCached(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -151,14 +150,19 @@ namespace Aurora.RedisServices.AssetService
             if (doDatabaseCaching && cache != null)
             {
                 bool found;
-                AssetBase cachedAsset = cache.Get(id, out found);
-                if (found && (cachedAsset == null || cachedAsset.Data.Length != 0))
-                    return cachedAsset.Data;
+                byte[] cachedAsset = cache.GetData(id, out found);
+                if (found)
+                    return cachedAsset;
             }
 
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return (byte[])remoteValue;
+            {
+                byte[] data = (byte[])remoteValue;
+                if (doDatabaseCaching && cache != null)
+                    cache.CacheData(id, data);
+                return data;
+            }
 
             AssetBase asset = RedisGetAsset(id);
             if (doDatabaseCaching && cache != null)
@@ -170,14 +174,13 @@ namespace Aurora.RedisServices.AssetService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool GetExists(string id)
         {
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
             return RedisExistsAsset(id);
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual void Get(String id, Object sender, AssetRetrieved handler)
         {
             Util.FireAndForget((o) =>
@@ -192,7 +195,7 @@ namespace Aurora.RedisServices.AssetService
             if (asset == null)
                 return UUID.Zero;
 
-            object remoteValue = DoRemote(asset);
+            object remoteValue = DoRemoteByURL("AssetServerURI", asset);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 if (remoteValue == null)
@@ -215,7 +218,7 @@ namespace Aurora.RedisServices.AssetService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual UUID UpdateContent(UUID id, byte[] data)
         {
-            object remoteValue = DoRemote(id, data);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id, data);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? UUID.Zero : (UUID)remoteValue;
 
@@ -231,7 +234,7 @@ namespace Aurora.RedisServices.AssetService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual bool Delete(UUID id)
         {
-            object remoteValue = DoRemote(id);
+            object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 

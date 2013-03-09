@@ -175,6 +175,10 @@ namespace Aurora.Services
             }
         }
 
+        public void CacheData(string assetID, byte[] asset)
+        {
+        }
+
         /// <summary>
         ///   Clear asset cache.
         /// </summary>
@@ -218,6 +222,12 @@ namespace Aurora.Services
         {
             bool found;
             return Get(id, out found);
+        }
+
+        public byte[] GetData(string id, out bool found)
+        {
+            found = false;
+            return null;
         }
 
         public AssetBase Get(string id, out bool found)

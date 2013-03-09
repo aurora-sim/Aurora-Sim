@@ -100,6 +100,10 @@ namespace Aurora.Services
                 m_Cache.AddOrUpdate(asset.IDString, asset);
         }
 
+        public void CacheData(string assetID, byte[] asset)
+        {
+        }
+
         public AssetBase Get(string id)
         {
             bool found;
@@ -114,6 +118,12 @@ namespace Aurora.Services
             Debug(asset);
 
             return (AssetBase)asset;
+        }
+
+        public byte[] GetData(string id, out bool found)
+        {
+            found = false;
+            return null;
         }
 
         public void Expire(string id)
