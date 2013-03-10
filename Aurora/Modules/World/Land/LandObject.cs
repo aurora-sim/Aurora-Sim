@@ -200,7 +200,7 @@ namespace Aurora.Modules.Land
                                        IClientAPI remote_client)
         {
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
-            uint regionFlags = 336723974 & ~((uint) (OpenMetaverse.RegionFlags.AllowLandmark | OpenMetaverse.RegionFlags.AllowSetHome));
+            ulong regionFlags = 336723974 & ~((uint) (OpenMetaverse.RegionFlags.AllowLandmark | OpenMetaverse.RegionFlags.AllowSetHome));
             if (estateModule != null)
                 regionFlags = estateModule.GetRegionFlags();
 
@@ -224,7 +224,7 @@ namespace Aurora.Modules.Land
                                              snap_selection, request_result, LandData,
                                              (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                              MaxPrimCounts,
-                                             m_scene.RegionInfo.ObjectCapacity, regionFlags);
+                                             m_scene.RegionInfo.ObjectCapacity, (uint)regionFlags);
         }
 
         public void UpdateLandProperties(LandUpdateArgs args, IClientAPI remote_client)
@@ -464,7 +464,7 @@ namespace Aurora.Modules.Land
 
         public bool IsRestrictedFromLand(UUID avatar)
         {
-            if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong) GroupPowers.LandManageAllowed))
+            if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong) 1))
                 return false;
 
             if ((LandData.Flags & (uint)ParcelFlags.UsePassList) > 0 ||

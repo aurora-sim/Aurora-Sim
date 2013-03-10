@@ -1017,7 +1017,7 @@ namespace Aurora.Modules.Estate
                                                        pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
                                                        redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX,
                                                        redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY,
-                                                       regionFlags = GetRegionFlags(),
+                                                       regionFlags = (uint)GetRegionFlags(),
                                                        simAccess = m_scene.RegionInfo.AccessLevel,
                                                        sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition,
                                                        terrainLowerLimit =
@@ -1532,7 +1532,7 @@ namespace Aurora.Modules.Estate
             client.OnLandStatRequest -= HandleLandStatRequest;
         }
 
-        public uint GetRegionFlags()
+        public ulong GetRegionFlags()
         {
             RegionFlags flags = RegionFlags.None;
 
@@ -1586,7 +1586,7 @@ namespace Aurora.Modules.Estate
             // Omitted: NullLayer Unknown: Related to the availability of an overview world map tile.(Think mainland images when zoomed out.)
             // Omitted: SkipAgentAction Unknown: Related to region debug flags. Possibly to skip processing of agent interaction with world.
 
-            return (uint)flags;
+            return (ulong)flags;
         }
 
         public uint GetEstateFlags()

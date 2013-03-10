@@ -566,7 +566,7 @@ namespace Aurora.Modules.Inventory
                     {
                         if (m_scene.Permissions.CanTakeLandmark(remoteClient.AgentId))
                         {
-                            data = BuildLandmark (presence, ref name);
+                            data = BuildLandmark (presence);
                         }
                         else
                         {
@@ -617,7 +617,7 @@ namespace Aurora.Modules.Inventory
             }
         }
 
-        private byte[] BuildLandmark (IScenePresence presence, ref string name)
+        private byte[] BuildLandmark (IScenePresence presenc)
         {
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, presence.UUID);
             Vector3 pos = presence.AbsolutePosition;

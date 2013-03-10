@@ -160,6 +160,8 @@ namespace Aurora.Services.SQLServices.UserAccountService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public UserAccount GetUserAccount(List<UUID> scopeIDs, string name)
         {
+            if (string.IsNullOrEmpty(name))
+                return null;
             UserAccount account;
             if (m_cache.Get(name, out account))
                 return AllScopeIDImpl.CheckScopeIDs(scopeIDs, account);

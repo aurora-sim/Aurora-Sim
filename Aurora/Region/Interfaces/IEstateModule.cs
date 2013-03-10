@@ -39,7 +39,7 @@ namespace OpenSim.Region.Framework.Interfaces
         event ChangeDelegate OnEstateInfoChange;
         event MessageDelegate OnEstateMessage;
 
-        uint GetRegionFlags();
+        ulong GetRegionFlags();
         bool IsManager(UUID avatarID);
 
         /// <summary>

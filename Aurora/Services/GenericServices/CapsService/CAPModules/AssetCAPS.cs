@@ -68,6 +68,9 @@ namespace Aurora.Services
             service.AddStreamHandler("GetMesh",
                 new GenericStreamHandler("GET", service.CreateCAPS("GetMesh", ""),
                                                        ProcessGetMesh));
+            service.AddStreamHandler("UpdateAvatarAppearance",
+                new GenericStreamHandler("GET", service.CreateCAPS("UpdateAvatarAppearance", ""),
+                                                        UpdateAvatarAppearance));
         }
 
         public void EnteringRegion()
@@ -79,6 +82,7 @@ namespace Aurora.Services
             m_service.RemoveStreamHandler("GetTexture", "GET");
             m_service.RemoveStreamHandler("UploadBakedTexture", "POST");
             m_service.RemoveStreamHandler("GetMesh", "GET");
+            m_service.RemoveStreamHandler("UpdateAvatarAppearance", "GET");
         }
 
         #region Get Texture
@@ -538,6 +542,30 @@ namespace Aurora.Services
 
             httpResponse.StatusCode = 404;
             return Encoding.UTF8.GetBytes("Failed to find mesh");
+        }
+
+        #endregion
+
+        #region Server Side Baked Textures
+
+        public byte[] UpdateAvatarAppearance(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            try
+            {
+                OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                int cof_version = rm["cof_version"].AsInteger();
+
+                OSDMap map = new OSDMap();
+                map["success"] = true;
+                map["error"] = "";
+                return OSDParser.SerializeLLSDXmlBytes(map);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[CAPS]: " + e);
+            }
+
+            return null;
         }
 
         #endregion

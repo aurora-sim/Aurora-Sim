@@ -413,7 +413,7 @@ namespace Aurora.Modules.Monitoring
                 {
                     if (m_estateModule == null)
                         m_estateModule = m_currentScene.RequestModuleInterface<IEstateModule>();
-                    regionFlags = m_estateModule != null ? m_estateModule.GetRegionFlags() : 0;
+                    regionFlags = m_estateModule != null ? (uint)m_estateModule.GetRegionFlags() : 0;
                 }
                 catch (Exception)
                 {

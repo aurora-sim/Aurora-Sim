@@ -121,10 +121,10 @@ namespace Aurora.Services
                                                            service.CreateCAPS("NewFileAgentInventoryVariablePrice", ""),
                                                            NewAgentInventoryRequestVariablePrice));
 
-            //service.AddStreamHandler("CreateInventoryCategory",
-            //                         new GenericStreamHandler("POST",
-            //                                               service.CreateCAPS("CreateInventoryCategory", ""),
-            //                                               CreateInventoryCategory));
+            service.AddStreamHandler("CreateInventoryCategory",
+                                     new GenericStreamHandler("POST",
+                                                           service.CreateCAPS("CreateInventoryCategory", ""),
+                                                           CreateInventoryCategory));
 
             
             /*method = delegate(string request, string path, string param,

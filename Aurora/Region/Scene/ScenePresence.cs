@@ -2747,6 +2747,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
             if (Animator != null && m_parentID == UUID.Zero)
                 Animator.UpdateMovementAnimations (true);
+            m_scene.EventManager.TriggerClientMovement(this);
         }
 
         #region Cached Attachments (Internal Use Only!)
