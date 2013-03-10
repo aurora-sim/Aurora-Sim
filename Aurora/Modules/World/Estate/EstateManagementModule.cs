@@ -1193,7 +1193,7 @@ namespace Aurora.Modules.Estate
             RegionHandshakeArgs args = new RegionHandshakeArgs
                                            {isEstateManager = m_scene.Permissions.IsGod(remoteClient.AgentId)};
 
-            if (m_scene.RegionInfo.EstateSettings.EstateOwner != UUID.Zero && m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
+            if (m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
                 args.isEstateManager = true;
             else if (m_scene.RegionInfo.EstateSettings.IsEstateManager(remoteClient.AgentId))
                 args.isEstateManager = true;

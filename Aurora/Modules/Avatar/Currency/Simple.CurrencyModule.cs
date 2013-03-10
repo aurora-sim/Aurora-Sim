@@ -37,6 +37,8 @@ namespace Simple.Currency
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            if (m_registry == null)
+                return;
             ISyncMessageRecievedService syncRecievedService = registry.RequestModuleInterface<ISyncMessageRecievedService>();
             if (syncRecievedService != null)
                 syncRecievedService.OnMessageReceived += syncRecievedService_OnMessageReceived;
@@ -44,6 +46,8 @@ namespace Simple.Currency
 
         public void FinishedStartup()
         {
+            if (m_registry == null)
+                return;
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {

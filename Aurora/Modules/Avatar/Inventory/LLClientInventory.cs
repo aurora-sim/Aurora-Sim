@@ -1665,6 +1665,7 @@ namespace Aurora.Modules.Inventory
             InventoryFolderBase newFolder = new InventoryFolderBase(newFolderID, name, destID, -1, rootFolder.ID, rootFolder.Version);
             m_scene.InventoryService.AddFolder(newFolder);
 
+            int countLeft = items.Count;
             foreach (UUID itemID in items)
             {
                 InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(destID, host, itemID);
@@ -1673,15 +1674,19 @@ namespace Aurora.Modules.Inventory
                 {
                     agentItem.Folder = newFolderID;
 
-                    AddInventoryItem(agentItem);
+                    m_scene.InventoryService.AddItemAsync(agentItem, ()=>
+                    {
+                        if (--countLeft == 0)
+                        {
+                            IScenePresence avatar;
+                            if (m_scene.TryGetScenePresence(destID, out avatar))
+                            {
+                                SendInventoryUpdate(avatar.ControllingClient, rootFolder, true, false);
+                                SendInventoryUpdate(avatar.ControllingClient, newFolder, false, true);
+                            }
+                        }
+                    });
                 }
-            }
-            
-            IScenePresence avatar;
-            if (m_scene.TryGetScenePresence(destID, out avatar))
-            {
-                SendInventoryUpdate(avatar.ControllingClient, rootFolder, true, false);
-                SendInventoryUpdate(avatar.ControllingClient, newFolder, false, true);
             }
 
             return newFolderID;

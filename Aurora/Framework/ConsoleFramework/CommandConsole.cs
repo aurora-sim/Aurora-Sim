@@ -607,10 +607,10 @@ namespace Aurora.Framework
                             cmd[i] = "\"" + cmd[i] + "\"";
                         }
                     }
-                    return String.Empty;
                 }
+                m_defaultPrompt = oldDefaultPrompt;
+                return String.Empty;
             }
-            m_defaultPrompt = oldDefaultPrompt;
             return cmdinput;
         }
 

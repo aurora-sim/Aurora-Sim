@@ -96,6 +96,8 @@ namespace Aurora.Services.SQLServices.InventoryService
                         AddItem(item.Item);
                         lock(_tempItemCache)
                             _tempItemCache.Remove(item.Item.ID);
+                        if (item.Complete != null)
+                            item.Complete();
                     }
                 });
             _moveInventoryItemQueue.Start(0.5, (agentID, itemsToMove) =>
@@ -1006,9 +1008,7 @@ namespace Aurora.Services.SQLServices.InventoryService
                 if (!_tempItemCache.ContainsKey(item.ID))
                     _tempItemCache.Add(item.ID, item);
             }
-            _addInventoryItemQueue.Add(item.Owner, new AddInventoryItemStore(item, null));
-            if (success != null)
-                success();
+            _addInventoryItemQueue.Add(item.Owner, new AddInventoryItemStore(item, success));
         }
 
         public void MoveItemsAsync(UUID agentID, List<InventoryItemBase> items, NoParam success)

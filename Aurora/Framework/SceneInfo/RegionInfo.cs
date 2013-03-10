@@ -61,7 +61,7 @@ namespace Aurora.Framework
         public bool InfiniteRegion = false;
         public bool NewRegion = false;
 
-        public OpenRegionSettings OpenRegionSettings = null;
+        public OpenRegionSettings OpenRegionSettings = new OpenRegionSettings();
         public OSD EnvironmentSettings = null;
 
         /// <summary>
