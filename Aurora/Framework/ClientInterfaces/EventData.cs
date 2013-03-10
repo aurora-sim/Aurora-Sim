@@ -44,6 +44,7 @@ namespace Aurora.Framework
         public uint eventFlags;
         public uint eventID;
         public Vector3 globalPos;
+        public Vector3 regionPos;
         public int maturity;
         public string name;
         public string simName;
@@ -67,6 +68,7 @@ namespace Aurora.Framework
             map["amount"] = amount;
             map["simName"] = simName;
             map["globalPos"] = globalPos;
+            map["regionPos"] = regionPos;
             map["eventFlags"] = eventFlags;
             map["maturity"] = maturity;
             return map;
@@ -86,6 +88,7 @@ namespace Aurora.Framework
             amount = map["amount"];
             simName = map["simName"];
             globalPos = map["globalPos"];
+            regionPos = map["regionPos"];
             eventFlags = map["eventFlags"];
             maturity = map["maturity"];
         }

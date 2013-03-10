@@ -600,9 +600,13 @@ namespace Aurora.Services
                         agent.MaxMaturity == 1 ? "M" : "A";
                 }
 
+
+                ArrayList eventNotifications = new ArrayList();
+                BuildEventNotifications(account.PrincipalID, ref eventNotifications);
+
                 response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList.ToArray(), m_InventoryService, m_LibraryService,
                     where, startLocation, position, lookAt, gestures, home, clientIP, MaxMaturity, MaturityRating,
-                    eventCategories, classifiedCategories, seedCap, m_config, DisplayName);
+                    eventCategories, eventNotifications, classifiedCategories, seedCap, m_config, DisplayName);
 
                 MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;
@@ -617,6 +621,28 @@ namespace Aurora.Services
                     m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), false, false, UUID.Zero);
                 }
                 return LLFailedLoginResponse.InternalError;
+            }
+        }
+
+        private void BuildEventNotifications(UUID principalID, ref ArrayList eventNotifications)
+        {
+            IDirectoryServiceConnector dirService = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            if (dirService == null)
+                return;
+            List<EventData> events = dirService.GetEventNotifications(principalID);
+
+            foreach(EventData ev in events)
+            {
+                Hashtable hash = new Hashtable();
+                hash["event_id"] = ev.eventID;
+                hash["event_name"] = ev.name;
+                hash["event_desc"] = ev.description;
+                hash["event_date"] = ev.date;
+                hash["grid_x"] = ev.globalPos.X;
+                hash["grid_y"] = ev.globalPos.Y;
+                hash["x_region"] = ev.regionPos.X;
+                hash["y_region"] = ev.regionPos.Y;
+                eventNotifications.Add(hash);
             }
         }
 

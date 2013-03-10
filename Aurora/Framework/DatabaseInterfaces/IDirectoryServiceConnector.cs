@@ -256,6 +256,28 @@ namespace Aurora.Framework
         /// <returns></returns>
         uint GetMaxEventID();
 
+        /// <summary>
+        /// Adds a notification for the user on login that events are going to occur
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="EventID"></param>
+        void AddEventNofication(UUID user, uint EventID);
+
+        /// <summary>
+        /// Removes a notification for the user on login that events are going to occur
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="EventID"></param>
+        void RemoveEventNofication(UUID user, uint EventID);
+
+        /// <summary>
+        /// Get all event notifications for the user
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        List<EventData> GetEventNotifications(UUID user);
+
         #endregion
+
     }
 }

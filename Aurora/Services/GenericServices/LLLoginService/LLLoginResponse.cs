@@ -47,6 +47,7 @@ namespace Aurora.Services
     {
         private readonly ArrayList classifiedCategories;
         private readonly ArrayList eventCategories;
+        private readonly ArrayList eventNotifications;
         private readonly ArrayList initialOutfit;
         private readonly ArrayList loginFlags;
         private readonly IConfigSource m_source;
@@ -81,6 +82,7 @@ namespace Aurora.Services
             ErrorReason = LoginResponseEnum.OK;
             loginFlags = new ArrayList();
             eventCategories = new ArrayList();
+            eventNotifications = new ArrayList();
             uiConfig = new ArrayList();
             classifiedCategories = new ArrayList();
 
@@ -100,7 +102,7 @@ namespace Aurora.Services
                                string where, string startlocation, Vector3 position, Vector3 lookAt,
                                List<InventoryItemBase> gestures,
                                GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating,
-                               ArrayList eventValues, ArrayList classifiedValues, string seedCap, IConfigSource source,
+                               ArrayList eventValues, ArrayList eventNotificationValues, ArrayList classifiedValues, string seedCap, IConfigSource source,
                                string DisplayName)
             : this()
         {
@@ -123,6 +125,7 @@ namespace Aurora.Services
             AgentAccessMax = AdultMax;
             AgentAccess = AdultRating;
             eventCategories = eventValues;
+            eventNotifications = eventNotificationValues;
             classifiedCategories = classifiedValues;
 
             FillOutHomeData(pinfo, home);
@@ -302,7 +305,7 @@ namespace Aurora.Services
                 responseData["seed_capability"] = seedCapability;
 
                 responseData["event_categories"] = eventCategories;
-                responseData["event_notifications"] = new ArrayList(); // TODO: What is this?
+                responseData["event_notifications"] = eventNotifications; // TODO: What is this?
                 responseData["classified_categories"] = classifiedCategories;
                 responseData["ui-config"] = uiConfig;
                 responseData["export"] = AllowExportPermission ? "flag" : "";
@@ -485,7 +488,7 @@ namespace Aurora.Services
                 map["seed_capability"] = OSD.FromString(seedCapability);
 
                 map["event_categories"] = ArrayListToOSDArray(eventCategories);
-                //map["event_notifications"] = new OSDArray(); // todo
+                map["event_notifications"] = ArrayListToOSDArray(eventNotifications);
                 map["classified_categories"] = ArrayListToOSDArray(classifiedCategories);
 
                 #region UI Config

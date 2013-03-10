@@ -65,6 +65,8 @@ namespace Aurora.Modules.Search
             client.OnMapItemRequest += HandleMapItemRequest;
             client.OnPlacesQuery += OnPlacesQueryRequest;
             client.OnAvatarPickerRequest += ProcessAvatarPickerRequest;
+            client.OnEventNotificationAddRequest += client_OnEventNotificationAddRequest;
+            client.OnEventNotificationRemoveRequest += client_OnEventNotificationRemoveRequest;
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -79,6 +81,8 @@ namespace Aurora.Modules.Search
             client.OnMapItemRequest -= HandleMapItemRequest;
             client.OnPlacesQuery -= OnPlacesQueryRequest;
             client.OnAvatarPickerRequest -= ProcessAvatarPickerRequest;
+            client.OnEventNotificationAddRequest -= client_OnEventNotificationAddRequest;
+            client.OnEventNotificationRemoveRequest -= client_OnEventNotificationRemoveRequest;
         }
 
         #endregion
@@ -519,8 +523,8 @@ namespace Aurora.Modules.Search
                     Vector3 globalPos = eventdata.globalPos;
                     mapitem = new mapItemReply
                                   {
-                                      x = (uint) (globalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX/2)),
-                                      y = (uint) (globalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY/2)),
+                                      x = (uint) globalPos.X,
+                                      y = (uint) globalPos.Y,
                                       id = UUID.Random(),
                                       name = eventData.name,
                                       Extra = (int) eventdata.dateUTC,
@@ -657,6 +661,16 @@ namespace Aurora.Modules.Search
                 data_args.Add(data_arg);
             }
             client.SendAvatarPickerReply(agent_data, data_args);
+        }
+
+        void client_OnEventNotificationRemoveRequest(uint EventID, IClientAPI client)
+        {
+            directoryService.RemoveEventNofication(client.AgentId, EventID);
+        }
+
+        void client_OnEventNotificationAddRequest(uint EventID, IClientAPI client)
+        {
+            directoryService.AddEventNofication(client.AgentId, EventID);
         }
 
         #endregion

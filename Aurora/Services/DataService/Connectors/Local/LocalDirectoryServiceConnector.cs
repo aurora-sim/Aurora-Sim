@@ -1082,10 +1082,16 @@ namespace Aurora.Services.DataService
                 data.eventFlags = Convert.ToUInt32(RetVal[i + 7]);
                 data.duration = Convert.ToUInt32(RetVal[i + 8]);
 
+                data.regionPos = new Vector3(
+                        float.Parse(RetVal[i + 9]),
+                        float.Parse(RetVal[i + 10]),
+                        float.Parse(RetVal[i + 11])
+                );
+
                 data.globalPos = new Vector3(
-                        region.RegionLocX + float.Parse(RetVal[i + 9]),
-                        region.RegionLocY + float.Parse(RetVal[i + 10]),
-                        region.RegionLocZ + float.Parse(RetVal[i + 11])
+                        region.RegionLocX + data.regionPos.X,
+                        region.RegionLocY + data.regionPos.Y,
+                        region.RegionLocZ + data.regionPos.Z
                 );
 
                 data.name = RetVal[i + 12];
@@ -1160,6 +1166,7 @@ namespace Aurora.Services.DataService
                                               region.RegionLocY + localPos.Y,
                                               region.RegionLocZ + localPos.Z
                                               ),
+                                          regionPos = localPos,
                                           name = name,
                                           description = description,
                                           category = category
@@ -1210,6 +1217,53 @@ namespace Aurora.Services.DataService
                 return 0;
             }
             return uint.Parse(GD.Query(new[] { "MAX(EID)" }, "asevents", null, null, null, null)[0]);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public void AddEventNofication(UUID user, uint EventID)
+        {
+            if (m_doRemoteOnly)
+            {
+                DoRemote(user, EventID); 
+                return;
+            }
+
+            GD.Insert("event_notifications", new object[2] { user.ToString(), EventID });
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public void RemoveEventNofication(UUID user, uint EventID)
+        {
+            if (m_doRemoteOnly)
+            {
+                DoRemote(user, EventID);
+                return;
+            }
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters.Add("UserID", user.ToString());
+            filter.andFilters.Add("EventID", EventID);
+            GD.Delete("event_notifications", filter);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public List<EventData> GetEventNotifications(UUID user)
+        {
+            object remoteValue = DoRemote(user);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<EventData>)remoteValue;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters.Add("UserID", user.ToString());
+            List<string> data = GD.Query(new string[1] { "EventID" }, "event_notifications", filter, null, null, null);
+            List<EventData> events = new List<EventData>();
+            if (data.Count == 0)
+                return events;
+
+            foreach (string eventID in data)
+                events.Add(GetEventInfo(uint.Parse(eventID)));
+
+            return events;
         }
 
         #endregion
