@@ -310,7 +310,7 @@ namespace Aurora.Framework
         /// </summary>
         public uint Flags
         {
-            get { return _flags | (uint) ParcelFlags.AllowVoiceChat; }//Force add allow voice chat
+            get { return _flags; }//Force add allow voice chat
             set { _flags = value; }
         }
 

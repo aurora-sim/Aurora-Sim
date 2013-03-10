@@ -617,7 +617,7 @@ namespace Aurora.Modules.Inventory
             }
         }
 
-        private byte[] BuildLandmark (IScenePresence presenc)
+        private byte[] BuildLandmark (IScenePresence presence)
         {
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, presence.UUID);
             Vector3 pos = presence.AbsolutePosition;
