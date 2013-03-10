@@ -82,6 +82,11 @@ namespace Aurora.Framework
             }*/
         }
 
+        public int Count
+        {
+            get { lock (m_objCollisionList) return m_objCollisionList.Count; }
+        }
+
         /// <summary>
         ///   Reset all the info about this collider
         /// </summary>

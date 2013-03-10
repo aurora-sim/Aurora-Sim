@@ -1574,6 +1574,8 @@ namespace Aurora.Modules.Estate
                     flags |= RegionFlags.BlockDwell;
                 if (m_scene.RegionInfo.EstateSettings.ResetHomeOnTeleport)
                     flags |= RegionFlags.ResetHomeOnTeleport;
+                if (m_scene.RegionInfo.EstateSettings.AllowVoice)
+                    flags |= RegionFlags.AllowVoice;
             }
 
             

@@ -410,13 +410,13 @@ namespace Aurora.OptionalModules
                                                        {
                                                            return ParcelVoiceInfoRequest(scene, agentID);
                                                        }));
-            retVal["ChatSessionRequest"] = CapsUtil.CreateCAPS("ChatSessionRequest", "");
+            /*retVal["ChatSessionRequest"] = CapsUtil.CreateCAPS("ChatSessionRequest", "");
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ChatSessionRequest"],
                                                        delegate(string path, Stream request,
                                                         OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
                                                            return ChatSessionRequest(scene, agentID);
-                                                       }));
+                                                       }));*/
             return retVal;
         }
 
@@ -601,12 +601,12 @@ namespace Aurora.OptionalModules
                     channel_uri = String.Empty;
                 }
                 //Disable this, force voice chat on only configurable via estate since LL disabled this
-                /*else if ((land.Flags & (uint)ParcelFlags.AllowVoiceChat) == 0)
+                else if ((land.Flags & (uint)ParcelFlags.AllowVoiceChat) == 0)
                 {
                     MainConsole.Instance.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": voice not enabled for parcel",
                                       scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName);
                     channel_uri = String.Empty;
-                }*/
+                }
                 else
                 {
                     MainConsole.Instance.DebugFormat("[VivoxVoice]: region \"{0}\": voice enabled in estate settings, creating parcel voice",

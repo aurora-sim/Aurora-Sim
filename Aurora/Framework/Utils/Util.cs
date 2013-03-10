@@ -554,6 +554,25 @@ namespace Aurora.Framework
             return (x + y - (min >> 1) - (min >> 2) + (min >> 4));
         }
 
+        // Inclusive, within range test (true if equal to the endpoints)
+        public static bool InRange<T>(T x, T min, T max)
+            where T : IComparable<T>
+        {
+            return x.CompareTo(max) <= 0 && x.CompareTo(min) >= 0;
+        }
+
+        // Clamp the maximum magnitude of a vector
+        public static Vector3 ClampV(Vector3 x, float max)
+        {
+            Vector3 ret = x;
+            float lenSq = x.LengthSquared();
+            if (lenSq > (max * max))
+            {
+                x = x / x.Length() * max;
+            }
+            return x;
+        }
+
         public static string FieldToString(byte[] bytes)
         {
             return FieldToString(bytes, String.Empty);
