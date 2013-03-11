@@ -1380,9 +1380,6 @@ namespace Aurora.Modules.Terrain
             m_painteffects[StandardTerrainEffects.Revert] = new RevertSphere(this);
             m_painteffects[StandardTerrainEffects.Erode] = new ErodeSphere();
             m_painteffects[StandardTerrainEffects.Weather] = new WeatherSphere();
-            m_painteffects[StandardTerrainEffects.Paint] = new PaintSphere();
-            if (m_scene.RegionInfo.RegionSettings.UsePaintableTerrain)
-                m_painteffects[StandardTerrainEffects.Revert] = new PaintSphere();
 
             // Area of effect selection effects
             m_floodeffects[StandardTerrainEffects.Raise] = new RaiseArea();

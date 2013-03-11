@@ -2218,11 +2218,11 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendEstateList(UUID invoice, int code, UUID[] Data, uint estateID)
+        public void SendEstateList(UUID invoice, int code, List<UUID> Data, uint estateID)
         {
         }
 
-        public void SendBannedUserList(UUID invoice, EstateBan[] banlist, uint estateID)
+        public void SendBannedUserList(UUID invoice, List<EstateBan> banlist, uint estateID)
         {
         }
 

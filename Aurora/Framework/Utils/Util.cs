@@ -52,6 +52,8 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
+using ProtoBuf.Meta;
+using ProtoBuf;
 
 namespace Aurora.Framework
 {
@@ -102,6 +104,166 @@ namespace Aurora.Framework
             = new Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
         public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.SmartThreadPool;
+
+        static Util()
+        {
+            RuntimeTypeModel.Default.Add(typeof(UUID), false)
+                            .SetSurrogate(typeof(UUIDSurrogate));
+            RuntimeTypeModel.Default.Add(typeof(IPEndPoint), false)
+                            .SetSurrogate(typeof(IPEndPointSurrogate));
+            RuntimeTypeModel.Default.Add(typeof(OSD), false)
+                            .SetSurrogate(typeof(OSDSurrogate));
+            RuntimeTypeModel.Default.Add(typeof(OSDMap), false)
+                            .SetSurrogate(typeof(OSDMapSurrogate));
+            RuntimeTypeModel.Default.Add(typeof(Vector3), false)
+                            .SetSurrogate(typeof(Vector3Surrogate));
+            RuntimeTypeModel.Default.Add(typeof(Quaternion), false)
+                            .SetSurrogate(typeof(QuaternionSurrogate));
+            RuntimeTypeModel.Default.Add(typeof(ParcelManager.ParcelAccessEntry), false)
+                            .SetSurrogate(typeof(ParcelAccessEntrySurrogate));
+            
+            
+        }
+
+        #region Protobuf helpers
+
+        [ProtoContract]
+        class UUIDSurrogate
+        {
+            [ProtoMember(1)]
+            public string ID;
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator UUID(UUIDSurrogate value)
+            {
+                return UUID.Parse(value.ID);
+            }
+            public static implicit operator UUIDSurrogate(UUID value)
+            {
+                return new UUIDSurrogate
+                {
+                    ID = value.ToString()
+                };
+            }
+        }
+        [ProtoContract]
+        class Vector3Surrogate
+        {
+            [ProtoMember(1)]
+            public byte[] array;
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator Vector3(Vector3Surrogate value)
+            {
+                return new Vector3(value.array, 0);
+            }
+            public static implicit operator Vector3Surrogate(Vector3 value)
+            {
+                Vector3Surrogate sur = new Vector3Surrogate();
+                sur.array = new byte[12];
+                value.ToBytes(sur.array, 0);
+                return sur;
+            }
+        }
+        [ProtoContract]
+        class QuaternionSurrogate
+        {
+            [ProtoMember(1)]
+            public byte[] array;
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator Quaternion(QuaternionSurrogate value)
+            {
+                return new Quaternion(value.array, 0, false);
+            }
+            public static implicit operator QuaternionSurrogate(Quaternion value)
+            {
+                QuaternionSurrogate sur = new QuaternionSurrogate();
+                sur.array = new byte[16];
+                value.ToBytes(sur.array, 0);
+                return sur;
+            }
+        }
+        [ProtoContract]
+        class IPEndPointSurrogate
+        {
+            [ProtoMember(1)]
+            public string IPAddr;
+            [ProtoMember(2)]
+            public int Port;
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator IPEndPoint(IPEndPointSurrogate value)
+            {
+                return value == null ? null : new IPEndPoint(IPAddress.Parse(value.IPAddr), value.Port);
+            }
+            public static implicit operator IPEndPointSurrogate(IPEndPoint value)
+            {
+                return value == null ? null : new IPEndPointSurrogate
+                {
+                    IPAddr = value.Address.ToString(),
+                    Port = value.Port
+                };
+            }
+        }
+        [ProtoContract]
+        class OSDSurrogate
+        {
+            [ProtoMember(1)]
+            public string str;
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator OSD(OSDSurrogate value)
+            {
+                return value.str == "" ? null : OSDParser.DeserializeJson(value.str);
+            }
+            public static implicit operator OSDSurrogate(OSD value)
+            {
+                return new OSDSurrogate
+                {
+                    str = value == null ? "" : OSDParser.SerializeJsonString(value)
+                };
+            }
+        }
+        [ProtoContract]
+        class OSDMapSurrogate
+        {
+            [ProtoMember(1)]
+            public string str;
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator OSDMap(OSDMapSurrogate value)
+            {
+                return value.str == "" ? null : (OSDMap)OSDParser.DeserializeJson(value.str);
+            }
+            public static implicit operator OSDMapSurrogate(OSDMap value)
+            {
+                return new OSDMapSurrogate
+                {
+                    str = value == null ? "" : OSDParser.SerializeJsonString(value)
+                };
+            }
+        }
+        [ProtoContract]
+        class ParcelAccessEntrySurrogate
+        {
+            [ProtoMember(1)]
+            public UUID AgentID;
+            [ProtoMember(2)]
+            public AccessList Flags;
+            [ProtoMember(3)]
+            public DateTime Time;
+
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator ParcelManager.ParcelAccessEntry(ParcelAccessEntrySurrogate value)
+            {
+                return new ParcelManager.ParcelAccessEntry() { AgentID = value.AgentID, Flags = value.Flags, Time = value.Time };
+            }
+            public static implicit operator ParcelAccessEntrySurrogate(ParcelManager.ParcelAccessEntry value)
+            {
+                return new ParcelAccessEntrySurrogate
+                {
+                    AgentID = value.AgentID,
+                    Flags = value.Flags,
+                    Time = value.Time
+                };
+            }
+        }
+        #endregion
 
         public static string ConvertToString(List<string> list)
         {

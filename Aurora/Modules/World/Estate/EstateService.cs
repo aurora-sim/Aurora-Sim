@@ -929,19 +929,10 @@ namespace Aurora.Modules.Estate
         private bool CheckEstateGroups(EstateSettings ES, AgentCircuitData agent)
         {
             IGroupsModule gm = m_scenes.Count == 0 ? null : m_scenes[0].RequestModuleInterface<IGroupsModule>();
-            if (gm != null && ES.EstateGroups.Length > 0)
+            if (gm != null && ES.EstateGroups.Count > 0)
             {
-                List<UUID> esGroups = new List<UUID>(ES.EstateGroups);
                 GroupMembershipData[] gmds = gm.GetMembershipData(agent.AgentID);
-#if (!ISWIN)
-                foreach (GroupMembershipData gmd in gmds)
-                {
-                    if (esGroups.Contains(gmd.GroupID)) return true;
-                }
-                return false;
-#else
-                return gmds.Any(gmd => esGroups.Contains(gmd.GroupID));
-#endif
+                return gmds.Any(gmd => ES.EstateGroups.Contains(gmd.GroupID));
             }
             return false;
         }

@@ -40,6 +40,11 @@ using Aurora.Framework;
 using Aurora.Framework.Serialization;
 using Aurora.Simulation.Base;
 using Aurora.DataManager;
+using ProtoBuf.Meta;
+using OpenMetaverse;
+using System.IO;
+using ProtoBuf;
+using System;
 
 namespace Aurora.Modules.Estate
 {
@@ -185,7 +190,7 @@ namespace Aurora.Modules.Estate
             if (EstateConnector != null)
             {
                 EstateSettings ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID);
-                if(ES == null)
+                if (ES == null)
                 {
                     //It could not find the estate service, wait until it can find it
                     MainConsole.Instance.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
@@ -200,7 +205,7 @@ namespace Aurora.Modules.Estate
                         if (ES != null)
                             break;
                     }
-                } 
+                }
                 else if (ES.EstateID == 0)
                 {
                     //It found the estate service, but found no estates for this region, make a new one

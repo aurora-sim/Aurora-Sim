@@ -201,7 +201,7 @@ namespace Aurora.Modules.Auction
                 ILandObject landObject = parcelManagement.GetLandObject(LocalID);
                 if (landObject == null)
                     return;
-                landObject.LandData.GenericData["AuctionInfo"] = info.ToOSD();
+                landObject.LandData.AuctionInfo = info;
             }
         }
 
@@ -213,10 +213,7 @@ namespace Aurora.Modules.Auction
                 ILandObject landObject = parcelManagement.GetLandObject(LocalID);
                 if (landObject == null)
                     return null;
-                OSDMap map = (OSDMap)landObject.LandData.GenericData["AuctionInfo"];
-                AuctionInfo info = new AuctionInfo();
-                info.FromOSD(map);
-                return info;
+                return landObject.LandData.AuctionInfo;
             }
             return null;
         }

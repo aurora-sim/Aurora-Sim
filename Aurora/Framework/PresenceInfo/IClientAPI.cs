@@ -1404,9 +1404,9 @@ namespace Aurora.Framework
         void SendHealth(float health);
 
 
-        void SendEstateList(UUID invoice, int code, UUID[] Data, uint estateID);
+        void SendEstateList(UUID invoice, int code, List<UUID> Data, uint estateID);
 
-        void SendBannedUserList(UUID invoice, EstateBan[] banlist, uint estateID);
+        void SendBannedUserList(UUID invoice, List<EstateBan> banlist, uint estateID);
 
         void SendRegionInfoToEstateMenu(RegionInfoForEstateMenuArgs args);
         void SendEstateCovenantInformation(UUID covenant, int covenantLastUpdated);

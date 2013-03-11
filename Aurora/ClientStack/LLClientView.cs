@@ -4620,7 +4620,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return false;
         }
 
-        public void SendEstateList(UUID invoice, int code, UUID[] Data, uint estateID)
+        public void SendEstateList(UUID invoice, int code, List<UUID> Data, uint estateID)
 
         {
             EstateOwnerMessagePacket packet = new EstateOwnerMessagePacket
@@ -4636,9 +4636,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                   };
 
             EstateOwnerMessagePacket.ParamListBlock[] returnblock =
-                new EstateOwnerMessagePacket.ParamListBlock[6 + Data.Length];
+                new EstateOwnerMessagePacket.ParamListBlock[6 + Data.Count];
 
-            for (int i = 0; i < (6 + Data.Length); i++)
+            for (int i = 0; i < (6 + Data.Count); i++)
             {
                 returnblock[i] = new EstateOwnerMessagePacket.ParamListBlock();
             }
@@ -4663,10 +4663,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if ((code & 8) != 0)
                 j = 5; // Managers
 
-            returnblock[j].Parameter = Utils.StringToBytes(Data.Length.ToString());
+            returnblock[j].Parameter = Utils.StringToBytes(Data.Count.ToString());
             j = 6;
 
-            for (int i = 0; i < Data.Length; i++)
+            for (int i = 0; i < Data.Count; i++)
             {
                 returnblock[j].Parameter = Data[i].GetBytes();
                 j++;
@@ -4676,7 +4676,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(packet, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendBannedUserList(UUID invoice, EstateBan[] bl, uint estateID)
+        public void SendBannedUserList(UUID invoice, List<EstateBan> bl, uint estateID)
         {
             List<UUID> BannedUsers =
                 (from t in bl where t != null where t.BannedUserID != UUID.Zero select t.BannedUserID).ToList();

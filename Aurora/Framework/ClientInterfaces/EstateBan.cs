@@ -28,9 +28,12 @@
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
+using System;
 
 namespace Aurora.Framework
 {
+    [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class EstateBan
     {
         private string m_bannedHostAddress = string.Empty;
@@ -39,19 +42,10 @@ namespace Aurora.Framework
         private UUID m_bannedUserID = UUID.Zero;
         private uint m_estateID = 1;
 
-        public EstateBan(Dictionary<string, object> values)
-        {
-            EstateID = uint.Parse(values["EstateID"].ToString());
-            BannedUserID = new UUID(values["BannedUserID"].ToString());
-        }
-
-        public EstateBan()
-        {
-        }
-
         /// <summary>
         ///   ID of the estate this ban limits access to.
         /// </summary>
+        [ProtoMember(1)]
         public uint EstateID
         {
             get { return m_estateID; }
@@ -61,6 +55,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   ID of the banned user.
         /// </summary>
+        [ProtoMember(2)]
         public UUID BannedUserID
         {
             get { return m_bannedUserID; }
@@ -70,6 +65,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   IP address or domain name of the banned client.
         /// </summary>
+        [ProtoMember(3)]
         public string BannedHostAddress
         {
             get { return m_bannedHostAddress; }
@@ -79,6 +75,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   IP address mask for banning group of client hosts.
         /// </summary>
+        [ProtoMember(3)]
         public string BannedHostIPMask
         {
             get { return m_bannedHostIPMask; }
@@ -88,6 +85,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Domain name mask for banning group of client hosts.
         /// </summary>
+        [ProtoMember(4)]
         public string BannedHostNameMask
         {
             get { return m_bannedHostNameMask; }
@@ -105,14 +103,6 @@ namespace Aurora.Framework
         {
             OSDMap kvp = new OSDMap();
             kvp["EstateID"] = (int) EstateID;
-            kvp["BannedUserID"] = BannedUserID;
-            return kvp;
-        }
-
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> kvp = new Dictionary<string, object>();
-            kvp["EstateID"] = EstateID;
             kvp["BannedUserID"] = BannedUserID;
             return kvp;
         }

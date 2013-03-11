@@ -1236,12 +1236,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        [XmlIgnore]
-        public bool ValidgrpOOB
-        {
-            set { m_ValidgrpOOB = value; }
-        }
-
         /// <summary>
         ///   The position center of the bounding box relative to it's Position
         /// </summary>

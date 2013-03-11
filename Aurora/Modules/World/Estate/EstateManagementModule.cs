@@ -525,21 +525,9 @@ namespace Aurora.Modules.Estate
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                EstateBan[] innerbanlistcheck = estate.EstateBans;
+                                List<EstateBan> innerbanlistcheck = estate.EstateBans;
 
-#if (!ISWIN)
-                                bool inneralreadyInList = false;
-                                foreach (EstateBan t in innerbanlistcheck)
-                                {
-                                    if (user == t.BannedUserID)
-                                    {
-                                        inneralreadyInList = true;
-                                        break;
-                                    }
-                                }
-#else
                                 bool inneralreadyInList = innerbanlistcheck.Any(t => user == t.BannedUserID);
-#endif
 
                                 if (!inneralreadyInList)
                                 {
@@ -555,21 +543,9 @@ namespace Aurora.Modules.Estate
                             }
                         }
                     }
-                    EstateBan[] banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
+                    List<EstateBan> banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 
-#if (!ISWIN)
-                    bool alreadyInList = false;
-                    foreach (EstateBan t in banlistcheck)
-                    {
-                        if (user == t.BannedUserID)
-                        {
-                            alreadyInList = true;
-                            break;
-                        }
-                    }
-#else
                     bool alreadyInList = banlistcheck.Any(t => user == t.BannedUserID);
-#endif
 
                     if (!alreadyInList)
                     {
@@ -633,7 +609,7 @@ namespace Aurora.Modules.Estate
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                EstateBan[] innerbanlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
+                                List<EstateBan> innerbanlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 
                                 bool inneralreadyInList = false;
                                 EstateBan innerlistitem = null;
@@ -656,7 +632,7 @@ namespace Aurora.Modules.Estate
                             }
                         }
                     }
-                    EstateBan[] banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
+                    List<EstateBan> banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 
                     bool alreadyInList = false;
                     EstateBan listitem = null;
@@ -1015,8 +991,8 @@ namespace Aurora.Modules.Estate
                                                            (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                                        parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID,
                                                        pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
-                                                       redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX,
-                                                       redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY,
+                                                       redirectGridX = 0,
+                                                       redirectGridY = 0,
                                                        regionFlags = (uint)GetRegionFlags(),
                                                        simAccess = m_scene.RegionInfo.AccessLevel,
                                                        sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition,
@@ -1217,36 +1193,10 @@ namespace Aurora.Modules.Estate
             args.terrainBase1 = UUID.Zero;
             args.terrainBase2 = UUID.Zero;
             args.terrainBase3 = UUID.Zero;
-
-            if (!m_scene.RegionInfo.RegionSettings.UsePaintableTerrain)
-            {
-                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
-                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
-                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
-                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
-            }
-            else
-            {
-                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-
-                AssetBase paintAsset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
-                if (paintAsset == null)
-                {
-                    paintAsset = new AssetBase(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture,
-                                               "PaintableTerrainTexture-" + m_scene.RegionInfo.RegionID,
-                                               AssetType.Texture, UUID.Zero) {Flags = AssetFlags.Deletable};
-                    byte[] defaultTexture = m_scene.AssetService.GetData(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
-                    if (defaultTexture == null)
-                        //Erm... what to do!
-                        return;
-
-                    paintAsset.Data = defaultTexture;//Eventually we need to replace this with an interpolation of the existing textures!
-                    paintAsset.ID = m_scene.AssetService.Store(paintAsset);
-                }
-            }
+            args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
+            args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
+            args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
+            args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
             args.RegionType = Utils.StringToBytes(m_scene.RegionInfo.RegionType);
 
             remoteClient.SendRegionHandshake(m_scene.RegionInfo,args);

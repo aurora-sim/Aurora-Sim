@@ -30,9 +30,11 @@ using System.Collections.Generic;
 using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
 namespace Aurora.Framework
 {
+    [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class EstateSettings : IDataTransferable
     {
         // private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -66,137 +68,161 @@ namespace Aurora.Framework
         {
         }
 
+        [ProtoMember(1)]
         public uint EstateID { get; set; }
 
+        [ProtoMember(2)]
         public string EstateName
         {
             get { return m_EstateName; }
             set { m_EstateName = value; }
         }
 
+        [ProtoMember(3)]
         public bool AllowLandmark
         {
             get { return m_AllowLandmark; }
             set { m_AllowLandmark = value; }
         }
 
+        [ProtoMember(4)]
         public bool AllowParcelChanges
         {
             get { return m_AllowParcelChanges; }
             set { m_AllowParcelChanges = value; }
         }
 
+        [ProtoMember(5)]
         public bool AllowSetHome
         {
             get { return m_AllowSetHome; }
             set { m_AllowSetHome = value; }
         }
 
-
+        [ProtoMember(6)]
         public uint ParentEstateID
         {
             get { return m_ParentEstateID; }
             set { m_ParentEstateID = value; }
         }
 
+        [ProtoMember(7)]
         public float BillableFactor { get; set; }
 
+        [ProtoMember(8)]
         public int PricePerMeter
         {
             get { return m_PricePerMeter; }
             set { m_PricePerMeter = value; }
         }
 
-        public int RedirectGridX { get; set; }
-
-        public int RedirectGridY { get; set; }
-
         // Used by the sim
         //
 
+        [ProtoMember(9)]
         public bool UseGlobalTime
         {
             get { return m_UseGlobalTime; }
             set { m_UseGlobalTime = value; }
         }
 
+        [ProtoMember(10)]
         public bool FixedSun { get; set; }
 
+        [ProtoMember(11)]
         public double SunPosition { get; set; }
 
+        [ProtoMember(12)]
         public bool AllowVoice
         {
             get { return m_AllowVoice; }
             set { m_AllowVoice = value; }
         }
 
+        [ProtoMember(13)]
         public bool AllowDirectTeleport
         {
             get { return m_AllowDirectTeleport; }
             set { m_AllowDirectTeleport = value; }
         }
 
+        [ProtoMember(14)]
         public bool DenyAnonymous { get; set; }
 
+        [ProtoMember(15)]
         public bool DenyIdentified { get; set; }
 
+        [ProtoMember(16)]
         public bool DenyTransacted { get; set; }
 
+        [ProtoMember(17)]
         public bool AbuseEmailToEstateOwner { get; set; }
 
+        [ProtoMember(18)]
         public bool BlockDwell { get; set; }
 
+        [ProtoMember(19)]
         public bool EstateSkipScripts { get; set; }
 
+        [ProtoMember(20)]
         public bool ResetHomeOnTeleport { get; set; }
 
+        [ProtoMember(21)]
         public bool TaxFree { get; set; }
 
+        [ProtoMember(22)]
         public bool PublicAccess
         {
             get { return m_PublicAccess; }
             set { m_PublicAccess = value; }
         }
 
+        [ProtoMember(23)]
         public string AbuseEmail
         {
             get { return m_AbuseEmail; }
             set { m_AbuseEmail = value; }
         }
 
+        [ProtoMember(24)]
         public UUID EstateOwner
         {
             get { return m_EstateOwner; }
             set { m_EstateOwner = value; }
         }
 
+        [ProtoMember(25)]
         public bool DenyMinors { get; set; }
 
         // All those lists...
         //
 
-        public UUID[] EstateManagers
+        [ProtoMember(26)]
+        public List<UUID> EstateManagers
         {
-            get { return l_EstateManagers.ToArray(); }
-            set { l_EstateManagers = new List<UUID>(value); }
+            get { return l_EstateManagers; }
+            set { l_EstateManagers = value; }
         }
 
-        public EstateBan[] EstateBans
+        [ProtoMember(27)]
+        public List<EstateBan> EstateBans
         {
-            get { return l_EstateBans.ToArray(); }
-            set { l_EstateBans = new List<EstateBan>(value); }
+            get { return l_EstateBans; }
+            set { l_EstateBans = value; }
         }
 
-        public UUID[] EstateAccess
+        [ProtoMember(28)]
+        public List<UUID> EstateAccess
         {
-            get { return l_EstateAccess.ToArray(); }
-            set { l_EstateAccess = new List<UUID>(value); }
+            get { return l_EstateAccess; }
+            set { l_EstateAccess = value; }
         }
 
-        public UUID[] EstateGroups
+        [ProtoMember(29)]
+        public List<UUID> EstateGroups
         {
-            get { return l_EstateGroups.ToArray(); }
-            set { l_EstateGroups = new List<UUID>(value); }
+            get { return l_EstateGroups; }
+            set { l_EstateGroups = value; }
         }
 
         public event SaveDelegate OnSave;
@@ -218,8 +244,6 @@ namespace Aurora.Framework
             PricePerMeter = values["PricePerMeter"].AsInteger();
             TaxFree = values["TaxFree"].AsBoolean();
             AllowDirectTeleport = values["AllowDirectTeleport"].AsBoolean();
-            RedirectGridX = values["RedirectGridX"].AsInteger();
-            RedirectGridY = values["RedirectGridY"].AsInteger();
             ParentEstateID = (uint) values["ParentEstateID"].AsInteger();
             SunPosition = values["SunPosition"].AsReal();
             EstateSkipScripts = values["EstateSkipScripts"].AsBoolean();
@@ -234,61 +258,19 @@ namespace Aurora.Framework
 
             OSDArray Managers = values["EstateManagers"] as OSDArray;
             if (Managers != null)
-            {
-#if (!ISWIN)
-                List<UUID> list = new List<UUID>();
-                foreach (OSD id in Managers)
-                {
-                    list.Add(id.AsUUID());
-                }
-                EstateManagers = list.ToArray();
-#else
-                EstateManagers = Managers.Select(id => id.AsUUID()).ToArray();
-#endif
-            }
+                EstateManagers = Managers.ConvertAll<UUID>((o) => o);
 
             OSDArray Ban = values["EstateBans"] as OSDArray;
             if (Ban != null)
-            {
-                List<EstateBan> NewBan = new List<EstateBan>();
-                foreach (OSD BannedUser in Ban)
-                {
-                    EstateBan ban = new EstateBan();
-                    ban.FromOSD(BannedUser);
-                    NewBan.Add(ban);
-                }
-                EstateBans = NewBan.ToArray();
-            }
+                EstateBans = Ban.ConvertAll<EstateBan>((o) => { EstateBan ban = new EstateBan(); ban.FromOSD(o); return ban; });
 
             OSDArray Access = values["EstateAccess"] as OSDArray;
             if (Access != null)
-            {
-#if (!ISWIN)
-                List<UUID> list1 = new List<UUID>();
-                foreach (OSD uuid in Access)
-                {
-                    list1.Add(uuid.AsUUID());
-                }
-                EstateAccess = list1.ToArray();
-#else
-                EstateAccess = Access.Select(uuid => uuid.AsUUID()).ToArray();
-#endif
-            }
+                EstateAccess = Access.ConvertAll<UUID>((o) => o);
 
             OSDArray Groups = values["EstateGroups"] as OSDArray;
             if (Groups != null)
-            {
-#if (!ISWIN)
-                List<UUID> list2 = new List<UUID>();
-                foreach (OSD uuid in Groups)
-                {
-                    list2.Add(uuid.AsUUID());
-                }
-                EstateGroups = list2.ToArray();
-#else
-                EstateGroups = Groups.Select(uuid => uuid.AsUUID()).ToArray();
-#endif
-            }
+                EstateGroups = Groups.ConvertAll<UUID>((o) => o);
         }
 
         public override OSDMap ToOSD()
@@ -308,8 +290,6 @@ namespace Aurora.Framework
             values["PricePerMeter"] = PricePerMeter;
             values["TaxFree"] = TaxFree;
             values["AllowDirectTeleport"] = AllowDirectTeleport;
-            values["RedirectGridX"] = RedirectGridX;
-            values["RedirectGridY"] = RedirectGridY;
             values["ParentEstateID"] = (int) ParentEstateID;
             values["SunPosition"] = SunPosition;
             values["EstateSkipScripts"] = EstateSkipScripts;
@@ -322,33 +302,16 @@ namespace Aurora.Framework
             values["AllowParcelChanges"] = AllowParcelChanges;
             values["AllowSetHome"] = AllowSetHome;
 
-            OSDArray Ban = new OSDArray(EstateBans.Length);
+            OSDArray Ban = new OSDArray(EstateBans.Count);
             foreach (EstateBan ban in EstateBans)
             {
                 Ban.Add(ban.ToOSD());
             }
             values["EstateBans"] = Ban;
 
-            OSDArray Managers = new OSDArray(EstateManagers.Length);
-            EstateManagers.ToList<UUID>().ForEach(delegate(UUID ID)
-            {
-                Managers.Add(ID);
-            });
-            values["EstateManagers"] = Managers;
-
-            OSDArray Groups = new OSDArray(EstateGroups.Length);
-            EstateGroups.ToList<UUID>().ForEach(delegate(UUID ID)
-            {
-                Groups.Add(ID);
-            });
-            values["EstateGroups"] = Groups;
-
-            OSDArray Access = new OSDArray(EstateAccess.Length);
-            EstateAccess.ToList<UUID>().ForEach(delegate(UUID ID)
-            {
-                Access.Add(ID);
-            });
-            values["EstateAccess"] = Access;
+            values["EstateManagers"] = EstateManagers.ToOSDArray();
+            values["EstateGroups"] = EstateGroups.ToOSDArray();
+            values["EstateAccess"] = EstateAccess.ToOSDArray();
 
             return values;
         }

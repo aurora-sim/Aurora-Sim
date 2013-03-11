@@ -43,6 +43,8 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using Timer = System.Timers.Timer;
 using Aurora.Management;
+using ProtoBuf.Meta;
+using ProtoBuf;
 
 namespace Aurora.Modules.Startup.FileBasedSimulationData
 {
@@ -596,6 +598,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
                 ISceneEntity[] saveentities = m_scene.Entities.GetEntities();
                 List<UUID> entitiesToSave = new List<UUID>();
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch(), sw2 = new System.Diagnostics.Stopwatch();
                 foreach (ISceneEntity entity in saveentities)
                 {
                     try
@@ -608,8 +611,12 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                         {
                             entity.HasGroupChanged = false;
                             //Write all entities
-                            byte[] xml = ((ISceneObject) entity).ToBinaryXml2();
+                            sw.Start();
+                            byte[] xml = ((ISceneObject)entity).ToBinaryXml2();
+                            sw.Stop();
+                            sw2.Start();
                             writer.WriteFile("entities/" + entity.UUID.ToString(), xml);
+                            sw2.Stop();
                             xml = null;
                         }
                         else
@@ -624,6 +631,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     }
                 }
 
+
+                MainConsole.Instance.Warn("sw: " + sw.ElapsedMilliseconds + ", sw2: " + sw2.ElapsedMilliseconds);
 
                 byte[] data;
                 string filePath;
@@ -795,6 +804,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 }
                 data = null;
             }
+
             m_loadStream.Close();
             m_loadStream = null;
 
@@ -904,6 +914,14 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
             foundLocalIDs.Clear();
             GC.Collect();
+        }
+
+        private void LoadBackupV2()
+        {
+            /*MemoryStream strm = new MemoryStream();
+            ProtoBuf.Serializer.Serialize<LandData>(strm, t);
+            strm.Seek(0, SeekOrigin.Begin);
+            LandData newRI = ProtoBuf.Serializer.Deserialize<LandData>(strm);*/
         }
 
         private ITerrainChannel ReadFromData(byte[] data, IScene scene)

@@ -32,6 +32,7 @@ using System.IO;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
 namespace Aurora.Framework
 {
@@ -41,143 +42,155 @@ namespace Aurora.Framework
         Normal = 3
     }
 
+    [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class RegionInfo : AllScopeIDImpl
     {
         private RegionSettings m_regionSettings;
 
-        private int m_objectCapacity = 0;
-        private string m_regionType = String.Empty;
+        protected int m_objectCapacity = 0;
+        protected string m_regionType = String.Empty;
         protected uint m_httpPort;
-        protected string m_serverURI;
         protected string m_regionName = String.Empty;
         protected IPEndPoint m_internalEndPoint;
         protected int m_regionLocX;
         protected int m_regionLocY;
         protected int m_regionLocZ;
-        public UUID RegionID = UUID.Zero;
-        public UUID Password = UUID.Random();
         private UUID m_GridSecureSessionID = UUID.Zero;
-        public StartupType Startup = StartupType.Normal;
-        public bool InfiniteRegion = false;
         public bool NewRegion = false;
+        public bool HasBeenDeleted { get; set; }
+        private List<int> m_UDPPorts = new List<int>();
+        private bool m_seeIntoThisSimFromNeighbor = true;
+        private bool m_allowPhysicalPrims = true;
 
+        [ProtoMember(1)]
+        public UUID RegionID = UUID.Zero;
+        [ProtoMember(2)]
+        public StartupType Startup = StartupType.Normal;
+
+        [ProtoMember(3)]
         public OpenRegionSettings OpenRegionSettings = new OpenRegionSettings();
+
+        [ProtoMember(4)]
         public OSD EnvironmentSettings = null;
 
         /// <summary>
         /// The X length (in meters) that the region is
         /// The default is 256m
         /// </summary>
+        [ProtoMember(5)]
         public int RegionSizeX = 256;
 
         /// <summary>
         /// The Y length (in meters) that the region is
         /// The default is 256m
         /// </summary>
+        [ProtoMember(6)]
         public int RegionSizeY = 256;
 
         /// <summary>
         /// The Z height (in meters) that the region is (not supported currently)
         /// The default is 1024m
         /// </summary>
+        [ProtoMember(7)]
         public int RegionSizeZ = 4096;
 
         /// <summary>
         /// The region flags (as set on the Grid Server in the database), cached on RegisterRegion call
         /// </summary>
+        [ProtoMember(8)]
         public int RegionFlags = -1;
 
+        [ProtoMember(9)]
         public EstateSettings EstateSettings { get; set; }
 
+        [ProtoMember(10)]
         public RegionSettings RegionSettings
         {
             get { return m_regionSettings ?? (m_regionSettings = new RegionSettings()); }
-
             set { m_regionSettings = value; }
         }
 
-        public bool HasBeenDeleted { get; set; }
+        [ProtoMember(11)]
+        public bool InfiniteRegion = false;
 
-        public bool AllowScriptCrossing { get; set; }
-
-        private List<int> m_UDPPorts = new List<int> ();
+        [ProtoMember(12)]
         public List<int> UDPPorts
         {
             get { return m_UDPPorts; }
             set { m_UDPPorts = value; }
         }
 
-        public bool TrustBinariesFromForeignSims { get; set; }
-
-        private bool m_seeIntoThisSimFromNeighbor = true;
+        [ProtoMember(13)]
         public bool SeeIntoThisSimFromNeighbor
         {
             get { return m_seeIntoThisSimFromNeighbor; }
             set { m_seeIntoThisSimFromNeighbor = value; }
         }
 
-        private bool m_allowPhysicalPrims = true;
-
-        public RegionInfo()
-        {
-            TrustBinariesFromForeignSims = false;
-            AllowScriptCrossing = false;
-        }
-
+        [ProtoMember(14)]
         public bool AllowPhysicalPrims
         {
             get { return m_allowPhysicalPrims; }
             set { m_allowPhysicalPrims = value; }
         }
 
+        [ProtoMember(15)]
         public int ObjectCapacity
         {
             get { return m_objectCapacity; }
             set { m_objectCapacity = value; }
         }
 
+        [ProtoMember(16)]
         public byte AccessLevel
         {
             get { return Util.ConvertMaturityToAccessLevel((uint)RegionSettings.Maturity); }
             set { RegionSettings.Maturity = (int)Util.ConvertAccessLevelToMaturity(value); }
         }
 
+        [ProtoMember(17)]
         public string RegionType
         {
             get { return m_regionType; }
             set { m_regionType = value; }
         }
 
+        [ProtoMember(18)]
         public UUID GridSecureSessionID
         {
             get { return m_GridSecureSessionID; }
             set { m_GridSecureSessionID = value; }
         }
 
+        [ProtoMember(19)]
         public string RegionName
         {
             get { return m_regionName; }
             set { m_regionName = value; }
         }
 
+        [ProtoMember(20)]
         public IPEndPoint InternalEndPoint
         {
             get { return m_internalEndPoint; }
             set { m_internalEndPoint = value; }
         }
 
+        [ProtoMember(21)]
         public int RegionLocX
         {
             get { return m_regionLocX; }
             set { m_regionLocX = value; }
         }
 
+        [ProtoMember(22)]
         public int RegionLocY
         {
             get { return m_regionLocY; }
             set { m_regionLocY = value; }
         }
 
+        [ProtoMember(23)]
         public int RegionLocZ
         {
             get { return m_regionLocZ; }
@@ -201,7 +214,6 @@ namespace Aurora.Framework
             args["internal_ep_port"] = OSD.FromString(InternalEndPoint.Port.ToString());
             if (RegionType != String.Empty)
                 args["region_type"] = OSD.FromString(RegionType);
-            args["password"] = OSD.FromUUID(Password);
             args["region_size_x"] = OSD.FromInteger(RegionSizeX);
             args["region_size_y"] = OSD.FromInteger(RegionSizeY);
             args["region_size_z"] = OSD.FromInteger(RegionSizeZ);
@@ -213,8 +225,6 @@ namespace Aurora.Framework
             args["object_capacity"] = OSD.FromInteger(m_objectCapacity);
             args["region_type"] = OSD.FromString(RegionType);
             args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
-            args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
-            args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
             args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
             args["startupType"] = OSD.FromInteger((int)Startup);
             args["RegionSettings"] = RegionSettings.ToOSD();
@@ -258,8 +268,6 @@ namespace Aurora.Framework
             InternalEndPoint = new IPEndPoint(ip_addr, port);
             if (args.ContainsKey("region_type"))
                 m_regionType = args["region_type"].AsString();
-            if (args.ContainsKey("password"))
-                Password = args["password"].AsUUID();
 
             if (args.ContainsKey("scope_id"))
                 ScopeID = args["scope_id"].AsUUID();
@@ -279,10 +287,6 @@ namespace Aurora.Framework
                 RegionType = args["region_type"].AsString();
             if (args.ContainsKey("see_into_this_sim_from_neighbor"))
                 SeeIntoThisSimFromNeighbor = args["see_into_this_sim_from_neighbor"].AsBoolean();
-            if (args.ContainsKey("trust_binaries_from_foreign_sims"))
-                TrustBinariesFromForeignSims = args["trust_binaries_from_foreign_sims"].AsBoolean();
-            if (args.ContainsKey("allow_script_crossing"))
-                AllowScriptCrossing = args["allow_script_crossing"].AsBoolean();
             if (args.ContainsKey("allow_physical_prims"))
                 AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
             if (args.ContainsKey ("startupType"))

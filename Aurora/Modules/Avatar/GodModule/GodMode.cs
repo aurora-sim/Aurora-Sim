@@ -271,8 +271,8 @@ namespace Aurora.Modules.Gods
                                                            (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                                        parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID,
                                                        pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
-                                                       redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX,
-                                                       redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY
+                                                       redirectGridX = 0,
+                                                       redirectGridY = 0
                                                    };
 
             IEstateModule estate = m_scene.RequestModuleInterface<IEstateModule>();

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
 namespace Aurora.Framework
 {
@@ -15,26 +16,31 @@ namespace Aurora.Framework
         void AuctionEnd(int LocalID);
     }
 
+    [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class AuctionInfo
     {
         /// <summary>
         /// Auction length (in days)
         /// </summary>
+        [ProtoMember(1)]
         public int AuctionLength = 7;
 
         /// <summary>
         /// Date the auction started
         /// </summary>
+        [ProtoMember(2)]
         public DateTime AuctionStart = DateTime.Now;
 
         /// <summary>
         /// Description of the parcel
         /// </summary>
+        [ProtoMember(3)]
         public string Description = "";
 
         /// <summary>
         /// List of bids on the auction so far
         /// </summary>
+        [ProtoMember(4)]
         public List<AuctionBid> AuctionBids = new List<AuctionBid>();
 
         public void FromOSD(OSDMap map)
@@ -64,21 +70,25 @@ namespace Aurora.Framework
         }
     }
 
+    [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class AuctionBid
     {
         /// <summary>
         /// The person who bid on the auction
         /// </summary>
+        [ProtoMember(1)]
         public UUID AuctionBidder;
 
         /// <summary>
         /// The amount bid on the auction
         /// </summary>
+        [ProtoMember(2)]
         public int Amount;
 
         /// <summary>
         /// The time the bid was added
         /// </summary>
+        [ProtoMember(3)]
         public DateTime TimeBid;
 
         public OSDMap ToOSD()
