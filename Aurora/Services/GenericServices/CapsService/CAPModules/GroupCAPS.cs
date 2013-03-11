@@ -36,7 +36,6 @@ using System.Reflection;
 using System.Text;
 using System.Web;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
@@ -45,7 +44,7 @@ using OpenMetaverse.Imaging;
 using Encoder = System.Drawing.Imaging.Encoder;
 using System.Collections.Generic;
 
-namespace OpenSim.Services.CapsService
+namespace Aurora.Services
 {
     public class GroupCAPS : ICapsServiceConnector
     {
