@@ -135,7 +135,12 @@ namespace Aurora.Framework
             }
         }
 
-        public static string ComputeFullPath(string Path, bool forceSlash = true) //single function that calls the functions that help compute a full url Path
+        public static string ComputeFullPath(string Path) //single function that calls the functions that help compute a full url Path
+        {
+            return ComputeFullPath(Path, true);
+        }
+
+        public static string ComputeFullPath(string Path, bool forceSlash) //single function that calls the functions that help compute a full url Path
         {
             Path = PathHomeDrive(
                 PathUsername(
