@@ -117,8 +117,7 @@ namespace Aurora.Services.DataService
             values["CurrentPosition"] = lastPosition;
             values["CurrentLookat"] = lastLookAt;
             values["LastSeen"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
-                //Set the last seen and is online since if the user is moving, they are sending updates
-            values["IsOnline"] = 1;
+            //values["IsOnline"] = 1;
 
             Update(userID, values);
         }
