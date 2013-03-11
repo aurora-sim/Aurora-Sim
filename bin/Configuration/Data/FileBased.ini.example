@@ -1,72 +1,74 @@
 [SimulationDataStore]
     DatabaseLoaderName = "FileBasedDatabase"
-	
+    
 [FileBasedSimulationData]
     ;;
     ;; This plugin loads the region information (such as terrain and objects) from an Aurora Backup file 
-	;; rather than from a normal database. This is much faster than a normal database and can be used to
-	;; automatically save backups of regions as well. This is the default option in Aurora
-	;;
-	
-	;;
-	;; Configuration Settings
-	;;
-	
-	;; Directory to load the backups from
-	;; Normally is the bin directory, but you can change this to anywhere on your hard drive
-	;; Default is ""
-	LoadBackupDirectory = "/"
-	
-	;; Directory to save new backups into
-	;; Normally this is the bin directory, but this can be changed to any place on your HD
-	;; Default is ""
-	SaveBackupDirectory = "/"
-	
-	;; Should we save any changes that occur in the sim? (This is useful for sandboxes as you can 
-	;;  decide not to persist any changes and just restart the sim to clear it)
-	;; Default is true
-	SaveChanges = true
-	
-	;; This module saves periodic backups of the region so that if it crashes, you do not lose anything
-	;; This allows you to change the amount of time (in minutes) between the auto saves
-	;; Default is 5 (minutes)
-	TimeBetweenSaves = 5
-	
-	;; This will make a copy of the last backup that was made of the sim and put it in the "Backup" directory
-	;; This makes sure that you have a good backup if something does go wrong (the backups are time stamped so
-	;;  you can tell when it was taken)
-	;; Default is true
-	SavePreviousBackup = true
-	
-	;; If you enabled SavePreviousBackup, this is the directory (in the bin folder) where the old saves
-	;; will be put
-	;; Default is "Backups"
-	PreviousBackupDirectory = "Backups/"
-	
-	;; The normal file name to load from for each region is "<Region Name Here>.abackup"
-	;; If you wish to change that, you can add this so that it becomes
-	;; "<Region Name Here><This config option setting>.abackup"
-	;; which allows for a bit of flexibility when loading.
-	;; Default is ""
+    ;; rather than from a normal database. This is much faster than a normal database and can be used to
+    ;; automatically save backups of regions as well. This is the default option in Aurora
+    ;;
+    ;; In directory paths you can use ~ for home directory, %username% to put your user name in the path. On Windows, you can use %homedrive% in place of your drive letter(Like if you stored your backups already on an external hard drive letter, X for example vs. C main drive).
+    ;;
+    
+    ;;
+    ;; Configuration Settings
+    ;;
+    
+    ;; Directory to load the backups from
+    ;; Normally is the bin directory, but you can change this to anywhere on your hard drive
+    ;; Default is ""
+    LoadBackupDirectory = "/"
+    
+    ;; Directory to save new backups into
+    ;; Normally this is the bin directory, but this can be changed to any place on your HD
+    ;; Default is ""
+    SaveBackupDirectory = "/"
+    
+    ;; Should we save any changes that occur in the sim? (This is useful for sandboxes as you can 
+    ;;  decide not to persist any changes and just restart the sim to clear it)
+    ;; Default is true
+    SaveChanges = true
+    
+    ;; This module saves periodic backups of the region so that if it crashes, you do not lose anything
+    ;; This allows you to change the amount of time (in minutes) between the auto saves
+    ;; Default is 5 (minutes)
+    TimeBetweenSaves = 5
+    
+    ;; This will make a copy of the last backup that was made of the sim and put it in the "Backup" directory
+    ;; This makes sure that you have a good backup if something does go wrong (the backups are time stamped so
+    ;;  you can tell when it was taken)
+    ;; Default is true
+    SavePreviousBackup = true
+    
+    ;; If you enabled SavePreviousBackup, this is the directory (in the bin folder) where the old saves
+    ;; will be put
+    ;; Default is "Backups"
+    PreviousBackupDirectory = "Backups/"
+    
+    ;; The normal file name to load from for each region is "<Region Name Here>.abackup"
+    ;; If you wish to change that, you can add this so that it becomes
+    ;; "<Region Name Here><This config option setting>.abackup"
+    ;; which allows for a bit of flexibility when loading.
+    ;; Default is ""
     AppendedLoadFileName = "";
-	
-	;; The normal file name to save for each region is "<Region Name Here>.abackup"
-	;; If you wish to change that, you can add this so that it becomes
-	;; "<Region Name Here><This config option setting>.abackup"
-	;; which allows for a bit of flexibility when saving the backups.
-	;; Default is ""
+    
+    ;; The normal file name to save for each region is "<Region Name Here>.abackup"
+    ;; If you wish to change that, you can add this so that it becomes
+    ;; "<Region Name Here><This config option setting>.abackup"
+    ;; which allows for a bit of flexibility when saving the backups.
+    ;; Default is ""
     AppendedSaveFileName = "";
-	
-	;; This will make a backup of the sim every X minutes and put it in the "Backup" directory
-	;; This makes sure that you have a good backup if something does go wrong (the backups are time stamped so
-	;;  you can tell when it was taken)
-	;; Default is true
-	SaveTimedPreviousBackup = true
-	
-	;; This module saves periodic backups of the region into the PreviousBackupDirectory 
-	;; so that you have time stamped backups of your region indefinitely
-	;; This allows you to change the amount of time (in minutes) between the auto saves
-	;; Default is 1440 (minutes) (1 day)
-	TimeBetweenBackupSaves = 1440
-	
-	
+    
+    ;; This will make a backup of the sim every X minutes and put it in the "Backup" directory
+    ;; This makes sure that you have a good backup if something does go wrong (the backups are time stamped so
+    ;;  you can tell when it was taken)
+    ;; Default is true
+    SaveTimedPreviousBackup = true
+    
+    ;; This module saves periodic backups of the region into the PreviousBackupDirectory 
+    ;; so that you have time stamped backups of your region indefinitely
+    ;; This allows you to change the amount of time (in minutes) between the auto saves
+    ;; Default is 1440 (minutes) (1 day)
+    TimeBetweenBackupSaves = 1440
+    
+    
