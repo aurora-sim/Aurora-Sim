@@ -7,6 +7,8 @@
 	;; rather than from a normal database. This is much faster than a normal database and can be used to
 	;; automatically save backups of regions as well. This is the default option in Aurora
 	;;
+	;; In directory paths you can use ~ for home directory, %username% to put your user name in the path. On Windows, you can use %homedrive% in place of your drive letter(Like if you stored your backups already on an external hard drive letter, X for example vs. C main drive).
+	;;
 	
 	;;
 	;; Configuration Settings
