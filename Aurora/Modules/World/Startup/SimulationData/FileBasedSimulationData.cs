@@ -310,9 +310,9 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 m_saveChanges = config.GetBoolean("SaveChanges", m_saveChanges);
                 m_timeBetweenSaves = config.GetInt("TimeBetweenSaves", m_timeBetweenSaves);
                 m_keepOldSave = config.GetBoolean("SavePreviousBackup", m_keepOldSave);
-                m_oldSaveDirectory = config.GetString("PreviousBackupDirectory", m_oldSaveDirectory);
-                m_loadDirectory = config.GetString("LoadBackupDirectory", m_loadDirectory);
-                m_saveDirectory = config.GetString("SaveBackupDirectory", m_saveDirectory);
+                m_oldSaveDirectory = PathHelpers.ComputeFullPath(config.GetString("PreviousBackupDirectory", m_oldSaveDirectory));
+                m_loadDirectory = PathHelpers.ComputeFullPath(config.GetString("LoadBackupDirectory", m_loadDirectory));
+                m_saveDirectory = PathHelpers.ComputeFullPath(config.GetString("SaveBackupDirectory", m_saveDirectory));
                 m_saveBackupChanges = config.GetBoolean("SaveTimedPreviousBackup", m_keepOldSave);
                 m_timeBetweenBackupSaves = config.GetInt("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
             }
