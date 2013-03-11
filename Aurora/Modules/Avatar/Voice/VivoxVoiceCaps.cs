@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) Contributors, http://opensimulator.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,7 +9,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the OpenSim Project nor the
+ *     * Neither the name of the Aurora-Sim Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
  *
@@ -26,27 +26,29 @@
  */
 
 using System;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Xml;
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Threading;
-using OpenMetaverse;
-using Nini.Config;
-using Nwc.XmlRpc;
+using System.Text;
+using System.Web;
+using Aurora.Simulation.Base;
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Xml;
+using System.Collections.Generic;
+using Nini.Config;
+using System.Net;
+using System.Threading;
 
-namespace Aurora.OptionalModules
+namespace Aurora.Modules
 {
-    public class VivoxVoiceModule : INonSharedRegionModule
+    public class VivoxVoiceService : IVoiceService, IService
     {
         // channel distance model values
         public const int CHAN_DIST_NONE = 0; // no attenuation
@@ -100,10 +102,9 @@ namespace Aurora.OptionalModules
 
         private static Dictionary<string, string> m_parents = new Dictionary<string, string>();
         private static bool m_dumpXml;
+        protected IRegistryCore m_registry;
 
-        private IConfig m_config;
-
-        public void Initialise(IConfigSource config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig voiceconfig = config.Configs["Voice"];
             if (voiceconfig == null)
@@ -113,27 +114,27 @@ namespace Aurora.OptionalModules
             if (voiceconfig.GetString("Module", voiceModule) != voiceModule)
                 return;
 
-            m_config = config.Configs["VivoxVoice"];
+            IConfig vivoxConfig = config.Configs["VivoxVoice"];
 
-            if (null == m_config)
+            if (null == vivoxConfig)
                 return;
 
             try
             {
                 // retrieve configuration variables
-                m_vivoxServer = m_config.GetString("vivox_server", String.Empty);
-                m_vivoxSipUri = m_config.GetString("vivox_sip_uri", String.Empty);
-                m_vivoxAdminUser = m_config.GetString("vivox_admin_user", String.Empty);
-                m_vivoxAdminPassword = m_config.GetString("vivox_admin_password", String.Empty);
+                m_vivoxServer = vivoxConfig.GetString("vivox_server", String.Empty);
+                m_vivoxSipUri = vivoxConfig.GetString("vivox_sip_uri", String.Empty);
+                m_vivoxAdminUser = vivoxConfig.GetString("vivox_admin_user", String.Empty);
+                m_vivoxAdminPassword = vivoxConfig.GetString("vivox_admin_password", String.Empty);
 
-                m_vivoxChannelDistanceModel = m_config.GetInt("vivox_channel_distance_model", CHAN_DIST_DEFAULT);
-                m_vivoxChannelRollOff = m_config.GetDouble("vivox_channel_roll_off", CHAN_ROLL_OFF_DEFAULT);
-                m_vivoxChannelMaximumRange = m_config.GetInt("vivox_channel_max_range", CHAN_MAX_RANGE_DEFAULT);
-                m_vivoxChannelMode = m_config.GetString("vivox_channel_mode", CHAN_MODE_DEFAULT).ToLower();
-                m_vivoxChannelType = m_config.GetString("vivox_channel_type", CHAN_TYPE_DEFAULT).ToLower();
-                m_vivoxChannelClampingDistance = m_config.GetInt("vivox_channel_clamping_distance",
+                m_vivoxChannelDistanceModel = vivoxConfig.GetInt("vivox_channel_distance_model", CHAN_DIST_DEFAULT);
+                m_vivoxChannelRollOff = vivoxConfig.GetDouble("vivox_channel_roll_off", CHAN_ROLL_OFF_DEFAULT);
+                m_vivoxChannelMaximumRange = vivoxConfig.GetInt("vivox_channel_max_range", CHAN_MAX_RANGE_DEFAULT);
+                m_vivoxChannelMode = vivoxConfig.GetString("vivox_channel_mode", CHAN_MODE_DEFAULT).ToLower();
+                m_vivoxChannelType = vivoxConfig.GetString("vivox_channel_type", CHAN_TYPE_DEFAULT).ToLower();
+                m_vivoxChannelClampingDistance = vivoxConfig.GetInt("vivox_channel_clamping_distance",
                                                                               CHAN_CLAMPING_DISTANCE_DEFAULT);
-                m_dumpXml = m_config.GetBoolean("dump_xml", false);
+                m_dumpXml = vivoxConfig.GetBoolean("dump_xml", false);
 
                 // Validate against constraints and default if necessary
                 if (m_vivoxChannelRollOff < CHAN_ROLL_OFF_MIN || m_vivoxChannelRollOff > CHAN_ROLL_OFF_MAX)
@@ -203,7 +204,10 @@ namespace Aurora.OptionalModules
 
                 m_pluginEnabled = true;
 
-                MainConsole.Instance.Info("[VivoxVoice] plugin enabled");
+                MainConsole.Instance.Info("[VivoxVoice]: plugin enabled");
+
+                registry.RegisterModuleInterface<IVoiceService>(this);
+                m_registry = registry;
             }
             catch (Exception e)
             {
@@ -212,500 +216,365 @@ namespace Aurora.OptionalModules
             }
         }
 
-        // Called to indicate that the module has been added to the region
-        public void AddRegion(IScene scene)
+        public void Start(Nini.Config.IConfigSource config, IRegistryCore registry)
         {
-            if (m_pluginEnabled)
+            if (m_registry == null)
+                return;
+            ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
+            if (manager != null)
             {
-                lock (vlock)
-                {
-
-                    string channelId;
-
-                    string sceneUUID = scene.RegionInfo.RegionID.ToString();
-                    string sceneName = scene.RegionInfo.RegionName;
-
-                    // Make sure that all local channels are deleted.
-                    // So we have to search for the children, and then do an
-                    // iteration over the set of chidren identified.
-                    // This assumes that there is just one directory per
-                    // region.
-
-                    if (VivoxTryGetDirectory(sceneUUID + "D", out channelId))
+                manager.OnAddedScene += (scene) =>
                     {
-                        MainConsole.Instance.DebugFormat("[VivoxVoice]: region {0}: uuid {1}: located directory id {2}",
-                                          sceneName, sceneUUID, channelId);
-
-                        XmlElement children = VivoxListChildren(channelId);
-                        string count;
-
-                        if (XmlFind(children, "response.level0.channel-search.count", out count))
+                        lock (vlock)
                         {
-                            int cnum = Convert.ToInt32(count);
-                            for (int i = 0; i < cnum; i++)
+                            string channelId;
+
+                            string sceneUUID = scene.RegionInfo.RegionID.ToString();
+                            string sceneName = scene.RegionInfo.RegionName;
+
+                            // Make sure that all local channels are deleted.
+                            // So we have to search for the children, and then do an
+                            // iteration over the set of chidren identified.
+                            // This assumes that there is just one directory per
+                            // region.
+
+                            if (VivoxTryGetDirectory(sceneUUID + "D", out channelId))
                             {
-                                string id;
-                                if (XmlFind(children, "response.level0.channel-search.channels.channels.level4.id", i, out id))
+                                MainConsole.Instance.DebugFormat("[VivoxVoice]: region {0}: uuid {1}: located directory id {2}",
+                                                  sceneName, sceneUUID, channelId);
+
+                                XmlElement children = VivoxListChildren(channelId);
+                                string count;
+
+                                if (XmlFind(children, "response.level0.channel-search.count", out count))
                                 {
-                                    if (!IsOK(VivoxDeleteChannel(channelId, id)))
-                                        MainConsole.Instance.WarnFormat("[VivoxVoice] Channel delete failed {0}:{1}:{2}", i, channelId, id);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (!VivoxTryCreateDirectory(sceneUUID + "D", sceneName, out channelId))
-                        {
-                            MainConsole.Instance.WarnFormat("[VivoxVoice] Create failed <{0}:{1}:{2}>",
-                                             "*", sceneUUID, sceneName);
-                            channelId = String.Empty;
-                        }
-                    }
-
-
-                    // Create a dictionary entry unconditionally. This eliminates the
-                    // need to check for a parent in the core code. The end result is
-                    // the same, if the parent table entry is an empty string, then
-                    // region channels will be created as first-level channels.
-
-                    lock (m_parents)
-                        if (m_parents.ContainsKey(sceneUUID))
-                        {
-                            RemoveRegion(scene);
-                            m_parents.Add(sceneUUID, channelId);
-                        }
-                        else
-                        {
-                            m_parents.Add(sceneUUID, channelId);
-                        }
-
-                }
-
-                // we need to capture scene in an anonymous method
-                // here as we need it later in the callbacks
-                scene.EventManager.OnRegisterCaps += delegate(UUID agentID, IHttpServer server)
-                {
-                    return EventManager_OnRegisterCaps(scene, agentID, server);
-                };
-            }
-
-        }
-
-        // Called to indicate that all loadable modules have now been added
-        public void RegionLoaded(IScene scene)
-        {
-            // Do nothing.
-        }
-
-        // Called to indicate that the region is going away.
-        public void RemoveRegion(IScene scene)
-        {
-            if (m_pluginEnabled)
-            {
-                lock (vlock)
-                {
-
-                    string channelId;
-
-                    string sceneUUID = scene.RegionInfo.RegionID.ToString();
-                    string sceneName = scene.RegionInfo.RegionName;
-
-                    // Make sure that all local channels are deleted.
-                    // So we have to search for the children, and then do an
-                    // iteration over the set of chidren identified.
-                    // This assumes that there is just one directory per
-                    // region.
-
-                    if (VivoxTryGetDirectory(sceneUUID + "D", out channelId))
-                    {
-
-                        MainConsole.Instance.DebugFormat("[VivoxVoice]: region {0}: uuid {1}: located directory id {2}",
-                                          sceneName, sceneUUID, channelId);
-
-                        XmlElement children = VivoxListChildren(channelId);
-                        string count;
-
-                        if (XmlFind(children, "response.level0.channel-search.count", out count))
-                        {
-                            int cnum = Convert.ToInt32(count);
-                            for (int i = 0; i < cnum; i++)
-                            {
-                                string id;
-                                if (XmlFind(children, "response.level0.channel-search.channels.channels.level4.id", i, out id))
-                                {
-                                    if (!IsOK(VivoxDeleteChannel(channelId, id)))
-                                        MainConsole.Instance.WarnFormat("[VivoxVoice] Channel delete failed {0}:{1}:{2}", i, channelId, id);
-                                }
-                            }
-                        }
-                    }
-
-                    if (!IsOK(VivoxDeleteChannel(null, channelId)))
-                        MainConsole.Instance.WarnFormat("[VivoxVoice] Parent channel delete failed {0}:{1}:{2}", sceneName, sceneUUID, channelId);
-
-                    // Remove the channel umbrella entry
-
-                    lock (m_parents)
-                    {
-                        if (m_parents.ContainsKey(sceneUUID))
-                        {
-                            m_parents.Remove(sceneUUID);
-                        }
-                    }
-                }
-            }
-        }
-
-        public void Close()
-        {
-            if (m_pluginEnabled)
-                VivoxLogout();
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public string Name
-        {
-            get { return "VivoxVoiceModule"; }
-        }
-
-        // <summary>
-        // OnRegisterCaps is invoked via the scene.EventManager
-        // everytime OpenSim hands out capabilities to a client
-        // (login, region crossing). We contribute two capabilities to
-        // the set of capabilities handed back to the client:
-        // ProvisionVoiceAccountRequest and ParcelVoiceInfoRequest.
-        //
-        // ProvisionVoiceAccountRequest allows the client to obtain
-        // the voice account credentials for the avatar it is
-        // controlling (e.g., user name, password, etc).
-        //
-        // ParcelVoiceInfoRequest is invoked whenever the client
-        // changes from one region or parcel to another.
-        //
-        // Note that OnRegisterCaps is called here via a closure
-        // delegate containing the scene of the respective region (see
-        // Initialise()).
-        // </summary>
-
-        OSDMap EventManager_OnRegisterCaps(IScene scene, UUID agentID, IHttpServer server)
-        {
-            OSDMap retVal = new OSDMap();
-            retVal["ProvisionVoiceAccountRequest"] = CapsUtil.CreateCAPS("ProvisionVoiceAccountRequest", "");
-
-            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
-                                                       delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProvisionVoiceAccountRequest(scene, agentID);
-                                                       }));
-            retVal["ParcelVoiceInfoRequest"] = CapsUtil.CreateCAPS("ParcelVoiceInfoRequest", "");
-            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ParcelVoiceInfoRequest"],
-                                                       delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ParcelVoiceInfoRequest(scene, agentID);
-                                                       }));
-            /*retVal["ChatSessionRequest"] = CapsUtil.CreateCAPS("ChatSessionRequest", "");
-            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ChatSessionRequest"],
-                                                       delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ChatSessionRequest(scene, agentID);
-                                                       }));*/
-            return retVal;
-        }
-
-        /// <summary>
-        /// Callback for a client request for Voice Account Details
-        /// </summary>
-        /// <param name="scene">current scene object of the client</param>
-        /// <param name="agentID"></param>
-        /// <param name="caps"></param>
-        /// <returns></returns>
-        public byte[] ProvisionVoiceAccountRequest(IScene scene, UUID agentID)
-        {
-            try
-            {
-
-                IScenePresence avatar = null;
-                string avatarName = null;
-
-                if (scene == null) throw new Exception("[VivoxVoice][PROVISIONVOICE] Invalid scene");
-
-                avatar = scene.GetScenePresence(agentID);
-                while (avatar == null)
-                {
-                    Thread.Sleep(100);
-                    avatar = scene.GetScenePresence(agentID);
-                }
-
-                avatarName = avatar.Name;
-
-                MainConsole.Instance.TraceFormat("[VivoxVoice][PROVISIONVOICE]: scene = {0}, agentID = {1}", scene, agentID);
-
-                XmlElement resp;
-                bool retry = false;
-                string agentname = "x" + Convert.ToBase64String(agentID.GetBytes());
-                string password = new UUID(Guid.NewGuid()).ToString().Replace('-', 'Z').Substring(0, 16);
-                string code = String.Empty;
-
-                agentname = agentname.Replace('+', '-').Replace('/', '_');
-
-                do
-                {
-                    resp = VivoxGetAccountInfo(agentname);
-
-                    if (XmlFind(resp, "response.level0.status", out code))
-                    {
-                        if (code != "OK")
-                        {
-                            if (XmlFind(resp, "response.level0.body.code", out code))
-                            {
-                                // If the request was recognized, then this should be set to something
-                                switch (code)
-                                {
-                                    case "201": // Account expired
-                                        MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : expired credentials",
-                                                          avatarName);
-                                        m_adminConnected = false;
-                                        retry = DoAdminLogin();
-                                        break;
-
-                                    case "202": // Missing credentials
-                                        MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : missing credentials",
-                                                          avatarName);
-                                        break;
-
-                                    case "212": // Not authorized
-                                        MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : not authorized",
-                                                          avatarName);
-                                        break;
-
-                                    case "300": // Required parameter missing
-                                        MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : parameter missing",
-                                                          avatarName);
-                                        break;
-
-                                    case "403": // Account does not exist
-                                        resp = VivoxCreateAccount(agentname, password);
-                                        // Note: This REALLY MUST BE status. Create Account does not return code.
-                                        if (XmlFind(resp, "response.level0.status", out code))
+                                    int cnum = Convert.ToInt32(count);
+                                    for (int i = 0; i < cnum; i++)
+                                    {
+                                        string id;
+                                        if (XmlFind(children, "response.level0.channel-search.channels.channels.level4.id", i, out id))
                                         {
-                                            switch (code)
-                                            {
-                                                case "201": // Account expired
-                                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : expired credentials",
-                                                                      avatarName);
-                                                    m_adminConnected = false;
-                                                    retry = DoAdminLogin();
-                                                    break;
-
-                                                case "202": // Missing credentials
-                                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : missing credentials",
-                                                                      avatarName);
-                                                    break;
-
-                                                case "212": // Not authorized
-                                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : not authorized",
-                                                                      avatarName);
-                                                    break;
-
-                                                case "300": // Required parameter missing
-                                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : parameter missing",
-                                                                      avatarName);
-                                                    break;
-
-                                                case "400": // Create failed
-                                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : create failed",
-                                                                      avatarName);
-                                                    break;
-                                            }
+                                            if (!IsOK(VivoxDeleteChannel(channelId, id)))
+                                                MainConsole.Instance.WarnFormat("[VivoxVoice] Channel delete failed {0}:{1}:{2}", i, channelId, id);
                                         }
-                                        break;
-
-                                    case "404": // Failed to retrieve account
-                                        MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : retrieve failed");
-                                        // [AMW] Sleep and retry for a fixed period? Or just abandon?
-                                        break;
+                                    }
                                 }
                             }
+                            else
+                            {
+                                if (!VivoxTryCreateDirectory(sceneUUID + "D", sceneName, out channelId))
+                                {
+                                    MainConsole.Instance.WarnFormat("[VivoxVoice] Create failed <{0}:{1}:{2}>",
+                                                     "*", sceneUUID, sceneName);
+                                    channelId = String.Empty;
+                                }
+                            }
+
+
+                            // Create a dictionary entry unconditionally. This eliminates the
+                            // need to check for a parent in the core code. The end result is
+                            // the same, if the parent table entry is an empty string, then
+                            // region channels will be created as first-level channels.
+
+                            lock (m_parents)
+                                if (!m_parents.ContainsKey(sceneUUID))
+                                    m_parents.Add(sceneUUID, channelId);
                         }
-                    }
-                } while (retry);
-
-                if (code != "OK")
-                {
-                    MainConsole.Instance.DebugFormat("[VivoxVoice][PROVISIONVOICE]: Get Account Request failed for \"{0}\"", avatarName);
-                    throw new Exception("Unable to execute request");
-                }
-
-                // Unconditionally change the password on each request
-                VivoxPassword(agentname, password);
-
-                OSDMap map = new OSDMap();
-                map["username"] = agentname;
-                map["password"] = password;
-                map["voice_sip_uri_hostname"] = m_vivoxSipUri;
-                map["voice_account_server_name"] = m_vivoxVoiceAccountApi;
-
-                MainConsole.Instance.TraceFormat("[VivoxVoice][PROVISIONVOICE]: avatar \"{0}\" added", avatarName);
-
-                return OSDParser.SerializeLLSDXmlBytes(map);
+                    };
             }
-            catch (Exception e)
-            {
-                MainConsole.Instance.ErrorFormat("[VivoxVoice][PROVISIONVOICE]: : {0}, retry later", e.ToString());
-                return Encoding.UTF8.GetBytes("<llsd><undef /></llsd>");
-            }
+            ISyncMessageRecievedService syncRecievedService = m_registry.RequestModuleInterface<ISyncMessageRecievedService>();
+            if(syncRecievedService != null)
+                syncRecievedService.OnMessageReceived += syncRecievedService_OnMessageReceived;
         }
 
-        /// <summary>
-        /// Callback for a client request for ParcelVoiceInfo
-        /// </summary>
-        /// <param name="scene">current scene object of the client</param>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <param name="param"></param>
-        /// <param name="agentID"></param>
-        /// <param name="caps"></param>
-        /// <returns></returns>
-        public byte[] ParcelVoiceInfoRequest(IScene scene, UUID agentID)
+        public void FinishedStartup()
         {
-            IScenePresence avatar = scene.GetScenePresence(agentID);
-            string avatarName = avatar.Name;
+            //if (m_pluginEnabled)
+            //    VivoxLogout();
+        }
 
-            // - check whether we have a region channel in our cache
-            // - if not:
-            //       create it and cache it
-            // - send it to the client
-            // - send channel_uri: as "sip:regionID@m_sipDomain"
-            try
+        #region Region-side message sending
+
+        private OSDMap syncRecievedService_OnMessageReceived(OSDMap message)
+        {
+            string method = message["Method"];
+            if (method == "GetParcelChannelInfo")
             {
-                string channel_uri;
+                ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
+                IScenePresence avatar = manager.Scene.GetScenePresence(message["AvatarID"].AsUUID());
+
+                bool success = false;
 
                 // get channel_uri: check first whether estate
                 // settings allow voice, then whether parcel allows
                 // voice, if all do retrieve or obtain the parcel
                 // voice channel
-                LandData land = avatar.CurrentParcel.LandData;
-
-                if (!scene.RegionInfo.EstateSettings.AllowVoice)
+                if (!manager.Scene.RegionInfo.EstateSettings.AllowVoice)
                 {
                     MainConsole.Instance.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": voice not enabled in estate settings",
-                                      scene.RegionInfo.RegionName);
-                    channel_uri = String.Empty;
+                                      manager.Scene.RegionInfo.RegionName);
+                    success = false;
                 }
-                //Disable this, force voice chat on only configurable via estate since LL disabled this
-                else if ((land.Flags & (uint)ParcelFlags.AllowVoiceChat) == 0)
+                else if ((avatar.CurrentParcel.LandData.Flags & (uint)ParcelFlags.AllowVoiceChat) == 0)
                 {
                     MainConsole.Instance.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": voice not enabled for parcel",
-                                      scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName);
-                    channel_uri = String.Empty;
+                                      manager.Scene.RegionInfo.RegionName, avatar.CurrentParcel.LandData.Name, avatar.CurrentParcel.LandData.LocalID, avatar.Name);
+                    success = false;
                 }
                 else
                 {
                     MainConsole.Instance.DebugFormat("[VivoxVoice]: region \"{0}\": voice enabled in estate settings, creating parcel voice",
-                                      scene.RegionInfo.RegionName);
-                    channel_uri = RegionGetOrCreateChannel(scene, land);
+                                      manager.Scene.RegionInfo.RegionName);
+                    success = true;
                 }
-
-                // fill in our response to the client
                 OSDMap map = new OSDMap();
-                map["region_name"] = scene.RegionInfo.RegionName;
-                map["parcel_local_id"] = land.LocalID;
-                map["voice_credentials"] = new OSDMap();
-                ((OSDMap)map["voice_credentials"])["channel_uri"] = channel_uri;
-
-                MainConsole.Instance.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\"",
-                                  scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName);
-                return OSDParser.SerializeLLSDXmlBytes(map);
+                map["Success"] = success;
+                map["ParcelID"] = avatar.CurrentParcel.LandData.GlobalID;
+                map["ParcelName"] = avatar.CurrentParcel.LandData.Name;
+                map["LocalID"] = avatar.CurrentParcel.LandData.LocalID;
+                map["ParcelFlags"] = avatar.CurrentParcel.LandData.Flags;
+                lock (m_parents) map["ParentID"] = m_parents[avatar.Scene.RegionInfo.RegionID.ToString()];
+                return map;
             }
-            catch (Exception e)
+            return null;
+        }
+
+        #endregion
+
+        #region IVoiceModule Members
+
+        public void VoiceAccountRequest(IRegionClientCapsService regionClient, out string agentname, out string password, out string vivoxSipUri, out string vivoxVoiceAccountApi)
+        {
+            vivoxSipUri = m_vivoxSipUri;
+            vivoxVoiceAccountApi = m_vivoxVoiceAccountApi;
+
+            XmlElement resp;
+            bool retry = false;
+            agentname = "x" + Convert.ToBase64String(regionClient.AgentID.GetBytes());
+            password = new UUID(Guid.NewGuid()).ToString().Replace('-', 'Z').Substring(0, 16);
+            string code = String.Empty;
+
+            agentname = agentname.Replace('+', '-').Replace('/', '_');
+
+            do
             {
-                MainConsole.Instance.ErrorFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": avatar \"{1}\": {2}, retry later",
-                                  scene.RegionInfo.RegionName, avatarName, e.Message);
-                MainConsole.Instance.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": avatar \"{1}\": {2} failed",
-                                  scene.RegionInfo.RegionName, avatarName, e.ToString());
+                resp = VivoxGetAccountInfo(agentname);
 
-                return Encoding.UTF8.GetBytes("<llsd><undef /></llsd>");
+                if (XmlFind(resp, "response.level0.status", out code))
+                {
+                    if (code != "OK")
+                    {
+                        if (XmlFind(resp, "response.level0.body.code", out code))
+                        {
+                            // If the request was recognized, then this should be set to something
+                            switch (code)
+                            {
+                                case "201": // Account expired
+                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : expired credentials",
+                                                      regionClient.ClientCaps.AccountInfo.Name);
+                                    m_adminConnected = false;
+                                    retry = DoAdminLogin();
+                                    break;
+
+                                case "202": // Missing credentials
+                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : missing credentials",
+                                                      regionClient.ClientCaps.AccountInfo.Name);
+                                    break;
+
+                                case "212": // Not authorized
+                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : not authorized",
+                                                      regionClient.ClientCaps.AccountInfo.Name);
+                                    break;
+
+                                case "300": // Required parameter missing
+                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : parameter missing",
+                                                      regionClient.ClientCaps.AccountInfo.Name);
+                                    break;
+
+                                case "403": // Account does not exist
+                                    resp = VivoxCreateAccount(agentname, password);
+                                    // Note: This REALLY MUST BE status. Create Account does not return code.
+                                    if (XmlFind(resp, "response.level0.status", out code))
+                                    {
+                                        switch (code)
+                                        {
+                                            case "201": // Account expired
+                                                MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : expired credentials",
+                                                                  regionClient.ClientCaps.AccountInfo.Name);
+                                                m_adminConnected = false;
+                                                retry = DoAdminLogin();
+                                                break;
+
+                                            case "202": // Missing credentials
+                                                MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : missing credentials",
+                                                                  regionClient.ClientCaps.AccountInfo.Name);
+                                                break;
+
+                                            case "212": // Not authorized
+                                                MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : not authorized",
+                                                                  regionClient.ClientCaps.AccountInfo.Name);
+                                                break;
+
+                                            case "300": // Required parameter missing
+                                                MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : parameter missing",
+                                                                  regionClient.ClientCaps.AccountInfo.Name);
+                                                break;
+
+                                            case "400": // Create failed
+                                                MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Create account information failed : create failed",
+                                                                  regionClient.ClientCaps.AccountInfo.Name);
+                                                break;
+                                        }
+                                    }
+                                    break;
+
+                                case "404": // Failed to retrieve account
+                                    MainConsole.Instance.ErrorFormat("[VivoxVoice]: avatar \"{0}\": Get account information failed : retrieve failed");
+                                    // [AMW] Sleep and retry for a fixed period? Or just abandon?
+                                    break;
+                            }
+                        }
+                    }
+                }
+            } while (retry);
+
+            if (code != "OK")
+            {
+                MainConsole.Instance.DebugFormat("[VivoxVoice][PROVISIONVOICE]: Get Account Request failed for \"{0}\"", regionClient.ClientCaps.AccountInfo.Name);
+                throw new Exception("Unable to execute request");
             }
+
+            // Unconditionally change the password on each request
+            VivoxPassword(agentname, password);
         }
 
-
-        /// <summary>
-        /// Callback for a client request for a private chat channel
-        /// </summary>
-        /// <param name="scene">current scene object of the client</param>
-        /// <param name="agentID"></param>
-        /// <param name="caps"></param>
-        /// <returns></returns>
-        public byte[] ChatSessionRequest(IScene scene, UUID agentID)
+        public void ParcelVoiceRequest(IRegionClientCapsService regionClient, out string channel_uri, out int localID)
         {
-            IScenePresence avatar = scene.GetScenePresence(agentID);
-            string avatarName = avatar.Name;
+            channel_uri = "";
+            localID = 0;
+            IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+            UserInfo user = agentInfoService.GetUserInfo(regionClient.AgentID.ToString());
+            if (user == null || !user.IsOnline)
+                return;
 
-            MainConsole.Instance.DebugFormat("[VivoxVoice][CHATSESSION]: avatar \"{0}\"",
-                              avatarName);
-            if (avatar.Scene.RegionInfo.EstateSettings.AllowVoice)
-                return OSDParser.SerializeLLSDXmlBytes(true);
-            return OSDParser.SerializeLLSDXmlBytes(false);
+            bool success;
+            UUID parcelID;
+            string parcelName, ParentID;
+            uint parcelFlags;
+            GetParcelChannelInfo(regionClient.AgentID, user.CurrentRegionURI, out success, out parcelID, out parcelName, out localID, out parcelFlags, out ParentID);
+            if (success)
+                channel_uri = RegionGetOrCreateChannel(user.CurrentRegionID, regionClient.Region.RegionName, parcelID, parcelName, localID, parcelFlags, ParentID);
         }
 
-
-        private string RegionGetOrCreateChannel(IScene scene, LandData land)
+        public void GetParcelChannelInfo(UUID avatarID, string URL,
+            out bool success, out UUID parcelID, out string parcelName, out int localID, out uint parcelFlags, out string ParentID)
         {
+            ISyncMessagePosterService syncPoster = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+            OSDMap request = new OSDMap();
+            request["AvatarID"] = avatarID;
+            request["Method"] = "GetParcelChannelInfo";
+            OSDMap response = null;
+            syncPoster.Get(URL, request, (resp) =>
+            {
+                response = resp;
+            });
+            while (response == null)
+                Thread.Sleep(5);
 
+            success = response["Success"];
+            parcelID = response["ParcelID"];
+            parcelName = response["ParcelName"];
+            localID = response["LocalID"];
+            parcelFlags = response["ParcelFlags"];
+            ParentID = response["ParentID"];
+        }
+
+        private string RegionGetOrCreateChannel(UUID regionID, string regionName, UUID parcelID, string parcelName, int localID, uint parcelFlags, string voiceParentID)
+        {
             string channelUri = null;
             string channelId = null;
 
             string landUUID;
             string landName;
-            string parentId;
-
-            lock (m_parents) parentId = m_parents[scene.RegionInfo.RegionID.ToString()];
 
             // Create parcel voice channel. If no parcel exists, then the voice channel ID is the same
             // as the directory ID. Otherwise, it reflects the parcel's ID.
 
-            if (land.LocalID != 1 && (land.Flags & (uint)ParcelFlags.UseEstateVoiceChan) == 0)
+            if (localID != 1 && (parcelFlags & (uint)ParcelFlags.UseEstateVoiceChan) == 0)
             {
-                landName = String.Format("{0}:{1}", scene.RegionInfo.RegionName, land.Name);
-                landUUID = land.GlobalID.ToString();
+                landName = String.Format("{0}:{1}", regionName, parcelName);
+                landUUID = parcelID.ToString();
                 MainConsole.Instance.TraceFormat("[VivoxVoice]: Region:Parcel \"{0}\": parcel id {1}: using channel name {2}",
-                                  landName, land.LocalID, landUUID);
+                                  landName, localID, landUUID);
             }
             else
             {
-                landName = String.Format("{0}:{1}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionName);
-                landUUID = scene.RegionInfo.RegionID.ToString();
+                landName = String.Format("{0}:{1}", regionName, regionName);
+                landUUID = regionID.ToString();
                 MainConsole.Instance.TraceFormat("[VivoxVoice]: Region:Parcel \"{0}\": parcel id {1}: using channel name {2}",
-                                  landName, land.LocalID, landUUID);
+                                  landName, localID, landUUID);
             }
 
             lock (vlock)
             {
                 // Added by Adam to help debug channel not availible errors.
-                if (VivoxTryGetChannel(parentId, landUUID, out channelId, out channelUri))
+                if (VivoxTryGetChannel(voiceParentID, landUUID, out channelId, out channelUri))
                     MainConsole.Instance.DebugFormat("[VivoxVoice] Found existing channel at " + channelUri);
-                else if (VivoxTryCreateChannel(parentId, landUUID, landName, out channelUri))
+                else if (VivoxTryCreateChannel(voiceParentID, landUUID, landName, out channelUri))
                     MainConsole.Instance.DebugFormat("[VivoxVoice] Created new channel at " + channelUri);
                 else
                     throw new Exception("vivox channel uri not available");
 
                 MainConsole.Instance.TraceFormat("[VivoxVoice]: Region:Parcel \"{0}\": parent channel id {1}: retrieved parcel channel_uri {2} ",
-                                  landName, parentId, channelUri);
-
-
+                                  landName, voiceParentID, channelUri);
             }
 
             return channelUri;
         }
 
+        public OSDMap GroupConferenceCallRequest(IRegionClientCapsService caps, UUID sessionid)
+        {
+            OSDMap map = new OSDMap();
+            map["session_id"] = sessionid;
+            OSDMap voice_credentials = new OSDMap();
+
+            string channelID = "Conff" + sessionid.ToString();
+            string channelUri, parentID;
+            lock (vlock)
+            {
+                if (!VivoxTryCreateDirectory("Server" + sessionid + "D", sessionid.ToString(), out parentID))
+                {
+                    VivoxTryGetDirectory("Server" + sessionid + "D", out parentID);
+                    //parentID = String.Empty;
+                }
+                // Added by Adam to help debug channel not availible errors.
+                if (VivoxTryGetChannel(parentID, channelID, out channelID, out channelUri))
+                    MainConsole.Instance.DebugFormat("[VivoxVoice] Found existing channel at " + channelUri);
+                else if (VivoxTryCreateChannel(parentID, "Conff" + sessionid.ToString(), "Conff" + sessionid.ToString(), out channelUri))
+                    MainConsole.Instance.DebugFormat("[VivoxVoice] Created new channel at " + channelUri);
+                else
+                    throw new Exception("vivox channel uri not available");
+
+                MainConsole.Instance.TraceFormat("[VivoxVoice]: Conference \"{0}\": retrieved parcel channel_uri {1} ",
+                                  channelID, channelUri);
+            }
+            voice_credentials["channel_uri"] = channelUri;
+            voice_credentials["channel_credentials"] = "";
+            map["voice_credentials"] = voice_credentials;
+
+            // <llsd><map>
+            //       <key>session-id</key><string>c0da7611-9405-e3a4-0172-c36a1120c77a</string>
+            //       <key>voice_credentials</key><map>
+            //           <key>channel_credentials</key><string>rh1iIIiT2v+ebJjRI+klpFHjFmo</string>
+            //           <key>channel_uri</key><string>sip:confctl-12574742@bhr.vivox.com</string>
+            //       </map>
+            // </map></llsd>
+            return map;
+        }
+
+        #endregion
+
+        #region Vivox Calls
 
         private static readonly string m_vivoxLoginPath = "http://{0}/api2/viv_signin.php?userid={1}&pwd={2}";
 
@@ -805,7 +674,7 @@ namespace Aurora.OptionalModules
             requrl = String.Format("{0}&chan_roll_off={1}", requrl, m_vivoxChannelRollOff);
             requrl = String.Format("{0}&chan_dist_model={1}", requrl, m_vivoxChannelDistanceModel);
             requrl = String.Format("{0}&chan_max_range={1}", requrl, m_vivoxChannelMaximumRange);
-            requrl = String.Format("{0}&chan_ckamping_distance={1}", requrl, m_vivoxChannelClampingDistance);
+            requrl = String.Format("{0}&chan_clamping_distance={1}", requrl, m_vivoxChannelClampingDistance);
 
             XmlElement resp = VivoxCall(requrl, true);
             if (XmlFind(resp, "response.level0.body.chan_uri", out channelUri))
@@ -1294,5 +1163,100 @@ namespace Aurora.OptionalModules
             result = String.Empty;
             return false;
         }
+
+        #endregion
+    }
+
+    public class VivoxVoiceCAPS : ICapsServiceConnector
+    {
+        protected IRegionClientCapsService m_service;
+        protected IVoiceService m_voiceModule;
+
+        public void RegisterCaps(IRegionClientCapsService service)
+        {
+            m_service = service;
+            m_voiceModule = service.Registry.RequestModuleInterface<IVoiceService>();
+
+            service.AddStreamHandler("ProvisionVoiceAccountRequest",
+                new GenericStreamHandler("POST", service.CreateCAPS("ProvisionVoiceAccountRequest", ""),
+                                                        ProvisionVoiceAccountRequest));
+            service.AddStreamHandler("ParcelVoiceInfoRequest",
+                new GenericStreamHandler("POST", service.CreateCAPS("ParcelVoiceInfoRequest", ""),
+                                                        ParcelVoiceInfoRequest));
+        }
+
+        public void EnteringRegion()
+        {
+        }
+
+        public void DeregisterCaps()
+        {
+            m_service.RemoveStreamHandler("ProvisionVoiceAccountRequest", "POST");
+            m_service.RemoveStreamHandler("ParcelVoiceInfoRequest", "POST");
+        }
+
+        #region Incoming voice caps
+
+        public byte[] ProvisionVoiceAccountRequest(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            try
+            {
+                string agentname, password, m_vivoxSipUri, m_vivoxVoiceAccountApi;
+                m_voiceModule.VoiceAccountRequest(m_service, out agentname, out password, out m_vivoxSipUri, out m_vivoxVoiceAccountApi);
+
+                OSDMap map = new OSDMap();
+                map["username"] = agentname;
+                map["password"] = password;
+                map["voice_sip_uri_hostname"] = m_vivoxSipUri;
+                map["voice_account_server_name"] = m_vivoxVoiceAccountApi;
+
+                MainConsole.Instance.DebugFormat("[VivoxVoice][PROVISIONVOICE]: avatar \"{0}\" added", m_service.ClientCaps.AccountInfo.Name);
+
+                return OSDParser.SerializeLLSDXmlBytes(map);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.ErrorFormat("[VivoxVoice][PROVISIONVOICE]: : {0}, retry later", e.ToString());
+                return Encoding.UTF8.GetBytes("<llsd><undef /></llsd>");
+            }
+        }
+
+        public byte[] ParcelVoiceInfoRequest(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            
+            // - check whether we have a region channel in our cache
+            // - if not:
+            //       create it and cache it
+            // - send it to the client
+            // - send channel_uri: as "sip:regionID@m_sipDomain"
+            try
+            {
+                string channel_uri;
+                int localID;
+
+                m_voiceModule.ParcelVoiceRequest(m_service, out channel_uri, out localID);
+
+                // fill in our response to the client
+                OSDMap map = new OSDMap();
+                map["region_name"] = m_service.Region.RegionName;
+                map["parcel_local_id"] = localID;
+                map["voice_credentials"] = new OSDMap();
+                ((OSDMap)map["voice_credentials"])["channel_uri"] = channel_uri;
+
+                MainConsole.Instance.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": Parcel ({1}): avatar \"{2}\"",
+                                  m_service.Region.RegionName, localID, m_service.ClientCaps.AccountInfo.Name);
+                return OSDParser.SerializeLLSDXmlBytes(map);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.ErrorFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": avatar \"{1}\": {2}, retry later",
+                                  m_service.Region.RegionName, m_service.ClientCaps.AccountInfo.Name, e.Message);
+                MainConsole.Instance.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": avatar \"{1}\": {2} failed",
+                                  m_service.Region.RegionName, m_service.ClientCaps.AccountInfo.Name, e.ToString());
+
+                return Encoding.UTF8.GetBytes("<llsd><undef /></llsd>");
+            }
+        }
+        #endregion
     }
 }

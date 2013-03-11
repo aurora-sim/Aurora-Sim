@@ -1,0 +1,147 @@
+[Voice]
+
+    ;; The voice module that will be activated for this region
+    ;; The modules that are currently available are GenericVoice, MurmurVoice, and FreeSwitchVoice
+    ;; If you do not wish to use voice, use the GenericVoice module so that the client is happy.
+    ;; If you want higher quality voice, use MurmurVoice
+    Module = GenericVoice;
+	
+	;; Enable Vivox voice
+	;Module = VivoxVoice
+    
+    ;; Should FreeSwitch be used? (requires it to be downloaded and compiled from 
+	;;   https://github.com/aurora-sim/Aurora-Sim-Optional-Modules
+    ;Module = FreeSwitchVoice
+    
+    ;; You must have a Mumble server already set up to use Murmur
+    ;; New, incompatible voice daemon which will do speaker indication,
+    ;; positional voice, and high quality audio codec. Host voice on the
+    ;; same server, or use Glacier2 to proxy the insecure ICE protocol.
+	;; Must be downloaded and compile from https://github.com/aurora-sim/whisper_server
+    ;Module = MurmurVoice;
+	
+[VivoxVoice]
+    ; The VivoxVoice module will allow you to provide voice on your
+    ; region(s). It uses the same voice technology as the LL grid and
+    ; works with recent LL clients (we have tested 1.22.9.110075, so
+    ; anything later ought to be fine as well).
+    ;
+    ; For this to work you need to obtain an admin account from Vivox
+    ; that allows you to create voice accounts and region channels.
+
+    ; vivox voice server
+    vivox_server = www.foobar.vivox.com
+
+    ; vivox SIP URI
+    vivox_sip_uri = foobar.vivox.com
+
+    ; vivox admin user name
+    vivox_admin_user = DeepThroat
+
+    ; vivox admin password
+    vivox_admin_password = VoiceG4te
+
+    ; channel type: "channel" or "positional"
+    ; - positional: spatial sound (default)
+    ; - channel: normal "conference call", no spatial sound
+    ;vivox_channel_type = positional
+
+    ; channel characteristics (unless you know what you are doing, i'd
+    ; leave them as they are --- now you WILL muck around with them,
+    ; huh? sigh)
+
+    ; channel distance model:
+    ; 0 - no attenuation
+    ; 1 - inverse distance attenuation
+    ; 2 - linear attenuation (default)
+    ; 3 - exponential attenuation
+    ;vivox_channel_distance_model = 2
+
+    ; channel mode:
+    ; - "open" (default)
+    ; - "lecture"
+    ; - "presentation"
+    ; - "auditorium"
+    ;vivox_channel_mode = "open"
+
+    ; channel roll off: rate of attenuation
+    ; - a value between 1.0 and 4.0, default is 2.0
+    ;vivox_channel_roll_off = 2.0
+
+    ; channel max range: distance at which channel is silent
+    ; - a value between 0 and 160, default is 80
+    ;vivox_channel_max_range = 80
+
+    ; channel clamping distance: distance before attenuation applies
+    ; - a value between 0 and 160, default is 10
+    ;vivox_channel_clamping_distance = 10
+
+[GenericVoice]
+    ;; This needs to be disabled if another voice module is being used!
+    Enabled = true
+    ;; This is what the viewer is told the voice module is
+    ModuleToSend = "SLVoice"
+
+[MurmurService]
+    
+    ;; If you are in standalone, or in grid mode, but the grid does not have a grid-wide Murmur service set up, use the following option
+    MurmurService = MurmurService
+    
+    ;; If the grid you are connected to does(!) have a Murmur service set up and running, select this option, and comment (;) the one above
+    ;MurmurService = RemoteMurmurConnector
+    
+    ;; Replace 127.0.0.1 with the IP to this computer (if you have issues with an exception, leave 127.0.0.1 here)
+    murmur_ice_cb = tcp -h 127.0.0.1 -p 6503
+    
+    ;;
+    ;; NOTE: The following config options are for standalone or grid users that do not have a grid-wide Mumur service set up!
+    ;;
+    
+    ;; Hostname to the public Murmur server
+    murmur_host = 127.0.0.1
+    
+    ;; Replace 127.0.0.1 with the same as the murmur_host value
+    murmur_ice = tcp -h 127.0.0.1 -p 6502
+    
+    ;; If you want all regions connected to this to all be in the same voice chat, 
+    ;; enable this option, and then set the name in the option below
+    use_one_channel = false
+    
+    ;; Parent channel name to use (if use_one_channel is enabled only)
+    channel_name = DracoServer
+    
+    ;;
+    ;; Most of the configurations options below will not need changed (unless you wish to make modifications)
+    ;;
+    
+    ;; Server identifier (normally 1)
+    murmur_sid   = 1
+    ;; Version of the Mumble server
+    server_version = 1.2.2
+
+    ;; Enable use of glacier2 (ignore murmur_ice_cb if false)
+    glacier      = false
+    ;; Glacier proxy
+    glacier_ice  = Glacier2/router:tcp -p 4063 -h 137.30.248.26
+    ;; Glacier session user
+    glacier_user = admin
+    ;; Glacier session password
+    glacier_pass = darastrix
+
+[FreeswitchService]
+    ;; !!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ;; !!!!!!STANDALONE MODE ONLY!!!!!!
+    ;; !!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ;; IP of your FS server
+    ;ServerAddress = 85.25.142.92
+
+    ;; All other options are - well - optional
+    ; Realm = "127.0.0.1"
+    ; SIPProxy = "127.0.0.1:5060"
+    ; EchoServer = "127.0.0.1"
+    ; EchoPort = 50505
+    ; AttemptSTUN = "false"
+    ; DefaultTimeout = 5000
+    ; Context = "default"
+    ; UserName = "freeswitch"
+    ; Password = "password"
