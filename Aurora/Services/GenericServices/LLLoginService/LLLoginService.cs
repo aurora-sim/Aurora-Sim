@@ -436,10 +436,6 @@ namespace Aurora.Services
                 List<InventoryItemBase> gestures = m_InventoryService.GetActiveGestures(account.PrincipalID);
                 //MainConsole.Instance.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
 
-                //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, false, UUID.Zero);
-                //Lock it as well
-                m_agentInfoService.LockLoggedInStatus(account.PrincipalID.ToString(), true);
                 //Now get the logged in status, then below make sure to kill the previous agent if we crashed before
                 UserInfo guinfo = m_agentInfoService.GetUserInfo(account.PrincipalID.ToString());
                 //
@@ -584,8 +580,8 @@ namespace Aurora.Services
 
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
                 m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt);
-                m_agentInfoService.LockLoggedInStatus(account.PrincipalID.ToString(), false); //Unlock it now
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, true, destination.RegionID);
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, destination.RegionID);
+                m_agentInfoService.FireUserStatusChangeEvent(account.PrincipalID.ToString(), true, destination.RegionID);
 
                 //
                 // Finally, fill out the response and return it
@@ -617,8 +613,7 @@ namespace Aurora.Services
                 if (account != null)
                 {
                     //Revert their logged in status if we got that far
-                    m_agentInfoService.LockLoggedInStatus(account.PrincipalID.ToString(), false); //Unlock it now
-                    m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), false, false, UUID.Zero);
+                    m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), false, UUID.Zero);
                 }
                 return LLFailedLoginResponse.InternalError;
             }

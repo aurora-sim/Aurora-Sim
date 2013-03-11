@@ -167,10 +167,13 @@ namespace Aurora.Services
                     AgentPosition pos = new AgentPosition();
                     pos.Unpack((OSDMap)body["AgentPos"]);
 
-                    SendChildAgentUpdate(pos, regionCaps);
                     regionCaps.Disabled = true;
 
-                    Util.FireAndForget((o)=>LogoutAgent(regionCaps, false)); //The root is killing itself
+                    Util.FireAndForget((o)=>
+                        {
+                            LogoutAgent(regionCaps, false); //The root is killing itself
+                            SendChildAgentUpdate(pos, regionCaps);
+                        });
                 }
             }
             else if (message["Method"] == "SendChildAgentUpdate")
@@ -291,7 +294,7 @@ namespace Aurora.Services
             regionCaps.ClientCaps.Close();
 
             if (agentInfoService != null)
-                agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, true, UUID.Zero);
+                agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, UUID.Zero);
 
             m_capsService.RemoveCAPS(regionCaps.AgentID);
        }

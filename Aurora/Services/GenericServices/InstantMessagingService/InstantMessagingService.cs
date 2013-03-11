@@ -174,7 +174,6 @@ namespace Aurora.Services
                     SessionName = caps.ClientCaps.AccountInfo.Name + " Conference",
                     ModeratedVoice = true
                 };
-
                 return OSDParser.SerializeLLSDXmlString(cs.Serialize());
             }
             else if (method == "accept invitation")
@@ -283,16 +282,13 @@ namespace Aurora.Services
             else if (method == "call")
             {
                 //Implement voice chat for conferences...
-                //Proper response
 
-                // <llsd><map>
-                //       <key>session-id</key><string>c0da7611-9405-e3a4-0172-c36a1120c77a</string>
-                //       <key>voice_credentials</key><map>
-                //           <key>channel_credentials</key><string>rh1iIIiT2v+ebJjRI+klpFHjFmo</string>
-                //           <key>channel_uri</key><string>sip:confctl-12574742@bhr.vivox.com</string>
-                //       </map>
-                // </map></llsd>
-                return "";
+                IVoiceService voiceService = m_registry.RequestModuleInterface<IVoiceService>();
+                if (voiceService == null)
+                    return "";
+
+                OSDMap resp = voiceService.GroupConferenceCallRequest(caps, sessionid);
+                return OSDParser.SerializeLLSDXmlString(resp);
             }
             else
             {

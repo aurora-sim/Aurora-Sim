@@ -178,14 +178,15 @@ namespace Aurora.Framework
         /// <param name = "loggingIn">Whether the user is logging in or out</param>
         /// <param name = "fireLoggedInEvent">Fire the event to log a user in</param>
         /// <param name = "enteringRegion">The region the user is entering (if logging in)</param>
-        void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion);
+        void SetLoggedIn(string userID, bool loggingIn, UUID enteringRegion);
 
         /// <summary>
-        ///   This is used in grid mode so that the sim cannot influence the login status
+        /// Fire the status changed event for this user
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "locked">Whether to lock or unlock the user</param>
-        void LockLoggedInStatus(string userID, bool locked);
+        /// <param name="userID"></param>
+        /// <param name="loggingIn"></param>
+        /// <param name="enteringRegion"></param>
+        void FireUserStatusChangeEvent(string userID, bool loggingIn, UUID enteringRegion);
 
         void Start(IConfigSource config, IRegistryCore registry);
 

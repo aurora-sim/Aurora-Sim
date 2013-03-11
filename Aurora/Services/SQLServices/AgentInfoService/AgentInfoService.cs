@@ -42,7 +42,6 @@ namespace Aurora.Services
 
         protected IAgentInfoConnector m_agentInfoConnector;
         protected IGridService m_gridService;
-        protected List<string> m_lockedUsers = new List<string>();
 
         #endregion
 
@@ -172,26 +171,8 @@ namespace Aurora.Services
             m_agentInfoConnector.SetLastPosition(userID, regionID, uri, lastPosition, lastLookAt);
         }
 
-        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
-        public virtual void LockLoggedInStatus(string userID, bool locked)
+        public virtual void SetLoggedIn(string userID, bool loggingIn, UUID enteringRegion)
         {
-            /*object remoteValue = DoRemote(userID, locked);
-            if (remoteValue != null || m_doRemoteOnly)
-                return;*/
-
-            if (locked && !m_lockedUsers.Contains(userID))
-                m_lockedUsers.Add(userID);
-            else
-                m_lockedUsers.Remove(userID);
-        }
-
-        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
-        public virtual void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
-        {
-            /*object remoteValue = DoRemote(userID, loggingIn, fireLoggedInEvent, enteringRegion);
-            if (remoteValue != null || m_doRemoteOnly)
-                return;*/
-
             UserInfo userInfo = GetUserInfo(userID, false); //We are changing the status, so don't look
             if (userInfo == null)
             {
@@ -210,9 +191,7 @@ namespace Aurora.Services
                              LastLogin = DateTime.Now.ToUniversalTime(),
                              LastLogout = DateTime.Now.ToUniversalTime(),
                          });
-            }
-            if (m_lockedUsers.Contains(userID)){
-                return; //User is locked, leave them alone
+                return;
             }
 
             Dictionary<string, object> agentUpdateValues = new Dictionary<string, object>();
@@ -236,13 +215,13 @@ namespace Aurora.Services
             }
             agentUpdateValues["LastSeen"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
             m_agentInfoConnector.Update(userID, agentUpdateValues);
+        }
 
-            if (fireLoggedInEvent)
-            {
-                //Trigger an event so listeners know
-                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                    "UserStatusChange", new object[] {userID, loggingIn, enteringRegion});
-            }
+        public void FireUserStatusChangeEvent(string userID, bool loggingIn, UUID enteringRegion)
+        {
+            //Trigger an event so listeners know
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
+                "UserStatusChange", new object[] { userID, loggingIn, enteringRegion });
         }
 
         #endregion
@@ -254,9 +233,8 @@ namespace Aurora.Services
             bool changed = false;
             UserInfo info = m_agentInfoConnector.Get(userID, checkForOfflineStatus, out changed);
             if (changed)
-                if (!m_lockedUsers.Contains(userID))
-                    m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                        "UserStatusChange", new object[] {userID, false, UUID.Zero});
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
+                    "UserStatusChange", new object[] {userID, false, UUID.Zero});
             return info;
         }
 
