@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System;
 
 namespace Aurora.Framework
 {
@@ -253,7 +254,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="item"></param>
         /// <param name="success"></param>
-        void AddItemAsync(InventoryItemBase item, NoParam success);
+        void AddItemAsync(InventoryItemBase item, Action<InventoryItemBase> success);
 
         /// <summary>
         /// Moves multiple items to a new folder in the user's inventory

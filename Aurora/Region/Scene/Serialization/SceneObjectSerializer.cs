@@ -558,12 +558,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             if (!string.IsNullOrEmpty(sop.CreatorData))
                 writer.WriteElementString("CreatorData", sop.CreatorData);
-            else if (options.ContainsKey("profile"))
-            {
-                IUserFinder m_UserManagement = sop.ParentEntity.Scene.RequestModuleInterface<IUserFinder>();
-                string name = m_UserManagement.GetUserName(sop.CreatorID);
-                writer.WriteElementString("CreatorData", (string) options["profile"] + "/" + sop.CreatorID + ";" + name);
-            }
 
             writer.WriteElementString("InventorySerial", sop.InventorySerial.ToString());
 
@@ -699,13 +693,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     WriteUUID(writer, "CreatorID", item.CreatorID, options);
                     if (!string.IsNullOrEmpty(item.CreatorData))
                         writer.WriteElementString("CreatorData", item.CreatorData);
-                    else if (options.ContainsKey("profile"))
-                    {
-                        IUserFinder m_UserManagement = scene.RequestModuleInterface<IUserFinder>();
-                        string name = m_UserManagement.GetUserName(item.CreatorID);
-                        writer.WriteElementString("CreatorData",
-                                                  (string) options["profile"] + "/" + item.CreatorID + ";" + name);
-                    }
                     writer.WriteElementString("Description", item.Description);
                     writer.WriteElementString("EveryonePermissions", item.EveryonePermissions.ToString());
                     writer.WriteElementString("Flags", item.Flags.ToString());

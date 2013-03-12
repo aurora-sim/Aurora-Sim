@@ -91,13 +91,34 @@ namespace Aurora.Services.SQLServices.InventoryService
         {
             _addInventoryItemQueue.Start(0.5, (agentID, itemsToAdd) =>
                 {
+                    if (itemsToAdd == null)
+                        return;
                     foreach (AddInventoryItemStore item in itemsToAdd)
                     {
+                        if (UUID.Zero == item.Item.Folder)
+                        {
+                            InventoryFolderBase f = GetFolderForType(item.Item.Owner, (InventoryType)item.Item.InvType, (AssetType)item.Item.AssetType);
+                            if (f != null)
+                                item.Item.Folder = f.ID;
+                            else
+                            {
+                                f = GetRootFolder(item.Item.Owner);
+                                if (f != null)
+                                    item.Item.Folder = f.ID;
+                                else
+                                {
+                                    MainConsole.Instance.WarnFormat(
+                                        "[InventorySerivce]: Could not find root folder for {0} when trying to add item {1} with no parent folder specified",
+                                        item.Item.Owner, item.Item.Name);
+                                    return;
+                                }
+                            }
+                        }
                         AddItem(item.Item);
                         lock(_tempItemCache)
                             _tempItemCache.Remove(item.Item.ID);
                         if (item.Complete != null)
-                            item.Complete();
+                            item.Complete(item.Item);
                     }
                 });
             _moveInventoryItemQueue.Start(0.5, (agentID, itemsToMove) =>
@@ -981,28 +1002,8 @@ namespace Aurora.Services.SQLServices.InventoryService
         protected ListCombiningTimedSaving<AddInventoryItemStore> _addInventoryItemQueue = new ListCombiningTimedSaving<AddInventoryItemStore>();
         protected ListCombiningTimedSaving<MoveInventoryItemStore> _moveInventoryItemQueue = new ListCombiningTimedSaving<MoveInventoryItemStore>();
 
-        public void AddItemAsync(InventoryItemBase item, NoParam success)
+        public void AddItemAsync(InventoryItemBase item, Action<InventoryItemBase> success)
         {
-            if (UUID.Zero == item.Folder)
-            {
-                InventoryFolderBase f = GetFolderForType(item.Owner, (InventoryType)item.InvType, (AssetType)item.AssetType);
-                if (f != null)
-                    item.Folder = f.ID;
-                else
-                {
-                    f = GetRootFolder(item.Owner);
-                    if (f != null)
-                        item.Folder = f.ID;
-                    else
-                    {
-                        MainConsole.Instance.WarnFormat(
-                            "[LLClientInventory]: Could not find root folder for {0} when trying to add item {1} with no parent folder specified",
-                            item.Owner, item.Name);
-                        return;
-                    }
-                }
-            }
-
             lock (_tempItemCache)
             {
                 if (!_tempItemCache.ContainsKey(item.ID))
@@ -1118,10 +1119,6 @@ namespace Aurora.Services.SQLServices.InventoryService
             {
                 if ((item.CurrentPermissions & (uint)PermissionMask.Transfer) == 0)
                     return null;
-
-                IUserFinder uman = m_registry.RequestModuleInterface<IUserFinder>();
-                if (uman != null)
-                    uman.AddUser(item.CreatorIdAsUuid, item.CreatorData);
 
                 // Insert a copy of the item into the recipient
                 InventoryItemBase itemCopy = new InventoryItemBase
@@ -1262,11 +1259,10 @@ namespace Aurora.Services.SQLServices.InventoryService
                 itemCopy.SalePrice = item.SalePrice;
                 itemCopy.SaleType = item.SaleType;
 
-                AddItemAsync(itemCopy, () =>
-                {
-                    if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
-                        DeleteItems(senderId, new List<UUID> { item.ID });
-                });
+                AddItem(itemCopy);
+
+                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                    DeleteItems(senderId, new List<UUID> { item.ID });
 
                 return itemCopy;
             }
@@ -1278,13 +1274,13 @@ namespace Aurora.Services.SQLServices.InventoryService
 
         protected class AddInventoryItemStore
         {
-            public AddInventoryItemStore(InventoryItemBase item, NoParam success)
+            public AddInventoryItemStore(InventoryItemBase item, Action<InventoryItemBase> success)
             {
                 Item = item;
                 Complete = success;
             }
             public InventoryItemBase Item;
-            public NoParam Complete;
+            public Action<InventoryItemBase> Complete;
         }
 
         protected class MoveInventoryItemStore
