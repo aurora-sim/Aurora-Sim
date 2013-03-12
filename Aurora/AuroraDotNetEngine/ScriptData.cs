@@ -764,7 +764,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 // don't restore the assembly name, the one we have is right (if re-compiled or not)
                 m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
                 AssemblyName = assy;
-                if (this.State == "" && DefaultState != this.State)
+                if (string.IsNullOrEmpty(this.State) && DefaultState != this.State)
                 //Sometimes, "" is a valid state for other script languages
                 {
                     MainConsole.Instance.Warn("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);

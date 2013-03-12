@@ -90,6 +90,7 @@ namespace Aurora.Services
             }
             public TimeSpan LastAccessedTimeSpan = TimeSpan.FromDays(1000);
             public DateTime LastAccessed = DateTime.Now;
+            public object Lock = new object();
         }
         private static ulong m_RequestsForInprogress;
         private static ulong m_DiskHits;
@@ -339,11 +340,8 @@ namespace Aurora.Services
             }
             else
             {
-                if (m_assetRequests.ContainsKey(assetID))
-                    m_assetRequests[assetID].SavedAmt++;
-                else
-                    m_assetRequests[assetID] = new AssetRequest();
-
+                m_assetRequests[assetID].SavedAmt++;
+                
                 if (m_assetRequests[assetID].SavedAmt > _forceMemoryCacheAmount)
                     UpdateMemoryCache(assetID, asset, true);
             }
@@ -563,12 +561,15 @@ namespace Aurora.Services
         {
             try
             {
-                Stream s = File.Open(filename, FileMode.Open);
-                asset = ProtoBuf.Serializer.Deserialize<AssetBase>(s);
-                if (asset.Type == -1)
-                    //This is a bug... it's because Texture is 0, and because it is the default value, it doesn't set it, even though we set it to -1 in the initialization of AssetBase
-                    asset.Type = 0;
-                s.Close();
+                lock (m_assetRequests[id].Lock)
+                {
+                    Stream s = File.Open(filename, FileMode.Open);
+                    asset = ProtoBuf.Serializer.Deserialize<AssetBase>(s);
+                    if (asset.Type == -1)
+                        //This is a bug... it's because Texture is 0, and because it is the default value, it doesn't set it, even though we set it to -1 in the initialization of AssetBase
+                        asset.Type = 0;
+                    s.Close();
+                }
             }
             catch
             {

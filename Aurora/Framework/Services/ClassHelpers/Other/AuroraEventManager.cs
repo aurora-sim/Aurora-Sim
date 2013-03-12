@@ -86,8 +86,6 @@ namespace Aurora.Framework
         ///     no params
         ///   AssetRequested - This is fired when the asset is requested by the client
         ///     params are IClientAPI and TransferRequestPacket
-        ///   RegionInfoChanged - The RegionInfo changed for a region (Aurora.exe only)
-        ///     params are the old RegionInfo and the new RegionInfo
         ///   DeleteUserInformation - The user is being deleted, remove all of their information from all databases
         ///     params are the user's UUID
         ///   CreateUserInformation - The user account is being created

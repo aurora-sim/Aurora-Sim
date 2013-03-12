@@ -32,6 +32,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using OpenMetaverse;
+using ProtoBuf;
 
 namespace Aurora.Framework
 {
@@ -40,6 +41,7 @@ namespace Aurora.Framework
     /// </summary>
     /// This class is not thread safe.  Callers must synchronize on Dictionary methods or Clone() this object before
     /// iterating over it.
+    [Serializable, ProtoContract()]
     public class TaskInventoryDictionary : Dictionary<UUID, TaskInventoryItem>,
                                            ICloneable, IXmlSerializable
     {
@@ -136,6 +138,13 @@ namespace Aurora.Framework
             }
 
             return clone;
+        }
+
+        [XmlIgnore]
+        public List<TaskInventoryItem> Items
+        {
+            get { return Clone2List(); }
+            set { foreach (TaskInventoryItem itm in value) this.Add(itm.ItemID, itm); }
         }
 
         // see ICloneable

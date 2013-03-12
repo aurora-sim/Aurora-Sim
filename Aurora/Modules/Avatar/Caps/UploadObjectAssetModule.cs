@@ -231,7 +231,7 @@ namespace Aurora.Modules.Caps
                 pbs.Scale = obj.Scale;
                 pbs.State = 0;
                 SceneObjectPart prim = new SceneObjectPart(AgentId, pbs, obj.Position, obj.Rotation,
-                                                           Vector3.Zero, obj.Name, m_scene)
+                                                           Vector3.Zero, obj.Name)
                                            {
                                                UUID = UUID.Random(),
                                                CreatorID = AgentId,
@@ -282,7 +282,7 @@ namespace Aurora.Modules.Caps
                     rootGroup = grp;
 
                 grp.AbsolutePosition = obj.Position;
-                prim.RotationOffset = obj.Rotation;
+                prim.SetRotationOffset(true, obj.Rotation, true);
 
                 grp.RootPart.IsAttachment = false;
 

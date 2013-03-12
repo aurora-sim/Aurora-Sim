@@ -384,7 +384,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             float dy;
             float dz;
 
-            Quaternion q = SensePoint.RotationOffset;
+            Quaternion q = SensePoint.GetRotationOffset();
             if (SensePoint.ParentEntity.RootChild.IsAttachment)
             {
                 // In attachments, the sensor cone always orients with the
@@ -507,7 +507,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
             ISceneChildEntity SensePoint = ts.host;
             Vector3 fromRegionPos = SensePoint.AbsolutePosition;
-            Quaternion q = SensePoint.RotationOffset;
+            Quaternion q = SensePoint.GetRotationOffset();
             LSL_Types.Quaternion r = new LSL_Types.Quaternion(q.X, q.Y, q.Z, q.W);
             LSL_Types.Vector3 forward_dir = (new LSL_Types.Vector3(1, 0, 0) * r);
             double mag_fwd = LSL_Types.Vector3.Mag(forward_dir);

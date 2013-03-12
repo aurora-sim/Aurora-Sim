@@ -12,15 +12,10 @@
 	;; Configuration Settings
 	;;
 	
-	;; Directory to load the backups from
+	;; Directory to load/save the backups from
 	;; Normally is the bin directory, but you can change this to anywhere on your hard drive
-	;; Default is ""
-	LoadBackupDirectory = "/"
-	
-	;; Directory to save new backups into
-	;; Normally this is the bin directory, but this can be changed to any place on your HD
-	;; Default is ""
-	SaveBackupDirectory = "/"
+	;; Default is "/"
+	StoreBackupDirectory = "/"
 	
 	;; Should we save any changes that occur in the sim? (This is useful for sandboxes as you can 
 	;;  decide not to persist any changes and just restart the sim to clear it)

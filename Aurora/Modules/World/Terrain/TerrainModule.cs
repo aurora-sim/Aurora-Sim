@@ -250,20 +250,12 @@ namespace Aurora.Modules.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadTerrain(true, m_scene.RegionInfo.RegionSizeX,
+                m_scene.SimulationDataService.LoadTerrain(true, m_scene.RegionInfo.RegionSizeX,
                                                                         m_scene.RegionInfo.RegionSizeY);
-                if (map == null)
+                if (m_revert == null)
                 {
-                    if (m_revert == null)
-                    {
-                        m_revert = m_channel.MakeCopy();
-
-                        m_scene.SimulationDataService.Tainted();
-                    }
-                }
-                else
-                {
-                    m_revert = new TerrainChannel(map, m_scene);
+                    m_revert = m_channel.MakeCopy();
+                    m_scene.SimulationDataService.Tainted();
                 }
             }
             catch (IOException e)
@@ -305,21 +297,14 @@ namespace Aurora.Modules.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadTerrain(false, m_scene.RegionInfo.RegionSizeX,
+                m_scene.SimulationDataService.LoadTerrain(false, m_scene.RegionInfo.RegionSizeX,
                                                                         m_scene.RegionInfo.RegionSizeY);
-                if (map == null)
+                if (m_channel == null)
                 {
-                    if (m_channel == null)
-                    {
-                        MainConsole.Instance.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
-                        m_channel = new TerrainChannel(m_scene);
+                    MainConsole.Instance.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
+                    m_channel = new TerrainChannel(m_scene);
 
-                        m_scene.SimulationDataService.Tainted();
-                    }
-                }
-                else
-                {
-                    m_channel = new TerrainChannel(map, m_scene);
+                    m_scene.SimulationDataService.Tainted();
                 }
             }
             catch (IOException e)
@@ -1047,20 +1032,12 @@ namespace Aurora.Modules.Terrain
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadWater(true, m_scene.RegionInfo.RegionSizeX,
+                m_scene.SimulationDataService.LoadWater(true, m_scene.RegionInfo.RegionSizeX,
                                                                       m_scene.RegionInfo.RegionSizeY);
-                if (map == null)
+                if (m_waterRevert == null)
                 {
-                    if (m_waterRevert == null)
-                    {
-                        m_waterRevert = m_waterChannel.MakeCopy();
-
-                        m_scene.SimulationDataService.Tainted();
-                    }
-                }
-                else
-                {
-                    m_waterRevert = new TerrainChannel(map, m_scene);
+                    m_waterRevert = m_waterChannel.MakeCopy();
+                    m_scene.SimulationDataService.Tainted();
                 }
             }
             catch (IOException e)
@@ -1107,28 +1084,21 @@ namespace Aurora.Modules.Terrain
                 return;
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadWater(false, m_scene.RegionInfo.RegionSizeX,
+                m_scene.SimulationDataService.LoadWater(false, m_scene.RegionInfo.RegionSizeX,
                                                                       m_scene.RegionInfo.RegionSizeY);
-                if (map == null)
+                if (m_waterChannel == null)
                 {
-                    if (m_waterChannel == null)
+                    MainConsole.Instance.Info("[TERRAIN]: No default water. Generating a new water.");
+                    m_waterChannel = new TerrainChannel(m_scene);
+                    for (int x = 0; x < m_waterChannel.Height; x++)
                     {
-                        MainConsole.Instance.Info("[TERRAIN]: No default water. Generating a new water.");
-                        m_waterChannel = new TerrainChannel(m_scene);
-                        for (int x = 0; x < m_waterChannel.Height; x++)
+                        for (int y = 0; y < m_waterChannel.Height; y++)
                         {
-                            for (int y = 0; y < m_waterChannel.Height; y++)
-                            {
-                                m_waterChannel[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
-                            }
+                            m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
                         }
-
-                        m_scene.SimulationDataService.Tainted();
                     }
-                }
-                else
-                {
-                    m_waterChannel = new TerrainChannel(map, m_scene);
+
+                    m_scene.SimulationDataService.Tainted();
                 }
             }
             catch (IOException e)

@@ -51,9 +51,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// <param name = "fromUserInventoryItemId">The inventory id from which this part came, if applicable</param>
         /// <param name = "xmlReader"></param>
         /// <returns></returns>
-        public static SceneObjectPart FromXml(XmlTextReader xmlReader, IRegistryCore scene)
+        public static SceneObjectPart FromXml(XmlTextReader xmlReader)
         {
-            SceneObjectPart part = Xml2ToSOP(xmlReader, scene);
+            SceneObjectPart part = Xml2ToSOP(xmlReader);
 
             // for tempOnRez objects, we have to fix the Expire date.
             if ((part.Flags & PrimFlags.TemporaryOnRez) != 0) part.ResetExpire();
@@ -108,7 +108,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 reader = new XmlTextReader(sr);
 
 
-                sceneObject = new SceneObjectGroup(FromXml(reader, scene), m_sceneForGroup, false);
+                sceneObject = new SceneObjectGroup(FromXml(reader), m_sceneForGroup, false);
                 sceneObject.RootPart.FromUserInventoryItemID = fromUserInventoryItemID;
                 reader.Close();
                 sr.Close();
@@ -119,7 +119,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 {
                     sr = new StringReader(parts[i].InnerXml);
                     reader = new XmlTextReader(sr);
-                    SceneObjectPart part = FromXml(reader, scene);
+                    SceneObjectPart part = FromXml(reader);
                     sceneObject.AddChild(part, part.LinkNum);
                     part.TrimPermissions();
                     part.StoreUndoState();
@@ -272,7 +272,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
                 StringReader sr = new StringReader(parts[0].OuterXml);
                 XmlTextReader reader = new XmlTextReader(sr);
-                SceneObjectGroup sceneObject = new SceneObjectGroup(FromXml(reader, scene), scene);
+                SceneObjectGroup sceneObject = new SceneObjectGroup(FromXml(reader), scene);
                 reader.Close();
                 sr.Close();
 
@@ -281,8 +281,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 {
                     sr = new StringReader(parts[i].OuterXml);
                     reader = new XmlTextReader(sr);
-                    SceneObjectPart part = FromXml(reader, scene);
-
+                    SceneObjectPart part = FromXml(reader);
                     sceneObject.AddChild(part, part.LinkNum);
 
                     part.StoreUndoState();
@@ -396,8 +395,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             m_SOPXmlProcessors.Add("UpdateFlag", ProcessUpdateFlag);
             m_SOPXmlProcessors.Add("SitTargetOrientation", ProcessSitTargetOrientation);
             m_SOPXmlProcessors.Add("SitTargetPosition", ProcessSitTargetPosition);
-            m_SOPXmlProcessors.Add("SitTargetPositionLL", ProcessSitTargetPositionLL);
-            m_SOPXmlProcessors.Add("SitTargetOrientationLL", ProcessSitTargetOrientationLL);
             m_SOPXmlProcessors.Add("ParentID", ProcessParentID);
             m_SOPXmlProcessors.Add("CreationDate", ProcessCreationDate);
             m_SOPXmlProcessors.Add("Category", ProcessCategory);
@@ -608,8 +605,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             writer.WriteElementString("UpdateFlag", ((byte) 0).ToString());
             WriteQuaternion(writer, "SitTargetOrientation", sop.SitTargetOrientation);
             WriteVector(writer, "SitTargetPosition", sop.SitTargetPosition);
-            WriteVector(writer, "SitTargetPositionLL", sop.SitTargetPositionLL);
-            WriteQuaternion(writer, "SitTargetOrientationLL", sop.SitTargetOrientationLL);
             writer.WriteElementString("ParentID", sop.ParentID.ToString());
             writer.WriteElementString("CreationDate", sop.CreationDate.ToString());
             writer.WriteElementString("Category", sop.Category.ToString());
@@ -641,7 +636,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             //Write the generic elements last
             foreach (KeyValuePair<string, Serialization> kvp in m_genericSerializers)
             {
-                writer.WriteElementString(kvp.Key, kvp.Value(sop));
+                string val = kvp.Value(sop);
+                if(val != null)
+                    writer.WriteElementString(kvp.Key, val);
             }
 
             writer.WriteEndElement();
@@ -830,7 +827,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         {
             reader.Read();
             reader.ReadStartElement("SceneObjectGroup");
-            SceneObjectPart root = Xml2ToSOP(reader, sog.Scene);
+            SceneObjectPart root = Xml2ToSOP(reader);
             if (root != null)
                 sog.SetRootPart(root);
             else
@@ -850,7 +847,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     case XmlNodeType.Element:
                         if (reader.Name == "SceneObjectPart")
                         {
-                            SceneObjectPart child = Xml2ToSOP(reader, sog.Scene);
+                            SceneObjectPart child = Xml2ToSOP(reader);
                             if (child != null)
                                 sog.AddChild(child, child.LinkNum);
                         }
@@ -869,9 +866,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             return true;
         }
 
-        public static SceneObjectPart Xml2ToSOP(XmlTextReader reader, IRegistryCore scene)
+        public static SceneObjectPart Xml2ToSOP(XmlTextReader reader)
         {
-            SceneObjectPart obj = new SceneObjectPart(scene);
+            SceneObjectPart obj = new SceneObjectPart();
 
             reader.ReadStartElement("SceneObjectPart");
 
@@ -903,8 +900,61 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             reader.ReadEndElement(); // SceneObjectPart
 
+            SceneObjectPart copy = ProtoBuf.Serializer.DeepClone<SceneObjectPart>(obj);
             //MainConsole.Instance.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
+            bool success = AreMatch(obj, copy);
             return obj;
+        }
+
+        private static bool AreMatch(object initial, object result)
+        {
+            if (initial.Equals(result))
+                return true;
+
+            foreach (var property in initial.GetType().GetProperties())
+            {
+                try
+                {
+                    if (!property.CanRead || !property.CanWrite)
+                        continue;
+                    var data = property.GetCustomAttributes(typeof(ProtoBuf.ProtoMemberAttribute), false);
+                    if (data.Length == 0)
+                        continue;
+                    var initialPropValue = property.GetValue(initial, null);
+                    var resultPropValue = result.GetType().GetProperty(property.Name).GetValue(result, null);
+
+                    if (property.PropertyType.IsArray)
+                    {
+                        if (initialPropValue != null && resultPropValue != null)
+                        {
+                            Array initialArray = (Array)initialPropValue;
+                            Array resultArray = (Array)resultPropValue;
+                            for (int i = 0; i < initialArray.Length; i++)
+                            {
+                                if (!object.Equals(initialArray.GetValue(i),
+                                    resultArray.GetValue(i)))
+                                {
+                                    MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name, initialPropValue, resultPropValue);
+                                }
+                            }
+                        }
+                    }
+                    else if (initialPropValue != null && property.PropertyType.IsClass)
+                    {
+                        if (!AreMatch(initialPropValue, resultPropValue))
+                            MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name, initialPropValue, resultPropValue);
+                    }
+                    else if (!object.Equals(initialPropValue, resultPropValue))
+                    {
+                        //if(property.Name != "Color")
+                        MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name, initialPropValue, resultPropValue);
+                    }
+                }
+                catch(Exception ex)
+                {
+                }
+            }
+            return true;
         }
 
         private static UUID ReadUUID(XmlTextReader reader, string name)
@@ -1001,6 +1051,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     }
                 }
                 reader.ReadEndElement(); // TaskInventoryItem
+
                 tinv.Add(item.ItemID, item);
             }
 
@@ -1213,16 +1264,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         private static void ProcessSitTargetPosition(SceneObjectPart obj, XmlTextReader reader)
         {
             obj.SitTargetPosition = ReadVector(reader, "SitTargetPosition");
-        }
-
-        private static void ProcessSitTargetPositionLL(SceneObjectPart obj, XmlTextReader reader)
-        {
-            obj.SitTargetPositionLL = ReadVector(reader, "SitTargetPositionLL");
-        }
-
-        private static void ProcessSitTargetOrientationLL(SceneObjectPart obj, XmlTextReader reader)
-        {
-            obj.SitTargetOrientationLL = ReadQuaternion(reader, "SitTargetOrientationLL");
         }
 
         private static void ProcessParentID(SceneObjectPart obj, XmlTextReader reader)

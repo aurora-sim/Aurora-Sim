@@ -5083,7 +5083,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 velocity = part.Velocity;
                 acceleration = part.Acceleration;
                 angularVelocity = part.AngularVelocity;
-                rotation = part.RotationOffset;
+                rotation = part.GetRotationOffset();
 
                 textureEntry = sendTexture ? part.Shape.TextureEntry : null;
             }
@@ -5279,7 +5279,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             data.Acceleration.ToBytes(objectData, 24);
             try
             {
-                data.RotationOffset.ToBytes(objectData, 36);
+                data.GetRotationOffset().ToBytes(objectData, 36);
             }
             catch (Exception e)
             {
@@ -5426,7 +5426,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             i += 12;
             try
             {
-                part.RotationOffset.ToBytes(objectData, i);
+                part.GetRotationOffset().ToBytes(objectData, i);
             }
             catch (Exception e)
             {

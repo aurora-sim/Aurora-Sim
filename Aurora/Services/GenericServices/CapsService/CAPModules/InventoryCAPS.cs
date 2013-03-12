@@ -611,11 +611,8 @@ namespace Aurora.Services
 
                     UUID owner_id = m_service.AgentID;
 
-                    IScene fakeScene = new Scene();
-                    fakeScene.AddModuleInterfaces(m_service.Registry.GetInterfaces());
-
                     SceneObjectPart prim = new SceneObjectPart(owner_id, pbs, position, Quaternion.Identity,
-                                                               Vector3.Zero, assetName, fakeScene)
+                                                               Vector3.Zero, assetName)
                                                {Scale = scale, AbsolutePosition = position};
 
                     rotations.Add(rotation);
@@ -637,7 +634,7 @@ namespace Aurora.Services
                     prim.OwnerMask = (uint) PermissionMask.All;
 
                     if (grp == null)
-                        grp = new SceneObjectGroup(prim, fakeScene);
+                        grp = new SceneObjectGroup(prim, null);
                     else
                         grp.AddChild(prim, i + 1);
                     grp.RootPart.IsAttachment = false;

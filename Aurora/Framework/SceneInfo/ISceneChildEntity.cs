@@ -110,8 +110,6 @@ namespace Aurora.Framework
         IEntityInventory Inventory { get; }
         void ResetEntityIDs();
 
-        string GenericData { get; }
-
         PrimFlags Flags { get; set; }
 
         int UseSoundQueue { get; set; }
@@ -396,6 +394,8 @@ namespace Aurora.Framework
 
         void Redo();
 
+        void FinishedSerializingGenericProperties();
+
         DateTime Expires { get; set; }
 
         uint CRC { get; set; }
@@ -407,6 +407,8 @@ namespace Aurora.Framework
         bool DIE_AT_EDGE { get; set; }
 
         byte[] TextureAnimation { get; set; }
+
+        Dictionary<UUID, StateSave> StateSaves { get; set;}
 
         Vector3 GroupPosition { get; }
         Vector3 GetGroupPosition();
@@ -493,5 +495,7 @@ namespace Aurora.Framework
 
         uint InventorySerial { get; set; }
 		void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool b);
+
+        Quaternion GetRotationOffset();
     }
 }

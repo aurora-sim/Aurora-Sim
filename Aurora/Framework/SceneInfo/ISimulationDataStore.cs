@@ -78,14 +78,14 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        short[] LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY);
+        void LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
         ///   Load the latest water revision from region storage
         /// </summary>
         /// <param name = "scene">the region</param>
         /// <returns>Heightfield data</returns>
-        short[] LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY);
+        void LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
         ///   Load all parcels from the database
@@ -107,15 +107,7 @@ namespace Aurora.Framework
         /// <summary>
         /// Clears out all references of the backup stream and dumps local caches
         /// </summary>
-        void Dispose();
-
-        /// <summary>
-        ///   Rename any backups that we might have to a new regionName
-        /// </summary>
-        /// <param name = "oldRegionName"></param>
-        /// <param name = "newRegionName"></param>
-        /// <param name = "configSource"></param>
-        void RenameBackupFiles(string oldRegionName, string newRegionName, IConfigSource configSource);
+        void CacheDispose();
 
         /// <summary>
         /// Load the region info for this sim

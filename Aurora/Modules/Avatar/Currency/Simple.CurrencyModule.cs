@@ -210,15 +210,28 @@ namespace Simple.Currency
 
         private void EconomyDataRequestHandler(IClientAPI remoteClient)
         {
-            remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity, remoteClient.Scene.RegionInfo.ObjectCapacity,
-                                         0, m_config.PriceGroupCreate,
-                                         0, 0,
-                                         0, 0,
-                                         0,
-                                         0, 0,
-                                         0, 0,
-                                         m_config.PriceUpload,
-                                         0, 0);
+            if (m_config == null)
+            {
+                remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity, remoteClient.Scene.RegionInfo.ObjectCapacity,
+                                             0, 0,
+                                             0, 0,
+                                             0, 0,
+                                             0,
+                                             0, 0,
+                                             0, 0,
+                                             0,
+                                             0, 0);
+            }
+            else
+                remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity, remoteClient.Scene.RegionInfo.ObjectCapacity,
+                                             0, m_config.PriceGroupCreate,
+                                             0, 0,
+                                             0, 0,
+                                             0,
+                                             0, 0,
+                                             0, 0,
+                                             m_config.PriceUpload,
+                                             0, 0);
         }
 
         private void SendMoneyBalance(IClientAPI client, UUID agentId, UUID sessionId, UUID transactionId)

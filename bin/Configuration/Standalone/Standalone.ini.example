@@ -80,3 +80,6 @@
     CacheEnabled = true
     ;; The time for cached images to expire (in hours)
     CacheExpires = 24
+
+[Includes]
+    Include-Data = Configuration/Data/Data.ini

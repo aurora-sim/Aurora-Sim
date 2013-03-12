@@ -666,7 +666,6 @@ namespace Aurora.Modules.InventoryAccess
                     return null;
 
                 group.IsDeleted = false;
-                group.m_isLoaded = true;
                 foreach (SceneObjectPart part in group.ChildrenList)
                 {
                     part.IsLoading = false;
@@ -924,7 +923,6 @@ namespace Aurora.Modules.InventoryAccess
                     return null;
 
                 group.IsDeleted = false;
-                group.m_isLoaded = true;
                 foreach (SceneObjectPart part in group.ChildrenList)
                 {
                     part.IsLoading = false;

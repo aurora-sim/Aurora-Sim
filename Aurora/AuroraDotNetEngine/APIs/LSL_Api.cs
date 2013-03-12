@@ -2297,7 +2297,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     ISceneChildEntity rootPart = group.RootChild;
                     if (rootPart != null) // again, better safe than sorry
                     {
-                        SetRot(obj, rootPart.RotationOffset * Rot2Quaternion(rot));
+                        SetRot(obj, rootPart.GetRotationOffset() * Rot2Quaternion(rot));
                     }
                 }
             }
@@ -2377,7 +2377,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Rotation();
 
-            return new LSL_Rotation(m_host.RotationOffset.X, m_host.RotationOffset.Y, m_host.RotationOffset.Z, m_host.RotationOffset.W);
+            return new LSL_Rotation(m_host.GetRotationOffset().X, m_host.GetRotationOffset().Y, m_host.GetRotationOffset().Z, m_host.GetRotationOffset().W);
         }
 
         public void llSetForce(LSL_Vector force, int local)
@@ -4265,7 +4265,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
 
                     group.IsDeleted = false;
-                    group.m_isLoaded = true;
                     foreach (SceneObjectPart part in group.ChildrenList)
                     {
                         part.IsLoading = false;
@@ -8338,7 +8337,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                 ISceneChildEntity rootPart = group.RootChild;
                                 if (rootPart != null) // again, better safe than sorry
                                 {
-                                    SetRot((part as ISceneChildEntity), rootPart.RotationOffset * Rot2Quaternion(q));
+                                    SetRot((part as ISceneChildEntity), rootPart.GetRotationOffset() * Rot2Quaternion(q));
                                 }
                             }
                         }
@@ -9428,7 +9427,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_ROT_LOCAL)
                 {
-                    Quaternion rtmp = part.RotationOffset;
+                    Quaternion rtmp = part.GetRotationOffset();
                     res.Add(new LSL_Rotation(rtmp.X, rtmp.Y, rtmp.Z, rtmp.W));
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_OMEGA)
@@ -11505,7 +11504,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             Vector3 position = m_host.AbsolutePosition;
             Vector3 velocity = m_host.Velocity;
-            Quaternion rotation = m_host.RotationOffset;
+            Quaternion rotation = m_host.GetRotationOffset();
             string ownerName = String.Empty;
             IScenePresence scenePresence = World.GetScenePresence(m_host.OwnerID);
             ownerName = scenePresence == null ? resolveName(m_host.OwnerID) : scenePresence.Name;
@@ -11924,7 +11923,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_ROT)
                         {
-                            Quaternion rtmp = obj.RotationOffset;
+                            Quaternion rtmp = obj.GetRotationOffset();
                             ret.Add(new LSL_Rotation(rtmp.X, rtmp.Y, rtmp.Z, rtmp.W));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_VELOCITY)
@@ -12514,7 +12513,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                   TimeList = times.ToArray(),
                                                   CurrentAnimationPosition = 0,
                                                   InitialPosition = m_host.AbsolutePosition,
-                                                  InitialRotation = m_host.RotationOffset
+                                                  InitialRotation = m_host.GetRotationOffset()
                                               };
             m_host.ParentEntity.AddKeyframedMotion(animation, KeyframeAnimation.Commands.Play);
         }

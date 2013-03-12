@@ -37,6 +37,7 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using GridRegion = Aurora.Framework.GridRegion;
+using ProtoBuf;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -98,6 +99,7 @@ namespace OpenSim.Region.Framework.Scenes
     ///   A scene object group is conceptually an object in the scene.  The object is constituted of SceneObjectParts
     ///   (often known as prims), one of which is considered the root part.
     /// </summary>
+    [Serializable, ProtoContract()]
     public partial class SceneObjectGroup : ISceneObject
         //(ISceneObject implements ISceneEntity and IEntity)
     {
@@ -113,7 +115,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool IsInTransit { get; set; }
 
-        public bool m_isLoaded;
         private UUID m_lastParcelUUID = UUID.Zero;
         private Vector3 m_lastSignificantPosition = Vector3.Zero;
         protected Dictionary<UUID, SceneObjectPart> m_parts = new Dictionary<UUID, SceneObjectPart>();
@@ -152,9 +153,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <value>
         ///   The parts of this scene object group.  You must lock this property before using it.
         /// </value>
+        [ProtoMember(1)]
         public List<SceneObjectPart> ChildrenList
         {
             get { return m_partsList; }
+            set { m_partsList = value; }
         }
 
         /// <value>
@@ -170,28 +173,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_rootPart.Color; }
             set
             {
-                if (m_rootPart != null && m_rootPart.Color != value)
-                    m_rootPart.Color = value;
-            }
-        }
-
-        public KeyframeAnimation m_KeyframeAnimation = null;
-        public KeyframeAnimation KeyframeAnimation
-        {
-            get 
-            {
-                OSDMap map = (OSDMap)m_rootPart.GetComponentState("KeyframeAnimation");
-                m_KeyframeAnimation = new KeyframeAnimation();
-                m_KeyframeAnimation.FromOSD(map);
-                return m_KeyframeAnimation;
-            }
-            set
-            {
-                m_KeyframeAnimation = value;
-                if (m_KeyframeAnimation == null)
-                    m_rootPart.RemoveComponentState("KeyframeAnimation");
-                else
-                    m_rootPart.SetComponentState("KeyframeAnimation", m_KeyframeAnimation.ToOSD());
+                if (m_rootPart != null)
+                    m_rootPart.SetColor(value, true);
             }
         }
 
@@ -267,7 +250,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public Quaternion GroupRotation
         {
-            get { return m_rootPart.RotationOffset; }
+            get { return m_rootPart.GetRotationOffset(); }
         }
 
         public UUID GroupID
@@ -399,13 +382,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructors
 
+        public SceneObjectGroup() { }
+
         /// <summary>
         ///   THIS IS ONLY FOR SERIALIZATION AND AS A BASE CONSTRUCTOR
         /// </summary>
         public SceneObjectGroup(IScene scene)
         {
             m_scene = scene;
-            m_isLoaded = true;
         }
 
         /// <summary>
@@ -424,10 +408,8 @@ namespace OpenSim.Region.Framework.Scenes
             : this(scene)
         {
             if (!AddToScene)
-            {
-                m_isLoaded = false;
                 m_isDeleted = true;
-            }
+
             SetRootPart(part);
             part.Scale = part.Shape.Scale; // temporary hack to update oobb
             m_ValidgrpOOB = false;
@@ -439,7 +421,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, string name,
                                 IScene scene) : this(scene)
         {
-            SceneObjectPart part = new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, name, scene);
+            SceneObjectPart part = new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, name);
             SetRootPart(part);
 
             //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
@@ -564,7 +546,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else // prims are in their local frame of reference
                 {
                     Vector3 partoffset = part.OffsetPosition;
-                    Quaternion partrot = part.RotationOffset;
+                    Quaternion partrot = part.GetRotationOffset();
 
                     // bring into this frame
 
@@ -687,7 +669,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else // prims are in their local frame of reference
                 {
                     // bring into this frame
-                    Quaternion partrot = part.RotationOffset;
+                    Quaternion partrot = part.GetRotationOffset();
                     partscale *= partrot;
                     partoffset *= partrot;
                     partoffset += part.OffsetPosition;
@@ -809,7 +791,7 @@ namespace OpenSim.Region.Framework.Scenes
                                                  out float minZ, out float maxZ)
         {
             Vector3 pos = m_rootPart.AbsolutePosition;
-            Quaternion rot = m_rootPart.RotationOffset;
+            Quaternion rot = m_rootPart.GetRotationOffset();
 //            Vector3 size = GroupScale();
             Vector3 minScale = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
             Vector3 maxScale = new Vector3(float.MinValue, float.MinValue, float.MinValue);
@@ -820,7 +802,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 partoffset = part.OffsetPosition;
                 if (part.ParentID != 0) // prims are rotated in group
                 {
-                    partscale *= part.RotationOffset;
+                    partscale *= part.GetRotationOffset();
                     partscale.X = Math.Abs(partscale.X);
                     partscale.Y = Math.Abs(partscale.Y);
                     partscale.Z = Math.Abs(partscale.Z);
@@ -1310,7 +1292,7 @@ namespace OpenSim.Region.Framework.Scenes
                         IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
                         {
-                            if (m_isLoaded && !backup.LoadingPrims) //Do NOT add to backup while still loading prims
+                            if (!backup.LoadingPrims) //Do NOT add to backup while still loading prims
                                 backup.AddPrimBackupTaint(this);
                         }
                     }
@@ -1369,6 +1351,12 @@ namespace OpenSim.Region.Framework.Scenes
         public byte GetSavedAttachmentPoint()
         {
             return (byte) m_rootPart.SavedAttachmentPoint;
+        }
+
+        public void FinishedSerializingGenericProperties()
+        {
+            foreach (ISceneChildEntity ent in ChildrenEntities())
+                ent.FinishedSerializingGenericProperties();
         }
 
         public void DetachToGround()
@@ -2146,102 +2134,102 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (command == KeyframeAnimation.Commands.Play)
             {
-                KeyframeAnimation = animation;
+                m_rootPart.KeyframeAnimation = animation;
                 m_scene.EventManager.OnFrame += moveKeyframeMotion;
             }
             else
             {
                 m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                 if (command == KeyframeAnimation.Commands.Stop)
-                    KeyframeAnimation = null;
+                    m_rootPart.KeyframeAnimation = null;
             }
         }
 
         public void moveKeyframeMotion()
         {
-            if (m_KeyframeAnimation == null || m_KeyframeAnimation.TimeList.Length == 0)
+            if (m_rootPart.KeyframeAnimation == null || m_rootPart.KeyframeAnimation.TimeList.Length == 0)
             {
                 m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                 return;
             }
             try
             {
-                int currentTime = m_KeyframeAnimation.TimeList[m_KeyframeAnimation.CurrentAnimationPosition];
+                int currentTime = m_rootPart.KeyframeAnimation.TimeList[m_rootPart.KeyframeAnimation.CurrentAnimationPosition];
                 float timeAmt = (1f / (float)currentTime);
-                Vector3 currentTarget = m_KeyframeAnimation.PositionList.Length == 0 ? Vector3.Zero :
-                    m_KeyframeAnimation.PositionList[m_KeyframeAnimation.CurrentAnimationPosition];
-                Quaternion target = m_KeyframeAnimation.RotationList.Length == 0 ? Quaternion.Identity :
-                    m_KeyframeAnimation.RotationList[m_KeyframeAnimation.CurrentAnimationPosition];
-                m_KeyframeAnimation.CurrentFrame++; //Add one to the current frame so that we know when to stops
+                Vector3 currentTarget = m_rootPart.KeyframeAnimation.PositionList.Length == 0 ? Vector3.Zero :
+                    m_rootPart.KeyframeAnimation.PositionList[m_rootPart.KeyframeAnimation.CurrentAnimationPosition];
+                Quaternion target = m_rootPart.KeyframeAnimation.RotationList.Length == 0 ? Quaternion.Identity :
+                    m_rootPart.KeyframeAnimation.RotationList[m_rootPart.KeyframeAnimation.CurrentAnimationPosition];
+                m_rootPart.KeyframeAnimation.CurrentFrame++; //Add one to the current frame so that we know when to stops
                 bool AllDoneMoving = false;
                 bool MadeItToCheckpoint = false;
-                if (m_KeyframeAnimation.CurrentFrame == currentTime)
+                if (m_rootPart.KeyframeAnimation.CurrentFrame == currentTime)
                 {
-                    if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Forward)
+                    if (m_rootPart.KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Forward)
                     {
-                        m_KeyframeAnimation.CurrentAnimationPosition += 1;
-                        if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
+                        m_rootPart.KeyframeAnimation.CurrentAnimationPosition += 1;
+                        if (m_rootPart.KeyframeAnimation.CurrentAnimationPosition == m_rootPart.KeyframeAnimation.TimeList.Length)
                         {
                             //All done moving...
                             AllDoneMoving = true;
                             m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                         }
                     }
-                    else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Reverse)
+                    else if (m_rootPart.KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Reverse)
                     {
-                        m_KeyframeAnimation.CurrentAnimationPosition -= 1;
-                        if (m_KeyframeAnimation.CurrentAnimationPosition < 0)
+                        m_rootPart.KeyframeAnimation.CurrentAnimationPosition -= 1;
+                        if (m_rootPart.KeyframeAnimation.CurrentAnimationPosition < 0)
                         {
                             //All done moving...
                             AllDoneMoving = true;
                             m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                         }
                     }
-                    else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Loop)
+                    else if (m_rootPart.KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Loop)
                     {
-                        m_KeyframeAnimation.CurrentAnimationPosition += 1;
-                        if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
-                            m_KeyframeAnimation.CurrentAnimationPosition = 0;
+                        m_rootPart.KeyframeAnimation.CurrentAnimationPosition += 1;
+                        if (m_rootPart.KeyframeAnimation.CurrentAnimationPosition == m_rootPart.KeyframeAnimation.TimeList.Length)
+                            m_rootPart.KeyframeAnimation.CurrentAnimationPosition = 0;
                     }
-                    else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.PingPong)
+                    else if (m_rootPart.KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.PingPong)
                     {
-                        if (m_KeyframeAnimation.PingPongForwardMotion)
+                        if (m_rootPart.KeyframeAnimation.PingPongForwardMotion)
                         {
-                            m_KeyframeAnimation.CurrentAnimationPosition += 1;
-                            if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
+                            m_rootPart.KeyframeAnimation.CurrentAnimationPosition += 1;
+                            if (m_rootPart.KeyframeAnimation.CurrentAnimationPosition == m_rootPart.KeyframeAnimation.TimeList.Length)
                             {
-                                m_KeyframeAnimation.PingPongForwardMotion = !m_KeyframeAnimation.PingPongForwardMotion;
-                                m_KeyframeAnimation.CurrentAnimationPosition -= 2;
+                                m_rootPart.KeyframeAnimation.PingPongForwardMotion = !m_rootPart.KeyframeAnimation.PingPongForwardMotion;
+                                m_rootPart.KeyframeAnimation.CurrentAnimationPosition -= 2;
                             }
                         }
                         else
                         {
-                            m_KeyframeAnimation.CurrentAnimationPosition -= 1;
-                            if (m_KeyframeAnimation.CurrentAnimationPosition < 0)
+                            m_rootPart.KeyframeAnimation.CurrentAnimationPosition -= 1;
+                            if (m_rootPart.KeyframeAnimation.CurrentAnimationPosition < 0)
                             {
-                                m_KeyframeAnimation.PingPongForwardMotion = !m_KeyframeAnimation.PingPongForwardMotion;
-                                m_KeyframeAnimation.CurrentAnimationPosition += 2;
+                                m_rootPart.KeyframeAnimation.PingPongForwardMotion = !m_rootPart.KeyframeAnimation.PingPongForwardMotion;
+                                m_rootPart.KeyframeAnimation.CurrentAnimationPosition += 2;
                             }
                         }
                     }
-                    m_KeyframeAnimation.CurrentFrame = 0;
+                    m_rootPart.KeyframeAnimation.CurrentFrame = 0;
                     MadeItToCheckpoint = true;
                 }
 
-                if (m_KeyframeAnimation.PositionList.Length != 0)
+                if (m_rootPart.KeyframeAnimation.PositionList.Length != 0)
                 {
                     Vector3 _target_velocity =
                                 new Vector3(
-                                    (currentTarget.X - m_KeyframeAnimation.InitialPosition.X) * timeAmt,
-                                    (currentTarget.Y - m_KeyframeAnimation.InitialPosition.Y) * timeAmt,
-                                    (currentTarget.Z - m_KeyframeAnimation.InitialPosition.Z) * timeAmt
+                                    (currentTarget.X - m_rootPart.KeyframeAnimation.InitialPosition.X) * timeAmt,
+                                    (currentTarget.Y - m_rootPart.KeyframeAnimation.InitialPosition.Y) * timeAmt,
+                                    (currentTarget.Z - m_rootPart.KeyframeAnimation.InitialPosition.Z) * timeAmt
                                     );
                     if (MadeItToCheckpoint)
                     {
                         if(AllDoneMoving)
                             Velocity = Vector3.Zero;
                         SetAbsolutePosition(true, currentTarget);
-                        m_KeyframeAnimation.InitialPosition = currentTarget;
+                        m_rootPart.KeyframeAnimation.InitialPosition = currentTarget;
                     }
                     else
                     {
@@ -2249,16 +2237,16 @@ namespace OpenSim.Region.Framework.Scenes
                         m_rootPart.Velocity = _target_velocity / 45f;
                     }
                 }
-                if (m_KeyframeAnimation.RotationList.Length != 0)
+                if (m_rootPart.KeyframeAnimation.RotationList.Length != 0)
                 {
-                    Quaternion source = m_rootPart.RotationOffset;
-                    Quaternion newInterpolation = Quaternion.Slerp(source, target, 1f / ((float)currentTime - (float)m_KeyframeAnimation.CurrentFrame));
+                    Quaternion source = m_rootPart.GetRotationOffset();
+                    Quaternion newInterpolation = Quaternion.Slerp(source, target, 1f / ((float)currentTime - (float)m_rootPart.KeyframeAnimation.CurrentFrame));
                     m_rootPart.UpdateRotation(newInterpolation);
                     if (MadeItToCheckpoint)
                     {
                         //Force set it to the right position, just to be sure
                         m_rootPart.UpdateRotation(target);
-                        m_KeyframeAnimation.InitialRotation = target;
+                        m_rootPart.KeyframeAnimation.InitialRotation = target;
                     }
                 }
             }
@@ -2356,10 +2344,10 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             scriptRotTarget target = m_rotTargets[idx];
                             double angle =
-                                Math.Acos(target.targetRot.X*m_rootPart.RotationOffset.X +
-                                          target.targetRot.Y*m_rootPart.RotationOffset.Y +
-                                          target.targetRot.Z*m_rootPart.RotationOffset.Z +
-                                          target.targetRot.W*m_rootPart.RotationOffset.W)*2;
+                                Math.Acos(target.targetRot.X * m_rootPart.GetRotationOffset().X +
+                                          target.targetRot.Y * m_rootPart.GetRotationOffset().Y +
+                                          target.targetRot.Z * m_rootPart.GetRotationOffset().Z +
+                                          target.targetRot.W * m_rootPart.GetRotationOffset().W) * 2;
                             if (angle < 0) angle = -angle;
                             if (angle > Math.PI) angle = (Math.PI*2 - angle);
                             if (angle <= target.tolerance)
@@ -2396,7 +2384,7 @@ namespace OpenSim.Region.Framework.Scenes
                             foreach (scriptRotTarget att in atRotTargets.Values)
                             {
                                 m_scene.EventManager.TriggerAtRotTargetEvent(
-                                    t, att.handle, att.targetRot, m_rootPart.RotationOffset);
+                                    t, att.handle, att.targetRot, m_rootPart.GetRotationOffset());
                             }
                         }
 
@@ -2501,9 +2489,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             SceneObjectGroup dupe = (SceneObjectGroup) MemberwiseClone();
 
-            //Block attempts to persist to the DB
-            dupe.m_isLoaded = false;
-
             dupe.m_parts = new Dictionary<UUID, SceneObjectPart>();
             dupe.m_partsList = new List<SceneObjectPart>();
 
@@ -2552,8 +2537,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             dupe.m_ValidgrpOOB = false;
-            //Reset the loaded setting
-            dupe.m_isLoaded = true;
 
             return dupe;
         }
@@ -3294,8 +3277,8 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectPart linkPart = objectGroup.m_rootPart;
 
             Vector3 oldGroupPosition = linkPart.GroupPosition;
-            Quaternion oldRootRotation = linkPart.RotationOffset;
-            Quaternion parentRot = m_rootPart.RotationOffset;
+            Quaternion oldRootRotation = linkPart.GetRotationOffset();
+            Quaternion parentRot = m_rootPart.GetRotationOffset();
 
             linkPart.SetGroupPosition(AbsolutePosition); // just change it without doing anything else
 
@@ -3394,7 +3377,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // We need to reset the child part's position
             // ready for life as a separate object after being a part of another object
-            Quaternion parentRot = m_rootPart.RotationOffset;
+            Quaternion parentRot = m_rootPart.GetRotationOffset();
 
             Vector3 axPos = linkPart.OffsetPosition;
 
@@ -3403,7 +3386,7 @@ namespace OpenSim.Region.Framework.Scenes
             linkPart.FixGroupPosition(AbsolutePosition + linkPart.OffsetPosition, false);
             linkPart.FixOffsetPosition(Vector3.Zero, false);
 
-            linkPart.RotationOffset = worldRot;
+            linkPart.SetRotationOffset(true, worldRot, true);
 
             SceneObjectGroup objectGroup = new SceneObjectGroup(linkPart, Scene);
             m_scene.SceneGraph.DelinkPartToScene(objectGroup);
@@ -3426,7 +3409,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void LinkNonRootPart(SceneObjectPart part, Vector3 oldGroupPosition, Quaternion oldGroupRotation,
                                      int linkNum)
         {
-            Quaternion WorldRot = oldGroupRotation*part.RotationOffset;
+            Quaternion WorldRot = oldGroupRotation * part.GetRotationOffset();
 
             // first fix from old local to world 
             // position
@@ -3441,7 +3424,7 @@ namespace OpenSim.Region.Framework.Scenes
             part.CreateSelected = true;
 
             // now lets move to the new parent frame
-            Quaternion rootRotation = m_rootPart.RotationOffset;
+            Quaternion rootRotation = m_rootPart.GetRotationOffset();
 
             Vector3 pos = part.GroupPosition - AbsolutePosition;
             pos *= Quaternion.Inverse(rootRotation);
@@ -4214,7 +4197,7 @@ namespace OpenSim.Region.Framework.Scenes
                                   AbsolutePosition.Z + m_rootPart.OffsetPosition.Z);
             Vector3 diff = oldPos - newPos;
             Vector3 axDiff = new Vector3(diff.X, diff.Y, diff.Z);
-            Quaternion partRotation = m_rootPart.RotationOffset;
+            Quaternion partRotation = m_rootPart.GetRotationOffset();
             axDiff *= Quaternion.Inverse(partRotation);
             diff = axDiff;
             if (IsAttachment)
@@ -4266,7 +4249,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             PhysicsObject actor = m_rootPart.PhysActor;
             if (actor != null)
-                actor.Orientation = m_rootPart.RotationOffset;
+                actor.Orientation = m_rootPart.GetRotationOffset();
 
             HasGroupChanged = true;
             ScheduleGroupTerseUpdate();
@@ -4286,7 +4269,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             PhysicsObject actor = m_rootPart.PhysActor;
             if (actor != null)
-                actor.Orientation = m_rootPart.RotationOffset;
+                actor.Orientation = m_rootPart.GetRotationOffset();
 
             AbsolutePosition = pos;
             HasGroupChanged = true;
@@ -4349,11 +4332,11 @@ namespace OpenSim.Region.Framework.Scenes
         private void UpdateRootRotation(Quaternion rot)
         {
             Quaternion new_global_group_rot = rot;
-            Quaternion old_global_group_rot = m_rootPart.RotationOffset;
+            Quaternion old_global_group_rot = m_rootPart.GetRotationOffset();
 
             m_rootPart.UpdateRotation(rot);
             if (m_rootPart.PhysActor != null)
-                m_rootPart.PhysActor.Orientation = m_rootPart.RotationOffset;
+                m_rootPart.PhysActor.Orientation = m_rootPart.GetRotationOffset();
 
 #if (!ISWIN)
             foreach (SceneObjectPart childPrim in m_partsList)
@@ -4391,7 +4374,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // fix rotation
                 // get in world coords
-                Quaternion primsRot = old_global_group_rot * childPrim.RotationOffset;
+                Quaternion primsRot = old_global_group_rot * childPrim.GetRotationOffset();
                 // set new offset as inverse of the one on root
                 // so world is right
                 primsRot = Quaternion.Inverse(new_global_group_rot) * primsRot;

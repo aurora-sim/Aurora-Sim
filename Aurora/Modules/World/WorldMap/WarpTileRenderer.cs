@@ -323,7 +323,7 @@ namespace Aurora.Modules.WorldMap
                 if (prim.Scale.LengthSquared() < MIN_SIZE*MIN_SIZE)
                     return;
 
-                Primitive omvPrim = prim.Shape.ToOmvPrimitive(prim.OffsetPosition, prim.RotationOffset);
+                Primitive omvPrim = prim.Shape.ToOmvPrimitive(prim.OffsetPosition, prim.GetRotationOffset());
                 FacetedMesh renderMesh = null;
 
                 // Are we dealing with a sculptie or mesh?
@@ -361,7 +361,7 @@ namespace Aurora.Modules.WorldMap
                     return;
 
                 warp_Vector primPos = ConvertVector(prim.GetWorldPosition());
-                warp_Quaternion primRot = ConvertQuaternion(prim.RotationOffset);
+                warp_Quaternion primRot = ConvertQuaternion(prim.GetRotationOffset());
 
                 warp_Matrix m = warp_Matrix.quaternionMatrix(primRot);
 
@@ -369,7 +369,7 @@ namespace Aurora.Modules.WorldMap
                 {
                     ISceneEntity group = m_scene.GetGroupByPrim(prim.LocalId);
                     if (group != null)
-                        m.transform(warp_Matrix.quaternionMatrix(ConvertQuaternion(group.RootChild.RotationOffset)));
+                        m.transform(warp_Matrix.quaternionMatrix(ConvertQuaternion(group.RootChild.GetRotationOffset())));
                 }
 
                 warp_Vector primScale = ConvertVector(prim.Scale);

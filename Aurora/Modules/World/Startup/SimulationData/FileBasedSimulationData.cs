@@ -46,7 +46,7 @@ using Aurora.Management;
 using ProtoBuf.Meta;
 using ProtoBuf;
 
-namespace Aurora.Modules.Startup.FileBasedSimulationData
+namespace Aurora.Modules
 {
     /// <summary>
     ///   FileBased DataStore, do not store anything in any databases, instead save .abackup files for it
@@ -57,33 +57,23 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
         protected string m_fileName = "";
         protected bool m_loaded = false;
-        protected List<ISceneEntity> m_groups = new List<ISceneEntity>();
         protected bool m_keepOldSave = true;
-        protected string m_loadAppendedFileName = "";
-        protected string m_loadDirectory = "";
         protected string m_oldSaveDirectory = "Backups";
         protected bool m_oldSaveHasBeenSaved;
-        protected byte[] m_oldstylerevertTerrain;
-        protected byte[] m_oldstyleterrain;
-        protected List<LandData> m_parcels = new List<LandData>();
         protected bool m_requiresSave = true;
         protected bool m_displayNotSavingNotice = true;
-        protected byte[] m_revertTerrain;
-        protected byte[] m_revertWater;
-        protected string m_saveAppendedFileName = "";
         protected bool m_saveBackupChanges = true;
         protected bool m_saveBackups;
         protected bool m_saveChanges = true;
-        protected string m_saveDirectory = "";
+        protected string m_storeDirectory = "";
         protected Timer m_saveTimer;
         protected IScene m_scene;
-        protected short[] m_shortrevertTerrain;
-        protected short[] m_shortterrain;
-        protected byte[] m_terrain;
         protected int m_timeBetweenBackupSaves = 1440; //One day
         protected int m_timeBetweenSaves = 5;
-        protected byte[] m_water;
         protected bool m_shutdown = false;
+        protected IRegionDataLoader _regionLoader;
+        protected IRegionDataLoader _oldRegionLoader;
+        protected RegionData _regionData;
         protected Object m_saveLock = new Object();
 
         #region ISimulationDataStore Members
@@ -110,30 +100,25 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             return new FileBasedSimulationData();
         }
 
-        public virtual void Dispose()
+        public virtual void CacheDispose()
         {
-            m_groups.Clear();
-            m_oldstylerevertTerrain = null;
-            m_oldstyleterrain = null;
-            m_parcels.Clear();
-            m_revertTerrain = null;
-            m_revertWater = null;
-            m_shortrevertTerrain = null;
-            m_shortterrain = null;
-            m_terrain = null;
-            m_water = null;
+            _regionData.Dispose();
+            _regionData = null;
         }
 
         public virtual void Initialise()
         {
+            _regionLoader = new ProtobufRegionDataLoader();
+            _oldRegionLoader = new TarRegionDataLoader();
         }
 
         public virtual RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion)
         {
             newRegion = false;
             ReadConfig(simBase);
-            RegionInfo info = ReadRegionInfo();
-            if (info == null)
+            ReadBackup();
+            RegionInfo info;
+            if (_regionData == null)
             {
             retry:
                 bool noGui = false;
@@ -155,6 +140,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     goto retry;
                 newRegion = true;
             }
+            else
+                info = _regionData.RegionInfo;
             return info;
         }
 
@@ -194,95 +181,51 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 m_loaded = true;
                 scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
                 m_scene = scene;
-                ReadBackup(scene);
             }
         }
 
         public virtual List<ISceneEntity> LoadObjects()
         {
-            return m_groups;
+            return _regionData.Groups.ConvertAll<ISceneEntity>(o=>o);
         }
 
-        public virtual short[] LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public virtual void LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
             ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
             if (RevertMap)
             {
-                if (m_revertTerrain == null)
-                {
-                    if (m_shortrevertTerrain != null) //OpenSim style
-                        terrainModule.TerrainRevertMap = new TerrainChannel(m_shortrevertTerrain, m_scene);
-                    else if (m_oldstylerevertTerrain != null)
-                    {
-                        MemoryStream ms = new MemoryStream(m_oldstylerevertTerrain);
-                        if (terrainModule != null)
-                            terrainModule.LoadRevertMapFromStream(".r32", ms, 0, 0);
-                    }
-                }
-                else
-                    //New style
-                    terrainModule.TerrainRevertMap = ReadFromData(m_revertTerrain, m_scene);
+                terrainModule.TerrainRevertMap = ReadFromData(_regionData.RevertTerrain, m_scene);
                 //Make sure the size is right!
                 if (terrainModule.TerrainRevertMap != null &&
                     terrainModule.TerrainRevertMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainRevertMap = null;
-                m_revertTerrain = null;
-                m_oldstylerevertTerrain = null;
-                m_shortrevertTerrain = null;
-                return null;
             }
             else
             {
-                if (m_terrain == null)
-                {
-                    if (m_shortterrain != null) //OpenSim style
-                        terrainModule.TerrainMap = new TerrainChannel(m_shortterrain, m_scene);
-                    else if (m_oldstyleterrain != null)
-                    {
-//Old style
-                        MemoryStream ms = new MemoryStream(m_oldstyleterrain);
-                        if (terrainModule != null)
-                            terrainModule.LoadFromStream(".r32", ms, 0, 0);
-                    }
-                }
-                else
-                    //New style
-                    terrainModule.TerrainMap = ReadFromData(m_terrain, m_scene);
+                terrainModule.TerrainMap = ReadFromData(_regionData.Terrain, m_scene);
                 //Make sure the size is right!
                 if (terrainModule.TerrainMap != null &&
                     terrainModule.TerrainMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainMap = null;
-                m_terrain = null;
-                m_oldstyleterrain = null;
-                m_shortterrain = null;
-                return null;
             }
         }
 
-        public virtual short[] LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY)
+        public virtual void LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
             ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
             if (RevertMap)
             {
-                if (m_revertWater == null)
-                    return null;
-                terrainModule.TerrainWaterRevertMap = ReadFromData(m_revertWater, m_scene);
+                terrainModule.TerrainWaterRevertMap = ReadFromData(_regionData.RevertWater, m_scene);
                 //Make sure the size is right!
                 if (terrainModule.TerrainWaterRevertMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainWaterRevertMap = null;
-                m_revertWater = null;
-                return null;
             }
             else
             {
-                if (m_water == null)
-                    return null;
-                terrainModule.TerrainWaterMap = ReadFromData(m_water, m_scene);
+                terrainModule.TerrainWaterMap = ReadFromData(_regionData.Water, m_scene);
                 //Make sure the size is right!
                 if (terrainModule.TerrainWaterMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainWaterMap = null;
-                m_water = null;
-                return null;
             }
         }
 
@@ -296,7 +239,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     m_shutdown = true;
                     if (!m_saveChanges || !m_saveBackups)
                         return;
-                    SaveBackup(m_saveDirectory, false);
+                    SaveBackup(false);
                 }
             }
             catch (Exception ex)
@@ -319,7 +262,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 lock (m_saveLock)
                 {
                     if (!m_shutdown)
-                        SaveBackup(m_saveDirectory, false);
+                        SaveBackup(false);
                     m_requiresSave = false;
                 }
             }
@@ -334,14 +277,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         public virtual void RemoveRegion()
         {
             //Remove the file so that the region is gone
-            File.Delete(m_loadDirectory == "/" ? m_fileName : m_loadDirectory + m_fileName);
-        }
-
-        public virtual void RenameBackupFiles(string oldRegionName, string newRegionName, IConfigSource configSource)
-        {
-            if (File.Exists(m_saveDirectory + oldRegionName + m_saveAppendedFileName + ".abackup"))
-                File.Move(m_saveDirectory + oldRegionName + m_saveAppendedFileName + ".abackup",
-                          m_saveDirectory + newRegionName + m_saveAppendedFileName + ".abackup");
+            File.Delete(BuildSaveFileName());
         }
 
         /// <summary>
@@ -351,18 +287,10 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         /// <returns></returns>
         public virtual List<LandData> LoadLandObjects()
         {
-            return m_parcels;
+            return _regionData.Parcels;
         }
 
         #endregion
-
-        public object RegionInfoChanged(string funcName, object param)
-        {
-            RegionInfo oldRegion = (RegionInfo)((object[])param)[0];
-            RegionInfo newRegion = (RegionInfo)((object[])param)[1];
-            RenameBackupFiles(oldRegion.RegionName, newRegion.RegionName, m_scene.Config);
-            return null;
-        }
 
         /// <summary>
         ///   Read the config for the data loader
@@ -371,18 +299,14 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         /// <param name = "config"></param>
         protected virtual void ReadConfig(ISimulationBase simBase)
         {
-            simBase.EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
             IConfig config = simBase.ConfigSource.Configs["FileBasedSimulationData"];
             if (config != null)
             {
-                m_loadAppendedFileName = config.GetString("AppendedLoadFileName", m_loadAppendedFileName);
-                m_saveAppendedFileName = config.GetString("AppendedSaveFileName", m_saveAppendedFileName);
                 m_saveChanges = config.GetBoolean("SaveChanges", m_saveChanges);
                 m_timeBetweenSaves = config.GetInt("TimeBetweenSaves", m_timeBetweenSaves);
                 m_keepOldSave = config.GetBoolean("SavePreviousBackup", m_keepOldSave);
                 m_oldSaveDirectory = config.GetString("PreviousBackupDirectory", m_oldSaveDirectory);
-                m_loadDirectory = config.GetString("LoadBackupDirectory", m_loadDirectory);
-                m_saveDirectory = config.GetString("SaveBackupDirectory", m_saveDirectory);
+                m_storeDirectory = config.GetString("StoreBackupDirectory", m_storeDirectory);
                 m_saveBackupChanges = config.GetBoolean("SaveTimedPreviousBackup", m_keepOldSave);
                 m_timeBetweenBackupSaves = config.GetInt("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
             }
@@ -401,7 +325,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 m_backupSaveTimer.Start();
             }
 
-            m_fileName = "sim.abackup";
+            m_fileName = "sim";
         }
 
         /// <summary>
@@ -437,7 +361,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     {
                         if (m_saveChanges && m_saveBackups && !m_shutdown)
                         {
-                            SaveBackup(m_saveDirectory, false);
+                            SaveBackup(false);
                         }
                     }
                 }
@@ -467,7 +391,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 {
                     if(!m_shutdown)
                     {
-                        SaveBackup(m_oldSaveDirectory, false);
+                        SaveBackup(true);
                     }
                 }
             }
@@ -481,10 +405,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         ///   Save a backup of the sim
         /// </summary>
         /// <param name = "appendedFilePath">The file path where the backup will be saved</param>
-        protected virtual void SaveBackup(string appendedFilePath, bool saveAssets)
+        protected virtual void SaveBackup(bool isOldSave)
         {
-            if (appendedFilePath == "/")
-                appendedFilePath = "";
             if (m_scene.RegionInfo.HasBeenDeleted)
                 return;
             IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule>();
@@ -500,20 +422,10 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             {
                 if (engines != null)
                 {
-#if (!ISWIN)
-                    foreach (IScriptModule engine in engines)
-                    {
-                        if (engine != null)
-                        {
-                            engine.SaveStateSaves();
-                        }
-                    }
-#else
                     foreach (IScriptModule engine in engines.Where(engine => engine != null))
                     {
                         engine.SaveStateSaves();
                     }
-#endif
                 }
             }
             catch (Exception ex)
@@ -522,184 +434,62 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             }
 
             MainConsole.Instance.Info("[FileBasedSimulationData]: Saving backup for region " + m_scene.RegionInfo.RegionName);
-            string fileName = "sim.abackup";
-            if (File.Exists(fileName))
+            
+            RegionData regiondata = new RegionData();
+            regiondata.Init();
+
+            regiondata.RegionInfo = m_scene.RegionInfo;
+            IParcelManagementModule module = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (module != null)
             {
-                //Do new style saving here!
-                GZipStream m_saveStream = new GZipStream(new FileStream(fileName + ".tmp", FileMode.Create),
-                                                         CompressionMode.Compress);
-                TarArchiveWriter writer = new TarArchiveWriter(m_saveStream);
-                GZipStream m_loadStream = new GZipStream(new FileStream(fileName, FileMode.Open),
-                                                         CompressionMode.Decompress);
-                TarArchiveReader reader = new TarArchiveReader(m_loadStream);
+                List<ILandObject> landObject = module.AllParcels();
+                foreach (ILandObject parcel in landObject)
+                    regiondata.Parcels.Add(parcel.LandData);
+            }
 
-                writer.WriteDir("parcels");
-
-                IParcelManagementModule module = m_scene.RequestModuleInterface<IParcelManagementModule>();
-                if (module != null)
-                {
-                    List<ILandObject> landObject = module.AllParcels();
-                    foreach (ILandObject parcel in landObject)
-                    {
-                        OSDMap parcelMap = parcel.LandData.ToOSD();
-                        var binary = OSDParser.SerializeLLSDBinary(parcelMap);
-                        writer.WriteFile("parcels/" + parcel.LandData.GlobalID.ToString(),
-                                         binary);
-                        binary = null;
-                        parcelMap = null;
-                    }
-                }
-
-                writer.WriteDir("newstyleterrain");
-                writer.WriteDir("newstylerevertterrain");
-
-                writer.WriteDir("newstylewater");
-                writer.WriteDir("newstylerevertwater");
-
-                writer.WriteDir("regioninfo");
-                byte[] regionData = OSDParser.SerializeLLSDBinary(m_scene.RegionInfo.PackRegionInfoData());
-                writer.WriteFile("regioninfo/regioninfo", regionData);
-
-                ITerrainModule tModule = m_scene.RequestModuleInterface<ITerrainModule>();
-                if (tModule != null)
-                {
-                    try
-                    {
-                        byte[] sdata = WriteTerrainToStream(tModule.TerrainMap);
-                        writer.WriteFile("newstyleterrain/" + m_scene.RegionInfo.RegionID.ToString() + ".terrain", sdata);
-                        sdata = null;
-
-                        sdata = WriteTerrainToStream(tModule.TerrainRevertMap);
-                        writer.WriteFile(
-                            "newstylerevertterrain/" + m_scene.RegionInfo.RegionID.ToString() + ".terrain", sdata);
-                        sdata = null;
-
-                        if (tModule.TerrainWaterMap != null)
-                        {
-                            sdata = WriteTerrainToStream(tModule.TerrainWaterMap);
-                            writer.WriteFile("newstylewater/" + m_scene.RegionInfo.RegionID.ToString() + ".terrain",
-                                             sdata);
-                            sdata = null;
-
-                            sdata = WriteTerrainToStream(tModule.TerrainWaterRevertMap);
-                            writer.WriteFile(
-                                "newstylerevertwater/" + m_scene.RegionInfo.RegionID.ToString() + ".terrain", sdata);
-                            sdata = null;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
-                    }
-                }
-
-                IDictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
-                UuidGatherer assetGatherer = new UuidGatherer(m_scene.AssetService);
-
-                ISceneEntity[] saveentities = m_scene.Entities.GetEntities();
-                List<UUID> entitiesToSave = new List<UUID>();
-                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch(), sw2 = new System.Diagnostics.Stopwatch();
-                foreach (ISceneEntity entity in saveentities)
-                {
-                    try
-                    {
-                        if (entity.IsAttachment ||
-                            ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
-                            || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
-                            continue;
-                        if (entity.HasGroupChanged)
-                        {
-                            entity.HasGroupChanged = false;
-                            //Write all entities
-                            sw.Start();
-                            byte[] xml = ((ISceneObject)entity).ToBinaryXml2();
-                            sw.Stop();
-                            sw2.Start();
-                            writer.WriteFile("entities/" + entity.UUID.ToString(), xml);
-                            sw2.Stop();
-                            xml = null;
-                        }
-                        else
-                            entitiesToSave.Add(entity.UUID);
-                        if (saveAssets)
-                            assetGatherer.GatherAssetUuids(entity, assets, m_scene);
-                    }
-                    catch (Exception ex)
-                    {
-                        MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
-                        entitiesToSave.Add(entity.UUID);
-                    }
-                }
-
-
-                MainConsole.Instance.Warn("sw: " + sw.ElapsedMilliseconds + ", sw2: " + sw2.ElapsedMilliseconds);
-
-                byte[] data;
-                string filePath;
-                TarArchiveReader.TarEntryType entryType;
-                //Load the archive data that we need
+            ITerrainModule tModule = m_scene.RequestModuleInterface<ITerrainModule>();
+            if (tModule != null)
+            {
                 try
                 {
-                    while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
+                    regiondata.Terrain = WriteTerrainToStream(tModule.TerrainMap);
+                    regiondata.RevertTerrain = WriteTerrainToStream(tModule.TerrainRevertMap);
+
+                    if (tModule.TerrainWaterMap != null)
                     {
-                        if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
-                            continue;
-                        if (filePath.StartsWith("entities/"))
-                        {
-                            UUID entityID = UUID.Parse(filePath.Remove(0, 9));
-                            if (entitiesToSave.Contains(entityID))
-                            {
-                                writer.WriteFile(filePath, data);
-                                entitiesToSave.Remove(entityID);
-                            }
-                        }
-                        data = null;
+                        regiondata.Water = WriteTerrainToStream(tModule.TerrainWaterMap);
+                        regiondata.RevertWater = WriteTerrainToStream(tModule.TerrainWaterRevertMap);
                     }
                 }
                 catch (Exception ex)
                 {
                     MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
                 }
+            }
 
-                if (entitiesToSave.Count > 0)
-                {
-                    MainConsole.Instance.Fatal(entitiesToSave.Count + " PRIMS WERE NOT GOING TO BE SAVED! FORCE SAVING NOW! ");
-                    foreach (ISceneEntity entity in saveentities)
-                    {
-                        if (entitiesToSave.Contains(entity.UUID))
-                        {
-                            if (entity.IsAttachment ||
-                                ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
-                                || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
-                                continue;
-                            //Write all entities
-                            byte[] xml = ((ISceneObject) entity).ToBinaryXml2();
-                            writer.WriteFile("entities/" + entity.UUID.ToString(), xml);
-                            xml = null;
-                        }
-                    }
-                }
+            ISceneEntity[] entities = m_scene.Entities.GetEntities();
+            regiondata.Groups = new List<SceneObjectGroup>(entities.Cast<SceneObjectGroup>());
+            try
+            {
+                foreach (ISceneEntity entity in entities.Where(ent=>ent.HasGroupChanged))
+                    entity.HasGroupChanged = false;
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
+            }
+            string filename = isOldSave ? BuildOldSaveFileName() : BuildSaveFileName();
 
-                if (saveAssets)
-                {
-                    foreach (UUID assetID in new List<UUID>(assets.Keys))
-                    {
-                        try
-                        {
-                            WriteAsset(assetID.ToString(), m_scene.AssetService.Get(assetID.ToString()), writer);
-                        }
-                        catch (Exception ex)
-                        {
-                            MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
-                        }
-                    }
-                }
+            if (File.Exists(filename + (isOldSave ? "" : ".tmp")))
+                File.Delete(filename + (isOldSave ? "" : ".tmp"));//Remove old tmp files
+            _regionLoader.SaveBackup(filename + (isOldSave ? "" : ".tmp"), regiondata);
 
-                reader.Close();
-                writer.Close();
-                m_loadStream.Close();
-                m_saveStream.Close();
-                GC.Collect();
+            //RegionData data = _regionLoader.LoadBackup(filename + ".tmp");
+            if(!isOldSave)
+            {
+                if (File.Exists(filename))
+                    File.Delete(filename);
+                File.Move(filename + ".tmp", filename);
 
                 if (m_keepOldSave && !m_oldSaveHasBeenSaved)
                 {
@@ -707,55 +497,26 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     m_oldSaveHasBeenSaved = true;
                     if (!Directory.Exists(m_oldSaveDirectory))
                         Directory.CreateDirectory(m_oldSaveDirectory);
-                    File.Copy(fileName + ".tmp",
-                              Path.Combine(m_oldSaveDirectory,
-                                           m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppendedFileName +
-                                           ".abackup"));
-                }
-                //Just remove the file
-                File.Delete(fileName);
-            }
-            else
-            {
-                //Add the .temp since we might need to make a backup and so that if something goes wrong, we don't corrupt the main backup
-                GZipStream m_saveStream = new GZipStream(new FileStream(fileName + ".tmp", FileMode.Create),
-                                                         CompressionMode.Compress);
-                TarArchiveWriter writer = new TarArchiveWriter(m_saveStream);
-                IAuroraBackupArchiver archiver = m_scene.RequestModuleInterface<IAuroraBackupArchiver>();
-
-                //Turn off prompting so that we don't ask the user questions every time we need to save the backup
-                archiver.AllowPrompting = false;
-                archiver.SaveRegionBackup(writer, m_scene);
-                archiver.AllowPrompting = true;
-
-                m_saveStream.Close();
-                writer.Close();
-                GC.Collect();
-                ISceneEntity[] entities = m_scene.Entities.GetEntities();
-                try
-                {
-                    foreach (ISceneEntity entity in entities.Where(entity => entity.HasGroupChanged))
-                    {
-                        entity.HasGroupChanged = false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
+                    File.Copy(filename, BuildOldSaveFileName());
                 }
             }
-            File.Move(fileName + ".tmp", fileName);
             //Now make it the full file again
             MapTileNeedsGenerated = true;
             MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
         }
 
-        private void WriteAsset(string id, AssetBase asset, TarArchiveWriter writer)
+        private string BuildOldSaveFileName()
         {
-            if (asset != null)
-                writer.WriteFile("assets/" + asset.ID, OSDParser.SerializeJsonString(asset.ToOSD()));
-            else
-                MainConsole.Instance.WarnFormat("[FileBasedSimulationData]: Could not find asset {0} to save.", id);
+            return Path.Combine(m_oldSaveDirectory,
+                                           m_scene.RegionInfo.RegionName + SerializeDateTime() +
+                                           _regionLoader.FileType);
+        }
+
+        private string BuildSaveFileName()
+        {
+            return (m_storeDirectory == "" || m_storeDirectory == "/")
+                                                      ? m_fileName + _regionLoader.FileType
+                                                      : Path.Combine(m_storeDirectory, m_fileName + _regionLoader.FileType);
         }
 
         private byte[] WriteTerrainToStream(ITerrainChannel tModule)
@@ -772,163 +533,71 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             //return "--" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute;
         }
 
-        protected virtual RegionInfo ReadRegionInfo()
-        {
-            MainConsole.Instance.Debug("[FileBasedSimulationData]: Restoring sim backup...");
-            List<uint> foundLocalIDs = new List<uint>();
-            var stream = ArchiveHelpers.GetStream((m_loadDirectory == "" || m_loadDirectory == "/")
-                                                      ? m_fileName
-                                                      : Path.Combine(m_loadDirectory, m_fileName));
-            if (stream == null)
-                return null;
-
-            GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
-            TarArchiveReader reader = new TarArchiveReader(m_loadStream);
-            RegionInfo regionInfo = null;
-
-            byte[] data;
-            string filePath;
-            TarArchiveReader.TarEntryType entryType;
-            //Load the archive data that we need
-            while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
-            {
-                if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
-                    continue;
-
-                if (filePath.StartsWith("regioninfo/"))
-                {
-                    //Only use if we are not merging
-                    OSD regionData = OSDParser.DeserializeLLSDBinary(data);
-                    regionInfo = new RegionInfo();
-                    regionInfo.UnpackRegionInfoData((OSDMap)regionData);
-                }
-                data = null;
-            }
-
-            m_loadStream.Close();
-            m_loadStream = null;
-
-            return regionInfo;
-        }
-
-        protected virtual void ReadBackup(IScene scene)
+        protected virtual void ReadBackup()
         {
             MainConsole.Instance.Info("[FileBasedSimulationData]: Restoring sim backup...");
-            List<uint> foundLocalIDs = new List<uint>();
-            var stream = ArchiveHelpers.GetStream((m_loadDirectory == "" || m_loadDirectory == "/")
-                                                      ? m_fileName
-                                                      : Path.Combine(m_loadDirectory, m_fileName));
-            if(stream == null)
-                return;
-
-            GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
-            TarArchiveReader reader = new TarArchiveReader(m_loadStream);
-
-            byte[] data;
-            string filePath;
-            TarArchiveReader.TarEntryType entryType;
-            System.Collections.Concurrent.ConcurrentQueue<byte[]> groups = new System.Collections.Concurrent.ConcurrentQueue<byte[]>();
-            //Load the archive data that we need
-            while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
+            _regionData = _regionLoader.LoadBackup(BuildSaveFileName());
+            if (_regionData == null)
+                _regionData = _oldRegionLoader.LoadBackup(Path.ChangeExtension(BuildSaveFileName(), _oldRegionLoader.FileType));
+            if (_regionData == null)
             {
-                if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
-                    continue;
-
-                if (filePath.StartsWith("parcels/"))
-                {
-                    //Only use if we are not merging
-                    LandData parcel = new LandData();
-                    OSD parcelData = OSDParser.DeserializeLLSDBinary(data);
-                    parcel.FromOSD((OSDMap) parcelData);
-                    if(parcel.OwnerID != UUID.Parse("05948863-b678-433e-87a4-e44d17678d1d"))//The default owner of the 'default' region
-                        m_parcels.Add(parcel);
-                }
-                else if (filePath.StartsWith("terrain/"))
-                {
-                    m_oldstyleterrain = data;
-                }
-                else if (filePath.StartsWith("revertterrain/"))
-                {
-                    m_oldstylerevertTerrain = data;
-                }
-                else if (filePath.StartsWith("newstyleterrain/"))
-                {
-                    m_terrain = data;
-                }
-                else if (filePath.StartsWith("newstylerevertterrain/"))
-                {
-                    m_revertTerrain = data;
-                }
-                else if (filePath.StartsWith("newstylewater/"))
-                {
-                    m_water = data;
-                }
-                else if (filePath.StartsWith("newstylerevertwater/"))
-                {
-                    m_revertWater = data;
-                }
-                else if (filePath.StartsWith("entities/"))
-                {
-                    groups.Enqueue(data);
-                }
-                data = null;
+                _regionData = new RegionData();
+                _regionData.Init();
             }
-            m_loadStream.Close();
-            m_loadStream = null;
-
-            int threadCount = groups.Count > 16 ? 16 : groups.Count;
-            System.Threading.Thread[] threads = new System.Threading.Thread[threadCount];
-            for (int i = 0; i < threadCount; i++)
-            {
-                threads[i] = new System.Threading.Thread(() =>
-                    {
-                        byte[] groupData;
-                        while(groups.TryDequeue(out groupData))
-                        {
-                            MemoryStream ms = new MemoryStream(groupData);
-                            SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format(ref ms, scene);
-                            ms.Close();
-                            ms = null;
-                            data = null;
-                            if (sceneObject != null)
-                            {
-                                foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
-                                {
-                                    lock (foundLocalIDs)
-                                    {
-                                        if (!foundLocalIDs.Contains(part.LocalId))
-                                            foundLocalIDs.Add(part.LocalId);
-                                        else
-                                            part.LocalId = 0; //Reset it! Only use it once!
-                                    }
-                                }
-                                m_groups.Add(sceneObject);
-                            }
-                        }
-                    });
-                threads[i].Start();
-            }
-            for (int i = 0; i < threadCount; i++)
-                threads[i].Join();
-
-
-            foundLocalIDs.Clear();
             GC.Collect();
-        }
-
-        private void LoadBackupV2()
-        {
-            /*MemoryStream strm = new MemoryStream();
-            ProtoBuf.Serializer.Serialize<LandData>(strm, t);
-            strm.Seek(0, SeekOrigin.Begin);
-            LandData newRI = ProtoBuf.Serializer.Deserialize<LandData>(strm);*/
         }
 
         private ITerrainChannel ReadFromData(byte[] data, IScene scene)
         {
+            if (data == null) return null;
             short[] sdata = new short[data.Length/2];
             Buffer.BlockCopy(data, 0, sdata, 0, data.Length);
             return new TerrainChannel(sdata, scene);
+        }
+    }
+
+    public interface IRegionDataLoader
+    {
+        string FileType { get; }
+
+        RegionData LoadBackup(string file);
+
+        bool SaveBackup(string m_fileName, RegionData regiondata);
+    }
+
+    [Serializable, ProtoBuf.ProtoContract()]
+    public class RegionData
+    {
+        [ProtoMember(1)]
+        public List<SceneObjectGroup> Groups;
+        [ProtoMember(2)]
+        public RegionInfo RegionInfo;
+        [ProtoMember(3)]
+        public byte[] Terrain;
+        [ProtoMember(4)]
+        public byte[] RevertTerrain;
+        [ProtoMember(5)]
+        public byte[] Water;
+        [ProtoMember(6)]
+        public byte[] RevertWater;
+        [ProtoMember(7)]
+        public List<LandData> Parcels;
+
+        public void Init()
+        {
+            Groups = new List<SceneObjectGroup>();
+            Parcels = new List<LandData>();
+        }
+
+        public void Dispose()
+        {
+            Groups = null;
+            Parcels = null;
+            Water = null;
+            RevertWater = null;
+            Terrain = null;
+            RevertTerrain = null;
+            RegionInfo = null;
         }
     }
 }

@@ -31,6 +31,7 @@ using System.Drawing;
 using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
 namespace Aurora.Framework
 {
@@ -45,6 +46,7 @@ namespace Aurora.Framework
         RegionStart = 4
     }
 
+    [Serializable, ProtoContract()]
     public class KeyframeAnimation
     {
         public enum Modes
@@ -66,14 +68,23 @@ namespace Aurora.Framework
             Rotation = 128,
             Both = 192
         }
+        [ProtoMember(1)]
         public int CurrentAnimationPosition = 0;
+        [ProtoMember(2)]
         public bool PingPongForwardMotion = true;
+        [ProtoMember(3)]
         public Modes CurrentMode = Modes.Forward;
+        [ProtoMember(4)]
         public int CurrentFrame = 0;
+        [ProtoMember(5)]
         public int[] TimeList = new int[0];
+        [ProtoMember(6)]
         public Vector3 InitialPosition = Vector3.Zero;
+        [ProtoMember(7)]
         public Vector3[] PositionList = new Vector3[0];
+        [ProtoMember(8)]
         public Quaternion InitialRotation = Quaternion.Identity;
+        [ProtoMember(9)]
         public Quaternion[] RotationList = new Quaternion[0];
 
         public OSDMap ToOSD()
@@ -250,5 +261,7 @@ namespace Aurora.Framework
         void UpdateRootPosition(Vector3 pos);
 
         void GeneratedMesh(ISceneChildEntity _parent_entity, IMesh _mesh);
+
+        void FinishedSerializingGenericProperties();
     }
 }

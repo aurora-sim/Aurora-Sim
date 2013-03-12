@@ -38,14 +38,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public class ScriptStateSave
     {
         private string m_componentName = "ScriptState";
-        private IComponentManager m_manager;
         private ScriptEngine m_module;
+        private object StateSaveLock = new object();
 
         public void Initialize(ScriptEngine module)
         {
             m_module = module;
-
-            m_manager = module.Scene.RequestModuleInterface<IComponentManager>();
         }
 
         public void AddScene(IScene scene)
@@ -102,7 +100,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                           UserInventoryID = script.UserInventoryItemID,
                                           AssemblyName = script.AssemblyName,
                                           Compiled = script.Compiled,
-                                          Source = script.Source
+                                          Source = script.Source == null ? "" : script.Source
                                       };
             //Allow for the full path to be put down, not just the assembly name itself
             if (script.InventoryItem != null)
@@ -118,21 +116,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             stateSave.TargetOmegaWasSet = script.TargetOmegaWasSet;
 
             //Vars
-            Dictionary<string, Object> vars = new Dictionary<string, object>();
+            string vars = "";
             if (script.Script != null)
-                vars = script.Script.GetStoreVars();
-            try
-            {
-                stateSave.Variables = WebUtils.BuildXmlResponse(vars);
-            }
-            catch
-            {
-            }
+                vars = WebUtils.BuildXmlResponse(script.Script.GetStoreVars());
+            stateSave.Variables = vars;
 
             //Plugins
-            stateSave.Plugins = m_module.GetSerializationData(script.ItemID, script.Part.UUID);
-
-            CreateOSDMapForState(script, stateSave);
+            stateSave.Plugins = OSDParser.SerializeJsonString(m_module.GetSerializationData(script.ItemID, script.Part.UUID));
+            
+            lock (StateSaveLock)
+                script.Part.StateSaves[script.ItemID] = stateSave;
             if (saveBackup)
                 script.Part.ParentEntity.HasGroupChanged = true;
         }
@@ -145,7 +138,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.AssemblyName = save.AssemblyName;
             instance.Disabled = save.Disabled;
             instance.UserInventoryItemID = save.UserInventoryID;
-            instance.PluginData = save.Plugins;
+            if(save.Plugins != "")
+                instance.PluginData = (OSDMap)OSDParser.DeserializeJson(save.Plugins);
             m_module.CreateFromData(instance.Part.UUID, instance.ItemID, instance.Part.UUID,
                                     instance.PluginData);
             instance.Source = save.Source;
@@ -153,97 +147,54 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.InventoryItem.PermsMask = save.PermsMask;
             instance.TargetOmegaWasSet = save.TargetOmegaWasSet;
 
-            try
-            {
-                Dictionary<string, object> vars = WebUtils.ParseXmlResponse(save.Variables);
-                if (vars != null && vars.Count != 0 || instance.Script != null)
-                    instance.Script.SetStoreVars(vars);
-            }
-            catch
-            {
-            }
+            if (!string.IsNullOrEmpty(save.Variables) && instance.Script != null)
+                instance.Script.SetStoreVars(WebUtils.ParseXmlResponse(save.Variables));
         }
 
         public StateSave FindScriptStateSave(ScriptData script)
         {
-            OSDMap component = m_manager.GetComponentState(script.Part, m_componentName) as OSDMap;
-            //Attempt to find the state saves we have
-            if (component != null)
+            lock (StateSaveLock)
             {
-                OSD o;
-                //If we have one for this item, deserialize it
-                if (!component.TryGetValue(script.ItemID.ToString(), out o))
+                StateSave save;
+                if (!script.Part.StateSaves.TryGetValue(script.ItemID, out save))
                 {
-                    if (!component.TryGetValue(script.InventoryItem.OldItemID.ToString(), out o))
+                    if (!script.Part.StateSaves.TryGetValue(script.InventoryItem.OldItemID, out save))
                     {
-                        if (!component.TryGetValue(script.InventoryItem.ItemID.ToString(), out o))
+                        if (!script.Part.StateSaves.TryGetValue(script.InventoryItem.ItemID, out save))
                         {
                             return null;
                         }
                     }
                 }
-                StateSave save = new StateSave();
-                save.FromOSD((OSDMap)o);
                 return save;
             }
-            return null;
         }
 
         public void DeleteFrom(ScriptData script)
         {
-            OSDMap component = m_manager.GetComponentState(script.Part, m_componentName) as OSDMap;
-            //Attempt to find the state saves we have
-            if (component != null)
+            bool changed = false;
+            lock (StateSaveLock)
             {
-                bool changed = false;
                 //if we did remove something, resave it
-                if (component.Remove(script.ItemID.ToString()))
+                if (script.Part.StateSaves.Remove(script.ItemID))
                     changed = true;
-                if (component.Remove(script.InventoryItem.OldItemID.ToString()))
+                if (script.Part.StateSaves.Remove(script.InventoryItem.OldItemID))
                     changed = true;
-                if (component.Remove(script.InventoryItem.ItemID.ToString()))
+                if (script.Part.StateSaves.Remove(script.InventoryItem.ItemID))
                     changed = true;
-                if (changed)
-                {
-                    if (component.Count == 0)
-                        m_manager.RemoveComponentState(script.Part.UUID, m_componentName);
-                    else
-                        m_manager.SetComponentState(script.Part, m_componentName, component);
-                    script.Part.ParentEntity.HasGroupChanged = true;
-                }
             }
+            if (changed)
+                script.Part.ParentEntity.HasGroupChanged = true;
         }
 
         public void DeleteFrom(ISceneChildEntity Part, UUID ItemID)
         {
-            OSDMap component = m_manager.GetComponentState(Part, m_componentName) as OSDMap;
-            //Attempt to find the state saves we have
-            if (component != null)
+            lock (StateSaveLock)
             {
                 //if we did remove something, resave it
-                if (component.Remove(ItemID.ToString()))
-                {
-                    if (component.Count == 0)
-                        m_manager.RemoveComponentState(Part.UUID, m_componentName);
-                    else
-                        m_manager.SetComponentState(Part, m_componentName, component);
+                if (Part.StateSaves.Remove(ItemID))
                     Part.ParentEntity.HasGroupChanged = true;
-                }
             }
-        }
-
-        private void CreateOSDMapForState(ScriptData script, StateSave save)
-        {
-            //Get any previous state saves from the component manager
-            OSDMap component = m_manager.GetComponentState(script.Part, m_componentName) as OSDMap;
-            if (component == null)
-                component = new OSDMap();
-
-            //Add our state to the list of all scripts in this object
-            component[script.ItemID.ToString()] = save.ToOSD();
-
-            //Now resave it
-            m_manager.SetComponentState(script.Part, m_componentName, component);
         }
     }
 }

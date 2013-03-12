@@ -121,8 +121,10 @@ namespace Aurora.Framework
                             .SetSurrogate(typeof(QuaternionSurrogate));
             RuntimeTypeModel.Default.Add(typeof(ParcelManager.ParcelAccessEntry), false)
                             .SetSurrogate(typeof(ParcelAccessEntrySurrogate));
-            
-            
+            RuntimeTypeModel.Default.Add(typeof(MediaEntry), false)
+                            .SetSurrogate(typeof(MediaEntrySurrogate));
+            RuntimeTypeModel.Default.Add(typeof(System.Drawing.Color), false)
+                            .SetSurrogate(typeof(ColorSurrogate));
         }
 
         #region Protobuf helpers
@@ -149,36 +151,52 @@ namespace Aurora.Framework
         class Vector3Surrogate
         {
             [ProtoMember(1)]
-            public byte[] array;
+            public float X;
+            [ProtoMember(2)]
+            public float Y;
+            [ProtoMember(3)]
+            public float Z;
+
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator Vector3(Vector3Surrogate value)
             {
-                return new Vector3(value.array, 0);
+                return new Vector3(value.X, value.Y, value.Z);
             }
             public static implicit operator Vector3Surrogate(Vector3 value)
             {
-                Vector3Surrogate sur = new Vector3Surrogate();
-                sur.array = new byte[12];
-                value.ToBytes(sur.array, 0);
-                return sur;
+                return new Vector3Surrogate()
+                {
+                    X = value.X,
+                    Y = value.Y,
+                    Z = value.Z
+                };
             }
         }
         [ProtoContract]
         class QuaternionSurrogate
         {
             [ProtoMember(1)]
-            public byte[] array;
+            public float X;
+            [ProtoMember(2)]
+            public float Y;
+            [ProtoMember(3)]
+            public float Z;
+            [ProtoMember(4)]
+            public float W;
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator Quaternion(QuaternionSurrogate value)
             {
-                return new Quaternion(value.array, 0, false);
+                return new Quaternion(value.X, value.Y, value.Z, value.W);
             }
             public static implicit operator QuaternionSurrogate(Quaternion value)
             {
-                QuaternionSurrogate sur = new QuaternionSurrogate();
-                sur.array = new byte[16];
-                value.ToBytes(sur.array, 0);
-                return sur;
+                return new QuaternionSurrogate()
+                {
+                    X = value.X,
+                    Y = value.Y,
+                    Z = value.Z,
+                    W = value.W
+                };
             }
         }
         [ProtoContract]
@@ -260,6 +278,53 @@ namespace Aurora.Framework
                     AgentID = value.AgentID,
                     Flags = value.Flags,
                     Time = value.Time
+                };
+            }
+        }
+        [ProtoContract]
+        class MediaEntrySurrogate
+        {
+            [ProtoMember(1)]
+            public OSD info;
+
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator MediaEntry(MediaEntrySurrogate value)
+            {
+                return MediaEntry.FromOSD(value.info);
+            }
+            public static implicit operator MediaEntrySurrogate(MediaEntry value)
+            {
+                return new MediaEntrySurrogate
+                {
+                    info = value.GetOSD()
+                };
+            }
+        }
+        [ProtoContract]
+        class ColorSurrogate
+        {
+            [ProtoMember(1)]
+            public int A;
+            [ProtoMember(2)]
+            public int R;
+            [ProtoMember(3)]
+            public int G;
+            [ProtoMember(4)]
+            public int B;
+
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator System.Drawing.Color(ColorSurrogate value)
+            {
+                return System.Drawing.Color.FromArgb(value.A, value.R, value.G, value.B);
+            }
+            public static implicit operator ColorSurrogate(System.Drawing.Color value)
+            {
+                return new ColorSurrogate
+                {
+                    A = value.A,
+                    R = value.R,
+                    G = value.G,
+                    B = value.B
                 };
             }
         }
@@ -1960,6 +2025,8 @@ namespace Aurora.Framework
             if (o.Type == OSDType.Array && PossibleArrayType == typeof(System.Drawing.Image))
                 return ByteArrayToImage(o.AsBinary());
 
+            if (o.Type == OSDType.Integer && PossibleArrayType == typeof(byte))
+                return (byte)o.AsInteger();
             if (o.Type == OSDType.Integer || PossibleArrayType == typeof(int))
                 return o.AsInteger();
             if (o.Type == OSDType.Binary || PossibleArrayType == typeof(byte[]))

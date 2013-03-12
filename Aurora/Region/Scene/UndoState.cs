@@ -45,13 +45,13 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.UUID == part.ParentGroup.UUID)
                 {
                     Position = part.ParentGroup.AbsolutePosition;
-                    Rotation = part.RotationOffset;
+                    Rotation = part.GetRotationOffset();
                     Scale = part.Shape.Scale;
                 }
                 else
                 {
                     Position = part.OffsetPosition;
-                    Rotation = part.RotationOffset;
+                    Rotation = part.GetRotationOffset();
                     Scale = part.Shape.Scale;
                 }
             }
@@ -63,7 +63,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part.UUID == part.ParentGroup.UUID)
                 {
-                    if (Position == part.AbsolutePosition && Rotation == part.RotationOffset &&
+                    if (Position == part.AbsolutePosition && Rotation == part.GetRotationOffset() &&
                         Scale == part.Shape.Scale)
                         return true;
                     else
@@ -71,7 +71,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    if (Position == part.OffsetPosition && Rotation == part.RotationOffset && Scale == part.Shape.Scale)
+                    if (Position == part.OffsetPosition && Rotation == part.GetRotationOffset() && Scale == part.Shape.Scale)
                         return true;
                     else
                         return false;
@@ -98,7 +98,7 @@ namespace OpenSim.Region.Framework.Scenes
                         part.ParentGroup.AbsolutePosition = Position;
                     }
                     ChangedRot = true;
-                    part.RotationOffset = Rotation;
+                    part.SetRotationOffset(true, Rotation, true);
                     if (Scale != Vector3.Zero)
                     {
                         ChangedScale = true;

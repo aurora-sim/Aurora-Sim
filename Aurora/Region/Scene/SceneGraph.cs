@@ -1960,15 +1960,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Reset the entity IDs
             ResetEntityIDs (copiedEntity);
 
-            IComponentManager manager = m_parentScene.RequestModuleInterface<IComponentManager> ();
-            if (manager != null)
-            {
-                foreach(ISceneChildEntity childEntity in copiedEntity.ChildrenEntities())
-                {
-                    manager.RemoveComponents (childEntity.UUID);
-                }
-            }
-
             //Force the prim to backup now that it has been added
             copiedEntity.ForcePersistence ();
             //Tell the entity that they are being added to a scene
@@ -2219,14 +2210,11 @@ namespace OpenSim.Region.Framework.Scenes
             children.Sort(LinkSetSorter);
 
             entity.ClearChildren();
-            IComponentManager manager = m_parentScene.RequestModuleInterface<IComponentManager> ();
             foreach (ISceneChildEntity child in children)
             {
                 UUID oldID = child.UUID;
                 child.ResetEntityIDs();
                 entity.AddChild (child, child.LinkNum);
-                if (manager != null)
-                    manager.ResetComponentIDsToNewObject (oldID, child);
             }
             //This clears the xml file, which will need rebuilt now that we have changed the UUIDs
             entity.HasGroupChanged = true;

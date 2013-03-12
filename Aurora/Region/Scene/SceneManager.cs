@@ -128,8 +128,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Load the startup modules for the region
             m_startupPlugins = AuroraModuleLoader.PickupModules<ISharedRegionStartupModule>();
-
-            m_OpenSimBase.EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -331,48 +329,6 @@ namespace OpenSim.Region.Framework.Scenes
                 t.AutoReset = false;
                 t.Start ();
             }
-        }
-
-        #endregion
-
-        #region Update region info
-
-        public object RegionInfoChanged(string funcName, object param)
-        {
-            UpdateRegionInfo((RegionInfo)((object[])param)[0], (RegionInfo)((object[])param)[1]);
-            return null;
-        }
-
-        public void UpdateRegionInfo (RegionInfo oldRegion, RegionInfo region)
-        {
-            bool needsGridUpdate =
-                    m_scene.RegionInfo.RegionName != region.RegionName ||
-                    m_scene.RegionInfo.RegionLocX != region.RegionLocX ||
-                    m_scene.RegionInfo.RegionLocY != region.RegionLocY ||
-                    m_scene.RegionInfo.RegionLocZ != region.RegionLocZ ||
-                    m_scene.RegionInfo.AccessLevel != region.AccessLevel ||
-                    m_scene.RegionInfo.RegionType != region.RegionType// ||
-                //m_scene.RegionInfo.RegionSizeX != region.RegionSizeX //Don't allow for size updates on the fly, that needs a restart
-                //m_scene.RegionInfo.RegionSizeY != region.RegionSizeY
-                //m_scene.RegionInfo.RegionSizeZ != region.RegionSizeZ
-                ;
-            bool needsRegistration =
-                m_scene.RegionInfo.RegionName != region.RegionName ||
-                m_scene.RegionInfo.RegionLocX != region.RegionLocX ||
-                m_scene.RegionInfo.RegionLocY != region.RegionLocY;
-
-            region.RegionSettings = m_scene.RegionInfo.RegionSettings;
-            region.EstateSettings = m_scene.RegionInfo.EstateSettings;
-            region.GridSecureSessionID = m_scene.RegionInfo.GridSecureSessionID;
-            m_scene.RegionInfo = region;
-            if(needsRegistration)
-                m_scene.RequestModuleInterface<IGridRegisterModule>().RegisterRegionWithGrid(m_scene, false, false, m_RegisterRegionPassword);
-            else if(needsGridUpdate)
-                m_scene.RequestModuleInterface<IGridRegisterModule>().UpdateGridRegion(m_scene);
-            //Tell clients about the changes
-            IEstateModule es = m_scene.RequestModuleInterface<IEstateModule>();
-            if(es != null)
-                es.sendRegionHandshakeToAll();
         }
 
         #endregion

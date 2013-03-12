@@ -66,3 +66,6 @@
 
 [WebInterface]
     Module = None
+
+[Includes]
+    Include-Data = Configuration/Data/FileBased.ini

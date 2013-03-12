@@ -40,9 +40,11 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Components;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using PrimType = Aurora.Framework.PrimType;
+using ProtoBuf;
 
 namespace OpenSim.Region.Framework.Scenes
 {
+    [Serializable, ProtoContract()]
     public class SceneObjectPart : ISceneChildEntity
     {
         /// <value>
@@ -111,11 +113,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Fields
 
-        /// <summary>
-        ///   This scene is set from the constructor and will be right as long as the object does not leave the region, this is to be able to access the Scene while starting up
-        /// </summary>
-        private readonly IRegistryCore m_initialScene;
-
         private readonly List<uint> m_lastColliders = new List<uint>();
         [XmlIgnore] public scriptEvents AggregateScriptEvents;
         [XmlIgnore] public bool IgnoreUndoUpdate;
@@ -126,9 +123,7 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore] public uint TimeStampLastActivity; // Will be used for AutoReturn
         [XmlIgnore] public bool Undoing;
         private UUID _creatorID;
-        [XmlIgnore] public float m_APIDDamp;
 
-        [XmlIgnore] public float m_APIDStrength;
         [XmlIgnore] private UUID m_AttachedAvatar;
         [XmlIgnore] private Dictionary<int, string> m_CollisionFilter = new Dictionary<int, string>();
         [XmlIgnore] private bool m_IsAttachment;
@@ -141,7 +136,6 @@ namespace OpenSim.Region.Framework.Scenes
         private UUID m_collisionSound;
         private float m_collisionSoundVolume;
         private UUID m_collisionSprite;
-        private Color m_color = Color.Black;
         protected uint m_crc;
         private string m_creatorData = string.Empty;
         private string m_description = String.Empty;
@@ -186,7 +180,6 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_pidhoverActive;
         private UndoStack<UndoState> m_redo = new UndoStack<UndoState>(5);
         protected ulong m_regionHandle;
-        protected Quaternion m_rotationOffset = Quaternion.Identity;
         [XmlIgnore] private int m_scriptAccessPin;
         [XmlIgnore] private Dictionary<UUID, scriptEvents> m_scriptEvents = new Dictionary<UUID, scriptEvents>();
         protected PrimitiveBaseShape m_shape;
@@ -200,62 +193,70 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_volumeDetectActive;
 
         [XmlIgnore]
+        [ProtoMember(92)]
         public bool RETURN_AT_EDGE
         {
-            get { return GetComponentState("RETURN_AT_EDGE").AsBoolean(); }
-            set { SetComponentState("RETURN_AT_EDGE", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(93)]
         public bool BlockGrab
         {
-            get { return GetComponentState("BlockGrab").AsBoolean(); }
-            set { SetComponentState("BlockGrab", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(94)]
         public bool BlockGrabObject
         {
-            get { return GetComponentState("BlockGrabObject").AsBoolean(); }
-            set { SetComponentState("BlockGrabObject", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
         public bool IsLoading { get; set; }
 
         [XmlIgnore]
+        [ProtoMember(96)]
         public bool StatusSandbox
         {
-            get { return GetComponentState("StatusSandbox").AsBoolean(); }
-            set { SetComponentState("StatusSandbox", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(97)]
         public Vector3 StatusSandboxPos
         {
-            get { return GetComponentState("StatusSandboxPos").AsVector3(); }
-            set { SetComponentState("StatusSandboxPos", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(98)]
         public int STATUS_ROTATE_X
         {
-            get { return GetComponentState("STATUS_ROTATE_X").AsInteger(); }
-            set { SetComponentState("STATUS_ROTATE_X", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(99)]
         public int STATUS_ROTATE_Y
         {
-            get { return GetComponentState("STATUS_ROTATE_Y").AsInteger(); }
-            set { SetComponentState("STATUS_ROTATE_Y", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(100)]
         public int STATUS_ROTATE_Z
         {
-            get { return GetComponentState("STATUS_ROTATE_Z").AsInteger(); }
-            set { SetComponentState("STATUS_ROTATE_Z", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
@@ -304,22 +305,26 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(1)]
         public bool AllowedDrop { get; set; }
 
         [XmlIgnore]
+        [ProtoMember(91)]
         public bool DIE_AT_EDGE
         {
-            get { return GetComponentState("DIE_AT_EDGE").AsBoolean(); }
-            set { SetComponentState("DIE_AT_EDGE", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(90)]
         public int UseSoundQueue
         {
-            get { return GetComponentState("UseSoundQueue").AsInteger(); }
-            set { SetComponentState("UseSoundQueue", value); }
+            get;
+            set;
         }
 
+        [ProtoMember(70, OverwriteList=true)]
         public int[] PayPrice
         {
             get { return m_PayPrice; }
@@ -338,56 +343,57 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
+        [ProtoMember(71)]
         public UUID Sound
         {
             get
             {
-                if (m_sound == null)
-                    m_sound = GetComponentState("Sound").AsUUID();
                 return m_sound;
             }
             set
             {
                 m_sound = value;
-                SetComponentState("Sound", value);
             }
         }
 
         [XmlIgnore]
+        [ProtoMember(72)]
         public byte SoundFlags
         {
-            get { return (byte) GetComponentState("SoundFlags").AsInteger(); }
-            set { SetComponentState("SoundFlags", (int) value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(73)]
         public double SoundGain
         {
-            get { return GetComponentState("SoundGain").AsReal(); }
-            set { SetComponentState("SoundGain", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(74)]
         public double SoundRadius
         {
-            get { return GetComponentState("SoundRadius").AsReal(); }
-            set { SetComponentState("SoundRadius", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(75)]
         public Vector3 PIDTarget
         {
-            get { return GetComponentState("PIDTarget").AsVector3(); }
-            set { SetComponentState("PIDTarget", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(76)]
         public bool PIDActive
         {
             get
             {
-                if (!m_notpidActive)
-                    m_pidActive = GetComponentState("PIDActive").AsBoolean();
                 m_notpidActive = true;
                 return m_pidActive;
             }
@@ -403,35 +409,36 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 m_notpidActive = true;
                 m_pidActive = value;
-                SetComponentState("PIDActive", value);
             }
         }
 
         [XmlIgnore]
+        [ProtoMember(77)]
         public float PIDTau
         {
-            get { return (float) GetComponentState("PIDTau").AsReal(); }
-            set { SetComponentState("PIDTau", value); }
+            get;
+            set;
         }
 
+        [ProtoMember(78)]
         public float PIDHoverHeight
         {
-            get { return (float) GetComponentState("PIDHoverHeight").AsReal(); }
-            set { SetComponentState("PIDHoverHeight", value); }
+            get;
+            set;
         }
 
+        [ProtoMember(79)]
         public float PIDHoverTau
         {
-            get { return (float) GetComponentState("PIDHoverTau").AsReal(); }
-            set { SetComponentState("PIDHoverTau", value); }
+            get;
+            set;
         }
 
+        [ProtoMember(80)]
         public bool PIDHoverActive
         {
             get
             {
-                if (!m_nothoverpidActive)
-                    m_pidhoverActive = GetComponentState("PIDHoverActive").AsBoolean();
                 m_nothoverpidActive = true;
                 return m_pidhoverActive;
             }
@@ -439,20 +446,22 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_nothoverpidActive = true;
                 m_pidhoverActive = value;
-                SetComponentState("PIDHoverActive", value);
             }
         }
 
+        [ProtoMember(81)]
         public PIDHoverType PIDHoverType
         {
-            get { return (PIDHoverType) GetComponentState("PIDHoverType").AsInteger(); }
-            set { SetComponentState("PIDHoverType", (int) value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(82)]
         public UUID FromUserInventoryItemID { get; set; }
 
         [XmlIgnore]
+        [ProtoMember(83)]
         public UUID FromUserInventoryAssetID { get; set; }
 
         [XmlIgnore]
@@ -483,26 +492,27 @@ namespace OpenSim.Region.Framework.Scenes
         ///   NOTE: THIS WILL NOT BE UP TO DATE AS THEY WILL BE ONE REV BEHIND
         ///   Used to save attachment pos and point over rezzing/taking
         /// </summary>
+        [ProtoMember(84)]
         public Vector3 SavedAttachedPos
         {
-            get { return GetComponentState("SavedAttachedPos").AsVector3(); }
-            set { SetComponentState("SavedAttachedPos", value); }
+            get;
+            set;
         }
 
 
+        [ProtoMember(85)]
         public int SavedAttachmentPoint
         {
-            get { return GetComponentState("SavedAttachmentPoint").AsInteger(); }
-            set { SetComponentState("SavedAttachmentPoint", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
+        [ProtoMember(86)]
         public bool VolumeDetectActive
         {
             get
             {
-                if (!m_hasVolumeDetectActive)
-                    m_volumeDetectActive = GetComponentState("VolumeDetectActive").AsBoolean();
                 m_hasVolumeDetectActive = true;
                 return m_volumeDetectActive;
             }
@@ -510,7 +520,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_hasVolumeDetectActive = true;
                 m_volumeDetectActive = value;
-                SetComponentState("VolumeDetectActive", value);
             }
         }
 
@@ -523,135 +532,44 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_inventory; }
         }
 
+        [ProtoMember(87)]
         public Vector3 CameraEyeOffset
         {
-            get { return GetComponentState("CameraEyeOffset").AsVector3(); }
-            set { SetComponentState("CameraEyeOffset", value); }
+            get;
+            set;
         }
 
+        [ProtoMember(88)]
         public Vector3 CameraAtOffset
         {
-            get { return GetComponentState("CameraAtOffset").AsVector3(); }
-            set { SetComponentState("CameraAtOffset", value); }
+            get;
+            set;
         }
 
+        [ProtoMember(89)]
         public bool ForceMouselook
         {
-            get { return GetComponentState("ForceMouselook").AsBoolean(); }
-            set { SetComponentState("ForceMouselook", value); }
+            get;
+            set;
         }
 
-        [XmlIgnore]
-        public string GenericData
+        [ProtoMember(102)]
+        public KeyframeAnimation KeyframeAnimation
         {
-            get
-            {
-                string data = string.Empty;
-                //Get the Components from the ComponentManager
-                IComponentManager manager =
-                    (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>
-                        ();
-                if (manager != null)
-                    data = manager.SerializeComponents(this);
-                return data;
-            }
-            set
-            {
-                //Set the Components for this object
-                IComponentManager manager =
-                    (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>
-                        ();
-                if (manager != null)
-                    manager.DeserializeComponents(this, value);
-                this.FinishedSerializingGenericProperties();
-            }
+            get;
+            set;
+        }
+
+        [ProtoMember(103)]
+        public Dictionary<UUID, StateSave> StateSaves 
+        { 
+            get; 
+            set;
         }
 
         public Vector3 GroupScale()
         {
             return m_parentGroup.GroupScale();
-        }
-
-        /// <summary>
-        ///   Get the current State of a Component
-        /// </summary>
-        /// <param name = "Name"></param>
-        /// <returns></returns>
-        public OSD GetComponentState(string Name)
-        {
-            IRegistryCore scene = (ParentGroup == null ? m_initialScene : ParentGroup.Scene);
-            if (scene != null)
-            {
-                IComponentManager manager = scene.RequestModuleInterface<IComponentManager>();
-                if (manager != null)
-                    return manager.GetComponentState(this, Name);
-            }
-
-            return new OSD();
-        }
-
-        /// <summary>
-        ///   Set a Component with the given name's State
-        /// </summary>
-        /// <param name = "Name"></param>
-        /// <param name = "State"></param>
-        public void SetComponentState(string Name, object State)
-        {
-            SetComponentState(Name, State, true);
-        }
-
-        /// <summary>
-        ///   Set a Component with the given name's State
-        /// </summary>
-        /// <param name = "Name"></param>
-        /// <param name = "State"></param>
-        /// <param name = "shouldBackup">Should this be backed up now</param>
-        public void SetComponentState(string Name, object State, bool shouldBackup)
-        {
-            if (IsLoading) //No saving while loading
-                return;
-            //Back up the object later
-            if (ParentGroup != null && shouldBackup)
-                ParentGroup.HasGroupChanged = true;
-
-            //Tell the ComponentManager about it
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null
-                                            ? null
-                                            : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).
-                                                  RequestModuleInterface<IComponentManager>();
-            if (manager != null)
-            {
-                OSD state = (State is OSD) ? (OSD) State : OSD.FromObject(State);
-                manager.SetComponentState(this, Name, state);
-            }
-        }
-
-        public void RemoveComponentState(string name)
-        {
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null
-                                            ? null
-                                            : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).
-                                                  RequestModuleInterface<IComponentManager>();
-            if (manager != null)
-            {
-                manager.RemoveComponentState(UUID, name);
-            }
-        }
-
-        public void ResetComponentsToNewID(UUID oldID)
-        {
-            if (oldID == UUID.Zero)
-                return;
-            if (IsLoading)
-                return;
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null
-                                            ? null
-                                            : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).
-                                                  RequestModuleInterface<IComponentManager>();
-            if (manager != null)
-            {
-                manager.ResetComponentIDsToNewObject(oldID, this);
-            }
         }
 
         #endregion Fields
@@ -664,15 +582,10 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectPart()
         {
             SitTargetAvatar = new List<UUID>();
-        }
-
-        public SceneObjectPart(IRegistryCore scene)
-        {
-            // It's not necessary to persist this
-            m_initialScene = scene;
+            StateSaves = new Dictionary<UUID, StateSave>();
 
             m_inventory = new SceneObjectPartInventory(this);
-            SitTargetAvatar = new List<UUID>();
+            m_shape = new PrimitiveBaseShape();
         }
 
         /// <summary>
@@ -685,10 +598,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name = "offsetPosition"></param>
         public SceneObjectPart(
             UUID ownerID, PrimitiveBaseShape shape, Vector3 groupPosition,
-            Quaternion rotationOffset, Vector3 offsetPosition, string name, IScene scene)
+            Quaternion rotationOffset, Vector3 offsetPosition, string name)
         {
             m_name = name;
-            m_initialScene = scene;
 
             CreationDate = (int) Utils.DateTimeToUnixTime(DateTime.Now);
             _ownerID = ownerID;
@@ -711,6 +623,7 @@ namespace OpenSim.Region.Framework.Scenes
             AngularVelocity = Vector3.Zero;
             Acceleration = Vector3.Zero;
             SitTargetAvatar = new List<UUID>();
+            StateSaves = new Dictionary<UUID, StateSave>();
 
             ValidpartOOB = false;
 
@@ -826,10 +739,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        [XmlIgnore]
+        private Quaternion m_APIDTarget;
+        [XmlIgnore, ProtoMember(65)]
         public Quaternion APIDTarget
         {
-            get { return GetComponentState("APIDTarget").AsQuaternion(); }
+            get { return m_APIDTarget; }
             set
             {
                 IScene s = ParentGroup == null ? null : ParentGroup.Scene ?? null;
@@ -840,42 +754,36 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                         s.EventManager.OnFrame -= UpdateLookAt;
                 }
-                SetComponentState("APIDTarget", value);
+                m_APIDTarget = value;
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, ProtoMember(66)]
         public float APIDDamp
         {
-            get { return (float) GetComponentState("APIDDamp").AsReal(); }
-            set
-            {
-                SetComponentState("APIDDamp", value);
-                m_APIDDamp = value;
-            }
+            get;
+            set;
         }
 
-        [XmlIgnore]
+        [XmlIgnore, ProtoMember(67)]
         public float APIDStrength
         {
-            get { return (float) GetComponentState("APIDStrength").AsReal(); }
-            set
-            {
-                SetComponentState("APIDStrength", value);
-                m_APIDStrength = value;
-            }
+            get;
+            set;
         }
 
+        [ProtoMember(68)]
         public int APIDIterations
         {
-            get { return GetComponentState("APIDIterations").AsInteger(); }
-            set { SetComponentState("APIDIterations", value); }
+            get;
+            set;
         }
 
+        [ProtoMember(69)]
         public bool APIDEnabled
         {
-            get { return GetComponentState("APIDEnabled").AsBoolean(); }
-            set { SetComponentState("APIDEnabled", value); }
+            get;
+            set;
         }
 
         [XmlIgnore]
@@ -898,11 +806,11 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_LoopSoundSlavePrims = value; }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, ProtoMember(64)]
         public float Damage
         {
-            get { return (float) GetComponentState("Damage").AsReal(); }
-            set { SetComponentState("Damage", value); }
+            get;
+            set;
         }
 
         public Vector3 RelativePosition
@@ -923,6 +831,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(2)]
         public UUID CreatorID
         {
             get { return _creatorID; }
@@ -932,6 +841,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///   Data about the creator in the form profile_url;name
         /// </summary>
+        [ProtoMember(3)]
         public string CreatorData
         {
             get { return m_creatorData; }
@@ -941,6 +851,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <value>
         ///   Access should be via Inventory directly - this property temporarily remains for xml serialization purposes
         /// </value>
+        [ProtoMember(4)]
         public uint InventorySerial
         {
             get { return m_inventory.Serial; }
@@ -950,12 +861,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <value>
         ///   Access should be via Inventory directly - this property temporarily remains for xml serialization purposes
         /// </value>
+        [ProtoMember(5)]
         public TaskInventoryDictionary TaskInventory
         {
             get { return m_inventory.Items; }
             set { m_inventory.Items = value; }
         }
 
+        [ProtoMember(6)]
         public UUID UUID
         {
             get { return m_uuid; }
@@ -969,33 +882,30 @@ namespace OpenSim.Region.Framework.Scenes
                 // This is necessary so that TaskInventoryItem parent ids correctly reference the new uuid of this part
                 if (Inventory != null)
                     Inventory.ResetObjectID();
-
-                ResetComponentsToNewID(oldID);
             }
         }
 
+        [ProtoMember(7)]
         public uint LocalId
         {
             get
             {
-                if (m_localId == 0)
-                    m_localId = GetComponentState("LocalId").AsUInteger();
                 return m_localId;
             }
             set
             {
                 m_localId = value;
-                SetComponentState("LocalId", value, true);
             }
         }
 
         [XmlIgnore]
         public uint CRC
         {
-            get { return GetComponentState("CRC").AsUInteger(); }
-            set { SetComponentState("CRC", value, false); }
+            get;
+            set;
         }
 
+        [ProtoMember(8)]
         public virtual string Name
         {
             get { return m_name; }
@@ -1010,6 +920,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(9)]
         public int Material
         {
             get { return (int) m_material; }
@@ -1027,6 +938,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(10)]
         public int PassTouch
         {
             get { return m_passTouches; }
@@ -1038,6 +950,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(11)]
         public int PassCollisions
         {
             get { return m_passCollision; }
@@ -1050,7 +963,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
-        [XmlIgnore]
+        [XmlIgnore, ProtoMember(12)]
         public Dictionary<int, string> CollisionFilter
         {
             get { return m_CollisionFilter; }
@@ -1062,103 +975,56 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(13)]
         public int ScriptAccessPin
         {
             get { return m_scriptAccessPin; }
             set { m_scriptAccessPin = value; }
         }
 
+        [ProtoMember(60, OverwriteList=true)]
         public Byte[] TextureAnimation
         {
-            get { return m_textureAnimation ?? (m_textureAnimation = GetComponentState("TextureAnimation").AsBinary()); }
-            set
-            {
-                bool same = true;
-                byte[] old = TextureAnimation;
-                if (old.Length == value.Length)
-                {
-#if (!ISWIN)
-                    for (int i = 0; i < value.Length; i++)
-                        if (old[i] != value[i])
-                        {
-                            same = false;
-                            break;
-                        }
-#else
-                    if (value.Where((t, i) => old[i] != t).Any())
-                    {
-                        same = false;
-                    }
-#endif
-                }
-                else
-                    same = false;
-                if (same)
-                    return;
-                m_textureAnimation = value;
-                SetComponentState("TextureAnimation", value);
-            }
+            get { return m_textureAnimation; }
+            set { m_textureAnimation = value; }
         }
 
         [XmlIgnore]
+        [ProtoMember(61, OverwriteList=true)]
         public Byte[] ParticleSystem
         {
             get
             {
-                if (m_ParticleSystem == null)
-                    m_ParticleSystem = GetComponentState("ParticleSystem").AsBinary();
                 return m_ParticleSystem;
             }
             set
             {
-                bool same = true;
-                byte[] old = ParticleSystem;
-                if (old.Length == value.Length)
-                {
-#if (!ISWIN)
-                    for (int i = 0; i < value.Length; i++)
-                        if (old[i] != value[i])
-                        {
-                            same = false;
-                            break;
-                        }
-#else
-                    if (value.Where((t, i) => old[i] != t).Any())
-                    {
-                        same = false;
-                    }
-#endif
-                }
-                else
-                    same = false;
-                if (same)
-                    return;
                 m_ParticleSystem = value;
-                //MUST set via the OSD
-                SetComponentState("ParticleSystem", OSD.FromBinary(value));
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, ProtoMember(62)]
         public DateTime Expires
         {
-            get { return GetComponentState("Expires").AsDate(); }
-            set { SetComponentState("Expires", value); }
+            get;
+            set;
         }
 
-        [XmlIgnore]
+        [XmlIgnore, ProtoMember(63)]
         public DateTime Rezzed
         {
-            get { return GetComponentState("Rezzed").AsDate(); }
-            set { SetComponentState("Rezzed", value, false); }
+            get;
+            set;
         }
 
         /// <summary>
         ///   The position of the entire group that this prim belongs to.
         /// </summary>
+        [ProtoMember(14)]
         public Vector3 GroupPosition
         {
             get { return GetGroupPosition(); }
+            set { FixGroupPosition(value, false); }
         }
 
         public Vector3 GetGroupPosition()
@@ -1180,6 +1046,7 @@ namespace OpenSim.Region.Framework.Scenes
             return m_groupPosition;
         }
 
+        [ProtoMember(15)]
         public Vector3 OffsetPosition
         {
             get { return m_offsetPosition; }
@@ -1190,29 +1057,31 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(16)]
         public Quaternion RotationOffset
         {
-            get
-            {
-                // We don't want the physics engine mucking up the rotations in a linkset
-                PhysicsObject actor = m_physActor;
-                if (_parentID == 0 && (m_shape.PCode != 9 || m_shape.State == 0) && actor != null)
-                {
-                    if (actor.Orientation.X != 0f || actor.Orientation.Y != 0f
-                        || actor.Orientation.Z != 0f || actor.Orientation.W != 0f)
-                    {
-                        m_rotationOffset = actor.Orientation;
-                    }
-                }
+            get;
+            set;
+        }
 
-                return m_rotationOffset;
+        public Quaternion GetRotationOffset()
+        {
+            PhysicsObject actor = m_physActor;
+            if (_parentID == 0 && (m_shape.PCode != 9 || m_shape.State == 0) && actor != null)
+            {
+                if (actor.Orientation.X != 0f || actor.Orientation.Y != 0f
+                    || actor.Orientation.Z != 0f || actor.Orientation.W != 0f)
+                {
+                    RotationOffset = actor.Orientation;
+                }
             }
-            set { SetRotationOffset(true, value, true); }
+            return RotationOffset;
         }
 
         private Vector3 m_tempVelocity = Vector3.Zero;
         /// <summary>
         /// </summary>
+        [ProtoMember(17)]
         public Vector3 Velocity
         {
             get
@@ -1249,6 +1118,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// </summary>
+        [ProtoMember(18)]
         public Vector3 AngularVelocity
         {
             get
@@ -1275,12 +1145,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// </summary>
+        [ProtoMember(19)]
         public Vector3 Acceleration
         {
             get { return m_acceleration; }
             set { m_acceleration = value; }
         }
 
+        [ProtoMember(20)]
         public string Description
         {
             get { return m_description; }
@@ -1298,15 +1170,25 @@ namespace OpenSim.Region.Framework.Scenes
         ///   Text color.
         /// </value>
         [XmlIgnore]
+        [ProtoMember(21)]
         public Color Color
         {
-            get { return m_color; }
-            set
+            get;
+            set;
+        }
+
+        public void SetColor(Color c, bool triggerChangedColor)
+        {
+            if (c.A != Color.A ||
+                c.B != Color.B ||
+                c.G != Color.G ||
+                c.R != Color.R)
             {
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
-                m_color = value;
-                TriggerScriptChangedEvent(Changed.COLOR);
+                Color = c;
+                if(triggerChangedColor)
+                    TriggerScriptChangedEvent(Changed.COLOR);
 
                 /* ScheduleFullUpdate() need not be called b/c after
                  * setting the color, the text will be set, so then
@@ -1315,6 +1197,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(22)]
         public string Text
         {
             get
@@ -1337,6 +1220,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
+        [ProtoMember(23)]
         public string SitName
         {
             get { return m_sitName; }
@@ -1350,6 +1234,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(24)]
         public string TouchName
         {
             get { return m_touchName; }
@@ -1363,6 +1248,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(25)]
         public int LinkNum
         {
             get { return m_linkNum; }
@@ -1376,6 +1262,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(26)]
         public byte ClickAction
         {
             get { return m_clickAction; }
@@ -1389,6 +1276,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(27)]
         public PrimitiveBaseShape Shape
         {
             get { return m_shape; }
@@ -1443,6 +1331,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///   Used for media on a prim.
         /// </summary>
         /// Do not change this value directly - always do it through an IMoapModule.
+        [ProtoMember(29)]
         public string MediaUrl
         {
             get { return m_mediaUrl; }
@@ -1483,40 +1372,13 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #region Only used for serialization as Color cannot be serialized
-
-        public int ColorA
-        {
-            get { return m_color.A; }
-            set { m_color = Color.FromArgb(value, m_color.R, m_color.G, m_color.B); }
-        }
-
-        public int ColorR
-        {
-            get { return m_color.R; }
-            set { m_color = Color.FromArgb(m_color.A, value, m_color.G, m_color.B); }
-        }
-
-        public int ColorG
-        {
-            get { return m_color.G; }
-            set { m_color = Color.FromArgb(m_color.A, m_color.R, value, m_color.B); }
-        }
-
-        public int ColorB
-        {
-            get { return m_color.B; }
-            set { m_color = Color.FromArgb(m_color.A, m_color.R, m_color.G, value); }
-        }
-
-        #endregion
-
         #endregion
 
         #region Public Properties with only Get
 
         private UUID _parentUUID = UUID.Zero;
         private float m_friction;
+        private float m_density;
         private float m_gravityMultiplier;
         private float m_restitution;
 
@@ -1528,38 +1390,6 @@ namespace OpenSim.Region.Framework.Scenes
         public scriptEvents ScriptEvents
         {
             get { return AggregateScriptEvents; }
-        }
-
-        // This sort of sucks, but I'm adding these in to make some of
-        // the mappings more consistant.
-        public Vector3 SitTargetPositionLL
-        {
-            get { return GetComponentState("SitTargetPosition").AsVector3(); }
-            set
-            {
-                Vector3 oldSitTarget = SitTargetPositionLL;
-                if (value.X == oldSitTarget.X &&
-                    value.Y == oldSitTarget.Y &&
-                    value.Z == oldSitTarget.Z)
-                    return;
-                SetComponentState("SitTargetPosition", value);
-            }
-        }
-
-        public Quaternion SitTargetOrientationLL
-        {
-            get { return GetComponentState("SitTargetOrientationLL").AsQuaternion(); }
-
-            set
-            {
-                Quaternion oldSitTargetOrientation = SitTargetOrientationLL;
-                if (value.X == oldSitTargetOrientation.X &&
-                    value.Y == oldSitTargetOrientation.Y &&
-                    value.Z == oldSitTargetOrientation.Z &&
-                    value.W == oldSitTargetOrientation.W)
-                    return;
-                SetComponentState("SitTargetOrientationLL", value);
-            }
         }
 
         public bool Stopped
@@ -1576,12 +1406,14 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(39)]
         public uint Category
         {
             get { return _category; }
             set { _category = value; }
         }
 
+        [ProtoMember(40)]
         public int OwnershipCost
         {
             get { return _ownershipCost; }
@@ -1618,219 +1450,178 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_parentGroup; }
         }
 
+        [ProtoMember(30)]
         public Quaternion SitTargetOrientation
         {
-            get { return GetComponentState("SitTargetOrientation").AsQuaternion(); }
-            set
-            {
-                Quaternion oldSitTargetOrientation = SitTargetOrientation;
-                if (value.X == oldSitTargetOrientation.X &&
-                    value.Y == oldSitTargetOrientation.Y &&
-                    value.Z == oldSitTargetOrientation.Z &&
-                    value.W == oldSitTargetOrientation.W)
-                    return;
-                SetComponentState("SitTargetOrientation", value);
-            }
+            get;
+            set;
         }
 
-
+        [ProtoMember(31)]
         public Vector3 SitTargetPosition
         {
-            get { return GetComponentState("SitTargetPosition").AsVector3(); }
-            set
-            {
-                Vector3 oldSitTarget = SitTargetPosition;
-                if (value.X == oldSitTarget.X &&
-                    value.Y == oldSitTarget.Y &&
-                    value.Z == oldSitTarget.Z)
-                    return;
-                SetComponentState("SitTargetPosition", value);
-            }
+            get;
+            set;
         }
 
+        [ProtoMember(32)]
         public Vector3 OmegaAxis
         {
-            get { return GetComponentState("OmegaAxis").AsVector3(); }
-
-            set
-            {
-                Vector3 oldOmegaAxis = OmegaAxis;
-                if (value.X == oldOmegaAxis.X &&
-                    value.Y == oldOmegaAxis.Y &&
-                    value.Z == oldOmegaAxis.Z)
-                    return;
-                SetComponentState("OmegaAxis", value);
-            }
+            get;
+            set;
         }
 
+        [ProtoMember(33)]
         public double OmegaSpinRate
         {
-            get { return GetComponentState("OmegaSpinRate").AsReal(); }
-
-            set
-            {
-                double oldOmegaSpinRate = OmegaSpinRate;
-                if (value == oldOmegaSpinRate)
-                    return;
-                SetComponentState("OmegaSpinRate", value);
-            }
+            get;
+            set;
         }
 
+        [ProtoMember(34)]
         public double OmegaGain
         {
-            get { return GetComponentState("OmegaGain").AsReal(); }
-
-            set
-            {
-                double oldOmegaGain = OmegaGain;
-                if (value == oldOmegaGain)
-                    return;
-                SetComponentState("OmegaGain", value);
-            }
+            get;
+            set;
         }
 
+        [ProtoMember(35)]
         public uint ParentID
         {
             get { return _parentID; }
             set { _parentID = value; }
         }
 
+        [ProtoMember(36)]
         public int CreationDate { get; set; }
-
+        
+        [ProtoMember(37)]
         public int SalePrice
         {
             get { return _salePrice; }
             set { _salePrice = value; }
         }
 
+        [ProtoMember(38)]
         public byte ObjectSaleType
         {
             get { return _objectSaleType; }
             set { _objectSaleType = value; }
         }
 
+        [ProtoMember(43)]
         public UUID GroupID
         {
             get { return _groupID; }
             set { _groupID = value; }
         }
 
+        [ProtoMember(44)]
         public UUID OwnerID
         {
             get { return _ownerID; }
             set { _ownerID = value; }
         }
 
+        [ProtoMember(45)]
         public UUID LastOwnerID { get; set; }
 
+        [ProtoMember(46)]
         public uint BaseMask
         {
             get { return _baseMask; }
             set { _baseMask = value; }
         }
 
+        [ProtoMember(101)]
         public uint OwnerMask
         {
             get { return _ownerMask; }
             set { _ownerMask = value; }
         }
 
+        [ProtoMember(47)]
         public uint GroupMask
         {
             get { return _groupMask; }
             set { _groupMask = value; }
         }
 
+        [ProtoMember(48)]
         public uint EveryoneMask
         {
             get { return _everyoneMask; }
             set { _everyoneMask = value; }
         }
 
+        [ProtoMember(49)]
         public uint NextOwnerMask
         {
             get { return _nextOwnerMask; }
             set { _nextOwnerMask = value; }
         }
 
+        [ProtoMember(50)]
         public byte PhysicsType
         {
-            get
-            {
-                OSD d = GetComponentState("PhysicsType");
-                if (d == null || d.Type == OSDType.Unknown)
-                    d = 0;
-                return (byte) d.AsInteger();
-            }
-            set { SetComponentState("PhysicsType", OSD.FromInteger((int) value)); }
+            get;
+            set;
         }
 
+        [ProtoMember(51)]
         public float Density
         {
             get
             {
-                OSD d = GetComponentState("Density");
-                if (d == null || d.Type == OSDType.Unknown)
-                    d = 1000;
-                return (float) d.AsReal();
+                if (m_density != 0)
+                    return m_density;
+                return (m_density = 1000f);
             }
-            set { SetComponentState("Density", value); }
+            set { m_density = value; }
         }
 
+        [ProtoMember(52)]
         public float Friction
         {
             get
             {
                 if (m_friction != 0)
                     return m_friction;
-                OSD d = GetComponentState("Friction");
-                if (d == null || d.Type == OSDType.Unknown)
-                    d = 0.6f;
-                m_friction = (float) d.AsReal();
-                return m_friction;
+                return (m_friction = 0.6f);
             }
             set
             {
                 m_friction = value;
-                SetComponentState("Friction", value);
             }
         }
 
+        [ProtoMember(53)]
         public float Restitution
         {
             get
             {
                 if (m_restitution != 0)
                     return m_restitution;
-                OSD d = GetComponentState("Restitution");
-                if (d == null || d.Type == OSDType.Unknown)
-                    d = 0.5f;
-                m_restitution = (float) d.AsReal();
-                return m_restitution;
+                return (m_restitution = 0.5f);
             }
             set
             {
                 m_restitution = value;
-                SetComponentState("Restitution", value);
             }
         }
 
+        [ProtoMember(54)]
         public float GravityMultiplier
         {
             get
             {
                 if (m_gravityMultiplier != 0)
                     return m_gravityMultiplier;
-                OSD d = GetComponentState("GravityMultiplier");
-                if (d == null || d.Type == OSDType.Unknown)
-                    d = 1;
-                m_gravityMultiplier = (float) d.AsReal();
-                return m_gravityMultiplier;
+                return (m_gravityMultiplier = 1);
             }
             set
             {
                 m_gravityMultiplier = value;
-                SetComponentState("GravityMultiplier", value);
             }
         }
 
@@ -1838,6 +1629,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///   Property flags.  See OpenMetaverse.PrimFlags
         /// </summary>
         /// Example properties are PrimFlags.Phantom and PrimFlags.DieAtEdge
+        [ProtoMember(55)]
         public PrimFlags Flags
         {
             get { return _flags; }
@@ -1863,9 +1655,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 if (ParentGroup != null)
-                {
                     _parentUUID = ParentGroup.UUID;
-                }
                 return _parentUUID;
             }
             set
@@ -1877,6 +1667,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
+        [ProtoMember(56)]
         public string SitAnimation
         {
             get { return m_sitAnimation; }
@@ -1888,6 +1679,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(57)]
         public UUID CollisionSound
         {
             get { return m_collisionSound; }
@@ -1901,6 +1693,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(58)]
         public UUID CollisionSprite
         {
             get { return m_collisionSprite; }
@@ -1912,6 +1705,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [ProtoMember(59)]
         public float CollisionSoundVolume
         {
             get { return m_collisionSoundVolume; }
@@ -1962,7 +1756,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // rotate into local reference ( part or grp )
-            vtmp *= Quaternion.Inverse(m_rotationOffset);
+            vtmp *= Quaternion.Inverse(GetRotationOffset());
 
             // now oob pos
             vtmp -= OOBoffset; // force update
@@ -2039,7 +1833,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // rotate into local reference
-            vtmp *= Quaternion.Inverse(m_rotationOffset);
+            vtmp *= Quaternion.Inverse(GetRotationOffset());
             // now oob pos
             vtmp -= OOBoffset; // force update
 
@@ -2452,7 +2246,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>A Linked Child Prim objects position in world</returns>
         public Vector3 GetWorldPosition()
         {
-            return IsRoot ? GroupPosition : GroupPosition + OffsetPosition * ParentGroup.RootPart.RotationOffset;
+            return IsRoot ? GroupPosition : GroupPosition + OffsetPosition * ParentGroup.RootPart.GetRotationOffset();
         }
 
         /// <summary>
@@ -2461,11 +2255,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public Quaternion GetWorldRotation()
         {
-            Quaternion newRot = RotationOffset;
+            Quaternion newRot = GetRotationOffset();
 
             if (_parentID != 0)
             {
-                Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
+                Quaternion parentRot = ParentGroup.RootPart.GetRotationOffset();
                 newRot = parentRot*newRot;
             }
 
@@ -2624,7 +2418,8 @@ namespace OpenSim.Region.Framework.Scenes
                 avatar.AddUpdateToAvatar(this, UpdateFlags);
             });
 #else
-            m_parentGroup.Scene.ForEachScenePresence(avatar => avatar.AddUpdateToAvatar(this, UpdateFlags));
+            if(m_parentGroup != null)
+                m_parentGroup.Scene.ForEachScenePresence(avatar => avatar.AddUpdateToAvatar(this, UpdateFlags));
 #endif
         }
 
@@ -2833,7 +2628,6 @@ namespace OpenSim.Region.Framework.Scenes
             else
                 VehicleFlags.Add(param);
 
-            SetComponentState("VehicleFlags", VehicleFlags);
             if (PhysActor != null)
                 PhysActor.VehicleFlags(param, remove);
         }
@@ -2848,7 +2642,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetVehicleFloatParam(int param, float value)
         {
             VehicleParameters[param.ToString()] = value;
-            SetComponentState("VehicleParameters", VehicleParameters);
             if (PhysActor != null)
                 PhysActor.VehicleFloatParam(param, value);
         }
@@ -2856,7 +2649,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetVehicleVectorParam(int param, Vector3 value)
         {
             VehicleParameters[param.ToString()] = value;
-            SetComponentState("VehicleParameters", VehicleParameters);
             if (PhysActor != null)
                 PhysActor.VehicleVectorParam(param, value);
         }
@@ -2864,7 +2656,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetVehicleRotationParam(int param, Quaternion value)
         {
             VehicleParameters[param.ToString()] = value;
-            SetComponentState("VehicleParameters", VehicleParameters);
             if (PhysActor != null)
                 PhysActor.VehicleRotationParam(param, value);
         }
@@ -3091,14 +2882,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //No triggering Changed_Color, so not using Color
             //Color = ...
-            if (m_color.A != alpha ||
-                m_color.R != color.X ||
-                m_color.G != color.Y ||
-                m_color.B != color.Z)
-                m_color = Color.FromArgb((int) (alpha*0xff),
+            SetColor(Color.FromArgb((int)(alpha * 0xff),
                                          (int) (color.X*0xff),
                                          (int) (color.Y*0xff),
-                                         (int) (color.Z*0xff));
+                                         (int) (color.Z*0xff)), false);
             SetText(text);
         }
 
@@ -3714,12 +3501,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void UpdateRotation(Quaternion rot)
         {
-            if ((rot.X != RotationOffset.X) ||
-                (rot.Y != RotationOffset.Y) ||
-                (rot.Z != RotationOffset.Z) ||
-                (rot.W != RotationOffset.W))
+            if ((rot.X != GetRotationOffset().X) ||
+                (rot.Y != GetRotationOffset().Y) ||
+                (rot.Z != GetRotationOffset().Z) ||
+                (rot.W != GetRotationOffset().W))
             {
-                RotationOffset = rot;
+                SetRotationOffset(true, rot, true);
                 ValidpartOOB = false;
                 ScheduleTerseUpdate();
             }
@@ -3958,8 +3745,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public int VehicleType
         {
-            get { return GetComponentState("VehicleType").AsInteger(); }
-            set { SetComponentState("VehicleType", value); }
+            get;
+            set;
         }
 
         public OSDArray VehicleFlags
@@ -3967,11 +3754,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 if (m_VehicleFlags == null)
-                {
-                    m_VehicleFlags = GetComponentState("VehicleFlags") as OSDArray;
-                    if (m_VehicleFlags == null)
-                        m_VehicleFlags = new OSDArray();
-                }
+                    m_VehicleFlags = new OSDArray();
                 return m_VehicleFlags;
             }
             set { m_VehicleFlags = value; }
@@ -3982,11 +3765,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 if (m_VehicleParams == null)
-                {
-                    m_VehicleParams = GetComponentState("VehicleParameters") as OSDMap;
-                    if (m_VehicleParams == null)
-                        m_VehicleParams = new OSDMap();
-                }
+                    m_VehicleParams = new OSDMap();
                 return m_VehicleParams;
             }
             set { m_VehicleParams = value; }
@@ -3996,19 +3775,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetRotationOffset(bool UpdatePrimActor, Quaternion value, bool single)
         {
-            if (m_rotationOffset == value)
-                return;
             if (ParentGroup != null)
                 ParentGroup.HasGroupChanged = true;
-            m_rotationOffset = value;
             ValidpartOOB = false;
 
-            if (value.W == 0) //We have an issue here... try to normalize it
-                value.Normalize();
+            RotationOffset = value;
 
             PhysicsObject actor = PhysActor;
             if (actor != null)
             {
+                if (value.W == 0) //We have an issue here... try to normalize it
+                    value.Normalize();
                 if (actor.PhysicsActorType != (int) ActorTypes.Prim) // for now let other times get updates
                 {
                     UpdatePrimActor = true;
@@ -4196,7 +3973,7 @@ namespace OpenSim.Region.Framework.Scenes
             dupe._groupID = GroupID;
             dupe.m_groupPosition = m_groupPosition;
             dupe.m_offsetPosition = m_offsetPosition;
-            dupe.m_rotationOffset = m_rotationOffset;
+            dupe.RotationOffset = RotationOffset;
             dupe.Velocity = new Vector3(0, 0, 0);
             dupe.Acceleration = new Vector3(0, 0, 0);
             dupe.AngularVelocity = new Vector3(0, 0, 0);
@@ -5351,7 +5128,7 @@ namespace OpenSim.Region.Framework.Scenes
                         return;
                     }
 
-                    Quaternion rot = Quaternion.Slerp(RotationOffset, APIDTarget, 1.0f / (float)APIDIterations);
+                    Quaternion rot = Quaternion.Slerp(GetRotationOffset(), APIDTarget, 1.0f / (float)APIDIterations);
                     UpdateRotation(rot);
 
                     APIDIterations--;

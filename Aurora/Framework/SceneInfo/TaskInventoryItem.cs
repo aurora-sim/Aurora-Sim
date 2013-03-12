@@ -27,6 +27,7 @@
 
 using System;
 using OpenMetaverse;
+using ProtoBuf;
 
 namespace Aurora.Framework
 {
@@ -129,6 +130,7 @@ namespace Aurora.Framework
     /// <summary>
     ///   Represents an item in a task inventory
     /// </summary>
+    [Serializable, ProtoContract()]
     public class TaskInventoryItem : ICloneable
     {
         private UUID _assetID = UUID.Zero;
@@ -156,26 +158,31 @@ namespace Aurora.Framework
             CreationDate = (uint) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
         }
 
+        [ProtoMember(1)]
         public UUID AssetID
         {
             get { return _assetID; }
             set { _assetID = value; }
         }
 
+        [ProtoMember(2)]
         public uint BasePermissions
         {
             get { return _baseMask; }
             set { _baseMask = value; }
         }
 
+        [ProtoMember(3)]
         public uint CreationDate { get; set; }
 
+        [ProtoMember(4)]
         public UUID CreatorID
         {
             get { return _creatorID; }
             set { _creatorID = value; }
         }
 
+        [ProtoMember(5)]
         public string CreatorData // = <profile url>;<name>
         {
             get { return _creatorData; }
@@ -187,6 +194,7 @@ namespace Aurora.Framework
         ///   The identification can either be a simple UUID or a string of the form
         ///   uuid[;profile_url[;name]]
         /// </summary>
+        [ProtoMember(6)]
         public string CreatorIdentification
         {
             get
@@ -230,40 +238,48 @@ namespace Aurora.Framework
             }
         }
 
+        [ProtoMember(7)]
         public string Description
         {
             get { return _description; }
             set { _description = value; }
         }
 
+        [ProtoMember(8)]
         public uint EveryonePermissions
         {
             get { return _everyoneMask; }
             set { _everyoneMask = value; }
         }
 
+        [ProtoMember(9)]
         public uint Flags { get; set; }
 
+        [ProtoMember(10)]
         public UUID GroupID
         {
             get { return _groupID; }
             set { _groupID = value; }
         }
 
+        [ProtoMember(11)]
         public uint GroupPermissions
         {
             get { return _groupMask; }
             set { _groupMask = value; }
         }
 
+        [ProtoMember(12)]
         public int InvType { get; set; }
 
+        [ProtoMember(13)]
         public UUID ItemID
         {
             get { return _itemID; }
             set { _itemID = value; }
         }
 
+        [ProtoMember(14)]
         public UUID OldItemID
         {
             get { return _oldID; }
@@ -274,58 +290,71 @@ namespace Aurora.Framework
             }
         }
 
+        [ProtoMember(15)]
         public UUID LastOwnerID
         {
             get { return _lastOwnerID; }
             set { _lastOwnerID = value; }
         }
 
+        [ProtoMember(16)]
         public string Name
         {
             get { return _name; }
             set { _name = value; }
         }
 
+        [ProtoMember(17)]
         public uint NextPermissions
         {
             get { return _nextOwnerMask; }
             set { _nextOwnerMask = value; }
         }
 
+        [ProtoMember(18)]
         public UUID OwnerID
         {
             get { return _ownerID; }
             set { _ownerID = value; }
         }
 
+        [ProtoMember(19)]
         public uint CurrentPermissions
         {
             get { return _ownerMask; }
             set { _ownerMask = value; }
         }
 
+        [ProtoMember(20)]
         public UUID ParentID
         {
             get { return _parentID; }
             set { _parentID = value; }
         }
 
+        [ProtoMember(21)]
         public UUID ParentPartID
         {
             get { return _parentPartID; }
             set { _parentPartID = value; }
         }
 
+        [ProtoMember(22)]
         public UUID PermsGranter { get; set; }
 
+        [ProtoMember(23)]
         public int PermsMask { get; set; }
 
+        [ProtoMember(24)]
         public int Type { get; set; }
 
+        [ProtoMember(25)]
         public bool OwnerChanged { get; set; }
 
+        [ProtoMember(26)]
         public int SalePrice { get; set; }
 
+        [ProtoMember(27)]
         public byte SaleType { get; set; }
 
         // See ICloneable

@@ -282,6 +282,7 @@ namespace Aurora.Modules.Startup
                         }
                         m_scene.SceneGraph.CheckAllocationOfLocalIds (group);
                         group.Scene = m_scene;
+                        group.FinishedSerializingGenericProperties();
 
                         if (group.RootChild == null)
                         {
@@ -319,7 +320,7 @@ namespace Aurora.Modules.Startup
                 //Load the prims from the database now that we are done loading
                 CreateScriptInstances();
                 //Now destroy the local caches as we're all loaded
-                m_scene.SimulationDataService.Dispose();
+                m_scene.SimulationDataService.CacheDispose();
             }
 
             /// <summary>
