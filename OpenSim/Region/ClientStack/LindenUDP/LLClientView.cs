@@ -4762,8 +4762,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             rinfopack.HasVariableBlocks = true;
             rinfopack.RegionInfo = rinfoblk;
-            rinfopack.AgentData = new RegionInfoPacket.AgentDataBlock {AgentID = AgentId, SessionID = SessionId};
-
+            rinfopack.AgentData = new RegionInfoPacket.AgentDataBlock { AgentID = AgentId, SessionID = SessionId };
+            rinfopack.RegionInfo3 = new RegionInfoPacket.RegionInfo3Block[1] { new RegionInfoPacket.RegionInfo3Block() { RegionFlagsExtended = args.regionFlags } };
 
             OutPacket(rinfopack, ThrottleOutPacketType.AvatarInfo);
         }
