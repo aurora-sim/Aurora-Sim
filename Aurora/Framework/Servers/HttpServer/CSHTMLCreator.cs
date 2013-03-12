@@ -26,9 +26,9 @@ namespace Aurora.Framework
                 MainServer.Instance.RemoveHTTPHandler(null, methodName + secret2);
                 return SetUpWebpage(t, url, html, variables);
             });
-            MainServer.Instance.AddHTTPHandler(methodName + secret, delegate(Hashtable t)
+            MainServer.Instance.AddHTTPHandler("/index.php?method=" + methodName + secret, delegate(Hashtable t)
             {
-                MainServer.Instance.RemoveHTTPHandler(null, methodName + secret);
+                MainServer.Instance.RemoveHTTPHandler(null, "/index.php?method=" + methodName + secret);
                 return HandleResponse(t, urlToAppend, variables, eventDelegate);
             });
             return navUrl;

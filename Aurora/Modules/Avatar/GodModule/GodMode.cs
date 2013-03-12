@@ -276,7 +276,7 @@ namespace Aurora.Modules.Gods
                                                    };
 
             IEstateModule estate = m_scene.RequestModuleInterface<IEstateModule>();
-            args.regionFlags = estate == null ? 0 : (uint)estate.GetRegionFlags();
+            args.regionFlags = estate == null ? 0 : estate.GetRegionFlags();
 
             args.simAccess = m_scene.RegionInfo.AccessLevel;
             args.sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition;

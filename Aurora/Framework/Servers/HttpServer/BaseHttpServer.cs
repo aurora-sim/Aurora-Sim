@@ -1224,7 +1224,8 @@ namespace Aurora.Framework.Servers.HttpServer
                 //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: " + requestBody);
                 GenericHTTPMethod requestprocessor;
                 IStreamedRequestHandler streamProcessor;
-                if (TryGetHTTPHandler(method, out requestprocessor))
+                if (TryGetHTTPHandler(method, out requestprocessor) ||
+                    TryGetHTTPHandler(request.RawUrl, out requestprocessor))
                 {
                     Stream requestStream = request.InputStream;
 
@@ -1242,7 +1243,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
                     //SendHTML500(response);
                 }
-                else if (TryGetStreamHTTPHandler(method, out streamProcessor))
+                else if (TryGetStreamHTTPHandler(method, out streamProcessor) ||
+                    TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
                 {
                     buffer = streamProcessor.Handle(request.RawUrl, request.InputStream, request, response);
                 }

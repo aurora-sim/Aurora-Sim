@@ -993,7 +993,7 @@ namespace Aurora.Modules.Estate
                                                        pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
                                                        redirectGridX = 0,
                                                        redirectGridY = 0,
-                                                       regionFlags = (uint)GetRegionFlags(),
+                                                       regionFlags = GetRegionFlags(),
                                                        simAccess = m_scene.RegionInfo.AccessLevel,
                                                        sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition,
                                                        terrainLowerLimit =

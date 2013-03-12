@@ -4741,7 +4741,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             rinfoblk.PricePerMeter = args.pricePerMeter;
             rinfoblk.RedirectGridX = args.redirectGridX;
             rinfoblk.RedirectGridY = args.redirectGridY;
-            rinfoblk.RegionFlags = args.regionFlags;
+            rinfoblk.RegionFlags = (uint)args.regionFlags;
             rinfoblk.SimAccess = args.simAccess;
             rinfoblk.SunHour = args.sunHour;
             rinfoblk.TerrainLowerLimit = args.terrainLowerLimit;
@@ -4762,7 +4762,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             rinfopack.HasVariableBlocks = true;
             rinfopack.RegionInfo = rinfoblk;
             rinfopack.AgentData = new RegionInfoPacket.AgentDataBlock {AgentID = AgentId, SessionID = SessionId};
-
+            rinfopack.RegionInfo3 = new RegionInfoPacket.RegionInfo3Block[1] { new RegionInfoPacket.RegionInfo3Block() { RegionFlagsExtended = args.regionFlags } };
 
             OutPacket(rinfopack, ThrottleOutPacketType.AvatarInfo);
         }

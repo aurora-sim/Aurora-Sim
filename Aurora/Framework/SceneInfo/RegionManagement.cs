@@ -159,8 +159,7 @@ namespace Aurora.Framework
             if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
-            AddOpenRegionSettingsHTMLPage(_sceneManager.Scene);
-            return "";
+            return AddOpenRegionSettingsHTMLPage(_sceneManager.Scene);
         }
 
         #region ORS HTML
