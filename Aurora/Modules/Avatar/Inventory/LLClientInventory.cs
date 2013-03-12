@@ -525,12 +525,12 @@ namespace Aurora.Modules.Inventory
                                              BasePermissions = baseMask,
                                              CreationDate = creationDate
                                          };
-            m_scene.InventoryService.AddItemAsync(item, () =>
+            m_scene.InventoryService.AddItemAsync(item, (itm) =>
             {
                 IAvatarFactory avFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
                 if (avFactory != null)
-                    avFactory.NewAppearanceLink(item);
-                remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
+                    avFactory.NewAppearanceLink(itm);
+                remoteClient.SendInventoryItemCreateUpdate(itm, callbackID);
             });
         }
 
@@ -1378,8 +1378,8 @@ namespace Aurora.Modules.Inventory
         /// in which the item is to be placed.</param>
         public void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item)
         {
-            m_scene.InventoryService.AddItemAsync(item, 
-                () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
+            m_scene.InventoryService.AddItemAsync(item,
+                (itm) => remoteClient.SendInventoryItemCreateUpdate(itm, 0));
         }
 
         /// <summary>
@@ -1683,7 +1683,7 @@ namespace Aurora.Modules.Inventory
                 {
                     agentItem.Folder = newFolderID;
 
-                    m_scene.InventoryService.AddItemAsync(agentItem, () =>
+                    m_scene.InventoryService.AddItemAsync(agentItem, (itm) =>
                     {
                         if (--countLeft == 0)
                         {

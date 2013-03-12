@@ -410,7 +410,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             item.Flags = (uint)wearableType;
             item.CreationDate = Util.UnixTimeSinceEpoch();
 
-            m_Scene.InventoryService.AddItemAsync(item, () => ourClient.SendInventoryItemCreateUpdate(item, callbackID));
+            m_Scene.InventoryService.AddItemAsync(item, (itm) => ourClient.SendInventoryItemCreateUpdate(itm, callbackID));
             m_transactions.RemoveXferUploader(m_transactionID);
         }
     }
