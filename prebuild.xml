@@ -292,6 +292,7 @@
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="protobuf-net.dll" path="../../bin/"/>
       <Reference name="SmartThreadPool"/>
       <Reference name="XMLRPC" path="../../bin/"/>
 
