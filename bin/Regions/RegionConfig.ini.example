@@ -44,3 +44,104 @@
 	;; Both of the above methods do not run the heartbeat (but do runs scripts!)
 	;; Normal - A normal region
 	;StartupType = Normal
+	
+	;; *
+	;; * Enables seeing into this region from neighboring regions
+	;; *
+	;SeeIntoThisSimFromNeighbor = true
+	
+	;; ##
+    ;; ## Prim Scale
+    ;; ##
+    
+    MaximumPrimScale = 256
+    MaximumPhysPrimScale = 10
+    MinimumPrimScale = 0.01
+    
+    ;; This can disable all physical prims in the sim
+    AllowPhysicalPrims = true
+    
+    
+    ;; ##
+    ;; ## Prim hollow and hole sizes
+    ;; ##
+    
+    ;; Maximum hollow size the viewer can set
+    MaximumHollowSize = 100
+    
+    ;; Maximum hole size the viewer can set
+    MinimumHoleSize = 0.01
+    
+    ;; ##
+    ;; ## Maximum Link set counts
+    ;; ##
+    
+    ;; Maximum number of prims ever allowed to be linked
+    ;;  Note: If this is set to 0 or commented out there is no limit set
+    MaximumLinkCount = 1000
+
+    ;; Maximum number of physical objects that can be linked before physical is taken off
+    ;;  Note: If this is set to 0 or commented out there is no limit set
+    MaximumLinkCountPhys = 32
+    
+    
+    ;; ##
+    ;; ## Client settings and overrides
+	;; ## Only implemented in certain viewers
+    ;; ##
+    
+    ;; Should water rendering be enabled for this sim?
+    RenderWater = true
+    
+    ;; Should the users be allowed to view/use their minimap?
+    DisplayMinimap = true
+
+	;; ##
+	;; ## Teen/PG Settings
+	;; ##
+        
+        ;; Should all users be forced to wear underwear and undershirts?
+        EnableTeenMode = false
+        
+        ;; ItemID of the default avatar underpants
+        DefaultUnderpants = 00000000-0000-0000-0000-000000000000
+        
+        ;; ItemID of the default avatar undershirt
+        DefaultUndershirt = 00000000-0000-0000-0000-000000000000
+    
+    ;; What time zone should the viewer use? 
+    ;;  Note: SLT is the default Second Life time (PST)
+    ;;  Note: all times are sent in the form of hours off of UTC. For example, -8 will set the viewer to use PST, same as the SLT setting.
+    OffsetOfUTC = SLT
+    
+    ;; Should the time offset have day light savings time enabled?
+    OffsetOfUTCDST = true
+    
+    ;; This does not get sent to the client if it is -1 or commented out
+    DefaultDrawDistance = -1
+    
+    ;; If this is set to true, the viewer cannot change the draw distance for this sim
+    ForceDrawDistance = false
+    
+    
+    ;; ##
+    ;; ## Other
+    ;; ##
+    
+    ;; Maximum items the viewer can send to another user at one time
+    ;;  Note: if commented out or set to -1, there is no limit
+    MaximumInventoryItemsTransfer = -1
+    
+    ;; Maximum distance the viewer is allowed to move an object by dragging it
+    ;;  Note: If this is set to -1 or commented out there is no limit set
+    MaxDragDistance = -1
+    
+    ;; Should avatars see tags above their heads?
+    ;; Settings:
+    ;; 0 - Hide all tags
+    ;; 1 - Temperarily show
+    ;; 2 - Always show
+    ShowTags = 2
+    
+    ; What should the maximum number of groups be?
+    MaxGroups = 50

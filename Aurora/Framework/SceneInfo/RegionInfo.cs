@@ -60,7 +60,6 @@ namespace Aurora.Framework
         public bool HasBeenDeleted { get; set; }
         private List<int> m_UDPPorts = new List<int>();
         private bool m_seeIntoThisSimFromNeighbor = true;
-        private bool m_allowPhysicalPrims = true;
 
         [ProtoMember(1)]
         public UUID RegionID = UUID.Zero;
@@ -125,13 +124,6 @@ namespace Aurora.Framework
         {
             get { return m_seeIntoThisSimFromNeighbor; }
             set { m_seeIntoThisSimFromNeighbor = value; }
-        }
-
-        [ProtoMember(14)]
-        public bool AllowPhysicalPrims
-        {
-            get { return m_allowPhysicalPrims; }
-            set { m_allowPhysicalPrims = value; }
         }
 
         [ProtoMember(15)]
@@ -225,7 +217,6 @@ namespace Aurora.Framework
             args["object_capacity"] = OSD.FromInteger(m_objectCapacity);
             args["region_type"] = OSD.FromString(RegionType);
             args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
-            args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
             args["startupType"] = OSD.FromInteger((int)Startup);
             args["RegionSettings"] = RegionSettings.ToOSD();
             args["GridSecureSessionID"] = GridSecureSessionID;
@@ -287,8 +278,6 @@ namespace Aurora.Framework
                 RegionType = args["region_type"].AsString();
             if (args.ContainsKey("see_into_this_sim_from_neighbor"))
                 SeeIntoThisSimFromNeighbor = args["see_into_this_sim_from_neighbor"].AsBoolean();
-            if (args.ContainsKey("allow_physical_prims"))
-                AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
             if (args.ContainsKey ("startupType"))
                 Startup = (StartupType)args["startupType"].AsInteger();
             if(args.ContainsKey("InfiniteRegion"))

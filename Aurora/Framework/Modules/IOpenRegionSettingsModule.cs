@@ -57,11 +57,9 @@ namespace Aurora.Framework
         bool EnableTeenMode { get; set; }
         UUID DefaultUnderpants { get; set; }
         UUID DefaultUndershirt { get; set; }
-        bool ClampPrimSizes { get; set; }
         bool ForceDrawDistance { get; set; }
         int ShowTags { get; set; }
         int MaxGroups { get; set; }
-        bool AllowParcelWindLight { get; set; }
         void RegisterGenericValue(string key, string value);
     }
 
@@ -73,7 +71,6 @@ namespace Aurora.Framework
     {
         #region Declares
 
-        private bool m_AllowParcelWindLight = true;
         private bool m_AllowPhysicalPrims = true;
         private bool m_ClampPrimSizes = true;
         private float m_DefaultDrawDistance = -1;
@@ -286,13 +283,6 @@ namespace Aurora.Framework
             set { m_DefaultUndershirt = value; }
         }
 
-        [ProtoMember(25)]
-        public bool ClampPrimSizes
-        {
-            get { return m_ClampPrimSizes; }
-            set { m_ClampPrimSizes = value; }
-        }
-
         [ProtoMember(26)]
         public bool ForceDrawDistance
         {
@@ -314,13 +304,6 @@ namespace Aurora.Framework
             set { m_MaxGroups = value; }
         }
 
-        [ProtoMember(29)]
-        public bool AllowParcelWindLight
-        {
-            get { return m_AllowParcelWindLight; }
-            set { m_AllowParcelWindLight = value; }
-        }
-
         #endregion
 
         #region IDataTransferable
@@ -337,7 +320,6 @@ namespace Aurora.Framework
             MaximumPhysPrimScale = (float) rm["MaxPhysPrimScale"].AsReal();
             MaximumHollowSize = (float) rm["MaxHollowSize"].AsReal();
             MinimumHoleSize = (float) rm["MinHoleSize"].AsReal();
-            ClampPrimSizes = rm["EnforceMaxBuild"].AsInteger() == 1;
             MaximumLinkCount = rm["MaxLinkCount"].AsInteger();
             MaximumLinkCountPhys = rm["MaxLinkCountPhys"].AsInteger();
             MaxDragDistance = (float) rm["MaxDragDistance"].AsReal();
@@ -352,7 +334,6 @@ namespace Aurora.Framework
             SetTeenMode = rm["SetTeenMode"].AsInteger() == 1;
             ShowTags = rm["ShowTags"].AsInteger();
             MaxGroups = rm["MaxGroups"].AsInteger();
-            AllowParcelWindLight = rm["AllowParcelWindLight"].AsInteger() == 1;
         }
 
         public override OSDMap ToOSD()
@@ -367,7 +348,7 @@ namespace Aurora.Framework
                                   {"MaxPhysPrimScale", OSD.FromReal(MaximumPhysPrimScale)},
                                   {"MaxHollowSize", OSD.FromReal(MaximumHollowSize)},
                                   {"MinHoleSize", OSD.FromReal(MinimumHoleSize)},
-                                  {"EnforceMaxBuild", OSD.FromInteger(ClampPrimSizes ? 1 : 0)},
+                                  {"EnforceMaxBuild", OSD.FromInteger(1)},
                                   {"MaxLinkCount", OSD.FromInteger(MaximumLinkCount)},
                                   {"MaxLinkCountPhys", OSD.FromInteger(MaximumLinkCountPhys)},
                                   {"LSLFunctions", LSLCommands},
@@ -381,8 +362,7 @@ namespace Aurora.Framework
                                   {"ToggleTeenMode", OSD.FromInteger(EnableTeenMode ? 1 : 0)},
                                   {"SetTeenMode", OSD.FromInteger(SetTeenMode ? 1 : 0)},
                                   {"ShowTags", OSD.FromInteger(ShowTags)},
-                                  {"MaxGroups", OSD.FromInteger(MaxGroups)},
-                                  {"AllowParcelWindLight", OSD.FromInteger(AllowParcelWindLight ? 1 : 0)}
+                                  {"MaxGroups", OSD.FromInteger(MaxGroups)}
                               };
 
             return body;

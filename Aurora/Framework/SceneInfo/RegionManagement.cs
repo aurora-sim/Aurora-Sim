@@ -185,7 +185,7 @@ namespace Aurora.Framework
             vars.Add("Allow Minimap", settings.DisplayMinimap ? "checked" : "");
             vars.Add("Allow Physical Prims", settings.AllowPhysicalPrims ? "checked" : "");
             vars.Add("Enable Teen Mode", settings.EnableTeenMode ? "checked" : "");
-            vars.Add("Enforce Max Build Constraints", settings.ClampPrimSizes ? "checked" : "");
+            vars.Add("Enforce Max Build Constraints", true ? "checked" : "");
             string HTMLPage = "";
             string path = Util.BasePathCombine(System.IO.Path.Combine("data", "OpenRegionSettingsPage.html"));
             if (System.IO.File.Exists(path))
@@ -217,7 +217,6 @@ namespace Aurora.Framework
             settings.DisplayMinimap = vars["Allow Minimap"] != null;
             settings.AllowPhysicalPrims = vars["Allow Physical Prims"] != null;
             settings.EnableTeenMode = vars["Enable Teen Mode"] != null;
-            settings.ClampPrimSizes = vars["Enforce Max Build Constraints"] != null;
             scene.RegionInfo.OpenRegionSettings = settings;
         }
 

@@ -187,12 +187,6 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             set { m_settings.DefaultUndershirt = value; }
         }
 
-        public bool ClampPrimSizes
-        {
-            get { return m_settings.ClampPrimSizes; }
-            set { m_settings.ClampPrimSizes = value; }
-        }
-
         public bool ForceDrawDistance
         {
             get { return m_settings.ForceDrawDistance; }
@@ -209,12 +203,6 @@ namespace Aurora.Modules.OpenRegionSettingsModule
         {
             get { return m_settings.MaxGroups; }
             set { m_settings.MaxGroups = value; }
-        }
-
-        public bool AllowParcelWindLight
-        {
-            get { return m_settings.AllowParcelWindLight; }
-            set { m_settings.AllowParcelWindLight = value; }
         }
 
         public void RegisterGenericValue(string key, string value)
@@ -331,9 +319,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             m_settings.TerrainDetailScale = (float) rm["terrain_detail_scale"].AsReal();
             m_settings.ShowTags = (int) rm["show_tags"].AsReal();
             m_settings.MaxGroups = (int) rm["max_groups"].AsReal();
-            m_settings.AllowParcelWindLight = rm["allow_parcel_windlight"].AsBoolean();
             m_settings.EnableTeenMode = rm["enable_teen_mode"].AsBoolean();
-            m_settings.ClampPrimSizes = rm["enforce_max_build"].AsBoolean();
 
             m_scene.RegionInfo.OpenRegionSettings = m_settings;
 
@@ -349,69 +335,6 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
         private void ReadConfig(IScene scene)
         {
-            //Set up the instance first
-            //DEPRECATED (rSmythe 11/4/11) - Now set in viewer and Region Manager
-            /*IConfig instanceSettings = m_source.Configs["InstanceSettings"];
-            if (instanceSettings != null)
-            {
-                ReadSettings(instanceSettings);
-            }
-            IConfig regionSettings = m_source.Configs[scene.RegionInfo.RegionName];
-            if (regionSettings != null)
-            {
-                ReadSettings(regionSettings);
-            }*/
-        }
-
-        private void ReadSettings(IConfig instanceSettings)
-        {
-            m_settings.MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance", MaxDragDistance);
-            m_settings.DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance", DefaultDrawDistance);
-
-
-            m_settings.MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale", MaximumPrimScale);
-            m_settings.MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale", MinimumPrimScale);
-            m_settings.MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale", MaximumPhysPrimScale);
-
-
-            m_settings.MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize", MaximumHollowSize);
-            m_settings.MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize", MinimumHoleSize);
-
-
-            m_settings.MaximumLinkCount = instanceSettings.GetInt("MaximumLinkCount", MaximumLinkCount);
-            m_settings.MaximumLinkCountPhys = instanceSettings.GetInt("MaximumLinkCountPhys", MaximumLinkCountPhys);
-
-
-            m_settings.RenderWater = instanceSettings.GetBoolean("RenderWater", RenderWater);
-            m_settings.MaximumInventoryItemsTransfer = instanceSettings.GetInt("MaximumInventoryItemsTransfer",
-                                                                               MaximumInventoryItemsTransfer);
-            m_settings.DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap", DisplayMinimap);
-            m_settings.AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims", AllowPhysicalPrims);
-            m_settings.ClampPrimSizes = instanceSettings.GetBoolean("ClampPrimSizes", ClampPrimSizes);
-            m_settings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance", ForceDrawDistance);
-
-            string offset = instanceSettings.GetString("OffsetOfUTC", OffsetOfUTC.ToString());
-            int off;
-            if (!int.TryParse(offset, out off))
-            {
-                if (offset == "SLT" || offset == "PST" || offset == "PDT")
-                    off = -8;
-                else if (offset == "UTC" || offset == "GMT")
-                    off = 0;
-            }
-            m_settings.OffsetOfUTC = off;
-            m_settings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST", OffsetOfUTCDST);
-            m_settings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode", EnableTeenMode);
-            m_settings.ShowTags = instanceSettings.GetInt("ShowTags", ShowTags);
-            m_settings.MaxGroups = instanceSettings.GetInt("MaxGroups", MaxGroups);
-            m_settings.AllowParcelWindLight = instanceSettings.GetBoolean("AllowParcelWindLight", AllowParcelWindLight);
-
-            string defaultunderpants = instanceSettings.GetString("DefaultUnderpants",
-                                                                  m_settings.DefaultUnderpants.ToString());
-            UUID.TryParse(defaultunderpants, out m_settings.m_DefaultUnderpants);
-            string defaultundershirt = instanceSettings.GetString("DefaultUndershirt",
-                                                                  m_settings.DefaultUndershirt.ToString());
-            UUID.TryParse(defaultundershirt, out m_settings.m_DefaultUndershirt);
         }
 
         #endregion
@@ -465,7 +388,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
                 body.Add("MaxHollowSize", OSD.FromReal(m_settings.MaximumHollowSize));
             if (m_settings.MinimumHoleSize != -1)
                 body.Add("MinHoleSize", OSD.FromReal(m_settings.MinimumHoleSize));
-            body.Add("EnforceMaxBuild", OSD.FromInteger(m_settings.ClampPrimSizes ? 1 : 0));
+            body.Add("EnforceMaxBuild", OSD.FromInteger(1));
 
             if (m_settings.MaximumLinkCount != -1)
                 body.Add("MaxLinkCount", OSD.FromInteger(m_settings.MaximumLinkCount));
@@ -495,7 +418,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             body.Add("ShowTags", OSD.FromInteger(m_settings.ShowTags));
             if (m_settings.MaxGroups != -1)
                 body.Add("MaxGroups", OSD.FromInteger(m_settings.MaxGroups));
-            body.Add("AllowParcelWindLight", OSD.FromInteger(m_settings.AllowParcelWindLight ? 1 : 0));
+            body.Add("AllowParcelWindLight", 1);
 
             //Add all the generic ones
             foreach (KeyValuePair<string, string> KVP in additionalKVPs)
@@ -533,7 +456,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             vars.Add("Allow Minimap", settings.DisplayMinimap ? "checked" : "");
             vars.Add("Allow Physical Prims", settings.AllowPhysicalPrims ? "checked" : "");
             vars.Add("Enable Teen Mode", settings.EnableTeenMode ? "checked" : "");
-            vars.Add("Enforce Max Build Constraints", settings.ClampPrimSizes ? "checked" : "");
+            vars.Add("Enforce Max Build Constraints", "checked");
             string HTMLPage = "";
             string path = Util.BasePathCombine(System.IO.Path.Combine("data", "OpenRegionSettingsPage.html"));
             if (System.IO.File.Exists(path))
@@ -565,7 +488,6 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             settings.DisplayMinimap = vars["Allow Minimap"] != null;
             settings.AllowPhysicalPrims = vars["Allow Physical Prims"] != null;
             settings.EnableTeenMode = vars["Enable Teen Mode"] != null;
-            settings.ClampPrimSizes = vars["Enforce Max Build Constraints"] != null;
             scene.RegionInfo.OpenRegionSettings = settings;
         }
 
