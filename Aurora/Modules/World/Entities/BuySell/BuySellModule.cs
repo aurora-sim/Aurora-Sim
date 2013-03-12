@@ -161,7 +161,7 @@ namespace Aurora.Modules.Entities.BuySell
                     item.CreationDate = Util.UnixTimeSinceEpoch();
 
                     m_scene.InventoryService.AddItemAsync(item,
-                        () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
+                        (itm) => remoteClient.SendInventoryItemCreateUpdate(itm, 0));
                     break;
 
                 case 3: // Sell contents

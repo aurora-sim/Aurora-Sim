@@ -685,10 +685,10 @@ namespace OpenSim.Services.Robust
 
         #region Async Functions
 
-        public void AddItemAsync(InventoryItemBase item, NoParam success)
+        public void AddItemAsync(InventoryItemBase item, Action<InventoryItemBase> success)
         {
             AddItem(item);
-            success();
+            success(item);
         }
 
         public void MoveItemsAsync(UUID agentID, List<InventoryItemBase> items, NoParam success)
