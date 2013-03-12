@@ -102,25 +102,6 @@ namespace Aurora.Framework
             }
         }
 
-        public static string CorrectSlash(string Path) //become someone is obsessed with perfection....
-        {
-            string slash;
-
-            if (Util.IsLinux)
-            {
-                slash = "/"; //forward slash
-            }
-            else
-            {
-                slash = "\\"; //back slash
-            }
-
-            Path = Path.Replace("/", slash);
-            Path = Path.Replace("\\", slash);
-
-            return Path;
-        }
-
         public static string ForceEndSlash(string Path)
         {
             string LastCharacter = Path.Last().ToString();
@@ -153,7 +134,7 @@ namespace Aurora.Framework
                 Path = ForceEndSlash(Path);
             }
 
-            return CorrectSlash(Path);
+            return Path;
         }
     }
 }
