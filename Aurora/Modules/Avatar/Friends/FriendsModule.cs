@@ -80,20 +80,10 @@ namespace Aurora.Modules.Friends
         public int GetFriendPerms(UUID principalID, UUID friendID)
         {
             FriendInfo[] friends = GetFriends(principalID);
-#if (!ISWIN)
-            foreach (FriendInfo fi in friends)
-            {
-                if (fi.Friend == friendID.ToString())
-                {
-                    return fi.TheirFlags;
-                }
-            }
-#else
             foreach (FriendInfo fi in friends.Where(fi => fi.Friend == friendID.ToString()))
             {
                 return fi.TheirFlags;
             }
-#endif
 
             return -1;
         }
@@ -174,7 +164,6 @@ namespace Aurora.Modules.Friends
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
-            scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
         }
 
         public void RegionLoaded(IScene scene)
@@ -194,7 +183,6 @@ namespace Aurora.Modules.Friends
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
-            scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
         }
 
         public string Name
@@ -269,49 +257,6 @@ namespace Aurora.Modules.Friends
             client.OnTerminateFriendship += OnTerminateFriendship;
             client.OnGrantUserRights += OnGrantUserRights;
             OfflineFriendRequest(client);
-        }
-
-        private void OnMakeRootAgent(IScenePresence presence)
-        {
-            //Only send if they are root!
-            Util.FireAndForget(delegate { SendFriendsOnlineIfNeeded(presence.ControllingClient); });
-        }
-
-        public void SendFriendsOnlineIfNeeded(IClientAPI client)
-        {
-            UUID agentID = client.AgentId;
-
-            // Send outstanding friendship offers
-            List<string> outstanding = new List<string>();
-            FriendInfo[] friends = GetFriends(agentID);
-            foreach (FriendInfo fi in friends)
-            {
-                if (fi.TheirFlags == -1)
-                    outstanding.Add(fi.Friend);
-            }
-
-            GridInstantMessage im = new GridInstantMessage(client.Scene, UUID.Zero, String.Empty, agentID,
-                                                           (byte) InstantMessageDialog.FriendshipOffered,
-                                                           "Will you be my friend?", true, Vector3.Zero);
-
-            foreach (string fid in outstanding)
-            {
-                UUID fromAgentID;
-                if (!UUID.TryParse(fid, out fromAgentID))
-                    continue;
-
-                UserAccount account = m_scene.UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs,
-                                                                                    fromAgentID);
-
-                im.fromAgentID = fromAgentID;
-                if (account != null)
-                    im.fromAgentName = account.Name;
-                im.offline = 1;
-                im.imSessionID = im.fromAgentID;
-
-                // Finally
-                LocalFriendshipOffered(agentID, im);
-            }
         }
 
         /// <summary>
@@ -465,20 +410,10 @@ namespace Aurora.Modules.Friends
                               target);
             // Let's find the friend in this user's friend list
             FriendInfo friend = null;
-#if (!ISWIN)
-            foreach (FriendInfo fi in friends)
-            {
-                if (fi.Friend == target.ToString())
-                {
-                    friend = fi;
-                }
-            }
-#else
             foreach (FriendInfo fi in friends.Where(fi => fi.Friend == target.ToString()))
             {
                 friend = fi;
             }
-#endif
 
             if (friend != null) // Found it
             {
@@ -657,57 +592,21 @@ namespace Aurora.Modules.Friends
 
                 // Update local cache
                 FriendInfo[] friends = GetFriends(friendID);
-                lock (m_Friends)
+                foreach (FriendInfo finfo in friends.Where(finfo => finfo.Friend == userID.ToString()))
                 {
-#if (!ISWIN)
-                    foreach (FriendInfo finfo in friends)
-                    {
-                        if (finfo.Friend == userID.ToString())
-                        {
-                            finfo.TheirFlags = rights;
-                        }
-                    }
-#else
-                    foreach (FriendInfo finfo in friends.Where(finfo => finfo.Friend == userID.ToString()))
-                    {
-                        finfo.TheirFlags = rights;
-                    }
-#endif
+                    finfo.TheirFlags = rights;
                 }
                 friends = GetFriends(userID);
-                lock (m_Friends)
+                foreach (FriendInfo finfo in friends.Where(finfo => finfo.Friend == friendID.ToString()))
                 {
-#if (!ISWIN)
-                    foreach (FriendInfo finfo in friends)
-                    {
-                        if (finfo.Friend == friendID.ToString())
-                        {
-                            finfo.MyFlags = rights;
-                        }
-                    }
-#else
-                    foreach (FriendInfo finfo in friends.Where(finfo => finfo.Friend == friendID.ToString()))
-                    {
-                        finfo.MyFlags = rights;
-                    }
-#endif
+                    finfo.MyFlags = rights;
                 }
                 //Add primFlag updates for all the prims in the sim with the owner, so that the new permissions are set up correctly
                 IScenePresence friendSP = friendClient.Scene.GetScenePresence(friendClient.AgentId);
-#if (!ISWIN)
-                foreach (ISceneEntity entity in friendClient.Scene.Entities.GetEntities())
-                {
-                    if (entity.OwnerID == userID)
-                    {
-                        entity.ScheduleGroupUpdateToAvatar(friendSP, PrimUpdateFlags.PrimFlags);
-                    }
-                }
-#else
                 foreach (ISceneEntity entity in friendClient.Scene.Entities.GetEntities().Where(entity => entity.OwnerID == userID))
                 {
                     entity.ScheduleGroupUpdateToAvatar(friendSP, PrimUpdateFlags.PrimFlags);
                 }
-#endif
 
                 return true;
             }
