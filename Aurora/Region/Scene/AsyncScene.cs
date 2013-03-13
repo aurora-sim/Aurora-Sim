@@ -296,7 +296,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_eventManager = new EventManager();
             m_permissions = new ScenePermissions(this);
 
-            m_sceneGraph = new SceneGraph(this, m_regInfo) { Entities = new AsyncEntityManager() };
+            m_sceneGraph = new SceneGraph(this, m_regInfo);
 
             #region Region Config
 
@@ -742,7 +742,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal IScenePresence CreateAndAddChildScenePresence (IClientAPI client)
         {
-            AsyncScenePresence newAvatar = new AsyncScenePresence(client, this) {IsChildAgent = true};
+            ScenePresence newAvatar = new ScenePresence(client, this) {IsChildAgent = true};
 
             m_sceneGraph.AddScenePresence(newAvatar);
 

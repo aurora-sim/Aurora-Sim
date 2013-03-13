@@ -35,9 +35,7 @@ namespace Aurora.Services.DataService
     public class LocalOfflineMessagesConnector : ConnectorBase, IOfflineMessagesConnector
     {
         private IGenericData GD;
-        private int m_maxGroupOfflineMessages = 50;
         private int m_maxOfflineMessages = 20;
-        private bool m_saveGroupOfflineMessages = true;
 
         #region IOfflineMessagesConnector Members
 
@@ -56,10 +54,6 @@ namespace Aurora.Services.DataService
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
             m_maxOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxOfflineMessages", m_maxOfflineMessages);
-            m_maxGroupOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxGroupOfflineMessages",
-                                                                                  m_maxGroupOfflineMessages);
-            m_saveGroupOfflineMessages = source.Configs["AuroraConnectors"].GetBoolean("SaveOfflineGroupChatMessages",
-                                                                                       m_saveGroupOfflineMessages);
             if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") ==
                 "LocalConnector")
             {
@@ -105,27 +99,12 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            if (message.fromGroup)
-            {
-                if (!m_saveGroupOfflineMessages)
-                    return false;
-                if (m_maxGroupOfflineMessages <= 0 ||
-                    GenericUtils.GetGenericCount(message.toAgentID, "GroupOfflineMessages", GD) < m_maxOfflineMessages)
-                {
-                    GenericUtils.AddGeneric(message.toAgentID, "GroupOfflineMessages", UUID.Random().ToString(),
-                                            message.ToOSD(), GD);
-                    return true;
-                }
-            }
-            else
-            {
-                if (m_maxOfflineMessages <= 0 ||
+            if (m_maxOfflineMessages <= 0 ||
                     GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
-                {
-                    GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(),
-                                            message.ToOSD(), GD);
-                    return true;
-                }
+            {
+                GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(),
+                                        message.ToOSD(), GD);
+                return true;
             }
             return false;
         }

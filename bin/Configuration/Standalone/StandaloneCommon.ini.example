@@ -11,11 +11,7 @@
     ;; The syntax is: Region_<RegionName> = <flags>
     ;; where <flags> can be DefaultRegion, FallbackRegion, NoDirectLogin, Persistent, LockedOut
     ;; For example:
-    Region_Aurora = DefaultRegion, FallbackRegion
-    
-    ;; Disable the checking of session ID's in the Grid Service
-    ;; This disables the security behind the Grid Service and allows regions to be registered and deregistered without verifying their identity.
-    DisableSessionID = false;
+    ;Region_Aurora = DefaultRegion, FallbackRegion
     
     ;; The maximum size a region can be
     ;; Note: 0 disables this check
@@ -44,7 +40,7 @@
 
 [LibraryService]
     ;;  Set this if you want to change the name of the Aurora Library
-    LibraryName = Aurora Library
+    LibraryName = "Aurora Library"
     LibraryOwnerName = "Library Owner"
 
 [LoginService]

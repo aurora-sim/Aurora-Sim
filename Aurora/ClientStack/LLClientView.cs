@@ -333,8 +333,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private int m_cachedTextureSerial;
 
-        private bool m_disableFacelights;
-
         ///<value>
         ///  Maintain a record of all the objects killed.  This allows us to stop an update being sent from the
         ///  thread servicing the m_primFullUpdates queue after a kill.  If this happens the object persists as an
@@ -479,12 +477,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         public bool IsLoggingOut { get; set; }
-
-        public bool DisableFacelights
-        {
-            get { return m_disableFacelights; }
-            set { m_disableFacelights = value; }
-        }
 
         public bool SendLogoutPacketWhenClosing
         {
@@ -3930,19 +3922,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 IEntity entity = update.Entity;
                 PrimUpdateFlags updateFlags = update.Flags;
-                if (entity is ISceneChildEntity)
-                {
-                    ISceneChildEntity part = (ISceneChildEntity) entity;
-
-                    if (part.ParentEntity.IsAttachment && m_disableFacelights)
-                    {
-                        if (part.ParentEntity.RootChild.Shape.State != (byte) AttachmentPoint.LeftHand &&
-                            part.ParentEntity.RootChild.Shape.State != (byte) AttachmentPoint.RightHand)
-                        {
-                            part.Shape.LightEntry = false;
-                        }
-                    }
-                }
 
                 bool canUseCompressed = true;
                 bool canUseImproved = true;

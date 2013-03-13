@@ -20,15 +20,15 @@
     ;; This will find the users last logged in date or if they are logged in and display it in the group panel
     FindUserOnlineStatus = true
 
+    ;; Aurora Generic Data backend groups service
+    ;; No setup required
+    ServicesConnectorModule = AuroraDataGroupsServicesConnectorModule
+
     ;;
-    ;; Services Setup
+    ;; Services Setup (ONLY REQUIRED IF YOU DO NOT WISH TO USE THE BUILT-IN VERSION)
     ;;
 
-    ;; SimianGrid Service for Groups  
-    ;ServicesConnectorModule = SimianGroupsServicesConnector
-    ;GroupsServerURI = http://127.0.0.1:82/Grid/
-
-    ;; Flotsam XmlRpc Service for Groups ROBUST or Other
+    ;; Flotsam XmlRpc Service for Groups ROBUST or Other, will not support all group features
     ;ServicesConnectorModule = XmlRpcGroupsServicesConnector
 	;; The path to your webserver where the FloatSam PHP web server parts are
     ;GroupsServerURI = "http://127.0.0.1/xmlrpc.php"
@@ -42,8 +42,3 @@
     ;; Only disable keep alive if you see a large number (dozens) of the following Exceptions:
     ;; System.Net.WebException: The request was aborted: The request was canceled.
     ;XmlRpcDisableKeepAlive = true
-
-    ;; Aurora Generic Data backend groups service
-    ;; No setup required
-	;; Does not support Simian
-    ServicesConnectorModule = AuroraDataGroupsServicesConnectorModule

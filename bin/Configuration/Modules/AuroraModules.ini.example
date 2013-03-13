@@ -37,6 +37,16 @@
     max_listens_per_script = 64
     max_listens_per_region = 1000
 
+[SimConsole]
+    ;; If you would like to be able to use the console in your viewer (2.x or higher), enable this module
+    Enabled = false
+    ;; This controls what users can access the console
+    ;; To add a new user, type their user name, then put a "|" and put either
+    ;;    Read, Write, ReadWrite, None
+    ;; This tells the module what permission they have to be able to use the console and should be self explanatory.
+    ;; To add another user, just add another "|" after the last ReadWrite permission and repeat.
+    ;Users = "Test User|ReadWrite"
+
 [Messaging]
     ;; Control which region module is used for instant messaging.
     ;; Default is InstantMessageModule (this is the name of the core IM module as well as the setting)
@@ -47,11 +57,7 @@
     MuteListModule = AuroraChatModule
     LureModule = AuroraLureModule
 	;; Allow people in god mode to force tp others
-	AllowGodTeleports = false
-
-    ;; Control whether group messages are forwarded to offline users.
-    ;; Default is true.
-    ;ForwardOfflineGroupMessages = true
+	AllowGodTeleports = true
     
     ;; Control whether offline IMs should be sent to the user's email as well
     ;; Default is false
@@ -93,8 +99,8 @@
     ; Test_RegionMaptileStaticUUID = "00000000-0000-0000-0000-000000000000"
 
     ;; The amount of map to load in the client when first loading the map
-    ;; Default is 100
-    MapViewLength = 100
+    ;; Default is 20
+    MapViewLength = 20
 
 [GodModule]
     GodModule = AuroraGodModModule
@@ -152,14 +158,6 @@
 	;; This is approximately the same speed as Second Life
 	RegenerateHealthSpeed = 0.50
 
-[Weather]
-    ;; Enables changing weather for clients that support WindLight Settings
-    Enabled = false
-
-[WindLightSettings]
-    ;; Should the setting of WindLight settings from the client be enabled?
-    Enabled = true
-
 [AbuseReports]
     Enabled = true
 
@@ -175,6 +173,10 @@
 
 [CallingCardModule]
     ;; This allows for calling cards to be used
+    Enabled = true
+
+[MediaOnAPrim]
+    ;; Enable media on a prim facilities
     Enabled = true
 
 [VisitorLogModule]
@@ -205,17 +207,7 @@
     UseDwell = true;
 	
 	;; The default owner of parcels (Leave blank to have the user be no one)
-	GodParcelOwner = 
-
-[SimConsole]
-    ;; If you would like to be able to use the console in your viewer (2.x or higher), enable this module
-    Enabled = false
-    ;; This controls what users can access the console
-    ;; To add a new user, type their user name, then put a "|" and put either
-    ;;    Read, Write, ReadWrite, None
-    ;; This tells the module what permission they have to be able to use the console and should be self explanatory.
-    ;; To add another user, just add another "|" after the last ReadWrite permission and repeat.
-    ;Users = "Test User|ReadWrite"
+	;GodParcelOwner = 
 
 [VersionControl]
     ;;

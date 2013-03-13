@@ -488,9 +488,7 @@ namespace OpenSim.Region.Framework.Scenes
                         lock (m_scene.SyncRoot)
                         {
                             if (m_physicsActor != null)
-                            {
                                 m_physicsActor.Position = value;
-                            }
                         }
                     }
                     catch (Exception e)
@@ -2768,7 +2766,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
-            Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
+            Dictionary<uint, ContactPoint> coldata = collisionData.GetCollisionEvents();
 
             if (coldata.Keys.Count > 0)
             {

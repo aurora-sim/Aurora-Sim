@@ -100,11 +100,6 @@ namespace Aurora.Framework
         void Shutdown();
 
         /// <summary>
-        ///   Make a copy of the given data store
-        /// </summary>
-        ISimulationDataStore Copy();
-
-        /// <summary>
         /// Clears out all references of the backup stream and dumps local caches
         /// </summary>
         void CacheDispose();
@@ -116,8 +111,15 @@ namespace Aurora.Framework
         /// <returns></returns>
         RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion);
 
+        /// <summary>
+        /// Set the region ref
+        /// </summary>
+        /// <param name="scene"></param>
         void SetRegion(IScene scene);
 
+        /// <summary>
+        /// Forces the datastore to backup the region
+        /// </summary>
         void ForceBackup();
     }
 }

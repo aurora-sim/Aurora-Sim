@@ -4077,7 +4077,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             CollisionEventUpdate a = (CollisionEventUpdate) e;
-            Dictionary<uint, ContactPoint> collissionswith = a.m_objCollisionList;
+            Dictionary<uint, ContactPoint> collissionswith = a.GetCollisionEvents();
             List<uint> thisHitColliders = new List<uint>();
             List<uint> startedColliders = new List<uint>();
             ContactPoint startedCollider = new ContactPoint();

@@ -95,11 +95,6 @@ namespace Aurora.Modules
             set { m_saveBackups = value; }
         }
 
-        public virtual ISimulationDataStore Copy()
-        {
-            return new FileBasedSimulationData();
-        }
-
         public virtual void CacheDispose()
         {
             _regionData.Dispose();
@@ -553,6 +548,7 @@ namespace Aurora.Modules
                     File.Copy(filename, BuildOldSaveFileName());
                 }
             }
+            regiondata.Dispose();
             //Now make it the full file again
             MapTileNeedsGenerated = true;
             MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);

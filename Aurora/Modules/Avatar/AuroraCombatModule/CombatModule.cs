@@ -538,7 +538,7 @@ namespace Aurora.Modules.Combat
                     return;
 
                 CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
-                Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
+                Dictionary<uint, ContactPoint> coldata = collisionData.GetCollisionEvents();
 
                 float starthealth = Health;
                 IScenePresence killingAvatar = null;

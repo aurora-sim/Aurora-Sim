@@ -299,14 +299,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             #region Region Config
 
-            IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
-            if (aurorastartupConfig != null)
-            {
-                //Region specific is still honored here, the RegionInfo checks for it, and if it is 0, it didn't set it
-                if (RegionInfo.ObjectCapacity == 0)
-                    RegionInfo.ObjectCapacity = aurorastartupConfig.GetInt("ObjectCapacity", 80000);
-            }
-
             IConfig packetConfig = m_config.Configs["PacketPool"];
             if (packetConfig != null)
             {
@@ -355,7 +347,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (shuttingdown)
             {
-                MainConsole.Instance.WarnFormat("[SCENE]: Ignoring close request because already closing {0}", RegionInfo.RegionName);
+                MainConsole.Instance.WarnFormat("[Scene]: Ignoring close request because already closing {0}", RegionInfo.RegionName);
                 return;
             }
 
@@ -465,17 +457,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (m_frame % m_update_entities == 0)
                         m_sceneGraph.UpdateEntities();
-
-                    /*BlankHandler[] events;
-                    lock (m_events)
-                    {
-                        events = new BlankHandler[m_events.Count];
-                        m_events.CopyTo(events);
-                        m_events.Clear();
-                    }
-                    foreach (BlankHandler h in events)
-                        try { h(); }
-                        catch { }*/
 
                     if (m_frame % m_update_events == 0)
                         m_sceneGraph.PhysicsScene.UpdatesLoop();

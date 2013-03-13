@@ -56,16 +56,6 @@ namespace Aurora.Simulation.Base
         public static bool m_saveCrashDumps;
 
         /// <summary>
-        ///   Should we send an error report?
-        /// </summary>
-        public static bool m_sendErrorReport;
-
-        /// <summary>
-        ///   Where to post errors
-        /// </summary>
-        public static string m_urlToPostErrors = "http://aurora-sim.org/CrashReports/crashreports.php";
-
-        /// <summary>
         ///   Loader of configuration files
         /// </summary>
         private static readonly ConfigurationLoader m_configLoader = new ConfigurationLoader();
@@ -171,14 +161,6 @@ namespace Aurora.Simulation.Base
 
             // check auto restart
             bool AutoRestart = m_configSource.Configs["Startup"].GetBoolean("AutoRestartOnCrash", true);
-
-            //Set up the error reporting
-            if (m_configSource.Configs["ErrorReporting"] != null)
-            {
-                m_sendErrorReport = m_configSource.Configs["ErrorReporting"].GetBoolean("SendErrorReports", true);
-                m_urlToPostErrors = m_configSource.Configs["ErrorReporting"].GetString("ErrorReportingURL",
-                                                                                       m_urlToPostErrors);
-            }
 
             bool Running = true;
             //If auto restart is set, then we always run.
@@ -681,26 +663,6 @@ namespace Aurora.Simulation.Base
                 catch (Exception e2)
                 {
                     MainConsole.Instance.ErrorFormat("[CRASH LOGGER CRASHED]: {0}", e2);
-                }
-            }
-
-            if (m_sendErrorReport)
-            {
-                Hashtable param = new Hashtable
-                                      {
-                                          {"Version", VersionInfo.Version},
-                                          {"Message", msg},
-                                          {"Platform", Environment.OSVersion.Platform.ToString()}
-                                      };
-                IList parameters = new ArrayList();
-                parameters.Add(param);
-                ConfigurableKeepAliveXmlRpcRequest req = new ConfigurableKeepAliveXmlRpcRequest("SendErrorReport", parameters, true);
-                try
-                {
-                    req.Send(m_urlToPostErrors, 10000);
-                }
-                catch
-                {
                 }
             }
         }

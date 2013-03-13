@@ -41,7 +41,6 @@ namespace Aurora.Modules.Chat
         private bool enabled = true;
         private IScene m_Scene;
         private IMessageTransferModule m_TransferModule = null;
-        private bool m_ForwardOfflineGroupMessages = true;
         private IOfflineMessagesConnector OfflineMessagesConnector;
         private bool m_SendOfflineMessagesToEmail = false;
         private Dictionary<UUID, List<GridInstantMessage>> m_offlineMessagesCache = new Dictionary<UUID, List<GridInstantMessage>>();
@@ -61,7 +60,6 @@ namespace Aurora.Modules.Chat
                 return;
             }
 
-            m_ForwardOfflineGroupMessages = cnf.GetBoolean ("ForwardOfflineGroupMessages", m_ForwardOfflineGroupMessages);
             m_SendOfflineMessagesToEmail = cnf.GetBoolean ("SendOfflineMessagesToEmail", m_SendOfflineMessagesToEmail);
         }
 
@@ -204,7 +202,7 @@ namespace Aurora.Modules.Chat
                     return;
             }
             else if ((im.offline != 0)
-                && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))
+                && (!im.fromGroup || im.fromGroup))
             {
                 if (im.dialog == 32) //Group notice
                 {

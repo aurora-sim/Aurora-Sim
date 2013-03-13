@@ -109,7 +109,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public AgentCircuitManager m_circuitManager;
 
         private int m_defaultRTO;
-        private bool m_disableFacelights;
 
         /// <summary>
         ///   Keeps track of the number of 100 millisecond periods elapsed in the outgoing packet handler executed
@@ -236,7 +235,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_defaultRTO = config.GetInt("DefaultRTO", 1000);
                 m_maxRTO = config.GetInt("MaxRTO", 20000);
                 ClientTimeOut = config.GetInt("ClientTimeOut", 500);
-                m_disableFacelights = config.GetBoolean("DisableFacelights", false);
             }
             else
             {
@@ -1027,8 +1025,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 LLClientView client = new LLClientView(remoteEndPoint, m_scene, this, udpClient, sessionInfo, agentID,
                                                        sessionID, circuitCode);
                 client.OnLogout += LogoutHandler;
-
-                client.DisableFacelights = m_disableFacelights;
 
                 // Start the IClientAPI
                 m_scene.AddNewClient(client, BlankDelegate);

@@ -52,12 +52,7 @@ namespace Aurora.Framework
         // Raising the event on the object, so don't need to provide location..  further up the tree knows that info.
 
         public bool Cleared;
-        public Dictionary<uint, ContactPoint> m_objCollisionList = new Dictionary<uint, ContactPoint>();
-
-        public CollisionEventUpdate(Dictionary<uint, ContactPoint> objCollisionList)
-        {
-            m_objCollisionList = objCollisionList;
-        }
+        private Dictionary<uint, ContactPoint> m_objCollisionList = new Dictionary<uint, ContactPoint>();
 
         public CollisionEventUpdate()
         {
@@ -104,6 +99,17 @@ namespace Aurora.Framework
             {
                 foreach (KeyValuePair<uint, ContactPoint> kvp in m_objCollisionList)
                     c.m_objCollisionList.Add(kvp.Key, kvp.Value);
+            }
+            return c;
+        }
+
+        public Dictionary<uint, ContactPoint> GetCollisionEvents()
+        {
+            Dictionary<uint, ContactPoint> c = new Dictionary<uint, ContactPoint>();
+            lock (m_objCollisionList)
+            {
+                foreach (KeyValuePair<uint, ContactPoint> kvp in m_objCollisionList)
+                    c.Add(kvp.Key, kvp.Value);
             }
             return c;
         }

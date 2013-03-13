@@ -7,9 +7,6 @@
     EntityTransferModule = BasicEntityTransferModule
     InventoryAccessModule = BasicInventoryAccessModule
 
-[Configuration]
-    UseRegistrationService = false
-
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector
     AssetConnector = LocalConnector
@@ -29,17 +26,11 @@
     EmailConnector = LocalConnector
 
     ;; Max non-group chat messages that the server will store per user
-    MaxOfflineMessages = 20
-
-    ;; Whether we should save any group chat messages for users
-    SaveOfflineGroupChatMessages = true
-
-    ;; The maximum number of group chat messages that the server will store per user
-    MaxGroupOfflineMessages = 50
+    MaxOfflineMessages = 50
 
     DoRemoteCalls = False
-    CapsServiceDoRemoteCalls = False
     AllowRemoteCalls = False
+	
 [Handlers]
     ;;Add any handlers here that you do not want to use
     LLLoginHandler = LLLoginServiceInConnector
