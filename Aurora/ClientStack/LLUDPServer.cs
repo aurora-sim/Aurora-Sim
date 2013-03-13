@@ -813,7 +813,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     object[] array = new object[] { buffer, packet, sessionData };
                     if (m_asyncPacketHandling)
-                        Util.FireAndForget(HandleUseCircuitCode, array);
+                        FireAndForget(HandleUseCircuitCode, array);
                     else
                         HandleUseCircuitCode(array);
                 }
@@ -1199,13 +1199,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
 
                 if (packetInbox.Dequeue(100, ref incomingPacket))
-                {
-                    //Async is dealt with other places, we shouldn't be calling for the threadpool here, it will call down lower...
-                    //if (m_server.m_asyncPacketHandling)
-                    //    Util.FireAndForget(ProcessInPacket, incomingPacket);
-                    //else
                     ProcessInPacket(incomingPacket);
-                }
             }
             catch (Exception ex)
             {

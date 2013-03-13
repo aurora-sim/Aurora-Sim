@@ -83,7 +83,6 @@ namespace Aurora.Modules
         private static readonly Object vlock = new Object();
 
         // Control info, e.g. vivox server, admin user, admin password
-        private static bool m_pluginEnabled = false;
         private static bool m_adminConnected = false;
 
         private static string m_vivoxServer;
@@ -201,8 +200,6 @@ namespace Aurora.Modules
                 // Get admin rights and cleanup any residual channel definition
 
                 DoAdminLogin();
-
-                m_pluginEnabled = true;
 
                 MainConsole.Instance.Info("[VivoxVoice]: plugin enabled");
 

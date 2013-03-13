@@ -2124,7 +2124,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void SendCoarseLocations (List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
         {
-            Util.FireAndForget((o) => SendCoarseLocationsDefault(m_scene.RegionInfo.RegionID, this, coarseLocations, avatarUUIDs));
+            SendCoarseLocationsDefault(m_scene.RegionInfo.RegionID, this, coarseLocations, avatarUUIDs);
         }
 
         public virtual void SendCoarseLocationsDefault (UUID sceneId, IScenePresence p, List<Vector3> coarseLocations, List<UUID> avatarUUIDs)

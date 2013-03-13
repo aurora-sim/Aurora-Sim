@@ -72,6 +72,7 @@ namespace Aurora.Modules.ObjectCache
                 {
                 }
             }
+            m_Enabled = false;
         }
 
         public virtual void AddRegion(IScene scene)

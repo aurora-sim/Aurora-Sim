@@ -101,15 +101,12 @@ namespace Aurora.Modules.Land
 
         bool EventManager_OnSceneGroupMove(UUID groupID, Vector3 pos)
         {
-            Util.FireAndForget(delegate                   
-            {
-                IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
-                ILandObject landObject = parcelManagment.GetLandObject(pos.X,pos.Y) ?? parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
-                if (landObject == null) return;
-                ParcelCounts parcelCounts;
-                if ((m_ParcelCounts.TryGetValue(landObject.LandData.GlobalID, out parcelCounts)) && (!parcelCounts.Objects.ContainsKey(groupID)))
-                    m_Tainted = true;
-            });
+            IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
+            ILandObject landObject = parcelManagment.GetLandObject(pos.X, pos.Y) ?? parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
+            if (landObject == null) return true;
+            ParcelCounts parcelCounts;
+            if ((m_ParcelCounts.TryGetValue(landObject.LandData.GlobalID, out parcelCounts)) && (!parcelCounts.Objects.ContainsKey(groupID)))
+                m_Tainted = true;
             return true;
         }
 

@@ -405,17 +405,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected void SendFullUpdateForPresence(IScenePresence presence)
         {
-            Util.FireAndForget(delegate
-                                   {
-                                       m_presence.ControllingClient.SendAvatarDataImmediate(presence);
-                                       //Send the animations too
-                                       presence.Animator.SendAnimPackToClient(m_presence.ControllingClient);
-                                       //Send the presence of this agent to us
-                                       IAvatarAppearanceModule module =
-                                           presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                                       if (module != null)
-                                           module.SendAppearanceToAgent(m_presence);
-                                   });
+            m_presence.ControllingClient.SendAvatarDataImmediate(presence);
+            //Send the animations too
+            presence.Animator.SendAnimPackToClient(m_presence.ControllingClient);
+            //Send the presence of this agent to us
+            IAvatarAppearanceModule module =
+                presence.RequestModuleInterface<IAvatarAppearanceModule>();
+            if (module != null)
+                module.SendAppearanceToAgent(m_presence);
         }
 
         private void AddPresenceToCurrentlyInView(IScenePresence presence)

@@ -4062,7 +4062,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         ISceneChildEntity cEntity = (ISceneChildEntity) entity;
                         compressedUpdates.Add(update);
                         //We are sending a compressed, which the client will save, add it to the cache
-                        module.AddCachedObject(AgentId, entity.LocalId, cEntity.CRC);
+                        if(module != null)
+                            module.AddCachedObject(AgentId, entity.LocalId, cEntity.CRC);
                         CompressedFlags Flags = CompressedFlags.None;
                         if (updateFlags == PrimUpdateFlags.FullUpdate || updateFlags == PrimUpdateFlags.FindBest)
                         {

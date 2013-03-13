@@ -47,8 +47,6 @@ namespace Aurora.Modules.Friends
         public bool m_enabled = true;
         protected bool m_firstStart = true;
 
-        protected Dictionary<UUID, List<UUID>> m_friendsToInformOfStatusChanges = new Dictionary<UUID, List<UUID>>();
-
         protected IFriendsService FriendsService
         {
             get { return m_scene.RequestModuleInterface<IFriendsService>(); }
@@ -115,15 +113,6 @@ namespace Aurora.Modules.Friends
                 // we're done
                 return;
             }
-
-            lock (m_friendsToInformOfStatusChanges)
-            {
-                if (!m_friendsToInformOfStatusChanges.ContainsKey(FriendToInformID))
-                    m_friendsToInformOfStatusChanges.Add(FriendToInformID, new List<UUID>());
-                m_friendsToInformOfStatusChanges[FriendToInformID].Add(userID);
-            }
-
-            // Friend is not online. Ignore.
         }
 
         public FriendInfo[] GetFriends(UUID agentID)
@@ -280,11 +269,6 @@ namespace Aurora.Modules.Friends
             client.OnTerminateFriendship += OnTerminateFriendship;
             client.OnGrantUserRights += OnGrantUserRights;
             OfflineFriendRequest(client);
-            //Only send if they are root!
-            //Util.FireAndForget(delegate(object o)
-            //{
-            //    SendFriendsOnlineIfNeeded(client);
-            //});
         }
 
         private void OnMakeRootAgent(IScenePresence presence)
@@ -327,19 +311,6 @@ namespace Aurora.Modules.Friends
 
                 // Finally
                 LocalFriendshipOffered(agentID, im);
-            }
-
-            lock (m_friendsToInformOfStatusChanges)
-            {
-                if (m_friendsToInformOfStatusChanges.ContainsKey(agentID))
-                {
-                    List<UUID> onlineFriends = new List<UUID>(m_friendsToInformOfStatusChanges[agentID]);
-                    foreach (UUID friend in onlineFriends)
-                    {
-                        SendFriendsStatusMessage(agentID, friend, true);
-                    }
-                    m_friendsToInformOfStatusChanges.Remove(agentID);
-                }
             }
         }
 

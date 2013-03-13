@@ -318,16 +318,10 @@ namespace Aurora.Modules.Inventory
         /// <param name="folderID"></param>
         protected void HandlePurgeInventoryDescendents(IClientAPI remoteClient, UUID folderID)
         {
-            InventoryFolderBase folder = new InventoryFolderBase(folderID, remoteClient.AgentId);
-            Util.FireAndForget(PurgeFolderAsync, folder);
-        }
-
-        private void PurgeFolderAsync(object folder)
-        {
-            if (m_scene.InventoryService.PurgeFolder((InventoryFolderBase)folder))
-                MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: folder {0} purged successfully", ((InventoryFolderBase)folder).ID);
+            if (m_scene.InventoryService.PurgeFolder(new InventoryFolderBase(folderID, remoteClient.AgentId)))
+                MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: folder {0} purged successfully", folderID);
             else
-                MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: could not purge folder {0} for client {1}", ((InventoryFolderBase)folder).ID, ((InventoryFolderBase)folder).Owner);
+                MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: could not purge folder {0} for client {1}", folderID, remoteClient.AgentId);
         }
 
         /// <summary>

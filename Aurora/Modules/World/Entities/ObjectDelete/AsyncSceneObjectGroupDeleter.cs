@@ -33,6 +33,7 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
+using System.Threading;
 
 namespace Aurora.Modules.Entities.ObjectDelete
 {
@@ -155,7 +156,8 @@ namespace Aurora.Modules.Entities.ObjectDelete
             if (DeleteObject())
             {
                 //Requeue us if there is some left
-                Util.FireAndForget(DoDeleteObject);
+                Thread.Sleep(5);
+                DoDeleteObject(o);
             }
             else
             {

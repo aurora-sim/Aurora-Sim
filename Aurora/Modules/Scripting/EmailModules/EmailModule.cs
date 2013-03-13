@@ -233,11 +233,7 @@ namespace Aurora.Modules.Scripting
         ///<returns></returns>
         public void GetNextEmailAsync(UUID objectID, string sender, string subject, NextEmail handler, IScene scene)
         {
-#if (!ISWIN)
-            Util.FireAndForget(delegate { handler(GetNextEmail(objectID, sender, subject, scene)); });
-#else
             Util.FireAndForget(state => handler(GetNextEmail(objectID, sender, subject, scene)));
-#endif
         }
 
         ///<summary>
