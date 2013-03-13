@@ -116,7 +116,8 @@ namespace OpenSim.Services.InventoryService
                             }
                         }
                         AddItem(item.Item);
-                        _tempItemCache.Remove(item.Item.ID);
+                        lock (_tempItemCache)
+                            _tempItemCache.Remove(item.Item.ID);
                         if(item.Complete != null)
                             item.Complete(item.Item);
                     }
@@ -878,8 +879,11 @@ namespace OpenSim.Services.InventoryService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual InventoryItemBase GetItem(InventoryItemBase item)
         {
-            if (_tempItemCache.ContainsKey(item.ID))
-                return _tempItemCache[item.ID];
+            lock (_tempItemCache)
+            {
+                if (_tempItemCache.ContainsKey(item.ID))
+                    return _tempItemCache[item.ID];
+            }
             object remoteValue = DoRemote(item);
             if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryItemBase)remoteValue;
@@ -1014,8 +1018,13 @@ namespace OpenSim.Services.InventoryService
 
         public void AddItemAsync(InventoryItemBase item, Action<InventoryItemBase> success)
         {
-            if (!_tempItemCache.ContainsKey(item.ID))
-                _tempItemCache.Add(item.ID, item);
+            if (item == null)
+                return;
+            lock (_tempItemCache)
+            {
+                if (!_tempItemCache.ContainsKey(item.ID))
+                    _tempItemCache.Add(item.ID, item);
+            }
             _addInventoryItemQueue.Add(item.Owner, new AddInventoryItemStore(item, success));
         }
 
