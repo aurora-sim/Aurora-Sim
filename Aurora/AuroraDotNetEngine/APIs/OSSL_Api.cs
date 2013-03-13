@@ -41,8 +41,6 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using GridRegion = Aurora.Framework.GridRegion;
 using Group = System.Text.RegularExpressions.Group;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
@@ -2881,8 +2879,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IEntity entity;
             if (World.Entities.TryGetValue(target, out entity))
             {
-                if (entity is SceneObjectGroup)
-                    ((SceneObjectGroup)entity).Rotation = rotation;
+                if (entity is ISceneEntity)
+                    ((ISceneEntity)entity).Rotation = rotation;
                 else if (entity is IScenePresence)
                     (entity).Rotation = rotation;
             }

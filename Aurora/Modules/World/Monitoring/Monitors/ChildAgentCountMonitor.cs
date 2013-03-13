@@ -26,9 +26,8 @@
  */
 
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
     internal class ChildAgentCountMonitor : IMonitor
     {

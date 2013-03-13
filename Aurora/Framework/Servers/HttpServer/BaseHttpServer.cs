@@ -728,29 +728,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             try
             {
-                // OpenSim.Framework.WebUtil.OSHeaderRequestID
-                //                if (request.Headers["opensim-request-id"] != null)
-                //                    reqnum = String.Format("{0}:{1}",request.RemoteIPEndPoint,request.Headers["opensim-request-id"]);
-                //MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: <{0}> handle request for {1}",reqnum,request.RawUrl);
-
                 System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US", true);
-
-                //                //  This is the REST agent interface. We require an agent to properly identify
-                //                //  itself. If the REST handler recognizes the prefix it will attempt to
-                //                //  satisfy the request. If it is not recognizable, and no damage has occurred
-                //                //  the request can be passed through to the other handlers. This is a low
-                //                //  probability event; if a request is matched it is normally expected to be
-                //                //  handled
-                //                IHttpAgentHandler agentHandler;
-                //
-                //                if (TryGetAgentHandler(request, response, out agentHandler))
-                //                {
-                //                    if (HandleAgentRequest(agentHandler, request, response))
-                //                    {
-                //                        requestEndTick = Environment.TickCount;
-                //                        return;
-                //                    }
-                //                }
 
                 //response.KeepAlive = true;
                 response.SendChunked = false;

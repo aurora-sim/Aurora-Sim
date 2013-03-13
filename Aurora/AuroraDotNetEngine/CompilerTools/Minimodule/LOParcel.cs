@@ -27,7 +27,6 @@
 
 using System;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

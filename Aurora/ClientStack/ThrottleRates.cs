@@ -29,7 +29,7 @@ using System;
 using Nini.Config;
 using Aurora.Framework;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     /// <summary>
     ///   Holds drip rates and maximum burst rates for throttling with hierarchical

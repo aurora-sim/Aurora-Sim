@@ -36,7 +36,6 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Entities.PhysicsMaterials
 {

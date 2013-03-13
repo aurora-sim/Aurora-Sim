@@ -36,8 +36,6 @@ using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Serialization.External;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
 
 namespace Aurora.Modules.Archivers
 {
@@ -581,19 +579,19 @@ namespace Aurora.Modules.Archivers
                 else if (assetType == AssetType.Object)
                 {
                     string xmlData = Utils.BytesToString(data);
-                    List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>
+                    List<ISceneEntity> sceneObjects = new List<ISceneEntity>
                                                               {
-                                                                  SceneObjectSerializer.FromOriginalXmlFormat(xmlData,
+                                                                  SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(xmlData,
                                                                                                               m_registry)
                                                               };
 
                     if (m_creatorIdForAssetId.ContainsKey(UUID.Parse(uuid)))
                     {
-                        foreach (SceneObjectPart sop in from sog in sceneObjects from sop in sog.Parts where string.IsNullOrEmpty(sop.CreatorData) select sop)
+                        foreach (ISceneChildEntity sop in from sog in sceneObjects from sop in sog.ChildrenEntities() where string.IsNullOrEmpty(sop.CreatorData) select sop)
                             sop.CreatorID = m_creatorIdForAssetId[UUID.Parse(uuid)];
                     }
-                    foreach (SceneObjectGroup sog in sceneObjects)
-                        foreach (SceneObjectPart sop in sog.Parts)
+                    foreach (ISceneEntity sog in sceneObjects)
+                        foreach (ISceneChildEntity sop in sog.ChildrenEntities())
                         {
                             //Fix ownerIDs and perms
                             sop.Inventory.ApplyGodPermissions((uint)PermissionMask.All);
@@ -602,7 +600,7 @@ namespace Aurora.Modules.Archivers
                                 item.OwnerID = m_userInfo.PrincipalID;
                             sop.OwnerID = m_userInfo.PrincipalID;
                         }
-                    data = Utils.StringToBytes(SceneObjectSerializer.ToOriginalXmlFormat(sceneObjects[0]));
+                    data = Utils.StringToBytes(SceneEntitySerializer.SceneObjectSerializer.ToOriginalXmlFormat(sceneObjects[0]));
                 }
                 //MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
 

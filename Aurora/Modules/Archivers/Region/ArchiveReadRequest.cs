@@ -36,8 +36,6 @@ using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Serialization.External;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using System.Linq;
 
 namespace Aurora.Modules.Archivers
@@ -178,7 +176,7 @@ namespace Aurora.Modules.Archivers
             int sceneObjectsLoadedCount = 0;
 
             //We save the groups so that we can back them up later
-            List<SceneObjectGroup> groupsToBackup = new List<SceneObjectGroup>();
+            List<ISceneEntity> groupsToBackup = new List<ISceneEntity>();
             List<LandData> landData = new List<LandData>();
 
             // must save off some stuff until after assets have been saved and recieved new uuids
@@ -295,7 +293,7 @@ namespace Aurora.Modules.Archivers
                     if (didChange)
                         data3 = Utils.StringToBytes(stringData);
 
-                    SceneObjectGroup sceneObject = (SceneObjectGroup)serialiser.DeserializeGroupFromXml2(data3, m_scene);
+                    ISceneEntity sceneObject = serialiser.DeserializeGroupFromXml2(data3, m_scene);
 
                     if (sceneObject == null)
                     {
@@ -304,7 +302,7 @@ namespace Aurora.Modules.Archivers
                         continue;
                     }
 
-                    foreach (SceneObjectPart part in sceneObject.ChildrenList)
+                    foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
                     {
                         if (string.IsNullOrEmpty(part.CreatorData))
                             part.CreatorID = ResolveUserUuid(part.CreatorID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
@@ -381,7 +379,7 @@ namespace Aurora.Modules.Archivers
             }
 
             //Now back up the prims
-            foreach (SceneObjectGroup grp in groupsToBackup)
+            foreach (ISceneEntity grp in groupsToBackup)
             {
                 //Backup!
                 grp.HasGroupChanged = true;

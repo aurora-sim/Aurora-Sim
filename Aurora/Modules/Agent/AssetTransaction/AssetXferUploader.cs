@@ -30,7 +30,6 @@ using System.IO;
 using System.Reflection;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Agent.AssetTransaction
 {

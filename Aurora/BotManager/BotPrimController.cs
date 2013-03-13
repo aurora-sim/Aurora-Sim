@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Aurora.Framework;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.BotManager
 {

@@ -35,8 +35,6 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Caps
 {
@@ -302,7 +300,7 @@ namespace Aurora.Modules.Caps
             pbs.Scale = scale;
             pbs.State = (byte) state;
 
-            SceneObjectGroup obj = null;
+            ISceneEntity obj = null;
 
             string reason;
             if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos, out reason))
@@ -310,7 +308,7 @@ namespace Aurora.Modules.Caps
                 // rez ON the ground, not IN the ground
                 // pos.Z += 0.25F;
 
-                obj = (SceneObjectGroup) m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
+                obj = m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
             }
             else
             {
@@ -321,7 +319,7 @@ namespace Aurora.Modules.Caps
             if (obj == null)
                 return MainServer.BadRequest;
 
-            SceneObjectPart rootpart = obj.RootPart;
+            ISceneChildEntity rootpart = obj.RootChild;
             rootpart.Shape = pbs;
             rootpart.Flags |= (PrimFlags) flags;
             rootpart.EveryoneMask = everyone_mask;

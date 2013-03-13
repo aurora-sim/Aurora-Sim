@@ -33,7 +33,6 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Groups
 {

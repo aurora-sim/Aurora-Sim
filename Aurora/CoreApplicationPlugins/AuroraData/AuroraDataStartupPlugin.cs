@@ -29,7 +29,7 @@ using Aurora.Services.DataService;
 using Nini.Config;
 using Aurora.Framework;
 
-namespace OpenSim.CoreApplicationPlugins
+namespace Aurora.CoreApplicationPlugins
 {
     public class AuroraDataStartupPlugin : IApplicationPlugin
     {

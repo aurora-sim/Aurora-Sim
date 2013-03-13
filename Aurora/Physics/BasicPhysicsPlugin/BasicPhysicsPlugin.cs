@@ -28,7 +28,7 @@
 using Aurora.Framework;
 using Aurora.Framework.Physics;
 
-namespace OpenSim.Region.Physics.BasicPhysicsPlugin
+namespace Aurora.Physics.BasicPhysicsPlugin
 {
     /// <summary>
     ///   Effectively a physics plugin that simulates no physics at all.

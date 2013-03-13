@@ -28,7 +28,6 @@
 using System;
 using Nini.Config;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Cloud
 {

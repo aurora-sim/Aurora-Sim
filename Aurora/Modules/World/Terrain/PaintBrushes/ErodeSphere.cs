@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Terrain.PaintBrushes
 {

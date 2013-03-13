@@ -37,10 +37,9 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenSim.Region.Framework.Interfaces;
 using Amib.Threading;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     /// <summary>
     ///   The LLUDP server for a region. This handles incoming and outgoing

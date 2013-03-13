@@ -31,13 +31,11 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Scenes.Components;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     public class ScriptStateSave
     {
-        private string m_componentName = "ScriptState";
         private ScriptEngine m_module;
         private object StateSaveLock = new object();
 

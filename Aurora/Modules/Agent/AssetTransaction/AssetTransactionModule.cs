@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Agent.AssetTransaction
 {

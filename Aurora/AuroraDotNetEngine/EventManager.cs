@@ -31,7 +31,6 @@ using System.Linq;
 using System.Reflection;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

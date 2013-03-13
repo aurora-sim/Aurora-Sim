@@ -38,9 +38,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
@@ -55,6 +52,7 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using Aurora.Framework.Serialization;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
@@ -1402,11 +1400,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     if (!allow)
                         return;
-                    ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus(true);
+                    m_host.ParentEntity.ScriptSetPhysicsStatus(true);
                 }
                 else
                 {
-                    ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus(false);
+                    m_host.ParentEntity.ScriptSetPhysicsStatus(false);
                 }
             }
 
@@ -1601,10 +1599,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetColor(LSL_Vector color, int face)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
-
-
-            if (face == ScriptBaseClass.ALL_SIDES)
-                face = SceneObjectPart.ALL_SIDES;
 
             m_host.SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
         }
@@ -3455,12 +3449,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (rezAsset != null)
                 {
                     string xmlData = Utils.BytesToString(rezAsset);
-                    SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(xmlData, World);
+                    ISceneEntity group = SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(xmlData, World);
                     if (group == null)
                         return null;
 
                     string reason;
-                    if (!World.Permissions.CanRezObject(group.ChildrenList.Count, ownerID, pos, out reason))
+                    if (!World.Permissions.CanRezObject(group.ChildrenEntities().Count, ownerID, pos, out reason))
                     {
                         World.GetScenePresence(ownerID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
                         return null;
@@ -3537,7 +3531,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     rootPart.TrimPermissions();
 
-                    if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
+                    if (group.RootChild.Shape.PCode == (byte)PCode.Prim)
                     {
                         group.ClearPartAttachmentData();
                     }
@@ -3546,9 +3540,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     //group.ApplyPhysics(m_physicalPrim);
                     World.SceneGraph.AddPrimToScene(group);
-                    if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
+                    if ((group.RootChild.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                     {
-                        group.RootPart.PhysActor.OnPhysicalRepresentationChanged += delegate
+                        group.RootChild.PhysActor.OnPhysicalRepresentationChanged += delegate
                         {
                             float groupmass = group.GetMass();
                             //Apply the velocity to the object
@@ -3558,8 +3552,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             //    This means SET the velocity to X, not just temperarily add it!
                             //   -- Revolution Smythe
                             llSetForce(new LSL_Vector(vel * groupmass), 0);
-                            group.RootPart.PhysActor.ForceSetVelocity(vel * groupmass);
-                            group.RootPart.PhysActor.Velocity = vel * groupmass;
+                            group.RootChild.PhysActor.ForceSetVelocity(vel * groupmass);
+                            group.RootChild.PhysActor.Velocity = vel * groupmass;
                         };
                     }
 
@@ -3805,11 +3799,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns>true if the attach suceeded, false if it did not</returns>
         public bool AttachToAvatar(int attachmentPoint, bool temp)
         {
-            var grp = (SceneObjectGroup) m_host.ParentEntity;
-            ScenePresence presence = (ScenePresence) World.GetScenePresence(m_host.OwnerID);
+            IScenePresence presence = World.GetScenePresence(m_host.OwnerID);
             IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachmentsModule != null)
-                return attachmentsModule.AttachObjectFromInworldObject(m_localID, presence.ControllingClient, grp, attachmentPoint, temp);
+                return attachmentsModule.AttachObjectFromInworldObject(m_localID, presence.ControllingClient, m_host.ParentEntity, attachmentPoint, temp);
             else
                 return false;
         }
@@ -3827,13 +3820,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         private void DetachWrapper(object o)
         {
-            SceneObjectPart host = (SceneObjectPart)o;
-            SceneObjectGroup grp = host.ParentGroup;
-            UUID itemID = grp.GroupID;
-            ScenePresence presence = (ScenePresence) World.GetScenePresence(host.OwnerID);
+            ISceneEntity grp = ((ISceneChildEntity)o).ParentEntity;
+            IScenePresence presence = World.GetScenePresence(grp.OwnerID);
             IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachmentsModule != null)
-                attachmentsModule.DetachSingleAttachmentToInventory(itemID, presence.ControllingClient);
+                attachmentsModule.DetachSingleAttachmentToInventory(grp.GroupID, presence.ControllingClient);
         }
 
         public void llAttachToAvatarTemp(int attachmentPoint)
@@ -4259,19 +4250,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
                 {
                     byte[] asset = World.AssetService.GetData(inventory);
-                    SceneObjectGroup group
-                                        = SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset), World);
+                    ISceneEntity group
+                                        = SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset), World);
                     if (group == null)
                         return;
 
                     group.IsDeleted = false;
-                    foreach (SceneObjectPart part in group.ChildrenList)
-                    {
+                    foreach (ISceneChildEntity part in group.ChildrenEntities())
                         part.IsLoading = false;
-                    }
+
                     group.OwnerID = m_host.OwnerID;
 
-                    group.RootPart.AddFlag(PrimFlags.CreateSelected);
+                    group.RootChild.AddFlag(PrimFlags.CreateSelected);
                     // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
                     // we'll be doing that later on.  Scheduling more than one full update during the attachment
                     // process causes some clients to fail to display the attachment properly.
@@ -4285,7 +4275,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (SP != null)
                         group.SetGroup(m_host.GroupID, SP.UUID, false);
 
-                    if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
+                    if (group.RootChild.Shape.PCode == (byte)PCode.Prim)
                         group.ClearPartAttachmentData();
 
                     // Fire on_rez
@@ -5597,7 +5587,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_Vector SunDoubleVector3;
 
-            // sunPosition estate setting is set in OpenSim.Region.CoreModules.SunModule
             // have to convert from Vector3 (float) to LSL_Vector (double)
             Vector3 SunFloatVector3 = World.RegionInfo.RegionSettings.SunVector;
             SunDoubleVector3.x = SunFloatVector3.X;
@@ -8651,7 +8640,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
                     string phy = rules.Data[idx++].ToString();
 
-                    ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus(phy.Equals("1"));
+                    m_host.ParentEntity.ScriptSetPhysicsStatus(phy.Equals("1"));
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_TEMP_ON_REZ)
                 {

@@ -33,7 +33,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Selection
 {

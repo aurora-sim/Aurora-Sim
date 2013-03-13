@@ -44,7 +44,7 @@ using PrimMesher;
 using zlib;
 using Path = System.IO.Path;
 
-namespace OpenSim.Region.Physics.Meshing
+namespace Aurora.Physics.Meshing
 {
     public class MeshmerizerPlugin : IMeshingPlugin
     {

@@ -27,7 +27,7 @@
 
 using OpenMetaverse.Packets;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     /// <summary>
     ///   Holds a reference to a <seealso cref = "LLUDPClient" /> and a <seealso cref = "Packet" />

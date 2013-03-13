@@ -39,8 +39,6 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine

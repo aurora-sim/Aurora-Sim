@@ -403,7 +403,6 @@
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Region"/>
       <Reference name="Aurora.Services.DataService"/>
 
       <Reference name="Nini" path="../../../bin/"/>
@@ -570,7 +569,6 @@
 
       <Reference name="Aurora.DataManager"/>
 	  <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Region"/>
 		
       <Reference name="MySql.Data" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
@@ -625,7 +623,6 @@
       
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Region"/>
 
       <Reference name="Community.CsharpSqlite.SQLiteClient" path="../../../bin/"/>
       <Reference name="System.Data.SQLite" path="../../../bin/"/>
@@ -736,7 +733,6 @@
       <Reference name="System.Xml"/>
 
       <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Region"/>
       
       <Reference name="Nini"  path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
@@ -1287,7 +1283,6 @@
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Management"/>
-      <Reference name="Aurora.Region"/>
       <Reference name="Aurora.Services.DataService"/>
 
       <Reference name="Nini" path="../../bin/"/>
@@ -1352,7 +1347,6 @@
 	  <Reference name="CSJ2K" path="../../bin/"/>
       <Reference name="DotNetOpenMail" path="../../bin/"/>
       <Reference name="GlynnTucker.Cache" path="../../bin/"/>
-      <Reference name="GoogleTranslateAPI" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -1513,7 +1507,6 @@
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Region"/>
       <Reference name="Aurora.ScriptEngine.AuroraDotNetEngine"/>
       
       <Reference name="Nini" path="../../bin/"/>

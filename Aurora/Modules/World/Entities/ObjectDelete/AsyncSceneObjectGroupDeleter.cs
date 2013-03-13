@@ -32,7 +32,6 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using System.Threading;
 
 namespace Aurora.Modules.Entities.ObjectDelete

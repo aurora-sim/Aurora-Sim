@@ -32,7 +32,7 @@ using System.Linq;
 using System.Threading;
 using OpenMetaverse;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     /// <summary>
     ///   Special collection that is optimized for tracking unacknowledged packets

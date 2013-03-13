@@ -38,8 +38,6 @@ using OpenMetaverse;
 using Aurora.Modules.Terrain.FileLoaders;
 using Aurora.Modules.Terrain.FloodBrushes;
 using Aurora.Modules.Terrain.PaintBrushes;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Terrain
 {

@@ -182,4 +182,44 @@ namespace Aurora.Framework
         /// <returns></returns>
         int GetScriptTime(UUID itemID);
     }
+
+    [Flags]
+    public enum scriptEvents : long
+    {
+        None = 0,
+        attach = 1,
+        collision = 16,
+        collision_end = 32,
+        collision_start = 64,
+        control = 128,
+        dataserver = 256,
+        email = 512,
+        http_response = 1024,
+        land_collision = 2048,
+        land_collision_end = 4096,
+        land_collision_start = 8192,
+        at_target = 16384,
+        at_rot_target = 16777216,
+        listen = 32768,
+        money = 65536,
+        moving_end = 131072,
+        moving_start = 262144,
+        not_at_rot_target = 524288,
+        not_at_target = 1048576,
+        remote_data = 8388608,
+        run_time_permissions = 268435456,
+        state_entry = 1073741824,
+        state_exit = 2,
+        timer = 4,
+        touch = 8,
+        touch_end = 536870912,
+        touch_start = 2097152,
+        object_rez = 4194304,
+        changed = 2147483648,
+        link_message = 4294967296,
+        no_sensor = 8589934592,
+        on_rez = 17179869184,
+        sensor = 34359738368,
+        http_request = 68719476736
+    }
 }

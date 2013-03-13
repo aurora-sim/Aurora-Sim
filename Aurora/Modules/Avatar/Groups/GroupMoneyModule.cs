@@ -5,7 +5,6 @@ using System.Text;
 using Aurora.Framework;
 using OpenMetaverse;
 using Nini.Config;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Avatar.Groups
 {

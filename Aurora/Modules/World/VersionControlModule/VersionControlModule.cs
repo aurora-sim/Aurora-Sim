@@ -30,7 +30,6 @@ using System.Linq;
 using System.Timers;
 using Nini.Config;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.VersionControl
 {

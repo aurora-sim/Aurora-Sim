@@ -33,7 +33,6 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
 using FriendInfo = Aurora.Framework.FriendInfo;
 
 namespace Aurora.Modules.Friends

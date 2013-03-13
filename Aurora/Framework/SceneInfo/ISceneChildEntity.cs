@@ -244,6 +244,7 @@ namespace Aurora.Framework
         void startLookAt(Quaternion rotation, float p, float p_2);
 
         Vector3 Acceleration { get; set; }
+        Vector3 RelativePosition { get; }
 
         void SetAngularImpulse(Vector3 vector3, bool p);
 
@@ -405,6 +406,7 @@ namespace Aurora.Framework
         int CreationDate { get; set; }
 
         bool DIE_AT_EDGE { get; set; }
+        bool RETURN_AT_EDGE { get; set; }
 
         byte[] TextureAnimation { get; set; }
 
@@ -497,5 +499,13 @@ namespace Aurora.Framework
 		void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool b);
 
         Quaternion GetRotationOffset();
+
+        string CurrentMediaVersion { get; set; }
+
+        void SetRotationOffset(bool p1, Quaternion Rotation, bool p2);
+
+        bool Undoing { get; set; }
+
+        bool IsLoading { get; set; }
     }
 }

@@ -30,7 +30,7 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 
-namespace OpenSim.Region.Physics.BasicPhysicsPlugin
+namespace Aurora.Physics.BasicPhysicsPlugin
 {
     public class BasicScene : PhysicsScene
     {

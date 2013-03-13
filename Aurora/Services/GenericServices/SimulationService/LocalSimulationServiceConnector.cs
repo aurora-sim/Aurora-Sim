@@ -33,8 +33,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services
@@ -211,7 +209,7 @@ namespace Aurora.Services
          * Object-related communications
          */
 
-        public bool CreateObject(GridRegion destination, ISceneObject sog)
+        public bool CreateObject(GridRegion destination, ISceneEntity sog)
         {
             if (Scene == null || destination == null)
                 return false;

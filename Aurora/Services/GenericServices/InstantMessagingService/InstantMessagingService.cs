@@ -3,7 +3,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;

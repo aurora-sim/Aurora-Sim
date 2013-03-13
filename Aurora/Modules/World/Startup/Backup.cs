@@ -37,8 +37,6 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Startup
 {
@@ -543,7 +541,7 @@ namespace Aurora.Modules.Startup
             private bool m_merge = false;
             private bool m_loadAssets = false;
             private GenericAccountCache<UserAccount> m_cache = new GenericAccountCache<UserAccount>();
-            private List<SceneObjectGroup> m_groups = new List<SceneObjectGroup>();
+            private List<ISceneEntity> m_groups = new List<ISceneEntity>();
 
             public bool IsArchiving
             {
@@ -631,7 +629,7 @@ namespace Aurora.Modules.Startup
                              || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
                             continue;
                         //Write all entities
-                        byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
+                        byte[] xml = entity.ToBinaryXml2 ();
                         writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
                         xml = null;
                         count++;
@@ -756,7 +754,7 @@ namespace Aurora.Modules.Startup
                     m_parcels.Clear();
                 }
 
-                foreach (SceneObjectGroup sceneObject in m_groups)
+                foreach (ISceneEntity sceneObject in m_groups)
                 {
                     foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
                     {
@@ -870,7 +868,7 @@ namespace Aurora.Modules.Startup
                 else if (filePath.StartsWith ("entities/"))
                 {
                     MemoryStream ms = new MemoryStream (data);
-                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ref ms, scene);
+                    ISceneEntity sceneObject = SceneEntitySerializer.SceneObjectSerializer.FromXml2Format(ref ms, scene);
                     ms.Close ();
                     ms = null;
                     data = null;

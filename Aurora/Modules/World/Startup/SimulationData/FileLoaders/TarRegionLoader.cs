@@ -2,9 +2,7 @@
 using Aurora.Framework.Serialization;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
+using Aurora.Region;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -94,7 +92,7 @@ namespace Aurora.Modules
                     while (groups.TryDequeue(out groupData))
                     {
                         MemoryStream ms = new MemoryStream(groupData);
-                        SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format(ref ms, null);
+                        ISceneEntity sceneObject = SceneEntitySerializer.SceneObjectSerializer.FromXml2Format(ref ms, null);
                         ms.Close();
                         ms = null;
                         data = null;
@@ -110,7 +108,7 @@ namespace Aurora.Modules
                                         part.LocalId = 0; //Reset it! Only use it once!
                                 }
                             }
-                            regiondata.Groups.Add(sceneObject);
+                            regiondata.Groups.Add(sceneObject as SceneObjectGroup);
                         }
                     }
                 });
@@ -198,7 +196,7 @@ namespace Aurora.Modules
                         {
                             entity.HasGroupChanged = false;
                             //Write all entities
-                            writer.WriteFile("entities/" + entity.UUID.ToString(), ((ISceneObject)entity).ToBinaryXml2());
+                            writer.WriteFile("entities/" + entity.UUID.ToString(), entity.ToBinaryXml2());
                         }
                         else
                             entitiesToSave.Add(entity.UUID);
@@ -251,7 +249,7 @@ namespace Aurora.Modules
                                     || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
                                     continue;
                                 //Write all entities
-                                byte[] xml = ((ISceneObject)entity).ToBinaryXml2();
+                                byte[] xml = entity.ToBinaryXml2();
                                 writer.WriteFile("entities/" + entity.UUID.ToString(), xml);
                                 xml = null;
                             }

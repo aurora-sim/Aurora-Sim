@@ -35,7 +35,7 @@ using OpenMetaverse;
 using Aurora.Framework;
 using System.Collections.Concurrent;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
 
     #region Delegates

@@ -31,7 +31,6 @@ using System.Linq;
 using System.Security;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

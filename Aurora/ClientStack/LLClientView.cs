@@ -39,12 +39,10 @@ using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using RegionFlags = OpenMetaverse.RegionFlags;
 using Amib.Threading;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     public delegate bool PacketMethod(IClientAPI simClient, Packet packet);
 
@@ -4042,7 +4040,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (canUseCached && !isTerse)
                     {
                         cachedUpdates.Add(update);
-                        cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((SceneObjectPart) entity,
+                        cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((ISceneChildEntity)entity,
                                                                                  m_agentId));
                     }
                     else if (!canUseImproved && !canUseCompressed)
@@ -4054,7 +4052,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         }
                         else
                         {
-                            objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((SceneObjectPart) entity, m_agentId));
+                            objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((ISceneChildEntity)entity, m_agentId));
                         }
                     }
                     else if (!canUseImproved)
@@ -4123,7 +4121,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             Flags |= CompressedFlags.HasNameValues;
 
                         compressedUpdates.Add(update);
-                        compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((SceneObjectPart) entity, Flags,
+                        compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((ISceneChildEntity)entity, Flags,
                                                                                      updateFlags));
                     }
                     else
@@ -5055,7 +5053,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
-                SceneObjectPart part = (SceneObjectPart) entity;
+                ISceneChildEntity part = (ISceneChildEntity)entity;
 
                 attachPoint = part.AttachmentPoint;
                 collisionPlane = Vector4.Zero;
@@ -5222,7 +5220,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return update;
         }
 
-        private ObjectUpdateCachedPacket.ObjectDataBlock CreatePrimCachedUpdateBlock(SceneObjectPart data,
+        private ObjectUpdateCachedPacket.ObjectDataBlock CreatePrimCachedUpdateBlock(ISceneChildEntity data,
                                                                                      UUID recipientID)
         {
             ObjectUpdateCachedPacket.ObjectDataBlock odb = new ObjectUpdateCachedPacket.ObjectDataBlock
@@ -5251,7 +5249,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return odb;
         }
 
-        private ObjectUpdatePacket.ObjectDataBlock CreatePrimUpdateBlock(SceneObjectPart data, UUID recipientID)
+        private ObjectUpdatePacket.ObjectDataBlock CreatePrimUpdateBlock(ISceneChildEntity data, UUID recipientID)
         {
             byte[] objectData = new byte[60];
             data.RelativePosition.ToBytes(objectData, 0);
@@ -5293,7 +5291,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 update.NameValue = Utils.EmptyBytes;
                 // The root part state is the canonical state for all parts of the object.  The other part states in the
                 // case for attachments may contain conflicting values that can end up crashing the viewer.
-                update.State = data.ParentGroup.RootPart.Shape.State;
+                update.State = data.ParentEntity.RootChild.Shape.State;
             }
 
             update.ObjectData = objectData;
@@ -5374,7 +5372,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return update;
         }
 
-        private ObjectUpdateCompressedPacket.ObjectDataBlock CreateCompressedUpdateBlock(SceneObjectPart part,
+        private ObjectUpdateCompressedPacket.ObjectDataBlock CreateCompressedUpdateBlock(ISceneChildEntity part,
                                                                                          CompressedFlags updateFlags,
                                                                                          PrimUpdateFlags flags)
         {

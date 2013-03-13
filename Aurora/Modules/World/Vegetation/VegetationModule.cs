@@ -30,8 +30,6 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Vegetation
 {
@@ -108,8 +106,7 @@ namespace Aurora.Modules.Vegetation
                 return null;
             }
 
-            SceneObjectGroup sceneObject = baseEntity as SceneObjectGroup;
-            SceneObjectPart rootPart = (SceneObjectPart) sceneObject.GetChildPart(sceneObject.UUID);
+            ISceneChildEntity rootPart = baseEntity.GetChildPart(baseEntity.UUID);
 
             // if grass or tree, make phantom
             //rootPart.TrimPermissions();
@@ -117,11 +114,11 @@ namespace Aurora.Modules.Vegetation
             if (rootPart.Shape.PCode != (byte) PCode.Grass)
                 AdaptTree(ref shape);
 
-            m_scene.SceneGraph.AddPrimToScene(sceneObject);
-            sceneObject.SetGroup(groupID, ownerID, true);
-            sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+            m_scene.SceneGraph.AddPrimToScene(baseEntity);
+            baseEntity.SetGroup(groupID, ownerID, true);
+            baseEntity.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
-            return sceneObject;
+            return baseEntity;
         }
 
         #endregion

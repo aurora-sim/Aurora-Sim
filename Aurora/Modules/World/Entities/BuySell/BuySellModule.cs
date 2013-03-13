@@ -31,9 +31,7 @@ using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
+using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Entities.BuySell
 {
@@ -110,7 +108,7 @@ namespace Aurora.Modules.Entities.BuySell
 
                     group.AbsolutePosition = inventoryStoredPosition;
 
-                    string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat((SceneObjectGroup) group);
+                    string sceneObjectXml = SceneEntitySerializer.SceneObjectSerializer.ToOriginalXmlFormat(group);
                     group.AbsolutePosition = originalPosition;
 
                     uint perms = group.GetEffectivePermissions();

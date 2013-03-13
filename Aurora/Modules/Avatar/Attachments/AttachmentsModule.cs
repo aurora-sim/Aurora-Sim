@@ -32,9 +32,7 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
+using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Attachments
 {
@@ -274,7 +272,7 @@ namespace Aurora.Modules.Attachments
                 DetachSingleAttachmentToInventory(group.RootChild.FromUserInventoryItemID, remoteClient);
             }
             else
-                SendKillEntity(new SceneObjectPart { LocalId = objectLocalID });
+                SendKillEntity(objectLocalID);
         }
 
         protected void ClientDropObject(uint objectLocalID, IClientAPI remoteClient)
@@ -353,7 +351,7 @@ namespace Aurora.Modules.Attachments
             if (invAccess != null)
             {
                 InventoryItemBase item = null;
-                SceneObjectGroup objatt = assetID == UUID.Zero ? invAccess.CreateObjectFromInventory(remoteClient,
+                ISceneEntity objatt = assetID == UUID.Zero ? invAccess.CreateObjectFromInventory(remoteClient,
                     itemID, out item) : invAccess.CreateObjectFromInventory(remoteClient, itemID, assetID);
 
                 if (objatt != null)
@@ -366,25 +364,25 @@ namespace Aurora.Modules.Attachments
                         // Since renaming the item in the inventory does not affect the name stored
                         // in the serialization, transfer the correct name from the inventory to the
                         // object itself before we rez.
-                        objatt.RootPart.Name = item.Name;
-                        objatt.RootPart.Description = item.Description;
+                        objatt.RootChild.Name = item.Name;
+                        objatt.RootChild.Description = item.Description;
                     }
 
-                    objatt.RootPart.Flags |= PrimFlags.Phantom;
-                    objatt.RootPart.IsAttachment = true;
+                    objatt.RootChild.Flags |= PrimFlags.Phantom;
+                    objatt.RootChild.IsAttachment = true;
                     objatt.SetFromItemID(itemID, assetID);
 
-                    List<SceneObjectPart> partList = new List<SceneObjectPart>(objatt.ChildrenList);
+                    List<ISceneChildEntity> partList = new List<ISceneChildEntity>(objatt.ChildrenEntities());
 
-                    foreach(SceneObjectPart part in partList)
+                    foreach (ISceneChildEntity part in partList)
                         part.AttachedAvatar = remoteClient.AgentId;
 
                     objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId, false);
-                    if (objatt.RootPart.OwnerID != remoteClient.AgentId)
+                    if (objatt.RootChild.OwnerID != remoteClient.AgentId)
                     {
                         //Need to kill the for sale here
-                        objatt.RootPart.ObjectSaleType = 0;
-                        objatt.RootPart.SalePrice = 10;
+                        objatt.RootChild.ObjectSaleType = 0;
+                        objatt.RootChild.SalePrice = 10;
 
                         if (m_scene.Permissions.PropagatePermissions())
                         {
@@ -394,7 +392,7 @@ namespace Aurora.Modules.Attachments
                                 return null;
                             if ((item.CurrentPermissions & 8) != 0)
                             {
-                                foreach (SceneObjectPart part in partList)
+                                foreach (ISceneChildEntity part in partList)
                                 {
                                     part.EveryoneMask = item.EveryOnePermissions;
                                     part.NextOwnerMask = item.NextPermissions;
@@ -406,7 +404,7 @@ namespace Aurora.Modules.Attachments
                         }
                     }
 
-                    foreach (SceneObjectPart part in partList)
+                    foreach (ISceneChildEntity part in partList)
                     {
                         if (part.OwnerID != remoteClient.AgentId)
                         {
@@ -415,8 +413,8 @@ namespace Aurora.Modules.Attachments
                             part.Inventory.ChangeInventoryOwner(remoteClient.AgentId);
                         }
                     }
-                    objatt.RootPart.TrimPermissions();
-                    objatt.RootPart.IsAttachment = true;
+                    objatt.RootChild.TrimPermissions();
+                    objatt.RootChild.IsAttachment = true;
                     objatt.IsDeleted = false;
 
                     //Update the ItemID with the new item
@@ -869,17 +867,10 @@ namespace Aurora.Modules.Attachments
             m_scene.EventManager.TriggerOnAttach(localID, group.RootChild.FromUserInventoryItemID, remoteClient.AgentId);
         }
 
-        protected void SendKillEntity(ISceneChildEntity rootPart)
+        protected void SendKillEntity(uint rootPart)
         {
-#if (!ISWIN)
-            m_scene.ForEachClient(delegate(IClientAPI client)
-            {
-                client.SendKillObject(m_scene.RegionInfo.RegionHandle, new IEntity[] { rootPart });
-            });
-#else
             m_scene.ForEachClient(
-                client => client.SendKillObject(m_scene.RegionInfo.RegionHandle, new IEntity[] {rootPart}));
-#endif
+                client => client.SendKillObject(m_scene.RegionInfo.RegionHandle, new uint[] {rootPart}));
         }
 
         // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.
@@ -975,7 +966,7 @@ namespace Aurora.Modules.Attachments
                     "[ATTACHMENTS MODULE]: Updating asset for attachment {0}, attachpoint {1}",
                     grp.UUID, grp.GetAttachmentPoint());
 
-                string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat((SceneObjectGroup)grp);
+                string sceneObjectXml = SceneEntitySerializer.SceneObjectSerializer.ToOriginalXmlFormat(grp);
 
                 AssetBase asset = new AssetBase(UUID.Random(), grp.Name,
                                                     AssetType.Object, remoteClient.AgentId)

@@ -37,8 +37,6 @@ using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using System.Timers;
 
 namespace Aurora.Modules.WorldMap
@@ -569,292 +567,288 @@ namespace Aurora.Modules.WorldMap
 
             lock (objs)
             {
-                foreach (ISceneEntity obj in objs)
+                foreach (ISceneEntity mapdot in objs)
                 {
                     // Only draw the contents of SceneObjectGroup
-                    if (obj is SceneObjectGroup)
-                    {
-                        SceneObjectGroup mapdot = (SceneObjectGroup) obj;
-                        Color mapdotspot = Color.Gray; // Default color when prim color is white
+                    Color mapdotspot = Color.Gray; // Default color when prim color is white
 
-                        // Loop over prim in group
-                        foreach (SceneObjectPart part in mapdot.ChildrenList)
+                    // Loop over prim in group
+                    foreach (ISceneChildEntity part in mapdot.ChildrenEntities())
+                    {
+                        if (part == null || part.Shape == null)
+                            continue;
+
+                        // Draw if the object is at least .5 meter wide in any direction
+                        if (part.Scale.X > .5f || part.Scale.Y > .5f || part.Scale.Z > .5f)
                         {
-                            if (part == null || part.Shape == null)
+                            Vector3 pos = part.GetWorldPosition();
+
+                            // skip prim outside of retion
+                            if (pos.X < 0f || pos.X > 256f || pos.Y < 0f || pos.Y > 256f)
                                 continue;
 
-                            // Draw if the object is at least .5 meter wide in any direction
-                            if (part.Scale.X > .5f || part.Scale.Y > .5f || part.Scale.Z > .5f)
+                            // skip prim in non-finite position
+                            if (Single.IsNaN(pos.X) || Single.IsNaN(pos.Y) ||
+                                Single.IsInfinity(pos.X) || Single.IsInfinity(pos.Y))
+                                continue;
+
+                            // Figure out if object is under 256m above the height of the terrain
+                            bool isBelow256AboveTerrain = false;
+
+                            try
                             {
-                                Vector3 pos = part.GetWorldPosition();
+                                if ((int)pos.X == m_scene.RegionInfo.RegionSizeX)
+                                    pos.X = m_scene.RegionInfo.RegionSizeX - 1;
+                                if ((int)pos.Y == m_scene.RegionInfo.RegionSizeY)
+                                    pos.Y = m_scene.RegionInfo.RegionSizeY - 1;
+                                isBelow256AboveTerrain = (pos.Z < (heightmap[(int)pos.X, (int)pos.Y] + 256f));
+                            }
+                            catch (Exception)
+                            {
+                            }
 
-                                // skip prim outside of retion
-                                if (pos.X < 0f || pos.X > 256f || pos.Y < 0f || pos.Y > 256f)
-                                    continue;
-
-                                // skip prim in non-finite position
-                                if (Single.IsNaN(pos.X) || Single.IsNaN(pos.Y) ||
-                                    Single.IsInfinity(pos.X) || Single.IsInfinity(pos.Y))
-                                    continue;
-
-                                // Figure out if object is under 256m above the height of the terrain
-                                bool isBelow256AboveTerrain = false;
-
+                            if (isBelow256AboveTerrain)
+                            {
+                                // Try to get the RGBA of the default texture entry..
+                                //
                                 try
                                 {
-                                    if ((int) pos.X == m_scene.RegionInfo.RegionSizeX)
-                                        pos.X = m_scene.RegionInfo.RegionSizeX - 1;
-                                    if ((int) pos.Y == m_scene.RegionInfo.RegionSizeY)
-                                        pos.Y = m_scene.RegionInfo.RegionSizeY - 1;
-                                    isBelow256AboveTerrain = (pos.Z < (heightmap[(int) pos.X, (int) pos.Y] + 256f));
-                                }
-                                catch (Exception)
-                                {
-                                }
-
-                                if (isBelow256AboveTerrain)
-                                {
-                                    // Try to get the RGBA of the default texture entry..
-                                    //
-                                    try
-                                    {
-                                        // get the null checks out of the way
-                                        // skip the ones that break
-                                        if (part == null)
-                                            continue;
-
-                                        if (part.Shape == null)
-                                            continue;
-
-                                        if (part.Shape.PCode == (byte) PCode.Tree ||
-                                            part.Shape.PCode == (byte) PCode.NewTree ||
-                                            part.Shape.PCode == (byte) PCode.Grass)
-                                            continue;
-                                                // eliminates trees from this since we don't really have a good tree representation
-                                        // if you want tree blocks on the map comment the above line and uncomment the below line
-                                        //mapdotspot = Color.PaleGreen;
-
-                                        Primitive.TextureEntry textureEntry = part.Shape.Textures;
-
-                                        if (textureEntry == null || textureEntry.DefaultTexture == null)
-                                            continue;
-                                        Color texcolor = Color.Black;
-                                        try
-                                        {
-                                            Primitive.TextureEntryFace tx = part.Shape.Textures.CreateFace(6);
-                                            texcolor = computeAverageColor(tx.TextureID, Color.Black);
-                                        }
-                                        catch (Exception)
-                                        {
-                                            texcolor = Color.FromArgb((int) textureEntry.DefaultTexture.RGBA.A,
-                                                                      (int) textureEntry.DefaultTexture.RGBA.R,
-                                                                      (int) textureEntry.DefaultTexture.RGBA.G,
-                                                                      (int) textureEntry.DefaultTexture.RGBA.B);
-                                        }
-
-                                        if (!(texcolor.R == 255 && texcolor.G == 255 && texcolor.B == 255))
-                                        {
-                                            // Try to set the map spot color
-                                            // If the color gets goofy somehow, skip it *shakes fist at Color4
-                                            mapdotspot = texcolor;
-                                        }
-                                    }
-                                    catch (IndexOutOfRangeException)
-                                    {
-                                        // Windows Array
-                                    }
-                                    catch (ArgumentOutOfRangeException)
-                                    {
-                                        // Mono Array
-                                    }
-                                    // Translate scale by rotation so scale is represented properly when object is rotated
-                                    Vector3 lscale = new Vector3(part.Shape.Scale.X, part.Shape.Scale.Y,
-                                                                 part.Shape.Scale.Z);
-                                    Vector3 scale = new Vector3();
-                                    Vector3 tScale = new Vector3();
-                                    Vector3 axPos = new Vector3(pos.X, pos.Y, pos.Z);
-
-                                    scale = lscale*part.GetWorldRotation();
-
-                                    // negative scales don't work in this situation
-                                    scale.X = Math.Abs(scale.X);
-                                    scale.Y = Math.Abs(scale.Y);
-                                    scale.Z = Math.Abs(scale.Z);
-
-                                    // This scaling isn't very accurate and doesn't take into account the face rotation :P
-                                    int mapdrawstartX = (int) (pos.X - scale.X);
-                                    int mapdrawstartY = (int) (pos.Y - scale.Y);
-                                    int mapdrawendX = (int) (pos.X + scale.X);
-                                    int mapdrawendY = (int) (pos.Y + scale.Y);
-
-                                    // If object is beyond the edge of the map, don't draw it to avoid errors
-                                    if (mapdrawstartX < 0 || mapdrawstartX > (m_scene.RegionInfo.RegionSizeX - 1) ||
-                                        mapdrawendX < 0 || mapdrawendX > (m_scene.RegionInfo.RegionSizeX - 1)
-                                        || mapdrawstartY < 0 || mapdrawstartY > (m_scene.RegionInfo.RegionSizeY - 1) ||
-                                        mapdrawendY < 0
-                                        || mapdrawendY > (m_scene.RegionInfo.RegionSizeY - 1))
+                                    // get the null checks out of the way
+                                    // skip the ones that break
+                                    if (part == null)
                                         continue;
 
-                                    #region obb face reconstruction part duex
+                                    if (part.Shape == null)
+                                        continue;
 
-                                    Vector3[] vertexes = new Vector3[8];
+                                    if (part.Shape.PCode == (byte)PCode.Tree ||
+                                        part.Shape.PCode == (byte)PCode.NewTree ||
+                                        part.Shape.PCode == (byte)PCode.Grass)
+                                        continue;
+                                    // eliminates trees from this since we don't really have a good tree representation
+                                    // if you want tree blocks on the map comment the above line and uncomment the below line
+                                    //mapdotspot = Color.PaleGreen;
 
-                                    // float[] distance = new float[6];
-                                    Vector3[] FaceA = new Vector3[6]; // vertex A for Facei
-                                    Vector3[] FaceB = new Vector3[6]; // vertex B for Facei
-                                    Vector3[] FaceC = new Vector3[6]; // vertex C for Facei
-                                    Vector3[] FaceD = new Vector3[6]; // vertex D for Facei
+                                    Primitive.TextureEntry textureEntry = part.Shape.Textures;
 
-                                    tScale = new Vector3(lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
-                                    vertexes[0] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-                                    // vertexes[0].x = pos.X + vertexes[0].x;
-                                    //vertexes[0].y = pos.Y + vertexes[0].y;
-                                    //vertexes[0].z = pos.Z + vertexes[0].z;
-
-                                    FaceA[0] = vertexes[0];
-                                    FaceB[3] = vertexes[0];
-                                    FaceA[4] = vertexes[0];
-
-                                    tScale = lscale;
-                                    scale = ((tScale*part.GetWorldRotation()));
-                                    vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[1].x = pos.X + vertexes[1].x;
-                                    // vertexes[1].y = pos.Y + vertexes[1].y;
-                                    //vertexes[1].z = pos.Z + vertexes[1].z;
-
-                                    FaceB[0] = vertexes[1];
-                                    FaceA[1] = vertexes[1];
-                                    FaceC[4] = vertexes[1];
-
-                                    tScale = new Vector3(lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
-
-                                    vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    //vertexes[2].x = pos.X + vertexes[2].x;
-                                    //vertexes[2].y = pos.Y + vertexes[2].y;
-                                    //vertexes[2].z = pos.Z + vertexes[2].z;
-
-                                    FaceC[0] = vertexes[2];
-                                    FaceD[3] = vertexes[2];
-                                    FaceC[5] = vertexes[2];
-
-                                    tScale = new Vector3(lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
-                                    vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    //vertexes[3].x = pos.X + vertexes[3].x;
-                                    // vertexes[3].y = pos.Y + vertexes[3].y;
-                                    // vertexes[3].z = pos.Z + vertexes[3].z;
-
-                                    FaceD[0] = vertexes[3];
-                                    FaceC[1] = vertexes[3];
-                                    FaceA[5] = vertexes[3];
-
-                                    tScale = new Vector3(-lscale.X, lscale.Y, lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
-                                    vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[4].x = pos.X + vertexes[4].x;
-                                    // vertexes[4].y = pos.Y + vertexes[4].y;
-                                    // vertexes[4].z = pos.Z + vertexes[4].z;
-
-                                    FaceB[1] = vertexes[4];
-                                    FaceA[2] = vertexes[4];
-                                    FaceD[4] = vertexes[4];
-
-                                    tScale = new Vector3(-lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
-                                    vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[5].x = pos.X + vertexes[5].x;
-                                    // vertexes[5].y = pos.Y + vertexes[5].y;
-                                    // vertexes[5].z = pos.Z + vertexes[5].z;
-
-                                    FaceD[1] = vertexes[5];
-                                    FaceC[2] = vertexes[5];
-                                    FaceB[5] = vertexes[5];
-
-                                    tScale = new Vector3(-lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
-                                    vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[6].x = pos.X + vertexes[6].x;
-                                    // vertexes[6].y = pos.Y + vertexes[6].y;
-                                    // vertexes[6].z = pos.Z + vertexes[6].z;
-
-                                    FaceB[2] = vertexes[6];
-                                    FaceA[3] = vertexes[6];
-                                    FaceB[4] = vertexes[6];
-
-                                    tScale = new Vector3(-lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
-                                    vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[7].x = pos.X + vertexes[7].x;
-                                    // vertexes[7].y = pos.Y + vertexes[7].y;
-                                    // vertexes[7].z = pos.Z + vertexes[7].z;
-
-                                    FaceD[2] = vertexes[7];
-                                    FaceC[3] = vertexes[7];
-                                    FaceD[5] = vertexes[7];
-
-                                    #endregion
-
-                                    //int wy = 0;
-
-                                    //bool breakYN = false; // If we run into an error drawing, break out of the
-                                    // loop so we don't lag to death on error handling
-                                    DrawStruct ds = new DrawStruct {brush = new SolidBrush(mapdotspot)};
-                                    if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Circle)
+                                    if (textureEntry == null || textureEntry.DefaultTexture == null)
+                                        continue;
+                                    Color texcolor = Color.Black;
+                                    try
                                     {
-                                        ds.dr = DrawRoutine.Ellipse;
-                                        Vector3 Location = new Vector3(part.AbsolutePosition.X - (part.Scale.X/2),
-                                                                       (256 -
-                                                                        (part.AbsolutePosition.Y + (part.Scale.Y/2))),
-                                                                       0);
-                                        Location.X /= m_scene.RegionInfo.RegionSizeX/Constants.RegionSize;
-                                        Location.Y /= m_scene.RegionInfo.RegionSizeY/Constants.RegionSize;
-                                        Location = Location*part.GetWorldRotation();
-                                        ds.rect = new Rectangle((int) Location.X, (int) Location.Y,
-                                                                (int) Math.Abs(part.Shape.Scale.X),
-                                                                (int) Math.Abs(part.Shape.Scale.Y));
+                                        Primitive.TextureEntryFace tx = part.Shape.Textures.CreateFace(6);
+                                        texcolor = computeAverageColor(tx.TextureID, Color.Black);
                                     }
-                                    else //if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Square)
+                                    catch (Exception)
                                     {
-                                        ds.dr = DrawRoutine.Rectangle;
-                                        //ds.rect = new Rectangle(mapdrawstartX, (255 - mapdrawstartY), mapdrawendX - mapdrawstartX, mapdrawendY - mapdrawstartY);
-
-                                        ds.trns = new face[FaceA.Length];
-
-                                        for (int i = 0; i < FaceA.Length; i++)
-                                        {
-                                            Point[] working = new Point[5];
-                                            working[0] = project(FaceA[i], axPos);
-                                            working[1] = project(FaceB[i], axPos);
-                                            working[2] = project(FaceD[i], axPos);
-                                            working[3] = project(FaceC[i], axPos);
-                                            working[4] = project(FaceA[i], axPos);
-
-                                            face workingface = new face {pts = working};
-
-                                            ds.trns[i] = workingface;
-                                        }
+                                        texcolor = Color.FromArgb((int)textureEntry.DefaultTexture.RGBA.A,
+                                                                  (int)textureEntry.DefaultTexture.RGBA.R,
+                                                                  (int)textureEntry.DefaultTexture.RGBA.G,
+                                                                  (int)textureEntry.DefaultTexture.RGBA.B);
                                     }
 
-                                    if (!z_localIDs.Contains(part.LocalId))
+                                    if (!(texcolor.R == 255 && texcolor.G == 255 && texcolor.B == 255))
                                     {
-                                        z_sort[part.LocalId] = ds;
-                                        z_localIDs.Add(part.LocalId);
-                                        z_sortheights.Add(pos.Z);
+                                        // Try to set the map spot color
+                                        // If the color gets goofy somehow, skip it *shakes fist at Color4
+                                        mapdotspot = texcolor;
                                     }
-                                } // Object is within 256m Z of terrain
-                            } // object is at least a meter wide
-                        } // loop over group children
-                    } // entitybase is sceneobject group
-                } // foreach loop over entities
+                                }
+                                catch (IndexOutOfRangeException)
+                                {
+                                    // Windows Array
+                                }
+                                catch (ArgumentOutOfRangeException)
+                                {
+                                    // Mono Array
+                                }
+                                // Translate scale by rotation so scale is represented properly when object is rotated
+                                Vector3 lscale = new Vector3(part.Shape.Scale.X, part.Shape.Scale.Y,
+                                                             part.Shape.Scale.Z);
+                                Vector3 scale = new Vector3();
+                                Vector3 tScale = new Vector3();
+                                Vector3 axPos = new Vector3(pos.X, pos.Y, pos.Z);
+
+                                scale = lscale * part.GetWorldRotation();
+
+                                // negative scales don't work in this situation
+                                scale.X = Math.Abs(scale.X);
+                                scale.Y = Math.Abs(scale.Y);
+                                scale.Z = Math.Abs(scale.Z);
+
+                                // This scaling isn't very accurate and doesn't take into account the face rotation :P
+                                int mapdrawstartX = (int)(pos.X - scale.X);
+                                int mapdrawstartY = (int)(pos.Y - scale.Y);
+                                int mapdrawendX = (int)(pos.X + scale.X);
+                                int mapdrawendY = (int)(pos.Y + scale.Y);
+
+                                // If object is beyond the edge of the map, don't draw it to avoid errors
+                                if (mapdrawstartX < 0 || mapdrawstartX > (m_scene.RegionInfo.RegionSizeX - 1) ||
+                                    mapdrawendX < 0 || mapdrawendX > (m_scene.RegionInfo.RegionSizeX - 1)
+                                    || mapdrawstartY < 0 || mapdrawstartY > (m_scene.RegionInfo.RegionSizeY - 1) ||
+                                    mapdrawendY < 0
+                                    || mapdrawendY > (m_scene.RegionInfo.RegionSizeY - 1))
+                                    continue;
+
+                                #region obb face reconstruction part duex
+
+                                Vector3[] vertexes = new Vector3[8];
+
+                                // float[] distance = new float[6];
+                                Vector3[] FaceA = new Vector3[6]; // vertex A for Facei
+                                Vector3[] FaceB = new Vector3[6]; // vertex B for Facei
+                                Vector3[] FaceC = new Vector3[6]; // vertex C for Facei
+                                Vector3[] FaceD = new Vector3[6]; // vertex D for Facei
+
+                                tScale = new Vector3(lscale.X, -lscale.Y, lscale.Z);
+                                scale = ((tScale * part.GetWorldRotation()));
+                                vertexes[0] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+                                // vertexes[0].x = pos.X + vertexes[0].x;
+                                //vertexes[0].y = pos.Y + vertexes[0].y;
+                                //vertexes[0].z = pos.Z + vertexes[0].z;
+
+                                FaceA[0] = vertexes[0];
+                                FaceB[3] = vertexes[0];
+                                FaceA[4] = vertexes[0];
+
+                                tScale = lscale;
+                                scale = ((tScale * part.GetWorldRotation()));
+                                vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+
+                                // vertexes[1].x = pos.X + vertexes[1].x;
+                                // vertexes[1].y = pos.Y + vertexes[1].y;
+                                //vertexes[1].z = pos.Z + vertexes[1].z;
+
+                                FaceB[0] = vertexes[1];
+                                FaceA[1] = vertexes[1];
+                                FaceC[4] = vertexes[1];
+
+                                tScale = new Vector3(lscale.X, -lscale.Y, -lscale.Z);
+                                scale = ((tScale * part.GetWorldRotation()));
+
+                                vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+
+                                //vertexes[2].x = pos.X + vertexes[2].x;
+                                //vertexes[2].y = pos.Y + vertexes[2].y;
+                                //vertexes[2].z = pos.Z + vertexes[2].z;
+
+                                FaceC[0] = vertexes[2];
+                                FaceD[3] = vertexes[2];
+                                FaceC[5] = vertexes[2];
+
+                                tScale = new Vector3(lscale.X, lscale.Y, -lscale.Z);
+                                scale = ((tScale * part.GetWorldRotation()));
+                                vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+
+                                //vertexes[3].x = pos.X + vertexes[3].x;
+                                // vertexes[3].y = pos.Y + vertexes[3].y;
+                                // vertexes[3].z = pos.Z + vertexes[3].z;
+
+                                FaceD[0] = vertexes[3];
+                                FaceC[1] = vertexes[3];
+                                FaceA[5] = vertexes[3];
+
+                                tScale = new Vector3(-lscale.X, lscale.Y, lscale.Z);
+                                scale = ((tScale * part.GetWorldRotation()));
+                                vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+
+                                // vertexes[4].x = pos.X + vertexes[4].x;
+                                // vertexes[4].y = pos.Y + vertexes[4].y;
+                                // vertexes[4].z = pos.Z + vertexes[4].z;
+
+                                FaceB[1] = vertexes[4];
+                                FaceA[2] = vertexes[4];
+                                FaceD[4] = vertexes[4];
+
+                                tScale = new Vector3(-lscale.X, lscale.Y, -lscale.Z);
+                                scale = ((tScale * part.GetWorldRotation()));
+                                vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+
+                                // vertexes[5].x = pos.X + vertexes[5].x;
+                                // vertexes[5].y = pos.Y + vertexes[5].y;
+                                // vertexes[5].z = pos.Z + vertexes[5].z;
+
+                                FaceD[1] = vertexes[5];
+                                FaceC[2] = vertexes[5];
+                                FaceB[5] = vertexes[5];
+
+                                tScale = new Vector3(-lscale.X, -lscale.Y, lscale.Z);
+                                scale = ((tScale * part.GetWorldRotation()));
+                                vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+
+                                // vertexes[6].x = pos.X + vertexes[6].x;
+                                // vertexes[6].y = pos.Y + vertexes[6].y;
+                                // vertexes[6].z = pos.Z + vertexes[6].z;
+
+                                FaceB[2] = vertexes[6];
+                                FaceA[3] = vertexes[6];
+                                FaceB[4] = vertexes[6];
+
+                                tScale = new Vector3(-lscale.X, -lscale.Y, -lscale.Z);
+                                scale = ((tScale * part.GetWorldRotation()));
+                                vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+
+                                // vertexes[7].x = pos.X + vertexes[7].x;
+                                // vertexes[7].y = pos.Y + vertexes[7].y;
+                                // vertexes[7].z = pos.Z + vertexes[7].z;
+
+                                FaceD[2] = vertexes[7];
+                                FaceC[3] = vertexes[7];
+                                FaceD[5] = vertexes[7];
+
+                                #endregion
+
+                                //int wy = 0;
+
+                                //bool breakYN = false; // If we run into an error drawing, break out of the
+                                // loop so we don't lag to death on error handling
+                                DrawStruct ds = new DrawStruct { brush = new SolidBrush(mapdotspot) };
+                                if (mapdot.RootChild.Shape.ProfileShape == ProfileShape.Circle)
+                                {
+                                    ds.dr = DrawRoutine.Ellipse;
+                                    Vector3 Location = new Vector3(part.AbsolutePosition.X - (part.Scale.X / 2),
+                                                                   (256 -
+                                                                    (part.AbsolutePosition.Y + (part.Scale.Y / 2))),
+                                                                   0);
+                                    Location.X /= m_scene.RegionInfo.RegionSizeX / Constants.RegionSize;
+                                    Location.Y /= m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
+                                    Location = Location * part.GetWorldRotation();
+                                    ds.rect = new Rectangle((int)Location.X, (int)Location.Y,
+                                                            (int)Math.Abs(part.Shape.Scale.X),
+                                                            (int)Math.Abs(part.Shape.Scale.Y));
+                                }
+                                else //if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Square)
+                                {
+                                    ds.dr = DrawRoutine.Rectangle;
+                                    //ds.rect = new Rectangle(mapdrawstartX, (255 - mapdrawstartY), mapdrawendX - mapdrawstartX, mapdrawendY - mapdrawstartY);
+
+                                    ds.trns = new face[FaceA.Length];
+
+                                    for (int i = 0; i < FaceA.Length; i++)
+                                    {
+                                        Point[] working = new Point[5];
+                                        working[0] = project(FaceA[i], axPos);
+                                        working[1] = project(FaceB[i], axPos);
+                                        working[2] = project(FaceD[i], axPos);
+                                        working[3] = project(FaceC[i], axPos);
+                                        working[4] = project(FaceA[i], axPos);
+
+                                        face workingface = new face { pts = working };
+
+                                        ds.trns[i] = workingface;
+                                    }
+                                }
+
+                                if (!z_localIDs.Contains(part.LocalId))
+                                {
+                                    z_sort[part.LocalId] = ds;
+                                    z_localIDs.Add(part.LocalId);
+                                    z_sortheights.Add(pos.Z);
+                                }
+                            } // Object is within 256m Z of terrain
+                        } // object is at least a meter wide
+                    } // loop over group children
+                }// foreach loop over entities
 
                 float[] sortedZHeights = z_sortheights.ToArray();
                 uint[] sortedlocalIds = z_localIDs.ToArray();

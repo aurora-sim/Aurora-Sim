@@ -38,13 +38,11 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Serialization;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
 using Timer = System.Timers.Timer;
 using Aurora.Management;
 using ProtoBuf.Meta;
 using ProtoBuf;
+using Aurora.Region;
 
 namespace Aurora.Modules
 {

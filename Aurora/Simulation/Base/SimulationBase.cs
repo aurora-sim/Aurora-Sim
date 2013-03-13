@@ -295,9 +295,7 @@ namespace Aurora.Simulation.Base
         {
             m_applicationPlugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.PreStartup(this);
-            }
         }
 
         /// <summary>
@@ -306,24 +304,16 @@ namespace Aurora.Simulation.Base
         public virtual void StartModules()
         {
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.Initialize(this);
-            }
 
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.PostInitialise();
-            }
 
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.Start();
-            }
 
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.PostStart();
-            }
         }
 
         /// <summary>
@@ -332,9 +322,7 @@ namespace Aurora.Simulation.Base
         public virtual void CloseModules()
         {
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.Close();
-            }
         }
 
         /// <summary>

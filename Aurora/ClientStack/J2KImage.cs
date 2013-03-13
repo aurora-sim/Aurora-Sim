@@ -30,9 +30,8 @@ using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     /// <summary>
     ///   Stores information about a current texture download and a reference to the texture asset

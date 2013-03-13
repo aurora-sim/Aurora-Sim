@@ -84,16 +84,9 @@ namespace Aurora.Simulation.Base
             configSource.AddSwitch("Startup", "logconfig");
             string logConfigFile = configSource.Configs["Startup"].GetString("logconfig", String.Empty);
             if (logConfigFile != String.Empty)
-            {
                 XmlConfigurator.Configure(new FileInfo(logConfigFile));
-                //MainConsole.Instance.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file",
-                //                 logConfigFile);
-            }
             else
-            {
                 XmlConfigurator.Configure();
-                //MainConsole.Instance.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
-            }
 
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             int workerThreads, iocpThreads;

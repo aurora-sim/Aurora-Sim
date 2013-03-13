@@ -34,7 +34,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {

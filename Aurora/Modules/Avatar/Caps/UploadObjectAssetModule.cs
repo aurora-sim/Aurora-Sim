@@ -37,9 +37,8 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using ExtraParamType = OpenMetaverse.ExtraParamType;
+using Aurora.Region;
 
 namespace Aurora.Modules.Caps
 {

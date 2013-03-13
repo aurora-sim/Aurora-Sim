@@ -36,7 +36,6 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Capabilities;
-using OpenSim.Region.Framework.Interfaces;
 using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse.StructuredData;
 using RegionFlags = OpenMetaverse.RegionFlags;

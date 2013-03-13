@@ -36,7 +36,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Scenes;
+using Aurora.Region;
 
 namespace Aurora.Services
 {
@@ -510,22 +510,13 @@ namespace Aurora.Services
                 SceneObjectGroup grp = null;
 
                 List<UUID> textures = new List<UUID>();
-#if(!ISWIN)
-                for (int i = 0; i < texture_list.Count; i++)
-                {
-                    AssetBase textureAsset = new AssetBase(UUID.Random(), assetName, AssetType.Texture, m_service.AgentID);
-                    textureAsset.Data = texture_list[i].AsBinary();
-                    textureAsset.ID = m_assetService.Store(textureAsset);
-                    textures.Add(textureAsset.ID);
-                }
-#else
                 foreach (AssetBase textureAsset in texture_list.Select(t => new AssetBase(UUID.Random(), assetName, AssetType.Texture,
                                                                                           m_service.AgentID) {Data = t.AsBinary()}))
                 {
                     textureAsset.ID = m_assetService.Store(textureAsset);
                     textures.Add(textureAsset.ID);
                 }
-#endif
+
                 InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID,
                                                                                      InventoryType.Mesh, AssetType.Mesh);
                 for (int i = 0; i < mesh_list.Count; i++)

@@ -35,7 +35,7 @@ using Aurora.Framework;
 using OSDArray = OpenMetaverse.StructuredData.OSDArray;
 using OSD = OpenMetaverse.StructuredData.OSD;
 
-namespace OpenSim.Region.Physics.Meshing
+namespace Aurora.Physics.Meshing
 {
     public class Mesh : IMesh
     {

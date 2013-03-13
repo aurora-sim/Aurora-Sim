@@ -31,7 +31,6 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

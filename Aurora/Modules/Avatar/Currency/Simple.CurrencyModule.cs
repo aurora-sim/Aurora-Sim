@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -145,8 +144,10 @@ namespace Simple.Currency
             return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint)amount, text, TransactionType.SystemGenerated, UUID.Zero); 
         }
 
+#pragma warning disable 67
         public event ObjectPaid OnObjectPaid;
         public event PostObjectPaid OnPostObjectPaid;
+#pragma warning restore 67
 
         public bool Transfer(UUID toID, UUID fromID, int amount, string description)
         {

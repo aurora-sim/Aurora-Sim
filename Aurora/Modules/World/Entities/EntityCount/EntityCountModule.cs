@@ -30,8 +30,6 @@ using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.Entities.EntityCount
@@ -216,7 +214,7 @@ namespace Aurora.Modules.Entities.EntityCount
             //If the object changes physical status, we need to make sure to update the active objects count
             if (FunctionName == "ObjectChangedPhysicalStatus")
             {
-                OnObjectBeingAddedToScene((SceneObjectGroup) parameters);
+                OnObjectBeingAddedToScene((ISceneEntity) parameters);
             }
             return null;
         }

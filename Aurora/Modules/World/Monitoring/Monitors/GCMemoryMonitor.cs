@@ -28,7 +28,7 @@
 using System;
 using Aurora.Framework;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
     internal class GCMemoryMonitor : IMonitor
     {

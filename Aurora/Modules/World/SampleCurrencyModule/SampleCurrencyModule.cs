@@ -33,17 +33,9 @@ using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.SampleCurrencyModule
 {
-    /// <summary>
-    ///   This is a demo for you to use when making one that works for you.
-    ///   // To use the following you need to add:
-    ///   -helperuri <ADDRESS TO HERE OR grid MONEY SERVER>
-    ///                to the command line parameters you use to start up your client
-    ///                This commonly looks like -helperuri http://127.0.0.1:9000/
-    /// </summary>
     public class CurrencyModule : IMoneyModule, INonSharedRegionModule
     {
         private bool m_enabled;

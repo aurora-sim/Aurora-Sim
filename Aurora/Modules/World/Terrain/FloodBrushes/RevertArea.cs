@@ -27,7 +27,6 @@
 
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Terrain.FloodBrushes
 {

@@ -32,8 +32,6 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Land
 {
@@ -521,8 +519,7 @@ namespace Aurora.Modules.Land
             {
                 try
                 {
-                    if (obj is SceneObjectGroup)
-                        AddObject(obj);
+                    AddObject(obj);
                 }
                 catch (Exception e)
                 {
@@ -571,8 +568,8 @@ namespace Aurora.Modules.Land
             //}
             if (FunctionName == "ObjectChangedOwner")
             {
-                TaintPrimCount((int) ((SceneObjectGroup) parameters).AbsolutePosition.X,
-                               (int) ((SceneObjectGroup) parameters).AbsolutePosition.Y);
+                TaintPrimCount((int)((ISceneEntity)parameters).AbsolutePosition.X,
+                               (int)((ISceneEntity)parameters).AbsolutePosition.Y);
             }
             else if (FunctionName == "ObjectEnteringNewParcel")
             {

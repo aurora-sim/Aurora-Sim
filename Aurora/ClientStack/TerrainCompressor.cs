@@ -30,7 +30,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using Aurora.Framework;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     public static class AuroraTerrainCompressor
     {

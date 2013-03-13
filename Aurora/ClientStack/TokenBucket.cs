@@ -27,7 +27,7 @@
 
 using System;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     /// <summary>
     ///   A hierarchical token bucket for bandwidth throttling. See

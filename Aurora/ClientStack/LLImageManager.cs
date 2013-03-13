@@ -31,9 +31,8 @@ using System.Reflection;
 using Mischel.Collections;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     public class LLImageManager
     {

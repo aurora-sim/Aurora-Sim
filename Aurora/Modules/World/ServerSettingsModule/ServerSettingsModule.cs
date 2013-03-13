@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

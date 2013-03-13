@@ -37,10 +37,8 @@ using System.Timers;
 using Nini.Config;
 using OpenMetaverse.Packets;
 using Aurora.Framework;
-using OpenSim.Region.CoreModules.Framework.Monitoring.Alerts;
-using OpenSim.Region.CoreModules.Framework.Monitoring.Monitors;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using Aurora.Modules.Monitoring.Alerts;
+using Aurora.Modules.Monitoring.Monitors;
 using ThreadState = System.Diagnostics.ThreadState;
 using Timer = System.Timers.Timer;
 

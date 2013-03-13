@@ -1662,43 +1662,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TerrainHeightFieldHeights = heightMap;
                 ODETerrainHeightFieldHeights = _heightmap;
             });
-            //Trimesh terrain
-            /*var mesh = new OpenSim.Region.Physics.Meshing.Mesh(523452345);
-            for (int i = 0; i < m_region.RegionSizeX - 1; i++)
-            {
-                for (int j = 0; j < m_region.RegionSizeY - 1; j++)
-                {
-                    mesh.Add(new Triangle(
-                        new Vertex(i, j, m_channel[i, j]),
-                        new Vertex(i + 1, j, m_channel[i + 1, j]),
-                        new Vertex(i + 1, j  + 1, m_channel[i + 1, j + 1])));
-                }
-            }
-            System.IntPtr vertices, indices;
-            int vertexCount, indexCount;
-            int vertexStride, triStride;
-            mesh.getVertexListAsPtrToFloatArray(out vertices, out vertexStride, out vertexCount);
-            // Note, that vertices are fixed in unmanaged heap
-            mesh.getIndexListAsPtrToIntArray(out indices, out triStride, out indexCount);
-            // Also fixed, needs release after usage
-
-            if (vertexCount == 0 || indexCount == 0)
-                return;
-
-            mesh.releaseSourceMeshData(); // free up the original mesh data to save memory
-            var _triMeshData = d.GeomTriMeshDataCreate();
-
-            d.GeomTriMeshDataBuildSimple(_triMeshData, vertices, vertexStride, vertexCount, indices, indexCount,
-                                         triStride);
-            d.GeomTriMeshDataPreprocess(_triMeshData);
-            var RegionTerrain = d.CreateTriMesh(space, _triMeshData, null, null, null);
-
-            d.GeomSetCategoryBits(RegionTerrain, (int)(CollisionCategories.Land));
-            d.GeomSetCollideBits(RegionTerrain, (int)(CollisionCategories.Space));
-
-            actor_name_map[RegionTerrain] = new NullObjectPhysicsActor();
-
-            TerrainHeightFieldHeights = heightMap;*/
         }
 
         public double GetWaterLevel(float x, float y)

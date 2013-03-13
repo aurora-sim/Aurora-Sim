@@ -35,7 +35,6 @@ using DotNetOpenMail;
 using DotNetOpenMail.SmtpAuth;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {

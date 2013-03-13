@@ -37,10 +37,8 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
 using Nini.Config;
+using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Inventory
 {
@@ -799,8 +797,8 @@ namespace Aurora.Modules.Inventory
 						AssetBase asset = m_scene.AssetService.Get(item.AssetID.ToString());
 						if (asset != null)
 						{
-							SceneObjectGroup group =
-								SceneObjectSerializer.FromOriginalXmlFormat(Utils.BytesToString(asset.Data), m_scene);
+                            ISceneEntity group =
+								SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(Utils.BytesToString(asset.Data), m_scene);
 
 							bool didchange = false;
 							//copy

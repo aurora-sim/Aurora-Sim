@@ -78,7 +78,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 if (rootPath != null) parameters.ReferencedAssemblies.Add(Path.Combine(rootPath, library));
             }
 
-            libraries.Add("OpenSim.Region.OptionalModules.dll");
             libraries.Add("OpenMetaverseTypes.dll");
             libraries.Add("log4net.dll");
 

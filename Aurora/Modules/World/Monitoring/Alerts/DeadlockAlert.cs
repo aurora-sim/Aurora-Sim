@@ -26,9 +26,9 @@
  */
 
 using Aurora.Framework;
-using OpenSim.Region.CoreModules.Framework.Monitoring.Monitors;
+using Aurora.Modules.Monitoring.Monitors;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Alerts
+namespace Aurora.Modules.Monitoring.Alerts
 {
     internal class DeadlockAlert : IAlert
     {

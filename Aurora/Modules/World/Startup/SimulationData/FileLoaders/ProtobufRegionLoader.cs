@@ -1,12 +1,12 @@
 ﻿using Aurora.Framework;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Scenes;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Aurora.Region;
 
 namespace Aurora.Modules
 {

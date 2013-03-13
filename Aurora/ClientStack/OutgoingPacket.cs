@@ -29,7 +29,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using Aurora.Framework;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     public delegate void UnackedPacketMethod(OutgoingPacket packet);
 

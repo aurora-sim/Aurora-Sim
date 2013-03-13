@@ -34,7 +34,6 @@ using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Serialization.External;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {

@@ -31,8 +31,6 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
 using Aurora.DataManager;
 using OpenMetaverse;

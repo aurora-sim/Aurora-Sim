@@ -39,8 +39,6 @@ using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.Land
@@ -915,7 +913,7 @@ namespace Aurora.Modules.Land
                             bool wasTemporary = ((group.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0);
                             bool wasPhantom = ((group.RootChild.Flags & PrimFlags.Phantom) != 0);
                             bool wasVD = group.RootChild.VolumeDetectActive;
-                            bool needsPhysicalRebuild = ((SceneObjectPart) group.RootChild).UpdatePrimFlags(false,
+                            bool needsPhysicalRebuild = group.RootChild.UpdatePrimFlags(false,
                                                                                                             wasTemporary,
                                                                                                             wasPhantom,
                                                                                                             wasVD, null);

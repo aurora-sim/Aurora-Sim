@@ -33,7 +33,6 @@ using System.Timers;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.ActivityDetectors
 {

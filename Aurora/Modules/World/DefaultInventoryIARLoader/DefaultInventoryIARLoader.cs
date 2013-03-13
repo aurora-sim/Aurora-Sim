@@ -34,7 +34,7 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Modules.Archivers;
-using OpenSim.Region.Framework.Scenes;
+using Aurora.Region;
 
 namespace Aurora.Modules.DefaultInventoryIARLoader
 {

@@ -39,7 +39,6 @@ using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
 using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Modules.Chat

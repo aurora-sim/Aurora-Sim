@@ -30,7 +30,7 @@ using Aurora.Framework;
 using Nini.Config;
 using Aurora.Simulation.Base;
 
-namespace OpenSim.CoreApplicationPlugins
+namespace Aurora.CoreApplicationPlugins
 {
     public class ServicesLoader : IApplicationPlugin
     {

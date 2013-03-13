@@ -169,6 +169,22 @@ namespace Aurora.Framework
 
         #endregion
 
+        #region XML
+
+        /// <summary>
+        /// Returns an XML based document that represents this object
+        /// </summary>
+        /// <returns></returns>
+        string ToXml2();
+
+        /// <summary>
+        /// Returns an XML based document that represents this object
+        /// </summary>
+        /// <returns></returns>
+        byte[] ToBinaryXml2();
+
+        #endregion
+
         Vector3 GetTorque();
 
         event BlankHandler OnFinishedPhysicalRepresentationBuilding;
@@ -263,5 +279,21 @@ namespace Aurora.Framework
         void GeneratedMesh(ISceneChildEntity _parent_entity, IMesh _mesh);
 
         void FinishedSerializingGenericProperties();
+
+        void OffsetForNewRegion(Vector3 oldGroupPosition);
+
+        void SetAbsolutePosition(bool p, Vector3 attemptedPos);
+
+        bool IsInTransit { get; set; }
+
+        void ScriptSetPhysicsStatus(bool p);
+
+        Vector3 GetAxisAlignedBoundingBox(out float offsetHeight);
+
+        void ClearPartAttachmentData();
+
+        void UpdateGroupRotationR(Quaternion rot);
+
+        void ApplyPermissions(uint p);
     }
 }

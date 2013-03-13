@@ -36,7 +36,6 @@ using Microsoft.Win32;
 using Nini.Config;
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {

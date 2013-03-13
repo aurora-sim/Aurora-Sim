@@ -36,7 +36,6 @@ using Aurora.Framework;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Serialization.External;
 using Aurora.Modules.Archivers;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Archivers
 {

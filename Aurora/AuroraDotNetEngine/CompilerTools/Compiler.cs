@@ -503,12 +503,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                                                  "Aurora.Framework.dll"));
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "OpenMetaverseTypes.dll"));
-
-                if (converter.Name == "yp")
-                {
-                    parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                                                                     "OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll"));
-                }
             }
 
             parameters.ReferencedAssemblies.AddRange(m_referencedFiles.ToArray());

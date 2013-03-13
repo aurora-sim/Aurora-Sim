@@ -31,8 +31,6 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using GridRegion = Aurora.Framework.GridRegion;
 
 using OpenMetaverse;
@@ -601,7 +599,7 @@ namespace Aurora.Modules.EntityTransfer
         /// <param name="attemptedPosition">the attempted out of region position of the scene object</param>
         /// <param name="grp">the scene object that we're crossing</param>
         ///<param name="destination"></param>
-        public bool CrossGroupToNewRegion(SceneObjectGroup grp, Vector3 attemptedPosition, GridRegion destination)
+        public bool CrossGroupToNewRegion(ISceneEntity grp, Vector3 attemptedPosition, GridRegion destination)
         {
             if (grp == null)
                 return false;
@@ -610,7 +608,7 @@ namespace Aurora.Modules.EntityTransfer
 
             if (grp.Scene == null)
                 return false;
-            if (grp.RootPart.DIE_AT_EDGE)
+            if (grp.RootChild.DIE_AT_EDGE)
             {
                 // We remove the object here
                 try
@@ -626,7 +624,7 @@ namespace Aurora.Modules.EntityTransfer
                 return false;
             }
 
-            if (grp.RootPart.RETURN_AT_EDGE)
+            if (grp.RootChild.RETURN_AT_EDGE)
             {
                 // We remove the object here
                 try
@@ -643,7 +641,7 @@ namespace Aurora.Modules.EntityTransfer
                 return false;
             }
 
-            Vector3 oldGroupPosition = grp.RootPart.GroupPosition;
+            Vector3 oldGroupPosition = grp.RootChild.GroupPosition;
             // If we fail to cross the border, then reset the position of the scene object on that border.
             if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp, attemptedPosition))
             {
@@ -663,7 +661,7 @@ namespace Aurora.Modules.EntityTransfer
         /// <returns>
         /// true if the crossing itself was successful, false on failure
         /// </returns>
-        protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp, Vector3 attemptedPos)
+        protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, ISceneEntity grp, Vector3 attemptedPos)
         {
             bool successYN = false;
             if (destination != null)
@@ -685,7 +683,7 @@ namespace Aurora.Modules.EntityTransfer
                     return true;//They do all the work adding the prim in the other region
                 }
 
-                SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy(false);
+                ISceneEntity copiedGroup = grp.Copy(false);
                 copiedGroup.SetAbsolutePosition(true, attemptedPos);
                 if (grp.Scene != null)
                     successYN = grp.Scene.RequestModuleInterface<ISimulationService>().CreateObject(destination, copiedGroup);
@@ -710,9 +708,9 @@ namespace Aurora.Modules.EntityTransfer
                 {
                     if (!grp.IsDeleted)
                     {
-                        if (grp.RootPart.PhysActor != null)
+                        if (grp.RootChild.PhysActor != null)
                         {
-                            grp.RootPart.PhysActor.CrossingFailure();
+                            grp.RootChild.PhysActor.CrossingFailure();
                         }
                     }
 
@@ -764,9 +762,9 @@ namespace Aurora.Modules.EntityTransfer
         /// <param name="regionID"></param>
         /// <param name="sog"></param>
         /// <returns></returns>
-        public virtual bool IncomingCreateObject(UUID regionID, ISceneObject sog)
+        public virtual bool IncomingCreateObject(UUID regionID, ISceneEntity sog)
         {
-            return AddSceneObject(m_scene, (SceneObjectGroup)sog);
+            return AddSceneObject(m_scene, sog);
         }
 
         /// <summary>
@@ -777,7 +775,7 @@ namespace Aurora.Modules.EntityTransfer
         /// <param name="scene"></param>
         /// <param name="sceneObject"></param>
         /// <returns>True if the SceneObjectGroup was added, False if it was not</returns>
-        public bool AddSceneObject(IScene scene, SceneObjectGroup sceneObject)
+        public bool AddSceneObject(IScene scene, ISceneEntity sceneObject)
         {
             // If the user is banned, we won't let any of their objects
             // enter. Period.
@@ -809,8 +807,8 @@ namespace Aurora.Modules.EntityTransfer
                 sceneObject.IsInTransit = false;//Reset this now that it's entering here
                 if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
-                    if(sceneObject.RootPart.IsSelected)
-                        sceneObject.RootPart.CreateSelected = true;
+                    if(sceneObject.RootChild.IsSelected)
+                        sceneObject.RootChild.CreateSelected = true;
                     sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                     return true;
                 }

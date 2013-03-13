@@ -33,7 +33,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 // // using System.Reflection;
 

@@ -31,7 +31,6 @@ using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.Scripting

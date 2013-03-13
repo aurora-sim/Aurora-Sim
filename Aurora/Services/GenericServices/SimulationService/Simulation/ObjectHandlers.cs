@@ -134,21 +134,17 @@ namespace Aurora.Services
             GridRegion destination = new GridRegion
                                          {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
 
-            string sogXmlStr = "", extraStr = "";
+            string sogXmlStr = "";
             if (args.ContainsKey("sog") && args["sog"] != null)
                 sogXmlStr = args["sog"].AsString();
 
-            ISceneObject sog = null;
+            ISceneEntity sog = null;
             try
             {
                 //MainConsole.Instance.DebugFormat("[OBJECT HANDLER]: received {0}", sogXmlStr);
                 IRegionSerialiserModule mod =  m_SimulationService.Scene.RequestModuleInterface<IRegionSerialiserModule>();
                 if (mod != null)
-                {
                     sog = mod.DeserializeGroupFromXml2(sogXmlStr,  m_SimulationService.Scene);
-                    if (sog != null)
-                        sog.ExtraFromXmlString(extraStr);
-                }
             }
             catch (Exception ex)
             {

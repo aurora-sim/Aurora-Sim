@@ -28,7 +28,6 @@
 using System;
 using System.IO;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Terrain.FileLoaders
 {

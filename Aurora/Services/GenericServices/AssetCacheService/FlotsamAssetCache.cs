@@ -40,7 +40,6 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
 using ProtoBuf;
 
 namespace Aurora.Services

@@ -33,7 +33,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services
@@ -383,7 +382,7 @@ namespace Aurora.Services
 
         #region Objects
 
-        public bool CreateObject(GridRegion destination, ISceneObject sog)
+        public bool CreateObject(GridRegion destination, ISceneEntity sog)
         {
              // Try local first
             if (m_localBackend != null && m_localBackend.CreateObject(destination, sog))
@@ -401,7 +400,6 @@ namespace Aurora.Services
 
             OSDMap args = new OSDMap(7);
             args["sog"] = OSD.FromString(sog.ToXml2());
-            args["extra"] = OSD.FromString(sog.ExtraToXmlString());
             // Add the input general arguments
             args["destination_x"] = OSD.FromString(destination.RegionLocX.ToString());
             args["destination_y"] = OSD.FromString(destination.RegionLocY.ToString());

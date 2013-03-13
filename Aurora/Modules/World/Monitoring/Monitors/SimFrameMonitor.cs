@@ -27,7 +27,7 @@
 
 using Aurora.Framework;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
     public class SimFrameMonitor : IMonitor, ISimFrameMonitor
     {

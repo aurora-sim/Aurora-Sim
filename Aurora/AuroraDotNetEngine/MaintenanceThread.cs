@@ -36,7 +36,6 @@ using System.Threading;
 using Aurora.Framework;
 using Mischel.Collections;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

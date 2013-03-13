@@ -37,7 +37,6 @@ using Nwc.XmlRpc;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
 
 /*****************************************************
  *

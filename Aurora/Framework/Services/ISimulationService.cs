@@ -184,7 +184,7 @@ namespace Aurora.Framework
         /// <param name = "regionHandle"></param>
         /// <param name = "sog"></param>
         /// <returns></returns>
-        bool CreateObject(GridRegion destination, ISceneObject sog);
+        bool CreateObject(GridRegion destination, ISceneEntity sog);
 
         /// <summary>
         ///   Create an object from the user's inventory in the destination region. 

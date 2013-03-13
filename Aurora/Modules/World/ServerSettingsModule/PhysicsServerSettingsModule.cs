@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using OpenMetaverse;
 using Nini.Config;
 

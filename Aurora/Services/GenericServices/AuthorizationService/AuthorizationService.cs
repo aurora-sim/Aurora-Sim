@@ -30,7 +30,6 @@ using System.Reflection;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Services
 {

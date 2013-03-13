@@ -8,8 +8,6 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using RunTimeCompiler;
 
 namespace Aurora.Modules.Installer

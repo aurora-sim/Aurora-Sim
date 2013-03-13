@@ -42,7 +42,7 @@ using Aurora.Framework.Physics;
  * it's always availabe and thus the default in case of configuration errors
 */
 
-namespace OpenSim.Region.Physics.Meshing
+namespace Aurora.Physics.Meshing
 {
     public class ZeroMesherPlugin : IMeshingPlugin
     {

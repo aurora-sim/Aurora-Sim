@@ -32,8 +32,6 @@ using System.Reflection;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Permissions
 {
@@ -1248,26 +1246,26 @@ namespace Aurora.Modules.Permissions
             // Default: deny
             bool locked = false;
 
-            SceneObjectGroup group;
+            ISceneEntity group;
             IEntity entity;
             if (!m_scene.Entities.TryGetValue(objId, out entity))
             {
                 if (!m_scene.Entities.TryGetChildPrimParent(objId, out entity))
                     return false;
-                    
-                group = (SceneObjectGroup) entity;
+
+                group = (ISceneEntity)entity;
             }
             else
             {
                 // If it's not an object, we cant edit it.
-                if (!(entity is SceneObjectGroup))
+                if (!(entity is ISceneEntity))
                     return false;
-                    
-                group = (SceneObjectGroup) entity;
+
+                group = (ISceneEntity)entity;
             }
 
             UUID objectOwner = group.OwnerID;
-            locked = ((group.RootPart.OwnerMask & PERM_LOCKED) == 0);
+            locked = ((group.RootChild.OwnerMask & PERM_LOCKED) == 0);
 
             // People shouldn't be able to do anything with locked objects, except the Administrator
             // The 'set permissions' runs through a different permission check, so when an object owner
@@ -2136,18 +2134,18 @@ namespace Aurora.Modules.Permissions
                 }
 
                 // If it's not an object, we cant edit it.
-                if (!(ent is SceneObjectGroup))
+                if (!(ent is ISceneEntity))
                 {
                     return false;
                 }
 
-                SceneObjectGroup task = (SceneObjectGroup) ent;
+                ISceneEntity task = (ISceneEntity)ent;
                 // UUID taskOwner = null;
                 // Added this because at this point in time it wouldn't be wise for
                 // the administrator object permissions to take effect.
                 // UUID objectOwner = task.OwnerID;
 
-                if ((task.RootPart.EveryoneMask & PERM_COPY) != 0)
+                if ((task.RootChild.EveryoneMask & PERM_COPY) != 0)
                     permission = true;
 
                 if (task.OwnerID != userID)
@@ -2164,9 +2162,9 @@ namespace Aurora.Modules.Permissions
             else
             {
                 IEntity ent;
-                if (m_scene.Entities.TryGetValue(objectID, out ent) && ent is SceneObjectGroup)
+                if (m_scene.Entities.TryGetValue(objectID, out ent) && ent is ISceneEntity)
                 {
-                    SceneObjectGroup task = (SceneObjectGroup) ent;
+                    ISceneEntity task = (ISceneEntity)ent;
 
                     if ((task.GetEffectivePermissions() & (PERM_COPY | PERM_TRANS)) != (PERM_COPY | PERM_TRANS))
                         permission = false;

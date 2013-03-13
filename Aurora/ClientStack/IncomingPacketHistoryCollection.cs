@@ -27,7 +27,7 @@
 
 using System.Collections.Generic;
 
-namespace OpenSim.Region.ClientStack.LindenUDP
+namespace Aurora.ClientStack
 {
     /// <summary>
     ///   A circular buffer and hashset for tracking incoming packet sequence
