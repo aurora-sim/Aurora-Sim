@@ -25,21 +25,26 @@ namespace Aurora.Modules
                 stream.Close();
 
                 List<SceneObjectGroup> grps = new List<SceneObjectGroup>();
-                
-                foreach (SceneObjectGroup grp in regiondata.Groups)
-                {
-                    SceneObjectGroup sceneObject = new SceneObjectGroup(grp.ChildrenList[0], null);
-                    foreach (SceneObjectPart part in grp.ChildrenList)
-                    {
-                        if (part.UUID == sceneObject.UUID)
-                            continue;
-                        sceneObject.AddChild(part, part.LinkNum);
 
-                        part.StoreUndoState();
+                if (regiondata.Groups != null)
+                {
+                    foreach (SceneObjectGroup grp in regiondata.Groups)
+                    {
+                        SceneObjectGroup sceneObject = new SceneObjectGroup(grp.ChildrenList[0], null);
+                        foreach (SceneObjectPart part in grp.ChildrenList)
+                        {
+                            if (part.UUID == sceneObject.UUID)
+                                continue;
+                            sceneObject.AddChild(part, part.LinkNum);
+
+                            part.StoreUndoState();
+                        }
+                        grps.Add(sceneObject);
                     }
-                    grps.Add(sceneObject);
+                    regiondata.Groups = grps;
                 }
-                regiondata.Groups = grps;
+                else
+                    regiondata.Groups = new List<SceneObjectGroup>();
                 return regiondata;
             }
             catch (Exception ex)
