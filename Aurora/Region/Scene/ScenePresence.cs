@@ -149,6 +149,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected const int LAND_VELOCITYMAG_MAX = 20;
 
+        private const float FLY_ROLL_MAX_RADIANS = 1.1f;
+
+        private const float FLY_ROLL_RADIANS_PER_UPDATE = 0.06f;
+        private const float FLY_ROLL_RESET_RADIANS_PER_UPDATE = 0.03f;
+
         // Default AV Height
         protected float m_defaultAvHeight = 1.56f;
 
@@ -589,6 +594,14 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_bodyRot = value; }
         }
 
+        // Used for limited viewer 'fake' user rotations.
+        private Vector3 m_AngularVelocity = Vector3.Zero;
+
+        public Vector3 AngularVelocity
+        {
+            get { return m_AngularVelocity; }
+        }
+
         /// <summary>
         /// If this is true, agent doesn't have a representation in this scene.
         ///    this is an agent 'looking into' this scene from a nearby scene(region)
@@ -981,6 +994,78 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void StopFlying ()
         {
             ControllingClient.StopFlying(this);
+        }
+
+        /// <summary>
+        /// Applies a roll accumulator to the avatar's angular velocity for the avatar fly roll effect.
+        /// </summary>
+        /// <param name="amount">Postive or negative roll amount in radians</param>
+        private void ApplyFlyingRoll(float amount, bool PressingUp, bool PressingDown)
+        {
+            float rollAmount = Util.Clamp(m_AngularVelocity.Z + amount, -FLY_ROLL_MAX_RADIANS, FLY_ROLL_MAX_RADIANS);
+            m_AngularVelocity.Z = rollAmount;
+
+            // APPLY EXTRA consideration for flying up and flying down during this time.
+            // if we're turning left
+            if (amount > 0)
+            {
+                // If we're at the max roll and pressing up, we want to swing BACK a bit
+                // Automatically adds noise
+                //if (PressingUp)
+                {
+                    if (m_AngularVelocity.Z >= FLY_ROLL_MAX_RADIANS - 0.04f)
+                        m_AngularVelocity.Z -= 0.2f;
+                }
+                // If we're at the max roll and pressing down, we want to swing MORE a bit
+                /*if (PressingDown)
+                {
+                    if (m_AngularVelocity.Z >= FLY_ROLL_MAX_RADIANS && m_AngularVelocity.Z < FLY_ROLL_MAX_RADIANS + 0.6f)
+                        m_AngularVelocity.Z += 0.6f;
+                }*/
+            }
+            else  // we're turning right.
+            {
+                // If we're at the max roll and pressing up, we want to swing BACK a bit
+                // Automatically adds noise
+                //if (PressingUp)
+                {
+                    if (m_AngularVelocity.Z <= (-FLY_ROLL_MAX_RADIANS))
+                        m_AngularVelocity.Z += 0.2f;
+                }
+                // If we're at the max roll and pressing down, we want to swing MORE a bit
+                /*if (PressingDown)
+                {
+                    if (m_AngularVelocity.Z >= (-FLY_ROLL_MAX_RADIANS))
+                        m_AngularVelocity.Z -= 0.6f;
+                }*/
+            }
+        }
+
+        /// <summary>
+        /// incrementally sets roll amount to zero
+        /// </summary>
+        /// <param name="amount">Positive roll amount in radians</param>
+        /// <returns></returns>
+        private float CalculateFlyingRollResetToZero(float amount)
+        {
+            const float rollMinRadians = 0f;
+
+            if (m_AngularVelocity.Z > 0)
+            {
+                float leftOverToMin = m_AngularVelocity.Z - rollMinRadians;
+                if (amount > leftOverToMin)
+                    return -leftOverToMin;
+                else
+                    return -amount;
+            }
+            else
+            {
+                float leftOverToMin = -m_AngularVelocity.Z - rollMinRadians;
+                if (amount > leftOverToMin)
+                    return leftOverToMin;
+                else
+                    return amount;
+            }
         }
 
         #endregion
@@ -1419,6 +1504,22 @@ namespace OpenSim.Region.Framework.Scenes
                     // Are the landing controls requirements filled?
                     bool controlland = (((flags & AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0) ||
                                         ((flags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG) != 0));
+
+                    // Applies a satisfying roll effect to the avatar when flying.
+                    if (((flags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT) != 0) && ((flags & AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS) != 0))
+                    {
+                        ApplyFlyingRoll(FLY_ROLL_RADIANS_PER_UPDATE, ((flags & AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0), ((flags & AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0));
+                    }
+                    else if (((flags & AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT) != 0) &&
+                             ((flags & AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG) != 0))
+                    {
+                        ApplyFlyingRoll(-FLY_ROLL_RADIANS_PER_UPDATE, ((flags & AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0), ((flags & AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0));
+                    }
+                    else
+                    {
+                        if (m_AngularVelocity.Z != 0)
+                            m_AngularVelocity.Z += CalculateFlyingRollResetToZero(FLY_ROLL_RESET_RADIANS_PER_UPDATE);
+                    }
 
                     // Are the collision requirements fulfilled?
                     bool colliding = (m_physicsActor.IsColliding == true);
