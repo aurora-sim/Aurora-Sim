@@ -301,7 +301,7 @@ namespace Aurora.Modules
                 IScenePresence avatar = manager.Scene.GetScenePresence(message["AvatarID"].AsUUID());
 
                 bool success = false;
-
+                bool noAgent = false;
                 // get channel_uri: check first whether estate
                 // settings allow voice, then whether parcel allows
                 // voice, if all do retrieve or obtain the parcel
@@ -310,6 +310,11 @@ namespace Aurora.Modules
                 {
                     MainConsole.Instance.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": voice not enabled in estate settings",
                                       manager.Scene.RegionInfo.RegionName);
+                    success = false;
+                }
+                else if(avatar == null || avatar.CurrentParcel == null)
+                {
+                    noAgent = true;
                     success = false;
                 }
                 else if ((avatar.CurrentParcel.LandData.Flags & (uint)ParcelFlags.AllowVoiceChat) == 0)
@@ -326,11 +331,15 @@ namespace Aurora.Modules
                 }
                 OSDMap map = new OSDMap();
                 map["Success"] = success;
-                map["ParcelID"] = avatar.CurrentParcel.LandData.GlobalID;
-                map["ParcelName"] = avatar.CurrentParcel.LandData.Name;
-                map["LocalID"] = avatar.CurrentParcel.LandData.LocalID;
-                map["ParcelFlags"] = avatar.CurrentParcel.LandData.Flags;
-                lock (m_parents) map["ParentID"] = m_parents[avatar.Scene.RegionInfo.RegionID.ToString()];
+                map["NoAgent"] = noAgent;
+                if(success)
+                {
+                    map["ParcelID"] = avatar.CurrentParcel.LandData.GlobalID;
+                    map["ParcelName"] = avatar.CurrentParcel.LandData.Name;
+                    map["LocalID"] = avatar.CurrentParcel.LandData.LocalID;
+                    map["ParcelFlags"] = avatar.CurrentParcel.LandData.Flags;
+                    lock (m_parents) map["ParentID"] = m_parents[avatar.Scene.RegionInfo.RegionID.ToString()];
+                }
                 return map;
             }
             return null;
@@ -479,6 +488,8 @@ namespace Aurora.Modules
                 Thread.Sleep(5);
 
             success = response["Success"];
+            if (response["NoAgent"])
+                throw new NotSupportedException();
             parcelID = response["ParcelID"];
             parcelName = response["ParcelName"];
             localID = response["LocalID"];

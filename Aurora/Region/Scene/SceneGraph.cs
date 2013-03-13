@@ -60,7 +60,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected uint m_lastAllocatedLocalId = 720000;
 
-        private readonly Mutex _primAllocateMutex = new Mutex(false);
+        private readonly object _primAllocateLock = new object();
 
         protected internal object m_syncRoot = new object();
 
@@ -2233,11 +2233,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>A brand new local ID</returns>
         public uint AllocateLocalId()
         {
-            _primAllocateMutex.WaitOne();
-            uint myID = ++m_lastAllocatedLocalId;
-            _primAllocateMutex.ReleaseMutex();
-
-            return myID;
+            lock(_primAllocateLock)
+                return ++m_lastAllocatedLocalId;
         }
 
         /// <summary>
@@ -2259,10 +2256,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="LocalID"></param>
         private void CheckAllocationOfLocalId(uint LocalID)
         {
-            _primAllocateMutex.WaitOne();
-            if (LocalID > m_lastAllocatedLocalId)
-                m_lastAllocatedLocalId = LocalID + 1;
-            _primAllocateMutex.ReleaseMutex();
+            lock (_primAllocateLock)
+            {
+                if (LocalID > m_lastAllocatedLocalId)
+                    m_lastAllocatedLocalId = LocalID + 1;
+            }
         }
 
         #endregion
