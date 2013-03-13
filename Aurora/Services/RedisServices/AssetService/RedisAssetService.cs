@@ -222,13 +222,15 @@ namespace Aurora.RedisServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? UUID.Zero : (UUID)remoteValue;
 
-            bool success = RedisUpdateAsset(id.ToString(), data);
+            AssetBase asset = RedisGetAsset(id.ToString());
+            if (asset == null)
+                return UUID.Zero;
+            UUID newID = asset.ID = UUID.Random();
+            asset.Data = data;
+            bool success = RedisSetAsset(asset);
             if (!success)
                 return UUID.Zero;//We weren't able to update the asset
-            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (doDatabaseCaching && cache != null)
-                cache.Expire(id.ToString());
-            return id;
+            return newID;
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -406,14 +408,6 @@ namespace Aurora.RedisServices.AssetService
             {
                 memStream.Close();
             }
-        }
-
-        public bool RedisUpdateAsset(string id, byte[] data)
-        {
-            return RedisEnsureConnection((conn) =>
-            {
-                return conn.Set(DATA_PREFIX + AssetBase.FillHash(data), data);
-            });
         }
 
         public void RedisDeleteAsset(string id)

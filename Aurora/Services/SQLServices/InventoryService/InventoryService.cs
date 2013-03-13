@@ -1004,6 +1004,8 @@ namespace Aurora.Services.SQLServices.InventoryService
 
         public void AddItemAsync(InventoryItemBase item, Action<InventoryItemBase> success)
         {
+            if (item == null)
+                return;
             lock (_tempItemCache)
             {
                 if (!_tempItemCache.ContainsKey(item.ID))
