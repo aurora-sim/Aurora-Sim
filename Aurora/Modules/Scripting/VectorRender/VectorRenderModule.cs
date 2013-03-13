@@ -52,11 +52,6 @@ namespace Aurora.Modules.Scripting
         private IScene m_scene;
         private IDynamicTextureManager m_textureManager;
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #region IDynamicTextureRender Members
 
         public string GetContentType()

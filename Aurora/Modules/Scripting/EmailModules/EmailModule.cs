@@ -66,11 +66,6 @@ namespace Aurora.Modules.Scripting
         private bool m_localOnly = true;
         private int m_MaxEmailSize = 4096;  // largest email allowed by default, as per lsl docs.
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #region IEmailModule Members
 
         /// <summary>

@@ -720,11 +720,6 @@ namespace Aurora.Modules.Search
             get { return null; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         public void Close()
         {
         }

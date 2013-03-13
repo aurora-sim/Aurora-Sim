@@ -40,11 +40,6 @@ namespace Aurora.Modules.Vegetation
         protected static readonly PCode[] creationCapabilities = new[] {PCode.Grass, PCode.NewTree, PCode.Tree};
         protected IScene m_scene;
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)

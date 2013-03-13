@@ -55,11 +55,6 @@ namespace Aurora.Modules.Scripting
         private readonly Dictionary<UUID, DynamicTextureUpdater> Updaters =
             new Dictionary<UUID, DynamicTextureUpdater>();
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #region IDynamicTextureManager Members
 
         public void RegisterRender(string handleType, IDynamicTextureRender render)

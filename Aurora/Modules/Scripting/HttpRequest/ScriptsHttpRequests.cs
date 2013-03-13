@@ -107,11 +107,6 @@ namespace Aurora.Modules.Scripting
             ServicePointManager.ServerCertificateValidationCallback += ValidateServerCertificate;
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #region IHttpRequestModule Members
 
         public UUID MakeHttpRequest(string url, string parameters, string body)

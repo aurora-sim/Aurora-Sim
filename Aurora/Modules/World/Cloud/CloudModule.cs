@@ -45,11 +45,6 @@ namespace Aurora.Modules.Cloud
         private bool m_ready;
         private IScene m_scene;
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region ICloudModule Members
 
         public void Initialise(IConfigSource config)

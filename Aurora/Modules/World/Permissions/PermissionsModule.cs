@@ -106,11 +106,6 @@ namespace Aurora.Modules.Permissions
 
         #endregion
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region Helper Functions
 
         protected void SendPermissionError(UUID user, string reason)

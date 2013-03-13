@@ -49,11 +49,6 @@ namespace Aurora.Modules.Gods
         protected IDialogModule m_dialogModule;
         protected IScene m_scene;
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region IGodsModule Members
 
         public void RequestGodlikePowers(

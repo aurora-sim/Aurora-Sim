@@ -44,11 +44,6 @@ namespace Aurora.Modules.Chat
         protected IMuteListModule m_muteListModule;
         protected IScene m_scene;
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region IDialogModule Members
 
         public void SendAlertToUser(IClientAPI client, string message)

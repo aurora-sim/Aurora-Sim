@@ -1401,11 +1401,6 @@ namespace Aurora.Modules.Estate
             get { return "EstateManagementModule"; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #endregion
 
         #region Other Functions

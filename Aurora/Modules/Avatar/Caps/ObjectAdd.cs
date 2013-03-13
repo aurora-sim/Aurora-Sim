@@ -44,11 +44,6 @@ namespace Aurora.Modules.Caps
     {
         private IScene m_scene;
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource pSource)

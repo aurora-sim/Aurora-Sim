@@ -101,11 +101,6 @@ namespace Aurora.Modules.Scripting
         private int m_shoutdistance = 100;
         private int m_whisperdistance = 10;
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)

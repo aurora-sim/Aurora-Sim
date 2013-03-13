@@ -53,11 +53,6 @@ namespace Aurora.Modules.Agent.AssetTransaction
             get { return m_scene; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)

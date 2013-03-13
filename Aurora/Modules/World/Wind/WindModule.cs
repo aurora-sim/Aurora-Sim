@@ -58,11 +58,6 @@ namespace Aurora.Modules.Wind
 
         #region IRegion Methods
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         public void Initialise(IConfigSource config)
         {
             windConfig = config.Configs["Wind"];

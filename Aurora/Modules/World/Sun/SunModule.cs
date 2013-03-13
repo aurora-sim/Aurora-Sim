@@ -163,13 +163,6 @@ namespace Aurora.Modules.Sun
 
         #region IRegion Methods
 
-        // Called immediately after the module is loaded for a given region
-        // i.e. Immediately after instance creation.
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         public void Initialise(IConfigSource config)
         {
             m_frame = 0;
