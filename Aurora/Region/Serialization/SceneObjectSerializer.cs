@@ -46,11 +46,6 @@ namespace Aurora.Region.Serialization
     /// right now - hopefully this isn't forever.
     public class SceneObjectSerializer : ISceneObjectSerializer
     {
-        static SceneObjectSerializer()
-        {
-            SceneEntitySerializer.SceneObjectSerializer = new SceneObjectSerializer();
-        }
-
         /// <summary>
         ///   Restore this part from the serialized xml representation.
         /// </summary>
@@ -374,7 +369,7 @@ namespace Aurora.Region.Serialization
         private readonly Dictionary<string, Serialization> m_genericSerializers =
             new Dictionary<string, Serialization>();
 
-        private SceneObjectSerializer()
+        public SceneObjectSerializer()
         {
             #region SOPXmlProcessors initialization
 

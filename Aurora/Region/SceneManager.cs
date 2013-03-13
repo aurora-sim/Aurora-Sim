@@ -44,6 +44,15 @@ namespace Aurora.Region
     /// </summary>
     public class SceneManager : ISceneManager, IApplicationPlugin
     {
+        #region Static Constructor
+
+        static SceneManager()
+        {
+            Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer = new Aurora.Region.Serialization.SceneObjectSerializer();
+        }
+
+        #endregion
+
         #region Declares
 
         public event NewScene OnCloseScene;
