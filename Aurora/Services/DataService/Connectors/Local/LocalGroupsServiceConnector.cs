@@ -476,7 +476,7 @@ namespace Aurora.Services.DataService
                 row["GroupID"] = GroupID;
                 row["RoleID"] = RoleID;
                 row["Name"] = NameOf;
-                row["Description"] = Description;
+                row["Description"] = Description == null ? "" : Description;
                 row["Title"] = Title;
                 row["Powers"] = (long)Powers;
                 data.Insert("osrole", row);
