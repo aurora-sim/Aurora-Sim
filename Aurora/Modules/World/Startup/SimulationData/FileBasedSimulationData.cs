@@ -118,7 +118,7 @@ namespace Aurora.Modules
             ReadConfig(simBase);
             ReadBackup();
             RegionInfo info;
-            if (_regionData == null)
+            if (_regionData == null || _regionData.RegionInfo == null)
             {
             retry:
                 bool noGui = false;

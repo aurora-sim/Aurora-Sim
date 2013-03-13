@@ -398,7 +398,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // If this is an update for our own avatar give it the highest priority
             if (presence == entity)
-                return -double.MaxValue;
+                return 0.0;
 
             // Use the camera position for local agents and avatar position for remote agents
             Vector3 presencePos = (presence.IsChildAgent)
@@ -412,10 +412,10 @@ namespace OpenSim.Region.Framework.Scenes
             if (entity is SceneObjectGroup)
             {
                 SceneObjectGroup g = (SceneObjectGroup) entity;
-                entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
-                distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
+                entityPos = g.AbsolutePosition;
+                distsq = Vector3.DistanceSquared(presencePos, entityPos);
                 if (g.IsAttachment)
-                    return -double.MaxValue;
+                    return 0.0;
             }
             else if (entity is SceneObjectPart)
             {
@@ -423,26 +423,23 @@ namespace OpenSim.Region.Framework.Scenes
                 if (p.IsRoot)
                 {
                     SceneObjectGroup g = p.ParentGroup;
-                    entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
-                    distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
+                    entityPos = g.AbsolutePosition;
+                    distsq = Vector3.DistanceSquared(presencePos, entityPos);
                     if (g.IsAttachment)
-                        return -double.MaxValue;
+                        return 0.0;
                 }
                 else
                 {
-                    distsq = -p.clampedAABdistanceToSQ(presencePos) + 1.0f;
+                    distsq = p.clampedAABdistanceToSQ(presencePos) + 1.0f;
                     if (p.ParentGroup.RootChild.IsAttachment)
-                        return -double.MaxValue + 0.5;
+                        return 1.0;
                 }
             }
             else
             {
                 entityPos = entity.AbsolutePosition;
-                distsq = - Vector3.DistanceSquared(presencePos, entityPos);
+                distsq = Vector3.DistanceSquared(presencePos, entityPos);
             }
-
-            if (distsq > 0.0f)
-                distsq = 0.0f;
 
             return distsq;
         }
