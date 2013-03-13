@@ -110,7 +110,8 @@ namespace Aurora.Region
             }
 
             IConfig gridConfig = m_config.Configs["Configuration"];
-            m_RegisterRegionPassword = Util.Md5Hash(gridConfig.GetString("RegisterRegionPassword", m_RegisterRegionPassword));
+            if(gridConfig != null)
+                m_RegisterRegionPassword = Util.Md5Hash(gridConfig.GetString("RegisterRegionPassword", m_RegisterRegionPassword));
 
             ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore> ().ToArray ();
             List<string> storeNames = new List<string>();
