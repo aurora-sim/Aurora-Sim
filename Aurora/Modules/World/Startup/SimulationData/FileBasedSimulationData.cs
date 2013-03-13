@@ -113,21 +113,29 @@ namespace Aurora.Modules
             RegionInfo info;
             if (_regionData == null || _regionData.RegionInfo == null)
             {
-            retry:
                 bool noGui = false;
                 IConfig startupconfig = simBase.ConfigSource.Configs["Startup"];
                 if (startupconfig != null)
                     noGui = startupconfig.GetBoolean("NoGUI", false);
 
+            retry:
                 if (noGui)
                 {
                     info = ReadRegionInfoFromFile();
                 }
                 else
                 {
-                    info = Aurora.Management.RegionManagerHelper.StartSynchronously(true,
-                        Management.RegionManagerPage.CreateRegion,
-                        simBase.ConfigSource, simBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), null);
+                    try
+                    {
+                        info = Aurora.Management.RegionManagerHelper.StartSynchronously(true,
+                            Management.RegionManagerPage.CreateRegion,
+                            simBase.ConfigSource, simBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), null);
+                    }
+                    catch
+                    {
+                        noGui = true;
+                        goto retry;
+                    }
                 }
                 if (info == null)
                     goto retry;
@@ -140,9 +148,13 @@ namespace Aurora.Modules
 
         private RegionInfo ReadRegionInfoFromFile()
         {
+            if (!File.Exists("/Regions/RegionConfig.ini"))
+            {
+                return CreateRegionFromConsole();
+            }
             try
             {
-                Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument("/Regions/RegionConfig.ini");
+                Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument("/Regions/RegionConfig.ini", Nini.Ini.IniFileType.AuroraStyle);
                 RegionInfo info = new RegionInfo();
                 Nini.Config.IniConfigSource source = new IniConfigSource(doc);
                 Nini.Ini.IniSection section = doc.Sections["Region"];
@@ -169,6 +181,40 @@ namespace Aurora.Modules
             }
             catch {  }
             return null;
+        }
+
+        private RegionInfo CreateRegionFromConsole()
+        {
+            File.Create("/Regions/RegionConfig.ini");
+            Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument("/Regions/RegionConfig.ini", Nini.Ini.IniFileType.AuroraStyle);
+            Nini.Config.IniConfigSource source = new IniConfigSource(doc);
+            Nini.Ini.IniSection section = new Nini.Ini.IniSection("Region");
+
+            RegionInfo info = new RegionInfo();
+            info.RegionID = UUID.Random();
+            info.RegionName = MainConsole.Instance.Prompt("Region Name: ");
+            section.Set("RegionName", info.RegionName);
+
+            info.RegionLocX = int.Parse(MainConsole.Instance.Prompt("Region Location X: "));
+            info.RegionLocY = int.Parse(MainConsole.Instance.Prompt("Region location Y: "));
+            section.Set("RegionLocX", info.RegionLocX.ToString());
+            section.Set("RegionLocY", info.RegionLocY.ToString());
+
+            info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: "));
+            info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: "));
+            section.Set("RegionSizeX", info.RegionSizeX.ToString());
+            section.Set("RegionSizeY", info.RegionSizeY.ToString());
+
+            System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: "));
+            int intPort = int.Parse(MainConsole.Instance.Prompt("Internal port: "));
+            info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
+            section.Set("InternalPort", intPort.ToString());
+            section.Set("InternalAddress", intAdd.ToString());
+
+            doc.Sections.Add(section);
+            doc.Save("/Regions/RegionConfig.ini");
+
+            return info;
         }
 
         private void ReadOpenRegionSettings(IConfig instanceSettings, ref RegionInfo region)
