@@ -477,7 +477,7 @@ namespace Aurora.Services.DataService
                 row["GroupID"] = GroupID;
                 row["RoleID"] = RoleID;
                 row["Name"] = NameOf;
-                row["Description"] = Description;
+                row["Description"] = Description != null ? Description : "";
                 row["Title"] = Title;
                 row["Powers"] = (long)Powers;
                 data.Insert("osrole", row);
@@ -500,9 +500,8 @@ namespace Aurora.Services.DataService
                     values["Name"] = NameOf;
                 }
                 if (Desc != null)
-                {
                     values["Description"] = Desc;
-                }
+
                 if (Title != null)
                 {
                     values["Title"] = Title;
