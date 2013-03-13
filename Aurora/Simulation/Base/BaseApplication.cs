@@ -215,8 +215,7 @@ namespace Aurora.Simulation.Base
                     string dbPasswd = "aurora";
                     string dbSchema = "aurora";
                     string dbUser = "aurora";
-                    string ipAddress = Utilities.GetExternalIp(),
-                        gridIPAddress = Utilities.GetExternalIp();
+                    string gridIPAddress = Utilities.GetExternalIp();
                     string mode = "1";
                     string dbType = "1";
                     string gridName = "Aurora-Sim Grid";
@@ -237,22 +236,25 @@ namespace Aurora.Simulation.Base
                         mode = ReadLine("Choose 1 or 2", mode);
                     }
 
-                    Console.WriteLine("Which database do you want to use?");
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine("[1] SQLite \n[2] MySQL");
-                    Console.ResetColor();
-                    dbType = ReadLine("Choose 1 or 2", dbType);
-                    if (dbType == "2")
+                    if (mode == "1")
                     {
-                        Console.WriteLine("Note: this setup does not automatically create a MySQL installation for you.\n" +
-                            "You must install MySQL on your own");
+                        Console.WriteLine("Which database do you want to use?");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("[1] SQLite \n[2] MySQL");
+                        Console.ResetColor();
+                        dbType = ReadLine("Choose 1 or 2", dbType);
+                        if (dbType == "2")
+                        {
+                            Console.WriteLine("Note: this setup does not automatically create a MySQL installation for you.\n" +
+                                "You must install MySQL on your own");
 
-                        dbSchema = ReadLine("MySQL database name for your region", dbSchema);
-                        dbSource = ReadLine("MySQL database IP", dbSource);
-                        dbUser = ReadLine("MySQL database user account", dbUser);
+                            dbSchema = ReadLine("MySQL database name for your region", dbSchema);
+                            dbSource = ReadLine("MySQL database IP", dbSource);
+                            dbUser = ReadLine("MySQL database user account", dbUser);
 
-                        Console.Write("MySQL database password for that account: ");
-                        dbPasswd = Console.ReadLine();
+                            Console.Write("MySQL database password for that account: ");
+                            dbPasswd = Console.ReadLine();
+                        }
                     }
 
                     if (mode == "1")
@@ -267,13 +269,9 @@ namespace Aurora.Simulation.Base
                             "(you don't have to create all accounts manually or have a web interface then)", allowAnonLogin);
                     }
 
-                    ipAddress = ReadLine("Your external domain name or IP address", ipAddress);
-                    if (ipAddress.StartsWith("http://"))//IP only!
-                        ipAddress = ipAddress.Remove(0, 7);
-
                     if (mode == "2")
                         gridIPAddress = ReadLine("The external domain name or IP address of the grid server you wish to connect to",
-                            ipAddress);
+                            gridIPAddress);
 
                     if (isAuroraExe)
                     {
@@ -281,74 +279,28 @@ namespace Aurora.Simulation.Base
                         IniConfigSource aurora_ini = new IniConfigSource("Aurora.ini", Nini.Ini.IniFileType.AuroraStyle);
                         IniConfigSource aurora_ini_example = new IniConfigSource("Aurora.ini.example", Nini.Ini.IniFileType.AuroraStyle);
 
-                        bool setHostName = false;
                         foreach (IConfig config in aurora_ini_example.Configs)
                         {
                             IConfig newConfig = aurora_ini.AddConfig(config.Name);
                             foreach (string key in config.GetKeys())
                             {
-                                if (key == "HostName")
-                                {
-                                    setHostName = true;
-                                    newConfig.Set(key, ipAddress);
-                                }
                                 //No GUI for mono
-                                else if (key == "NoGUI" &&
+                                if (key == "NoGUI" &&
                                     Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
                                     newConfig.Set(key, true);
-                                //Next 3: Set file loader to the default for mono
-                                else if (config.Name == "RegionStartup" && key == "Default" &&
-                                    Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
-                                    newConfig.Set(key, "RegionLoaderFileSystem");
-                                else if (key == "RegionLoaderFileSystem_Enabled" &&
-                                    Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
-                                    newConfig.Set(key, true);
-                                else if (key == "RegionLoaderDataBaseSystem_Enabled" &&
-                                    Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
-                                    newConfig.Set(key, false);
                                 else
                                     newConfig.Set(key, config.Get(key));
                             }
                         }
-                        if (!setHostName)
-                            aurora_ini.Configs["Network"].Set("HostName", ipAddress);
 
                         aurora_ini.Save();
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine("Your Aurora.ini has been successfully configured");
                         Console.ResetColor();
                     }
-                    else
-                    {
-                        MakeSureExists("Aurora.Server.ini");
-                        IniConfigSource aurora_ini = new IniConfigSource("Aurora.Server.ini", Nini.Ini.IniFileType.AuroraStyle);
-                        IniConfigSource aurora_ini_example = new IniConfigSource("Aurora.Server.ini.example", Nini.Ini.IniFileType.AuroraStyle);
-
-                        bool setHostName = false;
-                        foreach (IConfig config in aurora_ini_example.Configs)
-                        {
-                            IConfig newConfig = aurora_ini.AddConfig(config.Name);
-                            foreach (string key in config.GetKeys())
-                            {
-                                if (key == "HostName")
-                                {
-                                    setHostName = true;
-                                    newConfig.Set(key, ipAddress);
-                                }
-                                else
-                                    newConfig.Set(key, config.Get(key));
-                            }
-                        }
-                        if (!setHostName)
-                            aurora_ini.Configs["Network"].Set("HostName", ipAddress);
-
-                        aurora_ini.Save();
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your Aurora.Server.ini has been successfully configured");
-                        Console.ResetColor();
-                    }
 
                     //Data.ini setup
+                    if (mode == "1")
                     {
                         string folder = isAuroraExe ? "Configuration/" : "AuroraServerConfiguration/";
                         MakeSureExists(folder + "Data/Data.ini");
@@ -422,7 +374,7 @@ namespace Aurora.Simulation.Base
                                 if (newConfig.Name == "GridInfoService")
                                 {
                                     newConfig.Set("GridInfoInHandlerPort", 0);
-                                    newConfig.Set("login", "http://" + ipAddress + ":9000/");
+                                    newConfig.Set("login", "http://" + gridIPAddress + ":9000/");
                                     newConfig.Set("gridname", gridName);
                                     newConfig.Set("gridnick", gridName);
                                 }
@@ -453,7 +405,15 @@ namespace Aurora.Simulation.Base
                             conf = grid_ini.AddConfig("Includes");
                             conf.Set("Include-Grid", "Configuration/Grid/Grid.ini");
                             conf = grid_ini.AddConfig("Configuration");
-                            conf.Set("RegistrationURI", "http://" + gridIPAddress + ":8003");
+                            conf.Set("ServerURI", "http://" + gridIPAddress + ":8003/server/");
+                            conf.Set("AssetServerURI", "http://" + gridIPAddress + ":8010/asset/");
+                            conf.Set("AvatarServerURI", "http://" + gridIPAddress + ":8011/avatar/");
+                            conf.Set("GridServerURI", "http://" + gridIPAddress + ":8012/grid/");
+                            conf.Set("InventoryServerURI", "http://" + gridIPAddress + ":8013/inventory/");
+                            conf.Set("SyncMessageServerURI", "http://" + gridIPAddress + ":8014/syncmessage/");
+                            conf.Set("InstantMessageServerURI", "http://" + gridIPAddress + ":8014/im/"); 
+                            conf.Set("UserAccountServerURI", "http://" + gridIPAddress + ":8015/user/");
+                            conf.Set("CurrencyServerURI", "http://" + gridIPAddress + ":8002/currency/");
 
                             grid_ini.Save();
                             Console.ForegroundColor = ConsoleColor.Green;
@@ -488,7 +448,7 @@ namespace Aurora.Simulation.Base
                         IniConfigSource grid_info_ini = new IniConfigSource("AuroraServerConfiguration/GridInfoService.ini", Nini.Ini.IniFileType.AuroraStyle);
                         IConfig conf = grid_info_ini.AddConfig("GridInfoService");
                         conf.Set("GridInfoInHandlerPort", 8002);
-                        conf.Set("login", "http://" + ipAddress + ":8002");
+                        conf.Set("login", "http://" + gridIPAddress + ":8002");
                         conf.Set("gridname", gridName);
                         conf.Set("gridnick", gridName);
 
@@ -504,15 +464,18 @@ namespace Aurora.Simulation.Base
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine(gridName);
                     Console.ResetColor();
-                    Console.WriteLine("\nYour loginuri is ");
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine("http://" + ipAddress + (isAuroraExe ? ":9000/" : ":8002/"));
-                    Console.ResetColor();
-                    if (mode == "2")
+                    if (mode == "1")
+                    {
+                        Console.WriteLine("\nYour loginuri is ");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("http://" + gridIPAddress + (isAuroraExe ? ":9000/" : ":8002/"));
+                        Console.ResetColor();
+                    }
+                    else
                     {
                         Console.WriteLine("\nConnected Grid URL: ");
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine("http://" + ipAddress + ":8003/");
+                        Console.WriteLine("http://" + gridIPAddress + ":8003/");
                         Console.ResetColor();
                     }
                     Console.WriteLine("\n====================================================================\n");

@@ -78,31 +78,6 @@
     ;; GUIConsole = Special interface to allow i/o redirection to work for GUI applications.
     Console = LocalConsole
 
-    ;; These are the settings for the remote console, unneeded if not using the remote console
-    ;RemoteConsoleUser =
-    ;RemoteConsolePass =
-    ;remote_console_port = 0
-
-[RegionStartup]
-    ;; This sets the default for which region loader will create new regions
-    ;; Values are:
-    ;; RegionLoaderDataBaseSystem - database loader
-    ;; RegionLoaderFileSystem - .ini file loader
-    ;; RegionLoaderWebServer - the web loader (loads .ini files via a url)
-    ;; Default is RegionLoaderDataBaseSystem
-    Default = RegionLoaderDataBaseSystem
-
-    ;; If you want to enable only certain loaders, you can disable them there
-    RegionLoaderDataBaseSystem_Enabled = true
-    RegionLoaderFileSystem_Enabled = false
-    RegionLoaderWebServer_Enabled = true
-
-    ;; What directory region .ini files loaded from
-    RegionsDirectory = Regions
-
-    ;; Web page that .ini files are stored (used by the RegionLoaderWebServer plugin)
-    ;WebServerURL = http://example.com/regions.ini;
-
 ;; Please note that all the configuration files have been moved to the Configuration folder and organized from there.
 ;; Please do NOT edit below this line unless you know what you are doing with it!
 
