@@ -351,8 +351,8 @@ namespace Aurora.Modules
                 m_saveChanges = config.GetBoolean("SaveChanges", m_saveChanges);
                 m_timeBetweenSaves = config.GetInt("TimeBetweenSaves", m_timeBetweenSaves);
                 m_keepOldSave = config.GetBoolean("SavePreviousBackup", m_keepOldSave);
-                m_oldSaveDirectory = config.GetString("PreviousBackupDirectory", m_oldSaveDirectory);
-                m_storeDirectory = config.GetString("StoreBackupDirectory", m_storeDirectory);
+                m_oldSaveDirectory = PathHelpers.ComputeFullPath(config.GetString("PreviousBackupDirectory", m_oldSaveDirectory));
+                m_storeDirectory = PathHelpers.ComputeFullPath(config.GetString("StoreBackupDirectory", m_storeDirectory));
                 m_saveBackupChanges = config.GetBoolean("SaveTimedPreviousBackup", m_keepOldSave);
                 m_timeBetweenBackupSaves = config.GetInt("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
             }

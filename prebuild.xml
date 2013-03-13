@@ -1451,7 +1451,6 @@
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Region"/>
       
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="ScriptEngineParser" path="../../bin/"/>

@@ -1,6 +1,6 @@
 [SimulationDataStore]
     DatabaseLoaderName = "FileBasedDatabase"
-	
+    
 [FileBasedSimulationData]
     ;;
     ;; This plugin loads the region information (such as terrain and objects) from an Aurora Backup file 
@@ -44,24 +44,24 @@
 	;; which allows for a bit of flexibility when loading.
 	;; Default is ""
     AppendedLoadFileName = "";
-	
-	;; The normal file name to save for each region is "<Region Name Here>.abackup"
-	;; If you wish to change that, you can add this so that it becomes
-	;; "<Region Name Here><This config option setting>.abackup"
-	;; which allows for a bit of flexibility when saving the backups.
-	;; Default is ""
+    
+    ;; The normal file name to save for each region is "<Region Name Here>.abackup"
+    ;; If you wish to change that, you can add this so that it becomes
+    ;; "<Region Name Here><This config option setting>.abackup"
+    ;; which allows for a bit of flexibility when saving the backups.
+    ;; Default is ""
     AppendedSaveFileName = "";
-	
-	;; This will make a backup of the sim every X minutes and put it in the "Backup" directory
-	;; This makes sure that you have a good backup if something does go wrong (the backups are time stamped so
-	;;  you can tell when it was taken)
-	;; Default is true
-	SaveTimedPreviousBackup = true
-	
-	;; This module saves periodic backups of the region into the PreviousBackupDirectory 
-	;; so that you have time stamped backups of your region indefinitely
-	;; This allows you to change the amount of time (in minutes) between the auto saves
-	;; Default is 1440 (minutes) (1 day)
-	TimeBetweenBackupSaves = 1440
-	
-	
+    
+    ;; This will make a backup of the sim every X minutes and put it in the "Backup" directory
+    ;; This makes sure that you have a good backup if something does go wrong (the backups are time stamped so
+    ;;  you can tell when it was taken)
+    ;; Default is true
+    SaveTimedPreviousBackup = true
+    
+    ;; This module saves periodic backups of the region into the PreviousBackupDirectory 
+    ;; so that you have time stamped backups of your region indefinitely
+    ;; This allows you to change the amount of time (in minutes) between the auto saves
+    ;; Default is 1440 (minutes) (1 day)
+    TimeBetweenBackupSaves = 1440
+    
+    

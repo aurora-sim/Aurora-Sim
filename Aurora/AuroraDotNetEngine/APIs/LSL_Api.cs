@@ -12398,7 +12398,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (obj == null)
                 return new LSL_List();
 
-            if (obj.OwnerID != m_host.OwnerID)
+            if (obj.OwnerID == m_host.OwnerID)
                 return new LSL_List();
 
             return GetLinkPrimitiveParams(obj, rules);
