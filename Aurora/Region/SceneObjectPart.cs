@@ -1166,7 +1166,7 @@ namespace Aurora.Region
             set;
         }
 
-        public void SetColor(Color c, bool triggerChangedColor)
+        public void UpdateColor(Color c, bool triggerChangedColor)
         {
             if (c.A != Color.A ||
                 c.B != Color.B ||
@@ -2871,11 +2871,13 @@ namespace Aurora.Region
         {
             //No triggering Changed_Color, so not using Color
             //Color = ...
-            SetColor(Color.FromArgb((int)(alpha * 0xff),
+            UpdateColor(Color.FromArgb((int)(alpha * 0xff),
                                          (int) (color.X*0xff),
                                          (int) (color.Y*0xff),
-                                         (int) (color.Z*0xff)), false);
-            SetText(text);
+                                         (int)(color.Z * 0xff)), false);
+            Text = text;
+
+            ScheduleUpdate(PrimUpdateFlags.Text);
         }
 
         public void StopMoveToTarget()
@@ -4857,17 +4859,6 @@ namespace Aurora.Region
         {
             if (PhysActor != null)
                 PhysActor.LockAngularMotion(RotationAxis);
-        }
-
-        /// <summary>
-        ///   Set the text displayed for this part.
-        /// </summary>
-        /// <param name = "text"></param>
-        public void SetText(string text)
-        {
-            Text = text;
-
-            ScheduleUpdate(PrimUpdateFlags.Text);
         }
 
         /// <summary>

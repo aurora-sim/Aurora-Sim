@@ -133,7 +133,7 @@ namespace Aurora.Region
             set
             {
                 if (m_rootPart != null)
-                    m_rootPart.SetColor(value, true);
+                    m_rootPart.UpdateColor(value, true);
             }
         }
 
@@ -3537,24 +3537,6 @@ namespace Aurora.Region
             if (part != null)
             {
                 part.Description = des;
-            }
-        }
-
-        public void SetPartText(string text, uint localID)
-        {
-            SceneObjectPart part = (SceneObjectPart) GetChildPart(localID);
-            if (part != null)
-            {
-                part.SetText(text);
-            }
-        }
-
-        public void SetPartText(string text, UUID partID)
-        {
-            SceneObjectPart part = (SceneObjectPart) GetChildPart(partID);
-            if (part != null)
-            {
-                part.SetText(text);
             }
         }
 
