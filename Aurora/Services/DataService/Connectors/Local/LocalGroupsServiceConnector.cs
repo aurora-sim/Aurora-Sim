@@ -1322,7 +1322,7 @@ namespace Aurora.Services.DataService
                 "COUNT(AgentID)"
             }, "osgrouprolemembership", filter, null, null, null)[0]) == 1;
 
-            GroupMembersData GMD = new GroupMembersData
+            return new GroupMembersData
             {
                 AcceptNotices = (Membership[0]) == "1",
                 AgentID = AgentID,
@@ -1333,8 +1333,6 @@ namespace Aurora.Services.DataService
                 Title = GroupRole[0],
                 OnlineStatus = "(Online)"
             };
-
-            return GMD;
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -1343,11 +1341,6 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemote(requestingAgentID, GroupID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupMembersData>)remoteValue;
-
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.None))
-            {
-                return new List<GroupMembersData>(0);
-            }
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = GroupID;

@@ -1614,7 +1614,7 @@ namespace Aurora.Modules.Groups
                      (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted))
             {
                 UUID FolderID = new UUID(im.binaryBucket, 0);
-                remoteClient.Scene.InventoryService.GiveInventoryItemAsync(remoteClient.AgentId, im.imSessionID,
+                remoteClient.Scene.InventoryService.GiveInventoryItemAsync(remoteClient.AgentId, UUID.Zero,
                     im.imSessionID, FolderID, false,
                     (item) =>
                     {
@@ -1652,9 +1652,6 @@ namespace Aurora.Modules.Groups
 
                 //In offline group notices, imSessionID is replaced with the NoticeID so that we can rebuild the packet here
                 GroupNoticeInfo GND = m_groupData.GetGroupNotice(im.toAgentID, im.imSessionID);
-
-                //We reset the ID so that if this was set before, it won't be misadded or anything to the cache
-                im.imSessionID = UUID.Random();
 
                 //Rebuild the binary bucket
                 if (GND.noticeData.HasAttachment)
