@@ -230,7 +230,8 @@ namespace Aurora.Modules.Startup
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
 
             IConfig gridConfig = m_config.Configs["Configuration"];
-            m_RegisterRegionPassword = Util.Md5Hash(gridConfig.GetString("RegisterRegionPassword", m_RegisterRegionPassword));
+            if (gridConfig != null)
+                m_RegisterRegionPassword = Util.Md5Hash(gridConfig.GetString("RegisterRegionPassword", m_RegisterRegionPassword));
 
             //Now register our region with the grid
             RegisterRegionWithGrid(scene, false, true, m_RegisterRegionPassword);
