@@ -1130,8 +1130,7 @@ namespace Aurora.Services.DataService
                 return (EventData)remoteValue;
 
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
-            IParcelServiceConnector parceldata = DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
-            if(regiondata == null || parceldata == null){
+            if(regiondata == null){
                 return null;
             }
 
@@ -1139,15 +1138,6 @@ namespace Aurora.Services.DataService
             if(region == null){
                 return null;
             }
-            if (parcelID != UUID.Zero)
-            {
-                LandData parcel = parceldata.GetLandData(region.RegionID, parcelID);
-                if (parcel == null)
-                {
-                    return null;
-                }
-            }
-
 
             EventData eventData = new EventData
                                       {

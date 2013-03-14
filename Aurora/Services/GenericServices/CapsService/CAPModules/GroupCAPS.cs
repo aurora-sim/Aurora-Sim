@@ -70,7 +70,7 @@ namespace Aurora.Services
             m_service.RemoveStreamHandler("GroupMemberData", "POST");
         }
 
-        #region Baked Textures
+        #region Group Members
 
         public byte[] GroupMemberData(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {

@@ -111,13 +111,14 @@ namespace Aurora.Modules
             ReadConfig(simBase);
             ReadBackup();
             RegionInfo info;
+
+            bool noGui = false;
+            IConfig startupconfig = simBase.ConfigSource.Configs["Startup"];
+            if (startupconfig != null)
+                noGui = startupconfig.GetBoolean("NoGUI", false);
+
             if (_regionData == null || _regionData.RegionInfo == null)
             {
-                bool noGui = false;
-                IConfig startupconfig = simBase.ConfigSource.Configs["Startup"];
-                if (startupconfig != null)
-                    noGui = startupconfig.GetBoolean("NoGUI", false);
-
             retry:
                 if (noGui)
                 {
@@ -142,7 +143,12 @@ namespace Aurora.Modules
                 newRegion = true;
             }
             else
-                info = _regionData.RegionInfo;
+            {
+                if (noGui)
+                    info = ReadRegionInfoFromFile();
+                else
+                    info = _regionData.RegionInfo;
+            }
             return info;
         }
 
@@ -157,27 +163,28 @@ namespace Aurora.Modules
                 Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"), Nini.Ini.IniFileType.AuroraStyle);
                 RegionInfo info = new RegionInfo();
                 Nini.Config.IniConfigSource source = new IniConfigSource(doc);
-                Nini.Ini.IniSection section = doc.Sections["Region"];
+                IConfig config = source.Configs["Region"];
 
-                info.RegionID = UUID.Parse(section.GetValue("RegionID"));
-                info.RegionName = section.GetValue("RegionName");
-                info.RegionLocX = int.Parse(section.GetValue("RegionLocX"));
-                info.RegionLocY = int.Parse(section.GetValue("RegionLocY"));
-                info.RegionSizeX = int.Parse(section.GetValue("RegionSizeX"));
-                info.RegionSizeY = int.Parse(section.GetValue("RegionSizeY"));
+                info.RegionID = UUID.Parse(config.GetString("RegionID"));
+                info.RegionName = config.GetString("RegionName");
+                info.RegionLocX = config.GetInt("RegionLocX");
+                info.RegionLocY = config.GetInt("RegionLocY");
+                info.RegionSizeX = config.GetInt("RegionSizeX");
+                info.RegionSizeY = config.GetInt("RegionSizeY");
 
-                System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(section.GetValue("InternalAddress"));
-                int intPort = int.Parse(section.GetValue("InternalPort"));
+                System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(config.GetString("InternalAddress", "0.0.0.0"));
+                int intPort = config.GetInt("InternalPort", 9000);
                 info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
 
-                info.ObjectCapacity = int.Parse(section.GetValue("MaxPrims"));
-                info.RegionType = section.GetValue("RegionType");
-                info.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(section.GetValue("MaturityLevel")));
-                info.InfiniteRegion = section.GetValue("InfiniteRegion").ToLower() == "true";
-                info.Startup = section.GetValue("StartupType") == "Normal" ? StartupType.Normal : StartupType.Medium;
-                info.ScopeID = UUID.Parse(section.GetValue("ScopeID"));
-                info.SeeIntoThisSimFromNeighbor = section.GetValue("SeeIntoThisSimFromNeighbor").ToLower() == "true";
-                ReadOpenRegionSettings(source.Configs["Region"], ref info);
+                info.ObjectCapacity = config.GetInt("MaxPrims", info.ObjectCapacity);
+                info.RegionType = config.GetString("RegionType", "");
+                info.AccessLevel = Util.ConvertMaturityToAccessLevel(config.GetUInt("MaturityLevel", info.AccessLevel));
+                info.InfiniteRegion = config.GetBoolean("InfiniteRegion", info.InfiniteRegion);
+                info.Startup = config.GetString("StartupType", "Normal") == "Normal" ? StartupType.Normal : StartupType.Medium;
+                info.ScopeID = UUID.Parse(config.GetString("ScopeID", UUID.Zero.ToString()));
+                info.SeeIntoThisSimFromNeighbor = config.GetBoolean("SeeIntoThisSimFromNeighbor", info.SeeIntoThisSimFromNeighbor);
+                ReadOpenRegionSettings(config, ref info);
+                return info;
             }
             catch {  }
             return null;
