@@ -122,7 +122,7 @@ namespace Aurora.Modules
             retry:
                 if (noGui)
                 {
-                    info = ReadRegionInfoFromFile();
+                    info = ReadRegionInfoFromFile(ref _regionData.RegionInfo);
                 }
                 else
                 {
@@ -145,23 +145,24 @@ namespace Aurora.Modules
             else
             {
                 if (noGui)
-                    info = ReadRegionInfoFromFile();
+                    info = ReadRegionInfoFromFile(ref _regionData.RegionInfo);
                 else
                     info = _regionData.RegionInfo;
             }
             return info;
         }
 
-        private RegionInfo ReadRegionInfoFromFile()
+        private RegionInfo ReadRegionInfoFromFile(ref RegionInfo info)
         {
             if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini")))
             {
-                return CreateRegionFromConsole();
+                return info = CreateRegionFromConsole();
             }
             try
             {
                 Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"), Nini.Ini.IniFileType.AuroraStyle);
-                RegionInfo info = new RegionInfo();
+                if(info == null)
+                    info = new RegionInfo();
                 Nini.Config.IniConfigSource source = new IniConfigSource(doc);
                 IConfig config = source.Configs["Region"];
 
@@ -175,6 +176,7 @@ namespace Aurora.Modules
                 System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(config.GetString("InternalAddress", "0.0.0.0"));
                 int intPort = config.GetInt("InternalPort", 9000);
                 info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
+                info.UDPPorts.Add(info.InternalEndPoint.Port);
 
                 info.ObjectCapacity = config.GetInt("MaxPrims", info.ObjectCapacity);
                 info.RegionType = config.GetString("RegionType", "");
