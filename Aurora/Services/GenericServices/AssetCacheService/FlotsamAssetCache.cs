@@ -676,10 +676,13 @@ namespace Aurora.Services
             {
                 CacheScenes();
             }
-
-            foreach (string dir in Directory.GetDirectories(m_CacheDirectory))
+            
+            lock (m_fileCacheLock)
             {
-                CleanExpiredFiles(dir, purgeLine);
+                foreach (string dir in Directory.GetDirectories(m_CacheDirectory))
+                {
+                    CleanExpiredFiles(dir, purgeLine);
+                }
             }
         }
 
@@ -691,13 +694,10 @@ namespace Aurora.Services
         /// <param name = "dir"></param>
         private void CleanExpiredFiles(string dir, DateTime purgeLine)
         {
-            lock (m_fileCacheLock)
+            foreach (string file in Directory.GetFiles(dir))
             {
-                foreach (string file in Directory.GetFiles(dir))
-                {
-                        if (File.GetLastAccessTime(file) < purgeLine)
-                            File.Delete(file);
-                }
+                if (File.GetLastAccessTime(file) < purgeLine)
+                    File.Delete(file);
             }
 
             // Recurse into lower tiers
@@ -706,18 +706,15 @@ namespace Aurora.Services
                 CleanExpiredFiles(subdir, purgeLine);
             }
 
-            lock (m_fileCacheLock)
+            // Check if a tier directory is empty, if so, delete it
+            int dirSize = Directory.GetFiles(dir).Length + Directory.GetDirectories(dir).Length;
+            if (dirSize == 0)
+                Directory.Delete(dir);
+            else if (dirSize >= m_CacheWarnAt)
             {
-                // Check if a tier directory is empty, if so, delete it
-                int dirSize = Directory.GetFiles(dir).Length + Directory.GetDirectories(dir).Length;
-                if (dirSize == 0)
-                    Directory.Delete(dir);
-                else if (dirSize >= m_CacheWarnAt)
-                {
-                    MainConsole.Instance.WarnFormat(
-                        "[FLOTSAM ASSET CACHE]: Cache folder exceeded CacheWarnAt limit {0} {1}.  Suggest increasing tiers, tier length, or reducing cache expiration",
-                        dir, dirSize);
-                }
+                MainConsole.Instance.WarnFormat(
+                    "[FLOTSAM ASSET CACHE]: Cache folder exceeded CacheWarnAt limit {0} {1}.  Suggest increasing tiers, tier length, or reducing cache expiration",
+                    dir, dirSize);
             }
         }
 
