@@ -40,6 +40,12 @@ namespace Aurora.Framework
         string DefaultLSLScript { get; set; }
 
         /// <summary>
+        ///   Add the given inventory item to a user's inventory asyncronously.
+        /// </summary>
+        /// <param name = "item">The item to add</param>
+        void AddInventoryItemAsync(InventoryItemBase item);
+
+        /// <summary>
         ///   Add the given inventory item to a user's inventory.
         /// </summary>
         /// <param name = "item">The item to add</param>
@@ -51,7 +57,7 @@ namespace Aurora.Framework
         /// <param name = "remoteClient">The remote client controlling the avatar</param>
         /// <param name = "item">The item.  This structure contains all the item metadata, including the folder
         ///   in which the item is to be placed.</param>
-        void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item);
+        void AddInventoryItemAsync(IClientAPI remoteClient, InventoryItemBase item);
 
         /// <summary>
         ///   Return the given objects to the agent given

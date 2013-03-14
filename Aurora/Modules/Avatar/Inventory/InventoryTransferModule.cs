@@ -263,7 +263,7 @@ namespace Aurora.Modules.Inventory
                     invService.DeleteItems(item.Owner, uuids);
                     ILLClientInventory inventory = client.Scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventory != null)
-                        inventory.AddInventoryItem(client, item);
+                        inventory.AddInventoryItemAsync(client, item);
                 }
                 else
                 {
