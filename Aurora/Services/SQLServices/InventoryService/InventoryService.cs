@@ -728,12 +728,12 @@ namespace Aurora.Services.SQLServices.InventoryService
             return true;
         }
 
-        //[CanBeReflected(ThreatLevel = ThreatLevel.High)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public virtual bool PurgeFolder(InventoryFolderBase folder)
         {
-            /*object remoteValue = DoRemoteByURL("InventoryServerURI", folder);
+            object remoteValue = DoRemoteByURL("InventoryServerURI", folder);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;*/
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (!m_AllowDelete && !ParentIsLinkFolder(folder.ID))
                 return false;
