@@ -181,7 +181,6 @@ namespace Aurora.Framework
         public event ReturnObjectsHandler OnReturnObjects;
         public event InstantMessageHandler OnInstantMessage;
         public event CanGodTpHandler OnCanGodTp;
-        public event InventoryTransferHandler OnInventoryTransfer;
         public event ViewScriptHandler OnViewScript;
         public event ViewNotecardHandler OnViewNotecard;
         public event EditScriptHandler OnEditScript;
@@ -708,29 +707,6 @@ namespace Aurora.Framework
                 return true;
 #else
                 return list.Cast<CanGodTpHandler>().All(h => h(user, target) != false);
-#endif
-            }
-            return true;
-        }
-
-        #endregion
-
-        #region INVENTORY TRANSFER
-
-        public bool CanInventoryTransfer(UUID user, UUID target)
-        {
-            InventoryTransferHandler handler = OnInventoryTransfer;
-            if (handler != null)
-            {
-                Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (InventoryTransferHandler h in list)
-                {
-                    if (h(user, target, m_scene) == false) return false;
-                }
-                return true;
-#else
-                return list.Cast<InventoryTransferHandler>().All(h => h(user, target, m_scene) != false);
 #endif
             }
             return true;

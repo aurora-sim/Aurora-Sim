@@ -335,7 +335,6 @@ namespace Aurora.Modules.Permissions
             m_scene.Permissions.OnEditParcelProperties += CanEditParcelProperties; //MAYBE FULLY IMPLEMENTED
             m_scene.Permissions.OnInstantMessage += CanInstantMessage;
             m_scene.Permissions.OnCanGodTp += CanGodTp;
-            m_scene.Permissions.OnInventoryTransfer += CanInventoryTransfer; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnIssueEstateCommand += CanIssueEstateCommand;
             m_scene.Permissions.OnMoveObject += CanMoveObject;
             m_scene.Permissions.OnObjectEntry += CanObjectEntry;
@@ -1656,14 +1655,6 @@ namespace Aurora.Modules.Permissions
                 return true;
             }
             return false;
-        }
-
-        private bool CanInventoryTransfer(UUID user, UUID target, IScene startScene)
-        {
-            DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
-            if (m_bypassPermissions) return m_bypassPermissionsValue;
-
-            return GenericCommunicationPermission(user, target);
         }
 
         private bool CanIssueEstateCommand(UUID user, IScene requestFromScene, bool ownerCommand)

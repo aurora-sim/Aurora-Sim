@@ -203,7 +203,7 @@ namespace Simple.Currency
                     map["Method"] = "UpdateMoneyBalance";
                     map["AgentID"] = fromID;
                     map["Amount"] = fromCurrency.Amount;
-                    map["Message"] = "You paid " + toAccount.Name + " $" + amount;
+                    map["Message"] = "You paid " + (toAccount == null ? "" : toAccount.Name) + " $" + amount;
                     map["TransactionID"] = transactionID;
                     m_syncMessagePoster.Post(fromUserInfo.CurrentRegionURI, map);
                 }
