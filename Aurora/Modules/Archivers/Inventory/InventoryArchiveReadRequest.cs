@@ -579,28 +579,25 @@ namespace Aurora.Modules.Archivers
                 else if (assetType == AssetType.Object)
                 {
                     string xmlData = Utils.BytesToString(data);
-                    List<ISceneEntity> sceneObjects = new List<ISceneEntity>
-                                                              {
-                                                                  SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(xmlData,
-                                                                                                              m_registry)
-                                                              };
-
-                    if (m_creatorIdForAssetId.ContainsKey(UUID.Parse(uuid)))
+                    ISceneEntity sceneObject = SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(xmlData, m_registry);
+                    if(sceneObject != null)
                     {
-                        foreach (ISceneChildEntity sop in from sog in sceneObjects from sop in sog.ChildrenEntities() where string.IsNullOrEmpty(sop.CreatorData) select sop)
-                            sop.CreatorID = m_creatorIdForAssetId[UUID.Parse(uuid)];
-                    }
-                    foreach (ISceneEntity sog in sceneObjects)
-                        foreach (ISceneChildEntity sop in sog.ChildrenEntities())
+                        if (m_creatorIdForAssetId.ContainsKey(UUID.Parse(uuid)))
+                        {
+                            foreach (ISceneChildEntity sop in from sop in sceneObject.ChildrenEntities() where string.IsNullOrEmpty(sop.CreatorData) select sop)
+                                sop.CreatorID = m_creatorIdForAssetId[UUID.Parse(uuid)];
+                        }
+                        foreach (ISceneChildEntity sop in sceneObject.ChildrenEntities())
                         {
                             //Fix ownerIDs and perms
                             sop.Inventory.ApplyGodPermissions((uint)PermissionMask.All);
-                            sog.ApplyPermissions((uint)PermissionMask.All);
+                            sceneObject.ApplyPermissions((uint)PermissionMask.All);
                             foreach (TaskInventoryItem item in sop.Inventory.GetInventoryItems())
                                 item.OwnerID = m_userInfo.PrincipalID;
                             sop.OwnerID = m_userInfo.PrincipalID;
                         }
-                    data = Utils.StringToBytes(SceneEntitySerializer.SceneObjectSerializer.ToOriginalXmlFormat(sceneObjects[0]));
+                        data = Utils.StringToBytes(SceneEntitySerializer.SceneObjectSerializer.ToOriginalXmlFormat(sceneObject));
+                    }
                 }
                 //MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
 

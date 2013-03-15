@@ -290,13 +290,13 @@ namespace Aurora.Framework
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator MediaEntry(MediaEntrySurrogate value)
             {
-                return MediaEntry.FromOSD(value.info);
+                return value.info == null ? null : MediaEntry.FromOSD(value.info);
             }
             public static implicit operator MediaEntrySurrogate(MediaEntry value)
             {
                 return new MediaEntrySurrogate
                 {
-                    info = value.GetOSD()
+                    info = value == null ? null : value.GetOSD()
                 };
             }
         }
