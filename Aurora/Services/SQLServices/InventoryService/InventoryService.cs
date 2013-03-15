@@ -1103,7 +1103,7 @@ namespace Aurora.Services.SQLServices.InventoryService
         {
             Util.FireAndForget(o =>
             {
-                InventoryItemBase item = GetItem(UUID.Zero, itemId);
+                InventoryItemBase item = GetItem(senderId, itemId);
                 success(InnerGiveInventoryItem(recipient, senderId,
                     item, recipientFolderId, doOwnerCheck));
             });
