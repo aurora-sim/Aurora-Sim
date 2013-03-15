@@ -71,7 +71,7 @@
     EventQueueInHandler = EventQueueHandler
 
     AgentInfoHandler = AgentInfoService
-    AssetHandler = RedisAssetService
+    AssetHandler = AssetService
     AssetHandlerUseCache = false
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService

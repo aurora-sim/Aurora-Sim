@@ -1,6 +1,6 @@
 [Handlers]
     AgentInfoHandler = AgentInfoService
-    AssetHandler = RedisAssetService
+    AssetHandler = AssetService
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
     GridHandler = GridService
