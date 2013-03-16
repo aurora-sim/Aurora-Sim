@@ -200,7 +200,7 @@ namespace Aurora.Modules
                 File.Copy(Path.Combine("Regions", "RegionConfig.ini.example"), Path.Combine("Regions", "RegionConfig.ini"));
             Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"), Nini.Ini.IniFileType.AuroraStyle);
             Nini.Config.IniConfigSource source = new IniConfigSource(doc);
-            Nini.Ini.IniSection section = new Nini.Ini.IniSection("Region");
+            IConfig section = source.Configs["Region"] != null ? source.Configs["Region"] : source.AddConfig("Region");
 
             RegionInfo info = new RegionInfo();
             info.RegionID = UUID.Random();
@@ -224,8 +224,7 @@ namespace Aurora.Modules
             section.Set("InternalPort", intPort.ToString());
             section.Set("InternalAddress", intAdd.ToString());
 
-            doc.Sections.Add(section);
-            doc.Save(Path.Combine("Regions", "RegionConfig.ini"));
+            source.Save(Path.Combine("Regions", "RegionConfig.ini"));
 
             return info;
         }
