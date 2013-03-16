@@ -31,7 +31,7 @@ namespace Simple.Currency
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            if (config.Configs["Currency"] != null && config.Configs["Currency"].GetString("Module", "") != "SimpleCurrency")
+            if (config.Configs["Currency"] == null || config.Configs["Currency"].GetString("Module", "") != "SimpleCurrency")
                 return;
             if (!config.Configs["Currency"].GetBoolean("RunServer", false))
                 return;

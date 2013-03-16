@@ -45,7 +45,7 @@ namespace Simple.Currency
             m_registry = registry;
 
             IConfig config = source.Configs["Currency"];
-            if (source.Configs["Currency"] != null && source.Configs["Currency"].GetString("Module", "") != "SimpleCurrency")
+            if (config == null || source.Configs["Currency"].GetString("Module", "") != "SimpleCurrency")
                 return;
 
             if (source.Configs[Name] != null)
@@ -55,7 +55,7 @@ namespace Simple.Currency
                 GenericData.ConnectToDatabase(defaultConnectionString, "SimpleCurrency", true);
             DataManager.RegisterPlugin(Name, this);
 
-            m_config = new SimpleCurrencyConfig(source.Configs["Currency"]);
+            m_config = new SimpleCurrencyConfig(config);
 
             MainConsole.Instance.Commands.AddCommand("money add", "money add", "Adds money to a user's account.",
                 AddMoney);
