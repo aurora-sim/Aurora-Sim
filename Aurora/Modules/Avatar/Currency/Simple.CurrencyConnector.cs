@@ -193,7 +193,10 @@ namespace Simple.Currency
                     map["Method"] = "UpdateMoneyBalance";
                     map["AgentID"] = toID;
                     map["Amount"] = toCurrency.Amount;
-                    map["Message"] = fromAccount.Name + " paid you $" + amount + (description == "" ? "" : ": " + description);
+                    if (fromAccount != null)
+                        map["Message"] = fromAccount.Name + " paid you $" + amount + (description == "" ? "" : ": " + description);
+                    else
+                        map["Message"] = "";
                     map["TransactionID"] = transactionID;
                     m_syncMessagePoster.Post(toUserInfo.CurrentRegionURI, map);
                 }
