@@ -194,7 +194,10 @@ namespace Aurora.Modules
 
         private RegionInfo CreateRegionFromConsole()
         {
-            File.Create(Path.Combine("Regions", "RegionConfig.ini")).Close();
+            if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini.example")))
+                File.Create(Path.Combine("Regions", "RegionConfig.ini")).Close();
+            else
+                File.Copy(Path.Combine("Regions", "RegionConfig.ini.example"), Path.Combine("Regions", "RegionConfig.ini"));
             Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"), Nini.Ini.IniFileType.AuroraStyle);
             Nini.Config.IniConfigSource source = new IniConfigSource(doc);
             Nini.Ini.IniSection section = new Nini.Ini.IniSection("Region");
