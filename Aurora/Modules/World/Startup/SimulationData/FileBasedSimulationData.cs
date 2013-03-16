@@ -122,7 +122,7 @@ namespace Aurora.Modules
             retry:
                 if (noGui)
                 {
-                    info = ReadRegionInfoFromFile(ref _regionData.RegionInfo);
+                    info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
                 }
                 else
                 {
@@ -145,19 +145,21 @@ namespace Aurora.Modules
             else
             {
                 if (noGui)
-                    info = ReadRegionInfoFromFile(ref _regionData.RegionInfo);
+                    info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
                 else
                     info = _regionData.RegionInfo;
             }
             return info;
         }
 
-        private RegionInfo ReadRegionInfoFromFile(ref RegionInfo info)
+        private RegionInfo ReadRegionInfoFromFile(ref RegionInfo info, out bool newRegion)
         {
             if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini")))
             {
+                newRegion = true;
                 return info = CreateRegionFromConsole();
             }
+            newRegion = false;
             try
             {
                 Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"), Nini.Ini.IniFileType.AuroraStyle);
