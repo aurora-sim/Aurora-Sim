@@ -201,6 +201,7 @@ namespace Aurora.Modules
 
             RegionInfo info = new RegionInfo();
             info.RegionID = UUID.Random();
+            section.Set("RegionID", info.RegionID.ToString());
             info.RegionName = MainConsole.Instance.Prompt("Region Name: ");
             section.Set("RegionName", info.RegionName);
 
