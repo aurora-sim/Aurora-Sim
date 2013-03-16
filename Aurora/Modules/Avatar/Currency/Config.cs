@@ -48,7 +48,7 @@ namespace Simple.Currency
                 }
                 catch(Exception ex)
                 {
-                    MainConsole.Instance.Warn ("[StarDust]: Exception reading economy config: " + ex.ToString ());
+                    MainConsole.Instance.Warn ("[SimpleCurrency]: Exception reading economy config: " + ex.ToString ());
                 }
             }
         }
@@ -78,7 +78,7 @@ namespace Simple.Currency
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.Warn ("[StarDust]: Exception toOSD() config: " + ex.ToString ());
+                    MainConsole.Instance.Warn("[SimpleCurrency]: Exception toOSD() config: " + ex.ToString());
                 }
             }
             return returnvalue;
@@ -105,7 +105,7 @@ namespace Simple.Currency
                     }
                     catch (Exception ex)
                     {
-                        MainConsole.Instance.Warn("[StarDust]: Exception reading fromOSD() config: " + ex.ToString());
+                        MainConsole.Instance.Warn("[SimpleCurrency]: Exception reading fromOSD() config: " + ex.ToString());
                     }
                 }
             }

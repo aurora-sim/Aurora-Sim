@@ -269,7 +269,7 @@ namespace Simple.Currency
                 return;
             }
             var currency = GetUserCurrency(account.PrincipalID);
-            m_gd.Update("stardust_currency",
+            m_gd.Update(_REALM,
                         new Dictionary<string, object> { 
                         {
                             "Amount", currency.Amount + amount }
