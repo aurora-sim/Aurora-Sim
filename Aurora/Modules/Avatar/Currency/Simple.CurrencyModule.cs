@@ -95,6 +95,7 @@ namespace Simple.Currency
                     {
                         e.parcelOwnerID = pOwnerID;
                         e.landValidated = true;
+                        return true;
                     }
                     else
                     {

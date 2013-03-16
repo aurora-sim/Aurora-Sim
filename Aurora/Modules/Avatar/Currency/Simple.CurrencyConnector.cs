@@ -57,14 +57,17 @@ namespace Simple.Currency
 
             m_config = new SimpleCurrencyConfig(config);
 
-            MainConsole.Instance.Commands.AddCommand("money add", "money add", "Adds money to a user's account.",
-                AddMoney);
-            MainConsole.Instance.Commands.AddCommand("money set", "money set", "Sets the amount of money a user has.",
-                SetMoney);
-            MainConsole.Instance.Commands.AddCommand("money get", "money get", "Gets the amount of money a user has.",
-                GetMoney);
-
             Init(m_registry, Name, "", "/currency/");
+
+            if (!m_doRemoteCalls)
+            {
+                MainConsole.Instance.Commands.AddCommand("money add", "money add", "Adds money to a user's account.",
+                    AddMoney);
+                MainConsole.Instance.Commands.AddCommand("money set", "money set", "Sets the amount of money a user has.",
+                    SetMoney);
+                MainConsole.Instance.Commands.AddCommand("money get", "money get", "Gets the amount of money a user has.",
+                    GetMoney);
+            }
         }
 
         #endregion
