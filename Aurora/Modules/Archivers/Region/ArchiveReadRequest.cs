@@ -91,7 +91,10 @@ namespace Aurora.Modules.Archivers
             {
                 var stream = ArchiveHelpers.GetStream(loadPath);
                 if (stream == null)
-                    throw new FileNotFoundException();
+                {
+                    MainConsole.Instance.Error("[ARCHIVER]: We could not find the file specified, or the file was invalid: " + loadPath);
+                    return;
+                }
                 m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
             }
             catch (EntryPointNotFoundException e)
@@ -138,6 +141,8 @@ namespace Aurora.Modules.Archivers
 
         private void DearchiveRegion0DotStar()
         {
+            if (m_loadStream == null)
+                return;
             int successfulAssetRestores = 0;
             int failedAssetRestores = 0;
             string filePath = "NONE";

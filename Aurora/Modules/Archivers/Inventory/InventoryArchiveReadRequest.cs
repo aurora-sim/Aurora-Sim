@@ -42,8 +42,6 @@ namespace Aurora.Modules.Archivers
     public class InventoryArchiveReadRequest
     {
         private readonly string m_invPath;
-        private readonly Dictionary<UUID, AssetBase> assetNonBinaryCollection = new Dictionary<UUID, AssetBase>();
-        private readonly Dictionary<UUID, UUID> assetBinaryChangeRecord = new Dictionary<UUID, UUID>();
         private readonly List<InventoryItemBase> itemsSavedOff = new List<InventoryItemBase>();
         private readonly Queue<UUID> assets2Save = new Queue<UUID>();
         const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
@@ -78,23 +76,16 @@ namespace Aurora.Modules.Archivers
 
         public InventoryArchiveReadRequest(
             IRegistryCore registry, UserAccount userInfo, string invPath, string loadPath, bool merge, UUID overwriteCreator)
-            : this(
-                registry,
-                userInfo,
-                invPath,
-                new GZipStream(ArchiveHelpers.GetStream(loadPath), CompressionMode.Decompress),
-                merge, overwriteCreator)
         {
-        }
+            Stream str = ArchiveHelpers.GetStream(loadPath);
+            if (str == null)
+                return;
 
-        public InventoryArchiveReadRequest(
-            IRegistryCore registry, UserAccount userInfo, string invPath, Stream loadStream, bool merge, UUID overwriteCreator)
-        {
             m_registry = registry;
             m_merge = merge;
             m_userInfo = userInfo;
             m_invPath = invPath;
-            m_loadStream = loadStream;
+            m_loadStream = new GZipStream(str, CompressionMode.Decompress);
             m_overridecreator = overwriteCreator;
         }
 
@@ -107,6 +98,8 @@ namespace Aurora.Modules.Archivers
         /// </returns>
         public HashSet<InventoryNodeBase> Execute(bool loadAll)
         {
+            if (m_loadStream == null)
+                return new HashSet<InventoryNodeBase>();
             try
             {
                 string filePath = "ERROR";
@@ -174,7 +167,7 @@ namespace Aurora.Modules.Archivers
 
                                 if ((successfulItemRestores) % 50 == 0)
                                     MainConsole.Instance.InfoFormat(
-                                        "[INVENTORY ARCHIVER]: Loaded {0} items...",
+                                        "[INVENTORY ARCHIVER]: Restored {0} items...",
                                         successfulItemRestores);
 
                                 // If we aren't loading the folder containing the item then well need to update the 
@@ -187,24 +180,18 @@ namespace Aurora.Modules.Archivers
                     }
                     data = null;
                 }
-
-                IAssetService assetService = m_registry.RequestModuleInterface<IAssetService>();
-                int savingAssetsCount = 0;
-                do
-                {
-                    UUID assetid = assets2Save.Dequeue();
-                    SaveNonBinaryAssets(assetid, assetNonBinaryCollection[assetid], assetService);
-                    savingAssetsCount++;
-                    if ((savingAssetsCount) % 250 == 0)
-                        MainConsole.Instance.Info("[INVENTORY ARCHIVER]: Saving " + savingAssetsCount + " assets...");
-                } while (assets2Save.Count != 0);
-
+                int successfulItemLoaded = 0;
                 foreach (InventoryItemBase item in itemsSavedOff)
                 {
                     AddInventoryItem(item);
+                    successfulItemLoaded++;
+
+                    if ((successfulItemLoaded) % 50 == 0)
+                        MainConsole.Instance.InfoFormat(
+                            "[INVENTORY ARCHIVER]: Loaded {0} items of {1}...",
+                            successfulItemRestores, itemsSavedOff.Count);
                 }
                 itemsSavedOff.Clear();
-                assetNonBinaryCollection.Clear();
                 assets2Save.Clear();
 
                 MainConsole.Instance.InfoFormat(
@@ -218,54 +205,6 @@ namespace Aurora.Modules.Archivers
             {
                 m_loadStream.Close();
             }
-        }
-
-        private AssetBase SaveNonBinaryAssets(UUID key, AssetBase asset, IAssetService assetService)
-        {
-            if (!asset.HasBeenSaved)
-            {
-                string stringData = Utils.BytesToString(asset.Data);
-                MatchCollection mc = Regex.Matches(stringData, sPattern);
-                bool didChange = false;
-                if (mc.Count >= 1)
-                {
-                    foreach (Match match in mc)
-                    {
-                        try
-                        {
-                            UUID thematch = new UUID(match.Value);
-                            UUID newvalue = thematch;
-                            if ((thematch == UUID.Zero) || (thematch == key)) continue;
-                            if (assetNonBinaryCollection.ContainsKey(thematch))
-                            {
-                                AssetBase subasset = assetNonBinaryCollection[thematch];
-                                if (!subasset.HasBeenSaved)
-                                    subasset = SaveNonBinaryAssets(thematch, subasset, assetService);
-                                newvalue = subasset.ID;
-                            }
-                            else if (assetBinaryChangeRecord.ContainsKey(thematch))
-                                newvalue = assetBinaryChangeRecord[thematch];
-
-                            if (thematch == newvalue) continue;
-                            stringData = stringData.Replace(thematch.ToString(), newvalue.ToString());
-                            didChange = true;
-                        }
-                        catch { }
-                    }
-                    if (didChange)
-                    {
-                        asset.Data = Utils.StringToBytes(stringData);
-                        // so it doesn't try to find the old file
-                        asset.LastHashCode = asset.HashCode;
-                    }
-                }
-
-                asset.ID = assetService.Store(asset);
-                asset.HasBeenSaved = true;
-            }
-            if (assetNonBinaryCollection.ContainsKey(key))
-                assetNonBinaryCollection[key] = asset;
-            return asset;
         }
 
         public void Close()
@@ -528,11 +467,6 @@ namespace Aurora.Modules.Archivers
                 }
             }
 
-            if (assetNonBinaryCollection.ContainsKey(item.AssetID))
-                item.AssetID = assetNonBinaryCollection[item.AssetID].ID;
-            else if (assetBinaryChangeRecord.ContainsKey(item.AssetID))
-                item.AssetID = assetBinaryChangeRecord[item.AssetID];
-
             if (!m_registry.RequestModuleInterface<IInventoryService>().AddItem(item))
             {
                 MainConsole.Instance.WarnFormat(
@@ -606,18 +540,8 @@ namespace Aurora.Modules.Archivers
                 IAssetDataPlugin assetData = DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
                 if (assetData != null && ReplaceAssets)
                     assetData.Delete(asset.ID, true);
-                if (asset.IsBinaryAsset)
-                {
-                    UUID old_assid = asset.ID;
-                    asset.ID = assetService.Store(asset);
-                    if (old_assid != asset.ID)
-                        assetBinaryChangeRecord.Add(old_assid, asset.ID);
-                }
-                else
-                {
-                    assets2Save.Enqueue(asset.ID);
-                    assetNonBinaryCollection.Add(asset.ID, asset);
-                }
+                
+                assetService.Store(asset);
                 return true;
             }
             MainConsole.Instance.ErrorFormat(

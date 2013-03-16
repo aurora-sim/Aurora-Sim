@@ -57,22 +57,10 @@ namespace Aurora.Framework
         /// <param name = "firstName"></param>
         /// <param name = "lastName"></param>
         /// <param name = "invPath">The inventory path in which to place the loaded folders and items</param>
-        /// <param name = "loadStream">The stream from which the inventory archive will be loaded</param>
-        /// <returns>true if the first stage of the operation succeeded, false otherwise</returns>
-        bool DearchiveInventory(string firstName, string lastName, string invPath, string pass, Stream loadStream);
-
-        /// <summary>
-        ///   Dearchive a user's inventory folder from the given stream
-        /// </summary>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
-        /// <param name = "invPath">The inventory path in which to place the loaded folders and items</param>
-        /// <param name = "loadStream">The stream from which the inventory archive will be loaded</param>
-        /// <param name = "options">Dearchiving options.  At the moment, the only option is ("merge", true).  This merges
-        ///   the loaded IAR with existing folders where possible.</param>
+        /// <param name = "loadPath">The file from which the inventory archive will be loaded</param>
         /// <returns>true if the first stage of the operation succeeded, false otherwise</returns>
         bool DearchiveInventory(
-            string firstName, string lastName, string invPath, string pass, Stream loadStream,
+            string firstName, string lastName, string invPath, string loadPath,
             Dictionary<string, object> options);
 
         /// <summary>
@@ -84,7 +72,7 @@ namespace Aurora.Framework
         /// <param name = "invPath">The inventory path from which the inventory should be saved.</param>
         /// <param name = "saveStream">The stream to which the inventory archive will be saved</param>
         /// <returns>true if the first stage of the operation succeeded, false otherwise</returns>
-        bool ArchiveInventory(Guid id, string firstName, string lastName, string invPath, string pass, Stream saveStream);
+        bool ArchiveInventory(Guid id, string firstName, string lastName, string invPath, Stream saveStream);
 
         /// <summary>
         ///   Archive a user's inventory folder to the given stream
@@ -97,7 +85,7 @@ namespace Aurora.Framework
         /// <param name = "options">Archiving options.  Currently, there are none.</param>
         /// <returns>true if the first stage of the operation succeeded, false otherwise</returns>
         bool ArchiveInventory(
-            Guid id, string firstName, string lastName, string invPath, string pass, Stream saveStream,
+            Guid id, string firstName, string lastName, string invPath, Stream saveStream,
             Dictionary<string, object> options);
     }
 }

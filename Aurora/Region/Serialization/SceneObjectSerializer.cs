@@ -100,7 +100,7 @@ namespace Aurora.Region.Serialization
                 {
                     sceneObject = FromXml2Format(xmlData, m_sceneForGroup);
                     if (sceneObject == null)
-                        throw new Exception("Invalid Xml format - no root part");
+                        return null;
                     else
                         return sceneObject;
                 }
@@ -899,9 +899,9 @@ namespace Aurora.Region.Serialization
 
             reader.ReadEndElement(); // SceneObjectPart
 
-            SceneObjectPart copy = ProtoBuf.Serializer.DeepClone<SceneObjectPart>(obj);
+            //SceneObjectPart copy = ProtoBuf.Serializer.DeepClone<SceneObjectPart>(obj);
             //MainConsole.Instance.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
-            bool success = AreMatch(obj, copy);
+            //bool success = AreMatch(obj, copy);
             return obj;
         }
 
