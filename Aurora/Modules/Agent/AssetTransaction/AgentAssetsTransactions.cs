@@ -121,12 +121,6 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
                 foundUploader.HandleXferPacket(xferID, packetID, data);
             }
-            else
-            {
-                MainConsole.Instance.ErrorFormat(
-                    "[AGENT ASSET TRANSACTIONS]: Could not find uploader for xfer id {0}, packet id {1}, data length {2}",
-                    xferID, packetID, data.Length);
-            }
         }
 
         public bool RemoveXferUploader(UUID transactionID)
