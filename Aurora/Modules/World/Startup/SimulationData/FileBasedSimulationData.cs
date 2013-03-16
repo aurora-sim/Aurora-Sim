@@ -569,10 +569,15 @@ namespace Aurora.Modules
             }
 
             ISceneEntity[] entities = m_scene.Entities.GetEntities();
-            regiondata.Groups = new List<SceneObjectGroup>(entities.Cast<SceneObjectGroup>());
+            regiondata.Groups = new List<SceneObjectGroup>(entities.Cast<SceneObjectGroup>().Where((entity)=>
+                {
+                    return entity.IsAttachment ||
+                            ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
+                            || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez);
+                }));
             try
             {
-                foreach (ISceneEntity entity in entities.Where(ent=>ent.HasGroupChanged))
+                foreach (ISceneEntity entity in regiondata.Groups.Where(ent => ent.HasGroupChanged))
                     entity.HasGroupChanged = false;
             }
             catch (Exception ex)
