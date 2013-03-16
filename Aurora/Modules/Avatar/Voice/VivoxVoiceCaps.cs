@@ -1185,12 +1185,15 @@ namespace Aurora.Modules
             m_service = service;
             m_voiceModule = service.Registry.RequestModuleInterface<IVoiceService>();
 
-            service.AddStreamHandler("ProvisionVoiceAccountRequest",
-                new GenericStreamHandler("POST", service.CreateCAPS("ProvisionVoiceAccountRequest", ""),
-                                                        ProvisionVoiceAccountRequest));
-            service.AddStreamHandler("ParcelVoiceInfoRequest",
-                new GenericStreamHandler("POST", service.CreateCAPS("ParcelVoiceInfoRequest", ""),
-                                                        ParcelVoiceInfoRequest));
+            if (m_voiceModule != null)
+            {
+                service.AddStreamHandler("ProvisionVoiceAccountRequest",
+                    new GenericStreamHandler("POST", service.CreateCAPS("ProvisionVoiceAccountRequest", ""),
+                                                            ProvisionVoiceAccountRequest));
+                service.AddStreamHandler("ParcelVoiceInfoRequest",
+                    new GenericStreamHandler("POST", service.CreateCAPS("ParcelVoiceInfoRequest", ""),
+                                                            ParcelVoiceInfoRequest));
+            }
         }
 
         public void EnteringRegion()
