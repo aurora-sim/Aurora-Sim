@@ -326,7 +326,7 @@ namespace Aurora.Modules.Caps
             rootpart.GroupID = group_id;
             rootpart.GroupMask = group_mask;
             rootpart.NextOwnerMask = next_owner_mask;
-            rootpart.Material = (byte) material;
+            rootpart.UpdateMaterial(material);
 
             OSDMap map = new OSDMap();
             map["local_id"] = obj.LocalId;

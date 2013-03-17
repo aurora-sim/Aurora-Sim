@@ -155,6 +155,23 @@ namespace Aurora.Modules.Agent.J2KDecoder
 
             if (!TryLoadCacheForAsset(assetID, out layers))
             {
+                if (j2kData == null || j2kData.Length == 0)
+                {
+                    // Layer decoding completely failed. Guess at sane defaults for the layer boundaries
+                    layers = CreateDefaultLayers(j2kData.Length);
+                    // Notify Interested Parties
+                    lock (m_notifyList)
+                    {
+                        if (m_notifyList.ContainsKey(assetID))
+                        {
+                            foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
+                                d.DynamicInvoke(assetID, layers);
+
+                            m_notifyList.Remove(assetID);
+                        }
+                    }
+                    return false;
+                }
                 if (m_useCSJ2K)
                 {
                     try
@@ -217,20 +234,10 @@ namespace Aurora.Modules.Agent.J2KDecoder
                         {
                             if (m_notifyList.ContainsKey(assetID))
                             {
-#if (!ISWIN)
-                                foreach (DecodedCallback d in m_notifyList[assetID])
-                                {
-                                    if (d != null)
-                                    {
-                                        d.DynamicInvoke(assetID, layers);
-                                    }
-                                }
-#else
                                 foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
                                 {
                                     d.DynamicInvoke(assetID, layers);
                                 }
-#endif
                                 m_notifyList.Remove(assetID);
                             }
                         }
@@ -249,20 +256,10 @@ namespace Aurora.Modules.Agent.J2KDecoder
             {
                 if (m_notifyList.ContainsKey(assetID))
                 {
-#if (!ISWIN)
-                    foreach (DecodedCallback d in m_notifyList[assetID])
-                    {
-                        if (d != null)
-                        {
-                            d.DynamicInvoke(assetID, layers);
-                        }
-                    }
-#else
                     foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
                     {
                         d.DynamicInvoke(assetID, layers);
                     }
-#endif
                     m_notifyList.Remove(assetID);
                 }
             }

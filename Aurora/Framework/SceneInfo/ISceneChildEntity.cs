@@ -507,5 +507,7 @@ namespace Aurora.Framework
         bool Undoing { get; set; }
 
         bool IsLoading { get; set; }
+
+        void UpdateMaterial(int mat);
     }
 }

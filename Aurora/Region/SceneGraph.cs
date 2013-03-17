@@ -1448,7 +1448,7 @@ namespace Aurora.Region
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     ISceneChildEntity part = m_parentScene.GetSceneObjectPart (LocalID);
-                    part.Material = Convert.ToByte(material);
+                    part.UpdateMaterial(Convert.ToInt32(material));
                     //Update the client here as well... we changed restitution and friction in the physics engine probably
                     IEventQueueService eqs = m_parentScene.RequestModuleInterface<IEventQueueService> ();
                     if (eqs != null)

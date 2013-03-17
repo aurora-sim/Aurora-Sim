@@ -8618,7 +8618,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (mat < 0 || mat > 7)
                         return;
 
-                    (part as ISceneChildEntity).Material = Convert.ToByte(mat);
+                    (part as ISceneChildEntity).UpdateMaterial(mat);
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_PHANTOM)
                 {
