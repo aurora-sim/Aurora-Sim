@@ -148,7 +148,6 @@ namespace Aurora.Region
         protected Vector3 m_lastVelocity;
         private int m_linkNum;
         protected uint m_localId;
-        protected Material m_material = OpenMetaverse.Material.Wood;
 
         /// <summary>
         ///   Stores media texture data
@@ -628,6 +627,7 @@ namespace Aurora.Region
             //m_undo = new UndoStack<UndoState>(ParentGroup.GetSceneMaxUndo());
 
             m_inventory = new SceneObjectPartInventory(this);
+            Material = (int)OpenMetaverse.Material.Wood;
         }
 
         public override int GetHashCode()

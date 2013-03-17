@@ -585,9 +585,9 @@ namespace Aurora.Modules
             ISceneEntity[] entities = m_scene.Entities.GetEntities();
             regiondata.Groups = new List<SceneObjectGroup>(entities.Cast<SceneObjectGroup>().Where((entity)=>
                 {
-                    return entity.IsAttachment ||
+                    return !(entity.IsAttachment ||
                             ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
-                            || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez);
+                            || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez));
                 }));
             try
             {

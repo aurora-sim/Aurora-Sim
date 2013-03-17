@@ -132,7 +132,6 @@ namespace Aurora.Framework
         [XmlIgnore] private bool _sculptEntry;
         [XmlIgnore] private UUID _sculptTexture;
         [XmlIgnore] private byte _sculptType;
-        private byte _state;
         private byte[] m_textureEntry;
 
         public PrimitiveBaseShape()
@@ -423,8 +422,8 @@ namespace Aurora.Framework
         [ProtoMember(23)]
         public byte State
         {
-            get { return _state; }
-            set { _state = value; }
+            get;
+            set;
         }
 
         [ProtoMember(24)]
