@@ -175,24 +175,12 @@ namespace Aurora.Region.Serialization
             writer.WriteStartElement(String.Empty, "OtherParts", String.Empty);
 
             SceneObjectPart[] parts = sceneObject.Parts;
-#if (!ISWIN)
-            foreach (SceneObjectPart part in parts)
-            {
-                if (part.UUID != sceneObject.RootPart.UUID)
-                {
-                    writer.WriteStartElement(String.Empty, "Part", String.Empty);
-                    ToXmlFormat(part, writer);
-                    writer.WriteEndElement();
-                }
-            }
-#else
             foreach (SceneObjectPart part in parts.Where(part => part.UUID != sceneObject.RootPart.UUID))
             {
                 writer.WriteStartElement(String.Empty, "Part", String.Empty);
                 ToXmlFormat(part, writer);
                 writer.WriteEndElement();
             }
-#endif
 
             writer.WriteEndElement(); // OtherParts
             writer.WriteEndElement(); // SceneObjectGroup
@@ -430,6 +418,49 @@ namespace Aurora.Region.Serialization
             m_SOPXmlProcessors.Add("PayPrice4", ProcessPayPrice4);
             m_SOPXmlProcessors.Add("FromUserInventoryAssetID", ProcessFromUserInventoryAssetID);
             m_SOPXmlProcessors.Add("FromUserInventoryItemID", ProcessFromUserInventoryItemID);
+            Type sopType = typeof(SceneObjectPart);
+            m_SOPXmlProcessors.Add("RETURN_AT_EDGE", ((sop, xml) => GenericBool(sop, xml, "RETURN_AT_EDGE", sopType)));
+            m_SOPXmlProcessors.Add("BlockGrab", ((sop, xml) => GenericBool(sop, xml, "BlockGrab", sopType)));
+            m_SOPXmlProcessors.Add("BlockGrabObject", ((sop, xml) => GenericBool(sop, xml, "BlockGrabObject", sopType)));
+            m_SOPXmlProcessors.Add("StatusSandbox", ((sop, xml) => GenericBool(sop, xml, "StatusSandbox", sopType)));
+            m_SOPXmlProcessors.Add("StatusSandboxPos", ((sop, xml) => GenericVector3(sop, xml, "StatusSandboxPos", sopType)));
+            m_SOPXmlProcessors.Add("STATUS_ROTATE_X", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_X", sopType)));
+            m_SOPXmlProcessors.Add("STATUS_ROTATE_Y", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_Y", sopType)));
+            m_SOPXmlProcessors.Add("STATUS_ROTATE_Z", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_Z", sopType)));
+            m_SOPXmlProcessors.Add("SitTargetPosition", ((sop, xml) => GenericVector3(sop, xml, "SitTargetPosition", sopType)));
+            m_SOPXmlProcessors.Add("SitTargetOrientation", ((sop, xml) => GenericQuaternion(sop, xml, "SitTargetOrientation", sopType)));
+            m_SOPXmlProcessors.Add("OmegaAxis", ((sop, xml) => GenericVector3(sop, xml, "OmegaAxis", sopType)));
+            m_SOPXmlProcessors.Add("OmegaSpinRate", ((sop, xml) => GenericDouble(sop, xml, "OmegaSpinRate", sopType)));
+            m_SOPXmlProcessors.Add("OmegaGain", ((sop, xml) => GenericDouble(sop, xml, "OmegaGain", sopType)));
+            m_SOPXmlProcessors.Add("PhysicsType", ((sop, xml) => GenericByte(sop, xml, "PhysicsType", sopType)));
+            m_SOPXmlProcessors.Add("Density", ((sop, xml) => GenericFloat(sop, xml, "Density", sopType)));
+            m_SOPXmlProcessors.Add("Friction", ((sop, xml) => GenericFloat(sop, xml, "Friction", sopType)));
+            m_SOPXmlProcessors.Add("Restitution", ((sop, xml) => GenericFloat(sop, xml, "Restitution", sopType)));
+            m_SOPXmlProcessors.Add("GravityMultiplier", ((sop, xml) => GenericFloat(sop, xml, "GravityMultiplier", sopType)));
+            m_SOPXmlProcessors.Add("DIE_AT_EDGE", ((sop, xml) => GenericBool(sop, xml, "DIE_AT_EDGE", sopType)));
+            m_SOPXmlProcessors.Add("UseSoundQueue", ((sop, xml) => GenericBool(sop, xml, "UseSoundQueue", sopType)));
+            m_SOPXmlProcessors.Add("Sound", ((sop, xml) => GenericUUID(sop, xml, "Sound", sopType)));
+            m_SOPXmlProcessors.Add("SoundFlags", ((sop, xml) => GenericByte(sop, xml, "SoundFlags", sopType)));
+            m_SOPXmlProcessors.Add("SoundGain", ((sop, xml) => GenericDouble(sop, xml, "SoundGain", sopType)));
+            m_SOPXmlProcessors.Add("SoundRadius", ((sop, xml) => GenericDouble(sop, xml, "SoundRadius", sopType)));
+            m_SOPXmlProcessors.Add("PIDTarget", ((sop, xml) => GenericVector3(sop, xml, "PIDTarget", sopType)));
+            m_SOPXmlProcessors.Add("PIDActive", ((sop, xml) => GenericBool(sop, xml, "PIDActive", sopType)));
+            m_SOPXmlProcessors.Add("PIDTau", ((sop, xml) => GenericFloat(sop, xml, "PIDTau", sopType)));
+            m_SOPXmlProcessors.Add("PIDHoverHeight", ((sop, xml) => GenericFloat(sop, xml, "PIDHoverHeight", sopType)));
+            m_SOPXmlProcessors.Add("PIDHoverTau", ((sop, xml) => GenericFloat(sop, xml, "PIDHoverTau", sopType)));
+            m_SOPXmlProcessors.Add("VehicleType", ((sop, xml) => GenericInt(sop, xml, "VehicleType", sopType)));
+            m_SOPXmlProcessors.Add("SavedAttachedPos", ((sop, xml) => GenericVector3(sop, xml, "SavedAttachedPos", sopType)));
+            m_SOPXmlProcessors.Add("SavedAttachmentPoint", ((sop, xml) => GenericInt(sop, xml, "SavedAttachmentPoint", sopType)));
+            m_SOPXmlProcessors.Add("VolumeDetectActive", ((sop, xml) => GenericBool(sop, xml, "VolumeDetectActive", sopType)));
+            m_SOPXmlProcessors.Add("CameraEyeOffset", ((sop, xml) => GenericVector3(sop, xml, "CameraEyeOffset", sopType)));
+            m_SOPXmlProcessors.Add("CameraAtOffset", ((sop, xml) => GenericVector3(sop, xml, "CameraAtOffset", sopType)));
+            m_SOPXmlProcessors.Add("ForceMouselook", ((sop, xml) => GenericBool(sop, xml, "ForceMouselook", sopType)));
+            m_SOPXmlProcessors.Add("APIDTarget", ((sop, xml) => GenericQuaternion(sop, xml, "APIDTarget", sopType)));
+            m_SOPXmlProcessors.Add("APIDDamp", ((sop, xml) => GenericFloat(sop, xml, "APIDDamp", sopType)));
+            m_SOPXmlProcessors.Add("APIDStrength", ((sop, xml) => GenericFloat(sop, xml, "APIDStrength", sopType)));
+            m_SOPXmlProcessors.Add("APIDIterations", ((sop, xml) => GenericInt(sop, xml, "APIDIterations", sopType)));
+            m_SOPXmlProcessors.Add("APIDEnabled", ((sop, xml) => GenericBool(sop, xml, "APIDEnabled", sopType)));
+            m_SOPXmlProcessors.Add("Damage", ((sop, xml) => GenericFloat(sop, xml, "Damage", sopType)));
             
             #endregion
 
@@ -637,6 +668,61 @@ namespace Aurora.Region.Serialization
             writer.WriteElementString("PayPrice4", sop.PayPrice[4].ToString());
             writer.WriteElementString("FromUserInventoryItemID", sop.FromUserInventoryItemID.ToString());
             writer.WriteElementString("FromUserInventoryAssetID", sop.FromUserInventoryAssetID.ToString());
+
+            writer.WriteElementString("RETURN_AT_EDGE", sop.RETURN_AT_EDGE.ToString().ToLower());
+            writer.WriteElementString("BlockGrab", sop.BlockGrab.ToString().ToLower());
+            writer.WriteElementString("BlockGrabObject", sop.BlockGrabObject.ToString().ToLower());
+            writer.WriteElementString("StatusSandbox", sop.StatusSandbox.ToString().ToLower());
+            WriteVector(writer, "StatusSandboxPos", sop.StatusSandboxPos);
+
+            writer.WriteElementString("STATUS_ROTATE_X", sop.STATUS_ROTATE_X.ToString());
+            writer.WriteElementString("STATUS_ROTATE_Y", sop.STATUS_ROTATE_Y.ToString());
+            writer.WriteElementString("STATUS_ROTATE_Z", sop.STATUS_ROTATE_Z.ToString());
+
+            WriteVector(writer, "SitTargetPosition", sop.SitTargetPosition);
+            WriteQuaternion(writer, "SitTargetOrientation", sop.SitTargetOrientation);
+            WriteVector(writer, "OmegaAxis", sop.OmegaAxis);
+
+            writer.WriteElementString("OmegaSpinRate", sop.OmegaSpinRate.ToString());
+            writer.WriteElementString("OmegaGain", sop.OmegaGain.ToString());
+            writer.WriteElementString("PhysicsType", sop.PhysicsType.ToString());
+            writer.WriteElementString("Density", sop.Density.ToString());
+            writer.WriteElementString("Friction", sop.Friction.ToString());
+            writer.WriteElementString("Restitution", sop.Restitution.ToString());
+            writer.WriteElementString("GravityMultiplier", sop.GravityMultiplier.ToString());
+            writer.WriteElementString("DIE_AT_EDGE", sop.DIE_AT_EDGE.ToString().ToLower());
+            writer.WriteElementString("UseSoundQueue", sop.UseSoundQueue.ToString().ToLower());
+            writer.WriteElementString("UseSoundQueue", sop.UseSoundQueue.ToString().ToLower());
+
+            WriteUUID(writer, "Sound", sop.Sound, options);
+
+            writer.WriteElementString("SoundFlags", sop.SoundFlags.ToString());
+            writer.WriteElementString("SoundGain", sop.SoundGain.ToString());
+            writer.WriteElementString("SoundRadius", sop.SoundRadius.ToString());
+
+            WriteVector(writer, "PIDTarget", sop.PIDTarget);
+
+            writer.WriteElementString("PIDActive", sop.PIDActive.ToString().ToLower());
+            writer.WriteElementString("PIDTau", sop.PIDTau.ToString());//fl
+            writer.WriteElementString("PIDHoverHeight", sop.PIDHoverHeight.ToString());//fl
+            writer.WriteElementString("PIDHoverTau", sop.PIDHoverTau.ToString());//fl
+            writer.WriteElementString("VehicleType", sop.VehicleType.ToString());
+
+            WriteVector(writer, "SavedAttachedPos", sop.SavedAttachedPos);
+            writer.WriteElementString("SavedAttachmentPoint", sop.SavedAttachmentPoint.ToString());
+            writer.WriteElementString("VolumeDetectActive", sop.VolumeDetectActive.ToString().ToLower());
+
+            WriteVector(writer, "CameraEyeOffset", sop.CameraEyeOffset);
+            WriteVector(writer, "CameraAtOffset", sop.CameraAtOffset);
+
+            writer.WriteElementString("ForceMouselook", sop.ForceMouselook.ToString().ToLower());
+
+            WriteQuaternion(writer, "APIDTarget", sop.APIDTarget);
+            writer.WriteElementString("APIDDamp", sop.APIDDamp.ToString());
+            writer.WriteElementString("APIDStrength", sop.APIDStrength.ToString());
+            writer.WriteElementString("APIDIterations", sop.APIDIterations.ToString());
+            writer.WriteElementString("APIDEnabled", sop.APIDEnabled.ToString().ToLower());
+            writer.WriteElementString("Damage", sop.Damage.ToString());
 
 
             //Write the generic elements last
@@ -1407,7 +1493,47 @@ namespace Aurora.Region.Serialization
         {
             obj.FromUserInventoryItemID = ReadUUID(reader, "FromUserInventoryItemID");
         }
-        
+
+        private void GenericBool(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
+        {
+            bool val = reader.ReadElementContentAsBoolean(name, "");
+            SOPType.GetProperty(name).SetValue(obj, val, null);
+        }
+
+        private void GenericVector3(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
+        {
+            SOPType.GetProperty(name).SetValue(obj, ReadVector(reader, name), null);
+        }
+
+        private void GenericInt(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
+        {
+            SOPType.GetProperty(name).SetValue(obj, int.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+        }
+
+        private void GenericDouble(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
+        {
+            SOPType.GetProperty(name).SetValue(obj, double.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+        }
+
+        private void GenericFloat(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
+        {
+            SOPType.GetProperty(name).SetValue(obj, double.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+        }
+
+        private void GenericByte(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
+        {
+            SOPType.GetProperty(name).SetValue(obj, byte.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+        }
+
+        private void GenericUUID(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
+        {
+            SOPType.GetProperty(name).SetValue(obj, ReadUUID(reader, name), null);
+        }
+
+        private void GenericQuaternion(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
+        {
+            SOPType.GetProperty(name).SetValue(obj, ReadQuaternion(reader, name), null);
+        }
 
         #endregion
 
