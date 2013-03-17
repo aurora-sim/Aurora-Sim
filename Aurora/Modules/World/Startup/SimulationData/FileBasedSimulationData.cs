@@ -215,16 +215,25 @@ namespace Aurora.Modules
             section.Set("RegionLocX", info.RegionLocX.ToString());
             section.Set("RegionLocY", info.RegionLocY.ToString());
 
-            info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: "));
-            info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: "));
+            info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: ", "256"));
+            info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: ", "256"));
             section.Set("RegionSizeX", info.RegionSizeX.ToString());
             section.Set("RegionSizeY", info.RegionSizeY.ToString());
 
-            System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: "));
-            int intPort = int.Parse(MainConsole.Instance.Prompt("Internal port: "));
+            System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: ", "0.0.0.0"));
+            int intPort = int.Parse(MainConsole.Instance.Prompt("Internal port: ", "9000"));
             info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
             section.Set("InternalPort", intPort.ToString());
             section.Set("InternalAddress", intAdd.ToString());
+
+            info.RegionType = MainConsole.Instance.Prompt("Region Type: ", "Mainland");
+            section.Set("RegionType", info.RegionType);
+
+            info.SeeIntoThisSimFromNeighbor = bool.Parse(MainConsole.Instance.Prompt("See into this sim from neighbors: ", "true", new List<string>() { "true", "false" }).ToLower());
+            section.Set("SeeIntoThisSimFromNeighbor", info.SeeIntoThisSimFromNeighbor);
+
+            info.ObjectCapacity = int.Parse(MainConsole.Instance.Prompt("Object capacity: ", "50000"));
+            section.Set("MaxPrims", info.ObjectCapacity);
 
             source.Save(Path.Combine("Regions", "RegionConfig.ini"));
 
