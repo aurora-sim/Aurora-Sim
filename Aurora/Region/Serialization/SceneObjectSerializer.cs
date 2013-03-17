@@ -427,8 +427,6 @@ namespace Aurora.Region.Serialization
             m_SOPXmlProcessors.Add("STATUS_ROTATE_X", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_X", sopType)));
             m_SOPXmlProcessors.Add("STATUS_ROTATE_Y", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_Y", sopType)));
             m_SOPXmlProcessors.Add("STATUS_ROTATE_Z", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_Z", sopType)));
-            m_SOPXmlProcessors.Add("SitTargetPosition", ((sop, xml) => GenericVector3(sop, xml, "SitTargetPosition", sopType)));
-            m_SOPXmlProcessors.Add("SitTargetOrientation", ((sop, xml) => GenericQuaternion(sop, xml, "SitTargetOrientation", sopType)));
             m_SOPXmlProcessors.Add("OmegaAxis", ((sop, xml) => GenericVector3(sop, xml, "OmegaAxis", sopType)));
             m_SOPXmlProcessors.Add("OmegaSpinRate", ((sop, xml) => GenericDouble(sop, xml, "OmegaSpinRate", sopType)));
             m_SOPXmlProcessors.Add("OmegaGain", ((sop, xml) => GenericDouble(sop, xml, "OmegaGain", sopType)));
@@ -438,7 +436,7 @@ namespace Aurora.Region.Serialization
             m_SOPXmlProcessors.Add("Restitution", ((sop, xml) => GenericFloat(sop, xml, "Restitution", sopType)));
             m_SOPXmlProcessors.Add("GravityMultiplier", ((sop, xml) => GenericFloat(sop, xml, "GravityMultiplier", sopType)));
             m_SOPXmlProcessors.Add("DIE_AT_EDGE", ((sop, xml) => GenericBool(sop, xml, "DIE_AT_EDGE", sopType)));
-            m_SOPXmlProcessors.Add("UseSoundQueue", ((sop, xml) => GenericBool(sop, xml, "UseSoundQueue", sopType)));
+            m_SOPXmlProcessors.Add("UseSoundQueue", ((sop, xml) => GenericInt(sop, xml, "UseSoundQueue", sopType)));
             m_SOPXmlProcessors.Add("Sound", ((sop, xml) => GenericUUID(sop, xml, "Sound", sopType)));
             m_SOPXmlProcessors.Add("SoundFlags", ((sop, xml) => GenericByte(sop, xml, "SoundFlags", sopType)));
             m_SOPXmlProcessors.Add("SoundGain", ((sop, xml) => GenericDouble(sop, xml, "SoundGain", sopType)));
@@ -691,7 +689,6 @@ namespace Aurora.Region.Serialization
             writer.WriteElementString("Restitution", sop.Restitution.ToString());
             writer.WriteElementString("GravityMultiplier", sop.GravityMultiplier.ToString());
             writer.WriteElementString("DIE_AT_EDGE", sop.DIE_AT_EDGE.ToString().ToLower());
-            writer.WriteElementString("UseSoundQueue", sop.UseSoundQueue.ToString().ToLower());
             writer.WriteElementString("UseSoundQueue", sop.UseSoundQueue.ToString().ToLower());
 
             WriteUUID(writer, "Sound", sop.Sound, options);
@@ -1517,7 +1514,7 @@ namespace Aurora.Region.Serialization
 
         private void GenericFloat(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
         {
-            SOPType.GetProperty(name).SetValue(obj, double.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+            SOPType.GetProperty(name).SetValue(obj, float.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
         }
 
         private void GenericByte(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
