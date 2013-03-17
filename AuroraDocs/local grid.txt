@@ -1,0 +1,11 @@
+I wanted my grid to run locally on my internal network ip address. To do this…
+
+in Aurora.ini: 
+
+make sure it says HostName = 10.0.1.5 under [Network] section
+
+and then in Aurora.Server.ini
+
+make sure it says HostName = 10.0.1.5 under [Network] section also
+
+of course you want to change 10.0.1.5 to a local IP of your own.
