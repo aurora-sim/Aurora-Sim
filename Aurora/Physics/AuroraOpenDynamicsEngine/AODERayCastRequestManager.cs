@@ -28,11 +28,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
+using Aurora.Framework;
 using OdeAPI;
 using OpenMetaverse;
-using Aurora.Framework;
+
 //using Ode.NET;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
@@ -107,6 +107,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name = "position">Origin of Ray</param>
         /// <param name = "direction">Ray normal</param>
         /// <param name = "length">Ray length</param>
+        /// <param name = "count">Ray count</param>
         /// <param name = "retMethod">Return method to send the results</param>
         public void QueueRequest(Vector3 position, Vector3 direction, float length, int count, RayCallback retMethod)
         {

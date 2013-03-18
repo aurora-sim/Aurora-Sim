@@ -41,9 +41,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.Physics;
 using OdeAPI;
 using OpenMetaverse;
-using Aurora.Framework.Physics;
+
 //using Ode.NET;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
@@ -619,7 +620,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                   m_lastPositionVector.Y == 0 &&
                   m_lastPositionVector.Z == 0))
             {
-                ///Only do this if we have a last position
+                // Only do this if we have a last position
                 m_lastposChange.X = pos.X - m_lastPositionVector.X;
                 m_lastposChange.Y = pos.Y - m_lastPositionVector.Y;
                 m_lastposChange.Z = pos.Z - m_lastPositionVector.Z;
