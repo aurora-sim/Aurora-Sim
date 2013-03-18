@@ -588,7 +588,13 @@ namespace Aurora.Modules
 
             if (File.Exists(filename + (isOldSave ? "" : ".tmp")))
                 File.Delete(filename + (isOldSave ? "" : ".tmp"));//Remove old tmp files
-            _regionLoader.SaveBackup(filename + (isOldSave ? "" : ".tmp"), regiondata);
+            if (!_regionLoader.SaveBackup(filename + (isOldSave ? "" : ".tmp"), regiondata))
+            {
+                if (File.Exists(filename + (isOldSave ? "" : ".tmp")))
+                    File.Delete(filename + (isOldSave ? "" : ".tmp"));//Remove old tmp files
+                MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup for region " + m_scene.RegionInfo.RegionName + "!");
+                return;
+            }
 
             //RegionData data = _regionLoader.LoadBackup(filename + ".tmp");
             if(!isOldSave)

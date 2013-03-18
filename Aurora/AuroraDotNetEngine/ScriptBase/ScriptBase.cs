@@ -115,13 +115,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             }
         }
 
-        public void UpdateLease(TimeSpan time)
-        {
-            ILease lease = (ILease)RemotingServices.GetLifetimeService(this);
-            if (lease != null)
-                lease.Renew(time);
-        }
-
 #if DEBUG
         // For tracing GC while debugging
         public static bool GCDummy;

@@ -75,6 +75,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return false;
         }
 
+        public void Clear()
+        {
+            lock (ContinuedQueue)
+            {
+                lock (SuspendedQueue)
+                {
+                    lock (FirstStartQueue)
+                    {
+                        ContinuedQueue.Clear();
+                        SuspendedQueue.Clear();
+                        FirstStartQueue.Clear();
+                        ContinuedQueueCount = SuspendedQueueCount = FirstStartQueueCount = 0;
+                    }
+                }
+            }
+        }
+
         public int Count()
         {
             return ContinuedQueueCount + SuspendedQueueCount + FirstStartQueueCount;

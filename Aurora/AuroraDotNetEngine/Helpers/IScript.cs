@@ -52,7 +52,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         void InitApi(IScriptApi data);
 
-        void UpdateLease(TimeSpan time);
         long GetStateEventFlags(string state);
 
         EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start,

@@ -111,7 +111,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool ShowWarnings;
         public ScriptStateSave StateSave;
-        public Timer UpdateLeasesTimer;
         private IScriptApi[] m_APIs = new IScriptApi[0];
         private IConfigSource m_ConfigSource;
         private IXmlRpcRouter m_XmlRpcRouter;
@@ -306,10 +305,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
 
             scene.EventManager.OnRemoveScript += StopScript;
-
-            UpdateLeasesTimer = new Timer(9.5 * 1000 * 60 /*9.5 minutes*/) { Enabled = true };
-            UpdateLeasesTimer.Elapsed += UpdateAllLeases;
-            UpdateLeasesTimer.Start();
         }
 
         public void RemoveRegion(IScene scene)
@@ -320,9 +315,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_Scene = null;
             scene.EventManager.OnRemoveScript -= StopScript;
             scene.UnregisterModuleInterface<IScriptModule>(this);
-            UpdateLeasesTimer.Enabled = false;
-            UpdateLeasesTimer.Elapsed -= UpdateAllLeases;
-            UpdateLeasesTimer.Stop();
+
+            MaintenanceThread.Stop();
+            foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+            {
+                ID.CloseAndDispose(true);
+            }
 
             Shutdown();
         }
@@ -484,28 +482,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ConsoleDisabled = false;
             MaintenanceThread.Started = true;
             MainConsole.Instance.Warn("[ADNE]: ADNE has been enabled.");
-        }
-
-        #endregion
-
-        #region Update Leases [Unused]
-
-        public void UpdateAllLeases(object sender, ElapsedEventArgs e)
-        {
-            foreach (ScriptData script in ScriptProtection.GetAllScripts())
-            {
-                if (script.Running == false || script.Disabled || script.Script == null)
-                    return;
-
-                try
-                {
-                    script.Script.UpdateLease(DateTime.Now.AddMinutes(10) - DateTime.Now);
-                }
-                catch (Exception)
-                {
-                    MainConsole.Instance.Error("Lease found dead!" + script.ItemID);
-                }
-            }
         }
 
         #endregion

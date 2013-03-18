@@ -215,6 +215,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<LUStruct> NeedsFired = new List<LUStruct>();
             foreach (LUStruct item in items)
             {
+                if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || m_ScriptEngine.Scene == null || !m_ScriptEngine.Scene.ShouldRunHeartbeat)
+                    break;
+
                 if (item.Action == LUType.Unload)
                 {
                     //Close
@@ -319,6 +322,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scriptThreadpool.Restart();
             scriptChangeThreadpool.Restart();
             cmdThreadpool.Restart();
+            LUQueue.Clear();
+            QueueItemStruct itm;
+            while (ScriptEvents.TryDequeue(out itm)) ;
+            SleepingScriptEvents.Clear();
         }
 
         public void Stats()

@@ -66,10 +66,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { return null; }
         }
 
-        public void UpdateLease(TimeSpan time)
-        {
-        }
-
         public long GetStateEventFlags(string state)
         {
             return 0;

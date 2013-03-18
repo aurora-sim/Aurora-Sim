@@ -402,7 +402,8 @@ namespace Aurora.Region
                 clientServer.Start ();
             }
 
-            Heartbeat();
+            Thread t = new Thread(Heartbeat);
+            t.Start();
         }
 
         #endregion
@@ -410,7 +411,7 @@ namespace Aurora.Region
         #region Scene Heartbeat Methods
 
         private bool m_lastPhysicsChange = false;
-        private bool Heartbeat()
+        private void Heartbeat()
         {
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
             ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule> ().GetMonitor (RegionInfo.RegionID.ToString (), MonitorModuleHelper.TotalFrameTime);
@@ -424,7 +425,7 @@ namespace Aurora.Region
             while (true)
             {
                 if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
-                    return false;
+                    return;
 
                 int maintc = Util.EnvironmentTickCount();
                 int BeginningFrameTime = maintc;
@@ -521,7 +522,7 @@ namespace Aurora.Region
                 catch (Exception e)
                 {
                     MainConsole.Instance.Error("[REGION]: Failed with exception " + e + " in region: " + RegionInfo.RegionName);
-                    return true;
+                    return;
                 }
 
                 //Get the time between beginning and end
