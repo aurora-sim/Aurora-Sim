@@ -1131,20 +1131,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
         private byte[] HandleContentVerbs(OSHttpRequest request, OSHttpResponse response)
         {
-            //            MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: HandleContentVerbs for request to {0}", request.RawUrl);
-
-            // This is a test.  There's a workable alternative..  as this way sucks.
-            // We'd like to put this into a text file parhaps that's easily editable.
-            //
-            // For this test to work, I used the following secondlife.exe parameters
-            // "C:\Program Files\SecondLifeWindLight\SecondLifeWindLight.exe" -settings settings_windlight.xml -channel "Second Life WindLight"  -set SystemLanguage en-us -loginpage http://10.1.1.2:8002/?show_login_form=TRUE -loginuri http://10.1.1.2:8002 -user 10.1.1.2
-            //
-            // Even after all that, there's still an error, but it's a start.
-            //
-            // I depend on show_login_form being in the secondlife.exe parameters to figure out
-            // to display the form, or process it.
-            // a better way would be nifty.
-
             byte[] buffer;
 
             Encoding encoding = Encoding.UTF8;

@@ -39,6 +39,7 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using GridRegion = Aurora.Framework.GridRegion;
+using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Modules.WorldMap
 {
@@ -140,7 +141,7 @@ namespace Aurora.Modules.WorldMap
             regionimage = regionimage.Replace("-", "");
             MainConsole.Instance.Debug("[WORLD MAP]: JPEG Map location: " + MainServer.Instance.ServerURI + "/index.php?method=" + regionimage);
 
-            MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
+            MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET", regionimage, OnHTTPGetMapImage));
 
             m_scene.EventManager.OnNewClient += OnNewClient;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
@@ -653,15 +654,9 @@ namespace Aurora.Modules.WorldMap
             return block;
         }
 
-        public Hashtable OnHTTPGetMapImage(Hashtable keysvals)
+        public byte[] OnHTTPGetMapImage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            Hashtable reply = new Hashtable();
-            string regionImage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
-            regionImage = regionImage.Replace("-", "");
-            if (keysvals["method"].ToString() != regionImage)
-                return reply;
             MainConsole.Instance.Debug("[WORLD MAP]: Sending map image jpeg");
-            const int statuscode = 200;
             byte[] jpeg = new byte[0];
 
             MemoryStream imgstream = new MemoryStream();
@@ -714,11 +709,8 @@ namespace Aurora.Modules.WorldMap
                 imgstream.Dispose();
             }
 
-            reply["str_response_string"] = Convert.ToBase64String(jpeg);
-            reply["int_response_code"] = statuscode;
-            reply["content_type"] = "image/jpeg";
-
-            return reply;
+            httpResponse.ContentType = "image/jpeg";
+            return jpeg;
         }
 
         // From msdn

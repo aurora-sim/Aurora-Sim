@@ -34,7 +34,7 @@ namespace Aurora.Modules.Web
             _server = _registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
             if (_server != null)
             {
-                _server.AddHTTPHandler("GridTexture", OnHTTPGetTextureImage);
+                _server.AddHTTPHandler(new GenericStreamHandler("GET", "GridTexture", OnHTTPGetTextureImage));
                 _registry.RegisterModuleInterface<IWebHttpTextureService>(this);
             }
             IGridInfo gridInfo = _registry.RequestModuleInterface<IGridInfo>();
@@ -47,11 +47,8 @@ namespace Aurora.Modules.Web
             return _server.ServerURI + "/index.php?method=GridTexture&uuid=" + textureID.ToString();
         }
 
-        public Hashtable OnHTTPGetTextureImage(Hashtable keysvals)
+        public byte[] OnHTTPGetTextureImage (string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            Hashtable reply = new Hashtable();
-
-            int statuscode = 200;
             byte[] jpeg = new byte[0];
             IAssetService m_AssetService = _registry.RequestModuleInterface<IAssetService>();
 
@@ -60,7 +57,7 @@ namespace Aurora.Modules.Web
                 // Taking our jpeg2000 data, decoding it, then saving it to a byte array with regular jpeg data
 
                 // non-async because we know we have the asset immediately.
-                byte[] mapasset = m_AssetService.GetData(keysvals["uuid"].ToString());
+                byte[] mapasset = m_AssetService.GetData(httpRequest.QueryString["uuid"]);
 
                 if (mapasset != null)
                 {
@@ -86,11 +83,9 @@ namespace Aurora.Modules.Web
                 }
             }
 
-            reply["str_response_string"] = Convert.ToBase64String(jpeg);
-            reply["int_response_code"] = statuscode;
-            reply["content_type"] = "image/jpeg";
+            httpResponse.ContentType = "image/jpeg";
 
-            return reply;
+            return jpeg;
         }
 
         private Bitmap ResizeBitmap(Image b, int nWidth, int nHeight)
