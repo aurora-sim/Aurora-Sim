@@ -75,7 +75,8 @@ namespace Aurora.Modules.Startup
             scene.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("PreRegisterRegion", region);
 
             //Tell the grid service about us
-            RegisterRegion error = GridService.RegisterRegion(region, scene.RegionInfo.GridSecureSessionID, password);
+            RegisterRegion error = GridService.RegisterRegion(region, scene.RegionInfo.GridSecureSessionID, password, 
+                ProtocolVersion.MAJOR_PROTOCOL_VERSION, ProtocolVersion.MINOR_PROTOCOL_VERSION);
             if (error.Error == String.Empty)
             {
                 //If it registered ok, we save the sessionID to the database and tlel the neighbor service about it

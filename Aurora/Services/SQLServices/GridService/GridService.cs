@@ -333,10 +333,11 @@ namespace Aurora.Services.SQLServices.GridService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.None)]
-        public virtual RegisterRegion RegisterRegion (GridRegion regionInfos, UUID oldSessionID, string password)
+        public virtual RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password,
+            int majorProtocolVersion, int minorProtocolVersion)
         {
             RegisterRegion rr = new RegisterRegion ();
-            object remoteValue = DoRemoteByURL("GridServerURI", regionInfos, oldSessionID, password);
+            object remoteValue = DoRemoteByURL("GridServerURI", regionInfos, oldSessionID, password, majorProtocolVersion, minorProtocolVersion);
             if (remoteValue != null || m_doRemoteOnly) {
                 rr = (RegisterRegion)remoteValue;
                 if (rr == null)
@@ -344,6 +345,11 @@ namespace Aurora.Services.SQLServices.GridService
                 return rr;
             }
 
+            if (majorProtocolVersion < ProtocolVersion.MINIMUM_MAJOR_PROTOCOL_VERSION ||
+                minorProtocolVersion < ProtocolVersion.MINIMUM_MINOR_PROTOCOL_VERSION)
+            {
+                return new RegisterRegion { Error = "You need to update your version of Aurora, the protocol version is too low to connect to this server." };
+            }
 
             if (m_DisableRegistrations)
                 return new RegisterRegion { Error = "Registrations are disabled." };
