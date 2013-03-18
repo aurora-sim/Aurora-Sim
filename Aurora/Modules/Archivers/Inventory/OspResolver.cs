@@ -49,7 +49,7 @@ namespace Aurora.Modules.Archivers
         ///   Make an OSPA given a user UUID
         /// </summary>
         /// <param name = "userId"></param>
-        /// <param name = "commsManager"></param>
+        /// <param name = "userService"></param>
         /// <returns>The OSPA.  Null if a user with the given UUID could not be found.</returns>
         public static string MakeOspa(UUID userId, IUserAccountService userService)
         {

@@ -45,7 +45,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "o"></param>
         /// <param name = "avatarID"></param>
-        /// <param name = "RegionHandle"></param>
+        /// <param name = "regionID"></param>
         /// <returns>Whether it was added successfully</returns>
         bool Enqueue(OSD o, UUID avatarID, UUID regionID);
 
@@ -56,6 +56,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "avatarID"></param>
         /// <param name = "RegionHandle"></param>
+        /// <param name = "regionID"></param>
         void DisableSimulator(UUID avatarID, ulong RegionHandle, UUID regionID);
 
         void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY,

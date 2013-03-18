@@ -56,6 +56,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
         ///   returned based on HSL brightness between 0m and 128m
         /// </summary>
         /// <param name = "filename">The target image to load</param>
+        /// <param name = "scene"></param>
         /// <returns>A terrain channel generated from the image.</returns>
         public virtual ITerrainChannel LoadFile(string filename, IScene scene)
         {

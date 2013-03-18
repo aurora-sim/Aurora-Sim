@@ -51,6 +51,7 @@ namespace Aurora.Framework
                                    string extraParams,
                                    int updateTimer);
 
+        /// <summary>
         /// Apply a dynamically generated texture to all sides of the given prim.  The texture is not persisted to the
         /// asset service.
         /// </summary>

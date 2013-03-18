@@ -49,7 +49,7 @@ namespace Aurora.Framework
         /// <summary>
         /// Loads the estate data for the specified estate name (local only)
         /// </summary>
-        /// <param name="estateID"></param>
+        /// <param name="name"></param>
         /// <returns></returns>
         EstateSettings GetEstateSettings(string name);
 

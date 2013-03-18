@@ -46,7 +46,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Get help for the given help string
         /// </summary>
-        /// <param name = "helpParts">Parsed parts of the help string.  If empty then general help is returned.</param>
+        /// <param name = "cmd">Parsed parts of the help string.  If empty then general help is returned.</param>
         /// <returns></returns>
         public List<string> GetHelp(string[] cmd)
         {
@@ -58,7 +58,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "command">The string that will make the command execute</param>
         /// <param name = "commandHelp">The message that will show the user how to use the command</param>
-        /// <param name = "info">Any information about how the command works or what it does</param>
+        /// <param name = "infomessage">Any information about how the command works or what it does</param>
         /// <param name = "fn"></param>
         public void AddCommand(string command, string commandHelp, string infomessage, CommandDelegate fn)
         {

@@ -50,7 +50,6 @@ namespace Aurora.Framework
         ///   Adds a new abuse report to the database
         /// </summary>
         /// <param name = "report"></param>
-        /// <param name = "Password"></param>
         void AddAbuseReport(AbuseReport report);
 
         /// <summary>

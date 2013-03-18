@@ -38,7 +38,7 @@ namespace Aurora.Framework
     /// <param name = "succeeded">true if the save succeeded, false otherwise</param>
     /// <param name = "userInfo">The user for whom the save was conducted</param>
     /// <param name = "invPath">The inventory path saved</param>
-    /// <param name = "savePath">The stream to which the archive was saved</param>
+    /// <param name = "saveStream">The stream to which the archive was saved</param>
     /// <param name = "reportedException">Contains the exception generated if the save did not succeed</param>
     public delegate void InventoryArchiveSaved(
         Guid id, bool succeeded, UserAccount userInfo, string invPath, Stream saveStream, Exception reportedException);

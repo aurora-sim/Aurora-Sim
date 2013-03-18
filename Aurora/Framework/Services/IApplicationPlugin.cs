@@ -52,7 +52,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Initialize the Plugin
         /// </summary>
-        /// <param name = "openSim">The Application instance</param>
+        /// <param name = "simBase">The Application instance</param>
         void Initialize(ISimulationBase simBase);
 
         /// <summary>

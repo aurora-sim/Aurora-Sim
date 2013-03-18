@@ -49,8 +49,8 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "remoteClient"></param>
         /// <param name = "itemID"></param>
+        /// <param name = "assetID"></param>
         /// <param name = "AttachmentPt"></param>
-        /// <param name = "updateinventoryStatus">
         /// <param name = "updateUUIDs">ONLY make this true if you know that the user will not be crossing or teleporting when this call will be happening</param>
         ///   <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
         ISceneEntity RezSingleAttachmentFromInventory(

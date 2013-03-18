@@ -56,7 +56,7 @@ namespace Aurora.Modules.Archivers
         /// <summary>
         ///   Archive the assets given to this archiver to the given archive.
         /// </summary>
-        /// <param name = "archive"></param>
+        /// <param name = "asset"></param>
         public void WriteAsset(AssetBase asset)
         {
             //WriteMetadata(archive);

@@ -54,7 +54,7 @@ namespace Aurora.Framework
         ///new ones or setting existing UUIDs to the correct parent UUIDs.
         ///
         ///If this method is called and there are inventory items, then we regard the inventory as having changed.
-        ///<param name = "linkNum">Link number for the part</param>
+        ///<param name = "ChangeScripts">Link number for the part</param>
         void ResetInventoryIDs(bool ChangeScripts);
 
         /// <summary>

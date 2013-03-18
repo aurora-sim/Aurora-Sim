@@ -42,10 +42,14 @@ namespace Aurora.Modules.Terrain.FloodBrushes
         #region ITerrainFloodEffect Members
 
         /// <summary>
-        ///   reverts an area of the map to the heightfield stored in the revertmap
+        ///   Reverts an area of the map to the heightfield stored in the revertmap
         /// </summary>
-        /// <param name = "map">the current heightmap</param>
-        /// <param name = "fillArea">array indicating which sections of the map are to be reverted</param>
+        /// <param name = "map">The current heightmap</param>
+        /// <param name = "userID"></param>
+        /// <param name = "north"></param>
+        /// <param name = "west"></param>
+        /// <param name = "south"></param>
+        /// <param name = "east"></param>
         /// <param name = "strength">unused</param>
         public void FloodEffect(ITerrainChannel map, UUID userID, float north,
                                 float west, float south, float east, float strength)

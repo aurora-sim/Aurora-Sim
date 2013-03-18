@@ -61,8 +61,10 @@ namespace Aurora.Framework
         /// <summary>
         /// Gets a user's appearance, and if it does not exist, create it
         /// </summary>
-        /// <param name="uUID"></param>
+        /// <param name="userID"></param>
+        /// <param name="avatarName"></param>
         /// <param name="defaultUserAvatarArchive"></param>
+        /// <param name="loadedArchive"></param>
         /// <returns></returns>
         AvatarAppearance GetAndEnsureAppearance(UUID userID, string avatarName, string defaultUserAvatarArchive, out bool loadedArchive);
     }

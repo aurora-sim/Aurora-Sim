@@ -57,7 +57,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Posts an event to the entire given object
         /// </summary>
-        /// <param name = "itemID"></param>
+        /// <param name = "primID"></param>
         /// <param name = "name"></param>
         /// <param name = "args"></param>
         /// <returns></returns>

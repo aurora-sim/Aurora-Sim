@@ -49,7 +49,7 @@ namespace Aurora.Framework
         /// <param name = "client">The client to teleport hom</param>
         bool TeleportHome(UUID id, IClientAPI client);
 
-        // <summary>
+        /// <summary>
         /// Crosses the given agent to the given neighboring region.
         /// </summary>
         /// <param name = "agent">The agent to cross</param>

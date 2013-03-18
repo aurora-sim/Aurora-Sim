@@ -74,8 +74,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Finds previously saved AA data.
         /// </summary>
-        /// <param name = "token"></param>
-        /// <param name = "key"></param>
+        /// <param name = "primID"></param>
         /// <returns></returns>
         List<Email> GetEmails(UUID primID);
     }

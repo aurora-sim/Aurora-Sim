@@ -53,6 +53,7 @@ namespace Aurora.Modules.Archivers
         /// <param name = "scene"></param>
         /// <param name = "savePath">The path to which to save data.</param>
         /// <param name = "requestId">The id associated with this request</param>
+        /// <param name = "checkPermissions"></param>
         /// <exception cref = "System.IO.IOException">
         ///   If there was a problem opening a stream for the file specified by the savePath
         /// </exception>

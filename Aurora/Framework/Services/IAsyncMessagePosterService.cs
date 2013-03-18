@@ -41,6 +41,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Post a request to all hosts that we have
         /// </summary>
+        /// <param name = "url"></param>
         /// <param name = "request"></param>
         void Post(string url, OSDMap request);
 
@@ -54,7 +55,9 @@ namespace Aurora.Framework
         ///   Post a request to all hosts that we have
         ///   Returns an OSDMap of the response.
         /// </summary>
+        /// <param name = "url"></param>
         /// <param name = "request"></param>
+        /// <param name = "response"></param>
         /// <returns></returns>
         void Get(string url, OSDMap request, GetResponse response);
     }

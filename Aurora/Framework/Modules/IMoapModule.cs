@@ -47,7 +47,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Set the media entry for a given prim face.
         /// </summary>
-        /// <param name = "SceneObjectPart"></param>
+        /// <param name = "part"></param>
         /// <param name = "face"></param>
         /// <param name = "me"></param>
         void SetMediaEntry(ISceneChildEntity part, int face, MediaEntry me);
@@ -57,7 +57,7 @@ namespace Aurora.Framework
         /// </summary>
         /// This is the equivalent of setting a media entry of null
         /// <param name = "part"></param>
-        /// <param name = "face">/param>
+        /// <param name = "face"></param>
         void ClearMediaEntry(ISceneChildEntity part, int face);
     }
 }

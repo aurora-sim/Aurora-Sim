@@ -76,7 +76,7 @@ namespace Aurora.Simulation.Base
 
         public void RunMigration2()
         {
-            ///Asset format changed, broke existing cached assets
+            // Asset format changed, broke existing cached assets
             if (!Directory.Exists("assetcache//")) return;
             foreach (string path in Directory.GetDirectories("assetcache//"))
             {

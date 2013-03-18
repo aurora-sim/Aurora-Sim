@@ -80,9 +80,8 @@ namespace Aurora.Framework
         ///   This category WILL be saturated with packets after a link or selecting a large object.
         ///   So when assigning a packet to this category, be aware that after a link, packets will not be sent for some time
         ///   in this category.
-        ///   <remarks>
-        ///     This is a sub-category of Task
-        ///   </remarks>
+        ///   This is a sub-category of Task
+        /// </remarks>
         State = 7,
 
         ///<summary>

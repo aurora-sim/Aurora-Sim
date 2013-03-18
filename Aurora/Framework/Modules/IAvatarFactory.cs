@@ -46,7 +46,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Send the initial data to the client
         /// </summary>
-        /// <param name = "scenePresence"></param>
+        /// <param name = "agentid"></param>
         void QueueInitialAppearanceSend(UUID agentid);
 
         /// <summary>

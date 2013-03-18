@@ -47,6 +47,7 @@ namespace Aurora.Framework
         ///   Send a link_message event to an in-world script
         /// </summary>
         /// <param name = "scriptId"></param>
+        /// <param name = "primID"></param>
         /// <param name = "code"></param>
         /// <param name = "text"></param>
         /// <param name = "key"></param>

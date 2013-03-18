@@ -56,7 +56,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Find all T modules in the current directory
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
+        /// <typeparam name = "t"></typeparam>
         /// <returns></returns>
         public static List<dynamic> PickupModules(Type t)
         {

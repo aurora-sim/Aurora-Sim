@@ -49,6 +49,7 @@ namespace Aurora.Framework
         ///   Create the entire inventory for a given user (local only)
         /// </summary>
         /// <param name = "user"></param>
+        /// <param name = "createDefaultItems"></param>
         /// <returns></returns>
         bool CreateUserInventory(UUID user, bool createDefaultItems);
 
@@ -56,6 +57,8 @@ namespace Aurora.Framework
         ///   Create the entire inventory for a given user (local only)
         /// </summary>
         /// <param name = "user"></param>
+        /// <param name = "createDefaultItems"></param>
+        /// <param name = "defaultInventoryItems"></param>
         /// <returns></returns>
         bool CreateUserInventory(UUID user, bool createDefaultItems, out List<InventoryItemBase> defaultInventoryItems);
 

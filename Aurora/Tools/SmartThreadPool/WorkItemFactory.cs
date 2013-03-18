@@ -67,6 +67,7 @@ namespace Amib.Threading.Internal
         /// <summary>
         ///   Create a new work item
         /// </summary>
+        /// <param name = "workItemsGroup"></param>
         /// <param name = "wigStartInfo">Work item group start information</param>
         /// <param name = "callback">A callback to execute</param>
         /// <param name = "state">

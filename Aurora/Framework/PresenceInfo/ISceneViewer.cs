@@ -46,12 +46,13 @@ namespace Aurora.Framework
         ///   Sends all the information about the client to this avatar
         /// </summary>
         /// <param name = "presence"></param>
+        /// <param name = "forced"></param>
         void QueuePresenceForFullUpdate(IScenePresence presence, bool forced);
 
         /// <summary>
         ///   Send the full presence update immediately
         /// </summary>
-        /// <param name = "pres"></param>
+        /// <param name = "presence"></param>
         void SendPresenceFullUpdate(IScenePresence presence);
 
         /// <summary>
@@ -65,26 +66,28 @@ namespace Aurora.Framework
         ///   Send a presence terse update to all clients
         /// </summary>
         /// <param name = "presence"></param>
-        /// <param name = "flags"></param>
+        /// <param name = "animation"></param>
         void QueuePresenceForAnimationUpdate(IScenePresence presence, AnimationGroup animation);
 
         /// <summary>
         ///   Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name = "part"></param>
+        /// <param name = "UpdateFlags"></param>
         void QueuePartForUpdate(ISceneChildEntity part, PrimUpdateFlags UpdateFlags);
 
         /// <summary>
         ///   Add the objects to the queue for which we need to send a properties update for
         /// </summary>
-        /// <param name = "entity"></param>
+        /// <param name = "entities"></param>
         void QueuePartsForPropertiesUpdate(ISceneChildEntity[] entities);
 
         /// <summary>
         ///   This method is called by the LLUDPServer and should never be called by anyone else
         ///   It loops through the available updates and sends them out (no waiting)
         /// </summary>
-        /// <param name = "numUpdates">The number of updates to send</param>
+        /// <param name = "numPrimUpdates">The number of prim updates to send</param>
+        /// <param name = "numAvaUpdates"> The number of avatar updates to send</param>
         void SendPrimUpdates(int numPrimUpdates, int numAvaUpdates);
 
         /// <summary>
@@ -96,13 +99,13 @@ namespace Aurora.Framework
         /// <summary>
         ///   Once the packet has been sent, allow newer animations to be sent for the given entity
         /// </summary>
-        /// <param name = "ID"></param>
+        /// <param name = "update"></param>
         void FinishedAnimationPacketSend(AnimationGroup update);
 
         /// <summary>
         ///   Once the packet has been sent, allow newer property updates to be sent for the given entity
         /// </summary>
-        /// <param name = "ID"></param>
+        /// <param name = "updates"></param>
         void FinishedPropertyPacketSend(IEnumerable<IEntity> updates);
 
         /// <summary>

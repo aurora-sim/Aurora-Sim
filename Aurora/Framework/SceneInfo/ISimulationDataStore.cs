@@ -54,8 +54,6 @@ namespace Aurora.Framework
         /// <summary>
         ///   Entirely removes the region, this includes everything about the region
         /// </summary>
-        /// <param name = "uuid"></param>
-        /// <param name = "regionUUID"></param>
         /// <returns></returns>
         void RemoveRegion();
 
@@ -67,7 +65,6 @@ namespace Aurora.Framework
         /// <summary>
         ///   Load persisted objects from region storage.
         /// </summary>
-        /// <param name = "regionUUID">the Region UUID</param>
         /// <returns>List of loaded groups</returns>
         List<ISceneEntity> LoadObjects();
 

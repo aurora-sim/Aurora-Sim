@@ -45,7 +45,6 @@ namespace Aurora.Framework
         ///   Removes a region from search
         /// </summary>
         /// <param name = "regionID"></param>
-        /// <param name = "args"></param>
         void ClearRegion(UUID regionID);
 
         #endregion

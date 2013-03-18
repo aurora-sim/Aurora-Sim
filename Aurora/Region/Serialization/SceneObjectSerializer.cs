@@ -49,7 +49,6 @@ namespace Aurora.Region.Serialization
         /// <summary>
         ///   Restore this part from the serialized xml representation.
         /// </summary>
-        /// <param name = "fromUserInventoryItemId">The inventory id from which this part came, if applicable</param>
         /// <param name = "xmlReader"></param>
         /// <returns></returns>
         protected SceneObjectPart FromXml(XmlTextReader xmlReader)

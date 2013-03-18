@@ -91,8 +91,10 @@ namespace Aurora.ClientStack
         /// </summary>
         /// <remarks>
         ///   Tokens are added to the bucket any time 
-        ///   <seealso cref = "RemoveTokens" />
-        ///   is called, at the granularity of
+        ///   <seealso>
+        ///       <cref>RemoveTokens</cref>
+        ///   </seealso>
+        ///     is called, at the granularity of
         ///   the system tick interval (typically around 15-22ms)
         /// </remarks>
         public float DripRate
@@ -124,7 +126,7 @@ namespace Aurora.ClientStack
         ///   current number of tokens in the bucket
         ///   <remarks>
         ///     If this bucket has a parent bucket that does not have
-        ///     enough tokens for a request, <seealso cref = "RemoveTokens" /> will 
+        ///     enough tokens for a request, <seealso><cref>RemoveTokens</cref></seealso> will 
         ///     return false regardless of the content of this bucket
         ///   </remarks>
         /// </summary>
