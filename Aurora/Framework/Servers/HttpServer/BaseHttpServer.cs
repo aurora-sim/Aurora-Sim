@@ -53,8 +53,6 @@ namespace Aurora.Framework.Servers.HttpServer
         protected Dictionary<string, IStreamedRequestHandler> m_streamHandlers = new Dictionary<string, IStreamedRequestHandler>();
         protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
         protected Dictionary<string, IStreamedRequestHandler> m_HTTPStreamHandlers = new Dictionary<string, IStreamedRequestHandler>();
-        protected X509Certificate2 m_cert;
-        protected SslProtocols m_sslProtocol = SslProtocols.None;
 
         protected Dictionary<string, PollServiceEventArgs> m_pollHandlers = new Dictionary<string, PollServiceEventArgs>();
 
@@ -121,13 +119,6 @@ namespace Aurora.Framework.Servers.HttpServer
             m_hostName = hostName;
             m_port = port;
             m_isSecure = isSecure;
-        }
-
-        public void SetSecureParams(string path, string password, SslProtocols protocol)
-        {
-            m_isSecure = true;
-            m_cert = new X509Certificate2(path, password);
-            m_sslProtocol = protocol;
         }
 
         /// <summary>
@@ -1384,13 +1375,8 @@ namespace Aurora.Framework.Servers.HttpServer
                 //m_httpListener = new HttpListener();
 
                 NotSocketErrors = 0;
-                if (!Secure)
-                {
-                    //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
-                    //m_httpListener.Prefixes.Add("http://10.1.1.5:" + m_port + "/");
-                    m_internalServer = new HttpListenerManager(10);
-                    m_internalServer.ProcessRequest += OnRequest;
-                }
+                m_internalServer = new HttpListenerManager(10, Secure);
+                m_internalServer.ProcessRequest += OnRequest;
 
                 m_internalServer.Start(m_port);
 
@@ -1398,13 +1384,6 @@ namespace Aurora.Framework.Servers.HttpServer
                 m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
                 m_PollServiceManager.Start();
                 HTTPDRunning = true;
-
-                //HttpListenerContext context;
-                //while (true)
-                //{
-                //    context = m_httpListener.GetContext();
-                //    ThreadPool.UnsafeQueueUserWorkItem(new WaitCallback(HandleRequest), context);
-                // }
             }
             catch (Exception e)
             {

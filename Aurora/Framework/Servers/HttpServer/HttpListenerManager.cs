@@ -16,8 +16,9 @@ namespace Aurora.Framework.Servers.HttpServer
         private readonly ManualResetEvent _stop, _ready;
         private ConcurrentQueue<HttpListenerContext> _queue;
         public event Action<HttpListenerContext> ProcessRequest;
+        private bool _isSecure = false;
 
-        public HttpListenerManager(int maxThreads)
+        public HttpListenerManager(int maxThreads, bool isSecure)
         {
             _workers = new Thread[maxThreads];
             _queue = new ConcurrentQueue<HttpListenerContext>();
@@ -25,11 +26,12 @@ namespace Aurora.Framework.Servers.HttpServer
             _ready = new ManualResetEvent(false);
             _listener = new HttpListener();
             _listenerThread = new Thread(HandleRequests);
+            _isSecure = isSecure;
         }
 
         public void Start(uint port)
         {
-            _listener.Prefixes.Add(String.Format(@"http://+:{0}/", port));
+            _listener.Prefixes.Add(String.Format(@"http{0}://+:{1}/", _isSecure ? "s" : "", port));
             _listener.Start();
             _listenerThread.Start();
 
