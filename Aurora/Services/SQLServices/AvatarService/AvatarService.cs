@@ -26,10 +26,9 @@
  */
 
 using Aurora.DataManager;
-using Aurora.Simulation.Base;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
 using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.SQLServices.AvatarService

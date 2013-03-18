@@ -556,9 +556,7 @@ namespace Aurora.Framework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-            {
                 Output(s, "Severe");
-            }
         }
 
         /// <summary>
@@ -602,9 +600,7 @@ namespace Aurora.Framework
                     for (i = 0; i < cmd.Length; i++)
                     {
                         if (cmd[i].Contains(" "))
-                        {
                             cmd[i] = "\"" + cmd[i] + "\"";
-                        }
                     }
                 }
                 m_defaultPrompt = oldDefaultPrompt;
@@ -643,9 +639,7 @@ namespace Aurora.Framework
 #if (!ISWIN)
             string optstr = String.Empty;
             foreach (string option in options)
-            {
                 optstr = optstr + (" " + option);
-            }
 #else
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
 #endif
@@ -666,32 +660,11 @@ namespace Aurora.Framework
             itisdone = false;
             while (!itisdone && excludedCharacters.Count > 0)
             {
-                #if (!ISWIN)
-                    bool found = false;
-                    foreach (char c in excludedCharacters)
-                    {
-                        if (temp.Contains(c.ToString()))
-                        {
-                            Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                            itisdone = false;
-                            found = true;
-                        }
-                    }
-                    if (!found)
-                    {
-                        itisdone = true;
-                    }
-                    else
-                    {
-                        temp = InternalPrompt(prompt, defaultresponse, options);
-                    }
-#else
-                    foreach (char c in excludedCharacters.Where(c => temp.Contains(c.ToString())))
-                    {
-                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                        itisdone = false;
-                    }
-#endif
+                foreach (char c in excludedCharacters.Where(c => temp.Contains(c.ToString())))
+                {
+                    Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                    itisdone = false;
+                }
             }
             m_isPrompting = false;
             m_promptOptions.Clear();

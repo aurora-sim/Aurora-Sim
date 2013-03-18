@@ -25,17 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Reflection;
-using Aurora.Simulation.Base;
-using Nini.Config;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
 using Nwc.XmlRpc;
-using System.Net;
-using System.Collections;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System;
+using System.Reflection;
+using System.Net;
+using System.Collections;
 
 namespace Aurora.Services
 {

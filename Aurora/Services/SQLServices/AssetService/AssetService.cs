@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Reflection;
 using Aurora.DataManager;
-using Aurora.Simulation.Base;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
+using System;
+using System.Reflection;
 
 namespace Aurora.Services.SQLServices.AssetService
 {

@@ -25,17 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Ini;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.IO;
 using System.Collections.Generic;
-
-using Nini.Ini;
-using Nini.Config;
-
-using OpenMetaverse;
-
-using Aurora.Framework;
-using Aurora.Simulation.Base;
 
 namespace Aurora.Services.SQLServices.InventoryService
 {

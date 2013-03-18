@@ -25,6 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,12 +37,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
-using Nini.Config;
-using Aurora.Simulation.Base;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services

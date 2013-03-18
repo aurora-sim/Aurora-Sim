@@ -26,7 +26,6 @@
  */
 
 using Aurora.Framework;
-using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 

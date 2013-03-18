@@ -25,11 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using System.Reflection;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Aurora.Simulation.Base;
+using System.Collections.Generic;
+using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

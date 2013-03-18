@@ -25,6 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using OpenMetaverse.Imaging;
 using System;
 using System.Collections;
 using System.Collections.Specialized;
@@ -35,12 +40,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Web;
-using Aurora.Simulation.Base;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenMetaverse.Imaging;
 using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Aurora.Services
