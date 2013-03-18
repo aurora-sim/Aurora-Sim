@@ -253,25 +253,25 @@ namespace Aurora.FileBasedServices.AssetService
         private string GetPathForID(string id)
         {
             string fileName = MakeValidFileName(id);
-            if (!Directory.Exists(Path.Combine(m_assetsDirectory, fileName.Substring(0, 3))))
-                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, fileName.Substring(0, 3)));
-            if (!Directory.Exists(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3)))))
-                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3))));
-            if (!Directory.Exists(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3))))))
-                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3)))));
-            return Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), Path.Combine(fileName.Substring(5, 3), fileName + ".asset"))));
+            if (!Directory.Exists(Path.Combine(m_assetsDirectory, fileName.Substring(0, 6))))
+                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, fileName.Substring(0, 6)));
+            if (!Directory.Exists(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 6), fileName.Substring(5, 6)))))
+                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 6), fileName.Substring(5, 6))));
+            if (!Directory.Exists(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 6), Path.Combine(fileName.Substring(5, 6), fileName.Substring(11, 6))))))
+                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 6), Path.Combine(fileName.Substring(5, 6), fileName.Substring(11, 6)))));
+            return Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 6), Path.Combine(fileName.Substring(5, 6), Path.Combine(fileName.Substring(11, 6), fileName + ".asset"))));
         }
 
         private string GetDataPathForID(string hashCode)
         {
             string fileName = MakeValidFileName(hashCode);
-            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), fileName.Substring(0, 3))))
-                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), fileName.Substring(0, 3)));
-            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3)))))
-                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3))));
-            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3))))))
-                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3)))));
-            return Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), Path.Combine(fileName.Substring(5, 3), fileName + ".data"))));
+            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), fileName.Substring(0, 6))))
+                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), fileName.Substring(0, 6)));
+            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 6), fileName.Substring(5, 6)))))
+                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 6), fileName.Substring(5, 6))));
+            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 6), Path.Combine(fileName.Substring(5, 6), fileName.Substring(11, 6))))))
+                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 6), Path.Combine(fileName.Substring(5, 6), fileName.Substring(11, 6)))));
+            return Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(5, 6), Path.Combine(fileName.Substring(11, 6), fileName + ".data"))));
         }
         private static string MakeValidFileName(string name)
         {
@@ -303,6 +303,9 @@ namespace Aurora.FileBasedServices.AssetService
                         return CheckForConversion(id);
                     asset.Data = assetdata;
                 }
+            }
+            catch
+            {
             }
             finally
             {
@@ -347,13 +350,13 @@ namespace Aurora.FileBasedServices.AssetService
 
         public bool FileSetAsset(AssetBase asset)
         {
-            bool duplicate = File.Exists(GetDataPathForID(asset.HashCode));
-
             FileStream assetStream = null;
             try
             {
-                byte[] data = asset.Data;
                 string hash = asset.HashCode;
+                bool duplicate = File.Exists(GetDataPathForID(hash));
+
+                byte[] data = asset.Data;
                 asset.Data = new byte[0];
                 lock (_lock)
                 {
@@ -365,9 +368,6 @@ namespace Aurora.FileBasedServices.AssetService
                     //Deduplication...
                     if (duplicate)
                     {
-                        if (MainConsole.Instance != null)
-                            MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString + " for " + asset.IDString);
-
                         //Only set id --> asset, and not the hashcode --> data to deduplicate
                         return true;
                     }
