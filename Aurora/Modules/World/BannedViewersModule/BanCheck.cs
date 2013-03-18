@@ -284,8 +284,6 @@ namespace Aurora.Modules.Ban
                 agentInfo.Flags |= IAgentFlags.TempBan;
 
                 agentInfo.OtherAgentInformation["TemperaryBanInfo"] = DateTime.Now.AddDays(days);
-
-                conn.UpdateAgent(agentInfo);
             }
             else
             {
@@ -322,6 +320,8 @@ namespace Aurora.Modules.Ban
 
             agentInfo.Flags &= IAgentFlags.TempBan;
             agentInfo.Flags &= IAgentFlags.PermBan;
+            if (agentInfo.OtherAgentInformation.ContainsKey("TemperaryBanInfo") == true)
+                agentInfo.OtherAgentInformation.Remove("TemperaryBanInfo");
             conn.UpdateAgent(agentInfo);
 
             MainConsole.Instance.Fatal("User block removed");
