@@ -51,9 +51,9 @@ using Amib.Threading;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
-using ProtoBuf.Meta;
 using ProtoBuf;
+using ProtoBuf.Meta;
+using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
 
 namespace Aurora.Framework
 {

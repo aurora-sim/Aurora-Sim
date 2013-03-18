@@ -26,7 +26,6 @@
  */
 
 using System;
-using log4net.Core;
 using Nini.Config;
 
 namespace Aurora.Framework

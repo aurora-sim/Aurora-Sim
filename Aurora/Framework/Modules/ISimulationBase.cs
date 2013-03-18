@@ -27,9 +27,8 @@
 
 using System;
 using System.Security.Authentication;
-using Aurora.Framework;
-using Nini.Config;
 using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
 
 namespace Aurora.Framework
 {

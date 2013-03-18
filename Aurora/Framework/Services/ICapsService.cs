@@ -28,10 +28,9 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Framework
 {

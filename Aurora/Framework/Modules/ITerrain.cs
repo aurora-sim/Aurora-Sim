@@ -27,7 +27,6 @@
 
 using System.Drawing;
 using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {

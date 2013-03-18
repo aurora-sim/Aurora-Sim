@@ -25,10 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Simulation.Base;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {

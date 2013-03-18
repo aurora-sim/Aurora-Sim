@@ -26,7 +26,6 @@
  */
 
 using System;
-using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 

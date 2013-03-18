@@ -25,10 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using System;
 using ProtoBuf;
 
 namespace Aurora.Framework

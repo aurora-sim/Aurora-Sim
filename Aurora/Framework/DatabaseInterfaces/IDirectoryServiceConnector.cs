@@ -27,11 +27,7 @@
 
 using System;
 using System.Collections.Generic;
-
 using OpenMetaverse;
-using EventFlags = OpenMetaverse.DirectoryManager.EventFlags;
-
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {
@@ -231,7 +227,7 @@ namespace Aurora.Framework
         /// <param name="description"></param>
         /// <param name="category"></param>
         /// <returns></returns>
-        EventData CreateEvent(UUID creator, UUID region, UUID parcel, DateTime date, uint cover, EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category);
+        EventData CreateEvent(UUID creator, UUID region, UUID parcel, DateTime date, uint cover, DirectoryManager.EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category);
 
         /// <summary>
         /// Gets a list of events with optional filters

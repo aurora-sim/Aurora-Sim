@@ -29,12 +29,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Aurora.Framework.Serialization;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
-using Aurora.Framework.Serialization;
 
 namespace Aurora.Framework
 {

@@ -27,11 +27,9 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using OpenMetaverse;
 using System.Reflection;
+using System.Text;
 using log4net;
 
 namespace Aurora.Framework.Servers.HttpServer

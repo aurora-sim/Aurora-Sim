@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Aurora.Framework
+﻿namespace Aurora.Framework
 {
     public delegate void UpdatedSetting (string value);
     public delegate string GetSetting ();

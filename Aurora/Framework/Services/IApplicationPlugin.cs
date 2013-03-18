@@ -25,11 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Linq;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using Nini.Config;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {

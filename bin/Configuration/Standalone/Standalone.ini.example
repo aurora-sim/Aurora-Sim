@@ -30,7 +30,7 @@
 
     DoRemoteCalls = False
     AllowRemoteCalls = False
-	
+
 [Handlers]
     ;;Add any handlers here that you do not want to use
     LLLoginHandler = LLLoginServiceInConnector
@@ -57,7 +57,7 @@
 
     SyncMessagePosterServiceOpenServerHandler = false
     SyncMessagePosterServiceServerHandlerPort = 0
-	SyncMessagePosterServiceDoRemote = false
+    SyncMessagePosterServiceDoRemote = false
 
 [MapService]
     ;; This controls options about the v2 MapService, which allows v2 viewers to see the map

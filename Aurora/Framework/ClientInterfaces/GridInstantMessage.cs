@@ -26,7 +26,6 @@
  */
 
 using System;
-using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 

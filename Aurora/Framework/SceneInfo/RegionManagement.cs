@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Aurora.Framework;
+﻿using System.Collections.Generic;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 

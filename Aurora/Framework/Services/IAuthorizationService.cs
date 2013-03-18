@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
-
 namespace Aurora.Framework
 {
     // Generic Authorization service used for authorizing principals in a particular region

@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {

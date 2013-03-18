@@ -27,7 +27,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.Security.Cryptography;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

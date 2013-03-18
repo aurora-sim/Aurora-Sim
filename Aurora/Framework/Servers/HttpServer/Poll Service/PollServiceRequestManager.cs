@@ -28,9 +28,6 @@
 using System;
 using System.Collections;
 using System.Threading;
-using System.Reflection;
-using log4net;
-using Aurora.Framework;
 
 namespace Aurora.Framework.Servers.HttpServer
 {

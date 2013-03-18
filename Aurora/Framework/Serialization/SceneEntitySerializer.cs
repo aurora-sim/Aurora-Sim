@@ -1,10 +1,6 @@
-﻿using OpenMetaverse;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using System.Xml;
+using OpenMetaverse;
 
 namespace Aurora.Framework.Serialization
 {

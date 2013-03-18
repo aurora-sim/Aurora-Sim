@@ -26,11 +26,9 @@
  */
 
 using System;
-using Aurora.Framework;
+using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using System.Collections.Generic;
 
 namespace Aurora.Framework
 {

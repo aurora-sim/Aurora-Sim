@@ -30,7 +30,6 @@ using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {
