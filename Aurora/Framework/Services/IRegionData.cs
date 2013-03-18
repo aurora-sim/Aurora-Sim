@@ -59,7 +59,7 @@ namespace Aurora.Framework
         /// Gets the neighbouring regions, taking into account variable-sized regions
         /// </summary>
         /// <param name="regionID"></param>
-        /// <param name="ScopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="squareRangeFromCenterInMeters">because calculating circular radii would be a complex.</param>
         /// <returns>If the return result is of zero length the region does not exist.</returns>
         List<GridRegion> GetNeighbours(UUID regionID, List<UUID> scopeIDs, uint squareRangeFromCenterInMeters);
@@ -67,13 +67,15 @@ namespace Aurora.Framework
         /// <summary>
         /// Gets all regions within squareRangeFromCenterInMeters meters of centerX and centerY
         /// </summary>
+        /// <param name="scopeIDs"></param>
+        /// <param name="excludeRegion"></param>
         /// <param name="centerX"></param>
         /// <param name="centerY"></param>
         /// <param name="squareRangeFromCenterInMeters"></param>
         /// <returns></returns>
         List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters);
 
-        uint Count(uint EstateID, RegionFlags flags);
+        uint Count(uint estateID, RegionFlags flags);
 
         bool Store(GridRegion data);
 

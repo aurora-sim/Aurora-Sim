@@ -429,10 +429,10 @@ namespace Aurora.Modules.Startup
             /// This does send kill object updates and resets the parcel prim counts.
             /// </summary>
             /// <param name="groups"></param>
-            /// <param name="DeleteScripts"></param>
+            /// <param name="deleteScripts"></param>
             /// <param name="sendKillPackets"></param>
             /// <returns></returns>
-            public bool DeleteSceneObjects (ISceneEntity[] groups, bool DeleteScripts, bool sendKillPackets)
+            public bool DeleteSceneObjects (ISceneEntity[] groups, bool deleteScripts, bool sendKillPackets)
             {
                 List<ISceneChildEntity> parts = new List<ISceneChildEntity>();
                 foreach (ISceneEntity grp in groups)

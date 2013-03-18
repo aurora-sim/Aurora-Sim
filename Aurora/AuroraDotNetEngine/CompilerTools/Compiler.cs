@@ -199,13 +199,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <summary>
         ///   Converts script (if needed) and compiles
         /// </summary>
-        /// <param name = "Script">LSL script</param>
+        /// <param name = "script">LSL script</param>
+        /// <param name = "itemID"></param>
+        /// <param name = "ownerUUID"></param>
+        /// <param name = "assembly"></param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly)
+        public void PerformScriptCompile(string script, UUID itemID, UUID ownerUUID, out string assembly)
         {
             assembly = "";
 
-            if (Script == String.Empty)
+            if (script == String.Empty)
             {
                 AddError("No script text present");
                 return;
@@ -222,7 +225,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             IScriptConverter converter;
             string compileScript;
-            CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
+            CheckLanguageAndConvert(script, ownerUUID, out converter, out compileScript);
             if (GetErrors().Length != 0)
                 return;
             if (converter == null)
@@ -231,7 +234,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return;
             }
 
-            CompileFromDotNetText(compileScript, converter, assembly, Script, false);
+            CompileFromDotNetText(compileScript, converter, assembly, script, false);
         }
 
         /// <summary>
@@ -445,9 +448,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <summary>
         ///   Compile .NET script to .Net assembly (.dll)
         /// </summary>
-        /// <param name = "Script">CS script</param>
+        /// <param name = "script">CS script</param>
+        /// <param name = "converter"></param>
+        /// <param name = "assembly"></param>
+        /// <param name = "originalScript"></param>
+        /// <param name = "inMemory"></param>
         /// <returns>Filename to .dll assembly</returns>
-        internal void CompileFromDotNetText(string Script, IScriptConverter converter, string assembly,
+        internal void CompileFromDotNetText(string script, IScriptConverter converter, string assembly,
                                             string originalScript, bool inMemory)
         {
             string ext = "." + converter.Name;
@@ -476,7 +483,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 try
                 {
-                    File.WriteAllText(srcFileName, Script);
+                    File.WriteAllText(srcFileName, script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {
@@ -515,7 +522,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             parameters.TreatWarningsAsErrors = false;
 
             CompilerResults results = converter.Compile(parameters, WriteScriptSourceToDebugFile,
-                                                        WriteScriptSourceToDebugFile ? srcFileName : Script);
+                                                        WriteScriptSourceToDebugFile ? srcFileName : script);
             parameters = null;
             //
             // WARNINGS AND ERRORS
@@ -525,7 +532,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 try
                 {
-                    File.WriteAllText(srcFileName, Script);
+                    File.WriteAllText(srcFileName, script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {

@@ -69,7 +69,6 @@ namespace Aurora.Framework
         /// </summary>
         /// <typeparam name = "T"></typeparam>
         /// <param name = "moduleDir"></param>
-        /// <param name = "identifier"></param>
         /// <returns></returns>
         public static List<T> LoadModules<T>(string moduleDir)
         {

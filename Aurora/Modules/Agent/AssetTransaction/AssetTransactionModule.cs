@@ -263,7 +263,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         /// <param name = "transaction"></param>
         /// <param name = "type"></param>
         /// <param name = "data"></param>
-        /// </param>
+        /// <param name = "storeLocal"></param>
         /// <param name = "tempFile"></param>
         public void HandleUDPUploadRequest(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type,
                                            byte[] data, bool storeLocal, bool tempFile)

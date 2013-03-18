@@ -181,6 +181,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         IObjectSound Sound { get; }
 
+        /// <value>
         /// Grants access to the objects inventory
         /// </value>
         IObjectInventory Inventory { get; }

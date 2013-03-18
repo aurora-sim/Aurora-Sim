@@ -254,7 +254,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <summary>
         ///   Get the mapping between LSL and C# line/column number.
         /// </summary>
-        /// <returns>Dictionary\<KeyValuePair\<int, int\>, KeyValuePair\<int, int\>\>.</returns>
+        /// <returns>
+        ///   Dictionary&lt;KeyValuePair&lt;int, int&gt;, KeyValuePair&lt;int, int&gt;&gt;
+        /// </returns>
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap
         {
             get { return m_positionMap; }
@@ -2711,6 +2713,8 @@ default
         ///   Generates the code for a BinaryExpression node.
         /// </summary>
         /// <param name = "be">The BinaryExpression node.</param>
+        /// <param name = "isUnaryExpression"></param>
+        /// <param name = "addition"></param>
         /// <returns>String containing C# code for BinaryExpression be.</returns>
         private string GenerateBinaryExpression(BinaryExpression be, bool isUnaryExpression, string addition)
         {
@@ -2860,6 +2864,7 @@ default
         ///   Generates the code for a FunctionCall node.
         /// </summary>
         /// <param name = "fc">The FunctionCall node.</param>
+        /// <param name = "NeedRetVal"></param>
         /// <returns>String containing C# code for FunctionCall fc.</returns>
         private string GenerateFunctionCall(FunctionCall fc, bool NeedRetVal)
         {

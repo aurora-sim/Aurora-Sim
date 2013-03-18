@@ -39,7 +39,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         /// <summary>
         ///   Fire this only when simulator performance
-        ///   is reasonable. (eg sysload <= 1.0)
+        ///   is reasonable. (eg sysload &lt;= 1.0)
         /// </summary>
         bool IfHealthy { get; set; }
 

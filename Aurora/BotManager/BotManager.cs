@@ -81,11 +81,14 @@ namespace Aurora.BotManager
         /// <summary>
         ///   Creates a new bot inworld
         /// </summary>
-        /// <param name = "FirstName"></param>
-        /// <param name = "LastName"></param>
+        /// <param name = "firstName"></param>
+        /// <param name = "lastName"></param>
+        /// <param name = "scene"></param>
         /// <param name = "cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
+        /// <param name = "creatorID"></param>
+        /// <param name = "startPos"></param>
         /// <returns>ID of the bot</returns>
-        public UUID CreateAvatar(string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom,
+        public UUID CreateAvatar(string firstName, string lastName, IScene scene, UUID cloneAppearanceFrom,
                                  UUID creatorID, Vector3 startPos)
         {
             AgentCircuitData m_aCircuitData = new AgentCircuitData
@@ -103,7 +106,7 @@ namespace Aurora.BotManager
                 m_aCircuitData.Appearance = new AvatarAppearance {Wearables = AvatarWearable.DefaultWearables};
             }
             //Create the new bot data
-            BotClientAPI m_character = new BotClientAPI(scene, m_aCircuitData) { FirstName = FirstName, LastName = LastName };
+            BotClientAPI m_character = new BotClientAPI(scene, m_aCircuitData) { FirstName = firstName, LastName = lastName };
 
             m_aCircuitData.AgentID = m_character.AgentId;
             m_aCircuitData.Appearance.Owner = m_character.AgentId;

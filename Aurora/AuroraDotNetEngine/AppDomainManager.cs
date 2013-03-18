@@ -173,6 +173,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <param name = "permissionSetName">name of the permission set to restrict to</param>
         /// <param name = "appDomainName">'friendly' name of the appdomain to be created</param>
+        /// <param name = "ads"></param>
         /// <exception cref = "ArgumentNullException">
         ///   if <paramref name = "permissionSetName" /> is null
         /// </exception>

@@ -69,16 +69,12 @@ namespace Aurora.Framework
         ///   Close the module and remove all references to it
         /// </summary>
         /// <param name = "scene"></param>
-        /// <param name = "m_config"></param>
-        /// <param name = "m_OpenSimBase"></param>
         void Close(IScene scene);
 
         /// <summary>
         ///   Close the module and remove all references to it
         /// </summary>
         /// <param name = "scene"></param>
-        /// <param name = "m_config"></param>
-        /// <param name = "m_OpenSimBase"></param>
         void DeleteRegion(IScene scene);
 
         /// <summary>

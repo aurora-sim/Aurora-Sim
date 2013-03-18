@@ -71,14 +71,18 @@ namespace Aurora.Framework
         /// <summary>
         ///   Load the latest terrain revision from region storage
         /// </summary>
-        /// <param name = "regionID">the region UUID</param>
+        /// <param name = "RevertMap"></param>
+        /// <param name = "RegionSizeX"></param>
+        /// <param name = "RegionSizeY"></param>
         /// <returns>Heightfield data</returns>
         void LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
         ///   Load the latest water revision from region storage
         /// </summary>
-        /// <param name = "scene">the region</param>
+        /// <param name = "RevertMap"></param>
+        /// <param name = "RegionSizeX"></param>
+        /// <param name = "RegionSizeY"></param>
         /// <returns>Heightfield data</returns>
         void LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY);
 

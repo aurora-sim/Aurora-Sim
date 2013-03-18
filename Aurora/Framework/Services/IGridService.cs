@@ -68,7 +68,7 @@ namespace Aurora.Framework
         /// <summary>
         /// Get a specific region by UUID in the given scope
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="regionID"></param>
         /// <returns></returns>
         GridRegion GetRegionByUUID(List<UUID> scopeIDs, UUID regionID);
@@ -76,7 +76,7 @@ namespace Aurora.Framework
         /// <summary>
         /// Get the region at the given position (in meters)
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
@@ -85,7 +85,7 @@ namespace Aurora.Framework
         /// <summary>
         /// Get the first returning region by name in the given scope
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="regionName"></param>
         /// <returns></returns>
         GridRegion GetRegionByName(List<UUID> scopeIDs, string regionName);
@@ -93,10 +93,10 @@ namespace Aurora.Framework
         /// <summary>
         /// Get information about regions starting with the provided name. 
         /// </summary>
-        /// <param name="scopeID"></param>
-        /// <param name="name">
-        /// The name to match against.
-        /// </param>
+        /// <param name="scopeIDs"></param>
+        /// <param name="name"> The name to match against.</param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
         /// <returns>
         /// A list of <see cref="RegionInfo"/>s of regions with matching name. If the
         /// grid-server couldn't be contacted or returned an error, return null. 

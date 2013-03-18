@@ -61,10 +61,10 @@ namespace Aurora.Framework
         /// <summary>
         ///   Return the given objects to the agent given
         /// </summary>
-        /// <param name = "returnobjects">The objects to return</param>
-        /// <param name = "AgentId">The agent UUID that will get the inventory items for these objects</param>
+        /// <param name = "sceneObjectGroup">The objects to return</param>
+        /// <param name = "uuid">The agent UUID that will get the inventory items for these objects</param>
         /// <returns></returns>
-        bool ReturnObjects(ISceneEntity[] sceneObjectGroup, UUID uUID);
+        bool ReturnObjects(ISceneEntity[] sceneObjectGroup, UUID uuid);
 
         /// <summary>
         ///   Move the given item from the object task inventory to the agent's inventory
@@ -78,7 +78,7 @@ namespace Aurora.Framework
         /// <param name = "part"></param>
         /// <param name = "itemID"></param>
         /// <param name = "checkPermissions"></param>
-        InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID destId, UUID uUID, ISceneChildEntity m_host,
+        InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID destId, UUID uuid, ISceneChildEntity m_host,
                                                                UUID objId, bool checkPermissions);
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Aurora.Framework
         /// <param name = "host"></param>
         /// <param name = "items"></param>
         /// <returns></returns>
-        UUID MoveTaskInventoryItemsToUserInventory(UUID uUID, string p, ISceneChildEntity part, List<UUID> invList);
+        UUID MoveTaskInventoryItemsToUserInventory(UUID uuid, string p, ISceneChildEntity part, List<UUID> invList);
 
         /// <summary>
         ///   Copy a task (prim) inventory item to another task (prim)

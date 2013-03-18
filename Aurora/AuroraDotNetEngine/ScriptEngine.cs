@@ -595,11 +595,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         ///   Posts event to all objects in the group.
         /// </summary>
-        /// <param name = "localID">Region object ID</param>
-        /// <param name = "FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
-        /// <param name = "VersionID">Version ID of the script. Note: If it is -1, the version ID will be detected automatically</param>
+        /// <param name = "partID">Region object ID</param>
+        /// <param name = "functionName">Name of the function, will be state + "_event_" + FunctionName</param>
+        /// <param name = "qParams"></param>
         /// <param name = "param">Array of parameters to match event mask</param>
-        public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, object[] param)
+        public bool AddToObjectQueue(UUID partID, string functionName, DetectParams[] qParams, object[] param)
         {
             // Determine all scripts in Object and add to their queue
             ScriptData[] datas = ScriptProtection.GetScripts(partID);
@@ -611,7 +611,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (ScriptData ID in datas)
             {
                 // Add to each script in that object
-                AddToScriptQueue(ID, FunctionName, qParams, EventPriority.FirstStart, param);
+                AddToScriptQueue(ID, functionName, qParams, EventPriority.FirstStart, param);
             }
             return true;
         }
@@ -619,27 +619,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         ///   Posts the event to the given object.
         /// </summary>
-        /// <param name = "ID"></param>
-        /// <param name = "FunctionName"></param>
+        /// <param name = "id"></param>
+        /// <param name = "functionName"></param>
         /// <param name = "qParams"></param>
+        /// <param name = "priority"></param>
         /// <param name = "param"></param>
         /// <returns></returns>
-        public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, EventPriority priority,
+        public bool AddToScriptQueue(ScriptData id, string functionName, DetectParams[] qParams, EventPriority priority,
                                      object[] param)
         {
             // Create a structure and add data
             QueueItemStruct QIS = new QueueItemStruct
             {
-                ID = ID,
+                ID = id,
                 EventsProcData = new ScriptEventsProcData(),
-                functionName = FunctionName,
+                functionName = functionName,
                 llDetectParams = qParams,
                 param = param,
-                VersionID = Interlocked.Read(ref ID.VersionID),
-                State = ID.State
+                VersionID = Interlocked.Read(ref id.VersionID),
+                State = id.State
             };
 
-            if (EventManager.CheckIfEventShouldFire(ID, FunctionName, param))
+            if (EventManager.CheckIfEventShouldFire(id, functionName, param))
                 return MaintenanceThread.AddEventSchQIS(QIS, priority);
             return false;
         }
@@ -1026,10 +1027,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         ///   Fetches, loads and hooks up a script to an objects events
         /// </summary>
+        /// <param name = "part"></param>
         /// <param name = "itemID"></param>
-        /// <param name = "localID"></param>
+        /// <param name = "startParam"></param>
+        /// <param name = "postOnRez"></param>
+        /// <param name = "statesource"></param>
+        /// <param name = "rezzedFrom"></param>
+        /// <param name = "clearStateSaves"></param>
         public LUStruct StartScript(ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez,
-                                    StateSource statesource, UUID RezzedFrom, bool clearStateSaves)
+                                    StateSource statesource, UUID rezzedFrom, bool clearStateSaves)
         {
             ScriptData id = ScriptProtection.GetScript(part.UUID, itemID);
 
@@ -1063,7 +1069,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.stateSource = statesource;
             id.Part = part;
             id.World = part.ParentEntity.Scene;
-            id.RezzedFrom = RezzedFrom;
+            id.RezzedFrom = rezzedFrom;
             ls.ClearStateSaves = clearStateSaves;
             ls.ID = id;
             //WE MUST ADD THIS HERE, even though it hasn't compiled yet... 
@@ -1307,7 +1313,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         ///   Removes a script from all Script Plugins
         /// </summary>
-        /// <param name = "localID"></param>
+        /// <param name = "primID"></param>
         /// <param name = "itemID"></param>
         public void RemoveScriptFromPlugins(UUID primID, UUID itemID)
         {

@@ -57,9 +57,9 @@ namespace Aurora.Framework
         ///   Creates a new estate from the given info, returns the updated info
         /// </summary>
         /// <param name = "ES"></param>
-        /// <param name = "RegionID"></param>
+        /// <param name = "regionID"></param>
         /// <returns>0 if the estate could not be created, otherwise, the estateID</returns>
-        int CreateNewEstate(EstateSettings ES, UUID RegionID);
+        int CreateNewEstate(EstateSettings ES, UUID regionID);
 
         /// <summary>
         ///   Updates the given Estate data in the database
@@ -70,7 +70,8 @@ namespace Aurora.Framework
         /// <summary>
         ///   Gets the estates that have the given name and owner
         /// </summary>
-        /// <param name = "search"></param>
+        /// <param name = "ownerID"></param>
+        /// <param name = "name"></param>
         /// <returns></returns>
         int GetEstate(UUID ownerID, string name);
 
@@ -84,9 +85,9 @@ namespace Aurora.Framework
         /// <summary>
         ///   Gets the estates that have the given owner
         /// </summary>
-        /// <param name = "search"></param>
+        /// <param name = "ownerID"></param>
         /// <returns></returns>
-        List<EstateSettings> GetEstates(UUID OwnerID);
+        List<EstateSettings> GetEstates(UUID ownerID);
 
         /// <summary>
         /// Gets the estates that have the specified owner, with optional filters.
@@ -115,7 +116,6 @@ namespace Aurora.Framework
         ///   Remove an existing region from the estate
         /// </summary>
         /// <param name = "regionID"></param>
-        /// <param name = "estateID"></param>
         /// <returns></returns>
         bool DelinkRegion(UUID regionID);
 
@@ -123,7 +123,6 @@ namespace Aurora.Framework
         ///   Deletes the given estate by its estate ID
         /// </summary>
         /// <param name = "estateID"></param>
-        /// <param name = "password"></param>
         /// <returns></returns>
         bool DeleteEstate(int estateID);
     }

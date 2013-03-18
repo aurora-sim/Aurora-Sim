@@ -1370,13 +1370,13 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "objectname"></param>
         /// <param name = "objectID"></param>
-        /// <param name = "ownerID">/param>
-        ///   <param name = "ownerFirstName"></param>
-        ///   <param name = "ownerLastName"></param>
-        ///   <param name = "msg"></param>
-        ///   <param name = "textureID"></param>
-        ///   <param name = "ch"></param>
-        ///   <param name = "buttonlabels"></param>
+        /// <param name = "ownerID"></param>
+        /// <param name = "ownerFirstName"></param>
+        /// <param name = "ownerLastName"></param>
+        /// <param name = "msg"></param>
+        /// <param name = "textureID"></param>
+        /// <param name = "ch"></param>
+        /// <param name = "buttonlabels"></param>
         void SendDialog(string objectname, UUID objectID, UUID ownerID, string ownerFirstName, string ownerLastName,
                         string msg, UUID textureID, int ch,
                         string[] buttonlabels);
@@ -1386,12 +1386,12 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "sunPos"></param>
         /// <param name = "sunVel"></param>
-        /// <param name = "CurrentTime">Seconds since Unix Epoch 01/01/1970 00:00:00</param>
-        /// <param name = "SecondsPerSunCycle"></param>
-        /// <param name = "SecondsPerYear"></param>
-        /// <param name = "OrbitalPosition">The orbital position is given in radians, and must be "adjusted" for the linden client, see LLClientView</param>
-        void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong CurrentTime, uint SecondsPerSunCycle, uint SecondsPerYear,
-                        float OrbitalPosition);
+        /// <param name = "currentTime">Seconds since Unix Epoch 01/01/1970 00:00:00</param>
+        /// <param name = "secondsPerSunCycle"></param>
+        /// <param name = "secondsPerYear"></param>
+        /// <param name = "orbitalPosition">The orbital position is given in radians, and must be "adjusted" for the linden client, see LLClientView</param>
+        void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong currentTime, uint secondsPerSunCycle, uint secondsPerYear,
+                        float orbitalPosition);
 
         void SendViewerEffect(ViewerEffectPacket.EffectBlock[] effectBlocks);
         UUID GetDefaultAnimation(string name);

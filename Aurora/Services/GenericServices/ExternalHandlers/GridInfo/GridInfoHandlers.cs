@@ -58,12 +58,12 @@ namespace Aurora.Services
         public string GridMarketplaceURI { get; protected set; }
         public string GridTutorialURI { get; protected set; }
         public string GridSnapshotConfigURI { get; protected set; }
-        
+
         /// <summary>
         ///   Instantiate a GridInfoService object.
         /// </summary>
-        /// <param name = "configPath">path to config path containing
-        ///   grid information</param>
+        /// <param name = "configSource">path to config path containing grid information</param>
+        /// <param name = "registry"></param>
         /// <remarks>
         ///   GridInfoService uses the [GridInfo] section of the
         ///   standard Aurora.ini file --- which is not optimal, but

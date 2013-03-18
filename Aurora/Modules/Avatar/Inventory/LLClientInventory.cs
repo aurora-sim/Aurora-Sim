@@ -1889,12 +1889,11 @@ namespace Aurora.Modules.Inventory
                 m_scene = scene;
             }
 
-            /// <summary>
-            ///
-            /// </summary>
-            /// <param name="data"></param>
+            /// <summary></summary>
             /// <param name="path"></param>
-            /// <param name="param"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
                                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -1946,12 +1945,11 @@ namespace Aurora.Modules.Inventory
                 httpListener = httpServer;
             }
 
-            /// <summary>
-            ///
-            /// </summary>
-            /// <param name="data"></param>
+            /// <summary></summary>
             /// <param name="path"></param>
-            /// <param name="param"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -2093,11 +2091,12 @@ namespace Aurora.Modules.Inventory
             }
 
             /// <summary>
-            ///
+            /// 
             /// </summary>
-            /// <param name="data"></param>
             /// <param name="path"></param>
-            /// <param name="param"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)

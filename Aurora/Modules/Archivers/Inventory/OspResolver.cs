@@ -63,7 +63,8 @@ namespace Aurora.Modules.Archivers
         /// <summary>
         ///   Make an OSPA given a user name
         /// </summary>
-        /// <param name = "name"></param>
+        /// <param name = "firstName"></param>
+        /// <param name = "lastName"></param>
         /// <returns></returns>
         public static string MakeOspa(string firstName, string lastName)
         {

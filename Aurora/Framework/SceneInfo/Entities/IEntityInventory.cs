@@ -61,7 +61,6 @@ namespace Aurora.Framework
         ///   Reset parent object UUID for all the items in the prim's inventory.
         /// </summary>
         /// If this method is called and there are inventory items, then we regard the inventory as having changed.
-        /// <param name = "linkNum">Link number for the part</param>
         void ResetObjectID();
 
         /// <summary>

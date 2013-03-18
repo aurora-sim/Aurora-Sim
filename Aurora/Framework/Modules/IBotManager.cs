@@ -45,7 +45,7 @@ namespace Aurora.Framework
     {
         #region Create/Remove bot
 
-        UUID CreateAvatar(string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID,
+        UUID CreateAvatar(string firstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID,
                           Vector3 startPos);
 
         void RemoveAvatar(UUID Bot, IScene iScene, UUID userAttempting);

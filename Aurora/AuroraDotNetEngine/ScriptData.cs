@@ -264,8 +264,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         ///   Removes any permissions the script may have on other avatars.
         /// </summary>
-        /// <param name = "localID"></param>
-        /// <param name = "itemID"></param>
         private void ReleaseControls()
         {
             if (InventoryItem != null)
@@ -405,7 +403,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         ///   Sets up the APIs for the script
         /// </summary>
-        /// <param name = "setInitialResetValues">Get the initial reset values needed to reset the script</param>
         internal void SetApis()
         {
             Apis = new Dictionary<string, IScriptApi>();

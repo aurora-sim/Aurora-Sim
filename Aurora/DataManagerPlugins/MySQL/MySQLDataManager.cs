@@ -29,11 +29,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using Aurora.DataManager.Migration;
 using Aurora.Framework;
 using MySql.Data.MySqlClient;
-using OpenMetaverse;
 
 namespace Aurora.DataManager.MySQL
 {

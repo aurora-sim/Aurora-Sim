@@ -57,6 +57,7 @@ namespace Aurora.Framework
         /// <param name = "lastName"></param>
         /// <param name = "invPath">The inventory path in which to place the loaded folders and items</param>
         /// <param name = "loadPath">The file from which the inventory archive will be loaded</param>
+        /// <param name = "options"></param>
         /// <returns>true if the first stage of the operation succeeded, false otherwise</returns>
         bool DearchiveInventory(
             string firstName, string lastName, string invPath, string loadPath,

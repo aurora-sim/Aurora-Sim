@@ -68,9 +68,10 @@ namespace Aurora.Framework
         ///   This does send kill object updates and resets the parcel prim counts.
         /// </summary>
         /// <param name = "groups"></param>
-        /// <param name = "DeleteScripts"></param>
+        /// <param name = "deleteScripts"></param>
+        /// <param name = "sendKillPackets"></param>
         /// <returns></returns>
-        bool DeleteSceneObjects(ISceneEntity[] groups, bool DeleteScripts, bool sendKillPackets);
+        bool DeleteSceneObjects(ISceneEntity[] groups, bool deleteScripts, bool sendKillPackets);
 
         /// <summary>
         ///   Removes all current objects from the scene, but not from the database

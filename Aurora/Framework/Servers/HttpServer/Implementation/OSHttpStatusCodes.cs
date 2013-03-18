@@ -143,6 +143,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
         /// <summary>
         /// 403 Client error: Server understood request, will not deliver, do not try again.
+        /// </summary>
         ClientErrorForbidden = 403,
 
         /// <summary>

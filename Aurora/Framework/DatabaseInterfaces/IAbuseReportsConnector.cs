@@ -70,7 +70,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "start"></param>
         /// <param name = "count"></param>
-        /// <param name = "filter"></param>
+        /// <param name = "active"></param>
         /// <returns></returns>
         List<AbuseReport> GetAbuseReports(int start, int count, bool active);
     }

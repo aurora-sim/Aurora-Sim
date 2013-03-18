@@ -72,6 +72,8 @@ namespace Aurora.Services.DataService
         /// Add/Update a user's stats in the database
         /// </summary>
         /// <param name="uid"></param>
+        /// <param name="agentID"></param>
+        /// <param name="regionID"></param>
         public void UpdateUserStats(ViewerStatsMessage uid, UUID agentID, UUID regionID)
         {
             Dictionary<string, object> rows = new Dictionary<string, object>();

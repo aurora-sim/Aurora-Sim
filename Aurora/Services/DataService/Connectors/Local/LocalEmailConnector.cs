@@ -68,7 +68,7 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///   Gets all offline messages for the user in GridInstantMessage format.
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name = "objectID"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<Email> GetEmails(UUID objectID)

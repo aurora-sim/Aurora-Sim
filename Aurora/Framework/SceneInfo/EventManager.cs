@@ -1348,7 +1348,7 @@ namespace Aurora.Framework
         /// <param name="regionHandle"></param>
         /// <param name="FixedTime">True if the Sun Position is fixed</param>
         /// <param name="useEstateTime">True if the Estate Settings should be used instead of region</param>
-        /// <param name="FixedSunHour">The hour 0.0 <= FixedSunHour <= 24.0 at which the sun is fixed at. Sun Hour 0 is sun-rise, when Day/Night ratio is 1:1</param>
+        /// <param name="FixedSunHour">The hour 0.0 &lt;= FixedSunHour &lt;= 24.0 at which the sun is fixed at. Sun Hour 0 is sun-rise, when Day/Night ratio is 1:1</param>
         public void TriggerEstateToolsSunUpdate(ulong regionHandle, bool FixedTime, bool useEstateTime, float FixedSunHour)
         {
             EstateToolsSunUpdate handlerEstateToolsSunUpdate = OnEstateToolsSunUpdate;

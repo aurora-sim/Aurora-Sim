@@ -2309,7 +2309,7 @@ namespace Aurora.Modules.Permissions
         /// <summary>
         ///   Check whether the specified user can view the given notecard
         /// </summary>
-        /// <param name = "script"></param>
+        /// <param name = "notecard"></param>
         /// <param name = "objectID"></param>
         /// <param name = "user"></param>
         /// <param name = "scene"></param>

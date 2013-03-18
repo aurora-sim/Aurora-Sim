@@ -2190,8 +2190,8 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong CurrentTime, uint SecondsPerSunCycle,
-                               uint SecondsPerYear, float OrbitalPosition)
+        public void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong currentTime, uint secondsPerSunCycle,
+                               uint secondsPerYear, float orbitalPosition)
         {
         }
 

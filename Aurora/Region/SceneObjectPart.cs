@@ -3259,7 +3259,7 @@ namespace Aurora.Region
                             Vector3 offset = result.normal*ScaleOffset;
                             result.ipoint = AXpos + offset;
 
-                            ///pos = (intersectionpoint + offset);
+                            //pos = (intersectionpoint + offset);
                         }
                         else
                         {
@@ -3942,11 +3942,8 @@ namespace Aurora.Region
         /// <summary>
         ///   Duplicates this part.
         /// </summary>
-        /// <param name = "localID"></param>
-        /// <param name = "AgentID"></param>
-        /// <param name = "GroupID"></param>
-        /// <param name = "linkNum"></param>
-        /// <param name = "userExposed">True if the duplicate will immediately be in the scene, false otherwise</param>
+        /// <param name="parent"></param>
+        /// <param name="clonePhys"></param>
         /// <returns></returns>
         public SceneObjectPart Copy(SceneObjectGroup parent, bool clonePhys)
         {
@@ -4973,6 +4970,7 @@ namespace Aurora.Region
         ///   Update the texture entry for this part.
         /// </summary>
         /// <param name = "textureEntry"></param>
+        /// <param name = "sendChangedEvent"></param>
         public void UpdateTextureEntry(byte[] textureEntry, bool sendChangedEvent)
         {
             bool same = true;

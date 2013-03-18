@@ -82,8 +82,8 @@ namespace Aurora.Services
         /// <summary>
         ///   Initialise the service
         /// </summary>
-        /// <param name = "regionHandle"></param>
         /// <param name = "regionID"></param>
+        /// <param name = "registry"></param>
         public void Initialise(UUID regionID, IRegistryCore registry)
         {
             m_RegionID = regionID;

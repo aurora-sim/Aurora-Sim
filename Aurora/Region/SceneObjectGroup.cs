@@ -3643,6 +3643,7 @@ namespace Aurora.Region
         /// </summary>
         /// <param name = "localID"></param>
         /// <param name = "textureEntry"></param>
+        /// <param name = "sendChangedEvent"></param>
         public void UpdateTextureEntry(uint localID, byte[] textureEntry, bool sendChangedEvent)
         {
             SceneObjectPart part = (SceneObjectPart) GetChildPart(localID);

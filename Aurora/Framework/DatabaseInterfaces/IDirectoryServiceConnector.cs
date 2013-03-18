@@ -79,7 +79,6 @@ namespace Aurora.Framework
         /// <param name="start"></param>
         /// <param name="count"></param>
         /// <param name="RegionID"></param>
-        /// <param name="scopeID"></param>
         /// <param name="owner"></param>
         /// <param name="flags"></param>
         /// <param name="category"></param>
@@ -90,7 +89,6 @@ namespace Aurora.Framework
         /// Get the number of parcels in the specified region that match the specified filters.
         /// </summary>
         /// <param name="RegionID"></param>
-        /// <param name="scopeID"></param>
         /// <param name="owner"></param>
         /// <param name="flags"></param>
         /// <param name="category"></param>

@@ -59,6 +59,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "remoteClient"></param>
         /// <param name = "itemID"></param>
+        /// <param name = "assetID"></param>
         /// <returns></returns>
         ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID);
 

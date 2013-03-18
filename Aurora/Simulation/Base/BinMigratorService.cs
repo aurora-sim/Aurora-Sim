@@ -123,7 +123,7 @@ namespace Aurora.Simulation.Base
 
         public void RunMigration6()
         {
-            ///Asset format changed to protobuf, broke existing cached assets
+            // Asset format changed to protobuf, broke existing cached assets
             if (!Directory.Exists("assetcache//")) return;
             foreach (string path in Directory.GetDirectories("assetcache//"))
             {
@@ -133,7 +133,7 @@ namespace Aurora.Simulation.Base
 
         public void RunMigration7()
         {
-            ///Asset type was wrong, need to nuke
+            // Asset type was wrong, need to nuke
             if (!Directory.Exists("assetcache//")) return;
             foreach (string path in Directory.GetDirectories("assetcache//"))
             {

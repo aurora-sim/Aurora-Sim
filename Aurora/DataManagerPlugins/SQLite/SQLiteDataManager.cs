@@ -33,9 +33,9 @@ using System.Linq;
 using System.Reflection;
 using Aurora.DataManager.Migration;
 using Aurora.Framework;
-//using System.Data.Sqlite;
 using Community.CsharpSqlite.SQLiteClient;
 using OpenMetaverse;
+//using System.Data.Sqlite;
 
 namespace Aurora.DataManager.SQLite
 {

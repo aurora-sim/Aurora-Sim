@@ -65,6 +65,7 @@ namespace Aurora.Region.Serialization
         ///   Deserialize a scene object from the original xml format
         /// </summary>
         /// <param name = "serialization"></param>
+        /// <param name = "scene"></param>
         /// <returns></returns>
         public ISceneEntity FromOriginalXmlFormat(string serialization, IRegistryCore scene)
         {
@@ -74,7 +75,9 @@ namespace Aurora.Region.Serialization
         /// <summary>
         ///   Deserialize a scene object from the original xml format
         /// </summary>
-        /// <param name = "serialization"></param>
+        /// <param name = "fromUserInventoryItemID"></param>
+        /// <param name = "xmlData"></param>
+        /// <param name = "scene"></param>
         /// <returns></returns>
         public ISceneEntity FromOriginalXmlFormat(UUID fromUserInventoryItemID, string xmlData,
                                                              IRegistryCore scene)

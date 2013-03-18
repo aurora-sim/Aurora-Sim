@@ -829,11 +829,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name = "items"></param>
         /// <param name = "startParam"></param>
         /// <param name = "postOnRez"></param>
-        /// <param name = "engine"></param>
         /// <param name = "stateSource"></param>
-        /// <param name = "RezzedFrom"></param>
+        /// <param name = "rezzedFrom"></param>
+        /// <param name = "clearStateSaves"></param>
         public void rez_scripts(ISceneChildEntity part, TaskInventoryItem[] items,
-                                int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom, bool clearStateSaves)
+                                int startParam, bool postOnRez, StateSource stateSource, UUID rezzedFrom, bool clearStateSaves)
         {
 #if (!ISWIN)
             List<LUStruct> ItemsToStart = new List<LUStruct>();
@@ -843,7 +843,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (itemToQueue.Action != LUType.Unknown) ItemsToStart.Add(itemToQueue);
             }
 #else
-            List<LUStruct> ItemsToStart = items.Select(item => m_scriptEngine.StartScript(part, item.ItemID, startParam, postOnRez, stateSource, RezzedFrom, clearStateSaves)).Where(itemToQueue => itemToQueue.Action != LUType.Unknown).ToList();
+            List<LUStruct> ItemsToStart = items.Select(item => m_scriptEngine.StartScript(part, item.ItemID, startParam, postOnRez, stateSource, rezzedFrom, clearStateSaves)).Where(itemToQueue => itemToQueue.Action != LUType.Unknown).ToList();
 #endif
             if (ItemsToStart.Count != 0)
                 m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToStart.ToArray(), LoadPriority.FirstStart);

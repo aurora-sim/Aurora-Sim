@@ -2107,6 +2107,7 @@ namespace Aurora.Region
         /// Add the Entity to the Scene and back it up, but do NOT reset its ID's
         /// </summary>
         /// <param name="entity"></param>
+        /// <param name="force"></param>
         /// <returns></returns>
         public bool RestorePrimToScene(ISceneEntity entity, bool force)
         {

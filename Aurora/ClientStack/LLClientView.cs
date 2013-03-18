@@ -2560,16 +2560,16 @@ namespace Aurora.ClientStack
             OutPacket(sound, ThrottleOutPacketType.Asset);
         }
 
-        public void SendSunPos(Vector3 Position, Vector3 Velocity, ulong CurrentTime, uint SecondsPerSunCycle,
-                               uint SecondsPerYear, float OrbitalPosition)
+        public void SendSunPos(Vector3 Position, Vector3 Velocity, ulong currentTime, uint secondsPerSunCycle,
+                               uint secondsPerYear, float orbitalPosition)
         {
             // Viewers based on the Linden viwer code, do wacky things for oribital positions from Midnight to Sunrise
             // So adjust for that
             // Contributed by: Godfrey
 
-            if (OrbitalPosition > m_sunPainDaHalfOrbitalCutoff) // things get weird from midnight to sunrise
+            if (orbitalPosition > m_sunPainDaHalfOrbitalCutoff) // things get weird from midnight to sunrise
             {
-                OrbitalPosition = (OrbitalPosition - m_sunPainDaHalfOrbitalCutoff)*0.6666666667f +
+                orbitalPosition = (orbitalPosition - m_sunPainDaHalfOrbitalCutoff)*0.6666666667f +
                                   m_sunPainDaHalfOrbitalCutoff;
             }
 
@@ -2581,11 +2581,11 @@ namespace Aurora.ClientStack
             // Sun module used to add 6 hours to adjust for linden sun hour, adding here
             // to prevent existing code from breaking if it assumed that 6 hours were included.
             // 21600 == 6 hours * 60 minutes * 60 Seconds
-            viewertime.TimeInfo.UsecSinceStart = CurrentTime + 21600;
+            viewertime.TimeInfo.UsecSinceStart = currentTime + 21600;
 
-            viewertime.TimeInfo.SecPerDay = SecondsPerSunCycle;
-            viewertime.TimeInfo.SecPerYear = SecondsPerYear;
-            viewertime.TimeInfo.SunPhase = OrbitalPosition;
+            viewertime.TimeInfo.SecPerDay = secondsPerSunCycle;
+            viewertime.TimeInfo.SecPerYear = secondsPerYear;
+            viewertime.TimeInfo.SunPhase = orbitalPosition;
             viewertime.Header.Reliable = false;
             viewertime.Header.Zerocoded = true;
             OutPacket(viewertime, ThrottleOutPacketType.AvatarInfo);

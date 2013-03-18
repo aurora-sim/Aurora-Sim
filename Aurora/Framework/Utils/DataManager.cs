@@ -80,22 +80,21 @@ namespace Aurora.DataManager
         /// <summary>
         ///   Register a new plugin to the registry
         /// </summary>
-        /// <param name = "Name"></param>
-        /// <param name = "Plugin"></param>
-        public static void RegisterPlugin(IAuroraDataPlugin Plugin)
+        /// <param name = "plugin"></param>
+        public static void RegisterPlugin(IAuroraDataPlugin plugin)
         {
-            RegisterPlugin(Plugin.Name, Plugin);
+            RegisterPlugin(plugin.Name, plugin);
         }
         
         /// <summary>
         ///   Register a new plugin to the registry
         /// </summary>
-        /// <param name = "Name"></param>
-        /// <param name = "Plugin"></param>
-        public static void RegisterPlugin(string Name, IAuroraDataPlugin Plugin)
+        /// <param name = "name"></param>
+        /// <param name = "plugin"></param>
+        public static void RegisterPlugin(string name, IAuroraDataPlugin plugin)
         {
-            if (!Plugins.ContainsKey(Name))
-                Plugins.Add(Name, Plugin);
+            if (!Plugins.ContainsKey(name))
+                Plugins.Add(name, plugin);
         }
     }
 }

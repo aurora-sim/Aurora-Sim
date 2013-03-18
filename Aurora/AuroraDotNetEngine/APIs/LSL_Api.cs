@@ -5929,7 +5929,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// The supplied string is scanned for commas
         /// and converted into a list. Commas are only
         /// effective if they are encountered outside
-        /// of '<' '>' delimiters. Any whitespace
+        /// of &apos;&lt;&apos; &apos;&gt;&apos; delimiters. Any whitespace
         /// before or after an element is trimmed.
         /// </summary>
 
@@ -6165,9 +6165,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         /// <summary>
-        /// Insert the list identified by <src> into the
-        /// list designated by <dest> such that the first
-        /// new element has the index specified by <index>
+        /// Insert the list identified by &lt;src&gt; into the
+        /// list designated by &lt;dest&gt; such that the first
+        /// new element has the index specified by &lt;index&gt;
         /// </summary>
 
         public LSL_List llListInsertList(LSL_List dest, LSL_List src, int index)
