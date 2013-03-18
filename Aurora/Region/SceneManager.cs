@@ -641,7 +641,9 @@ namespace Aurora.Region
 
                 case "restart-instance":
                     //This kills the instance and restarts it
-                    MainConsole.Instance.EndConsoleProcessing();
+                    IRestartModule restartModule = m_scene.RequestModuleInterface<IRestartModule>();
+                    if (restartModule != null)
+                        restartModule.RestartScene();
                     break;
             }
         }
