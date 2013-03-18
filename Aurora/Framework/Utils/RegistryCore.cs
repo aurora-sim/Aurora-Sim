@@ -51,10 +51,10 @@ namespace Aurora.Framework
             //            MainConsole.Instance.DebugFormat("[SCENE BASE]: Registering interface {0}", typeof(M));
 
             List<Object> l = null;
-            if (!ModuleInterfaces.TryGetValue(typeof (T), out l))
+            if (!ModuleInterfaces.TryGetValue(typeof(T), out l))
             {
                 l = new List<Object>();
-                ModuleInterfaces.Add(typeof (T), l);
+                ModuleInterfaces.Add(typeof(T), l);
             }
 
             if (l.Count > 0)

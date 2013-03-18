@@ -51,6 +51,10 @@ namespace Simple.Currency
             }
         }
 
+        public SimpleCurrencyConfig()
+        {
+        }
+
         public SimpleCurrencyConfig(OSDMap values)
         {
             FromOSD(values);

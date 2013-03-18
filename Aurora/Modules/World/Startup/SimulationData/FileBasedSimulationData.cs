@@ -47,7 +47,6 @@ namespace Aurora.Modules
         protected Timer m_backupSaveTimer;
 
         protected string m_fileName = "";
-        protected bool m_loaded = false;
         protected bool m_keepOldSave = true;
         protected string m_oldSaveDirectory = "Backups";
         protected bool m_oldSaveHasBeenSaved;
@@ -284,12 +283,8 @@ namespace Aurora.Modules
 
         public virtual void SetRegion(IScene scene)
         {
-            if (!m_loaded)
-            {
-                m_loaded = true;
-                scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
-                m_scene = scene;
-            }
+            scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
+            m_scene = scene;
         }
 
         public virtual List<ISceneEntity> LoadObjects()
