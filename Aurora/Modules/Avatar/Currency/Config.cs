@@ -1,11 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using Aurora.Framework;
+﻿using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Simple.Currency
 {
@@ -28,7 +27,6 @@ namespace Simple.Currency
 
         #endregion
         #region functions
-        public SimpleCurrencyConfig() { }
         public SimpleCurrencyConfig(IConfig economyConfig)
         {
             foreach (PropertyInfo propertyInfo in GetType().GetProperties())
@@ -46,7 +44,7 @@ namespace Simple.Currency
                     else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (UUID)))
                         propertyInfo.SetValue (this, new UUID (economyConfig.GetString (propertyInfo.Name, propertyInfo.GetValue (this, new object[0]).ToString ())), new object[0]);
                 }
-                catch(Exception ex)
+                catch(Exception)
                 {
                     MainConsole.Instance.Warn ("[SimpleCurrency]: Exception reading economy config: " + propertyInfo.Name);
                 }
@@ -208,9 +206,7 @@ namespace Simple.Currency
 
         public UserCurrency() { }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary></summary>
         /// <param name="osdMap"></param>
         public override sealed void FromOSD(OSDMap osdMap)
         {
@@ -232,9 +228,7 @@ namespace Simple.Currency
                    uint.TryParse(queryResults[5], out StipendsBalance);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary></summary>
         /// <returns></returns>
         public override OSDMap ToOSD()
         {

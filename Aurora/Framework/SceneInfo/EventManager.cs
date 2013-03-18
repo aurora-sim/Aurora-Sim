@@ -641,7 +641,7 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom, bool clearStateSaves)
+        public void TriggerRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID rezzedFrom, bool clearStateSaves)
         {
             NewRezScripts handlerRezScripts = OnRezScripts;
             if (handlerRezScripts != null)
@@ -650,7 +650,7 @@ namespace Aurora.Framework
                 {
                     try
                     {
-                        d(part, taskInventoryItem, startParam, postOnRez, stateSource, RezzedFrom, clearStateSaves);
+                        d(part, taskInventoryItem, startParam, postOnRez, stateSource, rezzedFrom, clearStateSaves);
                     }
                     catch (Exception e)
                     {
@@ -845,7 +845,7 @@ namespace Aurora.Framework
             }
         }
 
-        public string TriggerChatSessionRequest(UUID AgentID, OSDMap request)
+        public string TriggerChatSessionRequest(UUID agentID, OSDMap request)
         {
             ChatSessionRequest handlerChatSessionRequest = OnChatSessionRequest;
             if (handlerChatSessionRequest != null)
@@ -854,7 +854,7 @@ namespace Aurora.Framework
                 {
                     try
                     {
-                        string resp = d(AgentID, request);
+                        string resp = d(agentID, request);
                         if (resp != "")
                             return resp;
                     }
@@ -1346,10 +1346,10 @@ namespace Aurora.Framework
         /// Updates the system as to how the position of the sun should be handled.
         /// </summary>
         /// <param name="regionHandle"></param>
-        /// <param name="FixedTime">True if the Sun Position is fixed</param>
+        /// <param name="fixedTime">True if the Sun Position is fixed</param>
         /// <param name="useEstateTime">True if the Estate Settings should be used instead of region</param>
-        /// <param name="FixedSunHour">The hour 0.0 &lt;= FixedSunHour &lt;= 24.0 at which the sun is fixed at. Sun Hour 0 is sun-rise, when Day/Night ratio is 1:1</param>
-        public void TriggerEstateToolsSunUpdate(ulong regionHandle, bool FixedTime, bool useEstateTime, float FixedSunHour)
+        /// <param name="fixedSunHour">The hour 0.0 &lt;= FixedSunHour &lt;= 24.0 at which the sun is fixed at. Sun Hour 0 is sun-rise, when Day/Night ratio is 1:1</param>
+        public void TriggerEstateToolsSunUpdate(ulong regionHandle, bool fixedTime, bool useEstateTime, float fixedSunHour)
         {
             EstateToolsSunUpdate handlerEstateToolsSunUpdate = OnEstateToolsSunUpdate;
             if (handlerEstateToolsSunUpdate != null)
@@ -1358,7 +1358,7 @@ namespace Aurora.Framework
                 {
                     try
                     {
-                        d(regionHandle, FixedTime, useEstateTime, FixedSunHour);
+                        d(regionHandle, fixedTime, useEstateTime, fixedSunHour);
                     }
                     catch (Exception e)
                     {
@@ -1681,7 +1681,7 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerOnUserCachedData(UUID agentID, Aurora.Framework.CachedUserInfo cache)
+        public void TriggerOnUserCachedData(UUID agentID, Framework.CachedUserInfo cache)
         {
             CachedUserInfo handlerOnCachedUserInfo = OnCachedUserInfo;
             if (handlerOnCachedUserInfo != null)

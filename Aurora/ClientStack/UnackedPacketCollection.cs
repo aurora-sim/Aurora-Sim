@@ -127,8 +127,6 @@ namespace Aurora.ClientStack
             ProcessQueues();
 
             List<OutgoingPacket> expiredPackets = null;
-            //Note:This is never used
-            int expiredPacketsBytes = 0;
 
             if (m_packets.Count > 0)
             {
@@ -149,7 +147,6 @@ namespace Aurora.ClientStack
                             packet.TickCount = 0;
 
                             expiredPackets.Add(packet);
-                            expiredPacketsBytes += packet.Buffer.DataLength;
                             if (i++ > 50) // limit number of packets loop
                                 break;
                         }
@@ -166,7 +163,6 @@ namespace Aurora.ClientStack
                     packet.TickCount = 0;
 
                     expiredPackets.Add(packet);
-                    expiredPacketsBytes += packet.Buffer.DataLength;
                     if (i++ > 50) // limit number of packets loop
                         break;
                 }

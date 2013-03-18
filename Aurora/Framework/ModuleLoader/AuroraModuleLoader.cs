@@ -673,7 +673,7 @@ namespace Aurora.Framework
             {
                 Assembly pluginAssembly = Assembly.Load(AssemblyName.GetAssemblyName(dllName));
 
-                foreach (Type pluginType in pluginAssembly.GetTypes().Where((p) => p.IsPublic && 
+                foreach (Type pluginType in pluginAssembly.GetTypes().Where(p => p.IsPublic && 
                     !(className != String.Empty && p.ToString() != p.Namespace + "." + className)))
                 {
                     Type typeInterface = pluginType.GetInterface(interfaceName, true);
