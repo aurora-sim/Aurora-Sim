@@ -84,7 +84,7 @@
     ;;  AssetService - basic SQL service, slower, but works
     ;;  RedisAssetService - Redis database, fast, but memory hog
     ;;  FileBasedAssetService - Uses the file system to store assets, recommended choice
-    AssetHandler = FileBasedAssetService
+    AssetHandler = AssetService
     AssetHandlerUseCache = false
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
