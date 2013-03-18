@@ -780,18 +780,17 @@ namespace Aurora.Modules.Estate
                         ent.CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero, false);
                     }
                 }
-                m_scene.RegionInfo.RegionSettings.DisableScripts = !ScriptEngine;
+                m_scene.RegionInfo.RegionSettings.DisableScripts = ScriptEngine;
             }
 
             if (m_scene.RegionInfo.RegionSettings.DisablePhysics == !PhysicsEngine)
             {
-                m_scene.RegionInfo.RegionSettings.DisablePhysics = !PhysicsEngine;
+                m_scene.RegionInfo.RegionSettings.DisablePhysics = PhysicsEngine;
             }
 
             if (m_scene.RegionInfo.RegionSettings.DisableCollisions == !CollisionEvents)
             {
-                m_scene.RegionInfo.RegionSettings.DisableCollisions = !CollisionEvents;
-                m_scene.PhysicsScene.DisableCollisions = m_scene.RegionInfo.RegionSettings.DisableCollisions;
+                m_scene.PhysicsScene.DisableCollisions = m_scene.RegionInfo.RegionSettings.DisableCollisions = CollisionEvents;
             }
         }
 

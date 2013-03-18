@@ -1343,22 +1343,11 @@ namespace Aurora.Services.SQLServices.InventoryService
             if (rootFolders.Count != 1)
             {
                 //No duplicate folders!
-#if (!ISWIN)
-                foreach (InventoryFolderBase f in rootFolders)
-                {
-                    if (!badFolders.Contains(f.ID) && f.ID != rootFolder.ID)
-                    {
-                        MainConsole.Instance.Warn("Removing duplicate root folder " + f.Name);
-                        badFolders.Add(f.ID);
-                    }
-                }
-#else
                 foreach (InventoryFolderBase f in rootFolders.Where(f => !badFolders.Contains(f.ID) && f.ID != rootFolder.ID))
                 {
                     MainConsole.Instance.Warn("Removing duplicate root folder " + f.Name);
                     badFolders.Add(f.ID);
                 }
-#endif
             }
             //Fix any root folders that shouldn't be root folders
             List<InventoryFolderBase> skeleton = GetInventorySkeleton(account.PrincipalID);
@@ -1434,18 +1423,6 @@ namespace Aurora.Services.SQLServices.InventoryService
             skeleton = GetInventorySkeleton(account.PrincipalID);
             Dictionary<int, UUID> defaultFolders = new Dictionary<int, UUID>();
             Dictionary<UUID, UUID> changedFolders = new Dictionary<UUID, UUID>();
-#if (!ISWIN)
-            foreach (InventoryFolderBase folder in skeleton)
-            {
-                if (folder.Type != -1)
-                {
-                    if (!defaultFolders.ContainsKey(folder.Type))
-                        defaultFolders[folder.Type] = folder.ID;
-                    else
-                        changedFolders.Add(folder.ID, defaultFolders[folder.Type]);
-                }
-            }
-#else
             foreach (InventoryFolderBase folder in skeleton.Where(folder => folder.Type != -1))
             {
                 if (!defaultFolders.ContainsKey(folder.Type))
@@ -1453,7 +1430,6 @@ namespace Aurora.Services.SQLServices.InventoryService
                 else
                     changedFolders.Add(folder.ID, defaultFolders[folder.Type]);
             }
-#endif
             foreach (InventoryFolderBase folder in skeleton)
             {
                 if (folder.Type != -1 && defaultFolders[folder.Type] != folder.ID)

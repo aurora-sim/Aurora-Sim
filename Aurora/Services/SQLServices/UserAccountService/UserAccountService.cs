@@ -68,34 +68,37 @@ namespace Aurora.Services.SQLServices.UserAccountService
         {
             if (MainConsole.Instance != null)
             {
-                MainConsole.Instance.Commands.AddCommand(
-                    "create user",
-                    "create user [<first> [<last> [<pass> [<email>]]]]",
-                    "Create a new user", HandleCreateUser);
-                MainConsole.Instance.Commands.AddCommand("reset user password",
-                                                         "reset user password [<first> [<last> [<password>]]]",
-                                                         "Reset a user password", HandleResetUserPassword);
-                MainConsole.Instance.Commands.AddCommand(
-                    "show account",
-                    "show account <first> <last>",
-                    "Show account details for the given user", HandleShowAccount);
-                MainConsole.Instance.Commands.AddCommand(
-                    "set user level",
-                    "set user level [<first> [<last> [<level>]]]",
-                    "Set user level. If the user's level is > 0, "
-                    + "this account will be treated as god-moded. "
-                    + "It will also affect the 'login level' command. ",
-                    HandleSetUserLevel);
-                MainConsole.Instance.Commands.AddCommand(
-                    "set user profile title",
-                    "set user profile title [<first> [<last> [<Title>]]]",
-                    "Sets the title (Normally resident) in a user's title to some custom value.",
-                    HandleSetTitle);
-                MainConsole.Instance.Commands.AddCommand(
-                    "set partner",
-                    "set partner",
-                    "Sets the partner in a user's profile.",
-                    HandleSetPartner);
+                if (!m_doRemoteCalls)
+                {
+                    MainConsole.Instance.Commands.AddCommand(
+                        "create user",
+                        "create user [<first> [<last> [<pass> [<email>]]]]",
+                        "Create a new user", HandleCreateUser);
+                    MainConsole.Instance.Commands.AddCommand("reset user password",
+                                                             "reset user password [<first> [<last> [<password>]]]",
+                                                             "Reset a user password", HandleResetUserPassword);
+                    MainConsole.Instance.Commands.AddCommand(
+                        "show account",
+                        "show account <first> <last>",
+                        "Show account details for the given user", HandleShowAccount);
+                    MainConsole.Instance.Commands.AddCommand(
+                        "set user level",
+                        "set user level [<first> [<last> [<level>]]]",
+                        "Set user level. If the user's level is > 0, "
+                        + "this account will be treated as god-moded. "
+                        + "It will also affect the 'login level' command. ",
+                        HandleSetUserLevel);
+                    MainConsole.Instance.Commands.AddCommand(
+                        "set user profile title",
+                        "set user profile title [<first> [<last> [<Title>]]]",
+                        "Sets the title (Normally resident) in a user's title to some custom value.",
+                        HandleSetTitle);
+                    MainConsole.Instance.Commands.AddCommand(
+                        "set partner",
+                        "set partner",
+                        "Sets the partner in a user's profile.",
+                        HandleSetPartner);
+                }
             }
             registry.RegisterModuleInterface<IUserAccountService>(this);
         }
@@ -364,13 +367,8 @@ namespace Aurora.Services.SQLServices.UserAccountService
             }
         }
 
-        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
         {
-            /*object remoteValue = DoRemoteByURL("UserAccountServerURI", userID, password, archiveInformation, wipeFromDatabase);
-            if (remoteValue != null || m_doRemoteOnly)
-                return;*/
-
             if (password != "" && m_AuthenticationService.Authenticate(userID, "UserAccount", password, 0) == "")
                 return;//Not authed
 

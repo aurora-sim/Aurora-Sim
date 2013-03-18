@@ -158,16 +158,6 @@ namespace Aurora.Modules.Restart
         /// </summary>
         public void RestartScene()
         {
-            IConfig startupConfig = m_scene.Config.Configs["Startup"];
-            if (startupConfig != null)
-            {
-                if (startupConfig.GetBoolean("InworldRestartShutsDown", false))
-                {
-                    //This will kill it asyncly
-                    MainConsole.Instance.EndConsoleProcessing();
-                    return;
-                }
-            }
             MainConsole.Instance.Error("[Scene]: Restaring Now");
             m_scene.RequestModuleInterface<ISceneManager>().RestartRegion();
         }

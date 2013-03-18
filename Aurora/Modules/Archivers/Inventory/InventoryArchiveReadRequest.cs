@@ -72,6 +72,12 @@ namespace Aurora.Modules.Archivers
 
         private UUID m_overridecreator = UUID.Zero;
 
+        static InventoryArchiveReadRequest()
+        {
+            if (Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer == null)
+                Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer = new Aurora.Region.Serialization.SceneObjectSerializer();
+        }
+
         public bool ReplaceAssets { get; set; }
 
         public InventoryArchiveReadRequest(
@@ -189,7 +195,7 @@ namespace Aurora.Modules.Archivers
                     if ((successfulItemLoaded) % 50 == 0)
                         MainConsole.Instance.InfoFormat(
                             "[INVENTORY ARCHIVER]: Loaded {0} items of {1}...",
-                            successfulItemRestores, itemsSavedOff.Count);
+                            successfulItemLoaded, itemsSavedOff.Count);
                 }
                 itemsSavedOff.Clear();
                 assets2Save.Clear();

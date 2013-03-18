@@ -1,11 +1,10 @@
-[Handlers]
-    AgentInfoHandler = AgentInfoService
-    AssetHandler = AssetService
-    AuthenticationHandler = PasswordAuthenticationService
-    AvatarHandler = AvatarService
-    GridHandler = GridService
-    InventoryHandler = InventoryService
-    UserAccountHandler = UserAccountService
+[Network]
+	;; HTTPS configs (See HTTPS.txt in AuroraDocs/)
+	use_https = false
+
+    ;; Only change this if you are having issues with connecting clients
+    ;; The default is your external IP
+    ;HostName = http://127.0.0.1
 
 [Console]
     ;; Setting for which console log will be used

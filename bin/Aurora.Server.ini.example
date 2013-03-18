@@ -2,19 +2,8 @@
     ;; Advanced configs
     http_listener_port = 8003
 	
-    ;; HTTPS configs
-    use_https = false
-    ;; Path to your HTTPS certificate
-    https_cert_path = ""
-    ;; Password to your HTTPS cert
-    https_cert_pass = ""
-    ;; The protocols that will be able to be used
-    ;; The valid values are
-    ;; Default - Specifies that either SSL 3.0 or TLS 1.0 are acceptable for secure communications
-    ;; Tls - Specifies that the TLS 1.0 security protocol is the only acceptable secure communications protocol
-    ;; Ssl3 - Specifies that the SSL 3.0 security protocol is the only acceptable secure communications protocol
-    ;; Ssl2 - Specifies that the SSL 2.0 security protocol is the only acceptable secure communications protocol
-    https_ssl_protocol = "Default"
+	;; HTTPS configs (See HTTPS.txt in AuroraDocs/)
+	use_https = false
 
     ;; Only change this if you are having issues with connecting clients
     ;; The default is your external IP

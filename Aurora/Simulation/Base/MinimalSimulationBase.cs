@@ -233,32 +233,26 @@ namespace Aurora.Simulation.Base
         /// <returns></returns>
         public IHttpServer GetHttpServer(uint port)
         {
-            return GetHttpServer(port, false, "", "", SslProtocols.None);
-        }
-
-        public IHttpServer GetHttpServer (uint port, bool secure, string certPath, string certPass, SslProtocols sslProtocol)
-        {
             if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
 
+            bool useHTTPS = m_config.Configs["Network"].GetBoolean("use_https", false);
             IHttpServer server;
-            if(m_Servers.TryGetValue(port, out server) && server.Secure == secure)
+            if (m_Servers.TryGetValue(port, out server) && server.Secure == useHTTPS)
                 return server;
 
             string hostName =
-                m_config.Configs["Network"].GetString("HostName", "http" + (secure ? "s" : "") + "://" + Utilities.GetExternalIp());
+                m_config.Configs["Network"].GetString("HostName", "http" + (useHTTPS ? "s" : "") + "://" + Utilities.GetExternalIp());
             //Clean it up a bit
             if (hostName.StartsWith("http://") || hostName.StartsWith("https://"))
                 hostName = hostName.Replace("https://", "").Replace("http://", "");
             if (hostName.EndsWith ("/"))
                 hostName = hostName.Remove (hostName.Length - 1, 1);
 
-            server = new BaseHttpServer(port, hostName, secure);
+            server = new BaseHttpServer(port, hostName, useHTTPS);
 
             try
             {
-                if(secure)//Set these params now
-                    server.SetSecureParams(certPath, certPass, sslProtocol);
                 server.Start();
             }
             catch(Exception)

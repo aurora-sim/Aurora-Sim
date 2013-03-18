@@ -1,0 +1,22 @@
+HTTPS in Aurora is pretty... unused, but that's not to say it can't be done (at least with Windows, I don't know whether mono supports HTTPS in it's implementation of HttpListener)!
+
+Basically, you need to go into Aurora.Server.ini, and in the [Network] section, set 
+  use_https = true
+  and from a config standpoint, that's pretty much all you need to do.
+  Then you need to basically follow the first answer of this URL, which is repeated below. http://stackoverflow.com/questions/11403333/httplistener-with-https-support
+  Good Luck!
+  
+  Now for the certificate side of things, using Win SDK command console (can also use VS Professional command console) 
+	a) use makecert.exe to create a certificate authority. Example:
+		makecert -n "CN=vMargeCA" -r -sv vMargeCA.pvk vMargeCA.cer
+	b) use makecert.exe to create an ssl certificate
+		makecert -sk vMargeSignedByCA -iv vMargeCA.pvk -n "CN=vMargeSignedByCA" -ic   
+		  vMargeCA.cer vMargeSignedByCA.cer -sr localmachine -ss My
+	c) use MMC gui to install CA in Trusted Authority store d) use MMC gui to install ssl cert in Personal store e) bind certificate to ip:port and application. Example:
+		netsh http add sslcert ipport=0.0.0.0:8443        
+          certhash=585947f104b5bce53239f02d1c6fed06832f47dc     
+          appid={df8c8073-5a4b-4810-b469-5975a9c95230}
+  The certhash is the thumbprint from your ssl certificate. you can find this using mmc
+  The appid is found in VS...usually in assembly.cs, look for guid value
+  
+  There may be other ways to accomplish the above, but this worked for me.

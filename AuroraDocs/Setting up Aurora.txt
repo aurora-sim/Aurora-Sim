@@ -1,0 +1,118 @@
+##
+## Setting up Aurora-Sim
+##
+  The first thing is to figure out which mode of Aurora-Sim you wish to run.
+  If you want to run one sim and disallow remote sim connections, you want to run standalone,
+      and should jump to the standalone section of this file.
+  If you want to run more than one sim and allow remote sim connections, you want to run grid
+      mode, and should jump to the grid section of this file.
+	  
+	  
+##
+## Standalone Mode
+##
+  To run Aurora-Sim in standalone mode, just run Aurora.exe, and enter yes to allow it to 
+      configure itself with the inputs from you.
+	  
+##
+## Grid Mode
+##
+  To run Aurora-Sim in grid mode, first run Aurora.Server.exe, and enter yes to allow it to
+      configure itself with the inputs from you. This sets up the server that deals with 
+	  viewer connections (mainly logins).
+  Next, you'll want to run the following secondary servers,
+      Aurora.AssetServer.exe
+	  Aurora.AvatarServer.exe
+	  Aurora.GridServer.exe
+	  Aurora.InventoryServer.exe
+	  Aurora.UserServer.exe
+  These do what the names suggest they do, and help balance the load of the regions on your grid.
+  Next, you'll start Aurora.exe, and enter yes to allow it to configure itself (make sure to set it
+      up in grid mode!) with the inputs from you. 
+  Your grid is now fully configured, and to restart it, just start the same .exe files as above (without
+      re-configuring the grid) in the same order.
+	  
+##
+## ADVANCED OPTIONS BELOW
+##
+
+##
+## Running all servers just in Aurora.Server.exe (like Aurora was before, or Robust)
+##
+
+  To combine all of the Aurora.*Server.exe back into Aurora.Server.exe, open
+    AuroraServerConfiguration/Services.ini
+    and look for [Handlers] and go to the bottom of that config.
+	You'll see an area that is commented out that says that it is the area to
+	set up Aurora.Server to run all of the services. Uncomment all of the lines there
+	starting with 
+	AssetServiceOpenServerHandler
+	Now you only have to run Aurora.Server.exe.
+	
+##
+## Setting up standalone to allow remote connections
+##
+  To allow standalone Aurora.exe to allow remote connections (like grid mode can),
+    you'll be doing some major config changes! 
+    If you're doing this, you had better have a good reason to!
+	YOU WILL NOT GET ANY ASSISTANCE IF YOU ARE TRYING TO DO THIS.
+  In essence, what you have to do is to enable the server handlers for Aurora.exe
+	which is possible, it's just not very pretty.
+	To do this, you'll have to open up Standalone.ini, and find the [Handlers]
+	section, and add in 
+	
+	#START COPYING
+	
+	LLLoginHandlerPort = 8002 ;;If you want to change this to 8002
+
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8014
+	SyncMessagePosterServiceDoRemote = true
+    InstantMessagingServiceOpenServerHandler = true
+    InstantMessagingServiceServerHandlerPort = 8014
+    AssetServiceOpenServerHandler = true
+    AssetServiceServerHandlerPort = 8010
+    AvatarServiceOpenServerHandler = true
+    AvatarServiceServerHandlerPort = 8011
+    GridServiceOpenServerHandler = true
+    GridServiceServerHandlerPort = 8012
+    InventoryServiceOpenServerHandler = true
+    InventoryServiceServerHandlerPort = 8013
+    UserAccountServiceOpenServerHandler = true
+    UserAccountServiceServerHandlerPort = 8015
+	
+	#END COPYING
+	
+	Then in [AuroraConnectors],
+	
+	#START COPYING
+	
+	DoRemoteCalls = False
+    AllowRemoteCalls = True
+	
+	#END COPYING
+	
+  This enables all of the remote listening handlers, so that other Aurora.exe 
+	instances can connect to Aurora.exe as if it were Aurora.Server.exe
+	
+##
+## Running a grid of standalone Aurora.exe services all with one database
+##
+
+This is possible... if you can do it, congratulations, you know the configs 
+  and how they interact with Aurora very well!
+
+##
+## Running a region on Aurora.Server.exe
+##
+
+This too is possible, and if you can do it, congratulations, just like above.
+
+##
+## Tips on speeding up closed grids
+##
+	
+1: Disable remote services for Aurora.exe in grid mode
+    EG. Disabling the remote asset connector, and just have it directly
+	    access the database, so that Aurora.Server isn't as necessary.
+2. I'll think of more things I've done later...

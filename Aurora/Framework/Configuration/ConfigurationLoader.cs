@@ -268,6 +268,7 @@ namespace Aurora.Framework
             }
 
             //
+            sources.Reverse();
             for (int i = 0; i < sources.Count; i++)
             {
                 //Read all non .example files first, then read all the example ones

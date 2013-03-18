@@ -41,7 +41,6 @@ namespace Aurora.Services
         #region Declares
 
         protected IAgentInfoConnector m_agentInfoConnector;
-        protected IGridService m_gridService;
 
         #endregion
 
@@ -70,7 +69,6 @@ namespace Aurora.Services
         public virtual void FinishedStartup()
         {
             m_agentInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
-            m_gridService = m_registry.RequestModuleInterface<IGridService>();
         }
 
         #endregion
@@ -157,21 +155,16 @@ namespace Aurora.Services
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+        public virtual void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt, string regionURI)
         {
             object remoteValue = DoRemote(userID, regionID, lastPosition, lastLookAt);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            string uri = "";
-            Aurora.Framework.GridRegion region = m_gridService.GetRegionByUUID(null, regionID);
-            if (region != null)
-                uri = region.ServerURI;
-
-            m_agentInfoConnector.SetLastPosition(userID, regionID, uri, lastPosition, lastLookAt);
+            m_agentInfoConnector.SetLastPosition(userID, regionID, regionURI, lastPosition, lastLookAt);
         }
 
-        public virtual void SetLoggedIn(string userID, bool loggingIn, UUID enteringRegion)
+        public virtual void SetLoggedIn(string userID, bool loggingIn, UUID enteringRegion, string enteringRegionURI)
         {
             UserInfo userInfo = GetUserInfo(userID, false); //We are changing the status, so don't look
             if (userInfo == null)
@@ -183,7 +176,7 @@ namespace Aurora.Services
                              CurrentLookAt = Vector3.Zero,
                              CurrentPosition = Vector3.Zero,
                              CurrentRegionID = enteringRegion,
-                             CurrentRegionURI = "",
+                             CurrentRegionURI = enteringRegionURI,
                              HomeLookAt = Vector3.Zero,
                              HomePosition = Vector3.Zero,
                              HomeRegionID = UUID.Zero,
@@ -202,11 +195,7 @@ namespace Aurora.Services
                 if (enteringRegion != UUID.Zero)
                 {
                     agentUpdateValues["CurrentRegionID"] = enteringRegion;
-                    string uri = "";
-                    Aurora.Framework.GridRegion region = m_gridService.GetRegionByUUID(null, enteringRegion);
-                    if (region != null)
-                        uri = region.ServerURI;
-                    agentUpdateValues["CurrentRegionURI"] = uri;
+                    agentUpdateValues["CurrentRegionURI"] = enteringRegionURI;
                 }
             }
             else

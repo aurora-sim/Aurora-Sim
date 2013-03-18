@@ -39,6 +39,7 @@ namespace Aurora.Services.SQLServices.AvatarService
         #region Declares
 
         protected IAvatarData m_Database;
+        protected IAssetService m_assetService;
         protected IInventoryService m_invService;
         protected IAvatarAppearanceArchiver m_ArchiveService;
         protected bool m_enableCacheBakedTextures = true;
@@ -83,6 +84,7 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         public void FinishedStartup()
         {
+            m_assetService = m_registry.RequestModuleInterface<IAssetService>();
             m_invService = m_registry.RequestModuleInterface<IInventoryService>();
         }
 
@@ -158,7 +160,6 @@ namespace Aurora.Services.SQLServices.AvatarService
         {
             AvatarAppearance olddata = m_Database.Get(principalID);
 
-            IAssetService service = m_registry.RequestModuleInterface<IAssetService>();
             if (olddata == null || olddata.Texture == null)
                 return;
             for (uint i = 0; i < olddata.Texture.FaceTextures.Length; i++)
@@ -166,9 +167,9 @@ namespace Aurora.Services.SQLServices.AvatarService
                 if ((olddata.Texture.FaceTextures[i] == null) || ((newdata.Texture.FaceTextures[i] != null) &&
                     (olddata.Texture.FaceTextures[i].TextureID == newdata.Texture.FaceTextures[i].TextureID))) continue;
 
-                AssetBase ab = service.Get(olddata.Texture.FaceTextures[i].TextureID.ToString());
+                AssetBase ab = m_assetService.Get(olddata.Texture.FaceTextures[i].TextureID.ToString());
                 if ((ab != null) && (ab.Name == "Baked Texture"))
-                    service.Delete(olddata.Texture.FaceTextures[i].TextureID);
+                    m_assetService.Delete(olddata.Texture.FaceTextures[i].TextureID);
             }
         }
 
@@ -196,9 +197,8 @@ namespace Aurora.Services.SQLServices.AvatarService
             ResetAvatar(acc.PrincipalID);
             InventoryFolderBase folder = m_invService.GetFolderForType(acc.PrincipalID, (InventoryType)0, AssetType.CurrentOutfitFolder);
             if (folder != null)
-            {
                 m_invService.ForcePurgeFolder(folder);
-            }
+
             MainConsole.Instance.Output("Reset avatar's appearance successfully.");
         }
 

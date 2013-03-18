@@ -41,6 +41,8 @@ using Aurora.Modules.Monitoring.Alerts;
 using Aurora.Modules.Monitoring.Monitors;
 using ThreadState = System.Diagnostics.ThreadState;
 using Timer = System.Timers.Timer;
+using Aurora.Framework.Servers.HttpServer;
+using System.IO;
 
 namespace Aurora.Modules.Monitoring
 {
@@ -155,7 +157,7 @@ namespace Aurora.Modules.Monitoring
                 {
                     m_currentScene = scene;
                     //Add the HTTP handler
-                    MainServer.Instance.AddHTTPHandler("/monitorstats/" + scene.RegionInfo.RegionID + "/", StatsPage);
+                    MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET", "/monitorstats/" + scene.RegionInfo.RegionID + "/", StatsPage));
                     //Add all of the region monitors
                     AddRegionMonitors(scene);
 
@@ -340,13 +342,13 @@ namespace Aurora.Modules.Monitoring
             /// </summary>
             /// <param name = "request"></param>
             /// <returns></returns>
-            public Hashtable StatsPage(Hashtable request)
+            public byte[] StatsPage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 // If request was for a specific monitor
                 // eg url/?monitor=Monitor.Name
-                if (request.ContainsKey("monitor"))
+                if (httpRequest.QueryString.Get("monitor") != null)
                 {
-                    string monID = (string) request["monitor"];
+                    string monID = httpRequest.QueryString.Get("monitor");
 
                     foreach (IMonitor monitor in m_monitors.Values)
                     {
@@ -355,24 +357,14 @@ namespace Aurora.Modules.Monitoring
                             elemName = elemName.Substring(monitor.GetType().Namespace.Length + 1);
                         if (elemName == monID || monitor.ToString() == monID)
                         {
-                            Hashtable ereply3 = new Hashtable();
-
-                            ereply3["int_response_code"] = 404; // 200 OK
-                            ereply3["str_response_string"] = monitor.GetValue().ToString();
-                            ereply3["content_type"] = "text/plain";
-
-                            return ereply3;
+                            httpResponse.ContentType = "text/plain";
+                            return Encoding.UTF8.GetBytes(monitor.GetValue().ToString());
                         }
                     }
 
                     // No monitor with that name
-                    Hashtable ereply2 = new Hashtable();
-
-                    ereply2["int_response_code"] = 404; // 200 OK
-                    ereply2["str_response_string"] = "No such monitor";
-                    ereply2["content_type"] = "text/plain";
-
-                    return ereply2;
+                    httpResponse.ContentType = "text/plain";
+                    return Encoding.UTF8.GetBytes("No such monitor");
                 }
 
                 string xml = "<data>";
@@ -386,13 +378,8 @@ namespace Aurora.Modules.Monitoring
                 }
                 xml += "</data>";
 
-                Hashtable ereply = new Hashtable();
-
-                ereply["int_response_code"] = 200; // 200 OK
-                ereply["str_response_string"] = xml;
-                ereply["content_type"] = "text/xml";
-
-                return ereply;
+                httpResponse.ContentType = "text/xml";
+                return Encoding.UTF8.GetBytes(xml);
             }
 
             #endregion

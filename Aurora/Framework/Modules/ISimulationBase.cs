@@ -72,15 +72,6 @@ namespace Aurora.Framework
         IHttpServer GetHttpServer(uint port);
 
         /// <summary>
-        ///   Get an instance of the HTTP server on the given port with the given protocol
-        /// </summary>
-        /// <param name = "port"></param>
-        /// <param name = "httpsSecure">https:// server</param>
-        /// <returns></returns>
-        IHttpServer GetHttpServer(uint port, bool httpsSecure, string certPath, string certPass,
-                                  SslProtocols sslProtocol);
-
-        /// <summary>
         ///   Run any startup commands that may need to be run
         /// </summary>
         void RunStartupCommands();

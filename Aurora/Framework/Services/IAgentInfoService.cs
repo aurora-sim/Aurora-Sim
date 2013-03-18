@@ -168,7 +168,7 @@ namespace Aurora.Framework
         /// <param name = "regionID"></param>
         /// <param name = "lastPosition"></param>
         /// <param name = "lastLookAt"></param>
-        void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt);
+        void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt, string regionURI);
 
         /// <summary>
         ///   Log the agent in or out
@@ -177,7 +177,8 @@ namespace Aurora.Framework
         /// <param name = "loggingIn">Whether the user is logging in or out</param>
         /// <param name = "fireLoggedInEvent">Fire the event to log a user in</param>
         /// <param name = "enteringRegion">The region the user is entering (if logging in)</param>
-        void SetLoggedIn(string userID, bool loggingIn, UUID enteringRegion);
+        /// <param name = "enteringRegion">The regionURI the user is entering (if logging in)</param>
+        void SetLoggedIn(string userID, bool loggingIn, UUID enteringRegion, string enteringRegionURI);
 
         /// <summary>
         /// Fire the status changed event for this user

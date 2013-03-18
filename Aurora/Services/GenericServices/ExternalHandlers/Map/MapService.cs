@@ -71,7 +71,7 @@ namespace Aurora.Services
                 CreateCacheDirectories ();
 
             m_server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_server.AddHTTPHandler("/MapService/", MapRequest);
+            m_server.AddHTTPHandler(new GenericStreamHandler("GET", "/MapService/", MapRequest));
             m_server.AddHTTPHandler(new GenericStreamHandler("GET", "/MapAPI/", MapAPIRequest));
 
             registry.RegisterModuleInterface<IMapService>(this);
@@ -158,12 +158,10 @@ namespace Aurora.Services
             return response;
         }
 
-        public Hashtable MapRequest (Hashtable request)
+        public byte[] MapRequest(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            Hashtable reply = new Hashtable ();
-            string uri = request["uri"].ToString ();
             //Remove the /MapService/
-            uri = uri.Remove (0, 12);
+            string uri = httpRequest.RawUrl.Remove(0, 12);
             if (!uri.StartsWith("map"))
             {
                 if (uri == "")
@@ -185,10 +183,8 @@ namespace Aurora.Services
                             "<LastModified>2012-07-09T21:26:32.000Z</LastModified></Contents>";
                     }
                     resp += "</ListBucketResult>";
-                    reply["str_response_string"] = resp;
-                    reply["int_response_code"] = 200;
-                    reply["content_type"] = "application/xml";
-                    return reply;
+                    httpResponse.ContentType = "application/xml";
+                    return System.Text.Encoding.UTF8.GetBytes(resp);
                 }
                 return null;
             }
@@ -196,11 +192,8 @@ namespace Aurora.Services
             byte[] jpeg = FindCachedImage(uri);
             if (jpeg.Length != 0)
             {
-                reply["str_response_string"] = Convert.ToBase64String (jpeg);
-                reply["int_response_code"] = 200;
-                reply["content_type"] = "image/jpeg";
-
-                return reply;
+                httpResponse.ContentType = "image/jpeg";
+                return jpeg;
             }
             try
             {
@@ -313,11 +306,8 @@ namespace Aurora.Services
                     }
                 }
             }
-            reply["str_response_string"] = Convert.ToBase64String (jpeg);
-            reply["int_response_code"] = 200;
-            reply["content_type"] = "image/jpeg";
-
-            return reply;
+            httpResponse.ContentType = "image/jpeg";
+            return jpeg;
         }
 
         // From msdn
