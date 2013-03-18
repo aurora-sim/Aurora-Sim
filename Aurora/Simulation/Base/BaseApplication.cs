@@ -100,27 +100,6 @@ namespace Aurora.Simulation.Base
                 ThreadPool.SetMaxThreads(workerThreads, iocpThreads);
             }
 
-            // Check if the system is compatible with OpenSimulator.
-            // Ensures that the minimum system requirements are met
-            //MainConsole.Instance.Info("[Setup]: Performing compatibility checks... \n");
-            string supported = String.Empty;
-            if (Util.IsEnvironmentSupported(ref supported))
-            {
-                int minWorker, minIOC;
-                // Get the current settings.
-                ThreadPool.GetMinThreads(out minWorker, out minIOC);
-
-                //MainConsole.Instance.InfoFormat("[Setup]: Environment is compatible. Thread Workers: {0}, IO Workers {1}\n", minWorker, minIOC);
-            }
-            else
-            {
-                MainConsole.Instance.Warn("[Setup]: Environment is unsupported (" + supported + ")\n");
-#if BlockUnsupportedVersions
-                    Thread.Sleep(10000); //Sleep 10 seconds
-                    return;
-#endif
-            }
-
             BinMigratorService service = new BinMigratorService();
             service.MigrateBin();
             // Configure nIni aliases and localles
@@ -152,19 +131,8 @@ namespace Aurora.Simulation.Base
             // load Crash directory config
             m_crashDir = m_configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
 
-            // check auto restart
-            bool AutoRestart = m_configSource.Configs["Startup"].GetBoolean("AutoRestartOnCrash", true);
-
-            bool Running = true;
-            //If auto restart is set, then we always run.
-            // otherwise, just run the first time that Running == true
-            while (AutoRestart || Running)
-            {
-                //Always run once, then disable this
-                Running = false;
-                //Initialize the sim base now
-                Startup(configSource, m_configSource, simBase.Copy(), args);
-            }
+            //Initialize the sim base now
+            Startup(configSource, m_configSource, simBase.Copy(), args);
         }
 
         public static void Configure(bool requested)

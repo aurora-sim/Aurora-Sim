@@ -59,8 +59,6 @@ namespace Aurora.Region
 
         protected RegionInfo m_regInfo;
         protected List<IClientNetworkServer> m_clientServers;
-
-        protected ThreadMonitor monitor = new ThreadMonitor();
             
         protected AuroraEventManager m_AuroraEventManager = null;
         protected EventManager m_eventManager;
@@ -373,8 +371,6 @@ namespace Aurora.Region
                 }
             }
             m_ShouldRunHeartbeat = false; //Stop the heartbeat
-            //Now close the tracker
-            monitor.Stop();
 
             if (m_sceneGraph.PhysicsScene != null)
                 m_sceneGraph.PhysicsScene.Dispose ();
@@ -406,11 +402,7 @@ namespace Aurora.Region
                 clientServer.Start ();
             }
 
-            //Give it the heartbeat delegate with an infinite timeout
-            monitor.StartTrackingThread(0, Update);
-            //Then start the thread for it with an infinite loop time and no 
-            //  sleep overall as the Update delete does it on it's own
-            monitor.StartMonitor(0, 0);
+            Heartbeat();
         }
 
         #endregion
@@ -418,7 +410,7 @@ namespace Aurora.Region
         #region Scene Heartbeat Methods
 
         private bool m_lastPhysicsChange = false;
-        private bool Update()
+        private bool Heartbeat()
         {
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
             ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule> ().GetMonitor (RegionInfo.RegionID.ToString (), MonitorModuleHelper.TotalFrameTime);

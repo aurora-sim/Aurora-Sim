@@ -154,7 +154,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Started) //Break early
                 return;
 
-            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || !m_ScriptEngine.Scene.ShouldRunHeartbeat)
                 return;
 
             ScriptChangeIsRunning = true;
@@ -256,7 +256,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Started) //Break early
                 return;
 
-            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || !m_ScriptEngine.Scene.ShouldRunHeartbeat)
                 return;
 
             //Check timers, etc
@@ -501,7 +501,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void eventLoop()
         {
             int numberOfEmptyWork = 0;
-            while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)
+            while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled && m_ScriptEngine.Scene.ShouldRunHeartbeat)
             {
                 //int numScriptsProcessed = 0;
                 int numSleepScriptsProcessed = 0;

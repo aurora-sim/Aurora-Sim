@@ -53,9 +53,9 @@ namespace Aurora.Physics.BasicPhysicsPlugin
             get { return false; }
         }
 
-        public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
+        public override void Initialise(IMesher meshmerizer, IScene scene)
         {
-            m_region = region;
+            m_region = scene.RegionInfo;
         }
 
         public override void PostInitialise(IConfigSource config)

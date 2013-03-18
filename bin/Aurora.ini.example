@@ -31,15 +31,6 @@
     ;; Time between each timer to run (in minutes)
     ;timer_time = 20
 
-    ;; If you have only one region in an instance, or to avoid the many bugs
-    ;; that you can trigger in modules by restarting a region, set this to
-    ;; true to make the entire instance restart instead of restarting the region.
-    ;; Restarting the region in this way is the same as reopening Aurora.
-    InworldRestartShutsDown = false
-
-    ;; Should we restart Aurora if the sim crashes?
-    AutoRestartOnCrash = false
-
     ;; Should Aurora wait until all modules have finished starting up before allowing logins and use of the console?
     ;; Default is true
     CompleteStartupAfterAllModulesLoad = true
