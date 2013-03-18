@@ -29,12 +29,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     public interface IAvatarAttachment
     {
-        //// <value>
+        /// <value>
         /// Describes where on the avatar the attachment is located
         /// </value>
         int Location { get; }
 
-        //// <value>
+        /// <value>
         /// Accessor to the rez'ed asset, representing the attachment
         /// </value>
         IObject Asset { get; }

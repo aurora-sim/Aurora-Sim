@@ -44,7 +44,7 @@ namespace Aurora.Modules.Entities.BuySell
 
         #region IBuySellModule Members
 
-        public bool BuyObject(IClientAPI remoteClient, UUID categoryID, uint localID, byte saleType, int salePrice)
+        public bool BuyObject(IClientAPI remoteClient, UUID categoryID, uint localID, byte saleType)
         {
             ISceneChildEntity part = m_scene.GetSceneObjectPart(localID);
 
@@ -336,7 +336,7 @@ namespace Aurora.Modules.Entities.BuySell
                 }
             }
 
-            BuyObject(remoteClient, categoryID, localID, saleType, salePrice);
+            BuyObject(remoteClient, categoryID, localID, saleType);
         }
     }
 }

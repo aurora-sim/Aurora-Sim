@@ -35,6 +35,7 @@ namespace Aurora.Framework
         ///   Kicks the given avatarID from the grid with the given message
         /// </summary>
         /// <param name = "avatarID"></param>
+        /// <param name = "message"></param>
         void KickUser(UUID avatarID, string message);
 
         /// <summary>

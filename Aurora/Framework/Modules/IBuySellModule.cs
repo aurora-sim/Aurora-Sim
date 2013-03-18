@@ -41,6 +41,6 @@ namespace Aurora.Framework
         /// <returns>
         ///   True on a successful purchase, false on failure
         /// </returns>
-        bool BuyObject(IClientAPI remoteClient, UUID categoryID, uint localID, byte saleType, int salePrice);
+        bool BuyObject(IClientAPI remoteClient, UUID categoryID, uint localID, byte saleType);
     }
 }

@@ -38,7 +38,7 @@ namespace Aurora.Framework.Capabilities
         /// <summary>
         ///   Generate a CAPS seed path using a previously generated CAPS object path component
         /// </summary>
-        /// <param name = "capsKey"></param>
+        /// <param name = "capsObjectPath"></param>
         /// <returns></returns>
         public static string GetCapsSeedPath(string capsObjectPath)
         {

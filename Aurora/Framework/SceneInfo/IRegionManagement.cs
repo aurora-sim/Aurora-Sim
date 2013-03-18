@@ -28,6 +28,7 @@ namespace Aurora.Framework
         /// Attempts to stop the currently running region
         /// </summary>
         /// <param name="regionID"></param>
+        /// <param name="secondsBeforeShutdown"></param>
         /// <returns></returns>
         bool StopRegion(UUID regionID, int secondsBeforeShutdown);
 

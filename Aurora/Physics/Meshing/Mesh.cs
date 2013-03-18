@@ -83,12 +83,7 @@ namespace Aurora.Physics.Meshing
 
         public List<Vector3> getVertexList()
         {
-            List<Vector3> vs = new List<Vector3>();
-            foreach (Vertex v in m_vertices.Keys)
-            {
-                vs.Add(new Vector3(v.X, v.Y, v.Z));
-            }
-            return vs;
+            return m_vertices.Keys.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
         }
 
         public float[] getVertexListAsFloatLocked()
@@ -431,10 +426,12 @@ namespace Aurora.Physics.Meshing
             OSDArray array = new OSDArray();
             foreach (Triangle t in m_triangles)
             {
-                OSDArray triArray = new OSDArray();
-                triArray.Add(new Vector3(t.v1.X, t.v1.Y, t.v1.Z));
-                triArray.Add(new Vector3(t.v2.X, t.v2.Y, t.v2.Z));
-                triArray.Add(new Vector3(t.v3.X, t.v3.Y, t.v3.Z));
+                OSDArray triArray = new OSDArray
+                                        {
+                                            new Vector3(t.v1.X, t.v1.Y, t.v1.Z),
+                                            new Vector3(t.v2.X, t.v2.Y, t.v2.Z),
+                                            new Vector3(t.v3.X, t.v3.Y, t.v3.Z)
+                                        };
                 array.Add(triArray);
             }
             return array;

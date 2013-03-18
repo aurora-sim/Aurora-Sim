@@ -40,9 +40,7 @@ namespace Aurora.Framework.Serialization
         /// <summary>
         ///   Create the filename used for objects in OpenSim Archives.
         /// </summary>
-        /// <param name = "objectName"></param>
-        /// <param name = "uuid"></param>
-        /// <param name = "pos"></param>
+        /// <param name = "sog"></param>
         /// <returns></returns>
         public static string CreateObjectFilename(ISceneEntity sog)
         {
@@ -52,9 +50,7 @@ namespace Aurora.Framework.Serialization
         /// <summary>
         ///   Create the path used to store an object in an OpenSim Archive.
         /// </summary>
-        /// <param name = "objectName"></param>
-        /// <param name = "uuid"></param>
-        /// <param name = "pos"></param>
+        /// <param name = "sog"></param>
         /// <returns></returns>
         public static string CreateObjectPath(ISceneEntity sog)
         {

@@ -37,6 +37,8 @@ namespace Aurora.Framework
         ///   Add/Update a user's stats in the database
         /// </summary>
         /// <param name = "uid"></param>
+        /// <param name = "agentID"></param>
+        /// <param name = "regionID"></param>
         void UpdateUserStats(ViewerStatsMessage uid, UUID agentID, UUID regionID);
 
         /// <summary>
