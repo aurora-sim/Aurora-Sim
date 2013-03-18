@@ -88,10 +88,7 @@ namespace Aurora.Framework
                 IConfig config;
                 if ((config = source.Configs["AuroraConnectors"]) != null)
                 {
-                    if (config.Contains(name + "DoRemoteCalls"))
-                        m_doRemoteCalls = config.GetBoolean(name + "DoRemoteCalls", false);
-                    else
-                        m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+                    m_doRemoteCalls = config.Contains(name + "DoRemoteCalls") ? config.GetBoolean(name + "DoRemoteCalls", false) : config.GetBoolean("DoRemoteCalls", false);
 
                     if ((config = source.Configs["Handlers"]) != null)
                     {

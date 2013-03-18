@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Aurora.Framework
 {
@@ -288,14 +289,7 @@ namespace Aurora.Framework
             if (idef != null && idef.Type == Type && idef.Fields.Length == Fields.Length)
             {
                 uint i = 0;
-                foreach (string field in idef.Fields)
-                {
-                    if (field != Fields[i++])
-                    {
-                        return false;
-                    }
-                }
-                return true;
+                return idef.Fields.All(field => field == Fields[i++]);
             }
             return false;
         }

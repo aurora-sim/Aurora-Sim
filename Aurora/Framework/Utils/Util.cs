@@ -1340,13 +1340,17 @@ namespace Aurora.Framework
         {
             string ru = String.Empty;
 
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-                ru = "Unix/Mono";
-            else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
-                ru = "OSX/Mono";
-            else
+            switch (Environment.OSVersion.Platform)
             {
-                ru = Type.GetType("Mono.Runtime") != null ? "Win/Mono" : "Win/.NET";
+                case PlatformID.Unix:
+                    ru = "Unix/Mono";
+                    break;
+                case PlatformID.MacOSX:
+                    ru = "OSX/Mono";
+                    break;
+                default:
+                    ru = Type.GetType("Mono.Runtime") != null ? "Win/Mono" : "Win/.NET";
+                    break;
             }
 
             return ru;
@@ -1354,14 +1358,15 @@ namespace Aurora.Framework
 
         public static RuntimeEnvironment GetRuntimeEnvironment()
         {
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-                return RuntimeEnvironment.Mono;
-            else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
-                return RuntimeEnvironment.Mono;
-            else
+            switch (Environment.OSVersion.Platform)
             {
-                return Type.GetType("Mono.Runtime") != null ? RuntimeEnvironment.WinMono :
-                    RuntimeEnvironment.NET;
+                case PlatformID.Unix:
+                    return RuntimeEnvironment.Mono;
+                case PlatformID.MacOSX:
+                    return RuntimeEnvironment.Mono;
+                default:
+                    return Type.GetType("Mono.Runtime") != null ? RuntimeEnvironment.WinMono :
+                               RuntimeEnvironment.NET;
             }
         }
 

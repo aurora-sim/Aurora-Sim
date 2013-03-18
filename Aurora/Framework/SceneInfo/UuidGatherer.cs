@@ -85,21 +85,21 @@ namespace Aurora.Framework
 
             assetUuids[assetUuid] = assetType;
 
-            if (AssetType.Bodypart == assetType || AssetType.Clothing == assetType)
+            switch (assetType)
             {
-                GetWearableAssetUuids(assetUuid, assetUuids);
-            }
-            else if (AssetType.Gesture == assetType)
-            {
-                GetGestureAssetUuids(assetUuid, assetUuids);
-            }
-            else if (AssetType.LSLText == assetType)
-            {
-                GetScriptAssetUuids(assetUuid, assetUuids);
-            }
-            else if (AssetType.Object == assetType)
-            {
-                GetSceneObjectAssetUuids(assetUuid, assetUuids, scene);
+                case AssetType.Clothing:
+                case AssetType.Bodypart:
+                    GetWearableAssetUuids(assetUuid, assetUuids);
+                    break;
+                case AssetType.Gesture:
+                    GetGestureAssetUuids(assetUuid, assetUuids);
+                    break;
+                case AssetType.LSLText:
+                    GetScriptAssetUuids(assetUuid, assetUuids);
+                    break;
+                case AssetType.Object:
+                    GetSceneObjectAssetUuids(assetUuid, assetUuids, scene);
+                    break;
             }
         }
 

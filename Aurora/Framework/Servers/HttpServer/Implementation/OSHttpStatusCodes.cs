@@ -30,7 +30,7 @@ namespace Aurora.Framework.Servers.HttpServer
     /// <summary>
     /// HTTP status codes (almost) as defined by W3C in http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html and IETF in http://tools.ietf.org/html/rfc6585
     /// </summary>
-    public enum OSHttpStatusCode : int
+    public enum OSHttpStatusCode
     {
         #region 1xx Informational status codes providing a provisional response.
 
