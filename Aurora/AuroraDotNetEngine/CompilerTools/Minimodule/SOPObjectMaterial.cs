@@ -27,8 +27,8 @@
 
 using System;
 using System.Drawing;
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

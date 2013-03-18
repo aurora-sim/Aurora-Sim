@@ -25,10 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using Microsoft.CSharp;
+
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools

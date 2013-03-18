@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

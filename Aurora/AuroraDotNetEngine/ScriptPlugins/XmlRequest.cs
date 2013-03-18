@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {

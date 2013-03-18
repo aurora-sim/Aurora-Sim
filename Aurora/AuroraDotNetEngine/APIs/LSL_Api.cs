@@ -32,19 +32,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Lifetime;
 using System.Text;
-using System.Threading;
 using System.Text.RegularExpressions;
+using System.Threading;
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using Aurora.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using GridRegion = Aurora.Framework.GridRegion;
-using PrimType = Aurora.Framework.PrimType;
-using AssetLandmark = Aurora.Framework.AssetLandmark;
-
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
@@ -52,7 +50,7 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
-using Aurora.Framework.Serialization;
+using PrimType = Aurora.Framework.PrimType;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {

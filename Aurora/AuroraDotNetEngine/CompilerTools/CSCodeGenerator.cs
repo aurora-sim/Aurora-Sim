@@ -28,8 +28,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Tools;
 using Aurora.ScriptEngineParser;
+using Tools;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {

@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

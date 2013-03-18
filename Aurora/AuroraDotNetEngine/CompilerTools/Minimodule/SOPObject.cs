@@ -28,7 +28,6 @@
 using System;
 using System.Security;
 using Aurora.Framework;
-using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 

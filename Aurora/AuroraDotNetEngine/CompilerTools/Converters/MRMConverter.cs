@@ -32,6 +32,7 @@ using System.IO;
 using Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule;
 using Microsoft.CSharp;
 using OpenMetaverse;
+
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools

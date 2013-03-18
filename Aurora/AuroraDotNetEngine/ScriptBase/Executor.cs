@@ -29,8 +29,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {

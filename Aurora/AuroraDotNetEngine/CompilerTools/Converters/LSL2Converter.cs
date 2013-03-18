@@ -29,8 +29,9 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Reflection;
-using Microsoft.CSharp;
 using System.Text.RegularExpressions;
+using Microsoft.CSharp;
+
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools

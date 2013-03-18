@@ -26,7 +26,6 @@
  */
 
 using System;
-using System.Reflection;
 using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule

@@ -26,7 +26,6 @@
  */
 
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
