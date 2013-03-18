@@ -294,7 +294,7 @@ namespace Aurora.Services
             regionCaps.ClientCaps.Close();
 
             if (agentInfoService != null)
-                agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, UUID.Zero);
+                agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, UUID.Zero, "");
 
             m_capsService.RemoveCAPS(regionCaps.AgentID);
        }
@@ -657,7 +657,7 @@ namespace Aurora.Services
                         IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
                         if (agentInfoService != null)
                             agentInfoService.SetLastPosition(AgentID.ToString(), destination.RegionID,
-                                                         agentData.Position, Vector3.Zero);
+                                                         agentData.Position, Vector3.Zero, destination.ServerURI);
 
                         SimulationService.MakeChildAgent(AgentID, regionCaps.Region.RegionID, regionCaps.Region, false); 
                         reason = "";
@@ -949,7 +949,7 @@ namespace Aurora.Services
                             IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
                             if (agentInfoService != null)
                                 agentInfoService.SetLastPosition(AgentID.ToString(), crossingRegion.RegionID,
-                                                                pos, Vector3.Zero);
+                                                                pos, Vector3.Zero, crossingRegion.ServerURI);
                             SimulationService.MakeChildAgent(AgentID, requestingRegionCaps.Region.RegionID,
                                 requestingRegionCaps.Region, true); 
                         }
@@ -1003,7 +1003,7 @@ namespace Aurora.Services
                             lookAt = Util.GetNormalizedVector(lookAt);
                         //Update the database
                         agentInfoService.SetLastPosition(regionCaps.AgentID.ToString(), regionCaps.Region.RegionID,
-                                                         agentpos.Position, lookAt);
+                                                         agentpos.Position, lookAt, regionCaps.Region.ServerURI);
                     }
 
                     //Also update the service itself

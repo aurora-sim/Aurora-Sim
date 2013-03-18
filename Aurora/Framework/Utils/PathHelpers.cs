@@ -71,70 +71,9 @@ namespace Aurora.Framework
             }
         }
 
-        public static string PathTilde(string Path) //supports ~ for home dir at beginning of Path
-        {
-            if (Path.IndexOf("~", StringComparison.CurrentCultureIgnoreCase) == -1) //does not contain ~
-            {
-                return Path;
-            }
-            else
-            {
-                if (Path[0].ToString() == "~")
-                {
-                    string homePath = "";
-
-                    if (Util.IsLinux)
-                    {
-                        homePath = Environment.GetEnvironmentVariable("HOME");
-                    }
-                    else
-                    {
-                        homePath = Environment.GetEnvironmentVariable("userprofile");
-                    }
-
-                    Path = Path.Substring(1);
-                    return homePath + Path;
-                }
-                else
-                {
-                    return Path;
-                }
-            }
-        }
-
-        public static string ForceEndSlash(string Path)
-        {
-            string LastCharacter = Path.Last().ToString();
-
-            if (LastCharacter == "/" || LastCharacter == "\\")
-            {
-                return Path;
-            }
-            else
-            {
-                return Path + "/";
-            }
-        }
-
         public static string ComputeFullPath(string Path) //single function that calls the functions that help compute a full url Path
         {
-            return ComputeFullPath(Path, true);
-        }
-
-        public static string ComputeFullPath(string Path, bool forceSlash) //single function that calls the functions that help compute a full url Path
-        {
-            Path = PathHomeDrive(
-                PathUsername(
-                    PathTilde(Path)
-                )
-            );
-
-            if (forceSlash)
-            {
-                Path = ForceEndSlash(Path);
-            }
-
-            return Path;
+            return PathHomeDrive(PathUsername(Path));
         }
     }
 }

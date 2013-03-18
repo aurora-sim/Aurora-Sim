@@ -509,7 +509,6 @@ namespace Aurora.Services
                     guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
                     guinfo.HomeLookAt = guinfo.CurrentLookAt = new Vector3(0, 0, 0);
 
-                    m_agentInfoService.SetLastPosition(guinfo.UserID, guinfo.CurrentRegionID, guinfo.CurrentPosition, guinfo.CurrentLookAt);
                     m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition, guinfo.HomeLookAt);
 
                     MainConsole.Instance.Info("[LLLoginService]: User did not have a home, set to " +
@@ -579,8 +578,8 @@ namespace Aurora.Services
                     friendsList = m_FriendsService.GetFriends(account.PrincipalID);
 
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
-                m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt);
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, destination.RegionID);
+                m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt, destination.ServerURI);
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, destination.RegionID, destination.ServerURI);
                 m_agentInfoService.FireUserStatusChangeEvent(account.PrincipalID.ToString(), true, destination.RegionID);
 
                 //
@@ -613,7 +612,7 @@ namespace Aurora.Services
                 if (account != null)
                 {
                     //Revert their logged in status if we got that far
-                    m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), false, UUID.Zero);
+                    m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), false, UUID.Zero, "");
                 }
                 return LLFailedLoginResponse.InternalError;
             }
