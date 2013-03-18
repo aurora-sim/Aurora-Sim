@@ -17,6 +17,8 @@
 	;;
 	;;Uncomment this line to enable currency if you agree to the above
 	;Module = SimpleCurrency
+	
+	;;Don't change this option unless you know what you're doing
 	RunServer = true
 	
 	;;The URI to send when something goes wrong
