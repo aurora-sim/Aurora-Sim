@@ -148,11 +148,6 @@ namespace Aurora.Framework
         void ReadConsole();
 
         /// <summary>
-        ///   Stops the reading of the console and closes/restarts the console thread
-        /// </summary>
-        void EndConsoleProcessing();
-
-        /// <summary>
         /// Check to see whether level A is lower or equal to levelB
         /// </summary>
         /// <param name="levelA"></param>
