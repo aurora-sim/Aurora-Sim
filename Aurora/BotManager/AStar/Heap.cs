@@ -178,8 +178,8 @@ namespace Tanis.Collections
         /// <summary>
         ///   IList implementation.
         ///   Search for a specified object in the list.
-        ///   If the list is sorted, a <see cref = "ArrayList.BinarySearch">BinarySearch</see> is performed using IComparer interface.
-        ///   Else the <see cref = "Equals">Object.Equals</see> implementation is used.
+        ///   If the list is sorted, a &lt;see cref = &quot;ArrayList.BinarySearch&quot;&gt;BinarySearch&lt;/see&gt; is performed using IComparer interface.
+        ///   Else the &lt;see cref = &quot;Equals&quot;&gt;Object.Equals&lt;/see&gt; implementation is used.
         /// </summary>
         /// <param name = "O">The object to look for</param>
         /// <returns>true if the object is in the list, otherwise false.</returns>
@@ -191,8 +191,8 @@ namespace Tanis.Collections
         /// <summary>
         ///   IList implementation.
         ///   Returns the index of the specified object in the list.
-        ///   If the list is sorted, a <see cref = "ArrayList.BinarySearch">BinarySearch</see> is performed using IComparer interface.
-        ///   Else the <see cref = "Equals">Object.Equals</see> implementation of objects is used.
+        ///   If the list is sorted, a &lt;see cref = &quot;ArrayList.BinarySearch&quot;&gt;BinarySearch&lt;/see&gt; is performed using IComparer interface.
+        ///   Else the &lt;see cref = &quot;Equals&quot;&gt;Object.Equals&lt;/see&gt; implementation of objects is used.
         /// </summary>
         /// <param name = "O">The object to locate.</param>
         /// <returns>

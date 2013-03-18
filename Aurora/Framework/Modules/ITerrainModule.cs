@@ -26,9 +26,9 @@
  */
 
 
+using OpenMetaverse;
 using System;
 using System.IO;
-using OpenMetaverse;
 
 namespace Aurora.Framework
 {
@@ -67,6 +67,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Save a terrain to a stream.
         /// </summary>
+        /// <param name = "channel"></param>
         /// <param name = "filename">
         ///   Only required here to identify the image type.  Not otherwise used in the saving itself.
         /// </param>

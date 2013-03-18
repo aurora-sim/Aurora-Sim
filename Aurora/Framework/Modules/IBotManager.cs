@@ -62,7 +62,7 @@ namespace Aurora.Framework
 
         #region Basic Movement
 
-        void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags, UUID userAttempting);
+        void SetBotMap(UUID Bot, List<Vector3> positions, List<TravelMode> mode, int flags, UUID userAttempting);
         void SetMovementSpeedMod(UUID Bot, float modifier, UUID userAttempting);
         void SetBotShouldFly(UUID botID, bool shouldFly, UUID userAttempting);
         void PauseMovement(UUID botID, UUID userAttempting);

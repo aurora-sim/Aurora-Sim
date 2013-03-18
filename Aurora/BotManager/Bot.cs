@@ -558,7 +558,6 @@ namespace Aurora.BotManager
         /// <summary>
         ///   Blocks walking and sets to only flying
         /// </summary>
-        /// <param name = "pos"></param>
         public void DisableWalk()
         {
             ShouldFly = true;
@@ -567,9 +566,8 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   Allows for flying and walkin
+        ///   Allows for flying and walking
         /// </summary>
-        /// <param name = "pos"></param>
         public void EnableWalk()
         {
             ShouldFly = false;

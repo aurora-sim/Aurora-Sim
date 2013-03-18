@@ -25,13 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using Aurora.DataManager;
-using Aurora.Simulation.Base;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
+using System.Collections.Generic;
 using FriendInfo = Aurora.Framework.FriendInfo;
 
 namespace Aurora.Services
@@ -101,23 +98,23 @@ namespace Aurora.Services
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual bool StoreFriend(UUID PrincipalID, string Friend, int flags)
+        public virtual bool StoreFriend(UUID PrincipalID, string friend, int flags)
         {
-            object remoteValue = DoRemote(PrincipalID, Friend, flags);
+            object remoteValue = DoRemote(PrincipalID, friend, flags);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            return m_Database.Store(PrincipalID, Friend, flags, 0);
+            return m_Database.Store(PrincipalID, friend, flags, 0);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual bool Delete(UUID PrincipalID, string Friend)
+        public virtual bool Delete(UUID PrincipalID, string friend)
         {
-            object remoteValue = DoRemote(PrincipalID, Friend);
+            object remoteValue = DoRemote(PrincipalID, friend);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            return m_Database.Delete(PrincipalID, Friend);
+            return m_Database.Delete(PrincipalID, friend);
         }
 
         #endregion

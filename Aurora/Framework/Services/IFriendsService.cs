@@ -25,9 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Framework
 {
@@ -86,14 +86,14 @@ namespace Aurora.Framework
         /// <summary>
         ///   Get all friends of the given user
         /// </summary>
-        /// <param name = "PrincipalID"></param>
+        /// <param name = "principalID"></param>
         /// <returns></returns>
-        List<FriendInfo> GetFriends(UUID PrincipalID);
+        List<FriendInfo> GetFriends(UUID principalID);
 
         /// <summary>
         ///   Get all friends requests of the given user
         /// </summary>
-        /// <param name = "PrincipalID"></param>
+        /// <param name = "principalID"></param>
         /// <returns></returns>
         /// 
         List<FriendInfo> GetFriendsRequest(UUID principalID);
@@ -101,19 +101,19 @@ namespace Aurora.Framework
         /// <summary>
         ///   Store the changes of the friend of PrincipalID
         /// </summary>
-        /// <param name = "PrincipalID"></param>
-        /// <param name = "Friend"></param>
+        /// <param name = "principalID"></param>
+        /// <param name = "friend"></param>
         /// <param name = "flags"></param>
         /// <returns></returns>
-        bool StoreFriend(UUID PrincipalID, string Friend, int flags);
+        bool StoreFriend(UUID principalID, string friend, int flags);
 
         /// <summary>
         ///   Delete the friendship between the two users
         /// </summary>
-        /// <param name = "PrincipalID"></param>
-        /// <param name = "Friend"></param>
+        /// <param name = "principalID"></param>
+        /// <param name = "friend"></param>
         /// <returns></returns>
-        bool Delete(UUID PrincipalID, string Friend);
+        bool Delete(UUID principalID, string friend);
 
         void Initialize(IConfigSource config, IRegistryCore registry);
 

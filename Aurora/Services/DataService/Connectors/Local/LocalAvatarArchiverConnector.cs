@@ -25,11 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using System.Data;
 using Aurora.Framework;
 using Nini.Config;
-using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Services.DataService
 {
@@ -80,7 +78,7 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///   Returns a list object of AvatarArchives. This is being used for WebUI
         /// </summary>
-        /// <param name = "Public"></param>
+        /// <param name = "isPublic"></param>
         /// <returns></returns>
         public List<AvatarArchive> GetAvatarArchives(bool isPublic)
         {

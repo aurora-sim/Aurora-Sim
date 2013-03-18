@@ -85,7 +85,6 @@ namespace Aurora.Framework
         /// <summary>
         /// Create a new region from the user's input
         /// </summary>
-        /// <param name="p"></param>
         void CreateRegion();
     }
 

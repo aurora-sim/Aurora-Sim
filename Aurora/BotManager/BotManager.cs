@@ -214,30 +214,33 @@ namespace Aurora.BotManager
         /// <summary>
         ///   Sets up where the bot should be walking
         /// </summary>
-        /// <param name = "Bot">ID of the bot</param>
-        /// <param name = "Positions">List of positions the bot will move to</param>
+        /// <param name = "botID">ID of the bot</param>
+        /// <param name = "positions">List of positions the bot will move to</param>
         /// <param name = "mode">List of what the bot should be doing inbetween the positions</param>
-        public void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags, UUID userAttempting)
+        /// <param name = "flags"></param>
+        /// <param name = "userAttempting"></param>
+        public void SetBotMap(UUID botID, List<Vector3> positions, List<TravelMode> mode, int flags, UUID userAttempting)
         {
             Bot bot;
             //Find the bot
-            if (m_bots.TryGetValue(Bot, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
                 if (!CheckPermission(bot, userAttempting))
                     return;
-                bot.SetPath(Positions, mode, flags);
+                bot.SetPath(positions, mode, flags);
             }
         }
 
         /// <summary>
         ///   Speed up or slow down the bot
         /// </summary>
-        /// <param name = "Bot"></param>
+        /// <param name = "botID"></param>
         /// <param name = "modifier"></param>
-        public void SetMovementSpeedMod(UUID Bot, float modifier, UUID userAttempting)
+        /// <param name = "userAttempting"></param>
+        public void SetMovementSpeedMod(UUID botID, float modifier, UUID userAttempting)
         {
             Bot bot;
-            if (m_bots.TryGetValue(Bot, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
                 if (!CheckPermission(bot, userAttempting))
                     return;
@@ -375,8 +378,13 @@ namespace Aurora.BotManager
         /// <summary>
         ///   Begins to follow the given user
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
+        /// <param name = "botID"></param>
+        /// <param name = "avatarName"></param>
+        /// <param name = "startFollowDistance"></param>
+        /// <param name = "endFollowDistance"></param>
+        /// <param name = "requireLOS"></param>
+        /// <param name = "offsetFromAvatar"></param>
+        /// <param name = "userAttempting"></param>
         public void FollowAvatar(UUID botID, string avatarName, float startFollowDistance, float endFollowDistance,
                                  bool requireLOS, Vector3 offsetFromAvatar, UUID userAttempting)
         {
@@ -392,8 +400,8 @@ namespace Aurora.BotManager
         /// <summary>
         ///   Stops following the given user
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
+        /// <param name = "botID"></param>
+        /// <param name = "userAttempting"></param>
         public void StopFollowAvatar(UUID botID, UUID userAttempting)
         {
             Bot bot;
@@ -408,8 +416,11 @@ namespace Aurora.BotManager
         /// <summary>
         ///   Sends a chat message to all clients
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
+        /// <param name = "botID"></param>
+        /// <param name = "message"></param>
+        /// <param name = "sayType"></param>
+        /// <param name = "channel"></param>
+        /// <param name = "userAttempting"></param>
         public void SendChatMessage(UUID botID, string message, int sayType, int channel, UUID userAttempting)
         {
             Bot bot;
@@ -424,8 +435,10 @@ namespace Aurora.BotManager
         /// <summary>
         ///   Sends a chat message to all clients
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
+        /// <param name = "botID"></param>
+        /// <param name = "toUser"></param>
+        /// <param name = "message"></param>
+        /// <param name = "userAttempting"></param>
         public void SendIM(UUID botID, UUID toUser, string message, UUID userAttempting)
         {
             Bot bot;
@@ -433,7 +446,7 @@ namespace Aurora.BotManager
             {
                 if (!CheckPermission(bot, userAttempting))
                     return;
-                bot.SendInstantMessage(new GridInstantMessage()
+                bot.SendInstantMessage(new GridInstantMessage
                 {
                     binaryBucket = new byte[0],
                     dialog = (byte)InstantMessageDialog.MessageFromAgent,
