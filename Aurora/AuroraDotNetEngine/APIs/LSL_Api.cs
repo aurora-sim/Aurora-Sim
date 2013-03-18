@@ -26,14 +26,6 @@
  */
 
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Remoting.Lifetime;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
@@ -42,6 +34,14 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Remoting.Lifetime;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using GridRegion = Aurora.Framework.GridRegion;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;

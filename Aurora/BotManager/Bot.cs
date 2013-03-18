@@ -25,17 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Timers;
 using Aurora.Framework;
 using Games.Pathfinding.AStar2DTest;
 using Mischel.Collections;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Timers;
 
 namespace Aurora.BotManager
 {

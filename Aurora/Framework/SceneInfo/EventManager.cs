@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Aurora.Framework.Servers.HttpServer;
+﻿using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Framework
 {/// <summary>

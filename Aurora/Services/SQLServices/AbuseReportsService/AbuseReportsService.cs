@@ -25,12 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using Aurora.DataManager;
 using Aurora.Framework;
-using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Services
 {

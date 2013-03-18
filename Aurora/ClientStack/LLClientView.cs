@@ -25,22 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Threading;
-using System.Xml;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Threading;
+using System.Xml;
 using RegionFlags = OpenMetaverse.RegionFlags;
-using Amib.Threading;
 
 namespace Aurora.ClientStack
 {

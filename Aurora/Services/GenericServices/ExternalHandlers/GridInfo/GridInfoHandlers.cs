@@ -25,16 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
+using Nwc.XmlRpc;
 using System;
 using System.Collections;
 using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Text;
-using Nini.Config;
-using Nwc.XmlRpc;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Services
 {

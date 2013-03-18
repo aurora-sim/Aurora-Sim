@@ -25,11 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Agent.AssetTransaction
 {

@@ -25,20 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Xml;
 using System.Xml.Serialization;
-using Aurora.Framework;
-using OpenMetaverse;
-using OpenMetaverse.Packets;
-using OpenMetaverse.StructuredData;
 using PrimType = Aurora.Framework.PrimType;
-using ProtoBuf;
-using Aurora.Framework.Serialization;
 
 namespace Aurora.Region
 {

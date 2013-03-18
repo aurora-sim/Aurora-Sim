@@ -25,20 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Services.DataService;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Timers;
-using log4net.Appender;
-using log4net.Core;
-using log4net.Repository;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using System.Security.Authentication;
-using Aurora.Services.DataService;
 
 namespace Aurora.Simulation.Base
 {
@@ -198,9 +193,12 @@ namespace Aurora.Simulation.Base
 
             //Fix the default prompt
             if (MainConsole.Instance != null)
+            {
                 MainConsole.Instance.DefaultPrompt = m_consolePrompt;
-            MainConsole.Instance.Info(string.Format("[MINAURORA]: STARTING MIN AURORA ({0})...", (IntPtr.Size == 4 ? "x86" : "x64")));
-            MainConsole.Instance.Info("[MINAURORA]: Version: " + Version + "\n");
+                MainConsole.Instance.Info(string.Format("[MINAURORA]: STARTING MIN AURORA ({0})...",
+                                                        (IntPtr.Size == 4 ? "x86" : "x64")));
+                MainConsole.Instance.Info("[MINAURORA]: Version: " + Version + "\n");
+            }
         }
 
         /// <summary>

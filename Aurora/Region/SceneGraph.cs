@@ -25,15 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Linq;
-using System.Threading;
-using System.Collections.Generic;
-using System.Reflection;
+using Aurora.Framework;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using Nini.Config;
-using Aurora.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace Aurora.Region
 {

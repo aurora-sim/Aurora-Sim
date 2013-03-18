@@ -25,9 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using Aurora.Simulation.Base;
 using Aurora.Framework;
+using Aurora.Simulation.Base;
+using System;
 
 namespace Aurora.Server
 {
@@ -42,9 +42,11 @@ namespace Aurora.Server
 
             //Fix the default prompt
             if (MainConsole.Instance != null)
+            {
                 MainConsole.Instance.DefaultPrompt = "Aurora.WebServer ";
-
-            MainConsole.Instance.Info("[AURORASTARTUP]: Startup completed in " + (DateTime.Now - this.StartupTime).TotalSeconds);
+                MainConsole.Instance.Info("[AURORASTARTUP]: Startup completed in " +
+                                          (DateTime.Now - this.StartupTime).TotalSeconds);
+            }
         }
 
         public override ISimulationBase Copy()

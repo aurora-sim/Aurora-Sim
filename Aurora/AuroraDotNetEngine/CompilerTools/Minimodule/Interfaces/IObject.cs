@@ -25,9 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenMetaverse;
 using System;
 using System.Drawing;
-using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

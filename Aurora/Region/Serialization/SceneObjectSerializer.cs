@@ -25,17 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Xml;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
 
 namespace Aurora.Region.Serialization
 {

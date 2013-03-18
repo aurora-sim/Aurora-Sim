@@ -25,6 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Amib.Threading;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using ProtoBuf;
+using ProtoBuf.Meta;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -47,12 +53,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
-using Amib.Threading;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using ProtoBuf;
-using ProtoBuf.Meta;
 using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
 
 namespace Aurora.Framework

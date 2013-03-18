@@ -25,17 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Capabilities;
+using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Modules.Groups
 {

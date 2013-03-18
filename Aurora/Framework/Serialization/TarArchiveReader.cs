@@ -85,6 +85,7 @@ namespace Aurora.Framework.Serialization
         ///   Read the next entry in the tar file.
         /// </summary>
         /// <param name = "filePath"></param>
+        /// <param name = "entryType"></param>
         /// <returns>the data for the entry.  Returns null if there are no more entries</returns>
         public byte[] ReadEntry(out string filePath, out TarEntryType entryType)
         {

@@ -25,10 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Servers.UserServer
 {
@@ -41,8 +41,8 @@ namespace Aurora.Servers.UserServer
         {
             BaseApplication.BaseMain(args, "Aurora.UserServer.ini",
                 new MinimalSimulationBase("Aurora.UserServer ",
-                    new List<Type>() { typeof(IUserAccountData), typeof(IProfileConnector), typeof(IAuthenticationData) }, 
-                    new List<Type>() { typeof(IUserAccountService), typeof(IAuthenticationService) }));
+                    new List<Type> { typeof(IUserAccountData), typeof(IProfileConnector), typeof(IAuthenticationData) }, 
+                    new List<Type> { typeof(IUserAccountService), typeof(IAuthenticationService) }));
         }
     }
 }

@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using OpenMetaverse;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -32,8 +34,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Aurora.Framework;
-using OpenMetaverse;
 
 //using Microsoft.JScript;
 

@@ -25,16 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Data;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-using OpenMetaverse;
-using Aurora.DataManager;
 using Aurora.Framework;
 using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
+using System.Collections.Generic;
 
 namespace Aurora.Services.DataService
 {

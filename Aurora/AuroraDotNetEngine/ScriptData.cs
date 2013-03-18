@@ -25,6 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,10 +36,6 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Lifetime;
 using System.Threading;
-using Aurora.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

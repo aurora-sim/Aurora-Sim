@@ -25,6 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -33,12 +39,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Timers;
-using Aurora.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine

@@ -25,18 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Startup
 {

@@ -25,11 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using OpenMetaverse;
 using System;
 using System.IO;
-using System.Reflection;
-using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Agent.AssetTransaction
 {

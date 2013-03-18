@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+﻿using Nini.Config;
 using Nini.Ini;
-using Nini.Config;
+using System;
+using System.IO;
+using System.Reflection;
 
 namespace Aurora.Simulation.Base
 {

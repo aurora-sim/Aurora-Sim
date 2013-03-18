@@ -25,9 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenMetaverse;
 using System.Collections;
 using System.Collections.Generic;
-using OpenMetaverse;
 
 namespace Aurora.Framework
 {

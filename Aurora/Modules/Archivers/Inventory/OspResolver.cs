@@ -25,10 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Reflection;
-using System.Text;
 using Aurora.Framework;
 using OpenMetaverse;
+using System.Text;
 
 namespace Aurora.Modules.Archivers
 {

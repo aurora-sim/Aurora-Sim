@@ -25,16 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
-using Aurora.Simulation.Base;
-using Nini.Config;
-using OpenMetaverse;
 using GridRegion = Aurora.Framework.GridRegion;
 using RegionFlags = Aurora.Framework.RegionFlags;
 

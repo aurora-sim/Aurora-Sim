@@ -25,9 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
+using System.Collections.Generic;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services
