@@ -29,16 +29,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml;
 using Nwc.XmlRpc;
 using OpenMetaverse.StructuredData;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Authentication;
 
 namespace Aurora.Framework.Servers.HttpServer
 {

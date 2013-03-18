@@ -31,11 +31,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Web;
-using log4net;
-using Aurora.Framework;
 
 namespace Aurora.Framework.Servers.HttpServer
 {

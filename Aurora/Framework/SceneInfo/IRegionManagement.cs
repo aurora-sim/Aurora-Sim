@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace Aurora.Framework
@@ -31,6 +28,7 @@ namespace Aurora.Framework
         /// Attempts to stop the currently running region
         /// </summary>
         /// <param name="regionID"></param>
+        /// <param name="secondsBeforeShutdown"></param>
         /// <returns></returns>
         bool StopRegion(UUID regionID, int secondsBeforeShutdown);
 

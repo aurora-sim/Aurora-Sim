@@ -28,8 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.IO;
-using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;

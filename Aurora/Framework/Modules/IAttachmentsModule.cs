@@ -27,7 +27,6 @@
 
 using System;
 using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {
@@ -37,10 +36,10 @@ namespace Aurora.Framework
         ///   Attach an object to an avatar.
         /// </summary>
         /// <param name = "localID"></param>
-        /// <param name = "controllingClient"></param>
-        /// <param name = "attachPoint"></param>
-        /// <param name = "rot"></param>
-        /// <param name = "attachPos"></param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "grp"></param>
+        /// <param name = "AttachmentPt"></param>
+        /// <param name = "isTempAttach"></param>
         /// <returns>true if the object was successfully attached, false otherwise</returns>
         bool AttachObjectFromInworldObject(
             uint localID, IClientAPI remoteClient, ISceneEntity grp, int AttachmentPt, bool isTempAttach);

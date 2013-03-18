@@ -26,7 +26,6 @@
  */
 
 using System;
-using System.Collections;
 using System.IO;
 
 namespace Aurora.Framework.Servers.HttpServer

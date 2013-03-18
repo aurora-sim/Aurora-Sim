@@ -60,7 +60,7 @@
 
     SyncMessagePosterServiceOpenServerHandler = true
     SyncMessagePosterServiceServerHandlerPort = 0
-	SyncMessagePosterServiceDoRemote = true
+    SyncMessagePosterServiceDoRemote = true
 
 [WebInterface]
     Module = None

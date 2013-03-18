@@ -1,9 +1,5 @@
 ﻿using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Aurora.Framework
 {
@@ -35,14 +31,14 @@ namespace Aurora.Framework
         /// <summary>
         /// Creates a new group conference session by the given user (will not replace an existing session)
         /// </summary>
-        /// <param name="uUID"></param>
+        /// <param name="agentID"></param>
         /// <param name="im"></param>
         void CreateGroupChat(UUID agentID, GridInstantMessage im);
 
         /// <summary>
         /// Checks to make sure a group conference session exsits for the given group
         /// </summary>
-        /// <param name="sessionID"></param>
+        /// <param name="groupID"></param>
         void EnsureSessionIsStarted(UUID groupID);
     }
 }

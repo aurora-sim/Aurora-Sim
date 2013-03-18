@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenMetaverse;
+﻿using System.Collections.Generic;
 using Nini.Config;
 
 namespace Aurora.Framework
@@ -25,7 +21,6 @@ namespace Aurora.Framework
         /// <summary>
         /// Shuts down the given region
         /// </summary>
-        /// <param name="scene"></param>
         /// <param name="shutdownType"></param>
         /// <param name="p"></param>
         void CloseRegion(ShutdownType shutdownType, int p);
@@ -33,13 +28,11 @@ namespace Aurora.Framework
         /// <summary>
         /// Removes and resets terrain and objects from the database
         /// </summary>
-        /// <param name="scene"></param>
         void ResetRegion();
 
         /// <summary>
         /// Restart the given region
         /// </summary>
-        /// <param name="m_scene"></param>
         void RestartRegion();
 
         void HandleStartupComplete(List<string> data);

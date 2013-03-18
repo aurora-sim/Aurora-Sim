@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using Aurora.Framework;
 using OdeAPI;
 using OpenMetaverse;
-using Aurora.Framework;
+using System;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
@@ -331,10 +329,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                if(!flying)
-                    m_forceAppliedBeforeFalling = Vector3.Zero;
-                else
-                    m_forceAppliedBeforeFalling = _target_velocity;
+                m_forceAppliedBeforeFalling = !flying ? Vector3.Zero : _target_velocity;
+
                 vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 2;
                 vec.Y += (_target_velocity.Y * movementmult - vel.Y) * PID_D * 2;
                 vec.Z += (_target_velocity.Z * movementmult - vel.Z) * PID_D;

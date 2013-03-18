@@ -27,7 +27,6 @@
 
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {

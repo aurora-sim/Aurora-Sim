@@ -25,11 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
-using Aurora.Framework;
 using OpenMetaverse.Messages.Linden;
 
 namespace Aurora.Framework
@@ -40,6 +37,8 @@ namespace Aurora.Framework
         ///   Add/Update a user's stats in the database
         /// </summary>
         /// <param name = "uid"></param>
+        /// <param name = "agentID"></param>
+        /// <param name = "regionID"></param>
         void UpdateUserStats(ViewerStatsMessage uid, UUID agentID, UUID regionID);
 
         /// <summary>

@@ -29,7 +29,7 @@ namespace RunTimeCompiler
         ///   generic properties section (as opposite to 
         ///   configuration-specific section).
         /// </summary>
-        /// <param name = "crtConfigurationNode">Generic section (xml node)</param>
+        /// <param name = "doc">Generic section (xml node)</param>
         /// <param name = "mgr"></param>
         /// <param name = "property">The name of the property/setting</param>
         /// <returns></returns>

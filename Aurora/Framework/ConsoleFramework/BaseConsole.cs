@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using log4net.Core;
 using log4net;
+using log4net.Core;
 
 namespace Aurora.Framework
 {

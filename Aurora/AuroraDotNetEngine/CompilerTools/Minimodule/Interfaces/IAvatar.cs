@@ -31,7 +31,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
     {
         bool IsChildAgent { get; }
 
-        //// <value>
+        /// <value>
         /// Array of worn attachments, empty but not null, if no attachments are worn
         /// </value>
         IAvatarAttachment[] Attachments { get; }

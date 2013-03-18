@@ -21,11 +21,10 @@ namespace Aurora.Services
         /// <summary>
         /// Callback for a viewerstats cap
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <param name="param"></param>
-        /// <param name="agentID"></param>
-        /// <param name="caps"></param>
+        /// <param name = "request"></param>
+        /// <param name = "path"></param>
+        /// <param name = "httpRequest"></param>
+        /// <param name = "httpResponse"></param>
         /// <returns></returns>
         public byte[] ViewerStatsReport(string path, Stream request, OSHttpRequest httpRequest,
                                                             OSHttpResponse httpResponse)

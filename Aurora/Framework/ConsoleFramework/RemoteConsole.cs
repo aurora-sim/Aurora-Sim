@@ -32,10 +32,9 @@ using System.Linq;
 using System.Threading;
 using System.Web;
 using System.Xml;
+using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework.Servers.HttpServer;
-using log4net.Core;
 
 namespace Aurora.Framework
 {

@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Framework
 {

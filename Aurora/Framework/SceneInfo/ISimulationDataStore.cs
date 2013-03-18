@@ -26,8 +26,6 @@
  */
 
 using System.Collections.Generic;
-using Nini.Config;
-using OpenMetaverse;
 
 namespace Aurora.Framework
 {

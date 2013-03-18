@@ -25,9 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using OpenMetaverse;
 using System.Net;
+using OpenMetaverse;
 
 namespace Aurora.Framework.Servers.HttpServer
 {

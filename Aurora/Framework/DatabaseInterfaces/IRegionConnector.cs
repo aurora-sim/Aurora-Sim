@@ -35,19 +35,21 @@ namespace Aurora.Framework
         ///   Adds a telehub for the region
         /// </summary>
         /// <param name = "telehub"></param>
+        /// <param name = "regionHandle"></param>
         void AddTelehub(Telehub telehub, ulong regionHandle);
 
         /// <summary>
         ///   Removes the telehub for the region
         /// </summary>
         /// <param name = "regionID"></param>
+        /// <param name = "regionHandle"></param>
         void RemoveTelehub(UUID regionID, ulong regionHandle);
 
         /// <summary>
         ///   Finds the telehub for the region
         /// </summary>
         /// <param name = "regionID"></param>
-        /// <returns></returns>
+        /// <param name="regionHandle"></param>
         Telehub FindTelehub(UUID regionID, ulong regionHandle);
     }
 }

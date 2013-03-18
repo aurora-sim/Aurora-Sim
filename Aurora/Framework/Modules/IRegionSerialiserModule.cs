@@ -33,6 +33,7 @@ namespace Aurora.Framework
         ///   Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
         /// </summary>
         /// <param name = "xmlString"></param>
+        /// <param name = "scene"></param>
         /// <returns>The scene object created</returns>
         ISceneEntity DeserializeGroupFromXml2(string xmlString, IScene scene);
 
@@ -40,6 +41,7 @@ namespace Aurora.Framework
         ///   Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
         /// </summary>
         /// <param name = "xml"></param>
+        /// <param name = "scene"></param>
         /// <returns>The scene object created</returns>
         ISceneEntity DeserializeGroupFromXml2(byte[] xml, IScene scene);
 

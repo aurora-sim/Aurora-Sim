@@ -28,7 +28,6 @@
 using System.Collections;
 using System.Net;
 using Nini.Config;
-using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 

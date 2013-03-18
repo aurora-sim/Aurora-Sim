@@ -13,6 +13,7 @@ namespace Amib.Threading.Internal
         /// <summary>
         ///   Create a new work item
         /// </summary>
+        /// <param name = "workItemsGroup">The work item group</param>
         /// <param name = "wigStartInfo">Work item group start information</param>
         /// <param name = "callback">A callback to execute</param>
         /// <returns>Returns a work item</returns>
@@ -27,6 +28,7 @@ namespace Amib.Threading.Internal
         /// <summary>
         ///   Create a new work item
         /// </summary>
+        /// <param name = "workItemsGroup">The work item group</param>
         /// <param name = "wigStartInfo">Work item group start information</param>
         /// <param name = "callback">A callback to execute</param>
         /// <param name = "workItemPriority">The priority of the work item</param>
@@ -43,6 +45,7 @@ namespace Amib.Threading.Internal
         /// <summary>
         ///   Create a new work item
         /// </summary>
+        /// <param name = "workItemsGroup">The work item group</param>
         /// <param name = "wigStartInfo">Work item group start information</param>
         /// <param name = "workItemInfo">Work item info</param>
         /// <param name = "callback">A callback to execute</param>

@@ -25,11 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
-using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using System;
 
 namespace Aurora.Framework
 {

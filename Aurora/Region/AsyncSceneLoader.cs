@@ -68,9 +68,7 @@ namespace Aurora.Region
         ///   Create a scene and its initial base structures.
         /// </summary>
         /// <param name = "regionInfo"></param>
-        /// <param name = "proxyOffset"></param>
         /// <param name = "configSource"></param>
-        /// <param name = "clientServer"> </param>
         /// <returns></returns>
         protected IScene SetupScene(RegionInfo regionInfo, IConfigSource configSource)
         {

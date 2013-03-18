@@ -25,9 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using OpenMetaverse;
-using FriendInfo = Aurora.Framework.FriendInfo;
 
 namespace Aurora.Framework
 {

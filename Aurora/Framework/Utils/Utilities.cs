@@ -29,19 +29,14 @@
 //http://www.obviex.com/samples/Encryption.aspx
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
-using System.Xml;
 
 namespace Aurora.Framework
 {

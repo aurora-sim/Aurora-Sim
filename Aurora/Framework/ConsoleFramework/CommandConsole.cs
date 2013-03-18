@@ -28,10 +28,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Threading;
 using Nini.Config;
 using log4net.Core;
-using System.Threading;
 
 namespace Aurora.Framework
 {

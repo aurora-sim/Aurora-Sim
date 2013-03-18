@@ -27,20 +27,19 @@
 
 //#define SPAM
 
+using Aurora.Framework;
+using Aurora.Framework.Physics;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
+using OpenMetaverse.StructuredData;
+using PrimMesher;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Physics;
-using PrimMesher;
 using zlib;
 using Path = System.IO.Path;
 
@@ -92,12 +91,7 @@ namespace Aurora.Physics.Meshing
             cacheSculptMaps = start_config.GetBoolean("CacheSculptMaps", cacheSculptMaps);
             UseMeshesPhysicsMesh = start_config.GetBoolean("UseMeshesPhysicsMesh", UseMeshesPhysicsMesh);
 
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-            {
-                cacheSculptAlphaMaps = false;
-            }
-            else
-                cacheSculptAlphaMaps = cacheSculptMaps; 
+            cacheSculptAlphaMaps = Environment.OSVersion.Platform != PlatformID.Unix && cacheSculptMaps; 
 
             try
             {
@@ -121,6 +115,7 @@ namespace Aurora.Physics.Meshing
         /// <param name = "maxY"></param>
         /// <param name = "minZ"></param>
         /// <param name = "maxZ"></param>
+        /// <param name = "key"></param>
         /// <returns></returns>
         private static Mesh CreateSimpleBoxMesh(float minX, float maxX, float minY, float maxY, float minZ, float maxZ,
                                                 ulong key)
@@ -170,6 +165,7 @@ namespace Aurora.Physics.Meshing
         ///   Creates a simple bounding box mesh for a complex input mesh
         /// </summary>
         /// <param name = "meshIn"></param>
+        /// <param name = "key"></param>
         /// <returns></returns>
         private static Mesh CreateBoundingBoxMesh(Mesh meshIn, ulong key)
         {

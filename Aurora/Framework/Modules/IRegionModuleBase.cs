@@ -27,7 +27,6 @@
 
 using System;
 using Nini.Config;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {

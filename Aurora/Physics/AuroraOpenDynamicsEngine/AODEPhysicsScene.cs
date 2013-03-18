@@ -25,17 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
+using Aurora.Framework;
 using Nini.Config;
 using OdeAPI;
 using OpenMetaverse;
-using Aurora.Framework;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
@@ -1143,10 +1142,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <summary>
         ///   Called when a static prim moves.  Allocates a space for the prim based on its position
         /// </summary>
-        /// <param name = "geom">the pointer to the geom that moved</param>
-        /// <param name = "pos">the position that the geom moved to</param>
-        /// <param name = "currentspace">a pointer to the space it was in before it was moved.</param>
-        /// <returns>a pointer to the new space it's in</returns>
+        /// <param name = "geom">The pointer to the geom that moved</param>
+        /// <param name = "pos">The position that the geom moved to</param>
+        /// <param name = "currentspace">A pointer to the space it was in before it was moved.</param>
+        /// <returns>A pointer to the new space it's in</returns>
         public IntPtr recalculateSpaceForGeom(IntPtr geom, Vector3 pos, IntPtr currentspace)
         {
             // Called from setting the Position and Size of an ODEPrim so
@@ -1256,16 +1255,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Creates a new space at X Y
-        /// </summary>
-        /// <param name = "iprimspaceArrItemX"></param>
-        /// <param name = "iprimspaceArrItemY"></param>
-        /// <returns>A pointer to the created space</returns>
-        /// <summary>
         ///   Calculates the space the prim should be in by its position
         /// </summary>
         /// <param name = "pos"></param>
-        /// <returns>a pointer to the space. This could be a new space or reused space.</returns>
+        /// <returns>A pointer to the space. This could be a new space or reused space.</returns>
         public IntPtr calculateSpaceForGeom(Vector3 pos)
         {
             int[] xyspace = calculateSpaceArrayItemFromPos(pos);
@@ -1315,7 +1308,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <summary>
         ///   Routine to figure out if we need to mesh this prim with our mesher
         /// </summary>
-        /// <param name = "pbs"></param>
+        /// <param name = "entity"></param>
         /// <returns></returns>
         internal bool needsMeshing(ISceneChildEntity entity)
         {
@@ -1337,9 +1330,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte) Extrusion.Curve1
                 && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == sphere.ProfileHollow && pbs.PathBegin == sphere.PathBegin && pbs.PathEnd == sphere.PathEnd &&
                 pbs.PathCurve == sphere.PathCurve && pbs.HollowShape == sphere.HollowShape && pbs.PathRadiusOffset == sphere.PathRadiusOffset && pbs.PathRevolutions == sphere.PathRevolutions &&
-                pbs.PathScaleX == pbs.PathScaleX && pbs.PathScaleY == sphere.PathScaleY && pbs.PathShearX == sphere.PathShearX && pbs.PathShearY == sphere.PathShearY && pbs.PathSkew == sphere.PathSkew &&
-                pbs.PathTaperX == pbs.PathTaperX && pbs.PathTaperY == sphere.PathTaperY && pbs.PathTwist == sphere.PathTwist && pbs.PathTwistBegin == sphere.PathTwistBegin && pbs.ProfileBegin == sphere.ProfileBegin &&
-                pbs.ProfileCurve == pbs.ProfileCurve && pbs.ProfileEnd == sphere.ProfileEnd && pbs.ProfileHollow == sphere.ProfileHollow && pbs.ProfileShape == sphere.ProfileShape)
+                pbs.PathScaleY == sphere.PathScaleY && pbs.PathShearX == sphere.PathShearX && pbs.PathShearY == sphere.PathShearY && pbs.PathSkew == sphere.PathSkew &&
+                pbs.PathTaperY == sphere.PathTaperY && pbs.PathTwist == sphere.PathTwist && pbs.PathTwistBegin == sphere.PathTwistBegin && pbs.ProfileBegin == sphere.ProfileBegin &&
+                pbs.ProfileEnd == sphere.ProfileEnd && pbs.ProfileHollow == sphere.ProfileHollow && pbs.ProfileShape == sphere.ProfileShape)
                 return false;
 
             if (pbs.SculptEntry && !meshSculptedPrim)
@@ -1468,7 +1461,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         ///   It moves the objects around in memory
         ///   It calls the methods that report back to the object owners.. (scenepresence, SceneObjectGroup)
         /// </summary>
-        /// <param name = "timeStep"></param>
+        /// <param name = "timeElapsed"></param>
         /// <returns></returns>
         public override void Simulate(float timeElapsed)
         {
@@ -1897,7 +1890,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override float[] GetGravityForce()
         {
-            return new float[3] {gravityx, gravityy, gravityz};
+            return new float[] {gravityx, gravityy, gravityz};
         }
 
         public override void AddGravityPoint(bool isApplyingForces, Vector3 position, float forceX, float forceY,

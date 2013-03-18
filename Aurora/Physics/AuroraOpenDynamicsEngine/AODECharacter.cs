@@ -25,12 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using OdeAPI;
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
+using System;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
@@ -197,7 +194,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override bool FloatOnWater
         {
-            set { return; }
+            set {}
         }
 
         public override bool IsPhysical
@@ -209,7 +206,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override bool ThrottleUpdates
         {
             get { return false; }
-            set { return; }
+            set {}
         }
 
         public override bool Flying
@@ -346,7 +343,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override Vector3 Force
         {
             get { return _target_velocity; }
-            set { return; }
+            set {}
         }
 
         public override Vector3 Velocity
@@ -739,6 +736,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         ///   The PID controller takes this target velocity and tries to make it a reality
         /// </summary>
         /// <param name = "force"></param>
+        /// <param name = "pushforce"></param>
         public override void AddForce(Vector3 force, bool pushforce)
         {
             if (force.IsFinite())

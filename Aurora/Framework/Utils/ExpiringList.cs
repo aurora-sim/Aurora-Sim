@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Timers;
-using OpenMetaverse;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Framework

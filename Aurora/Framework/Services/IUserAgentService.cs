@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {

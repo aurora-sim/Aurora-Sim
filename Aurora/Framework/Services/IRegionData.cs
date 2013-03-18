@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
-using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Framework
 {
