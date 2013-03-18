@@ -253,25 +253,27 @@ namespace Aurora.FileBasedServices.AssetService
         private string GetPathForID(string id)
         {
             string fileName = MakeValidFileName(id);
-            if (!Directory.Exists(Path.Combine(m_assetsDirectory, fileName.Substring(0, 3))))
-                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, fileName.Substring(0, 3)));
-            if (!Directory.Exists(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3)))))
-                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3))));
-            if (!Directory.Exists(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3))))))
-                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3)))));
-            return Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), Path.Combine(fileName.Substring(5, 3), fileName + ".asset"))));
+            string baseStr = m_assetsDirectory;
+            for (int i = 0; i < 4; i++)
+            {
+                baseStr = Path.Combine(baseStr, fileName.Substring(i * 2, 2));
+                if (!Directory.Exists(baseStr))
+                    Directory.CreateDirectory(baseStr);
+            }
+            return Path.Combine(baseStr, fileName + ".asset");
         }
 
         private string GetDataPathForID(string hashCode)
         {
             string fileName = MakeValidFileName(hashCode);
-            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), fileName.Substring(0, 3))))
-                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), fileName.Substring(0, 3)));
-            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3)))))
-                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3))));
-            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3))))))
-                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3)))));
-            return Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), Path.Combine(fileName.Substring(5, 3), fileName + ".data"))));
+            string baseStr = Path.Combine(m_assetsDirectory, "data");
+            for (int i = 0; i < 4; i++)
+            {
+                baseStr = Path.Combine(baseStr, fileName.Substring(i * 2, 2));
+                if (!Directory.Exists(baseStr))
+                    Directory.CreateDirectory(baseStr);
+            }
+            return Path.Combine(baseStr, fileName + ".data");
         }
         private static string MakeValidFileName(string name)
         {
@@ -298,11 +300,11 @@ namespace Aurora.FileBasedServices.AssetService
                     FileStream openStream = File.OpenRead(GetPathForID(id));
                     asset = ProtoBuf.Serializer.Deserialize<AssetBase>(openStream);
                     openStream.Close();
-                    byte[] assetdata = File.ReadAllBytes(GetDataPathForID(asset.HashCode));
-                    if (assetdata == null || asset.HashCode == "")
-                        return CheckForConversion(id);
-                    asset.Data = assetdata;
+                    asset.Data = File.ReadAllBytes(GetDataPathForID(asset.HashCode));
                 }
+            }
+            catch
+            {
             }
             finally
             {
@@ -347,13 +349,13 @@ namespace Aurora.FileBasedServices.AssetService
 
         public bool FileSetAsset(AssetBase asset)
         {
-            bool duplicate = File.Exists(GetDataPathForID(asset.HashCode));
-
             FileStream assetStream = null;
             try
             {
-                byte[] data = asset.Data;
                 string hash = asset.HashCode;
+                bool duplicate = File.Exists(GetDataPathForID(hash));
+
+                byte[] data = asset.Data;
                 asset.Data = new byte[0];
                 lock (_lock)
                 {
@@ -365,9 +367,6 @@ namespace Aurora.FileBasedServices.AssetService
                     //Deduplication...
                     if (duplicate)
                     {
-                        if (MainConsole.Instance != null)
-                            MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString + " for " + asset.IDString);
-
                         //Only set id --> asset, and not the hashcode --> data to deduplicate
                         return true;
                     }
