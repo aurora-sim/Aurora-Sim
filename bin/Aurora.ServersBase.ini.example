@@ -1,12 +1,3 @@
-[Handlers]
-    AgentInfoHandler = AgentInfoService
-    AssetHandler = AssetService
-    AuthenticationHandler = PasswordAuthenticationService
-    AvatarHandler = AvatarService
-    GridHandler = GridService
-    InventoryHandler = InventoryService
-    UserAccountHandler = UserAccountService
-
 [Console]
     ;; Setting for which console log will be used
     ;; Values are:

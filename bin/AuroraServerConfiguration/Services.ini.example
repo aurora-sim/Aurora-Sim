@@ -58,9 +58,6 @@
     ;; Should we check user passwords? If this is set to false, there will be NO password checking.
     AuthenticateUsers = true
 
-[AssetService]
-    AllowRemoteDelete = true
-
 [DisplayNamesModule]
     ;; This allows for display names to be used
     Enabled = true
@@ -68,3 +65,83 @@
     ;; Blocks all user names in this list from being used as display names. Names are NOT case sensitive. Seperate names by commas.
     ;; Example "Linden,Admin"
     BannedUserNames = "Linden"
+	
+[AssetService]
+    ;; Whether or not we should do conversion from an older SQL asset database
+	DoConversion = true
+	
+[Handlers]
+    ;; Add any handlers here that you want to use
+
+    FreeswitchInHandler = FreeswitchServerConnector
+    GridInfoInHandler = GridInfoServerInConnector
+    GridInHandler = GridServiceConnector
+    LLLoginHandler = LLLoginServiceInConnector
+    EventQueueInHandler = EventQueueHandler
+
+    AgentInfoHandler = AgentInfoService
+    ;; Possible choices for asset services:
+    ;;  AssetService - basic SQL service, slower, but works
+    ;;  RedisAssetService - Redis database, fast, but memory hog
+    ;;  FileBasedAssetService - Uses the file system to store assets, recommended choice
+    AssetHandler = FileBasedAssetService
+    AssetHandlerUseCache = false
+    AuthenticationHandler = PasswordAuthenticationService
+    AvatarHandler = AvatarService
+    CapsHandler = CapsService
+    ConfigurationHandler = ConfigurationService
+    EventQueueHandler = EventQueueService
+    FreeSwitchHandler = FreeswitchService
+    FriendsHandler = FriendsService
+    GridHandler = GridService
+    GridWideMessage = GridWideMessageModule
+    InventoryHandler = InventoryService
+    LoginHandler = LLLoginService
+    SimulationHandler = SimulationServiceConnector
+    SyncMessagePosterServiceHandler = SyncMessagePosterService
+    UserAccountHandler = UserAccountService
+
+    AssetServiceOpenServerHandler = false
+    AvatarServiceOpenServerHandler = false
+    GridServiceOpenServerHandler = false
+    InventoryServiceOpenServerHandler = false
+    UserAccountServiceOpenServerHandler = false
+
+    LLLoginHandlerPort = 8002
+
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8014
+	SyncMessagePosterServiceDoRemote = true
+
+    InstantMessagingServiceOpenServerHandler = true
+    InstantMessagingServiceServerHandlerPort = 8014
+
+[AuroraConnectors]
+    AbuseReportsConnector = LocalConnector
+    AssetConnector = LocalConnector
+    AvatarArchiverConnector = LocalConnector
+    SimMapDataConnector = LocalConnector
+    ScriptDataConnector = LocalConnector
+    RegionInfoConnector = LocalConnector
+    AgentConnector = LocalConnector
+    RegionConnector = LocalConnector
+    ProfileConnector = LocalConnector
+    EstateConnector = LocalConnector
+    OfflineMessagesConnector = LocalConnector
+    DirectoryServiceConnector = LocalConnector
+    MuteListConnector = LocalConnector
+    ParcelConnector = LocalConnector
+    EmailConnector = LocalConnector
+
+    ;; Max non-group chat messages that the server will store per user
+    MaxOfflineMessages = 20
+
+    ;; Whether we should save any group chat messages for users
+    SaveOfflineGroupChatMessages = true
+
+    ;; The maximum number of group chat messages that the server will store per user
+    MaxGroupOfflineMessages = 50
+
+    DoRemoteCalls = False
+    CapsServiceDoRemoteCalls = False
+    AllowRemoteCalls = True

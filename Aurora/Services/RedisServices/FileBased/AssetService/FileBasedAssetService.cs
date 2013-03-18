@@ -9,23 +9,20 @@ using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
-using Sider;
-using Aurora.RedisServices.ConnectionHelpers;
 
-namespace Aurora.RedisServices.AssetService
+namespace Aurora.FileBasedServices.AssetService
 {
     public class AssetService : ConnectorBase, IAssetService, IService
     {
         #region Declares
 
-        protected const string DATA_PREFIX = "DATA";
         protected bool doDatabaseCaching = false;
         protected string m_connectionDNS = "localhost", m_connectionPassword = null;
-        protected Pool<RedisClient<byte[]>> m_connectionPool;
-        protected int m_connectionPort = 6379;
 
         protected bool m_doConversion = false;
         protected IAssetDataPlugin m_assetService;
+        protected string m_assetsDirectory = "C://assets/";
+        protected bool m_enabled = false;
 
         #endregion
 
@@ -39,14 +36,23 @@ namespace Aurora.RedisServices.AssetService
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", "") != "Redis" + Name)
+            if (handlerConfig.GetString("AssetHandler", "") != "FileBased" + Name)
                 return;
+            m_enabled = true;
             Configure(config, registry);
             Init(registry, Name, serverPath: "/asset/");
+
+            SetUpFileBase(Path.GetPathRoot(Environment.CurrentDirectory));
+
+            IConfig assetConfig = config.Configs["AssetService"];
+            if (assetConfig != null)
+                m_doConversion = assetConfig.GetBoolean("DoConversion", true);
         }
 
         public virtual void Configure(IConfigSource config, IRegistryCore registry)
         {
+            if (!m_enabled)
+                return;
             m_registry = registry;
 
             registry.RegisterModuleInterface<IAssetService>(this);
@@ -54,17 +60,6 @@ namespace Aurora.RedisServices.AssetService
             IConfig handlers = config.Configs["Handlers"];
             if (handlers != null)
                 doDatabaseCaching = handlers.GetBoolean("AssetHandlerUseCache", false);
-
-            IConfig redisConnection = config.Configs["RedisConnection"];
-            if (redisConnection != null)
-            {
-                string connString = redisConnection.Get("ConnectionString", "localhost:6379");
-                m_connectionDNS = connString.Split(':')[0];
-                m_connectionPort = int.Parse(connString.Split(':')[1]);
-                m_connectionPassword = redisConnection.Get("ConnectionPassword", null);
-                m_doConversion = redisConnection.GetBoolean("DoConversion", false);
-            }
-            m_connectionPool = new Pool<RedisClient<byte[]>>(() => new RedisClient<byte[]>(m_connectionDNS, m_connectionPort));
 
             if (MainConsole.Instance != null)
             {
@@ -79,8 +74,6 @@ namespace Aurora.RedisServices.AssetService
                 MainConsole.Instance.Commands.AddCommand("get asset",
                                                          "get asset <ID>",
                                                          "Gets info about asset from database", HandleGetAsset);
-
-                MainConsole.Instance.Info("[REDIS ASSET SERVICE]: Redis asset service enabled");
             }
         }
 
@@ -204,7 +197,7 @@ namespace Aurora.RedisServices.AssetService
             }
             else
                 RedisSetAsset(asset);
-
+            AssetBase test = RedisGetAsset(asset.IDString);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (doDatabaseCaching && cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
             {
@@ -246,56 +239,48 @@ namespace Aurora.RedisServices.AssetService
 
         #endregion
 
-        private byte[] RedisEnsureConnection(Func<RedisClient<byte[]>, byte[]> func)
+        private void SetUpFileBase(string path)
         {
-            RedisClient<byte[]> client = null;
-            try
-            {
-                client = m_connectionPool.GetFreeItem();
-                if (func == null)
-                    return null;//Checking whether the connection is alive
-                return func(client);
-            }
-            catch (Exception)
-            {
-                try { client.Dispose(); }
-                catch { }
-                m_connectionPool.DestroyItem(client);
-                client = null;
-            }
-            finally
-            {
-                if (client != null)
-                    m_connectionPool.FlagFreeItem(client);
-            }
-            return null;
+            m_assetsDirectory = Path.Combine(path, "assets");
+            if (!Directory.Exists(m_assetsDirectory))
+                Directory.CreateDirectory(m_assetsDirectory);
+            if (!Directory.Exists(Path.Combine(m_assetsDirectory, "data")))
+                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, "data"));
+
+            MainConsole.Instance.InfoFormat("[FILE BASED ASSET SERVICE]: Set up File Based Assets in {0}.", m_assetsDirectory);
         }
 
-        private bool RedisEnsureConnection(Func<RedisClient<byte[]>, bool> func)
+        private string GetPathForID(string id)
         {
-            RedisClient<byte[]> client = null;
-            try
-            {
-                client = m_connectionPool.GetFreeItem();
-                if (func == null)
-                    return false;//Checking whether the connection is alive
-                return func(client);
-            }
-            catch (Exception)
-            {
-                try { client.Dispose(); }
-                catch { }
-                m_connectionPool.DestroyItem(client);
-                client = null;
-            }
-            finally
-            {
-                if (client != null)
-                    m_connectionPool.FlagFreeItem(client);
-            }
-            return false;
+            string fileName = MakeValidFileName(id);
+            if (!Directory.Exists(Path.Combine(m_assetsDirectory, fileName.Substring(0, 3))))
+                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, fileName.Substring(0, 3)));
+            if (!Directory.Exists(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3)))))
+                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3))));
+            if (!Directory.Exists(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3))))))
+                Directory.CreateDirectory(Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3)))));
+            return Path.Combine(m_assetsDirectory, Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), Path.Combine(fileName.Substring(5, 3), fileName + ".asset"))));
         }
 
+        private string GetDataPathForID(string hashCode)
+        {
+            string fileName = MakeValidFileName(hashCode);
+            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), fileName.Substring(0, 3))))
+                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), fileName.Substring(0, 3)));
+            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3)))))
+                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), fileName.Substring(2, 3))));
+            if (!Directory.Exists(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3))))))
+                Directory.CreateDirectory(Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), fileName.Substring(5, 3)))));
+            return Path.Combine(Path.Combine(m_assetsDirectory, "data"), Path.Combine(fileName.Substring(0, 3), Path.Combine(fileName.Substring(2, 3), Path.Combine(fileName.Substring(5, 3), fileName + ".data"))));
+        }
+        private static string MakeValidFileName(string name)
+        {
+            string invalidChars = System.Text.RegularExpressions.Regex.Escape(new string(System.IO.Path.GetInvalidFileNameChars())) + "+=";
+            string invalidReStr = string.Format(@"([{0}]*\.+$)|([{0}]+)", invalidChars);
+            return System.Text.RegularExpressions.Regex.Replace(name, invalidReStr, "");
+        }
+
+        private object _lock = new object();
         public AssetBase RedisGetAsset(string id)
         {
             AssetBase asset = null;
@@ -305,31 +290,26 @@ namespace Aurora.RedisServices.AssetService
 #endif
             try
             {
-                RedisEnsureConnection((conn) =>
-                {
-                    byte[] data = conn.Get(id);
-                    if (data == null)
-                        return null;
-
-                    MemoryStream memStream = new MemoryStream(data);
-                    asset = ProtoBuf.Serializer.Deserialize<AssetBase>(memStream);
-                    memStream.Close();
-                    byte[] assetdata = conn.Get(DATA_PREFIX + asset.HashCode);
-                    if (assetdata == null || asset.HashCode == "")
-                        return null;
-                    asset.Data = assetdata;
-                    return null;
-                });
-
-                if (asset == null)
+                if (!File.Exists(GetPathForID(id)))
                     return CheckForConversion(id);
+
+                lock (_lock)
+                {
+                    FileStream openStream = File.OpenRead(GetPathForID(id));
+                    asset = ProtoBuf.Serializer.Deserialize<AssetBase>(openStream);
+                    openStream.Close();
+                    byte[] assetdata = File.ReadAllBytes(GetDataPathForID(asset.HashCode));
+                    if (assetdata == null || asset.HashCode == "")
+                        return CheckForConversion(id);
+                    asset.Data = assetdata;
+                }
             }
             finally
             {
 #if DEBUG
                 long endTime = System.Diagnostics.Stopwatch.GetTimestamp();
                 if (MainConsole.Instance != null && asset != null)
-                    MainConsole.Instance.Warn("[REDIS ASSET SERVICE]: Took " + (endTime - startTime) /10000 + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
+                    MainConsole.Instance.Warn("[FILE BASED ASSET SERVICE]: Took " + (endTime - startTime) /10000 + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
 #endif
             }
             return asset;
@@ -359,7 +339,7 @@ namespace Aurora.RedisServices.AssetService
 
         public bool RedisExistsAsset(string id)
         {
-            bool success = RedisEnsureConnection((conn) => conn.Exists(id));
+            bool success = File.Exists(GetPathForID(id));
             if (!success)
                 success = m_assetService.ExistsAsset(UUID.Parse(id));
             return success;
@@ -367,37 +347,33 @@ namespace Aurora.RedisServices.AssetService
 
         public bool RedisSetAsset(AssetBase asset)
         {
-            bool duplicate = RedisEnsureConnection((conn) => conn.Exists(DATA_PREFIX + asset.HashCode));
-            
-            MemoryStream memStream = new MemoryStream();
-            byte[] data = asset.Data;
-            string hash = asset.HashCode;
-            asset.Data = new byte[0];
-            ProtoBuf.Serializer.Serialize<AssetBase>(memStream, asset);
-            asset.Data = data;
+            bool duplicate = File.Exists(GetDataPathForID(asset.HashCode));
 
+            FileStream assetStream = null;
             try
             {
-                //Deduplication...
-                if (duplicate)
+                byte[] data = asset.Data;
+                string hash = asset.HashCode;
+                asset.Data = new byte[0];
+                lock (_lock)
                 {
-                    if (MainConsole.Instance != null)
-                        MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString + " for " + asset.IDString);
+                    assetStream = File.OpenWrite(GetPathForID(asset.IDString));
+                    ProtoBuf.Serializer.Serialize<AssetBase>(assetStream, asset);
+                    assetStream.Close();
+                    asset.Data = data;
 
-                    //Only set id --> asset, and not the hashcode --> data to deduplicate
-                    RedisEnsureConnection((conn) => conn.Set(asset.IDString, memStream.ToArray()));
-                    return true;
-                }
-
-                RedisEnsureConnection((conn) =>
+                    //Deduplication...
+                    if (duplicate)
                     {
-                        conn.Pipeline((c) =>
-                        {
-                            c.Set(asset.IDString, memStream.ToArray());
-                            c.Set(DATA_PREFIX + hash, data);
-                        });
+                        if (MainConsole.Instance != null)
+                            MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString + " for " + asset.IDString);
+
+                        //Only set id --> asset, and not the hashcode --> data to deduplicate
                         return true;
-                    });
+                    }
+
+                    File.WriteAllBytes(GetDataPathForID(hash), data);
+                }
                 return true;
             }
             catch
@@ -406,7 +382,8 @@ namespace Aurora.RedisServices.AssetService
             }
             finally
             {
-                memStream.Close();
+                //if (assetStream != null)
+                //    assetStream.Close();
             }
         }
 
@@ -415,8 +392,8 @@ namespace Aurora.RedisServices.AssetService
             AssetBase asset = RedisGetAsset(id);
             if (asset == null)
                 return;
-            RedisEnsureConnection((conn) => conn.Del(id) == 1);
-            RedisEnsureConnection((conn) => conn.Del(DATA_PREFIX + asset.HashCode) == 1);
+            File.Delete(GetPathForID(id));
+            File.Delete(GetDataPathForID(asset.HashCode));
         }
 
         #region Console Commands
