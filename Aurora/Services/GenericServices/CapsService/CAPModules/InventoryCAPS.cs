@@ -468,188 +468,188 @@ namespace Aurora.Services
             sbyte assType = 0;
             sbyte inType = 0;
 
-            if (inventoryType == "sound")
+            switch (inventoryType)
             {
-                inType = 1;
-                assType = 1;
-            }
-            else if (inventoryType == "animation")
-            {
-                inType = 19;
-                assType = 20;
-            }
-            else if (inventoryType == "snapshot")
-            {
-                inType = 15;
-                assType = 0;
-            }
-            else if (inventoryType == "wearable")
-            {
-                inType = 18;
-                switch (assetType)
-                {
-                    case "bodypart":
-                        assType = 13;
-                        break;
-                    case "clothing":
-                        assType = 5;
-                        break;
-                }
-            }
-            else if (inventoryType == "object")
-            {
-                inType = (sbyte) InventoryType.Object;
-                assType = (sbyte) AssetType.Object;
-
-                List<Vector3> positions = new List<Vector3>();
-                List<Quaternion> rotations = new List<Quaternion>();
-                OSDMap request = (OSDMap) OSDParser.DeserializeLLSDXml(data);
-                OSDArray instance_list = (OSDArray) request["instance_list"];
-                OSDArray mesh_list = (OSDArray) request["mesh_list"];
-                OSDArray texture_list = (OSDArray) request["texture_list"];
-                SceneObjectGroup grp = null;
-
-                List<UUID> textures = new List<UUID>();
-                foreach (AssetBase textureAsset in texture_list.Select(t => new AssetBase(UUID.Random(), assetName, AssetType.Texture,
-                                                                                          m_service.AgentID) {Data = t.AsBinary()}))
-                {
-                    textureAsset.ID = m_assetService.Store(textureAsset);
-                    textures.Add(textureAsset.ID);
-                }
-
-                InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID,
-                                                                                     InventoryType.Mesh, AssetType.Mesh);
-                for (int i = 0; i < mesh_list.Count; i++)
-                {
-                    PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox();
-
-                    Primitive.TextureEntry textureEntry =
-                        new Primitive.TextureEntry(Primitive.TextureEntry.WHITE_TEXTURE);
-                    OSDMap inner_instance_list = (OSDMap) instance_list[i];
-
-                    OSDArray face_list = (OSDArray) inner_instance_list["face_list"];
-                    for (uint face = 0; face < face_list.Count; face++)
+                case "sound":
+                    inType = 1;
+                    assType = 1;
+                    break;
+                case "animation":
+                    inType = 19;
+                    assType = 20;
+                    break;
+                case "snapshot":
+                    inType = 15;
+                    assType = 0;
+                    break;
+                case "wearable":
+                    inType = 18;
+                    switch (assetType)
                     {
-                        OSDMap faceMap = (OSDMap) face_list[(int) face];
-                        Primitive.TextureEntryFace f = pbs.Textures.CreateFace(face);
-                        if (faceMap.ContainsKey("fullbright"))
-                            f.Fullbright = faceMap["fullbright"].AsBoolean();
-                        if (faceMap.ContainsKey("diffuse_color"))
-                            f.RGBA = faceMap["diffuse_color"].AsColor4();
-
-                        int textureNum = faceMap["image"].AsInteger();
-                        float imagerot = faceMap["imagerot"].AsInteger();
-                        float offsets = (float) faceMap["offsets"].AsReal();
-                        float offsett = (float) faceMap["offsett"].AsReal();
-                        float scales = (float) faceMap["scales"].AsReal();
-                        float scalet = (float) faceMap["scalet"].AsReal();
-
-                        if (imagerot != 0)
-                            f.Rotation = imagerot;
-                        if (offsets != 0)
-                            f.OffsetU = offsets;
-                        if (offsett != 0)
-                            f.OffsetV = offsett;
-                        if (scales != 0)
-                            f.RepeatU = scales;
-                        if (scalet != 0)
-                            f.RepeatV = scalet;
-                        f.TextureID = textures.Count > textureNum ? textures[textureNum] : Primitive.TextureEntry.WHITE_TEXTURE;
-                        textureEntry.FaceTextures[face] = f;
+                        case "bodypart":
+                            assType = 13;
+                            break;
+                        case "clothing":
+                            assType = 5;
+                            break;
                     }
-                    pbs.TextureEntry = textureEntry.GetBytes();
-
-                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, AssetType.Mesh, m_service.AgentID)
-                                              {Data = mesh_list[i].AsBinary()};
-                    meshAsset.ID = m_assetService.Store(meshAsset);
-
-                    if (meshFolder == null)
+                    break;
+                case "object":
                     {
-                        m_inventoryService.CreateUserInventory(m_service.AgentID, false);
-                        meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Mesh,
-                                                                         AssetType.Mesh);
+                        inType = (sbyte) InventoryType.Object;
+                        assType = (sbyte) AssetType.Object;
+
+                        List<Vector3> positions = new List<Vector3>();
+                        List<Quaternion> rotations = new List<Quaternion>();
+                        OSDMap request = (OSDMap) OSDParser.DeserializeLLSDXml(data);
+                        OSDArray instance_list = (OSDArray) request["instance_list"];
+                        OSDArray mesh_list = (OSDArray) request["mesh_list"];
+                        OSDArray texture_list = (OSDArray) request["texture_list"];
+                        SceneObjectGroup grp = null;
+
+                        List<UUID> textures = new List<UUID>();
+                        foreach (AssetBase textureAsset in texture_list.Select(t => new AssetBase(UUID.Random(), assetName, AssetType.Texture,
+                                                                                                  m_service.AgentID) {Data = t.AsBinary()}))
+                        {
+                            textureAsset.ID = m_assetService.Store(textureAsset);
+                            textures.Add(textureAsset.ID);
+                        }
+
+                        InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID,
+                                                                                             InventoryType.Mesh, AssetType.Mesh);
+                        for (int i = 0; i < mesh_list.Count; i++)
+                        {
+                            PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox();
+
+                            Primitive.TextureEntry textureEntry =
+                                new Primitive.TextureEntry(Primitive.TextureEntry.WHITE_TEXTURE);
+                            OSDMap inner_instance_list = (OSDMap) instance_list[i];
+
+                            OSDArray face_list = (OSDArray) inner_instance_list["face_list"];
+                            for (uint face = 0; face < face_list.Count; face++)
+                            {
+                                OSDMap faceMap = (OSDMap) face_list[(int) face];
+                                Primitive.TextureEntryFace f = pbs.Textures.CreateFace(face);
+                                if (faceMap.ContainsKey("fullbright"))
+                                    f.Fullbright = faceMap["fullbright"].AsBoolean();
+                                if (faceMap.ContainsKey("diffuse_color"))
+                                    f.RGBA = faceMap["diffuse_color"].AsColor4();
+
+                                int textureNum = faceMap["image"].AsInteger();
+                                float imagerot = faceMap["imagerot"].AsInteger();
+                                float offsets = (float) faceMap["offsets"].AsReal();
+                                float offsett = (float) faceMap["offsett"].AsReal();
+                                float scales = (float) faceMap["scales"].AsReal();
+                                float scalet = (float) faceMap["scalet"].AsReal();
+
+                                if (imagerot != 0)
+                                    f.Rotation = imagerot;
+                                if (offsets != 0)
+                                    f.OffsetU = offsets;
+                                if (offsett != 0)
+                                    f.OffsetV = offsett;
+                                if (scales != 0)
+                                    f.RepeatU = scales;
+                                if (scalet != 0)
+                                    f.RepeatV = scalet;
+                                f.TextureID = textures.Count > textureNum ? textures[textureNum] : Primitive.TextureEntry.WHITE_TEXTURE;
+                                textureEntry.FaceTextures[face] = f;
+                            }
+                            pbs.TextureEntry = textureEntry.GetBytes();
+
+                            AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, AssetType.Mesh, m_service.AgentID)
+                                                      {Data = mesh_list[i].AsBinary()};
+                            meshAsset.ID = m_assetService.Store(meshAsset);
+
+                            if (meshFolder == null)
+                            {
+                                m_inventoryService.CreateUserInventory(m_service.AgentID, false);
+                                meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Mesh,
+                                                                                 AssetType.Mesh);
+                            }
+
+                            InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_service.AgentID)
+                                                             {
+                                                                 AssetType = (sbyte) AssetType.Mesh,
+                                                                 AssetID = meshAsset.ID,
+                                                                 CreatorId = m_service.AgentID.ToString(),
+                                                                 Folder = meshFolder.ID,
+                                                                 InvType = (int) InventoryType.Texture,
+                                                                 Name = "(Mesh) - " + assetName,
+                                                                 CurrentPermissions = (uint) PermissionMask.All,
+                                                                 BasePermissions = (uint) PermissionMask.All,
+                                                                 EveryOnePermissions = everyone_mask,
+                                                                 GroupPermissions = group_mask,
+                                                                 NextPermissions = next_owner_mask
+                                                             };
+                            //Bad... but whatever
+                            m_inventoryService.AddItem(itemBase);
+
+                            pbs.SculptEntry = true;
+                            pbs.SculptTexture = meshAsset.ID;
+                            pbs.SculptType = (byte) SculptType.Mesh;
+                            pbs.SculptData = meshAsset.Data;
+
+                            Vector3 position = inner_instance_list["position"].AsVector3();
+                            Vector3 scale = inner_instance_list["scale"].AsVector3();
+                            Quaternion rotation = inner_instance_list["rotation"].AsQuaternion();
+
+                            int physicsShapeType = inner_instance_list["physics_shape_type"].AsInteger();
+                            int material = inner_instance_list["material"].AsInteger();
+                            int mesh = inner_instance_list["mesh"].AsInteger();
+
+                            UUID owner_id = m_service.AgentID;
+
+                            SceneObjectPart prim = new SceneObjectPart(owner_id, pbs, position, Quaternion.Identity,
+                                                                       Vector3.Zero, assetName)
+                                                       {Scale = scale, AbsolutePosition = position};
+
+                            rotations.Add(rotation);
+                            positions.Add(position);
+                            prim.UUID = UUID.Random();
+                            prim.CreatorID = owner_id;
+                            prim.OwnerID = owner_id;
+                            prim.GroupID = UUID.Zero;
+                            prim.LastOwnerID = prim.OwnerID;
+                            prim.CreationDate = Util.UnixTimeSinceEpoch();
+                            prim.Name = assetName;
+                            prim.Description = "";
+                            prim.PhysicsType = (byte) physicsShapeType;
+
+                            prim.BaseMask = (uint) PermissionMask.All;
+                            prim.EveryoneMask = everyone_mask;
+                            prim.NextOwnerMask = next_owner_mask;
+                            prim.GroupMask = group_mask;
+                            prim.OwnerMask = (uint) PermissionMask.All;
+
+                            if (grp == null)
+                                grp = new SceneObjectGroup(prim, null);
+                            else
+                                grp.AddChild(prim, i + 1);
+                            grp.RootPart.IsAttachment = false;
+                        }
+                        if (grp.ChildrenList.Count > 1) //Fix first link #
+                            grp.RootPart.LinkNum++;
+
+                        Vector3 rootPos = positions[0];
+                        grp.SetAbsolutePosition(false, rootPos);
+                        for (int i = 0; i < positions.Count; i++)
+                        {
+                            Vector3 offset = positions[i] - rootPos;
+                            grp.ChildrenList[i].SetOffsetPosition(offset);
+                            Vector3 abs = grp.ChildrenList[i].AbsolutePosition;
+                            Vector3 currentPos = positions[i];
+                        }
+                        //grp.Rotation = rotations[0];
+                        for (int i = 0; i < rotations.Count; i++)
+                        {
+                            if (i != 0)
+                                grp.ChildrenList[i].SetRotationOffset(false, rotations[i], false);
+                        }
+                        grp.UpdateGroupRotationR(rotations[0]);
+                        data = Encoding.ASCII.GetBytes(grp.ToXml2());
                     }
-
-                    InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_service.AgentID)
-                                                     {
-                                                         AssetType = (sbyte) AssetType.Mesh,
-                                                         AssetID = meshAsset.ID,
-                                                         CreatorId = m_service.AgentID.ToString(),
-                                                         Folder = meshFolder.ID,
-                                                         InvType = (int) InventoryType.Texture,
-                                                         Name = "(Mesh) - " + assetName,
-                                                         CurrentPermissions = (uint) PermissionMask.All,
-                                                         BasePermissions = (uint) PermissionMask.All,
-                                                         EveryOnePermissions = everyone_mask,
-                                                         GroupPermissions = group_mask,
-                                                         NextPermissions = next_owner_mask
-                                                     };
-                    //Bad... but whatever
-                    m_inventoryService.AddItem(itemBase);
-
-                    pbs.SculptEntry = true;
-                    pbs.SculptTexture = meshAsset.ID;
-                    pbs.SculptType = (byte) SculptType.Mesh;
-                    pbs.SculptData = meshAsset.Data;
-
-                    Vector3 position = inner_instance_list["position"].AsVector3();
-                    Vector3 scale = inner_instance_list["scale"].AsVector3();
-                    Quaternion rotation = inner_instance_list["rotation"].AsQuaternion();
-
-                    int physicsShapeType = inner_instance_list["physics_shape_type"].AsInteger();
-                    int material = inner_instance_list["material"].AsInteger();
-                    int mesh = inner_instance_list["mesh"].AsInteger();
-
-                    UUID owner_id = m_service.AgentID;
-
-                    SceneObjectPart prim = new SceneObjectPart(owner_id, pbs, position, Quaternion.Identity,
-                                                               Vector3.Zero, assetName)
-                                               {Scale = scale, AbsolutePosition = position};
-
-                    rotations.Add(rotation);
-                    positions.Add(position);
-                    prim.UUID = UUID.Random();
-                    prim.CreatorID = owner_id;
-                    prim.OwnerID = owner_id;
-                    prim.GroupID = UUID.Zero;
-                    prim.LastOwnerID = prim.OwnerID;
-                    prim.CreationDate = Util.UnixTimeSinceEpoch();
-                    prim.Name = assetName;
-                    prim.Description = "";
-                    prim.PhysicsType = (byte) physicsShapeType;
-
-                    prim.BaseMask = (uint) PermissionMask.All;
-                    prim.EveryoneMask = everyone_mask;
-                    prim.NextOwnerMask = next_owner_mask;
-                    prim.GroupMask = group_mask;
-                    prim.OwnerMask = (uint) PermissionMask.All;
-
-                    if (grp == null)
-                        grp = new SceneObjectGroup(prim, null);
-                    else
-                        grp.AddChild(prim, i + 1);
-                    grp.RootPart.IsAttachment = false;
-                }
-                if (grp.ChildrenList.Count > 1) //Fix first link #
-                    grp.RootPart.LinkNum++;
-
-                Vector3 rootPos = positions[0];
-                grp.SetAbsolutePosition(false, rootPos);
-                for (int i = 0; i < positions.Count; i++)
-                {
-                    Vector3 offset = positions[i] - rootPos;
-                    grp.ChildrenList[i].SetOffsetPosition(offset);
-                    Vector3 abs = grp.ChildrenList[i].AbsolutePosition;
-                    Vector3 currentPos = positions[i];
-                }
-                //grp.Rotation = rotations[0];
-                for (int i = 0; i < rotations.Count; i++)
-                {
-                    if (i != 0)
-                        grp.ChildrenList[i].SetRotationOffset(false, rotations[i], false);
-                }
-                grp.UpdateGroupRotationR(rotations[0]);
-                data = Encoding.ASCII.GetBytes(grp.ToXml2());
+                    break;
             }
             AssetBase asset = new AssetBase(assetID, assetName, (AssetType) assType, m_service.AgentID) {Data = data};
             asset.ID = m_assetService.Store(asset);

@@ -626,26 +626,26 @@ namespace Aurora.BotManager
             if (m_nodeGraph.GetNextPosition(m_controller.AbsolutePosition, m_closeToPoint, 60, out pos, out state,
                                             out teleport))
             {
-                if (state == TravelMode.Fly)
-                    FlyTo(pos);
-                else if (state == TravelMode.Run)
+                switch (state)
                 {
-                    m_controller.SetAlwaysRun = true;
-                    WalkTo(pos);
-                }
-                else if (state == TravelMode.Walk)
-                {
-                    m_controller.SetAlwaysRun = false;
-                    WalkTo(pos);
-                }
-                else if (state == TravelMode.Teleport)
-                {
-                    m_controller.Teleport(pos);
-                    m_nodeGraph.CurrentPos++;
-                }
-                else if (state == TravelMode.TriggerHereEvent)
-                {
-                    EventManager.FireGenericEventHandler("HereEvent", null);
+                    case TravelMode.Fly:
+                        FlyTo(pos);
+                        break;
+                    case TravelMode.Run:
+                        m_controller.SetAlwaysRun = true;
+                        WalkTo(pos);
+                        break;
+                    case TravelMode.Walk:
+                        m_controller.SetAlwaysRun = false;
+                        WalkTo(pos);
+                        break;
+                    case TravelMode.Teleport:
+                        m_controller.Teleport(pos);
+                        m_nodeGraph.CurrentPos++;
+                        break;
+                    case TravelMode.TriggerHereEvent:
+                        EventManager.FireGenericEventHandler("HereEvent", null);
+                        break;
                 }
             }
             else

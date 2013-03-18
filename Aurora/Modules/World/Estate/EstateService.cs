@@ -176,22 +176,20 @@ namespace Aurora.Modules.Estate
             }
             if (cmdparams[2] == "Maturity")
             {
-                if (cmdparams[3] == "PG")
+                switch (cmdparams[3])
                 {
-                    scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(0);
-                }
-                else if (cmdparams[3] == "Mature")
-                {
-                    scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(1);
-                }
-                else if (cmdparams[3] == "Adult")
-                {
-                    scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(2);
-                }
-                else
-                {
-                    MainConsole.Instance.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
-                    return;
+                    case "PG":
+                        scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(0);
+                        break;
+                    case "Mature":
+                        scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(1);
+                        break;
+                    case "Adult":
+                        scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(2);
+                        break;
+                    default:
+                        MainConsole.Instance.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
+                        return;
                 }
                 //Tell the grid about the changes
                 IGridRegisterModule gridRegModule = scene.RequestModuleInterface<IGridRegisterModule>();

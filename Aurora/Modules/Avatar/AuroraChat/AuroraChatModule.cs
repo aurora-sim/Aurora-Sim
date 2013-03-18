@@ -719,12 +719,18 @@ namespace Aurora.Modules.Chat
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             byte dialog = im.dialog;
-            if ((im.dialog == (byte)InstantMessageDialog.SessionGroupStart))
-                m_imService.CreateGroupChat(client.AgentId, im);
-            else if (dialog == (byte) InstantMessageDialog.SessionSend)
-                m_imService.SendChatToSession(client.AgentId, im);
-            else if (dialog == (byte) InstantMessageDialog.SessionDrop)
-                m_imService.DropMemberFromSession(client.AgentId, im);
+            switch (dialog)
+            {
+                case (byte)InstantMessageDialog.SessionGroupStart:
+                    m_imService.CreateGroupChat(client.AgentId, im);
+                    break;
+                case (byte)InstantMessageDialog.SessionSend:
+                    m_imService.SendChatToSession(client.AgentId, im);
+                    break;
+                case (byte)InstantMessageDialog.SessionDrop:
+                    m_imService.DropMemberFromSession(client.AgentId, im);
+                    break;
+            }
         }
     }
 }

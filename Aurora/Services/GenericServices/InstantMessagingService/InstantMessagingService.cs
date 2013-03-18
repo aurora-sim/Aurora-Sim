@@ -117,182 +117,183 @@ namespace Aurora.Services
 
             UUID sessionid = UUID.Parse(req["session-id"].AsString());
 
-            if (method == "start conference")
+            switch (method)
             {
-                if (SessionExists(sessionid))
-                    return "";//No duplicate sessions
-                //Create the session.
-                CreateSession(new ChatSession
-                {
-                    Members = new List<ChatSessionMember>(),
-                    SessionID = sessionid,
-                    Name = caps.ClientCaps.AccountInfo.Name + " Conference"
-                });
-
-                OSDArray parameters = (OSDArray)req["params"];
-                //Add other invited members.
-                foreach (OSD param in parameters)
-                {
-                    AddDefaultPermsMemberToSession(param.AsUUID(), sessionid);
-                }
-
-                //Add us to the session!
-                AddMemberToGroup(new ChatSessionMember
-                {
-                    AvatarKey = caps.AgentID,
-                    CanVoiceChat = true,
-                    IsModerator = true,
-                    MuteText = false,
-                    MuteVoice = false,
-                    HasBeenAdded = true,
-                    RequestedRemoval = false
-                }, sessionid);
-
-
-                //Inform us about our room
-                ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
-                    new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
+                case "start conference":
                     {
-                        AgentID = caps.AgentID,
-                        CanVoiceChat = true,
-                        IsModerator = true,
-                        MuteText = false,
-                        MuteVoice = false,
-                        Transition = "ENTER"
-                    };
-                m_eventQueueService.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, caps.AgentID, "ENTER",
-                                                     caps.RegionID);
+                        if (SessionExists(sessionid))
+                            return "";//No duplicate sessions
+                        //Create the session.
+                        CreateSession(new ChatSession
+                                          {
+                                              Members = new List<ChatSessionMember>(),
+                                              SessionID = sessionid,
+                                              Name = caps.ClientCaps.AccountInfo.Name + " Conference"
+                                          });
 
-                ChatterBoxSessionStartReplyMessage cs = new ChatterBoxSessionStartReplyMessage
-                {
-                    VoiceEnabled = true,
-                    TempSessionID = sessionid,
-                    Type = 1,
-                    Success = true,
-                    SessionID = sessionid,
-                    SessionName = caps.ClientCaps.AccountInfo.Name + " Conference",
-                    ModeratedVoice = true
-                };
-                return OSDParser.SerializeLLSDXmlString(cs.Serialize());
-            }
-            else if (method == "accept invitation")
-            {
-                //They would like added to the group conversation
-                List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> Us =
-                    new List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
-                List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents =
-                    new List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+                        OSDArray parameters = (OSDArray)req["params"];
+                        //Add other invited members.
+                        foreach (OSD param in parameters)
+                        {
+                            AddDefaultPermsMemberToSession(param.AsUUID(), sessionid);
+                        }
 
-                ChatSession session = GetSession(sessionid);
-                if (session != null)
-                {
-                    ChatSessionMember thismember = FindMember(sessionid, caps.AgentID);
-                    //Tell all the other members about the incoming member
-                    foreach (ChatSessionMember sessionMember in session.Members)
-                    {
+                        //Add us to the session!
+                        AddMemberToGroup(new ChatSessionMember
+                                             {
+                                                 AvatarKey = caps.AgentID,
+                                                 CanVoiceChat = true,
+                                                 IsModerator = true,
+                                                 MuteText = false,
+                                                 MuteVoice = false,
+                                                 HasBeenAdded = true,
+                                                 RequestedRemoval = false
+                                             }, sessionid);
+
+
+                        //Inform us about our room
                         ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
                             new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
-                            {
-                                AgentID = sessionMember.AvatarKey,
-                                CanVoiceChat = sessionMember.CanVoiceChat,
-                                IsModerator = sessionMember.IsModerator,
-                                MuteText = sessionMember.MuteText,
-                                MuteVoice = sessionMember.MuteVoice,
-                                Transition = "ENTER"
-                            };
-                        if (sessionMember.AvatarKey == thismember.AvatarKey)
+                                {
+                                    AgentID = caps.AgentID,
+                                    CanVoiceChat = true,
+                                    IsModerator = true,
+                                    MuteText = false,
+                                    MuteVoice = false,
+                                    Transition = "ENTER"
+                                };
+                        m_eventQueueService.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, caps.AgentID, "ENTER",
+                                                                              caps.RegionID);
+
+                        ChatterBoxSessionStartReplyMessage cs = new ChatterBoxSessionStartReplyMessage
+                                                                    {
+                                                                        VoiceEnabled = true,
+                                                                        TempSessionID = sessionid,
+                                                                        Type = 1,
+                                                                        Success = true,
+                                                                        SessionID = sessionid,
+                                                                        SessionName = caps.ClientCaps.AccountInfo.Name + " Conference",
+                                                                        ModeratedVoice = true
+                                                                    };
+                        return OSDParser.SerializeLLSDXmlString(cs.Serialize());
+                    }
+                case "accept invitation":
+                    {
+                        //They would like added to the group conversation
+                        List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> Us =
+                            new List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+                        List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents =
+                            new List<ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+
+                        ChatSession session = GetSession(sessionid);
+                        if (session != null)
                         {
-                            Us.Add(block);
-                            NotUsAgents.Add(block);
+                            ChatSessionMember thismember = FindMember(sessionid, caps.AgentID);
+                            //Tell all the other members about the incoming member
+                            foreach (ChatSessionMember sessionMember in session.Members)
+                            {
+                                ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
+                                    new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
+                                        {
+                                            AgentID = sessionMember.AvatarKey,
+                                            CanVoiceChat = sessionMember.CanVoiceChat,
+                                            IsModerator = sessionMember.IsModerator,
+                                            MuteText = sessionMember.MuteText,
+                                            MuteVoice = sessionMember.MuteVoice,
+                                            Transition = "ENTER"
+                                        };
+                                if (sessionMember.AvatarKey == thismember.AvatarKey)
+                                {
+                                    Us.Add(block);
+                                    NotUsAgents.Add(block);
+                                }
+                                else
+                                {
+                                    if (sessionMember.HasBeenAdded)
+                                        // Don't add not joined yet agents. They don't want to be here.
+                                        NotUsAgents.Add(block);
+                                }
+                            }
+                            thismember.HasBeenAdded = true;
+                            foreach (ChatSessionMember member in session.Members)
+                            {
+                                if (member.HasBeenAdded)//Only send to those in the group
+                                {
+                                    UUID regionID = FindRegionID(member.AvatarKey);
+                                    if(regionID != UUID.Zero)
+                                    {
+                                        m_eventQueueService.ChatterBoxSessionAgentListUpdates(session.SessionID,
+                                                                                              member.AvatarKey == thismember.AvatarKey
+                                                                                                  ? NotUsAgents.ToArray()
+                                                                                                  : Us.ToArray(),
+                                                                                              member.AvatarKey, "ENTER",
+                                                                                              regionID);
+                                    }
+                                }
+                            }
+                            return "Accepted";
                         }
                         else
-                        {
-                            if (sessionMember.HasBeenAdded)
-                                // Don't add not joined yet agents. They don't want to be here.
-                                NotUsAgents.Add(block);
-                        }
+                            return ""; //no session exists?
                     }
-                    thismember.HasBeenAdded = true;
-                    foreach (ChatSessionMember member in session.Members)
+                case "mute update":
                     {
-                        if (member.HasBeenAdded)//Only send to those in the group
+                        //Check if the user is a moderator
+                        if (!CheckModeratorPermission(caps.AgentID, sessionid))
+                            return "";
+
+                        OSDMap parameters = (OSDMap)req["params"];
+                        UUID AgentID = parameters["agent_id"].AsUUID();
+                        OSDMap muteInfoMap = (OSDMap)parameters["mute_info"];
+
+                        ChatSessionMember thismember = FindMember(sessionid, AgentID);
+                        if (muteInfoMap.ContainsKey("text"))
+                            thismember.MuteText = muteInfoMap["text"].AsBoolean();
+                        if (muteInfoMap.ContainsKey("voice"))
+                            thismember.MuteVoice = muteInfoMap["voice"].AsBoolean();
+
+                        ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
+                            new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
+                                {
+                                    AgentID = thismember.AvatarKey,
+                                    CanVoiceChat = thismember.CanVoiceChat,
+                                    IsModerator = thismember.IsModerator,
+                                    MuteText = thismember.MuteText,
+                                    MuteVoice = thismember.MuteVoice,
+                                    Transition = "ENTER"
+                                };
+
+                        ChatSession session = GetSession(sessionid);
+                        // Send an update to all users so that they show the correct permissions
+                        foreach (ChatSessionMember member in session.Members)
                         {
-                            UUID regionID = FindRegionID(member.AvatarKey);
-                            if(regionID != UUID.Zero)
+                            if (member.HasBeenAdded)//Only send to those in the group
                             {
-                                m_eventQueueService.ChatterBoxSessionAgentListUpdates(session.SessionID,
-                                                                     member.AvatarKey == thismember.AvatarKey
-                                                                         ? NotUsAgents.ToArray()
-                                                                         : Us.ToArray(),
-                                                                     member.AvatarKey, "ENTER",
-                                                                     regionID);
+                                UUID regionID = FindRegionID(member.AvatarKey);
+                                if (regionID != UUID.Zero)
+                                {
+                                    m_eventQueueService.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, member.AvatarKey, "",
+                                                                                          regionID);
+                                }
                             }
                         }
+
+                        return "Accepted";
                     }
-                    return "Accepted";
-                }
-                else
-                    return ""; //no session exists?
-            }
-            else if (method == "mute update")
-            {
-                //Check if the user is a moderator
-                if (!CheckModeratorPermission(caps.AgentID, sessionid))
-                    return "";
-
-                OSDMap parameters = (OSDMap)req["params"];
-                UUID AgentID = parameters["agent_id"].AsUUID();
-                OSDMap muteInfoMap = (OSDMap)parameters["mute_info"];
-
-                ChatSessionMember thismember = FindMember(sessionid, AgentID);
-                if (muteInfoMap.ContainsKey("text"))
-                    thismember.MuteText = muteInfoMap["text"].AsBoolean();
-                if (muteInfoMap.ContainsKey("voice"))
-                    thismember.MuteVoice = muteInfoMap["voice"].AsBoolean();
-
-                ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block =
-                    new ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
+                case "call":
                     {
-                        AgentID = thismember.AvatarKey,
-                        CanVoiceChat = thismember.CanVoiceChat,
-                        IsModerator = thismember.IsModerator,
-                        MuteText = thismember.MuteText,
-                        MuteVoice = thismember.MuteVoice,
-                        Transition = "ENTER"
-                    };
+                        //Implement voice chat for conferences...
 
-                ChatSession session = GetSession(sessionid);
-                // Send an update to all users so that they show the correct permissions
-                foreach (ChatSessionMember member in session.Members)
-                {
-                    if (member.HasBeenAdded)//Only send to those in the group
-                    {
-                        UUID regionID = FindRegionID(member.AvatarKey);
-                        if (regionID != UUID.Zero)
-                        {
-                            m_eventQueueService.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, member.AvatarKey, "",
-                                                                 regionID);
-                        }
+                        IVoiceService voiceService = m_registry.RequestModuleInterface<IVoiceService>();
+                        if (voiceService == null)
+                            return "";
+
+                        OSDMap resp = voiceService.GroupConferenceCallRequest(caps, sessionid);
+                        return OSDParser.SerializeLLSDXmlString(resp);
                     }
-                }
-
-                return "Accepted";
-            }
-            else if (method == "call")
-            {
-                //Implement voice chat for conferences...
-
-                IVoiceService voiceService = m_registry.RequestModuleInterface<IVoiceService>();
-                if (voiceService == null)
+                default:
+                    MainConsole.Instance.Warn("ChatSessionRequest : " + method);
                     return "";
-
-                OSDMap resp = voiceService.GroupConferenceCallRequest(caps, sessionid);
-                return OSDParser.SerializeLLSDXmlString(resp);
-            }
-            else
-            {
-                MainConsole.Instance.Warn("ChatSessionRequest : " + method);
-                return "";
             }
         }
 

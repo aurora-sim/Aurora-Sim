@@ -1533,150 +1533,152 @@ namespace Aurora.Modules.Groups
             }
 
             // Group notices
-            if ((im.dialog == (byte) InstantMessageDialog.GroupNotice))
+            switch (im.dialog)
             {
-                if (!m_groupNoticesEnabled)
-                    return;
-
-                UUID GroupID = im.toAgentID;
-                if (m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), GroupID, null) != null)
-                {
-                    UUID NoticeID = UUID.Random();
-                    string Subject = im.message.Substring(0, im.message.IndexOf('|'));
-                    string Message = im.message.Substring(Subject.Length + 1);
-
-                    byte[] bucket;
-                    UUID ItemID = UUID.Zero;
-                    int AssetType = 0;
-                    string ItemName = "";
-
-                    if ((im.binaryBucket.Length == 1) && (im.binaryBucket[0] == 0))
+                case (byte) InstantMessageDialog.GroupNotice:
                     {
-                        bucket = new byte[19];
-                        bucket[0] = 0;
-                        bucket[1] = 0;
-                        GroupID.ToBytes(bucket, 2);
-                        bucket[18] = 0;
-                    }
-                    else
-                    {
-                        bucket = im.binaryBucket;
-                        string binBucket = Utils.BytesToString(im.binaryBucket);
-                        binBucket = binBucket.Remove(0, 14).Trim();
+                        if (!m_groupNoticesEnabled)
+                            return;
 
-                        OSDMap binBucketOSD = (OSDMap) OSDParser.DeserializeLLSDXml(binBucket);
-                        if (binBucketOSD.ContainsKey("item_id"))
+                        UUID GroupID = im.toAgentID;
+                        if (m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), GroupID, null) != null)
                         {
-                            ItemID = binBucketOSD["item_id"].AsUUID();
+                            UUID NoticeID = UUID.Random();
+                            string Subject = im.message.Substring(0, im.message.IndexOf('|'));
+                            string Message = im.message.Substring(Subject.Length + 1);
 
-                            InventoryItemBase item = m_scene.InventoryService.GetItem(GetRequestingAgentID(remoteClient), ItemID);
-                            if (item != null)
+                            byte[] bucket;
+                            UUID ItemID = UUID.Zero;
+                            int AssetType = 0;
+                            string ItemName = "";
+
+                            if ((im.binaryBucket.Length == 1) && (im.binaryBucket[0] == 0))
                             {
-                                AssetType = item.AssetType;
-                                ItemName = item.Name;
+                                bucket = new byte[19];
+                                bucket[0] = 0;
+                                bucket[1] = 0;
+                                GroupID.ToBytes(bucket, 2);
+                                bucket[18] = 0;
                             }
                             else
-                                ItemID = UUID.Zero;
+                            {
+                                bucket = im.binaryBucket;
+                                string binBucket = Utils.BytesToString(im.binaryBucket);
+                                binBucket = binBucket.Remove(0, 14).Trim();
+
+                                OSDMap binBucketOSD = (OSDMap) OSDParser.DeserializeLLSDXml(binBucket);
+                                if (binBucketOSD.ContainsKey("item_id"))
+                                {
+                                    ItemID = binBucketOSD["item_id"].AsUUID();
+
+                                    InventoryItemBase item = m_scene.InventoryService.GetItem(GetRequestingAgentID(remoteClient), ItemID);
+                                    if (item != null)
+                                    {
+                                        AssetType = item.AssetType;
+                                        ItemName = item.Name;
+                                    }
+                                    else
+                                        ItemID = UUID.Zero;
+                                }
+                            }
+
+                            m_groupData.AddGroupNotice(GetRequestingAgentID(remoteClient), GroupID, NoticeID, im.fromAgentName,
+                                                       Subject, Message, ItemID, AssetType, ItemName);
+                            if (OnNewGroupNotice != null)
+                                OnNewGroupNotice(GroupID, NoticeID);
+                            GroupNoticeInfo notice = new GroupNoticeInfo()
+                                                         {
+                                                             BinaryBucket = im.binaryBucket,
+                                                             GroupID = GroupID,
+                                                             Message = Message,
+                                                             noticeData = new GroupNoticeData()
+                                                                              {
+                                                                                  AssetType = (byte)AssetType,
+                                                                                  FromName = im.fromAgentName,
+                                                                                  GroupID = GroupID,
+                                                                                  HasAttachment = ItemID != UUID.Zero,
+                                                                                  ItemID = ItemID,
+                                                                                  ItemName = ItemName,
+                                                                                  NoticeID = NoticeID,
+                                                                                  Subject = Subject,
+                                                                                  Timestamp = im.timestamp
+                                                                              }
+                                                         };
+
+                            SendGroupNoticeToUsers(remoteClient, notice, false);
                         }
                     }
-
-                    m_groupData.AddGroupNotice(GetRequestingAgentID(remoteClient), GroupID, NoticeID, im.fromAgentName,
-                                               Subject, Message, ItemID, AssetType, ItemName);
-                    if (OnNewGroupNotice != null)
-                        OnNewGroupNotice(GroupID, NoticeID);
-                    GroupNoticeInfo notice = new GroupNoticeInfo()
+                    break;
+                case (byte) InstantMessageDialog.GroupNoticeInventoryDeclined:
+                    break;
+                case (byte) InstantMessageDialog.GroupNoticeInventoryAccepted:
                     {
-                        BinaryBucket = im.binaryBucket,
-                        GroupID = GroupID,
-                        Message = Message,
-                        noticeData = new GroupNoticeData()
+                        UUID FolderID = new UUID(im.binaryBucket, 0);
+                        remoteClient.Scene.InventoryService.GiveInventoryItemAsync(remoteClient.AgentId, UUID.Zero,
+                                                                                   im.imSessionID, FolderID, false,
+                                                                                   (item) =>
+                                                                                       {
+
+                                                                                           if (item != null)
+                                                                                               remoteClient.SendBulkUpdateInventory(item);
+                                                                                       });
+                    }
+                    break;
+                case 210:
+                    {
+                        // This is sent from the region that the ejectee was ejected from
+                        // if it's being delivered here, then the ejectee is here
+                        // so we need to send local updates to the agent.
+
+                        UUID ejecteeID = im.toAgentID;
+
+                        im.dialog = (byte) InstantMessageDialog.MessageFromAgent;
+                        OutgoingInstantMessage(im, ejecteeID);
+
+                        IClientAPI ejectee = GetActiveClient(ejecteeID);
+                        if (ejectee != null)
                         {
-                            AssetType = (byte)AssetType,
-                            FromName = im.fromAgentName,
-                            GroupID = GroupID,
-                            HasAttachment = ItemID != UUID.Zero,
-                            ItemID = ItemID,
-                            ItemName = ItemName,
-                            NoticeID = NoticeID,
-                            Subject = Subject,
-                            Timestamp = im.timestamp
+                            UUID groupID = im.imSessionID;
+                            ejectee.SendAgentDropGroup(groupID);
+                            if (ejectee.ActiveGroupId == groupID)
+                                GroupTitleUpdate(ejectee, UUID.Zero, UUID.Zero);
+                            RemoveFromGroupPowersCache(ejecteeID, groupID);
                         }
-                    };
-
-                    SendGroupNoticeToUsers(remoteClient, notice, false);
-                }
-            }
-            else if ((im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryDeclined) ||
-                     (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryDeclined))
-            {
-            }
-            else if ((im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted) ||
-                     (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted))
-            {
-                UUID FolderID = new UUID(im.binaryBucket, 0);
-                remoteClient.Scene.InventoryService.GiveInventoryItemAsync(remoteClient.AgentId, UUID.Zero,
-                    im.imSessionID, FolderID, false,
-                    (item) =>
+                    }
+                    break;
+                case 211:
                     {
+                        im.dialog = (byte) InstantMessageDialog.GroupNotice;
 
-                        if (item != null)
-                            remoteClient.SendBulkUpdateInventory(item);
-                    });
-            }
-            else if ((im.dialog == 210))
-            {
-                // This is sent from the region that the ejectee was ejected from
-                // if it's being delivered here, then the ejectee is here
-                // so we need to send local updates to the agent.
+                        //In offline group notices, imSessionID is replaced with the NoticeID so that we can rebuild the packet here
+                        GroupNoticeInfo GND = m_groupData.GetGroupNotice(im.toAgentID, im.imSessionID);
 
-                UUID ejecteeID = im.toAgentID;
+                        //Rebuild the binary bucket
+                        if (GND.noticeData.HasAttachment)
+                        {
+                            im.binaryBucket = CreateBitBucketForGroupAttachment(GND.noticeData, GND.GroupID);
+                            //Save the sessionID for the callback by the client (reject or accept)
+                            //Only save if has attachment
+                            im.imSessionID = GND.noticeData.ItemID;
+                        }
+                        else
+                        {
+                            byte[] bucket = new byte[19];
+                            bucket[0] = 0; //Attachment enabled == false so 0
+                            bucket[1] = 0; //No attachment, so no asset type
+                            GND.GroupID.ToBytes(bucket, 2);
+                            bucket[18] = 0; //dunno
+                            im.binaryBucket = bucket;
+                        }
 
-                im.dialog = (byte) InstantMessageDialog.MessageFromAgent;
-                OutgoingInstantMessage(im, ejecteeID);
+                        OutgoingInstantMessage(im, im.toAgentID);
 
-                IClientAPI ejectee = GetActiveClient(ejecteeID);
-                if (ejectee != null)
-                {
-                    UUID groupID = im.imSessionID;
-                    ejectee.SendAgentDropGroup(groupID);
-                    if (ejectee.ActiveGroupId == groupID)
-                        GroupTitleUpdate(ejectee, UUID.Zero, UUID.Zero);
-                    RemoveFromGroupPowersCache(ejecteeID, groupID);
-                }
-            }
-
-                // Interop, received special 211 code for offline group notice
-            else if ((im.dialog == 211))
-            {
-                im.dialog = (byte) InstantMessageDialog.GroupNotice;
-
-                //In offline group notices, imSessionID is replaced with the NoticeID so that we can rebuild the packet here
-                GroupNoticeInfo GND = m_groupData.GetGroupNotice(im.toAgentID, im.imSessionID);
-
-                //Rebuild the binary bucket
-                if (GND.noticeData.HasAttachment)
-                {
-                    im.binaryBucket = CreateBitBucketForGroupAttachment(GND.noticeData, GND.GroupID);
-                    //Save the sessionID for the callback by the client (reject or accept)
-                    //Only save if has attachment
-                    im.imSessionID = GND.noticeData.ItemID;
-                }
-                else
-                {
-                    byte[] bucket = new byte[19];
-                    bucket[0] = 0; //Attachment enabled == false so 0
-                    bucket[1] = 0; //No attachment, so no asset type
-                    GND.GroupID.ToBytes(bucket, 2);
-                    bucket[18] = 0; //dunno
-                    im.binaryBucket = bucket;
-                }
-
-                OutgoingInstantMessage(im, im.toAgentID);
-
-                //You MUST reset this, otherwise the client will get it twice,
-                // as it goes through OnGridInstantMessage
-                // which will check and then reresent the notice
-                im.dialog = 211;
+                        //You MUST reset this, otherwise the client will get it twice,
+                        // as it goes through OnGridInstantMessage
+                        // which will check and then reresent the notice
+                        im.dialog = 211;
+                    }
+                    break;
             }
         }
 

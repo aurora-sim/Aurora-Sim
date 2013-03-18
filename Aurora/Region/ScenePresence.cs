@@ -1880,29 +1880,28 @@ namespace Aurora.Region
                         IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule>();
                         if (appearance != null)
                         {
-                            if (part.GetPrimType() == PrimType.BOX ||
-                                part.GetPrimType() == PrimType.CYLINDER ||
-                                part.GetPrimType() == PrimType.TORUS ||
-                                part.GetPrimType() == PrimType.TUBE ||
-                                part.GetPrimType() == PrimType.RING ||
-                                part.GetPrimType() == PrimType.PRISM ||
-                                part.GetPrimType() == PrimType.SCULPT)
+                            switch (part.GetPrimType())
                             {
-                                Position.Z += part.Scale.Z/2f;
-                                Position.Z += appearance.Appearance.AvatarHeight/2;
-                                Position.Z -= (float) (SIT_TARGET_ADJUSTMENT.Z/1.5); //m_appearance.AvatarHeight / 15;
-
-                                MovePos.X = (part.Scale.X/2) + .1f;
-                                MovePos *= Rotation;
-                            }
-                            else if (part.GetPrimType() == PrimType.SPHERE)
-                            {
-                                Position.Z += part.Scale.Z/2f;
-                                Position.Z += appearance.Appearance.AvatarHeight/2;
-                                Position.Z -= (float) (SIT_TARGET_ADJUSTMENT.Z/1.5); //m_appearance.AvatarHeight / 15;
-
-                                MovePos.X = (float) (part.Scale.X/2.5);
-                                MovePos *= Rotation;
+                                case PrimType.SCULPT:
+                                case PrimType.PRISM:
+                                case PrimType.RING:
+                                case PrimType.TUBE:
+                                case PrimType.TORUS:
+                                case PrimType.CYLINDER:
+                                case PrimType.BOX:
+                                    Position.Z += part.Scale.Z/2f;
+                                    Position.Z += appearance.Appearance.AvatarHeight/2;
+                                    Position.Z -= (float) (SIT_TARGET_ADJUSTMENT.Z/1.5); //m_appearance.AvatarHeight / 15;
+                                    MovePos.X = (part.Scale.X/2) + .1f;
+                                    MovePos *= Rotation;
+                                    break;
+                                case PrimType.SPHERE:
+                                    Position.Z += part.Scale.Z/2f;
+                                    Position.Z += appearance.Appearance.AvatarHeight/2;
+                                    Position.Z -= (float) (SIT_TARGET_ADJUSTMENT.Z/1.5); //m_appearance.AvatarHeight / 15;
+                                    MovePos.X = (float) (part.Scale.X/2.5);
+                                    MovePos *= Rotation;
+                                    break;
                             }
                         }
                         Position += MovePos;

@@ -4136,20 +4136,30 @@ namespace Aurora.Region
                         break; //Always play the click or thump sound when hitting ground
 
                     case ActorTypes.Prim:
-                        if (Material == (int)OpenMetaverse.Material.Flesh)
-                            SendSound(SoundFleshCollision, 1, true, 0, 0, false, false);
-                        else if (Material == (int)OpenMetaverse.Material.Glass)
-                            SendSound(SoundGlassCollision, 1, true, 0, 0, false, false);
-                        else if (Material == (int)OpenMetaverse.Material.Metal)
-                            SendSound(SoundMetalCollision, 1, true, 0, 0, false, false);
-                        else if (Material == (int)OpenMetaverse.Material.Plastic)
-                            SendSound(SoundPlasticCollision, 1, true, 0, 0, false, false);
-                        else if (Material == (int)OpenMetaverse.Material.Rubber)
-                            SendSound(SoundRubberCollision, 1, true, 0, 0, false, false);
-                        else if (Material == (int)OpenMetaverse.Material.Stone)
-                            SendSound(SoundStoneCollision, 1, true, 0, 0, false, false);
-                        else if (Material == (int)OpenMetaverse.Material.Wood)
-                            SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
+                        switch (Material)
+                        {
+                            case (int)OpenMetaverse.Material.Flesh:
+                                SendSound(SoundFleshCollision, 1, true, 0, 0, false, false);
+                                break;
+                            case (int)OpenMetaverse.Material.Glass:
+                                SendSound(SoundGlassCollision, 1, true, 0, 0, false, false);
+                                break;
+                            case (int)OpenMetaverse.Material.Metal:
+                                SendSound(SoundMetalCollision, 1, true, 0, 0, false, false);
+                                break;
+                            case (int)OpenMetaverse.Material.Plastic:
+                                SendSound(SoundPlasticCollision, 1, true, 0, 0, false, false);
+                                break;
+                            case (int)OpenMetaverse.Material.Rubber:
+                                SendSound(SoundRubberCollision, 1, true, 0, 0, false, false);
+                                break;
+                            case (int)OpenMetaverse.Material.Stone:
+                                SendSound(SoundStoneCollision, 1, true, 0, 0, false, false);
+                                break;
+                            case (int)OpenMetaverse.Material.Wood:
+                                SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
+                                break;
+                        }
                         break; //Play based on material type in prim2prim collisions
 
                     default:

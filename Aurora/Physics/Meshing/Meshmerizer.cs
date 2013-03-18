@@ -549,26 +549,34 @@ namespace Aurora.Physics.Meshing
                 }
 
                 int sides = 4;
-                if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.EquilateralTriangle)
-                    sides = 3;
-                else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.Circle)
-                    sides = 24;
-                else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.HalfCircle)
+                switch ((primShape.ProfileCurve & 0x07))
                 {
-                    // half circle, prim is a sphere
-                    sides = 24;
-
-                    profileBegin = 0.5f*profileBegin + 0.5f;
-                    profileEnd = 0.5f*profileEnd + 0.5f;
+                    case (byte) ProfileShape.EquilateralTriangle:
+                        sides = 3;
+                        break;
+                    case (byte) ProfileShape.Circle:
+                        sides = 24;
+                        break;
+                    case (byte) ProfileShape.HalfCircle:
+                        sides = 24;
+                        profileBegin = 0.5f*profileBegin + 0.5f;
+                        profileEnd = 0.5f*profileEnd + 0.5f;
+                        break;
                 }
 
                 int hollowSides = sides;
-                if (primShape.HollowShape == HollowShape.Circle)
-                    hollowSides = 24;
-                else if (primShape.HollowShape == HollowShape.Square)
-                    hollowSides = 4;
-                else if (primShape.HollowShape == HollowShape.Triangle)
-                    hollowSides = 3;
+                switch (primShape.HollowShape)
+                {
+                    case HollowShape.Circle:
+                        hollowSides = 24;
+                        break;
+                    case HollowShape.Square:
+                        hollowSides = 4;
+                        break;
+                    case HollowShape.Triangle:
+                        hollowSides = 3;
+                        break;
+                }
 
                 primMesh = new PrimMesh(sides, profileBegin, profileEnd, profileHollow, hollowSides);
 
