@@ -15,8 +15,8 @@ namespace Aurora.Framework
         /// <summary>
         /// Starts a region
         /// </summary>
-        /// <param name="region"></param>
-        IScene StartNewRegion(RegionInfo region);
+        /// <param name="newRegion"></param>
+        void StartRegion(out bool newRegion);
 
         /// <summary>
         /// Shuts down the given region

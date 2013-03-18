@@ -80,30 +80,16 @@ namespace Aurora.Framework
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
-        public void StartNewRegion(RegionInfo region)
+        public void StartRegion()
         {
-            InternalDoRemote(region);
-            if (m_doRemoteOnly)
-                return;
-
-            region.NewRegion = true;
-            Util.FireAndForget(delegate(object o)
-            {
-                _sceneManager.StartNewRegion(region);
-            });
-            region.NewRegion = false;
-        }
-
-        [CanBeReflected(ThreatLevel = ThreatLevel.None, UsePassword = true)]
-        public void StartRegion(RegionInfo region)
-        {
-            InternalDoRemote(region);
+            InternalDoRemote();
             if (m_doRemoteOnly)
                 return;
 
             Util.FireAndForget(delegate(object o)
             {
-                _sceneManager.StartNewRegion(region);
+                bool newRegion;
+                _sceneManager.StartRegion(out newRegion);
             });
         }
 

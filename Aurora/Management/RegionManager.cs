@@ -379,7 +379,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             SetStartingStatus ();
             Util.FireAndForget (delegate
             {
-                _regionManager.StartRegion( _startingRegionInfo);
+                _regionManager.StartRegion();
                 SetOnlineStatus();
             });
         }
