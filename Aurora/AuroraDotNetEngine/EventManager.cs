@@ -838,7 +838,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<LUStruct> ItemsToStart = new List<LUStruct>();
             foreach (TaskInventoryItem item in items)
             {
-                LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID, startParam, postOnRez, stateSource, RezzedFrom, clearStateSaves);
+                LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID, startParam, postOnRez, stateSource, rezzedFrom, clearStateSaves);
                 if (itemToQueue.Action != LUType.Unknown) ItemsToStart.Add(itemToQueue);
             }
 #else

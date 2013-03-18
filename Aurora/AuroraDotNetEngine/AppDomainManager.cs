@@ -32,6 +32,11 @@ using System.Security;
 using System.Security.Permissions;
 using System.Security.Policy;
 
+#if NET_3_5 || LINUX
+using System.Collections;
+using System.Net;
+#endif
+
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     /// <summary>
