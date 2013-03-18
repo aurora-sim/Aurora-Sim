@@ -117,7 +117,7 @@ namespace Aurora.FileBasedServices.AssetService
                 return (AssetBase)remoteValue;
             }
 
-            AssetBase asset = RedisGetAsset(id);
+            AssetBase asset = FileGetAsset(id);
             if (doDatabaseCaching && cache != null)
                 cache.Cache(id, asset);
             return asset;
@@ -157,7 +157,7 @@ namespace Aurora.FileBasedServices.AssetService
                 return data;
             }
 
-            AssetBase asset = RedisGetAsset(id);
+            AssetBase asset = FileGetAsset(id);
             if (doDatabaseCaching && cache != null)
                 cache.Cache(id, asset);
             if (asset != null) return asset.Data;
@@ -171,7 +171,7 @@ namespace Aurora.FileBasedServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            return RedisExistsAsset(id);
+            return FileExistsAsset(id);
         }
 
         public virtual void Get(String id, Object sender, AssetRetrieved handler)
@@ -196,8 +196,8 @@ namespace Aurora.FileBasedServices.AssetService
                 asset.ID = (UUID)remoteValue;
             }
             else
-                RedisSetAsset(asset);
-            AssetBase test = RedisGetAsset(asset.IDString);
+                FileSetAsset(asset);
+            
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (doDatabaseCaching && cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
             {
@@ -215,12 +215,12 @@ namespace Aurora.FileBasedServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? UUID.Zero : (UUID)remoteValue;
 
-            AssetBase asset = RedisGetAsset(id.ToString());
+            AssetBase asset = FileGetAsset(id.ToString());
             if (asset == null)
                 return UUID.Zero;
             UUID newID = asset.ID = UUID.Random();
             asset.Data = data;
-            bool success = RedisSetAsset(asset);
+            bool success = FileSetAsset(asset);
             if (!success)
                 return UUID.Zero;//We weren't able to update the asset
             return newID;
@@ -233,7 +233,7 @@ namespace Aurora.FileBasedServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            RedisDeleteAsset(id.ToString());
+            FileDeleteAsset(id.ToString());
             return true;
         }
 
@@ -281,7 +281,7 @@ namespace Aurora.FileBasedServices.AssetService
         }
 
         private object _lock = new object();
-        public AssetBase RedisGetAsset(string id)
+        public AssetBase FileGetAsset(string id)
         {
             AssetBase asset = null;
 
@@ -332,12 +332,12 @@ namespace Aurora.FileBasedServices.AssetService
             //m_assetService.StoreAsset(asset);
 
             //Now store in Redis
-            RedisSetAsset(asset);
+            FileSetAsset(asset);
 
             return asset;
         }
 
-        public bool RedisExistsAsset(string id)
+        public bool FileExistsAsset(string id)
         {
             bool success = File.Exists(GetPathForID(id));
             if (!success)
@@ -345,7 +345,7 @@ namespace Aurora.FileBasedServices.AssetService
             return success;
         }
 
-        public bool RedisSetAsset(AssetBase asset)
+        public bool FileSetAsset(AssetBase asset)
         {
             bool duplicate = File.Exists(GetDataPathForID(asset.HashCode));
 
@@ -387,9 +387,9 @@ namespace Aurora.FileBasedServices.AssetService
             }
         }
 
-        public void RedisDeleteAsset(string id)
+        public void FileDeleteAsset(string id)
         {
-            AssetBase asset = RedisGetAsset(id);
+            AssetBase asset = FileGetAsset(id);
             if (asset == null)
                 return;
             File.Delete(GetPathForID(id));
@@ -468,9 +468,9 @@ namespace Aurora.FileBasedServices.AssetService
                 return;
             }
 
-            AssetBase asset = RedisGetAsset(args[2]);
+            AssetBase asset = FileGetAsset(args[2]);
             if(asset == null)
-                asset = RedisGetAsset(args[2]);
+                asset = FileGetAsset(args[2]);
 
             if (asset == null || asset.Data.Length == 0)
             {
