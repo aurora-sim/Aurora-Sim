@@ -48,7 +48,7 @@ namespace Simple.Currency
                 }
                 catch(Exception ex)
                 {
-                    MainConsole.Instance.Warn ("[SimpleCurrency]: Exception reading economy config: " + ex.ToString ());
+                    MainConsole.Instance.Warn ("[SimpleCurrency]: Exception reading economy config: " + propertyInfo.Name);
                 }
             }
         }
