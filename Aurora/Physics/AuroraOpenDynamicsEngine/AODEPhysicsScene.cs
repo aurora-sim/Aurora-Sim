@@ -1571,15 +1571,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     foreach (PhysicsActor obj in _collisionEventDictionary.Values.Where(obj => obj != null))
                         obj.SendCollisions();
                 }
+            }
 
-                foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
+            foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
+                actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
+
+            lock (_activeprimsLock)
+            {
+                foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
                     actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
-
-                lock (_activeprimsLock)
-                {
-                    foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
-                        actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
-                }
             }
         }
 
