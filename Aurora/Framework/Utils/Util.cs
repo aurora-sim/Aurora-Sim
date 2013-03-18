@@ -1851,7 +1851,7 @@ namespace Aurora.Framework
                     if (m_ThreadPool == null)
                         InitThreadPool(15);
                     if (m_threadPoolRunning) //Check if the thread pool should be running
-                        m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new[] { callback, obj });
+                        m_ThreadPool.QueueWorkItem((WorkItemCallback)SmartThreadPoolCallback, new[] { callback, obj });
                     break;
                 case FireAndForgetMethod.Thread:
                     Thread thread = new Thread(delegate(object o)
