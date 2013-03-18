@@ -25,16 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Reflection;
+using Aurora.Framework;
 using BitmapProcessing;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 
 namespace Aurora.Modules.WorldMap
 {

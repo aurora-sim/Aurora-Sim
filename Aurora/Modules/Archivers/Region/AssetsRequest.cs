@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Timers;
-using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Archivers
 {
@@ -199,8 +198,9 @@ namespace Aurora.Modules.Archivers
         ///   Called back by the asset cache when it has the asset
         /// </summary>
         /// <param name = "assetID"></param>
+        /// <param name = "sender"></param>
         /// <param name = "asset"></param>
-        public void AssetRequestCallback(string id, object sender, AssetBase asset)
+        public void AssetRequestCallback(string assetID, object sender, AssetBase asset)
         {
             try
             {
@@ -214,7 +214,7 @@ namespace Aurora.Modules.Archivers
                     {
                         MainConsole.Instance.WarnFormat(
                             "[ARCHIVER]: Received information about asset {0} after archive save abortion.  Ignoring.",
-                            id);
+                            assetID);
 
                         return;
                     }
@@ -228,7 +228,7 @@ namespace Aurora.Modules.Archivers
                     else
                     {
 //                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Recording asset {0} as not found", id);
-                        m_notFoundAssetUuids.Add(new UUID(id));
+                        m_notFoundAssetUuids.Add(new UUID(assetID));
                     }
 
                     if (m_foundAssetUuids.Count + m_notFoundAssetUuids.Count == m_repliesRequired)

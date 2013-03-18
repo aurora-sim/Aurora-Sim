@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Aurora.Framework;
-using OpenMetaverse;
+﻿using Aurora.Framework;
 using Nini.Config;
+using System;
 
 namespace Aurora.Modules.World.ServerSettingsModule
 {
@@ -21,7 +17,7 @@ namespace Aurora.Modules.World.ServerSettingsModule
         public void RegionLoaded (IScene scene)
         {
             IServerSettings serverSettings = scene.RequestModuleInterface<IServerSettings>();
-            ServerSetting gravitySetting = new ServerSetting()
+            ServerSetting gravitySetting = new ServerSetting
             {
                 Name = "Gravity",
                 Comment = "The forces of gravity that are on this sim",

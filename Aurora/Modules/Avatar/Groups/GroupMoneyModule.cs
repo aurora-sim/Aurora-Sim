@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Aurora.Framework;
-using OpenMetaverse;
-using Nini.Config;
 
 namespace Aurora.Modules.Avatar.Groups
 {

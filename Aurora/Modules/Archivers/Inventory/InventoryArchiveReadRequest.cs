@@ -25,17 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using Aurora.Framework.Serialization.External;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
-using Aurora.Framework.Serialization.External;
 
 namespace Aurora.Modules.Archivers
 {
@@ -264,16 +262,17 @@ namespace Aurora.Modules.Archivers
         /// <param name = "archivePath">
         ///   The item archive path to resolve.  The portion of the path passed back is that
         ///   which corresponds to the resolved desintation folder.
-        ///   <param name = "rootDestFolder">
-        ///     The root folder for the inventory load
-        ///   </param>
-        ///   <param name = "resolvedFolders">
-        ///     The folders that we have resolved so far for a given archive path.
-        ///   </param>
-        ///   <returns>
-        ///     The folder in the user's inventory that matches best the archive path given.  If no such folder was found
-        ///     then the passed in root destination folder is returned.
-        ///   </returns>
+        /// </param>
+        /// <param name = "rootDestFolder">
+        ///   The root folder for the inventory load
+        /// </param>
+        /// <param name = "resolvedFolders">
+        ///   The folders that we have resolved so far for a given archive path.
+        /// </param>
+        /// <returns>
+        ///   The folder in the user's inventory that matches best the archive path given.  If no such folder was found
+        ///   then the passed in root destination folder is returned.
+        /// </returns>
         protected InventoryFolderBase ResolveDestinationFolder(
             InventoryFolderBase rootDestFolder,
             ref string archivePath,

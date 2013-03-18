@@ -25,10 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using Aurora.Framework;
+using System;
 
 namespace Aurora.ClientStack
 {

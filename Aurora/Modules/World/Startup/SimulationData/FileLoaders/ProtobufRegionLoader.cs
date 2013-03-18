@@ -1,12 +1,8 @@
 ﻿using Aurora.Framework;
-using OpenMetaverse;
-using ProtoBuf;
+using Aurora.Region;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using Aurora.Region;
 
 namespace Aurora.Modules
 {

@@ -25,14 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
+using System.Collections.Generic;
+using System.IO;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services
@@ -86,10 +85,9 @@ namespace Aurora.Services
         ///   Callback for a map layer request
         /// </summary>
         /// <param name = "request"></param>
-        /// <param name = "path"></param>
-        /// <param name = "param"></param>
+        /// <param name = "httpRequest"></param>
+        /// <param name = "httpResponse"></param>
         /// <param name = "agentID"></param>
-        /// <param name = "caps"></param>
         /// <returns></returns>
         public byte[] MapLayerRequest(string request, OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {

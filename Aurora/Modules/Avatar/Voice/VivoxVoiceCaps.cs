@@ -25,26 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Specialized;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Web;
-using Aurora.Simulation.Base;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using System.Xml;
+using System;
 using System.Collections.Generic;
-using Nini.Config;
+using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
+using System.Xml;
 
 namespace Aurora.Modules
 {

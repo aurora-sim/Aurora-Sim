@@ -25,15 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Serialization;
+using OpenMetaverse;
+using OpenMetaverse.Assets;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Aurora.Framework.Serialization;
-using OpenMetaverse;
-using OpenMetaverse.Assets;
 
 namespace Aurora.Framework
 {
@@ -76,6 +76,7 @@ namespace Aurora.Framework
         /// <param name = "assetUuid">The uuid of the asset for which to gather referenced assets</param>
         /// <param name = "assetType">The type of the asset for the uuid given</param>
         /// <param name = "assetUuids">The assets gathered</param>
+        /// <param name = "scene"></param>
         public void GatherAssetUuids(UUID assetUuid, AssetType assetType, IDictionary<UUID, AssetType> assetUuids,
                                      IRegistryCore scene)
         {

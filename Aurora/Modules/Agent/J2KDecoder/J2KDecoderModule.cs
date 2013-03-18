@@ -25,19 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using CSJ2K;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using Aurora.Simulation.Base;
-using CSJ2K;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Agent.J2KDecoder
 {

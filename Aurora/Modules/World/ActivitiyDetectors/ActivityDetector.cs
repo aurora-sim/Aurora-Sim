@@ -25,14 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Timers;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
+using System;
+using System.Collections.Generic;
+using System.Timers;
 
 namespace Aurora.Modules.ActivityDetectors
 {

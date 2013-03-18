@@ -25,14 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using Aurora.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Aurora.Modules.Selection
 {
@@ -158,7 +157,7 @@ namespace Aurora.Modules.Selection
         /// <summary>
         ///   Invoked when the client selects a prim.
         /// </summary>
-        /// <param name = "primLocalID"></param>
+        /// <param name = "primLocalIDs"></param>
         /// <param name = "remoteClient"></param>
         protected void SelectPrim(List<uint> primLocalIDs, IClientAPI remoteClient)
         {

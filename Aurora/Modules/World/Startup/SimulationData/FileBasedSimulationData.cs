@@ -25,24 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Region;
+using Nini.Config;
+using OpenMetaverse;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using System.Timers;
-using System.Windows.Forms;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework.Serialization;
 using Timer = System.Timers.Timer;
-using Aurora.Management;
-using ProtoBuf.Meta;
-using ProtoBuf;
-using Aurora.Region;
 
 namespace Aurora.Modules
 {
@@ -398,7 +391,6 @@ namespace Aurora.Modules
         /// <summary>
         ///   Around for legacy things
         /// </summary>
-        /// <param name = "regionUUID"></param>
         /// <returns></returns>
         public virtual List<LandData> LoadLandObjects()
         {
@@ -410,8 +402,7 @@ namespace Aurora.Modules
         /// <summary>
         ///   Read the config for the data loader
         /// </summary>
-        /// <param name = "scene"></param>
-        /// <param name = "config"></param>
+        /// <param name = "simBase"></param>
         protected virtual void ReadConfig(ISimulationBase simBase)
         {
             IConfig config = simBase.ConfigSource.Configs["FileBasedSimulationData"];
@@ -519,7 +510,7 @@ namespace Aurora.Modules
         /// <summary>
         ///   Save a backup of the sim
         /// </summary>
-        /// <param name = "appendedFilePath">The file path where the backup will be saved</param>
+        /// <param name="isOldSave"></param>
         protected virtual void SaveBackup(bool isOldSave)
         {
             if (m_scene.RegionInfo.HasBeenDeleted)

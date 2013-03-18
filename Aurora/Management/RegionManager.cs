@@ -25,18 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using Aurora.Framework;
-using Nini.Config;
-using Nini.Ini;
-using OpenMetaverse;
 
 namespace Aurora.Management
 {
@@ -115,12 +112,18 @@ namespace Aurora.Management
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString ();
             uint maturityLevel = Util.ConvertAccessLevelToMaturity (region.AccessLevel);
-            if (maturityLevel == 0)
-                textBox4.Text = "PG";
-            else if (maturityLevel == 1)
-                textBox4.Text = "Mature";
-            else
-                textBox4.Text = "Adult";
+            switch (maturityLevel)
+            {
+                case 0:
+                    textBox4.Text = "PG";
+                    break;
+                case 1:
+                    textBox4.Text = "Mature";
+                    break;
+                default:
+                    textBox4.Text = "Adult";
+                    break;
+            }
 #if (!ISWIN)
             textBox7.Text = string.Join(", ", region.UDPPorts.ConvertAll<string>(delegate(int i) { return i.ToString(); }).ToArray());
 #else
@@ -225,12 +228,18 @@ namespace Aurora.Management
             int maturityLevel = 0;
             if (!int.TryParse(textBox4.Text, out maturityLevel))
             {
-                if (textBox4.Text == "Adult")
-                    maturityLevel = 2;
-                else if (textBox4.Text == "Mature")
-                    maturityLevel = 1;
-                else //Leave it as PG by default if they do not select a valid option
-                    maturityLevel = 0;
+                switch (textBox4.Text)
+                {
+                    case "Adult":
+                        maturityLevel = 2;
+                        break;
+                    case "Mature":
+                        maturityLevel = 1;
+                        break;
+                    default:
+                        maturityLevel = 0;
+                        break;
+                }
             }
             region.RegionSettings.Maturity = maturityLevel;
             int.TryParse(RegionSizeX.Text, out region.RegionSizeX);
@@ -431,7 +440,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 vars.Add("Region Name", region.RegionName);
                 vars.Add("Region Location X", (region.RegionLocX / Constants.RegionSize).ToString());
                 vars.Add("Region Location Y", (region.RegionLocY / Constants.RegionSize).ToString());
-                vars.Add("Region Ports", string.Join(", ", region.UDPPorts.ConvertAll<string>(delegate(int i) { return i.ToString(); }).ToArray()));
+                vars.Add("Region Ports", string.Join(", ", region.UDPPorts.ConvertAll(delegate(int i) { return i.ToString(); }).ToArray()));
                 vars.Add("Region Type", region.RegionType);
                 vars.Add("Region Size X", region.RegionSizeX.ToString());
                 vars.Add("Region Size Y", region.RegionSizeY.ToString());

@@ -25,15 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using System.Timers;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Timers;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Modules.Appearance
@@ -233,8 +232,9 @@ textures 1
         /// </summary>
         /// <param name = "textureEntry"></param>
         /// <param name = "visualParams"></param>
-        /// <param name="client"></param>
-        /// <param name="wearables"></param>
+        /// <param name = "client"></param>
+        /// <param name = "wearables"></param>
+        /// <param name = "serial"></param>
         public void SetAppearance(IClientAPI client, Primitive.TextureEntry textureEntry, byte[] visualParams,
                                   WearableCache[] wearables, uint serial)
         {

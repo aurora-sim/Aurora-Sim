@@ -25,10 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Security.Authentication;
 using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
+using System;
 
 namespace Aurora.Framework
 {
@@ -99,6 +98,8 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "originalConfigSource">The settings parsed from the command line</param>
         /// <param name = "configSource">The .ini config</param>
+        /// <param name = "cmdParameters"></param>
+        /// <param name = "configLoader"></param>
         void Initialize(IConfigSource originalConfigSource, IConfigSource configSource, string[] cmdParameters,
                         ConfigurationLoader configLoader);
 

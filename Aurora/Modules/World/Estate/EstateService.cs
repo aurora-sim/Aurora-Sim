@@ -25,16 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Modules.Estate

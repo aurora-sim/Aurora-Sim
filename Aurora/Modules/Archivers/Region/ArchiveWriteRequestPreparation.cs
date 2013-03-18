@@ -25,15 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Archivers
 {

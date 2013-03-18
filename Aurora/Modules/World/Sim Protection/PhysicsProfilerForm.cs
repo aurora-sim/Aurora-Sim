@@ -25,16 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Modules.SimProtection;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 using System.Windows.Forms;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
 using Timer = System.Timers.Timer;
-using Aurora.Modules.SimProtection;
 
 namespace Aurora.Modules
 {

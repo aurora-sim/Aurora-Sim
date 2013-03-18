@@ -25,21 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.Messages.Linden;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using ChatSessionMember = Aurora.Framework.ChatSessionMember;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Aurora.Modules.Chat
 {
@@ -162,13 +153,17 @@ namespace Aurora.Modules.Chat
         /// </summary>
         /// <param name = "message"></param>
         /// <param name = "type"></param>
+        /// <param name = "channel"></param>
         /// <param name = "fromPos"></param>
         /// <param name = "fromName"></param>
         /// <param name = "fromAgentID"></param>
+        /// <param name = "fromAgent"></param>
+        /// <param name = "toAgentID"></param>
+        /// <param name = "scene"></param>
         public void SimChatBroadcast(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                                     UUID fromID, bool fromAgent, UUID ToAgentID, IScene scene)
+                                     UUID fromAgentID, bool fromAgent, UUID toAgentID, IScene scene)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, -1, ToAgentID, scene);
+            SimChat(message, type, channel, fromPos, fromName, fromAgentID, fromAgent, true, -1, toAgentID, scene);
         }
 
         public virtual void DeliverChatToAvatars(ChatSourceType sourceType, OSChatMessage c)
@@ -390,7 +385,7 @@ namespace Aurora.Modules.Chat
 
             m_Scene = scene;
             scene.EventManager.OnNewClient += OnNewClient;
-            scene.EventManager.OnClosingClient += OnClosingClient;;
+            scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnCachedUserInfo += UpdateCachedInfo;
 
             scene.RegisterModuleInterface<IMuteListModule>(this);

@@ -25,9 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Simulation.Base;
 using Nini.Config;
-using Aurora.Framework;
 
 namespace Aurora.Management
 {

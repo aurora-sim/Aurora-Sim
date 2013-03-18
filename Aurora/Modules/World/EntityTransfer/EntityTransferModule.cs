@@ -25,17 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Reflection;
 using Aurora.Framework;
-using GridRegion = Aurora.Framework.GridRegion;
-
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Nini.Config;
+using System;
+using System.Collections.Generic;
+using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.EntityTransfer
 {
@@ -432,7 +428,6 @@ namespace Aurora.Modules.EntityTransfer
         /// Tries to teleport agent to landmark.
         /// </summary>
         /// <param name="remoteClient"></param>
-        /// <param name="gatekeeperURL"></param>
         /// <param name="position"></param>
         /// <param name="regionID"></param>
         public void RequestTeleportLandmark (IClientAPI remoteClient, UUID regionID, Vector3 position)

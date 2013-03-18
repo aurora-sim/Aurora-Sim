@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using Nini.Config;
 using OpenMetaverse;
+using System.Collections.Generic;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.Web

@@ -24,16 +24,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Aurora.Framework;
-using Aurora.DataManager;
-using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Ban
 {
@@ -91,7 +86,7 @@ namespace Aurora.Modules.Ban
         /// <summary>
         /// Check to see if the client has baked textures that belong to banned clients
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="avatarID"></param>
         /// <param name="textureEntry"></param>
         public void CheckForBannedViewer(UUID avatarID, Primitive.TextureEntry textureEntry)
         {

@@ -25,24 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Modules.Monitoring.Alerts;
+using Aurora.Modules.Monitoring.Monitors;
+using Nini.Config;
+using OpenMetaverse.Packets;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Timers;
-using Nini.Config;
-using OpenMetaverse.Packets;
-using Aurora.Framework;
-using Aurora.Modules.Monitoring.Alerts;
-using Aurora.Modules.Monitoring.Monitors;
 using ThreadState = System.Diagnostics.ThreadState;
 using Timer = System.Timers.Timer;
-using Aurora.Framework.Servers.HttpServer;
-using System.IO;
 
 namespace Aurora.Modules.Monitoring
 {
@@ -340,7 +338,10 @@ namespace Aurora.Modules.Monitoring
             /// <summary>
             ///   Return a hashable of the monitors, or just the ones requested
             /// </summary>
+            /// <param name = "path"></param>
             /// <param name = "request"></param>
+            /// <param name = "httpRequest"></param>
+            /// <param name = "httpResponse"></param>
             /// <returns></returns>
             public byte[] StatsPage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
@@ -696,7 +697,6 @@ namespace Aurora.Modules.Monitoring
         /// <summary>
         ///   This shows stats for ALL regions in the instance
         /// </summary>
-        /// <param name = "module"></param>
         /// <param name = "args"></param>
         protected void DebugMonitors(string[] args)
         {
@@ -711,7 +711,6 @@ namespace Aurora.Modules.Monitoring
         /// <summary>
         ///   This shows the stats for the given region
         /// </summary>
-        /// <param name = "module"></param>
         /// <param name = "args"></param>
         protected void DebugMonitorsInCurrentRegion(string[] args)
         {

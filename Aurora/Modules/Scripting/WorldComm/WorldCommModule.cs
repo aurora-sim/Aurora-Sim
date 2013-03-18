@@ -25,17 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-
-// // using System.Reflection;
-
 
 /*****************************************************
  *
@@ -181,7 +178,6 @@ namespace Aurora.Modules.Scripting
         ///   the script during 'peek' time. Parameter hostID is needed to
         ///   determine the position of the script.
         /// </summary>
-        /// <param name = "localID">localID of the script engine</param>
         /// <param name = "itemID">UUID of the script engine</param>
         /// <param name = "hostID">UUID of the SceneObjectPart</param>
         /// <param name = "channel">channel to listen on</param>
@@ -356,10 +352,13 @@ namespace Aurora.Modules.Scripting
         /// <param name = "type">type of delvery (whisper,say,shout or regionwide)</param>
         /// <param name = "channel">channel to sent on</param>
         /// <param name = "name">name of sender (object or avatar)</param>
-        /// <param name = "id">key of sender (object or avatar)</param>
+        /// <param name = "fromID">key of sender (object or avatar)</param>
         /// <param name = "msg">msg to sent</param>
-        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position,
-                                   float Range, UUID toID)
+        /// <param name = "position"></param>
+        /// <param name = "range"></param>
+        /// <param name = "toID"></param>
+        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID fromID, string msg, Vector3 position,
+                                   float range, UUID toID)
         {
             //Make sure that the cmd handler thread is running
             m_scriptModule.PokeThreads(UUID.Zero);
@@ -371,10 +370,10 @@ namespace Aurora.Modules.Scripting
             // Determine which listen event filters match the given set of arguments, this results
             // in a limited set of listeners, each belonging a host. If the host is in range, add them
             // to the pending queue.
-            foreach (ListenerInfo li in m_listenerManager.GetListeners(UUID.Zero, channel, name, id, msg))
+            foreach (ListenerInfo li in m_listenerManager.GetListeners(UUID.Zero, channel, name, fromID, msg))
             {
                 // Dont process if this message is from yourself!
-                if (li.GetHostID().Equals(id))
+                if (li.GetHostID().Equals(fromID))
                     continue;
 
                 ISceneChildEntity sPart = m_scene.GetSceneObjectPart(li.GetHostID());
@@ -392,31 +391,31 @@ namespace Aurora.Modules.Scripting
                 {
                     case ChatTypeEnum.Whisper:
                         if (dis < m_whisperdistance)
-                            QueueMessage(new ListenerInfo(li, name, id, msg));
+                            QueueMessage(new ListenerInfo(li, name, fromID, msg));
                         break;
 
                     case ChatTypeEnum.Say:
                         if (dis < m_saydistance)
-                            QueueMessage(new ListenerInfo(li, name, id, msg));
+                            QueueMessage(new ListenerInfo(li, name, fromID, msg));
                         break;
 
                     case ChatTypeEnum.ObsoleteSay:
                         if (dis < m_saydistance)
-                            QueueMessage(new ListenerInfo(li, name, id, msg));
+                            QueueMessage(new ListenerInfo(li, name, fromID, msg));
                         break;
 
                     case ChatTypeEnum.Shout:
                         if (dis < m_shoutdistance)
-                            QueueMessage(new ListenerInfo(li, name, id, msg));
+                            QueueMessage(new ListenerInfo(li, name, fromID, msg));
                         break;
 
                     case ChatTypeEnum.Custom:
-                        if (dis < Range)
-                            QueueMessage(new ListenerInfo(li, name, id, msg));
+                        if (dis < range)
+                            QueueMessage(new ListenerInfo(li, name, fromID, msg));
                         break;
 
                     case ChatTypeEnum.Region:
-                        QueueMessage(new ListenerInfo(li, name, id, msg));
+                        QueueMessage(new ListenerInfo(li, name, fromID, msg));
                         break;
                 }
             }

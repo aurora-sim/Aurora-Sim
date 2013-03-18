@@ -25,11 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using OpenMetaverse;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Archivers
 {
@@ -181,7 +181,7 @@ namespace Aurora.Modules.Archivers
             return FindItemByPath(inventoryService, rootFolder, path);
         }
 
-        ///<summary>
+        /// <summary>
         ///  Find an item given a PATH_DELIMITOR delimited path starting from this folder.
         ///
         ///  This method does not handle paths that contain multiple delimitors
@@ -190,18 +190,17 @@ namespace Aurora.Modules.Archivers
         ///  XPath like expression
         ///
         ///  FIXME: Delimitors which occur in names themselves are not currently escapable.
-        ///</summary>
-        ///<param name = "inventoryService">
+        /// </summary>
+        /// <param name = "inventoryService">
         ///  Inventory service to query
-        ///</param>
-        ///<param name = "startFolder">
+        /// </param>
+        /// <param name = "startFolder">
         ///  The folder from which the path starts
-        ///</param>
-        ///<param name = "path">
-        ///  <param name = "path">
+        /// </param>
+        /// <param name = "path">
         ///    The path to the required item.
-        ///  </param>
-        ///  <returns>null if the item is not found</returns>
+        /// </param>
+        /// <returns>null if the item is not found</returns>
         public static InventoryItemBase FindItemByPath(
             IInventoryService inventoryService, InventoryFolderBase startFolder, string path)
         {

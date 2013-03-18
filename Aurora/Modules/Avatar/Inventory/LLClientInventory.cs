@@ -1735,7 +1735,6 @@ namespace Aurora.Modules.Inventory
         /// <param name="AgentID"></param>
         /// <param name="request"></param>
         /// <param name="path"></param>
-        /// <param name="param"></param>
         /// <param name="httpRequest">HTTP request header object</param>
         /// <param name="httpResponse">HTTP response header object</param>
         /// <returns></returns>
@@ -1788,7 +1787,6 @@ namespace Aurora.Modules.Inventory
         /// <param name="AgentID"></param>
         /// <param name="request"></param>
         /// <param name="path"></param>
-        /// <param name="param"></param>
         /// <param name="httpRequest">HTTP request header object</param>
         /// <param name="httpResponse">HTTP response header object</param>
         /// <returns></returns>
@@ -1837,7 +1835,6 @@ namespace Aurora.Modules.Inventory
         /// <param name="AgentID"></param>
         /// <param name="request"></param>
         /// <param name="path"></param>
-        /// <param name="param"></param>
         /// <param name="httpRequest"></param>
         /// <param name="httpResponse"></param>
         /// <returns></returns>
@@ -1994,6 +1991,7 @@ namespace Aurora.Modules.Inventory
             /// <param name="primId">The prim which contains the item to update</param>
             /// <param name="isScriptRunning2">Indicates whether the script to update is currently running</param>
             /// <param name="data"></param>
+            /// <param name="newID"></param>
             public ArrayList CapsUpdateTaskInventoryScriptAsset(IClientAPI remoteClient, UUID itemId,
                                                            UUID primId, bool isScriptRunning2, byte[] data, out UUID newID)
             {

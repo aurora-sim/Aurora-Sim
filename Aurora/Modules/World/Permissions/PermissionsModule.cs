@@ -146,6 +146,7 @@ namespace Aurora.Modules.Permissions
         ///   Is the given user an administrator (in other words, a god)?
         /// </summary>
         /// <param name = "user"></param>
+        /// <param name = "checkGodStatus"></param>
         /// <returns></returns>
         private bool InternalIsAdministrator(UUID user, bool checkGodStatus)
         {

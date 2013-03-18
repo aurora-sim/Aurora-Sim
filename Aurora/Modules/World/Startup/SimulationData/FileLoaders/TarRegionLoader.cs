@@ -1,15 +1,12 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.Serialization;
+using Aurora.Region;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Region;
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
 
 namespace Aurora.Modules
 {

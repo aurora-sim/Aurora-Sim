@@ -25,14 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using Aurora.Simulation.Base;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Archivers
 {

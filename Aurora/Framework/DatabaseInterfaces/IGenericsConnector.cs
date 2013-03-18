@@ -72,7 +72,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Adds a generic IDataTransferable into the database
         /// </summary>
-        /// <param name = "AgentID"></param>
+        /// <param name = "OwnerID"></param>
         /// <param name = "Type"></param>
         /// <param name = "Key"></param>
         /// <param name = "Value"></param>
@@ -81,7 +81,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Removes a generic IDataTransferable from the database
         /// </summary>
-        /// <param name = "AgentID"></param>
+        /// <param name = "OwnerID"></param>
         /// <param name = "Type"></param>
         /// <param name = "Key"></param>
         void RemoveGeneric(UUID OwnerID, string Type, string Key);
@@ -89,7 +89,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Removes a generic IDataTransferable from the database
         /// </summary>
-        /// <param name = "AgentID"></param>
+        /// <param name = "OwnerID"></param>
         /// <param name = "Type"></param>
         void RemoveGeneric(UUID OwnerID, string Type);
 

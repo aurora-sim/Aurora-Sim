@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Reflection;
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
 
@@ -104,10 +103,7 @@ namespace Aurora.Modules.Archivers
 //
 //            archive.WriteFile("assets.xml", sw.ToString());
 //        }
-        /// <summary>
-        ///   Write an assets metadata file to the given archive
-        /// </summary>
-        /// <param name = "archive"></param>
+
         /// <summary>
         ///   Write asset data files to the given archive
         /// </summary>

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Aurora.DataManager;
-using Aurora.Framework;
+﻿using Aurora.Framework;
 using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Web
 {

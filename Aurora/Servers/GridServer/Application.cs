@@ -25,10 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Servers.AssetServer
 {
@@ -41,8 +41,8 @@ namespace Aurora.Servers.AssetServer
         {
             BaseApplication.BaseMain(args, "Aurora.GridServer.ini",
                 new MinimalSimulationBase("Aurora.GridServer ", 
-                    new List<Type>() { typeof(IRegionData), typeof(IAgentInfoConnector) }, 
-                    new List<Type>() { typeof(IGridService), typeof(IAgentInfoService) }));
+                    new List<Type> { typeof(IRegionData), typeof(IAgentInfoConnector) }, 
+                    new List<Type> { typeof(IGridService), typeof(IAgentInfoService) }));
         }
     }
 }

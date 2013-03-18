@@ -25,17 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using Microsoft.Win32;
+using Nini.Config;
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using Aurora.Simulation.Base;
-using Microsoft.Win32;
-using Nini.Config;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Archivers
 {

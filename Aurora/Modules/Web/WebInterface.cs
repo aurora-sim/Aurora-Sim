@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Xsl;
-using Aurora.Framework;
+﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Xsl;
 
 namespace Aurora.Modules.Web
 {

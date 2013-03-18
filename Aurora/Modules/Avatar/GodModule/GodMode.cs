@@ -25,13 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using Aurora.Framework;
 using Nini.Config;
-using Nini.Ini;
 using OpenMetaverse;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Gods
 {

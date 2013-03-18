@@ -27,13 +27,12 @@
 
 //#define Debug
 
-using System;
-using System.Net;
-using System.Reflection;
-using System.Threading;
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
+using System;
 using System.Collections.Concurrent;
+using System.Net;
+using System.Threading;
 
 namespace Aurora.ClientStack
 {

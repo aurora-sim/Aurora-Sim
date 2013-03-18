@@ -25,14 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Attachments
 {
@@ -582,7 +581,8 @@ namespace Aurora.Modules.Attachments
         /// Update the position of the given attachment
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="ItemID"></param>
+        /// <param name="sog"></param>
+        /// <param name="localID"></param>
         /// <param name="pos"></param>
         public void UpdateAttachmentPosition(IClientAPI client, ISceneEntity sog, uint localID, Vector3 pos)
         {
@@ -668,8 +668,6 @@ namespace Aurora.Modules.Attachments
         /// <param name="localID">The localID (SceneObjectPart) that is being attached (for the attach script event)</param>
         /// <param name="group">The group (SceneObjectGroup) that is being attached</param>
         /// <param name="AttachmentPt">The point to where the attachment will go</param>
-        /// <param name="item">If this is not null, it saves a query in this method to the InventoryService
-        /// This is the Item that the object is in (if it is in one yet)</param>
         /// <param name="assetID"/>
         /// <param name="forceUpdatePrim">Force updating of the prim the next time the user attempts to deattach it</param>
         /// <param name="isTempAttach">Is a temporary attachment</param>

@@ -86,7 +86,7 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///   Adds a new offline message for the user.
         /// </summary>
-        /// <param name = "message"></param>
+        /// <param name = "email"></param>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void InsertEmail(Email email)
         {

@@ -25,12 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using Aurora.Framework;
 using Aurora.Framework.Physics;
 using Nini.Config;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Startup
 {
@@ -93,7 +92,7 @@ namespace Aurora.Modules.Startup
         /// <summary>
         ///   Load all plugins in assemblies at the given path
         /// </summary>
-        /// <param name = "pluginsPath"></param>
+        /// <param name = "assembliesPath"></param>
         public void LoadPluginsFromAssemblies(string assembliesPath)
         {
             List<IPhysicsPlugin> physicsPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);

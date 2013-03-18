@@ -25,11 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
 using System;
 using System.Drawing;
-using System.Reflection;
-using Nini.Config;
-using Aurora.Framework;
 
 namespace Aurora.Modules.WorldMap
 {

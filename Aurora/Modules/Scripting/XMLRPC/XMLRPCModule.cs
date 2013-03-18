@@ -25,18 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
+using Nwc.XmlRpc;
+using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Threading;
-using Nini.Config;
-using Nwc.XmlRpc;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
 
 /*****************************************************
  *

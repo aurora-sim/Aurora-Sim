@@ -25,11 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Reflection;
-using System.Timers;
-using Nini.Config;
 using Aurora.Framework;
+using Nini.Config;
+using System;
+using System.Timers;
 
 namespace Aurora.Modules.SimProtection
 {

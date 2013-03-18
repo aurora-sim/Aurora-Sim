@@ -101,10 +101,7 @@ namespace Aurora.Framework
         /// <param name="start"></param>
         /// <param name="count"></param>
         /// <param name="RegionID"></param>
-        /// <param name="ScopeID"></param>
         /// <param name="name"></param>
-        /// <param name="flags"></param>
-        /// <param name="category"></param>
         /// <returns></returns>
         List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, string name);
 
@@ -112,7 +109,6 @@ namespace Aurora.Framework
         /// Get the number of parcels in the specified region with the specified name
         /// </summary>
         /// <param name="RegionID"></param>
-        /// <param name="ScopeID"></param>
         /// <param name="name"></param>
         /// <returns></returns>
         uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, string name);
@@ -123,6 +119,8 @@ namespace Aurora.Framework
         /// <param name = "queryText"></param>
         /// <param name = "category"></param>
         /// <param name = "StartQuery"></param>
+        /// <param name = "Flags"></param>
+        /// <param name = "scopeID"></param>
         /// <returns></returns>
         List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags, UUID scopeID);
 
@@ -133,6 +131,8 @@ namespace Aurora.Framework
         /// <param name = "price"></param>
         /// <param name = "area"></param>
         /// <param name = "StartQuery"></param>
+        /// <param name = "Flags"></param>
+        /// <param name = "scopeID"></param>
         /// <returns></returns>
         List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID scopeID);
 

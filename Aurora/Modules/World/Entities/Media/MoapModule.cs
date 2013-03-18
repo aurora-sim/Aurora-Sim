@@ -25,17 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.Capabilities;
+using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Aurora.Modules.Entities.Media
 {
@@ -259,7 +258,6 @@ namespace Aurora.Modules.Entities.Media
         /// </summary>
         /// <param name = "request"></param>
         /// <param name = "path"></param>
-        /// <param name = "param"></param>
         /// <param name = "httpRequest"></param>
         /// <param name = "httpResponse"></param>
         /// <returns></returns>
@@ -324,7 +322,7 @@ namespace Aurora.Modules.Entities.Media
         ///   Handle an update of media textures.
         /// </summary>
         /// <param name = "path">Path on which this request was made</param>
-        /// <param name = "omu">/param>
+        /// <param name = "omu"></param>
         ///   <returns></returns>
         protected byte[] HandleObjectMediaUpdate(string path, ObjectMediaUpdate omu)
         {
@@ -437,10 +435,9 @@ namespace Aurora.Modules.Entities.Media
         /// </summary>
         /// <param name = "request"></param>
         /// <param name = "path"></param>
-        /// <param name = "param"></param>
-        /// <param name = "httpRequest">/param>
-        ///   <param name = "httpResponse">/param>
-        ///     <returns></returns>
+        /// <param name = "httpRequest"></param>
+        /// <param name = "httpResponse"></param>
+        /// <returns></returns>
         protected byte[] HandleObjectMediaNavigateMessage(string path, Stream request, OSHttpRequest httpRequest,
                                                                     OSHttpResponse httpResponse)
         {

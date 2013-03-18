@@ -25,15 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using CSJ2K;
+using OpenMetaverse;
 using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Reflection;
-using CSJ2K;
-using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Modules.WorldMap.Warp3DMap
 {
@@ -71,7 +70,12 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
         ///   and heightmap settings
         /// </summary>
         /// <param name = "heightmap">Terrain heightmap</param>
-        /// <param name = "regionInfo">Region information including terrain texture parameters</param>
+        /// <param name = "textureIDs"></param>
+        /// <param name = "startHeights"></param>
+        /// <param name = "heightRanges"></param>
+        /// <param name = "regionPosition"></param>
+        /// <param name = "assetService"></param>
+        /// <param name = "textureTerrain"></param>
         /// <returns>A composited 256x256 RGB texture ready for rendering</returns>
         /// <remarks>
         ///   Based on the algorithm described at http://opensimulator.org/wiki/Terrain_Splatting

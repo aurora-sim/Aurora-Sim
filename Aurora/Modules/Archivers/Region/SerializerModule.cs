@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Xml;
-using Nini.Config;
 using Aurora.Framework;
-using Aurora.Region.Serialization;
 using Aurora.Framework.Serialization;
+using Nini.Config;
+using System;
 using System.IO;
+using System.Xml;
 
 namespace Aurora.Modules.Archivers
 {

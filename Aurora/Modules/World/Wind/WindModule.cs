@@ -25,12 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Wind
 {
@@ -321,6 +320,7 @@ namespace Aurora.Modules.Wind
         /// </summary>
         /// <param name = "x">0...255</param>
         /// <param name = "y">0...255</param>
+        /// <param name = "z">Ignored</param>
         public Vector3 WindSpeed(int x, int y, int z)
         {
             if (m_activeWindPlugin != null)

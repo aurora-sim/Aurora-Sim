@@ -25,17 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using Nwc.XmlRpc;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using Nini.Config;
-using Nwc.XmlRpc;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.Chat
@@ -552,7 +551,8 @@ namespace Aurora.Modules.Chat
         ///   If the handles are the same, we look up the user's location using the grid.
         ///   If the handles are still the same, we end.  The send failed.
         /// </summary>
-        /// <param name = "prevRegionHandle">
+        /// <param name = "im"></param>
+        /// <param name = "prevRegion">
         ///   Pass in 0 the first time this method is called.  It will be called recursively with the last 
         ///   regionhandle tried
         /// </param>

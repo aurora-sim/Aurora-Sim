@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using OpenMetaverse;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
-using Nini.Config;
-using OpenMetaverse;
 
 namespace Aurora.Modules.Web
 {

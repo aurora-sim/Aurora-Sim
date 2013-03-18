@@ -25,15 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using System;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Scripting
 {

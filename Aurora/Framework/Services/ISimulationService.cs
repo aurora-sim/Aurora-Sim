@@ -25,9 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 
 namespace Aurora.Framework
 {
@@ -106,6 +106,7 @@ namespace Aurora.Framework
         /// <param name = "aCircuit"></param>
         /// <param name = "teleportFlags"></param>
         /// <param name = "data"></param>
+        /// <param name = "requestedUDPPort"></param>
         /// <param name = "reason"></param>
         /// <returns></returns>
         bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data,
@@ -115,7 +116,7 @@ namespace Aurora.Framework
         ///   Full child agent update.
         ///   Grid Server only.
         /// </summary>
-        /// <param name = "regionHandle"></param>
+        /// <param name = "destination"></param>
         /// <param name = "data"></param>
         /// <returns></returns>
         bool UpdateAgent(GridRegion destination, AgentData data);
@@ -124,7 +125,7 @@ namespace Aurora.Framework
         ///   Short child agent update, mostly for position.
         ///   Grid Server only.
         /// </summary>
-        /// <param name = "regionHandle"></param>
+        /// <param name = "destination"></param>
         /// <param name = "data"></param>
         /// <returns></returns>
         bool UpdateAgent(GridRegion destination, AgentPosition data);
@@ -135,6 +136,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "destination"></param>
         /// <param name = "id"></param>
+        /// <param name = "agentIsLeaving"></param>
         /// <param name = "agent"></param>
         /// <param name = "circuitData"></param>
         /// <returns></returns>
@@ -145,7 +147,7 @@ namespace Aurora.Framework
         ///   Close agent.
         ///   Grid Server only.
         /// </summary>
-        /// <param name = "regionHandle"></param>
+        /// <param name = "destination"></param>
         /// <param name = "id"></param>
         /// <returns></returns>
         bool CloseAgent(GridRegion destination, UUID id);
@@ -155,14 +157,19 @@ namespace Aurora.Framework
         ///   DOES mark the agent as leaving (removes attachments among other things)
         /// </summary>
         /// <param name = "AgentID"></param>
+        /// <param name = "leavingRegion"></param>
         /// <param name = "Region"></param>
+        /// <param name = "markAgentAsLeaving"></param>
         bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion Region, bool markAgentAsLeaving);
 
         /// <summary>
         /// Sends that a teleport failed to the given user
         /// </summary>
-        /// <param name="sp"></param>
-        /// <param name="reason"></param>
+        /// <param name = "destination"></param>
+        /// <param name = "failedRegionID"></param>
+        /// <param name = "agentID"></param>
+        /// <param name = "reason"></param>
+        /// <param name = "isCrossing"></param>
         bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID agentID, string reason, bool isCrossing);
 
         /// <summary>

@@ -25,19 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Amib.Threading;
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Threading;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Packets;
-using Amib.Threading;
 
 namespace Aurora.ClientStack
 {

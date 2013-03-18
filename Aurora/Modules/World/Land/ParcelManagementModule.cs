@@ -25,20 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Timers;
-using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.Capabilities;
+using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Timers;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Modules.Land
@@ -259,26 +257,26 @@ namespace Aurora.Modules.Land
         /// <param name = "reason">Reasion for object return</param>
         /// <param name = "groups">The objects to return</param>
         public void AddReturns(UUID agentID, string objectName, Vector3 location, string reason,
-                               List<ISceneEntity> Groups)
+                               List<ISceneEntity> groups)
         {
             lock (m_returns)
             {
                 if (m_returns.ContainsKey(agentID))
                 {
                     ReturnInfo info = m_returns[agentID];
-                    info.count += Groups.Count;
-                    info.Groups.AddRange(Groups);
+                    info.count += groups.Count;
+                    info.Groups.AddRange(groups);
                     m_returns[agentID] = info;
                 }
                 else
                 {
                     ReturnInfo info = new ReturnInfo
                                           {
-                                              count = Groups.Count,
+                                              count = groups.Count,
                                               objectName = objectName,
                                               location = location,
                                               reason = reason,
-                                              Groups = Groups
+                                              Groups = groups
                                           };
                     m_returns[agentID] = info;
                 }
@@ -430,7 +428,7 @@ namespace Aurora.Modules.Land
                                                  //If there is no group, don't check the groups part
                                                     ((parcel.LandData.GroupID != UUID.Zero) &&
                                                  //If there is a group, check for group rezzed prims and group owned prims
-                                                     (parcel.LandData.GroupID != sog.GroupID && ///Allow prims set to the group
+                                                     (parcel.LandData.GroupID != sog.GroupID && //Allow prims set to the group
                                                       parcel.LandData.GroupID != sog.OwnerID && //Allow group deeded prims!
                                                       parcel.LandData.OwnerID != sog.GroupID) //Allow group deeded prims!
                                                     )) &&
@@ -656,7 +654,7 @@ namespace Aurora.Modules.Land
         /// <summary>
         ///   Adds a land object to the stored list and adds them to the landIDList to what they own
         /// </summary>
-        /// <param name = "new_land">The land object being added</param>
+        /// <param name = "land">The land object being added</param>
         public ILandObject AddLandObject(ILandObject land)
         {
             return AddLandObject(land, false);
@@ -1126,12 +1124,11 @@ namespace Aurora.Modules.Land
         /// <summary>
         ///   Change a land bitmap at within a square and set those points to a specific value
         /// </summary>
-        /// <param name = "land_bitmap"></param>
         /// <param name = "start_x"></param>
         /// <param name = "start_y"></param>
         /// <param name = "end_x"></param>
         /// <param name = "end_y"></param>
-        /// <param name = "set_value"></param>
+        /// <param name = "localIDToSet"></param>
         /// <returns></returns>
         public void ModifyLandBitmapSquare(int start_x, int start_y, int end_x, int end_y, int localIDToSet)
         {

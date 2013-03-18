@@ -87,7 +87,7 @@ namespace Aurora.Framework
         void DeliverChatToAvatars(ChatSourceType chatSourceType, OSChatMessage message);
 
         void SimChatBroadcast(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                              UUID fromID, bool fromAgent, UUID ToAgentID, IScene scene);
+                              UUID fromID, bool fromAgent, UUID toAgentID, IScene scene);
 
         void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
                      UUID fromID, bool fromAgent, IScene scene);

@@ -77,7 +77,7 @@ namespace Aurora.Modules.Archivers
         /// In some cases this will be a UUID if a suitable profile exists on the system.  In other cases, this may
         /// just return the same identifier after creating a temporary profile.
         /// <param name = "ospa"></param>
-        /// <param name = "commsManager"></param>
+        /// <param name = "userService"></param>
         /// <returns>
         ///   A suitable UUID for use in Second Life client communication.  If the string was not a valid ospa, then UUID.Zero
         ///   is returned.
@@ -127,7 +127,7 @@ namespace Aurora.Modules.Archivers
         ///   then a temporary user profile is inserted in the cache.
         /// </summary>
         /// <param name = "name"></param>
-        /// <param name = "commsManager"></param>
+        /// <param name = "userService"></param>
         /// <returns>
         ///   An OpenSim internal identifier for the name given.  Returns null if the name was not valid
         /// </returns>

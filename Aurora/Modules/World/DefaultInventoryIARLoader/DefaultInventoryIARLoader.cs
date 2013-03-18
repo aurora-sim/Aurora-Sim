@@ -25,16 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Modules.Archivers;
+using Aurora.Region;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Modules.Archivers;
-using Aurora.Region;
 
 namespace Aurora.Modules.DefaultInventoryIARLoader
 {
@@ -102,8 +101,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         /// <summary>
         ///   Use the asset set information at path to load assets
         /// </summary>
-        /// <param name = "path"></param>
-        /// <param name = "assets"></param>
+        /// <param name = "iarFileName"></param>
         protected void LoadLibraries(string iarFileName)
         {
             RegionInfo regInfo = new RegionInfo();

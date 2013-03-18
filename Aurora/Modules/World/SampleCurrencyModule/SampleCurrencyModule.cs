@@ -25,14 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using Nwc.XmlRpc;
+using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
-using Nini.Config;
-using Nwc.XmlRpc;
-using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Modules.SampleCurrencyModule
 {
@@ -95,7 +95,6 @@ namespace Aurora.Modules.SampleCurrencyModule
         /// <summary>
         ///   Startup
         /// </summary>
-        /// <param name = "scene"></param>
         /// <param name = "config"></param>
         public void Initialise(IConfigSource config)
         {
@@ -315,7 +314,7 @@ namespace Aurora.Modules.SampleCurrencyModule
         /// <summary>
         ///   Event called Economy Data Request handler.
         /// </summary>
-        /// <param name = "agentId"></param>
+        /// <param name = "remoteClient"></param>
         public void EconomyDataRequestHandler(IClientAPI remoteClient)
         {
             remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity, 0, 0, 0,

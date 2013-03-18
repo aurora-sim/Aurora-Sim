@@ -25,21 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
+using OpenMetaverse;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
 using GridRegion = Aurora.Framework.GridRegion;
-using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Modules.WorldMap
 {

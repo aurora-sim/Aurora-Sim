@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Net;
-using System.Reflection;
-using Aurora.DataManager;
+﻿using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System;
+using System.Collections;
+using System.Net;
 using System.Threading;
 
 namespace Simple.Currency

@@ -24,16 +24,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
-using System.Reflection;
-using System.Text;
-using Aurora.Framework;
-using Nini.Config;
-using Aurora.DataManager;
-using OpenMetaverse;
 
 namespace Aurora.Modules.Ban
 {

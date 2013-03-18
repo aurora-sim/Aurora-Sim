@@ -25,6 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using BitmapProcessing;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -33,12 +38,6 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Net;
-using System.Reflection;
-using BitmapProcessing;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Scripting
 {

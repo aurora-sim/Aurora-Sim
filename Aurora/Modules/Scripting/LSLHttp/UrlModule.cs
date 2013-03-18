@@ -25,14 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Collections;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
+using OpenMetaverse;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Scripting
 {

@@ -25,15 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Xml;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Archivers
 {
@@ -135,7 +134,7 @@ namespace Aurora.Modules.Archivers
         /// <summary>
         ///   Resolve a new piece of asset data against stored metadata
         /// </summary>
-        /// <param name = "assetFilename"></param>
+        /// <param name = "assetPath"></param>
         /// <param name = "data"></param>
         protected void ResolveAssetData(string assetPath, byte[] data)
         {

@@ -25,17 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
-using Aurora.Framework;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Modules.Groups
@@ -372,7 +371,6 @@ namespace Aurora.Modules.Groups
                 foreach (Hashtable groupFind in results.Values)
                 {
                     DirGroupsReplyData data = new DirGroupsReplyData {groupID = new UUID((string) groupFind["GroupID"])};
-                    ;
                     data.groupName = (string) groupFind["Name"];
                     data.members = int.Parse((string) groupFind["Members"]);
                     // data.searchOrder = order;

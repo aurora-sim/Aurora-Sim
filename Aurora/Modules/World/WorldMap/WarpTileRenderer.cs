@@ -25,25 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using Aurora.Framework;
+using Aurora.Modules.WorldMap.Warp3DMap;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Rendering;
 using OpenMetaverse.StructuredData;
-using Aurora.Modules.WorldMap.Warp3DMap;
 using Rednettle.Warp3D;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.IO;
 using RegionSettings = Aurora.Framework.RegionSettings;
 using WarpRenderer = Warp3D.Warp3D;
-using System.IO;
 
 namespace Aurora.Modules.WorldMap
 {

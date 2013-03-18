@@ -25,12 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Linq;
-using System.Reflection;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
+using System;
+using System.Linq;
 
 namespace Aurora.Modules.Chat
 {
@@ -286,7 +285,6 @@ namespace Aurora.Modules.Chat
         /// <summary>
         ///   Handle an alert command from the console.
         /// </summary>
-        /// <param name = "module"></param>
         /// <param name = "cmdparams"></param>
         public void HandleAlertConsoleCommand(string[] cmdparams)
         {

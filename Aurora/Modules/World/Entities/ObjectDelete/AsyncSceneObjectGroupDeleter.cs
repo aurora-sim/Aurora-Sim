@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Reflection;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Aurora.Modules.Entities.ObjectDelete

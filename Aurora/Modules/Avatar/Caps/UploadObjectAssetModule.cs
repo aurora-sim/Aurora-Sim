@@ -25,20 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.IO;
-using System.Reflection;
-using System.Text;
+using Aurora.Framework;
+using Aurora.Framework.Capabilities;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Region;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
+using System;
+using System.IO;
+using System.Text;
 using ExtraParamType = OpenMetaverse.ExtraParamType;
-using Aurora.Region;
 
 namespace Aurora.Modules.Caps
 {
@@ -102,8 +100,8 @@ namespace Aurora.Modules.Caps
         ///   Parses ad request
         /// </summary>
         /// <param name = "request"></param>
+        /// <param name = "response"></param>
         /// <param name = "AgentId"></param>
-        /// <param name = "cap"></param>
         /// <returns></returns>
         public byte[] ProcessAdd(Stream request, OSHttpResponse response, UUID AgentId)
         {

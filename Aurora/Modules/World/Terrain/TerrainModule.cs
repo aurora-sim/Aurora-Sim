@@ -25,19 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Modules.Terrain.FileLoaders;
+using Aurora.Modules.Terrain.FloodBrushes;
+using Aurora.Modules.Terrain.PaintBrushes;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Timers;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Modules.Terrain.FileLoaders;
-using Aurora.Modules.Terrain.FloodBrushes;
-using Aurora.Modules.Terrain.PaintBrushes;
 
 namespace Aurora.Modules.Terrain
 {
@@ -101,7 +100,6 @@ namespace Aurora.Modules.Terrain
         /// <summary>
         ///   Creates and initialises a terrain module for a region
         /// </summary>
-        /// <param name = "scene">Region initialising</param>
         /// <param name = "config">Config for the region</param>
         public void Initialise(IConfigSource config)
         {
@@ -351,6 +349,8 @@ namespace Aurora.Modules.Terrain
         ///   Loads a terrain file from disk and installs it in the scene.
         /// </summary>
         /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name = "offsetX"></param>
+        /// <param name = "offsetY"></param>
         public void LoadFromFile(string filename, int offsetX, int offsetY)
         {
 #if (!ISWIN)
@@ -683,6 +683,8 @@ namespace Aurora.Modules.Terrain
         /// </summary>
         /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
         /// <param name = "stream"></param>
+        /// <param name = "offsetX"></param>
+        /// <param name = "offsetY"></param>
         public void LoadFromStream(string filename, Stream stream, int offsetX, int offsetY)
         {
             m_channel = InternalLoadFromStream(filename, stream, offsetX, offsetY, m_channel);
@@ -698,6 +700,8 @@ namespace Aurora.Modules.Terrain
         /// </summary>
         /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
         /// <param name = "stream"></param>
+        /// <param name = "offsetX"></param>
+        /// <param name = "offsetY"></param>
         public void LoadWaterFromStream(string filename, Stream stream, int offsetX, int offsetY)
         {
             m_waterChannel = InternalLoadFromStream(filename, stream, offsetX, offsetY, m_waterChannel);
@@ -712,6 +716,8 @@ namespace Aurora.Modules.Terrain
         /// </summary>
         /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
         /// <param name = "stream"></param>
+        /// <param name = "offsetX"></param>
+        /// <param name = "offsetY"></param>
         public void LoadRevertMapFromStream(string filename, Stream stream, int offsetX, int offsetY)
         {
             m_revert = InternalLoadFromStream(filename, stream, offsetX, offsetY, m_revert);
@@ -722,6 +728,8 @@ namespace Aurora.Modules.Terrain
         /// </summary>
         /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
         /// <param name = "stream"></param>
+        /// <param name = "offsetX"></param>
+        /// <param name = "offsetY"></param>
         public void LoadWaterRevertMapFromStream(string filename, Stream stream, int offsetX, int offsetY)
         {
             m_waterRevert = InternalLoadFromStream(filename, stream, offsetX, offsetY, m_waterRevert);
@@ -730,6 +738,7 @@ namespace Aurora.Modules.Terrain
         /// <summary>
         ///   Modify Land
         /// </summary>
+        /// <param name = "user"></param>
         /// <param name = "pos">Land-position (X,Y,0)</param>
         /// <param name = "size">The size of the brush (0=small, 1=medium, 2=large)</param>
         /// <param name = "action">0=LAND_LEVEL, 1=LAND_RAISE, 2=LAND_LOWER, 3=LAND_SMOOTH, 4=LAND_NOISE, 5=LAND_REVERT</param>
@@ -745,6 +754,7 @@ namespace Aurora.Modules.Terrain
         /// <summary>
         ///   Saves the current heightmap to a specified stream.
         /// </summary>
+        /// <param name = "channel"></param>
         /// <param name = "filename">The destination filename.  Used here only to identify the image type</param>
         /// <param name = "stream"></param>
         public void SaveToStream(ITerrainChannel channel, string filename, Stream stream)
@@ -1168,6 +1178,9 @@ namespace Aurora.Modules.Terrain
         /// </summary>
         /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
         /// <param name = "stream"></param>
+        /// <param name = "offsetX"></param>
+        /// <param name = "offsetY"></param>
+        /// <param name = "update"></param>
         public ITerrainChannel InternalLoadFromStream(string filename, Stream stream, int offsetX, int offsetY,
                                                       ITerrainChannel update)
         {

@@ -25,12 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.IO;
-using System.Reflection;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse.Packets;
-using Aurora.Framework;
+using System;
+using System.IO;
 
 namespace Aurora.Modules.Monitoring
 {

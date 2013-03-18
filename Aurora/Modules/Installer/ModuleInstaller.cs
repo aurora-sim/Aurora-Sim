@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Windows.Forms;
-using Aurora.Framework;
-using Aurora.Simulation.Base;
+﻿using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
 using RunTimeCompiler;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Windows.Forms;
 
 namespace Aurora.Modules.Installer
 {

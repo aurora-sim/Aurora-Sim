@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Aurora.Framework;
+﻿using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System;
+using System.Collections.Generic;
 
 namespace Simple.Currency
 {
@@ -342,7 +340,6 @@ namespace Simple.Currency
         /// </summary>
         /// <param name="toId"></param>
         /// <param name="message"></param>
-        /// <param name="goDeep"></param>
         /// <param name="transactionId"></param>
         /// <returns></returns>
         public bool SendGridMessage(UUID toId, string message, UUID transactionId)

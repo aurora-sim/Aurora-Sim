@@ -204,16 +204,17 @@ namespace Aurora.Modules.Agent.AssetTransaction
             transactions.RequestUpdateInventoryItem(remoteClient, transactionID, item);
         }
 
-        ///<summary>
-        ///  Update a task inventory item with data that has been received through a transaction.
-        ///
-        ///  This is currently called when, for instance, a notecard in a prim is saved.  The data is sent
-        ///  up through a single AssetUploadRequest.  A subsequent UpdateTaskInventory then references the transaction
-        ///  and comes through this method.
-        ///</summary>
-        ///<param name = "remoteClient"></param>
-        ///<param name = "transactionID"></param>
-        ///<param name = "item"></param>
+        /// <summary>
+        ///   Update a task inventory item with data that has been received through a transaction.
+        /// 
+        ///   This is currently called when, for instance, a notecard in a prim is saved.  The data is sent
+        ///   up through a single AssetUploadRequest.  A subsequent UpdateTaskInventory then references the transaction
+        ///   and comes through this method.
+        /// </summary>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "part"></param>
+        /// <param name = "transactionID"></param>
+        /// <param name = "item"></param>
         public void HandleTaskItemUpdateFromTransaction(
             IClientAPI remoteClient, ISceneChildEntity part, UUID transactionID, TaskInventoryItem item)
         {

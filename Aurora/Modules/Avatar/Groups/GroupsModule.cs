@@ -933,6 +933,7 @@ namespace Aurora.Modules.Groups
         /// <summary>
         ///   Get a list of groups memberships for the agent that are marked "ListInProfile"
         /// </summary>
+        /// <param name = "requestingClient"></param>
         /// <param name = "dataForAgentID"></param>
         /// <returns></returns>
         private GroupMembershipData[] GetProfileListedGroupMemberships(IClientAPI requestingClient, UUID dataForAgentID)
@@ -1858,6 +1859,7 @@ namespace Aurora.Modules.Groups
         /// </summary>
         /// <param name = "AgentID"></param>
         /// <param name = "GroupID"></param>
+        /// <param name = "permissions"></param>
         /// <returns></returns>
         public bool GroupPermissionCheck(UUID AgentID, UUID GroupID, GroupPowers permissions)
         {
