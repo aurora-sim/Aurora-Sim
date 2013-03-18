@@ -25,16 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OdeAPI;
+using OpenMetaverse;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Aurora.Framework;
-using Nini.Config;
-using OdeAPI;
-using OpenMetaverse;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
@@ -1142,10 +1142,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <summary>
         ///   Called when a static prim moves.  Allocates a space for the prim based on its position
         /// </summary>
-        /// <param name = "geom">the pointer to the geom that moved</param>
-        /// <param name = "pos">the position that the geom moved to</param>
-        /// <param name = "currentspace">a pointer to the space it was in before it was moved.</param>
-        /// <returns>a pointer to the new space it's in</returns>
+        /// <param name = "geom">The pointer to the geom that moved</param>
+        /// <param name = "pos">The position that the geom moved to</param>
+        /// <param name = "currentspace">A pointer to the space it was in before it was moved.</param>
+        /// <returns>A pointer to the new space it's in</returns>
         public IntPtr recalculateSpaceForGeom(IntPtr geom, Vector3 pos, IntPtr currentspace)
         {
             // Called from setting the Position and Size of an ODEPrim so
@@ -1255,16 +1255,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Creates a new space at X Y
-        /// </summary>
-        /// <param name = "iprimspaceArrItemX"></param>
-        /// <param name = "iprimspaceArrItemY"></param>
-        /// <returns>A pointer to the created space</returns>
-        /// <summary>
         ///   Calculates the space the prim should be in by its position
         /// </summary>
         /// <param name = "pos"></param>
-        /// <returns>a pointer to the space. This could be a new space or reused space.</returns>
+        /// <returns>A pointer to the space. This could be a new space or reused space.</returns>
         public IntPtr calculateSpaceForGeom(Vector3 pos)
         {
             int[] xyspace = calculateSpaceArrayItemFromPos(pos);

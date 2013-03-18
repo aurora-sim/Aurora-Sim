@@ -1,7 +1,7 @@
-﻿using System;
-using Aurora.Framework;
+﻿using Aurora.Framework;
 using OdeAPI;
 using OpenMetaverse;
+using System;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {

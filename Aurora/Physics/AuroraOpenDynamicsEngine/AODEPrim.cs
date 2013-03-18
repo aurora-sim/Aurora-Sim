@@ -39,14 +39,13 @@
  * settings use.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Physics;
+using OdeAPI;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using OdeAPI;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Physics;
 //using Ode.NET;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
@@ -2010,7 +2009,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
                 MakeBody();
-            ;
         }
 
         public void changeshape(PrimitiveBaseShape arg)
@@ -2672,7 +2670,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                                 case HollowShape.Circle:
                                     hollowVolume *= 0.78539816339f;
-                                    ;
                                     break;
 
                                 case HollowShape.Triangle:
