@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using OpenMetaverse;
 
 namespace Aurora.Modules.Web
@@ -21,7 +22,7 @@ namespace Aurora.Modules.Web
 
         public static bool RequiresUpdate()
         {
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
 
             OSDWrapper version = generics.GetGeneric<OSDWrapper>(UUID.Zero, Schema + "Version", "");
             return version == null || version.Info.AsInteger() < CurrentVersion;
@@ -29,7 +30,7 @@ namespace Aurora.Modules.Web
 
         public static uint GetVersion()
         {
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
 
             OSDWrapper version = generics.GetGeneric<OSDWrapper>(UUID.Zero, Schema + "Version", "");
             return version == null ? 0 : (uint) version.Info.AsInteger();
@@ -37,7 +38,7 @@ namespace Aurora.Modules.Web
 
         public static bool RequiresInitialUpdate()
         {
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
 
             OSDWrapper version = generics.GetGeneric<OSDWrapper>(UUID.Zero, Schema + "Version", "");
             return version == null || version.Info.AsInteger() < 1;
@@ -47,7 +48,7 @@ namespace Aurora.Modules.Web
         {
             InitializeDefaults();
 
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
 
             //Remove all pages
             generics.RemoveGeneric(UUID.Zero, Schema);

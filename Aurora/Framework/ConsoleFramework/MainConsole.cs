@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Aurora.Framework
+using Aurora.Framework.Modules;
+
+namespace Aurora.Framework.ConsoleFramework
 {
     public class MainConsole
     {

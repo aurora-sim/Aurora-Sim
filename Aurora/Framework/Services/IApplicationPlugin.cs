@@ -28,9 +28,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using Aurora.Framework.Modules;
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     Aurora-Sim Application Plugin framework interface
@@ -81,10 +82,7 @@ namespace Aurora.Framework
         /// <param name="m_config"></param>
         void ReloadConfiguration(IConfigSource m_config);
     }
-}
 
-namespace Aurora.Framework
-{
     public interface IGenericData
     {
         #region UPDATE
@@ -211,11 +209,10 @@ namespace Aurora.Framework
         #region DELETE
 
         /// <summary>
-        ///     delete from 'table' where 'key' < now()
+        ///     delete from 'table' where 'key' &lt; now()
         /// </summary>
         /// <param name="table"></param>
         /// <param name="keys"></param>
-        /// <param name="values"></param>
         /// <returns></returns>
         bool DeleteByTime(string table, string keys);
 
@@ -233,6 +230,8 @@ namespace Aurora.Framework
         ///     Connects to the database and then performs migrations
         /// </summary>
         /// <param name="connectionString"></param>
+        /// <param name="migrationName"></param>
+        /// <param name="validateTables"></param>
         void ConnectToDatabase(string connectionString, string migrationName, bool validateTables);
 
         /// <summary>
@@ -673,6 +672,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="GenericData">The Database Plugin</param>
         /// <param name="source">Config if more parameters are needed</param>
+        /// <param name="simBase"></param>
         /// <param name="DefaultConnectionString">The connection string to use</param>
         void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
                         string DefaultConnectionString);

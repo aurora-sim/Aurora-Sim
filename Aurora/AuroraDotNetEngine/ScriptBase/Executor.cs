@@ -30,6 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime

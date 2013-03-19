@@ -25,12 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
-using System.Reflection;
 
 namespace Aurora.Services
 {
@@ -121,7 +123,7 @@ namespace Aurora.Services
                 m_authenticateUsers = authConfig.GetBoolean("AuthenticateUsers", m_authenticateUsers);
             }
 
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAuthenticationData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IAuthenticationData>();
             registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 

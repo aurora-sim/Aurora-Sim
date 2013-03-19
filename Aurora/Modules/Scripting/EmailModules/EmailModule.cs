@@ -31,6 +31,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using DotNetOpenMail;
 using DotNetOpenMail.SmtpAuth;
 using Nini.Config;
@@ -216,7 +222,7 @@ namespace Aurora.Modules.Scripting
                                           message = body,
                                           toPrimID = toID
                                       };
-                    IEmailConnector conn = DataManager.DataManager.RequestPlugin<IEmailConnector>();
+                    IEmailConnector conn = Framework.Utilities.DataManager.RequestPlugin<IEmailConnector>();
                     conn.InsertEmail(email);
                 }
             }
@@ -329,7 +335,7 @@ namespace Aurora.Modules.Scripting
 
         private void GetRemoteEmails(UUID objectID, IScene scene)
         {
-            IEmailConnector conn = DataManager.DataManager.RequestPlugin<IEmailConnector>();
+            IEmailConnector conn = Framework.Utilities.DataManager.RequestPlugin<IEmailConnector>();
             List<Email> emails = conn.GetEmails(objectID);
             if (emails.Count > 0)
             {

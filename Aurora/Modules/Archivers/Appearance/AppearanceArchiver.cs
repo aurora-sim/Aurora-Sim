@@ -26,7 +26,16 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Serialization.External;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -67,7 +76,7 @@ namespace Aurora.Modules.Archivers
             string archiveXML = "";
             if (FileName.EndsWith(".database"))
             {
-                IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
+                IAvatarArchiverConnector archiver = Framework.Utilities.DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 if (archiver != null)
                 {
                     AvatarArchive archive =
@@ -387,7 +396,7 @@ namespace Aurora.Modules.Archivers
             //Write the map
             if (cmdparams[5].EndsWith(".database"))
             {
-                IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
+                IAvatarArchiverConnector archiver = Framework.Utilities.DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 if (archiver != null)
                 {
                     AvatarArchive archive = new AvatarArchive();

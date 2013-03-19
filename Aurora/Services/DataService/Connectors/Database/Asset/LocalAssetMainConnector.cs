@@ -1,10 +1,13 @@
-﻿using System;
-using System.Data;
-using System.Reflection;
-using System.Collections.Generic;
-using Aurora.Framework;
+﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using Nini.Config;
 using OpenMetaverse;
+using System;
+using System.Collections.Generic;
+using System.Data;
 
 namespace Aurora.Services.DataService.Connectors.Database.Asset
 {
@@ -32,7 +35,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if (genericData != null)
                 genericData.ConnectToDatabase(defaultConnectionString, "Asset",
                                               source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-            DataManager.DataManager.RegisterPlugin(this);
+            Framework.Utilities.DataManager.RegisterPlugin(this);
         }
 
         #endregion

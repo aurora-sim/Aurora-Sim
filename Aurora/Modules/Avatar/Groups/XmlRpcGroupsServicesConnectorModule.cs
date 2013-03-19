@@ -26,6 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
@@ -34,7 +41,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ChatSessionMember = Aurora.Framework.ChatSessionMember;
+using ChatSessionMember = Aurora.Framework.Services.ChatSessionMember;
 
 namespace Aurora.Modules.Groups
 {

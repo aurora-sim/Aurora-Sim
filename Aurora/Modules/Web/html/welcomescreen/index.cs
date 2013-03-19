@@ -1,5 +1,6 @@
 ﻿using Aurora.Framework.Servers.HttpServer;
 using System.Collections.Generic;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 
 namespace Aurora.Modules.Web
 {

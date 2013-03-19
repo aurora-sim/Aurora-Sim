@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 
 namespace Aurora.BotManager

@@ -204,6 +204,8 @@ namespace Aurora.Framework.Serialization
         ///     Convert octal bytes to a decimal representation
         /// </summary>
         /// <param name="bytes"></param>
+        /// <param name="startIndex"></param>
+        /// <param name="count"></param>
         /// <returns></returns>
         public static int ConvertOctalBytesToDecimal(byte[] bytes, int startIndex, int count)
         {

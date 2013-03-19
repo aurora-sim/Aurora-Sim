@@ -25,9 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public interface IDefaultLibraryLoader
     {

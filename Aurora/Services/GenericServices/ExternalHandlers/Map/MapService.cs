@@ -26,18 +26,22 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {

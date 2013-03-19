@@ -27,10 +27,12 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using log4net.Core;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <summary>
     ///     The console interface

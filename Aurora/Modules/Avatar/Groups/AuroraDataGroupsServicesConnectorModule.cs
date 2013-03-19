@@ -26,6 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -309,7 +316,7 @@ namespace Aurora.Modules.Groups
 
         public void AddRegion(IScene scene)
         {
-            GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            GroupsConnector = Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
             if (GroupsConnector == null)
             {
                 MainConsole.Instance.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");

@@ -26,6 +26,7 @@
  */
 
 using System.Xml;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Framework.Serialization
 {

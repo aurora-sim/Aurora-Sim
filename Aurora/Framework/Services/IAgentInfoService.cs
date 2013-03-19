@@ -27,11 +27,12 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public class UserInfo : IDataTransferable
     {
@@ -124,16 +125,14 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get the user infos for the given user
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="regionID"></param>
+        /// <param name="userID">The ID of the user to fetch info of</param>
         /// <returns></returns>
         UserInfo GetUserInfo(string userID);
 
         /// <summary>
         ///     Get the user infos for the given users
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="regionID"></param>
+        /// <param name="userIDs">A List of IDs for users to fetch info of</param>
         /// <returns></returns>
         List<UserInfo> GetUserInfos(List<string> userIDs);
 
@@ -169,6 +168,7 @@ namespace Aurora.Framework
         /// <param name="regionID"></param>
         /// <param name="lastPosition"></param>
         /// <param name="lastLookAt"></param>
+        /// <param name="regionURI"></param>
         void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt, string regionURI);
 
         /// <summary>
@@ -176,9 +176,8 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="loggingIn">Whether the user is logging in or out</param>
-        /// <param name="fireLoggedInEvent">Fire the event to log a user in</param>
         /// <param name="enteringRegion">The region the user is entering (if logging in)</param>
-        /// <param name="enteringRegion">The regionURI the user is entering (if logging in)</param>
+        /// <param name="enteringRegionURI">The regionURI the user is entering (if logging in)</param>
         void SetLoggedIn(string userID, bool loggingIn, UUID enteringRegion, string enteringRegionURI);
 
         /// <summary>

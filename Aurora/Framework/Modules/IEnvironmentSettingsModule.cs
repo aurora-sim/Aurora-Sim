@@ -1,4 +1,6 @@
-﻿namespace Aurora.Framework
+﻿using Aurora.Framework.ClientInterfaces;
+
+namespace Aurora.Framework.Modules
 {
     public interface IEnvironmentSettingsModule
     {

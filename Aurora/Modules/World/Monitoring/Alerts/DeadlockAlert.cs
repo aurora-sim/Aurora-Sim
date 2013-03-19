@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 using Aurora.Modules.Monitoring.Monitors;
 
 namespace Aurora.Modules.Monitoring.Alerts

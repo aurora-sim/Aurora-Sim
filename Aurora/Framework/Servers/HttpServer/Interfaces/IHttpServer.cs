@@ -25,9 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Security.Authentication;
 
-namespace Aurora.Framework.Servers.HttpServer
+using Aurora.Framework.Servers.HttpServer.Implementation;
+
+namespace Aurora.Framework.Servers.HttpServer.Interfaces
 {
     /// <summary>
     ///     Interface to OpenSimulator's built in HTTP server.  Use this to register handlers (http, llsd, xmlrpc, etc.)
@@ -94,7 +95,6 @@ namespace Aurora.Framework.Servers.HttpServer
         ///     URI.  So if a handler for "/myapp/" is registered and a request for "/myapp/page" is received, then
         ///     the "/myapp/" handler is invoked if no "/myapp/page" handler exists.
         /// </summary>
-        /// <param name="methodName"></param>
         /// <param name="handler"></param>
         /// <returns>
         ///     true if the handler was successfully registered, false if a handler with the same name already existed.

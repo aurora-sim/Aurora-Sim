@@ -26,8 +26,17 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
 using Games.Pathfinding.AStar2DTest;
-using Mischel.Collections;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System;

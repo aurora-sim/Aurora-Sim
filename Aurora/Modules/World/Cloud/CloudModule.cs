@@ -26,6 +26,9 @@
  */
 
 using System;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using Aurora.Framework;
 

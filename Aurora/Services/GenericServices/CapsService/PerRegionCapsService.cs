@@ -26,9 +26,11 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using OpenMetaverse;
 using System.Collections.Generic;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {

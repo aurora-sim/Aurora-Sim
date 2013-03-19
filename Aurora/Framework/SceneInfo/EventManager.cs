@@ -1,10 +1,18 @@
-﻿using Aurora.Framework.Servers.HttpServer;
+﻿using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     A class for triggering remote scene events.
@@ -290,7 +298,7 @@ namespace Aurora.Framework
         public event RegionUp OnRegionUp;
         public event RegionUp OnRegionDown;
 
-        public delegate void CachedUserInfo(UUID agentID, Aurora.Framework.CachedUserInfo info);
+        public delegate void CachedUserInfo(UUID agentID, Services.CachedUserInfo info);
 
         public event CachedUserInfo OnCachedUserInfo;
 
@@ -1737,7 +1745,7 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerOnUserCachedData(UUID agentID, Framework.CachedUserInfo cache)
+        public void TriggerOnUserCachedData(UUID agentID, Services.CachedUserInfo cache)
         {
             CachedUserInfo handlerOnCachedUserInfo = OnCachedUserInfo;
             if (handlerOnCachedUserInfo != null)

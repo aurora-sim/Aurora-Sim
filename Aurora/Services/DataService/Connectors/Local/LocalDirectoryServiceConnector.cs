@@ -25,17 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using Aurora.Framework;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using EventFlags = OpenMetaverse.DirectoryManager.EventFlags;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services.DataService
 {
@@ -58,12 +65,12 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(defaultConnectionString, "Directory",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("DirectoryServiceConnector", "LocalConnector") ==
                 "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
             Init(simBase, Name);
         }
@@ -277,7 +284,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (LandData) remoteValue;
 
-            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            IRegionData regiondata = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
                 GridRegion region = regiondata.Get(RegionID, null);
@@ -372,7 +379,7 @@ namespace Aurora.Services.DataService
                 return resp;
             }
 
-            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            IRegionData regiondata = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
                 GridRegion region = regiondata.Get(RegionID, null);
@@ -394,7 +401,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (uint) remoteValue;
 
-            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            IRegionData regiondata = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
                 GridRegion region = regiondata.Get(RegionID, null);
@@ -420,7 +427,7 @@ namespace Aurora.Services.DataService
                 return resp;
             }
 
-            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            IRegionData regiondata = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
                 GridRegion region = regiondata.Get(RegionID, null);
@@ -447,7 +454,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (uint) remoteValue;
 
-            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            IRegionData regiondata = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
                 GridRegion region = regiondata.Get(RegionID, null);
@@ -1044,7 +1051,7 @@ namespace Aurora.Services.DataService
 
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
 
-            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            IRegionData regiondata = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
                 List<GridRegion> regions = regiondata.Get(regionName, null, null, null);
@@ -1091,7 +1098,7 @@ namespace Aurora.Services.DataService
         private static List<EventData> Query2EventData(List<string> RetVal)
         {
             List<EventData> Events = new List<EventData>();
-            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            IRegionData regiondata = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             if (RetVal.Count%16 != 0 || regiondata == null)
             {
                 return Events;
@@ -1171,7 +1178,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (EventData) remoteValue;
 
-            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            IRegionData regiondata = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             if (regiondata == null)
             {
                 return null;

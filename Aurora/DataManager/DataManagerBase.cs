@@ -30,6 +30,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.DataManager
 {

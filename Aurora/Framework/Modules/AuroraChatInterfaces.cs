@@ -26,10 +26,13 @@
  */
 
 using System;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <summary>
     ///     Adds functionality so that modules can be developed to be triggered by chat said inworld by avatars

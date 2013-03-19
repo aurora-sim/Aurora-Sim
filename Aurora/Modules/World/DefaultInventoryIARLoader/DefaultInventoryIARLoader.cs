@@ -26,6 +26,11 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Aurora.Modules.Archivers;
 using Aurora.Region;
 using Nini.Config;
@@ -50,7 +55,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         {
             m_service = service;
             m_registry = registry;
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IInventoryData>();
 
             IConfig libConfig = source.Configs["InventoryIARLoader"];
             const string pLibrariesLocation = "DefaultInventory/";

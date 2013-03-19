@@ -25,10 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public delegate void GetResponse(OSDMap response);
 
@@ -124,6 +127,7 @@ namespace Aurora.Framework
         ///     Log out the current agent
         /// </summary>
         /// <param name="regionCaps"></param>
+        /// <param name="kickRootAgent"></param>
         void LogoutAgent(IRegionClientCapsService regionCaps, bool kickRootAgent);
 
         /// <summary>
@@ -131,7 +135,6 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="region"></param>
         /// <param name="aCircuit"></param>
-        /// <param name="reason"></param>
         LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit);
 
         /// <summary>

@@ -26,6 +26,9 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {

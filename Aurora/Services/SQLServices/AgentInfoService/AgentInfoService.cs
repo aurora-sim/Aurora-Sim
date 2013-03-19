@@ -25,8 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -67,7 +69,7 @@ namespace Aurora.Services
 
         public virtual void FinishedStartup()
         {
-            m_agentInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
+            m_agentInfoConnector = Framework.Utilities.DataManager.RequestPlugin<IAgentInfoConnector>();
         }
 
         #endregion

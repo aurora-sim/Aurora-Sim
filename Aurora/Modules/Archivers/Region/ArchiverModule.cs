@@ -26,6 +26,9 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using System;
 using System.Collections.Generic;

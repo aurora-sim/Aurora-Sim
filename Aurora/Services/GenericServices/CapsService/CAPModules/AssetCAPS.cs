@@ -26,18 +26,23 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.StructuredData;
 using System;
-using System.Collections;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Web;
 using Encoder = System.Drawing.Imaging.Encoder;
@@ -140,6 +145,7 @@ namespace Aurora.Services
         /// <param name="httpResponse"></param>
         /// <param name="textureID"></param>
         /// <param name="format"></param>
+        /// <param name="response"></param>
         /// <returns>False for "caller try another codec"; true otherwise</returns>
         private bool FetchTexture(OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID textureID, string format,
                                   out byte[] response)
@@ -452,9 +458,10 @@ namespace Aurora.Services
 
             /// <summary>
             /// </summary>
-            /// <param name="data"></param>
             /// <param name="path"></param>
-            /// <param name="param"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)

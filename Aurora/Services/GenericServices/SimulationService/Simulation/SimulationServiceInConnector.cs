@@ -26,7 +26,10 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 

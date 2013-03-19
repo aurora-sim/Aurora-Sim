@@ -28,7 +28,7 @@
 using System;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     /// <summary>
     ///     Client provided parameters for avatar movement

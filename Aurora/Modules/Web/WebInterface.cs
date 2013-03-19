@@ -1,5 +1,12 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -57,7 +64,7 @@ namespace Aurora.Modules.Web
         {
             Registry = registry;
 
-            var webPages = Aurora.Framework.AuroraModuleLoader.PickupModules<IWebInterfacePage>();
+            var webPages = AuroraModuleLoader.PickupModules<IWebInterfacePage>();
             foreach (var pages in webPages)
             {
                 foreach (var page in pages.FilePath)

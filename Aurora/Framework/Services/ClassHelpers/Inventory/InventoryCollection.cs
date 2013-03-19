@@ -26,10 +26,12 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Inventory
 {
     /// <summary>
     ///     Used to serialize a whole inventory for transfer over the network.

@@ -25,10 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
 using Nini.Config;
-using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,7 +76,7 @@ namespace Aurora.Services
         {
             if (!m_doRemoteCalls)
             {
-                m_database = Aurora.DataManager.DataManager.RequestPlugin<ISchedulerDataPlugin>();
+                m_database = Framework.Utilities.DataManager.RequestPlugin<ISchedulerDataPlugin>();
                 if (m_database != null)
                     m_enabled = true;
 

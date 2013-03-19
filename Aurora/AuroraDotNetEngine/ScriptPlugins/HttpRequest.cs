@@ -25,10 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -89,7 +93,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                           };
 
                     m_ScriptEngine.AddToObjectQueue(info.PrimID, "http_response", new DetectParams[0], resobj);
-                    if (info.Status == (int) Aurora.Framework.Servers.HttpServer.OSHttpStatusCode.ClientErrorJoker &&
+                    if (info.Status == (int) OSHttpStatusCode.ClientErrorJoker &&
                         info.VerbroseThrottle)
                     {
                         ISceneChildEntity part = m_ScriptEngine.Scene.GetSceneObjectPart(info.PrimID);

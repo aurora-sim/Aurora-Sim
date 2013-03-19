@@ -28,7 +28,7 @@
 using System;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     /// <summary>
     ///     Args to return to a client that queries picker data

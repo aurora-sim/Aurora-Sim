@@ -28,10 +28,13 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.PresenceInfo
 {
     /// <summary>
     ///     Circuit data for an agent.  Connection information shared between

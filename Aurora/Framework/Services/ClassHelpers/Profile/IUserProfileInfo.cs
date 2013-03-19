@@ -26,10 +26,12 @@
  */
 
 using System;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Profile
 {
     [Flags]
     public enum IAgentFlags : uint
@@ -249,7 +251,7 @@ namespace Aurora.Framework
         ///     does not contain sensitive information
         ///     if the trusted boolean is false
         /// </summary>
-        /// <param name="secure"></param>
+        /// <param name="trusted"></param>
         /// <returns></returns>
         public OSDMap ToOSD(bool trusted)
         {

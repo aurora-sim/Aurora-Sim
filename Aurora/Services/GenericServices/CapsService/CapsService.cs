@@ -26,12 +26,16 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Aurora.Services
 {
@@ -163,7 +167,7 @@ namespace Aurora.Services
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="CAPSBase"></param>
-        /// <param name="regionHandle"></param>
+        /// <param name="regionID"></param>
         /// <param name="IsRootAgent">Will this child be a root agent</param>
         /// <param name="circuitData"></param>
         /// <param name="port">The port to use for the CAPS service</param>
@@ -241,7 +245,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Get a region handler for the given region
         /// </summary>
-        /// <param name="RegionHandle"></param>
+        /// <param name="regionID"></param>
         public IRegionCapsService GetCapsForRegion(UUID regionID)
         {
             IRegionCapsService service;
@@ -255,7 +259,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Create a caps handler for the given region
         /// </summary>
-        /// <param name="RegionHandle"></param>
+        /// <param name="regionID"></param>
         public void AddCapsForRegion(UUID regionID)
         {
             if (!m_RegionCapsServices.ContainsKey(regionID))
@@ -270,7 +274,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Remove the handler for the given region
         /// </summary>
-        /// <param name="RegionHandle"></param>
+        /// <param name="regionID"></param>
         public void RemoveCapsForRegion(UUID regionID)
         {
             if (m_RegionCapsServices.ContainsKey(regionID))

@@ -27,7 +27,7 @@
 
 using System;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     public delegate void ConsoleCommand(string[] comParams);
 

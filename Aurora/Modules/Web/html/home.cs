@@ -1,5 +1,7 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
 using System.Collections.Generic;
 
@@ -46,7 +48,7 @@ namespace Aurora.Modules.Web
             vars.Add("WelcomeScreen", translator.GetTranslatedString("WelcomeScreen"));
             vars.Add("WelcomeToText", translator.GetTranslatedString("WelcomeToText"));
 
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
             if (PagesMigrator.RequiresUpdate() &&
                 PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored))

@@ -25,9 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Inventory
 {
     /// <summary>
     ///     Common base class for inventory nodes of different types (files, folders, etc.)

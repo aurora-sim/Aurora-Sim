@@ -1,12 +1,13 @@
-﻿using Aurora.Framework.Servers.HttpServer;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Web;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Servers.HttpServer
 {
     public delegate string HTTPReturned(Dictionary<string, string> variables);
 

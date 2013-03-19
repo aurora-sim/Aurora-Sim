@@ -26,6 +26,11 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OdeAPI;
 using OpenMetaverse;

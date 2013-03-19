@@ -29,10 +29,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using Nini.Ini;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Configuration
 {
     /// <summary>
     ///     Loads the Configuration files into nIni
@@ -328,7 +329,10 @@ namespace Aurora.Framework
         ///     Adds the included files as ini configuration files
         /// </summary>
         /// <param name="sources">List of URL strings or filename strings</param>
+        /// <param name="basePath"></param>
         /// <param name="cntr">Where should we start inserting sources into the list?</param>
+        /// <param name="triedPaths"></param>
+        /// <param name="configSource"></param>
         private void AddIncludes(List<string> sources, string basePath, ref int cntr, ref List<string> triedPaths,
                                  IConfigSource configSource)
         {
@@ -480,6 +484,8 @@ namespace Aurora.Framework
         ///     Provide same ini loader functionality for standard ini and master ini - file system or XML over http
         /// </summary>
         /// <param name="iniPath">Full path to the ini</param>
+        /// <param name="i"></param>
+        /// <param name="source"></param>
         /// <returns></returns>
         private bool ReadConfig(string iniPath, int i, IConfigSource source)
         {
@@ -504,7 +510,7 @@ namespace Aurora.Framework
                 // Try to read it
                 try
                 {
-                    string file = Utilities.ReadExternalWebsite(iniPath);
+                    string file = Utilities.Utilities.ReadExternalWebsite(iniPath);
                     string filename = Path.GetTempFileName();
                     File.WriteAllText(filename, file);
 

@@ -25,9 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IEntityTransferModule
     {
@@ -100,12 +105,12 @@ namespace Aurora.Framework
         /// <summary>
         ///     Teleports the given client to the given region at position/rotation
         /// </summary>
-        /// <param name="client">The agent to cross</param>
+        /// <param name="iClientAPI">The agent to cross</param>
         /// <param name="RegionName">The name of the region the client is teleporting to</param>
         /// <param name="position">The position in the new region you are teleporting into</param>
         /// <param name="lookAt">The rotation you will have once you enter the region</param>
         /// <param name="teleportFlags">The flags (TeleportFlags class) that are being sent along with this teleport</param>
-        void RequestTeleportLocation(IClientAPI iClientAPI, string RegionName, Vector3 pos, Vector3 lookat,
+        void RequestTeleportLocation(IClientAPI iClientAPI, string RegionName, Vector3 position, Vector3 lookAt,
                                      uint teleportFlags);
 
         /// <summary>
@@ -198,8 +203,10 @@ namespace Aurora.Framework
         /// <summary>
         ///     Sends that a teleport failed to the given user
         /// </summary>
-        /// <param name="sp"></param>
+        /// <param name="destination"></param>
+        /// <param name="agentID"></param>
         /// <param name="reason"></param>
+        /// <param name="isCrossing"></param>
         void FailedToTeleportAgent(GridRegion destination, UUID agentID, string reason, bool isCrossing);
     }
 }

@@ -26,6 +26,15 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -409,7 +418,7 @@ namespace Aurora.Modules.Chat
             if (!m_enabled) return;
 
             if (m_useMuteListModule)
-                MuteListConnector = DataManager.DataManager.RequestPlugin<IMuteListConnector>();
+                MuteListConnector = Framework.Utilities.DataManager.RequestPlugin<IMuteListConnector>();
 
             m_imService = scene.RequestModuleInterface<IInstantMessagingService>();
         }

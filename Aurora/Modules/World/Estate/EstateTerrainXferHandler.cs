@@ -26,6 +26,9 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;
 

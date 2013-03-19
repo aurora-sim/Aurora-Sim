@@ -26,6 +26,10 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Nini.Config;
 using System.Collections.Generic;
 
@@ -55,7 +59,7 @@ namespace Aurora.Services.DataService
                 if (GD != null)
                     GD.ConnectToDatabase(defaultConnectionString, "AvatarArchive",
                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 

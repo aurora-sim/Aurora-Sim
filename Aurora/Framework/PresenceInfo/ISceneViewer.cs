@@ -26,9 +26,12 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.PresenceInfo
 {
     public interface ISceneViewer
     {
@@ -167,6 +170,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="client"></param>
         /// <param name="entity"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene);
     }

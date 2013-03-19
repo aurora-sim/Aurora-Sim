@@ -27,10 +27,12 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     Callback used when a user's inventory is received from the inventory service
@@ -103,7 +105,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Gets everything (folders and items) inside a folder
         /// </summary>
-        /// <param name="userId"></param>
+        /// <param name="userID"></param>
         /// <param name="folderID"></param>
         /// <returns></returns>
         InventoryCollection GetFolderContent(UUID userID, UUID folderID);
@@ -148,7 +150,8 @@ namespace Aurora.Framework
         /// <summary>
         ///     Delete an item from the user's inventory
         /// </summary>
-        /// <param name="item"></param>
+        /// <param name="userID"></param>
+        /// <param name="folderIDs"></param>
         /// <returns>true if the item was successfully deleted</returns>
         bool DeleteFolders(UUID userID, List<UUID> folderIDs);
 
@@ -202,14 +205,16 @@ namespace Aurora.Framework
         /// <summary>
         ///     Delete an item from the user's inventory
         /// </summary>
-        /// <param name="item"></param>
+        /// <param name="userID"></param>
+        /// <param name="itemIDs"></param>
         /// <returns>true if the item was successfully deleted</returns>
         bool DeleteItems(UUID userID, List<UUID> itemIDs);
 
         /// <summary>
         ///     Get an item, given by its UUID
         /// </summary>
-        /// <param name="item"></param>
+        /// <param name="userID"></param>
+        /// <param name="inventoryID"></param>
         /// <returns></returns>
         InventoryItemBase GetItem(UUID userID, UUID inventoryID);
 
@@ -244,6 +249,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get the item serialized as an OSDArray - local only
         /// </summary>
+        /// <param name="avatarID"></param>
         /// <param name="itemID"></param>
         /// <returns></returns>
         OSDArray GetOSDItem(UUID avatarID, UUID itemID);
@@ -292,7 +298,7 @@ namespace Aurora.Framework
 
         #endregion
 
-        UUID GetItemAssetID(UUID uUID, UUID itemID);
+        UUID GetItemAssetID(UUID uuid, UUID itemID);
     }
 
     public delegate void GiveFolderParam(InventoryFolderBase folder);

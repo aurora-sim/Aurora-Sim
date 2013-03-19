@@ -25,15 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
+using Aurora.Region.Animation;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Region.Animation;
-using GridRegion = Aurora.Framework.GridRegion;
-using PrimType = Aurora.Framework.PrimType;
+using GridRegion = Aurora.Framework.Services.GridRegion;
+using PrimType = Aurora.Framework.SceneInfo.PrimType;
 
 namespace Aurora.Region
 {
@@ -975,6 +984,8 @@ namespace Aurora.Region
         ///     Applies a roll accumulator to the avatar's angular velocity for the avatar fly roll effect.
         /// </summary>
         /// <param name="amount">Postive or negative roll amount in radians</param>
+        /// <param name="PressingUp"></param>
+        /// <param name="PressingDown"></param>
         private void ApplyFlyingRoll(float amount, bool PressingUp, bool PressingDown)
         {
             float rollAmount = Util.Clamp(m_AngularVelocity.Z + amount, -FLY_ROLL_MAX_RADIANS, FLY_ROLL_MAX_RADIANS);

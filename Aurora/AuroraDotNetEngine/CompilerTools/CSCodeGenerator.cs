@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Aurora.Framework.Utilities;
 using Aurora.ScriptEngineParser;
 using Tools;
 
@@ -2996,7 +2997,7 @@ default
                 if (m_isInEnumeratedDeclaration && NeedRetVal) //Got to have a retVal for do/while
                 {
                     //This is for things like the do/while statement, where a function is in the while() part and can't be dumped in front of the do/while
-                    string MethodName = Aurora.Framework.StringUtils.RandomString(10, true);
+                    string MethodName = StringUtils.RandomString(10, true);
                     string typeDefs = "";
                     ObjectList arguements = null;
                     if (LocalMethodArguements.TryGetValue(fc.Id, out arguements))
@@ -3018,7 +3019,7 @@ default
                                                      typeDefs);
                     newMethod += (Generate("{"));
                     newMethod += (Generate("ahwowuerogng = true;"));
-                    Mname = Aurora.Framework.StringUtils.RandomString(10, true);
+                    Mname = StringUtils.RandomString(10, true);
                     newMethod += (Generate("System.Collections.IEnumerator " + Mname + " = "));
                     newMethod += (Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
                     newMethod += (tempString);
@@ -3038,7 +3039,7 @@ default
                     MethodsToAdd.Add(newMethod);
 
                     List<string> fCalls = new List<string>();
-                    string boolname = Aurora.Framework.StringUtils.RandomString(10, true);
+                    string boolname = StringUtils.RandomString(10, true);
                     fCalls.Add(Generate("bool " + boolname + " = true;"));
                     retstr += MethodName + "(" + tempString + ", out " + boolname + ")";
                     lock (FuncCalls)
@@ -3047,8 +3048,8 @@ default
                 else
                 {
                     //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
-                    Mname = Aurora.Framework.StringUtils.RandomString(10, true);
-                    string Exname = Aurora.Framework.StringUtils.RandomString(10, true);
+                    Mname = StringUtils.RandomString(10, true);
+                    string Exname = StringUtils.RandomString(10, true);
                     List<string> fCalls = new List<string>
                                               {
                                                   Generate("string " + Exname + " =  \"\";"),

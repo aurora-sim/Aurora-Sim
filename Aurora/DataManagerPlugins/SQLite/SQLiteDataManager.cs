@@ -33,6 +33,9 @@ using System.Linq;
 using System.Reflection;
 using Aurora.DataManager.Migration;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Community.CsharpSqlite.SQLiteClient;
 using OpenMetaverse;
 
@@ -526,7 +529,6 @@ namespace Aurora.DataManager.SQLite
             }
 
             string query = string.Format("UPDATE {0}", table);
-            ;
             Dictionary<string, object> ps = new Dictionary<string, object>();
 
             string filter = "";

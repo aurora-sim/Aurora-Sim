@@ -27,8 +27,9 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <summary>
     ///     Represent generic cache to store key/value pairs (elements) limited by time, size and count of elements.

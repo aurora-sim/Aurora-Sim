@@ -25,12 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.PresenceInfo;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Net;
-using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     Maps from client AgentID and RemoteEndPoint values to IClientAPI

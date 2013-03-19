@@ -27,9 +27,11 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public interface IEventArgs
     {

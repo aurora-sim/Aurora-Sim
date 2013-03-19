@@ -25,11 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.SQLServices.AvatarService
 {
@@ -76,7 +81,7 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAvatarData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IAvatarData>();
             m_ArchiveService = registry.RequestModuleInterface<IAvatarAppearanceArchiver>();
             registry.RequestModuleInterface<ISimulationBase>()
                     .EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);

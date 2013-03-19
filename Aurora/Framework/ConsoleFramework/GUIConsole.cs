@@ -25,16 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using log4net.Core;
+using Nini.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Timers;
-using Nini.Config;
-using log4net.Core;
-using Timer = System.Timers.Timer;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     /// <summary>
     ///     This is a special class designed to take over control of the command console prompt of

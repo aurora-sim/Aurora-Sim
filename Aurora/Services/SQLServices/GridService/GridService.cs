@@ -26,13 +26,19 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GridRegion = Aurora.Framework.GridRegion;
-using RegionFlags = Aurora.Framework.RegionFlags;
+using GridRegion = Aurora.Framework.Services.GridRegion;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.Services.SQLServices.GridService
 {
@@ -136,7 +142,7 @@ namespace Aurora.Services.SQLServices.GridService
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
             m_registryCore = registry;
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             m_agentInfoService = m_registryCore.RequestModuleInterface<IAgentInfoService>();
         }
 
@@ -191,7 +197,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <summary>
         ///     Gets the default regions that people land in if they have no other region to enter
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs)
@@ -219,7 +225,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <summary>
         ///     Attempts to find regions that are good for the agent to login to if the default and fallback regions are down.
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
@@ -748,6 +754,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <summary>
         ///     Get the cached list of neighbors or a new list
         /// </summary>
+        /// <param name="scopeIDs"></param>
         /// <param name="region"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -1012,6 +1019,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <summary>
         ///     Get all agent locations for the given region
         /// </summary>
+        /// <param name="scopeIDs"></param>
         /// <param name="X"></param>
         /// <param name="Y"></param>
         /// <param name="regionHandle"></param>

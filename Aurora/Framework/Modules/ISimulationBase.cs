@@ -25,11 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Configuration;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Nini.Config;
 using System;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface ISimulationBase
     {

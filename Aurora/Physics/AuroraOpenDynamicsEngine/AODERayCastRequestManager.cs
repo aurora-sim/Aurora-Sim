@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Physics;
 using OdeAPI;
 using OpenMetaverse;
 using System;

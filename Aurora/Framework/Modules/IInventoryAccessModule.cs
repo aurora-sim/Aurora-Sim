@@ -25,10 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IInventoryAccessModule
     {

@@ -1,7 +1,7 @@
 ﻿using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public interface IVoiceService
     {

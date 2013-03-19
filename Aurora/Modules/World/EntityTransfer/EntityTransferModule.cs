@@ -26,12 +26,23 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.EntityTransfer
 {
@@ -956,7 +967,7 @@ namespace Aurora.Modules.EntityTransfer
                 // We do this caching so that we don't pull down all of this info as the user is trying to login, which causes major lag, and slows down the sim for people already in the sim
                 CachedUserInfo cache = new CachedUserInfo();
                 cache.FromOSD((OSDMap) map["CachedUserInfo"]);
-                IAgentConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+                IAgentConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
                 if (conn != null)
                     conn.CacheAgent(cache.AgentInfo);
                 scene.UserAccountService.CacheAccount(cache.UserAccount);

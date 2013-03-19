@@ -28,8 +28,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Aurora.Framework.Services;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <summary>
     ///     Used for the OnInventoryArchiveSaved event.

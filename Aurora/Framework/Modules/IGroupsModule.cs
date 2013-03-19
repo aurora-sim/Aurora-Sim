@@ -26,9 +26,12 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Services;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public delegate void NewGroupNotice(UUID groupID, UUID noticeID);
 

@@ -26,8 +26,18 @@
  */
 
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -397,7 +407,7 @@ namespace Aurora.Modules.Estate
             {
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true))
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
                         List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
@@ -425,7 +435,7 @@ namespace Aurora.Modules.Estate
             }
             if ((estateAccessType & (int) AccessDeltaRequest.RemoveAllowedUser) != 0) // User remove
             {
-                IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                 if ((estateAccessType & 1) != 0 && connector != null) // All estates
                 {
                     List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
@@ -459,7 +469,7 @@ namespace Aurora.Modules.Estate
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
                     m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
                         List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
@@ -490,7 +500,7 @@ namespace Aurora.Modules.Estate
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
                     m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
                         List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
@@ -521,7 +531,7 @@ namespace Aurora.Modules.Estate
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false) ||
                     m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
                         List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
@@ -623,7 +633,7 @@ namespace Aurora.Modules.Estate
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false) ||
                     m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
                         List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
@@ -697,7 +707,7 @@ namespace Aurora.Modules.Estate
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
                     m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
                         List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
@@ -728,7 +738,7 @@ namespace Aurora.Modules.Estate
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
                     m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
                         List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);

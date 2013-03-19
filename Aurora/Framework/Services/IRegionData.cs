@@ -29,7 +29,7 @@ using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     An interface for connecting to the authentication datastore

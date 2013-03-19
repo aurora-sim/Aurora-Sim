@@ -28,6 +28,8 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.DataManager.Migration.Migrators
 {

@@ -25,7 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using System;
@@ -35,7 +41,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     Gather uuids for a given entity.
@@ -112,6 +118,7 @@ namespace Aurora.Framework
         /// within this object).
         /// <param name="sceneObject">The scene object for which to gather assets</param>
         /// <param name="assetUuids">The assets gathered</param>
+        /// <param name="scene"></param>
         public void GatherAssetUuids(ISceneEntity sceneObject, IDictionary<UUID, AssetType> assetUuids,
                                      IRegistryCore scene)
         {
@@ -267,8 +274,9 @@ namespace Aurora.Framework
         ///     it (e.g. face textures) and recursively, those of items within it's inventory (e.g. objects contained
         ///     within this object).
         /// </summary>
-        /// <param name="sceneObject"></param>
+        /// <param name="sceneObjectUuid"></param>
         /// <param name="assetUuids"></param>
+        /// <param name="scene"></param>
         protected void GetSceneObjectAssetUuids(UUID sceneObjectUuid, IDictionary<UUID, AssetType> assetUuids,
                                                 IRegistryCore scene)
         {

@@ -1,13 +1,13 @@
-﻿using System;
-using System.Reflection;
-using Aurora.DataManager;
+﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
+using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace Aurora.FileBasedServices.AssetService
 {
@@ -79,7 +79,7 @@ namespace Aurora.FileBasedServices.AssetService
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
             if (m_doConversion)
-                m_assetService = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+                m_assetService = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
         }
 
         public virtual void FinishedStartup()

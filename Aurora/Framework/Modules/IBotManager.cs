@@ -25,10 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public enum TravelMode
     {

@@ -29,7 +29,7 @@ using System;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     /// <summary>
     ///     Information about an Animation

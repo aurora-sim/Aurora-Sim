@@ -26,7 +26,9 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 
 namespace Aurora.Modules.Archivers
 {

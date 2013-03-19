@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.Services;
 using Aurora.Simulation.Base;
 
 namespace Aurora.Servers.AvatarServer

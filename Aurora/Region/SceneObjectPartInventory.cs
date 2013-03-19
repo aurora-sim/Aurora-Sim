@@ -25,15 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using OpenMetaverse;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
+using OpenMetaverse;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Aurora.Region
 {
@@ -374,7 +378,11 @@ namespace Aurora.Region
         /// <summary>
         ///     Updates a script which is in this prim's inventory.
         /// </summary>
-        /// <param name="item"></param>
+        /// <param name="itemID"></param>
+        /// <param name="assetData"></param>
+        /// <param name="startParam"></param>
+        /// <param name="postOnRez"></param>
+        /// <param name="stateSource"></param>
         /// <returns></returns>
         public void UpdateScriptInstance(UUID itemID, byte[] assetData, int startParam, bool postOnRez,
                                          StateSource stateSource)

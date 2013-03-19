@@ -26,7 +26,15 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Configuration;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
 using Aurora.Services.DataService;
 using Nini.Config;
 using OpenMetaverse;
@@ -286,7 +294,7 @@ namespace Aurora.Simulation.Base
             List<dynamic> modules = new List<dynamic>();
             foreach (Type t in m_servicePlugins)
             {
-                var mods = Aurora.Framework.AuroraModuleLoader.PickupModules(t);
+                var mods = AuroraModuleLoader.PickupModules(t);
                 modules.AddRange(mods);
             }
 

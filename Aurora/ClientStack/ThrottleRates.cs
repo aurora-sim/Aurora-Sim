@@ -26,6 +26,7 @@
  */
 
 using System;
+using Aurora.Framework.ClientInterfaces;
 using Nini.Config;
 using Aurora.Framework;
 

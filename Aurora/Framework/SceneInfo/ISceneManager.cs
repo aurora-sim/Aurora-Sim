@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
 
     #region Delegates

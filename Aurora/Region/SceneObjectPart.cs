@@ -26,7 +26,16 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
@@ -37,7 +46,7 @@ using System.Drawing;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using PrimType = Aurora.Framework.PrimType;
+using PrimType = Aurora.Framework.SceneInfo.PrimType;
 
 namespace Aurora.Region
 {
@@ -460,9 +469,10 @@ namespace Aurora.Region
         /// </summary>
         /// <param name="ownerID"></param>
         /// <param name="shape"></param>
-        /// <param name="position"></param>
+        /// <param name="groupPosition"></param>
         /// <param name="rotationOffset"></param>
         /// <param name="offsetPosition"></param>
+        /// <param name="name"></param>
         public SceneObjectPart(
             UUID ownerID, PrimitiveBaseShape shape, Vector3 groupPosition,
             Quaternion rotationOffset, Vector3 offsetPosition, string name)
@@ -2228,6 +2238,9 @@ namespace Aurora.Region
         /// <param name="volume"></param>
         /// <param name="triggered"></param>
         /// <param name="flags"></param>
+        /// <param name="radius"></param>
+        /// <param name="useMaster"></param>
+        /// <param name="isMaster"></param>
         public void SendSound(string sound, double volume, bool triggered, byte flags, float radius, bool useMaster,
                               bool isMaster)
         {
@@ -2566,7 +2579,6 @@ namespace Aurora.Region
         /// <summary>
         ///     Tell us what type this prim is
         /// </summary>
-        /// <param name="primShape"></param>
         /// <returns></returns>
         public PrimType GetPrimType()
         {
@@ -3376,6 +3388,7 @@ namespace Aurora.Region
         /// not handling RGBA properly. Cycles through, and "fixes" the color
         /// info
         /// <param name="tex"></param>
+        /// <param name="sendChangedEvent"></param>
         public void UpdateTexture(Primitive.TextureEntry tex, bool sendChangedEvent)
         {
             //Color4 tmpcolor;

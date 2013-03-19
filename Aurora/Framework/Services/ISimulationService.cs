@@ -25,11 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public class CachedUserInfo : IDataTransferable
     {
@@ -197,7 +204,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Create an object in the destination region. This message is used primarily for prim crossing.
         /// </summary>
-        /// <param name="regionHandle"></param>
+        /// <param name="destination"></param>
         /// <param name="sog"></param>
         /// <returns></returns>
         bool CreateObject(GridRegion destination, ISceneEntity sog);
@@ -206,7 +213,7 @@ namespace Aurora.Framework
         ///     Create an object from the user's inventory in the destination region.
         ///     This message is used primarily by clients for attachments.
         /// </summary>
-        /// <param name="regionHandle"></param>
+        /// <param name="destination"></param>
         /// <param name="userID"></param>
         /// <param name="itemID"></param>
         /// <returns></returns>

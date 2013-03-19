@@ -30,7 +30,7 @@ using OpenMetaverse;
 using System;
 using System.IO;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface ITerrainModule
     {

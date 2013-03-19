@@ -28,7 +28,9 @@
 //#define SPAM
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;

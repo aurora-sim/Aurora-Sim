@@ -26,10 +26,12 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 using System.Collections.Generic;
-using FriendInfo = Aurora.Framework.FriendInfo;
+using FriendInfo = Aurora.Framework.Services.FriendInfo;
 
 namespace Aurora.Services.DataService
 {
@@ -55,7 +57,7 @@ namespace Aurora.Services.DataService
                     GD.ConnectToDatabase(connectionString, "Friends",
                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 

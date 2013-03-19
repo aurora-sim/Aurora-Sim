@@ -25,18 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
+using Aurora.Region;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
-using Aurora.Region;
 
 namespace Aurora.Services
 {
@@ -56,7 +63,7 @@ namespace Aurora.Services
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
-            m_inventoryData = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
+            m_inventoryData = Framework.Utilities.DataManager.RequestPlugin<IInventoryData>();
 
             HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                OSHttpResponse httpResponse)
@@ -285,7 +292,10 @@ namespace Aurora.Services
         /// <summary>
         ///     This handles the uploading of some inventory types
         /// </summary>
-        /// <param name="llsdRequest"></param>
+        /// <param name="path"></param>
+        /// <param name="request"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         public byte[] NewAgentInventoryRequest(string path, Stream request, OSHttpRequest httpRequest,
                                                OSHttpResponse httpResponse)
@@ -464,9 +474,17 @@ namespace Aurora.Services
 
         /// <summary>
         /// </summary>
+        /// <param name="assetName"></param>
+        /// <param name="assetDescription"></param>
         /// <param name="assetID"></param>
         /// <param name="inventoryItem"></param>
+        /// <param name="parentFolder"></param>
         /// <param name="data"></param>
+        /// <param name="inventoryType"></param>
+        /// <param name="assetType"></param>
+        /// <param name="everyone_mask"></param>
+        /// <param name="group_mask"></param>
+        /// <param name="next_owner_mask"></param>
         public UUID UploadCompleteHandler(string assetName, string assetDescription, UUID assetID,
                                           UUID inventoryItem, UUID parentFolder, byte[] data, string inventoryType,
                                           string assetType, uint everyone_mask, uint group_mask, uint next_owner_mask)
@@ -735,9 +753,10 @@ namespace Aurora.Services
 
             /// <summary>
             /// </summary>
-            /// <param name="data"></param>
             /// <param name="path"></param>
-            /// <param name="param"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)

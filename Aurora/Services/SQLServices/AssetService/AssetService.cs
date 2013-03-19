@@ -25,12 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
-using System.Reflection;
 
 namespace Aurora.Services.SQLServices.AssetService
 {
@@ -63,7 +66,7 @@ namespace Aurora.Services.SQLServices.AssetService
         {
             m_registry = registry;
 
-            m_database = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+            m_database = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
 
             registry.RegisterModuleInterface<IAssetService>(this);
 

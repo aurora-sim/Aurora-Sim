@@ -1,5 +1,10 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
@@ -42,7 +47,7 @@ namespace Aurora.Modules.Web
                             : UUID.Parse(requestParameters["userid"].ToString());
 
             IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
-            var agentService = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            var agentService = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             UserAccount account = userService.GetUserAccount(null, user);
             IAgentInfo agent = agentService.GetAgent(user);
             if (requestParameters.ContainsKey("Submit") &&

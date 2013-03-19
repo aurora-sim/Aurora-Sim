@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
 
     #region Enumerations

@@ -29,6 +29,9 @@ using System;
 using System.IO;
 using System.Text;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.Modules.Terrain.FileLoaders
 {

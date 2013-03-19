@@ -25,11 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
 using System;
 using System.Collections;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -889,9 +890,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     return new list(ret);
                 }
-
-                    // Deal with the segmented case: 0->end + start->EOL
-
+                // Deal with the segmented case: 0->end + start->EOL
                 else
                 {
                     list result = null;
@@ -1278,8 +1277,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 if (Math.Ceiling(this.Length*i) == this.Length*i)
                 {
-                    return
-                        (double) ((double) j.Data[(int) (this.Length*i - 1)] + (double) j.Data[(int) (this.Length*i)])/2;
+                    return (double) ((double) j.Data[(int) (this.Length*i - 1)] + (double) j.Data[(int) (this.Length*i)])/2;
                 }
                 else
                 {

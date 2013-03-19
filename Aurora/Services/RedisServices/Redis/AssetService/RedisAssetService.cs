@@ -1,15 +1,15 @@
-﻿using System;
-using System.Reflection;
-using Aurora.DataManager;
+﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
+using Aurora.RedisServices.ConnectionHelpers;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using System.IO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Threading;
 using Sider;
-using Aurora.RedisServices.ConnectionHelpers;
+using System;
+using System.IO;
 
 namespace Aurora.RedisServices.AssetService
 {
@@ -97,7 +97,7 @@ namespace Aurora.RedisServices.AssetService
             if (!m_enabled)
                 return;
             if (m_doConversion)
-                m_assetService = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+                m_assetService = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
         }
 
         public virtual void FinishedStartup()

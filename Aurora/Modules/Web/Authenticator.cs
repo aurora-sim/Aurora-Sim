@@ -1,5 +1,7 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
 using OpenMetaverse;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,13 +1,18 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using ChatSessionMember = Aurora.Framework.ChatSessionMember;
+using ChatSessionMember = Aurora.Framework.Services.ChatSessionMember;
 
 namespace Aurora.Services
 {
@@ -42,7 +47,7 @@ namespace Aurora.Services
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>();
             if (syncRecievedService != null)
                 syncRecievedService.OnMessageReceived += syncRecievedService_OnMessageReceived;
-            m_groupData = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            m_groupData = Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("UserStatusChange",
                                                                                                    OnGenericEvent);
         }
@@ -498,7 +503,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Remove the member from this session
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="agentID"></param>
         /// <param name="im"></param>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void DropMemberFromSession(UUID agentID, GridInstantMessage im)
@@ -559,7 +564,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Send chat to all the members of this friend conference
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="agentID"></param>
         /// <param name="im"></param>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void SendChatToSession(UUID agentID, GridInstantMessage im)

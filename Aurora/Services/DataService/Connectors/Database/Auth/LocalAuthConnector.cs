@@ -28,6 +28,8 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 
@@ -57,7 +59,7 @@ namespace Aurora.Services.DataService
                     GD.ConnectToDatabase(connectionString, "Auth",
                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 

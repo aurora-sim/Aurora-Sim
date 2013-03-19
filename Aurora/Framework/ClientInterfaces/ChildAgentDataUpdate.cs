@@ -27,10 +27,12 @@
 
 using System;
 using System.Linq;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public interface IAgentData
     {
@@ -358,7 +360,7 @@ namespace Aurora.Framework
         ///     Deserialization of agent data.
         ///     Avoiding reflection makes it painful to write, but that's the price!
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="args"></param>
         public virtual void Unpack(OSDMap args)
         {
             // DEBUG ON

@@ -25,18 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Nwc.XmlRpc;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml;
-using Nwc.XmlRpc;
-using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -696,8 +697,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// <summary>
         ///     This methods is the start of incoming HTTP request handling.
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
+        /// <param name="context"></param>
         public virtual void HandleRequest(HttpListenerContext context)
         {
             HttpListenerRequest request = context.Request;

@@ -1,4 +1,9 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -27,7 +32,7 @@ namespace Simple.Currency
                 return;
 
             m_registry = registry;
-            m_connector = Aurora.DataManager.DataManager.RequestPlugin<ISimpleCurrencyConnector>();
+            m_connector = DataManager.RequestPlugin<ISimpleCurrencyConnector>();
             m_config = m_connector.GetConfig();
 
             registry.RegisterModuleInterface<IMoneyModule>(this);

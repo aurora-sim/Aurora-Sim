@@ -26,7 +26,14 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
@@ -37,7 +44,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 
 namespace Aurora.Services
 {
@@ -297,7 +303,6 @@ namespace Aurora.Services
         ///     Add the given event into the client's queue so that it is sent on the next
         /// </summary>
         /// <param name="ev"></param>
-        /// <param name="avatarID"></param>
         /// <returns></returns>
         public bool Enqueue(OSD ev)
         {

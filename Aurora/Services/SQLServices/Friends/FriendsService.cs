@@ -26,10 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System.Collections.Generic;
-using FriendInfo = Aurora.Framework.FriendInfo;
+using FriendInfo = Aurora.Framework.Services.FriendInfo;
 
 namespace Aurora.Services
 {
@@ -61,7 +64,7 @@ namespace Aurora.Services
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IFriendsData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IFriendsData>();
         }
 
         public virtual void FinishedStartup()

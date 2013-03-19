@@ -1,6 +1,13 @@
 ﻿using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
@@ -36,7 +43,7 @@ namespace Simple.Currency
             if (!config.Configs["Currency"].GetBoolean("RunServer", false))
                 return;
 
-            m_connector = Aurora.DataManager.DataManager.RequestPlugin<ISimpleCurrencyConnector>();
+            m_connector = DataManager.RequestPlugin<ISimpleCurrencyConnector>();
             IHttpServer server =
                 registry.RequestModuleInterface<ISimulationBase>()
                         .GetHttpServer((uint) m_connector.GetConfig().ClientPort);

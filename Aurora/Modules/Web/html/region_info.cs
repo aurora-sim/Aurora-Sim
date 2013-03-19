@@ -1,8 +1,15 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System.Collections.Generic;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.Modules.Web
 {
@@ -48,7 +55,7 @@ namespace Aurora.Modules.Web
                                                                                                                           .ToString
                                                                                                                           ()));
 
-                IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector estateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                 EstateSettings estate = estateConnector.GetEstateSettings(region.RegionID);
 
                 vars.Add("RegionName", region.RegionName);
@@ -62,8 +69,8 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionSizeY", region.RegionSizeY);
                 vars.Add("RegionType", region.RegionType);
                 vars.Add("RegionOnline",
-                         (region.Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) ==
-                         (int) Aurora.Framework.RegionFlags.RegionOnline
+                         (region.Flags & (int) RegionFlags.RegionOnline) ==
+                         (int) RegionFlags.RegionOnline
                              ? translator.GetTranslatedString("Online")
                              : translator.GetTranslatedString("Offline"));
 
@@ -90,7 +97,7 @@ namespace Aurora.Modules.Web
                     vars.Add("UsersInRegion", new List<Dictionary<string, object>>());
                 }
                 IDirectoryServiceConnector directoryConnector =
-                    Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                    Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
                 if (directoryConnector != null)
                 {
                     List<LandData> data = directoryConnector.GetParcelsByRegion(0, 10, region.RegionID, UUID.Zero,

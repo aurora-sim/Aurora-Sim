@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ClientInterfaces;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using Aurora.Framework;

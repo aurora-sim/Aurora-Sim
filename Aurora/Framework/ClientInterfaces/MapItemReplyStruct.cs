@@ -26,10 +26,11 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public class multipleMapItemReply : IDataTransferable
     {

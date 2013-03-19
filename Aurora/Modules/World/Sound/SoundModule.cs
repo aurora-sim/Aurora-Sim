@@ -27,6 +27,11 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;

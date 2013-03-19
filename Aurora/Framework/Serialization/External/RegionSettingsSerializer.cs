@@ -28,6 +28,8 @@
 using System.IO;
 using System.Text;
 using System.Xml;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
 namespace Aurora.Framework.Serialization.External

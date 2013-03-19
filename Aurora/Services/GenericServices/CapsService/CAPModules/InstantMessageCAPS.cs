@@ -26,21 +26,14 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenMetaverse;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
 using OpenMetaverse.StructuredData;
-using OpenMetaverse.Imaging;
 using System;
-using System.Collections;
-using System.Collections.Specialized;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Web;
-using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Aurora.Services
 {

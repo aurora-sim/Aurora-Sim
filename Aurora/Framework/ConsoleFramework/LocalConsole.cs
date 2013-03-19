@@ -29,10 +29,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Aurora.Framework.Modules;
 using Nini.Config;
 using log4net.Core;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     /// <summary>
     ///     A console that uses cursor control and color

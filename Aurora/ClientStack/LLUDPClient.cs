@@ -28,6 +28,9 @@
 //#define Debug
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;
 using System.Collections.Concurrent;

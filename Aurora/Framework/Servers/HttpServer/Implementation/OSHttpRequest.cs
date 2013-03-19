@@ -33,8 +33,10 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace Aurora.Framework.Servers.HttpServer.Implementation
 {
     public class OSHttpRequest
     {

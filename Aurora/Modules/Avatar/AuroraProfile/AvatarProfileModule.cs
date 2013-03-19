@@ -26,6 +26,14 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -33,7 +41,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Profiles
 {
@@ -81,7 +89,7 @@ namespace Aurora.Modules.Profiles
         {
             if (!m_ProfileEnabled)
                 return;
-            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            ProfileFrontend = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             if (ProfileFrontend == null)
                 return;
 

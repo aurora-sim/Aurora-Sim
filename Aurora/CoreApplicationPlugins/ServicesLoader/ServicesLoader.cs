@@ -26,6 +26,9 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Nini.Config;
 using System.Collections.Generic;
 

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public interface ISceneGraph
     {

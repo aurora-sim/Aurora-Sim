@@ -26,10 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using GlynnTucker.Cache;
 using Nini.Config;
 using System;
-using System.Reflection;
 
 namespace Aurora.Services
 {

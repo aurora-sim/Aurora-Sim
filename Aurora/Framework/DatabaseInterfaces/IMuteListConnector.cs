@@ -26,9 +26,11 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Services;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IMuteListConnector : IAuroraDataPlugin
     {

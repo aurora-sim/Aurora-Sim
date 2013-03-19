@@ -25,21 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml;
-using GridRegion = Aurora.Framework.GridRegion;
-using FriendInfo = Aurora.Framework.FriendInfo;
+using FriendInfo = Aurora.Framework.Services.FriendInfo;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {
@@ -303,7 +309,7 @@ namespace Aurora.Services
             }
 
             IAgentInfo agent = null;
-            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector agentData = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (agentData != null)
             {
                 agent = agentData.GetAgent(account.PrincipalID);
@@ -359,7 +365,7 @@ namespace Aurora.Services
             }
 
             IAgentInfo agent = null;
-            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector agentData = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (agentData != null)
                 agent = agentData.GetAgent(account.PrincipalID);
             if (agent == null)
@@ -385,7 +391,7 @@ namespace Aurora.Services
             {
                 string DisplayName = account.Name;
                 AvatarAppearance avappearance = null;
-                IProfileConnector profileData = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                IProfileConnector profileData = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
 
                 //
                 // Get the user's inventory
@@ -667,7 +673,7 @@ namespace Aurora.Services
         private void BuildEventNotifications(UUID principalID, ref ArrayList eventNotifications)
         {
             IDirectoryServiceConnector dirService =
-                Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (dirService == null)
                 return;
             List<EventData> events = dirService.GetEventNotifications(principalID);

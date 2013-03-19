@@ -25,18 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using FriendInfo = Aurora.Framework.FriendInfo;
-using GridRegion = Aurora.Framework.GridRegion;
+using FriendInfo = Aurora.Framework.Services.FriendInfo;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {
@@ -96,7 +100,7 @@ namespace Aurora.Services
             SetDefaultValues();
         }
 
-        public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, Aurora.Framework.UserInfo pinfo,
+        public LLLoginResponse(UserAccount account, AgentCircuitData aCircuit, Framework.Services.UserInfo pinfo,
                                GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList,
                                IInventoryService invService, ILibraryService libService,
                                string where, string startlocation, Vector3 position, Vector3 lookAt,
@@ -200,7 +204,7 @@ namespace Aurora.Services
             ActiveGestures = list;
         }
 
-        private void FillOutHomeData(Aurora.Framework.UserInfo pinfo, GridRegion home)
+        private void FillOutHomeData(Framework.Services.UserInfo pinfo, GridRegion home)
         {
             int x = 1000*Constants.RegionSize, y = 1000*Constants.RegionSize;
             if (home != null)
@@ -507,7 +511,6 @@ namespace Aurora.Services
 
                 map["inventory-skel-lib"] = ArrayListToOSDArray(InventoryLibrary);
                 map["inventory-root"] = ArrayListToOSDArray(inventoryRoot);
-                ;
                 map["inventory-lib-root"] = ArrayListToOSDArray(InventoryLibRoot);
                 map["inventory-lib-owner"] = ArrayListToOSDArray(InventoryLibraryOwner);
 

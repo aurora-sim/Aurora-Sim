@@ -1,5 +1,7 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
 using System.Collections.Generic;
 
@@ -37,7 +39,7 @@ namespace Aurora.Modules.Web
 
             vars.Add("WorldMap", translator.GetTranslatedString("WorldMap"));
 
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector connector = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = connector.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
             vars.Add("GridCenterX", settings.MapCenter.X);

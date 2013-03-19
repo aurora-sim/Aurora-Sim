@@ -29,6 +29,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
@@ -123,7 +127,6 @@ namespace Aurora.Services
         ///     Attempt to find the CapsService for the given user/region
         /// </summary>
         /// <param name="regionID"></param>
-        /// <param name="agentID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetCapsService(UUID regionID)
         {
@@ -135,8 +138,6 @@ namespace Aurora.Services
         /// <summary>
         ///     Attempt to find the CapsService for the root user/region
         /// </summary>
-        /// <param name="regionID"></param>
-        /// <param name="agentID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetRootCapsService()
         {
@@ -152,6 +153,9 @@ namespace Aurora.Services
         ///     Find, or create if one does not exist, a Caps Service for the given region
         /// </summary>
         /// <param name="regionID"></param>
+        /// <param name="CAPSBase"></param>
+        /// <param name="circuitData"></param>
+        /// <param name="port"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetOrCreateCapsService(UUID regionID, string CAPSBase,
                                                                AgentCircuitData circuitData, uint port)
@@ -175,7 +179,6 @@ namespace Aurora.Services
         /// <summary>
         ///     Remove the CAPS for the given user in the given region
         /// </summary>
-        /// <param name="AgentID"></param>
         /// <param name="regionHandle"></param>
         public void RemoveCAPS(UUID regionHandle)
         {
@@ -197,7 +200,10 @@ namespace Aurora.Services
         /// <summary>
         ///     Add a new Caps Service for the given region if one does not already exist
         /// </summary>
-        /// <param name="regionHandle"></param>
+        /// <param name="regionID"></param>
+        /// <param name="CAPSBase"></param>
+        /// <param name="circuitData"></param>
+        /// <param name="port"></param>
         protected void AddCapsServiceForRegion(UUID regionID, string CAPSBase, AgentCircuitData circuitData,
                                                uint port)
         {
@@ -205,7 +211,7 @@ namespace Aurora.Services
                 m_clientEndPoint = circuitData.ClientIPEndPoint;
             if (m_clientEndPoint == null)
             {
-                ///Should only happen in grid HG/OpenSim situtations
+                //Should only happen in grid HG/OpenSim situtations
                 IPAddress test = null;
                 if (IPAddress.TryParse(circuitData.IPAddress, out test))
                     m_clientEndPoint = new IPEndPoint(test, 0); //Dunno the port, so leave it alone

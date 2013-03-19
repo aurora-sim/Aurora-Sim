@@ -26,6 +26,12 @@
  */
 
 using System;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
@@ -551,7 +557,7 @@ namespace Aurora.Region.Animation
         ///     Sends all clients the given information for this avatar
         /// </summary>
         /// <param name="animations"></param>
-        /// <param name="seqs"></param>
+        /// <param name="sequenceNums"></param>
         /// <param name="objectIDs"></param>
         public void SendAnimPack(UUID[] animations, int[] sequenceNums, UUID[] objectIDs)
         {

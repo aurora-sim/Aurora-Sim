@@ -33,6 +33,10 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -63,7 +67,7 @@ namespace Aurora.Services.DataService
                     GD.ConnectToDatabase(connectionString, "Inventory",
                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
             m_registry = simBase;
         }

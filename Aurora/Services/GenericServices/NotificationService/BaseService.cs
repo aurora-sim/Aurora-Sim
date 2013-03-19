@@ -26,17 +26,18 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using log4net;
 using log4net.Appender;
-using log4net.Config;
 using log4net.Core;
 using log4net.Repository;
 using Nini.Config;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace Aurora.Services
 {

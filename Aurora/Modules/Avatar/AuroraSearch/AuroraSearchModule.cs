@@ -29,10 +29,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Search
 {
@@ -174,13 +182,11 @@ namespace Aurora.Modules.Search
             {
                 DirPeopleQuery(remoteClient, queryID, queryText, queryFlags,
                                queryStart);
-                return;
             }
             else if ((queryFlags & 32) != 0) //Events query
             {
                 DirEventsQuery(remoteClient, queryID, queryText, queryFlags,
                                queryStart);
-                return;
             }
         }
 
@@ -361,7 +367,7 @@ namespace Aurora.Modules.Search
 
             if (itemtype == (uint) GridItemType.Telehub)
             {
-                IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>();
+                IRegionConnector GF = Framework.Utilities.DataManager.RequestPlugin<IRegionConnector>();
                 if (GF == null)
                     return;
 
@@ -724,8 +730,8 @@ namespace Aurora.Modules.Search
             if (!m_SearchEnabled)
                 return;
             //Pull in the services we need
-            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            directoryService = DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            ProfileFrontend = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
+            directoryService = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             GroupsModule = scene.RequestModuleInterface<IGroupsModule>();
         }
 

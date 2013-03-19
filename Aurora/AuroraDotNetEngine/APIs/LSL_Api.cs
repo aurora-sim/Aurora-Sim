@@ -27,7 +27,21 @@
 
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
@@ -42,7 +56,7 @@ using System.Runtime.Remoting.Lifetime;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
@@ -50,7 +64,8 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
-using PrimType = Aurora.Framework.PrimType;
+using PrimType = Aurora.Framework.SceneInfo.PrimType;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
@@ -6652,7 +6667,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
 
-            IAgentConnector AgentFrontend = DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector AgentFrontend = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend == null)
                 return "en-us";
             IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
@@ -6787,7 +6802,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (presence != null)
                 {
-                    IProfileConnector connector = DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                    IProfileConnector connector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
                     if (connector != null)
                         return connector.GetUserProfile(presence.UUID).DisplayName;
                 }
@@ -10521,7 +10536,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case 6: // DATA_SIM_STATUS
                         if (info != null)
                         {
-                            reply = (info.Flags & (int) Framework.RegionFlags.RegionOnline) != 0 ? "up" : "down";
+                            reply = (info.Flags & (int) RegionFlags.RegionOnline) != 0 ? "up" : "down";
                         }
                             //if() starting
                             //if() stopping
@@ -12656,7 +12671,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                    {
                                        string name = "";
                                        IProfileConnector connector =
-                                           DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                                           Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
                                        if (connector != null)
                                        {
                                            IUserProfileInfo info = connector.GetUserProfile(userID);

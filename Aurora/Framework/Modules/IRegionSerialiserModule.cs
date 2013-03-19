@@ -25,7 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Aurora.Framework
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+
+namespace Aurora.Framework.Modules
 {
     public interface IRegionSerialiserModule
     {

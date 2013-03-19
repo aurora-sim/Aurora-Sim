@@ -31,6 +31,9 @@ using System.Data;
 using System.Linq;
 using Aurora.DataManager.Migration;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using MySql.Data.MySqlClient;
 
 namespace Aurora.DataManager.MySQL
@@ -395,7 +398,6 @@ namespace Aurora.DataManager.MySQL
             }
 
             string query = string.Format("UPDATE {0}", table);
-            ;
             Dictionary<string, object> ps = new Dictionary<string, object>();
 
             string filter = "";

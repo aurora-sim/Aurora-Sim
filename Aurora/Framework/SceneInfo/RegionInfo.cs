@@ -25,14 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Net;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
+using System;
+using System.Net;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public enum StartupType
     {

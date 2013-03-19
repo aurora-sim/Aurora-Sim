@@ -29,7 +29,7 @@ using System;
 using OpenMetaverse;
 using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public class TaskInventoryItemHelpers
     {

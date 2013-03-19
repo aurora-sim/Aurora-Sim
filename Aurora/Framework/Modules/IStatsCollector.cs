@@ -26,9 +26,11 @@
  */
 
 using System;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <summary>
     ///     Implemented by classes which collect up non-viewer statistical information
@@ -83,9 +85,9 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get the latest stats
         /// </summary>
-        /// <param name="p">The RegionID of the region</param>
+        /// <param name="key">The RegionID of the region</param>
         /// <returns></returns>
-        float[] GetRegionStats(string Key);
+        float[] GetRegionStats(string key);
     }
 
     public interface IMonitor
@@ -331,7 +333,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Add X prims updates that were limited to the stats
         /// </summary>
-        /// <param name="frames"></param>
+        /// <param name="prims"></param>
         void AddLimitedPrims(int prims);
     }
 

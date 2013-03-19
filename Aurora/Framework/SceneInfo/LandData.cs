@@ -28,11 +28,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     Details of a Parcel of land

@@ -26,9 +26,11 @@
  */
 
 using System;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     A new version of the old Channel class, simplified

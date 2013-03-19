@@ -26,10 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using Nini.Config;
-using OpenMetaverse;
 using System;
-using System.Reflection;
 
 namespace Aurora.Services
 {
@@ -159,6 +162,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Cache asset.
         /// </summary>
+        /// <param name="assetID"></param>
         /// <param name="asset">
         ///     The asset that is being cached.
         /// </param>

@@ -25,11 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo.Entities
 {
     /// <summary>
     ///     Interface to an ISceneChildEntity's inventory
@@ -97,6 +98,7 @@ namespace Aurora.Framework
         ///     Start a script which is in this entity's inventory.
         /// </summary>
         /// <param name="item"></param>
+        /// <param name="startParam"></param>
         /// <param name="postOnRez"></param>
         /// <param name="stateSource"></param>
         void CreateScriptInstance(
@@ -108,7 +110,6 @@ namespace Aurora.Framework
         /// <param name="itemId"></param>
         /// <param name="startParam"></param>
         /// <param name="postOnRez"></param>
-        /// <param name="engine"></param>
         /// <param name="stateSource"></param>
         void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, StateSource stateSource);
 
@@ -116,6 +117,7 @@ namespace Aurora.Framework
         ///     Updates a script instance in this prim's inventory.
         /// </summary>
         /// <param name="itemId"></param>
+        /// <param name="assetData"></param>
         /// <param name="startParam"></param>
         /// <param name="postOnRez"></param>
         /// <param name="stateSource"></param>
@@ -136,12 +138,14 @@ namespace Aurora.Framework
         ///     name is chosen.
         /// </summary>
         /// <param name="item"></param>
+        /// <param name="allowedDrop"></param>
         void AddInventoryItem(TaskInventoryItem item, bool allowedDrop);
 
         /// <summary>
         ///     Add an item to this entity's inventory.  If an item with the same name already exists, it is replaced.
         /// </summary>
         /// <param name="item"></param>
+        /// <param name="allowedDrop"></param>
         void AddInventoryItemExclusive(TaskInventoryItem item, bool allowedDrop);
 
         /// <summary>
@@ -158,7 +162,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="itemID"></param>
         /// <returns>null if the item does not exist</returns>
-        TaskInventoryItem GetInventoryItem(UUID itemId);
+        TaskInventoryItem GetInventoryItem(UUID itemID);
 
         /// <summary>
         ///     Get inventory items by name.
@@ -173,7 +177,6 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get all inventory items
         /// </summary>
-        /// <param name="name"></param>
         /// <returns>
         ///     A list of inventory items in this object
         /// </returns>

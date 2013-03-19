@@ -1,8 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.PresenceInfo
 {
     [Flags]
     public enum PresenceTaint

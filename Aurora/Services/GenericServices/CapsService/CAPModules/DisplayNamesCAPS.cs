@@ -25,22 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Web;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Services
 {
@@ -68,7 +71,7 @@ namespace Aurora.Services
                     bannedNames = new List<string>(bannedNamesString.Split(','));
             }
             m_service = service;
-            m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            m_profileConnector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             m_eventQueue = service.Registry.RequestModuleInterface<IEventQueueService>();
             m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
 
@@ -102,8 +105,10 @@ namespace Aurora.Services
         /// <summary>
         ///     Set the display name for the given user
         /// </summary>
-        /// <param name="mDhttpMethod"></param>
-        /// <param name="agentID"></param>
+        /// <param name="path"></param>
+        /// <param name="request"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         private byte[] ProcessSetDisplayName(string path, Stream request,
                                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -160,8 +165,10 @@ namespace Aurora.Services
         /// <summary>
         ///     Get the user's display name, currently not used?
         /// </summary>
-        /// <param name="mDhttpMethod"></param>
-        /// <param name="agentID"></param>
+        /// <param name="path"></param>
+        /// <param name="request"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         private byte[] ProcessGetDisplayName(string path, Stream request, OSHttpRequest httpRequest,
                                              OSHttpResponse httpResponse)
@@ -185,7 +192,7 @@ namespace Aurora.Services
                     if (account != null)
                     {
                         IUserProfileInfo info =
-                            Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>()
+                            Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>()
                                   .GetUserProfile(account.PrincipalID);
                         if (info != null)
                             PackUserInfo(info, account, ref agents);
@@ -203,7 +210,7 @@ namespace Aurora.Services
                 if (account != null)
                 {
                     IUserProfileInfo info =
-                        Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>()
+                        Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>()
                               .GetUserProfile(account.PrincipalID);
                     if (info != null)
                         PackUserInfo(info, account, ref agents);

@@ -25,11 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IDirectoryServiceConnector : IAuroraDataPlugin
     {
@@ -145,6 +150,8 @@ namespace Aurora.Framework
         /// <param name="price"></param>
         /// <param name="area"></param>
         /// <param name="StartQuery"></param>
+        /// <param name="Flags"></param>
+        /// <param name="regionID"></param>
         /// <returns></returns>
         List<DirLandReplyData> FindLandForSaleInRegion(string searchType, uint price, uint area, int StartQuery,
                                                        uint Flags, UUID regionID);
@@ -152,10 +159,8 @@ namespace Aurora.Framework
         /// <summary>
         ///     Searches for the most popular places around the grid
         /// </summary>
-        /// <param name="searchType"></param>
-        /// <param name="price"></param>
-        /// <param name="area"></param>
-        /// <param name="StartQuery"></param>
+        /// <param name="queryFlags"></param>
+        /// <param name="scopeID"></param>
         /// <returns></returns>
         List<DirPopularReplyData> FindPopularPlaces(uint queryFlags, UUID scopeID);
 
@@ -170,6 +175,7 @@ namespace Aurora.Framework
         /// <param name="category"></param>
         /// <param name="queryFlags"></param>
         /// <param name="StartQuery"></param>
+        /// <param name="scopeID"></param>
         /// <returns></returns>
         List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery,
                                                      UUID scopeID);
@@ -193,6 +199,7 @@ namespace Aurora.Framework
         /// <param name="queryText"></param>
         /// <param name="flags"></param>
         /// <param name="StartQuery"></param>
+        /// <param name="scopeID"></param>
         /// <returns></returns>
         List<DirEventsReplyData> FindEvents(string queryText, uint flags, int StartQuery, UUID scopeID);
 

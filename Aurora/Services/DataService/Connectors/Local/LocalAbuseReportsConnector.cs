@@ -25,12 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Data;
 using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Services.DataService
 {
@@ -54,7 +57,7 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(defaultConnectionString, "AbuseReports",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
             if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
                 "LocalConnector")
             {
@@ -66,7 +69,7 @@ namespace Aurora.Services.DataService
                 //    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
                 //    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
                 //}
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -167,7 +170,6 @@ namespace Aurora.Services.DataService
         ///     Adds a new abuse report to the database
         /// </summary>
         /// <param name="report"></param>
-        /// <param name="Password"></param>
         public void AddAbuseReport(AbuseReport report)
         {
             List<object> InsertValues = new List<object>

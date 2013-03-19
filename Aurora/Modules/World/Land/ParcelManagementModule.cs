@@ -26,8 +26,18 @@
  */
 
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
@@ -37,7 +47,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Timers;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Land
 {
@@ -633,7 +643,7 @@ namespace Aurora.Modules.Land
 
         protected void AddLandObjectToSearch(ILandObject parcel)
         {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
                 if (m_UpdateDirectoryOnUpdate)
@@ -646,7 +656,7 @@ namespace Aurora.Modules.Land
 
         private void RemoveLandObjectFromSearch(ILandObject iLandObject)
         {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
                 if (m_UpdateDirectoryOnUpdate)
@@ -2197,7 +2207,7 @@ namespace Aurora.Modules.Land
 
         private void DoSearchUpdate()
         {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
                 DSC.AddRegion(AllParcels().ConvertAll(delegate(ILandObject o)
                                                           {
@@ -2339,7 +2349,7 @@ namespace Aurora.Modules.Land
                                    out X, out Y, out Z);
             MainConsole.Instance.DebugFormat("[LAND] got parcelinfo request for regionHandle {0}, x/y {1}/{2}",
                                              RegionHandle, X, Y);
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
                 LandData data = DSC.GetParcelInfo(parcelID);

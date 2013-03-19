@@ -26,7 +26,15 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
@@ -36,7 +44,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Xml.Serialization;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Region
 {
@@ -1407,7 +1415,8 @@ namespace Aurora.Region
         ///     Set the user group to which this scene object belongs.
         /// </summary>
         /// <param name="GroupID2"></param>
-        /// <param name="client"></param>
+        /// <param name="attemptingUserID"></param>
+        /// <param name="needsUpdate"></param>
         public void SetGroup(UUID GroupID2, UUID attemptingUserID, bool needsUpdate)
         {
             IGroupsModule module = Scene.RequestModuleInterface<IGroupsModule>();

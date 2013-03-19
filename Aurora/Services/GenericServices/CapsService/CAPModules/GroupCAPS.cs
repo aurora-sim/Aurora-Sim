@@ -26,15 +26,18 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenMetaverse.Imaging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Aurora.Services
 {
@@ -46,7 +49,7 @@ namespace Aurora.Services
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
-            m_groupService = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            m_groupService = Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
 
             service.AddStreamHandler("GroupMemberData",
                                      new GenericStreamHandler("POST", service.CreateCAPS("GroupMemberData", ""),

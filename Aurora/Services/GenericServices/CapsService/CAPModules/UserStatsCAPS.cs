@@ -26,17 +26,18 @@
  */
 
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
 using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Aurora.Services
 {
@@ -56,7 +57,7 @@ namespace Aurora.Services
                                         OSHttpResponse httpResponse)
         {
             IUserStatsDataConnector dataConnector =
-                Aurora.DataManager.DataManager.RequestPlugin<IUserStatsDataConnector>();
+                Framework.Utilities.DataManager.RequestPlugin<IUserStatsDataConnector>();
 
             OpenMetaverse.Messages.Linden.ViewerStatsMessage vsm =
                 new OpenMetaverse.Messages.Linden.ViewerStatsMessage();
@@ -103,14 +104,14 @@ namespace Aurora.Services
 
         public void ClearMetrics(string[] cmd)
         {
-            IUserStatsDataConnector dc = Aurora.DataManager.DataManager.RequestPlugin<IUserStatsDataConnector>();
+            IUserStatsDataConnector dc = Framework.Utilities.DataManager.RequestPlugin<IUserStatsDataConnector>();
             if (dc != null)
                 dc.RemoveAllSessions();
         }
 
         public void Metrics(string[] cmd)
         {
-            IUserStatsDataConnector dc = Aurora.DataManager.DataManager.RequestPlugin<IUserStatsDataConnector>();
+            IUserStatsDataConnector dc = Framework.Utilities.DataManager.RequestPlugin<IUserStatsDataConnector>();
             if (dc != null)
             {
                 MainConsole.Instance.Info(

@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Aurora.Framework;
-using OpenMetaverse;
+﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using Nini.Config;
+using System;
 using System.Collections;
 using System.IO;
 
@@ -37,7 +38,7 @@ namespace Aurora.Services
         public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType,
                                    string password, out object data)
         {
-            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector agentData = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             data = null;
 
             if (request == null)

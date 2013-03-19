@@ -32,7 +32,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Aurora.Framework;
-using Mischel.Collections;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
@@ -337,7 +340,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             cmdThreadpool.Restart();
             LUQueue.Clear();
             QueueItemStruct itm;
-            while (ScriptEvents.TryDequeue(out itm)) ;
+            while (ScriptEvents.TryDequeue(out itm))
+            {
+            }
             SleepingScriptEvents.Clear();
         }
 

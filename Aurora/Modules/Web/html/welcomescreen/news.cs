@@ -1,5 +1,7 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
 using System.Collections.Generic;
 
@@ -34,7 +36,7 @@ namespace Aurora.Modules.Web
                                                ITranslator translator, out string response)
         {
             response = null;
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector connector = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             var vars = new Dictionary<string, object>();
 
             vars.Add("News", translator.GetTranslatedString("News"));

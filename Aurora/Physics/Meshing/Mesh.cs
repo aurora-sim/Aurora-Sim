@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Aurora.Framework.Physics;
 using OpenMetaverse;
 using Aurora.Framework;
 using OSDArray = OpenMetaverse.StructuredData.OSDArray;

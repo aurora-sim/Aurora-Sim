@@ -25,16 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using OpenMetaverse;
-using Nini.Config;
-using Aurora.Framework;
-using System.Timers;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Region
@@ -288,7 +293,6 @@ namespace Aurora.Region
         /// <summary>
         ///     Shuts down and permanently removes all info associated with the region
         /// </summary>
-        /// <param name="scene"></param>
         /// <param name="cleanup"></param>
         public void RemoveRegion(bool cleanup)
         {
@@ -312,7 +316,6 @@ namespace Aurora.Region
         /// <summary>
         ///     Shuts down a region and removes it from all running modules
         /// </summary>
-        /// <param name="scene"></param>
         /// <param name="type"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>

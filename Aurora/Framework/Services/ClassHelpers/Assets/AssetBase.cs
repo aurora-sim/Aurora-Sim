@@ -25,14 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Diagnostics;
-using System.Security.Cryptography;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
+using System;
+using System.Diagnostics;
+using System.Security.Cryptography;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Assets
 {
     [Flags]
     public enum AssetFlags

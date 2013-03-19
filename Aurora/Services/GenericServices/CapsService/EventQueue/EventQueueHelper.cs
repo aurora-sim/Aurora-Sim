@@ -28,6 +28,8 @@
 using System;
 using System.Linq;
 using System.Net;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;

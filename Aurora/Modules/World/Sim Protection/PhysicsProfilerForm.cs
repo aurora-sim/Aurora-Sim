@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using Aurora.Modules.SimProtection;
 using OpenMetaverse;
 using System;

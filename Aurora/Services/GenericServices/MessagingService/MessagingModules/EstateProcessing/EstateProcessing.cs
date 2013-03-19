@@ -25,14 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
-using System.Collections.Generic;
-using System.Reflection;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using GridRegion = Aurora.Framework.GridRegion;
+using System.Collections.Generic;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {
@@ -76,7 +80,7 @@ namespace Aurora.Services
             if (FunctionName == "EstateUpdated")
             {
                 EstateSettings es = (EstateSettings) parameters;
-                IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector estateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                 ISyncMessagePosterService asyncPoster =
                     m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                 IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
@@ -122,7 +126,7 @@ namespace Aurora.Services
                     if (manager.Scene.RegionInfo.EstateSettings.EstateID == estateID)
                     {
                         IEstateConnector estateConnector =
-                            Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                            Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                         if (estateConnector != null)
                         {
                             EstateSettings es = null;

@@ -25,15 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.IO;
-using System.Text;
+using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
+using System;
+using System.Text;
 
 namespace Aurora.Modules.Voice
 {
@@ -127,16 +129,12 @@ namespace Aurora.Modules.Voice
             OSDMap retVal = new OSDMap();
             retVal["ProvisionVoiceAccountRequest"] = CapsUtil.CreateCAPS("ProvisionVoiceAccountRequest", "");
             caps.AddStreamHandler(new GenericStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
-                                                           delegate(string path, Stream request,
-                                                                    OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
-                                                               { return ProvisionVoiceAccountRequest(scene, agentID); }));
+                                                           (path, request, httpRequest, httpResponse) =>
+                                                           ProvisionVoiceAccountRequest(scene, agentID)));
             retVal["ParcelVoiceInfoRequest"] = CapsUtil.CreateCAPS("ParcelVoiceInfoRequest", "");
             caps.AddStreamHandler(new GenericStreamHandler("POST", retVal["ParcelVoiceInfoRequest"],
-                                                           delegate(string path, Stream request,
-                                                                    OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
-                                                               { return ParcelVoiceInfoRequest(scene, agentID); }));
+                                                           (path, request, httpRequest, httpResponse) =>
+                                                           ParcelVoiceInfoRequest(scene, agentID)));
 
             return retVal;
         }

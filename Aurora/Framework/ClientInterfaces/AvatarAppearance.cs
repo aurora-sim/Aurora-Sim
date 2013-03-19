@@ -28,10 +28,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     /// <summary>
     ///     Contains the Avatar's Appearance and methods to manipulate the appearance.

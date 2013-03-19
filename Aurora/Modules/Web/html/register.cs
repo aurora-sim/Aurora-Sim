@@ -1,5 +1,12 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -56,7 +63,7 @@ namespace Aurora.Modules.Web
                 bool ToSAccept = requestParameters.ContainsKey("ToSAccept") &&
                                  requestParameters["ToSAccept"].ToString() == "Accepted";
 
-                IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+                IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
                 var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
                 if (ToSAccept)
@@ -70,7 +77,7 @@ namespace Aurora.Modules.Web
                                                              UserEmail);
                     if (error == "")
                     {
-                        IAgentConnector con = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+                        IAgentConnector con = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
                         con.CreateNewAgent(userID);
                         IAgentInfo agent = con.GetAgent(userID);
                         agent.OtherAgentInformation["RLFirstName"] = FirstName;
@@ -92,7 +99,7 @@ namespace Aurora.Modules.Web
                         if (AvatarArchive != "")
                         {
                             IProfileConnector profileData =
-                                Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                                Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
                             profileData.CreateNewProfile(userID);
 
                             IUserProfileInfo profile = profileData.GetUserProfile(userID);
@@ -131,7 +138,7 @@ namespace Aurora.Modules.Web
             vars.Add("Years", yearsArgs);
 
             List<AvatarArchive> archives =
-                Aurora.DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>().GetAvatarArchives(true);
+                Framework.Utilities.DataManager.RequestPlugin<IAvatarArchiverConnector>().GetAvatarArchives(true);
 
             List<Dictionary<string, object>> avatarArchives = new List<Dictionary<string, object>>();
             IWebHttpTextureService webTextureService = webInterface.Registry.

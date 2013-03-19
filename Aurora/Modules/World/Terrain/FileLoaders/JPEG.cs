@@ -30,6 +30,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Terrain.FileLoaders
 {

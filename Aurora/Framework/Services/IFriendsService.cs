@@ -25,11 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
 using Nini.Config;
 using OpenMetaverse;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public class FriendInfo : IDataTransferable
     {

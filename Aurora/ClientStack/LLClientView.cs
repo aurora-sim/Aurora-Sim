@@ -26,6 +26,16 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
@@ -3855,8 +3865,8 @@ namespace Aurora.ClientStack
         /// again  presences update preiority was lost. recovering it  fast and dirty
         public void SendAvatarUpdate(IEnumerable<EntityUpdate> updates)
         {
-            Aurora.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks =
-                new Aurora.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();
+            Framework.Utilities.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks =
+                new Framework.Utilities.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();
             List<EntityUpdate> terseUpdates = new List<EntityUpdate>();
 
             foreach (EntityUpdate update in updates)
@@ -3913,14 +3923,14 @@ namespace Aurora.ClientStack
 
         public void SendPrimUpdate(IEnumerable<EntityUpdate> updates)
         {
-            Aurora.Framework.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>> objectUpdateBlocks =
-                new Aurora.Framework.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>>();
-            Aurora.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>> compressedUpdateBlocks =
-                new Aurora.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>>();
-            Aurora.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks =
-                new Aurora.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();
-            Aurora.Framework.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>> cachedUpdateBlocks =
-                new Aurora.Framework.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>>();
+            Framework.Utilities.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>> objectUpdateBlocks =
+                new Framework.Utilities.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>>();
+            Framework.Utilities.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>> compressedUpdateBlocks =
+                new Framework.Utilities.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>>();
+            Framework.Utilities.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks =
+                new Framework.Utilities.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();
+            Framework.Utilities.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>> cachedUpdateBlocks =
+                new Framework.Utilities.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>>();
             List<EntityUpdate> fullUpdates = new List<EntityUpdate>();
             List<EntityUpdate> compressedUpdates = new List<EntityUpdate>();
             List<EntityUpdate> cachedUpdates = new List<EntityUpdate>();

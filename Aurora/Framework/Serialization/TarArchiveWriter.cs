@@ -99,7 +99,6 @@ namespace Aurora.Framework.Serialization
         /// <summary>
         ///     Finish writing the raw tar archive data to a stream.  The stream will be closed on completion.
         /// </summary>
-        /// <param name="s">Stream to which to write the data</param>
         /// <returns></returns>
         public void Close()
         {

@@ -26,6 +26,11 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Utilities;
 using Aurora.Modules.WorldMap.Warp3DMap;
 using Nini.Config;
 using OpenMetaverse;
@@ -39,7 +44,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
-using RegionSettings = Aurora.Framework.RegionSettings;
+using RegionSettings = Aurora.Framework.SceneInfo.RegionSettings;
 using WarpRenderer = Warp3D.Warp3D;
 
 namespace Aurora.Modules.WorldMap

@@ -1,5 +1,7 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
@@ -39,7 +41,7 @@ namespace Aurora.Modules.Web
             {
                 string title = requestParameters["NewsTitle"].ToString();
                 string text = requestParameters["NewsText"].ToString();
-                IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+                IGenericsConnector connector = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
                 GridNewsItem item = new GridNewsItem {Text = text, Time = DateTime.Now, Title = title};
                 item.ID = connector.GetGenericCount(UUID.Zero, "WebGridNews") + 1;
                 connector.AddGeneric(UUID.Zero, "WebGridNews", item.ID.ToString(), item.ToOSD());

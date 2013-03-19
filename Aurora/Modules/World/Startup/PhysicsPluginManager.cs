@@ -26,7 +26,10 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using System;
 using System.Collections.Generic;
@@ -47,8 +50,7 @@ namespace Aurora.Modules.Startup
         /// <param name="physEngineName"></param>
         /// <param name="meshEngineName"></param>
         /// <param name="config"></param>
-        /// <param name="region"></param>
-        /// <param name="registry"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config,
                                             IScene scene)
@@ -96,9 +98,9 @@ namespace Aurora.Modules.Startup
         public void LoadPluginsFromAssemblies(string assembliesPath)
         {
             List<IPhysicsPlugin> physicsPlugins =
-                Aurora.Framework.AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
+                AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
             List<IMeshingPlugin> meshingPlugins =
-                Aurora.Framework.AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
+                AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
             meshingPlugins.AddRange(AuroraModuleLoader.LoadModules<IMeshingPlugin>(""));
 
             foreach (IPhysicsPlugin plug in physicsPlugins)

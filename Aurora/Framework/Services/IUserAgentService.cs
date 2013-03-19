@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     HG1.5 only

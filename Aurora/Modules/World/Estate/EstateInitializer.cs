@@ -26,7 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
@@ -49,7 +55,7 @@ namespace Aurora.Modules.Estate
             EstateSettings ES = new EstateSettings();
             while (true)
             {
-                IEstateConnector EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector EstateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
 
                 string name = MainConsole.Instance.Prompt("Estate owner name", LastEstateOwner);
                 UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.AllScopeIDs, name);
@@ -183,7 +189,7 @@ namespace Aurora.Modules.Estate
             if (scene.RegionInfo.EstateSettings != null)
                 return;
 
-            IEstateConnector EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            IEstateConnector EstateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
             if (EstateConnector != null)
             {
                 EstateSettings ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID);
@@ -239,7 +245,7 @@ namespace Aurora.Modules.Estate
 
         protected void ChangeEstate(string[] cmd)
         {
-            IEstateConnector EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            IEstateConnector EstateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
             if (EstateConnector != null)
             {
                 if (MainConsole.Instance.ConsoleScene == null)

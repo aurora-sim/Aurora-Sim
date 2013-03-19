@@ -25,14 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.IO;
-using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework.Servers.HttpServer;
+using System.IO;
 
 namespace Aurora.Services
 {
@@ -48,7 +49,7 @@ namespace Aurora.Services
         {
             m_service = service;
             m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
-            m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            m_profileConnector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             m_service.AddStreamHandler("MeshUploadFlag",
                                        new GenericStreamHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),
                                                                 MeshUploadFlagCAP));

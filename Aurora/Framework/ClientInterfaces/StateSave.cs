@@ -28,7 +28,7 @@
 using OpenMetaverse;
 using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     [ProtoContract]
     public class StateSave

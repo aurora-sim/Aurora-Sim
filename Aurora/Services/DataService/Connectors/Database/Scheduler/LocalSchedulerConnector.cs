@@ -29,6 +29,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 
@@ -77,7 +80,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                                               source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             m_Gd = GenericData;
-            DataManager.DataManager.RegisterPlugin(this);
+            Framework.Utilities.DataManager.RegisterPlugin(this);
         }
 
         #endregion

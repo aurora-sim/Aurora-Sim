@@ -27,7 +27,7 @@
 
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public delegate void ChangeDelegate(UUID regionID);
 

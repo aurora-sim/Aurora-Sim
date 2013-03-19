@@ -29,7 +29,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace Aurora.Framework.Servers.HttpServer.Implementation
 {
     /// <summary>
     ///     OSHttpResponse is the OpenSim representation of an HTTP

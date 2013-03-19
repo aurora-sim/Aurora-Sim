@@ -26,8 +26,15 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Serialization.External;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
@@ -564,7 +571,7 @@ namespace Aurora.Modules.Archivers
                                               .Normal
                                       };
                 IAssetService assetService = m_registry.RequestModuleInterface<IAssetService>();
-                IAssetDataPlugin assetData = DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+                IAssetDataPlugin assetData = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
                 if (assetData != null && ReplaceAssets)
                     assetData.Delete(asset.ID, true);
 

@@ -28,6 +28,8 @@
 using System;
 using System.Drawing;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 

@@ -26,7 +26,12 @@
  */
 
 using Aurora.Framework;
-using Mischel.Collections;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
