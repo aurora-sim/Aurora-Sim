@@ -32,6 +32,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Utilities;

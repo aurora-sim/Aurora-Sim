@@ -34,7 +34,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     public class Commands
     {

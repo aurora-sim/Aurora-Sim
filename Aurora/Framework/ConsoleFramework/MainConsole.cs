@@ -27,7 +27,7 @@
 
 using Aurora.Framework.Modules;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     public class MainConsole
     {

@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Physics;
 using Aurora.Framework.Utilities;
 using OdeAPI;

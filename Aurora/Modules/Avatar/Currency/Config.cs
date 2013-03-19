@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Nini.Config;
 using OpenMetaverse;

@@ -3,7 +3,7 @@ using System.Reflection;
 using log4net;
 using log4net.Core;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     public class BaseConsole
     {

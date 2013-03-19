@@ -35,7 +35,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     /// <summary>
     ///     This is a special class designed to take over control of the command console prompt of

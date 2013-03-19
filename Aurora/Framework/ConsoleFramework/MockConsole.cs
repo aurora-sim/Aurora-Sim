@@ -29,7 +29,7 @@ using System;
 using Aurora.Framework.Modules;
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     /// <summary>
     ///     This is a Fake console that's used when setting up the Scene in Unit Tests

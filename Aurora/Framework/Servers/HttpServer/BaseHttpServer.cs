@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Nwc.XmlRpc;

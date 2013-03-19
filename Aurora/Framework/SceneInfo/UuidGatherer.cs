@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;

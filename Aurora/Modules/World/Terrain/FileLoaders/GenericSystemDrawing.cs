@@ -30,6 +30,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
 

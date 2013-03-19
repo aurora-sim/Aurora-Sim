@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Security;
+using Aurora.Framework.ConsoleFramework;
 
 namespace OdeAPI
 {
@@ -1966,7 +1967,7 @@ namespace OdeAPI
             }
             catch (Exception ex)
             {
-                Aurora.Framework.MainConsole.Instance.Output(
+                MainConsole.Instance.Output(
                     "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
                     ex.ToString());
             }
@@ -1977,7 +1978,7 @@ namespace OdeAPI
             }
             catch (Exception ex)
             {
-                Aurora.Framework.MainConsole.Instance.Output(
+                MainConsole.Instance.Output(
                     "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
                     ex.ToString());
             }

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Aurora.Framework.ConsoleFramework;
 
 namespace Aurora.Framework.Utilities
 {

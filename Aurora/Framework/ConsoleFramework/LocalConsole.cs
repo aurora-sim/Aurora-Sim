@@ -33,7 +33,7 @@ using Aurora.Framework.Modules;
 using Nini.Config;
 using log4net.Core;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     /// <summary>
     ///     A console that uses cursor control and color

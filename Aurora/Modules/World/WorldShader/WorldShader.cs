@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;

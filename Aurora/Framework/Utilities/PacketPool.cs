@@ -28,6 +28,7 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.ConsoleFramework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 

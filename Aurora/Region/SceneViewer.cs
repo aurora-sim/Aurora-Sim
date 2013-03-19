@@ -28,6 +28,7 @@
 
 #define UseDictionaryForEntityUpdates
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;

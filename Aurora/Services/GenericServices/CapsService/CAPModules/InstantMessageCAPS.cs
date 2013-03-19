@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Services;

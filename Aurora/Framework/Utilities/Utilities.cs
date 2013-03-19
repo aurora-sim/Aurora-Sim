@@ -37,6 +37,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Servers;
 
 namespace Aurora.Framework.Utilities

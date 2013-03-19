@@ -39,7 +39,7 @@ using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     public class ConsoleConnection
     {

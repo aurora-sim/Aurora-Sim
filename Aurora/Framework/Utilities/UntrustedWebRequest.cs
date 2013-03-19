@@ -31,6 +31,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Aurora.Framework.ConsoleFramework;
 
 namespace Aurora.Framework.Utilities
 {

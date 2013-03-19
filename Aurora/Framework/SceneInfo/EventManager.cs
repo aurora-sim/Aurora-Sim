@@ -1,4 +1,5 @@
-﻿using Aurora.Framework.PresenceInfo;
+﻿using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer.Interfaces;

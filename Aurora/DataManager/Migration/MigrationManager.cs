@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Utilities;
 

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using log4net.Core;

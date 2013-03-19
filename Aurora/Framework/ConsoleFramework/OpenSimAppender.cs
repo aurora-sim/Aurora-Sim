@@ -30,7 +30,7 @@ using Aurora.Framework.Modules;
 using log4net.Appender;
 using log4net.Core;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     /// <summary>
     ///     Writes log information out onto the console

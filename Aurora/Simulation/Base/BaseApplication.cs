@@ -28,6 +28,7 @@
 //#define BlockUnsupportedVersions
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Utilities;
 using log4net.Config;

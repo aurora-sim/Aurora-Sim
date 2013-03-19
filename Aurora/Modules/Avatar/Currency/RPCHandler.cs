@@ -1,5 +1,6 @@
 ﻿using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer;

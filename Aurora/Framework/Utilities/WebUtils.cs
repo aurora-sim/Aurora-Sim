@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ConsoleFramework;
 using log4net.Core;
 using Nwc.XmlRpc;
 using OpenMetaverse;
