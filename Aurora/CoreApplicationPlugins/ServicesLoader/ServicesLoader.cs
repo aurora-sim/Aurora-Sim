@@ -25,14 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Nini.Config;
 using System.Collections.Generic;
 
-namespace Aurora.CoreApplicationPlugins
+namespace Aurora.CoreApplicationPlugins.ServicesLoader
 {
     public class ServicesLoader : IApplicationPlugin
     {

@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
@@ -36,7 +35,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Aurora.CoreApplicationPlugins
+namespace Aurora.CoreApplicationPlugins.RegionModulesController
 {
     public class RegionModulesControllerPlugin : IRegionModulesController, IApplicationPlugin
     {
