@@ -217,7 +217,9 @@ namespace Aurora.Framework
         public void ClearEvents()
         {
             Action itm;
-            while (queue.TryDequeue(out itm)) ;
+            while (queue.TryDequeue(out itm))
+            {
+            }
         }
 
         public Thread[] GetThreads()

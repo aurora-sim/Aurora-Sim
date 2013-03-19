@@ -506,7 +506,6 @@ namespace Aurora.Services
 
                 map["inventory-skel-lib"] = ArrayListToOSDArray(InventoryLibrary);
                 map["inventory-root"] = ArrayListToOSDArray(inventoryRoot);
-                ;
                 map["inventory-lib-root"] = ArrayListToOSDArray(InventoryLibRoot);
                 map["inventory-lib-owner"] = ArrayListToOSDArray(InventoryLibraryOwner);
 

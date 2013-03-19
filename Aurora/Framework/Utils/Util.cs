@@ -914,7 +914,6 @@ namespace Aurora.Framework
         public static string safeFileName(string filename)
         {
             return Regex.Replace(filename, regexInvalidFileChars, String.Empty);
-            ;
         }
 
         //

@@ -395,7 +395,6 @@ namespace Aurora.DataManager.MySQL
             }
 
             string query = string.Format("UPDATE {0}", table);
-            ;
             Dictionary<string, object> ps = new Dictionary<string, object>();
 
             string filter = "";

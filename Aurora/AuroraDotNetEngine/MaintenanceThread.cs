@@ -337,7 +337,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             cmdThreadpool.Restart();
             LUQueue.Clear();
             QueueItemStruct itm;
-            while (ScriptEvents.TryDequeue(out itm)) ;
+            while (ScriptEvents.TryDequeue(out itm))
+            {
+            }
             SleepingScriptEvents.Clear();
         }
 
