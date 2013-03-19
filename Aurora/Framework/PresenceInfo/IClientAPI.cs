@@ -35,7 +35,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.PresenceInfo
 {
 
     #region Client API Delegate definitions

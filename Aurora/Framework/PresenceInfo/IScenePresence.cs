@@ -5,7 +5,7 @@ using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using GridRegion = Aurora.Framework.Services.GridRegion;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.PresenceInfo
 {
     [Flags]
     public enum PresenceTaint

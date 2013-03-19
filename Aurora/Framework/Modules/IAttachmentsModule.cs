@@ -26,6 +26,7 @@
  */
 
 using System;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 

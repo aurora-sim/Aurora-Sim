@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 
 namespace Aurora.Framework

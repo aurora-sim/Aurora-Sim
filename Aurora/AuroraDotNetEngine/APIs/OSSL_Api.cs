@@ -36,6 +36,7 @@ using System.Runtime.Remoting.Lifetime;
 using System.Text;
 using System.Text.RegularExpressions;
 using Aurora.Framework;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Servers;

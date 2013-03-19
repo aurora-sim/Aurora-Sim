@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 using System.Collections;
 using System.Collections.Generic;

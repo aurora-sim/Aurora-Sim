@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Profile;

@@ -28,6 +28,7 @@
 using System;
 using System.Security;
 using Aurora.Framework;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using OpenMetaverse.Packets;

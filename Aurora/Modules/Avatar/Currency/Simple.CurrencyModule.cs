@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;

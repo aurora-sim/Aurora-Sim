@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Other;

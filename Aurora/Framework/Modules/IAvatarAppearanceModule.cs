@@ -1,4 +1,6 @@
-﻿namespace Aurora.Framework
+﻿using Aurora.Framework.PresenceInfo;
+
+namespace Aurora.Framework
 {
     public interface IAvatarAppearanceModule
     {

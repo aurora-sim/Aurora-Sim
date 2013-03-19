@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;

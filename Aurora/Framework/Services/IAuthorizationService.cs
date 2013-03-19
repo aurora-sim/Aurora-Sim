@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.PresenceInfo;
+
 namespace Aurora.Framework.Services
 {
     // Generic Authorization service used for authorizing principals in a particular region

@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Serialization.External;
 using Aurora.Framework.Services;
