@@ -52,7 +52,6 @@ namespace Aurora.Services.DataService
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
         /// <param name="GD"></param>
-        /// <param name="data">a default T</param>
         /// <returns></returns>
         public static List<T> GetGenerics<T>(UUID OwnerID, string Type, IGenericData GD) where T : IDataTransferable
         {
@@ -75,7 +74,6 @@ namespace Aurora.Services.DataService
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
         /// <param name="GD"></param>
-        /// <param name="data">a default T</param>
         /// <returns></returns>
         public static List<OSDMap> GetGenerics(UUID OwnerID, string Type, IGenericData GD)
         {
@@ -103,7 +101,6 @@ namespace Aurora.Services.DataService
         /// <param name="Type"></param>
         /// <param name="Key"></param>
         /// <param name="GD"></param>
-        /// <param name="data">a default T to copy all data into</param>
         /// <returns></returns>
         public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD)
             where T : IDataTransferable
@@ -118,12 +115,10 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///     Gets a Generic type as set by T
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
         /// <param name="Key"></param>
         /// <param name="GD"></param>
-        /// <param name="data">a default T to copy all data into</param>
         /// <returns></returns>
         public static OSDMap GetGeneric(UUID OwnerID, string Type, string Key, IGenericData GD)
         {
@@ -142,7 +137,6 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///     Gets the number of generic entries
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
         /// <param name="GD"></param>
@@ -160,9 +154,9 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///     Gets the number of generic entries
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
+        /// <param name="Key"></param>
         /// <param name="GD"></param>
         /// <returns></returns>
         public static int GetGenericCount(UUID OwnerID, string Type, string Key, IGenericData GD)
@@ -179,7 +173,6 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///     Gets the number of generic entries
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="OwnerID"></param>
         /// <param name="GD"></param>
         /// <returns></returns>

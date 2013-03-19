@@ -124,6 +124,7 @@ namespace Aurora.Framework
         ///     Log out the current agent
         /// </summary>
         /// <param name="regionCaps"></param>
+        /// <param name="kickRootAgent"></param>
         void LogoutAgent(IRegionClientCapsService regionCaps, bool kickRootAgent);
 
         /// <summary>
@@ -131,7 +132,6 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="region"></param>
         /// <param name="aCircuit"></param>
-        /// <param name="reason"></param>
         LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit);
 
         /// <summary>

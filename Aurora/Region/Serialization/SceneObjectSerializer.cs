@@ -163,6 +163,7 @@ namespace Aurora.Region.Serialization
         ///     Serialize a scene object to the original xml format
         /// </summary>
         /// <param name="sceneObject"></param>
+        /// <param name="writer"></param>
         /// <returns></returns>
         protected void ToOriginalXmlFormat(SceneObjectGroup sceneObject, XmlTextWriter writer)
         {

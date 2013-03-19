@@ -138,6 +138,7 @@ namespace Aurora.Services
         /// <param name="httpResponse"></param>
         /// <param name="textureID"></param>
         /// <param name="format"></param>
+        /// <param name="response"></param>
         /// <returns>False for "caller try another codec"; true otherwise</returns>
         private bool FetchTexture(OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID textureID, string format,
                                   out byte[] response)
@@ -450,9 +451,10 @@ namespace Aurora.Services
 
             /// <summary>
             /// </summary>
-            /// <param name="data"></param>
             /// <param name="path"></param>
-            /// <param name="param"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)

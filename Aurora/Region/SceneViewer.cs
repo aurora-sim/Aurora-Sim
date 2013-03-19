@@ -303,6 +303,7 @@ namespace Aurora.Region
         ///     Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
+        /// <param name="flags"></param>
         public void QueuePartForUpdate(ISceneChildEntity part, PrimUpdateFlags flags)
         {
             if (m_presence == null)
@@ -437,7 +438,6 @@ namespace Aurora.Region
         ///     When the client moves enough to trigger this, make sure that we have sent
         ///     the client all of the objects that have just entered their FOV in their draw distance.
         /// </summary>
-        /// <param name="remote_client"></param>
         private void SignificantClientMovement()
         {
             if (m_culler == null)
@@ -574,7 +574,8 @@ namespace Aurora.Region
         ///     This method is called by the LLUDPServer and should never be called by anyone else
         ///     It loops through the available updates and sends them out (no waiting)
         /// </summary>
-        /// <param name="numUpdates">The number of updates to send</param>
+        /// <param name="numPrimUpdates">The number of prim updates to send</param>
+        /// <param name="numAvaUpdates">The number of avatar updates to send</param>
         public void SendPrimUpdates(int numPrimUpdates, int numAvaUpdates)
         {
             if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT)
@@ -593,7 +594,7 @@ namespace Aurora.Region
 
             #region New client entering the Scene, requires all objects in the Scene
 
-            ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
+            //If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
             if (!m_SentInitialObjects && m_presence.DrawDistance != 0.0f)
                 SendInitialObjects();
 
@@ -837,7 +838,7 @@ namespace Aurora.Region
         /// <summary>
         ///     Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
-        /// <param name="ID"></param>
+        /// <param name="updates"></param>
         public void FinishedEntityPacketSend(IEnumerable<EntityUpdate> updates)
         {
             /*foreach (EntityUpdate update in updates)
@@ -849,7 +850,7 @@ namespace Aurora.Region
         /// <summary>
         ///     Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
-        /// <param name="ID"></param>
+        /// <param name="updates"></param>
         public void FinishedPropertyPacketSend(IEnumerable<IEntity> updates)
         {
             /*foreach (IEntity update in updates)
@@ -861,7 +862,7 @@ namespace Aurora.Region
         /// <summary>
         ///     Once the packet has been sent, allow newer animations to be sent for the given entity
         /// </summary>
-        /// <param name="ID"></param>
+        /// <param name="update"></param>
         public void FinishedAnimationPacketSend(AnimationGroup update)
         {
             //m_AnimationsInPacketQueue.Remove(update.AvatarID);

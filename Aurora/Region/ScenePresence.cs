@@ -974,6 +974,8 @@ namespace Aurora.Region
         ///     Applies a roll accumulator to the avatar's angular velocity for the avatar fly roll effect.
         /// </summary>
         /// <param name="amount">Postive or negative roll amount in radians</param>
+        /// <param name="PressingUp"></param>
+        /// <param name="PressingDown"></param>
         private void ApplyFlyingRoll(float amount, bool PressingUp, bool PressingDown)
         {
             float rollAmount = Util.Clamp(m_AngularVelocity.Z + amount, -FLY_ROLL_MAX_RADIANS, FLY_ROLL_MAX_RADIANS);

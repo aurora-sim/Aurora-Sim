@@ -211,11 +211,10 @@ namespace Aurora.Framework
         #region DELETE
 
         /// <summary>
-        ///     delete from 'table' where 'key' < now()
+        ///     delete from 'table' where 'key' &lt; now()
         /// </summary>
         /// <param name="table"></param>
         /// <param name="keys"></param>
-        /// <param name="values"></param>
         /// <returns></returns>
         bool DeleteByTime(string table, string keys);
 
@@ -233,6 +232,8 @@ namespace Aurora.Framework
         ///     Connects to the database and then performs migrations
         /// </summary>
         /// <param name="connectionString"></param>
+        /// <param name="migrationName"></param>
+        /// <param name="validateTables"></param>
         void ConnectToDatabase(string connectionString, string migrationName, bool validateTables);
 
         /// <summary>
@@ -673,6 +674,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="GenericData">The Database Plugin</param>
         /// <param name="source">Config if more parameters are needed</param>
+        /// <param name="simBase"></param>
         /// <param name="DefaultConnectionString">The connection string to use</param>
         void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
                         string DefaultConnectionString);

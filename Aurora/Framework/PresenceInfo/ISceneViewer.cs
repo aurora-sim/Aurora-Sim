@@ -167,6 +167,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="client"></param>
         /// <param name="entity"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene);
     }

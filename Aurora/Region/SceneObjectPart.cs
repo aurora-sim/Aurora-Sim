@@ -460,9 +460,10 @@ namespace Aurora.Region
         /// </summary>
         /// <param name="ownerID"></param>
         /// <param name="shape"></param>
-        /// <param name="position"></param>
+        /// <param name="groupPosition"></param>
         /// <param name="rotationOffset"></param>
         /// <param name="offsetPosition"></param>
+        /// <param name="name"></param>
         public SceneObjectPart(
             UUID ownerID, PrimitiveBaseShape shape, Vector3 groupPosition,
             Quaternion rotationOffset, Vector3 offsetPosition, string name)
@@ -2228,6 +2229,9 @@ namespace Aurora.Region
         /// <param name="volume"></param>
         /// <param name="triggered"></param>
         /// <param name="flags"></param>
+        /// <param name="radius"></param>
+        /// <param name="useMaster"></param>
+        /// <param name="isMaster"></param>
         public void SendSound(string sound, double volume, bool triggered, byte flags, float radius, bool useMaster,
                               bool isMaster)
         {
@@ -2566,7 +2570,6 @@ namespace Aurora.Region
         /// <summary>
         ///     Tell us what type this prim is
         /// </summary>
-        /// <param name="primShape"></param>
         /// <returns></returns>
         public PrimType GetPrimType()
         {
@@ -3376,6 +3379,7 @@ namespace Aurora.Region
         /// not handling RGBA properly. Cycles through, and "fixes" the color
         /// info
         /// <param name="tex"></param>
+        /// <param name="sendChangedEvent"></param>
         public void UpdateTexture(Primitive.TextureEntry tex, bool sendChangedEvent)
         {
             //Color4 tmpcolor;

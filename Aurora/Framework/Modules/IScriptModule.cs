@@ -171,7 +171,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get the script time for the given script
         /// </summary>
-        /// <param name="m_itemID"></param>
+        /// <param name="itemID"></param>
         /// <returns></returns>
         int GetScriptTime(UUID itemID);
     }

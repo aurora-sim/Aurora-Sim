@@ -57,6 +57,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="simID">The simulator in which the texture is being generated</param>
         /// <param name="primID">The prim to which to apply the texture.</param>
+        /// <param name="oldAssetID"></param>
         /// <param name="contentType">
         ///     The content type to create.  Current choices are "vector" to create a vector
         ///     based texture or "image" to create a texture from an image at a particular URL
@@ -87,6 +88,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="simID">The simulator in which the texture is being generated</param>
         /// <param name="primID">The prim to which to apply the texture.</param>
+        /// <param name="oldAssetID"></param>
         /// <param name="contentType">
         ///     The content type to create.  Current choices are "vector" to create a vector
         ///     based texture or "image" to create a texture from an image at a particular URL

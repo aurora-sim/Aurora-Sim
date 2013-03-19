@@ -157,6 +157,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Cache asset.
         /// </summary>
+        /// <param name="assetID"></param>
         /// <param name="asset">
         ///     The asset that is being cached.
         /// </param>

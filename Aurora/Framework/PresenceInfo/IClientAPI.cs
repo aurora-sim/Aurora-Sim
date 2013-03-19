@@ -1244,7 +1244,7 @@ namespace Aurora.Framework
         ///     Tell the client that an object has been deleted
         /// </summary>
         /// <param name="regionHandle"></param>
-        /// <param name="localID"></param>
+        /// <param name="entities"></param>
         void SendKillObject(ulong regionHandle, IEntity[] entities);
 
         void SendKillObject(ulong regionHandle, uint[] entities);
@@ -1273,8 +1273,8 @@ namespace Aurora.Framework
         ///     Send one patch to the client
         ///     Note: x and y variables are NOT positions, they are terrain patches!
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
+        /// <param name="px"></param>
+        /// <param name="py"></param>
         /// <param name="map"></param>
         void SendLayerData(int px, int py, short[] map);
 
@@ -1285,6 +1285,7 @@ namespace Aurora.Framework
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="map"></param>
+        /// <param name="type"></param>
         void SendLayerData(int[] x, int[] y, short[] map, TerrainPatch.LayerType type);
 
         void SendWindData(Vector2[] windSpeeds);
@@ -1329,6 +1330,7 @@ namespace Aurora.Framework
         ///     Tell the client that we have created the item it requested.
         /// </summary>
         /// <param name="Item"></param>
+        /// <param name="callbackId"></param>
         void SendInventoryItemCreateUpdate(InventoryItemBase Item, uint callbackId);
 
         void SendRemoveInventoryItem(UUID itemID);

@@ -133,7 +133,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get a user given by UUID
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="userID"></param>
         /// <returns></returns>
         UserAccount GetUserAccount(List<UUID> scopeIDs, UUID userID);
@@ -141,7 +141,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get a user given by a first and last name
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="FirstName"></param>
         /// <param name="LastName"></param>
         /// <returns></returns>
@@ -150,15 +150,15 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get a user given by its full name
         /// </summary>
-        /// <param name="scopeID"></param>
-        /// <param name="Email"></param>
+        /// <param name="scopeIDs"></param>
+        /// <param name="Name"></param>
         /// <returns></returns>
         UserAccount GetUserAccount(List<UUID> scopeIDs, string Name);
 
         /// <summary>
         ///     Returns the list of avatars that matches both the search criterion and the scope ID passed
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="query"></param>
         /// <returns></returns>
         List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query);
@@ -166,7 +166,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Returns a paginated list of avatars that matches both the search criteriion and the scope ID passed
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="query"></param>
         /// <param name="start"></param>
         /// <param name="count"></param>
@@ -176,7 +176,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Returns a paginated list of avatars that matches both the search criteriion and the scope ID passed
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="level">greater than or equal to clause is used</param>
         /// <param name="flags">bit mask clause is used</param>
         /// <returns></returns>
@@ -185,7 +185,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Returns the number of avatars that match both the search criterion and the scope ID passed
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="query"></param>
         /// <returns></returns>
         uint NumberOfUserAccounts(List<UUID> scopeIDs, string query);
@@ -214,6 +214,8 @@ namespace Aurora.Framework
         /// <summary>
         ///     Create the user with the given info
         /// </summary>
+        /// <param name="userID"></param>
+        /// <param name="scopeID"></param>
         /// <param name="name"></param>
         /// <param name="md5password">MD5 hashed password</param>
         /// <param name="email"></param>

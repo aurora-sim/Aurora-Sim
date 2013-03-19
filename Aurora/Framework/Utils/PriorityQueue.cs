@@ -311,7 +311,7 @@ namespace Mischel.Collections
         ///     The passed equality comparison is used.
         /// </summary>
         /// <param name="item">The item to be removed.</param>
-        /// <param name="comp">
+        /// <param name="comparer">
         ///     An object that implements the IEqualityComparer interface
         ///     for the type of item in the collection.
         /// </param>
@@ -334,8 +334,8 @@ namespace Mischel.Collections
         ///     The passed equality comparison is used.
         /// </summary>
         /// <param name="item">The item to be removed.</param>
-        /// <param name="comp">
-        ///     An object that implements the IEqualityComparer interface
+        /// <param name="comparer">
+        ///     An object that implements the IComparer interface
         ///     for the type of item in the collection.
         /// </param>
         public TValue Find(TValue item, IComparer<TValue> comparer)

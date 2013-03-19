@@ -85,7 +85,13 @@ namespace Aurora.Framework
         ///     If true, the archive is loaded without loading any assets contained within it.  This is useful if the
         ///     assets are already known to be present in the grid's asset service.
         /// </param>
-        /// <param name="requestId">If supplied, this request Id is later returned in the saved event</param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
+        /// <param name="offsetZ"></param>
+        /// <param name="flipX"></param>
+        /// <param name="flipY"></param>
+        /// <param name="useParcelOwnership"></param>
+        /// <param name="checkOwnership"></param>
         void DearchiveRegion(string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ,
                              bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership);
 
@@ -109,7 +115,13 @@ namespace Aurora.Framework
         ///     If true, the archive is loaded without loading any assets contained within it.  This is useful if the
         ///     assets are already known to be present in the grid's asset service.
         /// </param>
-        /// <param name="requestId">If supplied, this request Id is later returned in the saved event</param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
+        /// <param name="offsetZ"></param>
+        /// <param name="flipX"></param>
+        /// <param name="flipY"></param>
+        /// <param name="useParcelOwnership"></param>
+        /// <param name="checkOwnership"></param>
         void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ,
                              bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership);
     }

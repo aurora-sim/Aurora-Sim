@@ -93,7 +93,7 @@ namespace Aurora.Framework.Serialization.External
         /// <summary>
         ///     Deserialize settings
         /// </summary>
-        /// <param name="serializedSettings"></param>
+        /// <param name="serialization"></param>
         /// <returns></returns>
         /// <exception cref="System.Xml.XmlException"></exception>
         public static InventoryItemBase Deserialize(string serialization)

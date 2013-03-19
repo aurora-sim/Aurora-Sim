@@ -249,7 +249,7 @@ namespace Aurora.Framework
         ///     does not contain sensitive information
         ///     if the trusted boolean is false
         /// </summary>
-        /// <param name="secure"></param>
+        /// <param name="trusted"></param>
         /// <returns></returns>
         public OSDMap ToOSD(bool trusted)
         {

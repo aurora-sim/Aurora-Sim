@@ -296,7 +296,6 @@ namespace Aurora.Services
         ///     Add the given event into the client's queue so that it is sent on the next
         /// </summary>
         /// <param name="ev"></param>
-        /// <param name="avatarID"></param>
         /// <returns></returns>
         public bool Enqueue(OSD ev)
         {

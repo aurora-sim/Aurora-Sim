@@ -68,7 +68,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Tells the region to tell the given agent that the other agent is online
         /// </summary>
-        /// <param name="AgentID">Agent that is either logging in or logging out</param>
+        /// <param name="AgentIDs">Agents that are either logging in or logging out</param>
         /// <param name="FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
         /// <param name="newStatus">Whether they are logged in or out</param>
         /// <returns></returns>

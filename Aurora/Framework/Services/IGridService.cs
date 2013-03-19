@@ -53,6 +53,8 @@ namespace Aurora.Framework
         /// <param name="regionInfos"> </param>
         /// <param name="oldSessionID"></param>
         /// <param name="password"> </param>
+        /// <param name="majorProtocolVersion"></param>
+        /// <param name="minorProtocolVersion"></param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region registration failed</exception>
         RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password,
@@ -107,7 +109,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get number of regions starting with the provided name.
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="name">
         ///     The name to match against.
         /// </param>
@@ -120,7 +122,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get all regions within the range of (xmin - xmax, ymin - ymax) (in meters)
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="xmin"></param>
         /// <param name="xmax"></param>
         /// <param name="ymin"></param>
@@ -131,7 +133,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get all regions within the range of specified center.
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="centerX"></param>
         /// <param name="centerY"></param>
         /// <param name="squareRangeFromCenterInMeters"></param>
@@ -142,6 +144,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get the neighbors of the given region
         /// </summary>
+        /// <param name="scopeIDs"></param>
         /// <param name="region"></param>
         /// <returns></returns>
         List<GridRegion> GetNeighbors(List<UUID> scopeIDs, GridRegion region);
@@ -149,14 +152,14 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get any default regions that have been set for users that are logging in that don't have a region to log into
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <returns></returns>
         List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs);
 
         /// <summary>
         ///     If all the default regions are down, find any fallback regions that have been set near x,y
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
@@ -165,7 +168,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     If there still are no regions after fallbacks have been checked, find any region near x,y
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
@@ -174,7 +177,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get the current flags of the given region
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="regionID"></param>
         /// <returns></returns>
         int GetRegionFlags(List<UUID> scopeIDs, UUID regionID);
@@ -183,12 +186,14 @@ namespace Aurora.Framework
         ///     Update the map of the given region if the sessionID is correct
         /// </summary>
         /// <param name="region"></param>
+        /// <param name="online"></param>
         /// <returns></returns>
         string UpdateMap(GridRegion region, bool online);
 
         /// <summary>
         ///     Get all map items of the given type for the given region
         /// </summary>
+        /// <param name="scopeIDs"></param>
         /// <param name="regionHandle"></param>
         /// <param name="gridItemType"></param>
         /// <returns></returns>

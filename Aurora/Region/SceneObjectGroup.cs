@@ -1407,7 +1407,8 @@ namespace Aurora.Region
         ///     Set the user group to which this scene object belongs.
         /// </summary>
         /// <param name="GroupID2"></param>
-        /// <param name="client"></param>
+        /// <param name="attemptingUserID"></param>
+        /// <param name="needsUpdate"></param>
         public void SetGroup(UUID GroupID2, UUID attemptingUserID, bool needsUpdate)
         {
             IGroupsModule module = Scene.RequestModuleInterface<IGroupsModule>();

@@ -84,6 +84,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="columnDefinitions"></param>
+        /// <param name="indexDefinitions"></param>
         /// <returns></returns>
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions,
                                IndexDefinition[] indexDefinitions);
@@ -94,6 +95,8 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="columnDefinitions"></param>
+        /// <param name="indexDefinitions"></param>
+        /// <param name="renameColumns"></param>
         void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions,
                                IndexDefinition[] indexDefinitions, Dictionary<string, string> renameColumns);
 

@@ -56,7 +56,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Find all T modules in the current directory
         /// </summary>
-        /// <typeparam name="t"></typeparam>
+        /// <param name="t"></param>
         /// <returns></returns>
         public static List<dynamic> PickupModules(Type t)
         {
@@ -243,9 +243,8 @@ namespace Aurora.Framework
         ///     Gets all modules found in the given directory.
         ///     Identifier is the name of the interface.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="moduleDir"></param>
-        /// <param name="identifier"></param>
+        /// <param name="t"></param>
         /// <returns></returns>
         public static List<dynamic> LoadModules(string moduleDir, Type t)
         {
@@ -426,6 +425,7 @@ namespace Aurora.Framework
         ///     Load all T modules from dllname
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <param name="moduleDir"></param>
         /// <param name="dllName"></param>
         /// <returns></returns>
         private static List<T> LoadModulesFromDLL<T>(string moduleDir, string dllName)
@@ -494,8 +494,9 @@ namespace Aurora.Framework
         /// <summary>
         ///     Load all T modules from dllname
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <param name="moduleDir"></param>
         /// <param name="dllName"></param>
+        /// <param name="t"></param>
         /// <returns></returns>
         private static List<dynamic> LoadModulesFromDLL(string moduleDir, string dllName, Type t)
         {
@@ -567,7 +568,6 @@ namespace Aurora.Framework
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="dllName"></param>
-        /// <param name="type"></param>
         /// <returns></returns>
         public static T LoadPlugin<T>(string dllName)
         {
@@ -607,7 +607,6 @@ namespace Aurora.Framework
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="dllName"></param>
-        /// <param name="type"></param>
         /// <returns></returns>
         public static List<T> LoadPlugins<T>(string dllName)
         {

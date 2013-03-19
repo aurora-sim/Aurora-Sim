@@ -283,7 +283,10 @@ namespace Aurora.Services
         /// <summary>
         ///     This handles the uploading of some inventory types
         /// </summary>
-        /// <param name="llsdRequest"></param>
+        /// <param name="path"></param>
+        /// <param name="request"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         public byte[] NewAgentInventoryRequest(string path, Stream request, OSHttpRequest httpRequest,
                                                OSHttpResponse httpResponse)
@@ -462,9 +465,17 @@ namespace Aurora.Services
 
         /// <summary>
         /// </summary>
+        /// <param name="assetName"></param>
+        /// <param name="assetDescription"></param>
         /// <param name="assetID"></param>
         /// <param name="inventoryItem"></param>
+        /// <param name="parentFolder"></param>
         /// <param name="data"></param>
+        /// <param name="inventoryType"></param>
+        /// <param name="assetType"></param>
+        /// <param name="everyone_mask"></param>
+        /// <param name="group_mask"></param>
+        /// <param name="next_owner_mask"></param>
         public UUID UploadCompleteHandler(string assetName, string assetDescription, UUID assetID,
                                           UUID inventoryItem, UUID parentFolder, byte[] data, string inventoryType,
                                           string assetType, uint everyone_mask, uint group_mask, uint next_owner_mask)
@@ -733,9 +744,10 @@ namespace Aurora.Services
 
             /// <summary>
             /// </summary>
-            /// <param name="data"></param>
             /// <param name="path"></param>
-            /// <param name="param"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)

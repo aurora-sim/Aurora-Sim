@@ -695,6 +695,7 @@ namespace Aurora.Framework
         ///     Checks whether the user is in god mode
         /// </summary>
         /// <param name="user"></param>
+        /// <param name="target"></param>
         /// <returns></returns>
         public bool CanGodTeleport(UUID user, UUID target)
         {
@@ -1146,8 +1147,9 @@ namespace Aurora.Framework
 
         #endregion
 
-        /// Check whether the specified user is allowed to directly create the given inventory type in a prim's
-        /// inventory (e.g. the New Script button in the 1.21 Linden Lab client).
+        /// <summary>
+        ///     Check whether the specified user is allowed to directly create the given inventory type in a prim's
+        ///     inventory (e.g. the New Script button in the 1.21 Linden Lab client).
         /// </summary>
         /// <param name="invType"></param>
         /// <param name="objectID"></param>
@@ -1386,6 +1388,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="userID">The user who is teleporting (can be either incoming from a remote region, or a local teleport)</param>
         /// <param name="Position">The position the user has requested</param>
+        /// <param name="TeleportFlags"></param>
         /// <param name="newPosition">The position the user is going to get</param>
         /// <param name="reason">If the check fails, this will tell why</param>
         /// <returns>Whether this user can teleport into/around this region</returns>

@@ -99,8 +99,10 @@ namespace Aurora.Services
         /// <summary>
         ///     Set the display name for the given user
         /// </summary>
-        /// <param name="mDhttpMethod"></param>
-        /// <param name="agentID"></param>
+        /// <param name="path"></param>
+        /// <param name="request"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         private byte[] ProcessSetDisplayName(string path, Stream request,
                                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -157,8 +159,10 @@ namespace Aurora.Services
         /// <summary>
         ///     Get the user's display name, currently not used?
         /// </summary>
-        /// <param name="mDhttpMethod"></param>
-        /// <param name="agentID"></param>
+        /// <param name="path"></param>
+        /// <param name="request"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         private byte[] ProcessGetDisplayName(string path, Stream request, OSHttpRequest httpRequest,
                                              OSHttpResponse httpResponse)

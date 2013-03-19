@@ -103,7 +103,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get a region handler for the given region
         /// </summary>
-        /// <param name="RegionHandle"></param>
+        /// <param name="regionID"></param>
         IRegionCapsService GetCapsForRegion(UUID regionID);
 
         /// <summary>
@@ -209,14 +209,13 @@ namespace Aurora.Framework
         /// <summary>
         ///     Get a regions Caps Service by region handle
         /// </summary>
-        /// <param name="regionID"></param>
+        /// <param name="regionHandle"></param>
         /// <returns></returns>
         IRegionClientCapsService GetCapsService(UUID regionHandle);
 
         /// <summary>
         ///     Get the root agent's caps service
         /// </summary>
-        /// <param name="regionID"></param>
         /// <returns></returns>
         IRegionClientCapsService GetRootCapsService();
 
@@ -231,7 +230,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="regionID"></param>
         /// <param name="CAPSBase"></param>
-        /// <param name="UrlToInform"></param>
+        /// <param name="circuitData"></param>
         /// <param name="port"></param>
         /// <returns></returns>
         IRegionClientCapsService GetOrCreateCapsService(UUID regionID, string CAPSBase, AgentCircuitData circuitData,
@@ -355,7 +354,6 @@ namespace Aurora.Framework
         ///     Add a new SEED CAP for the region at the given CapsUrl unless one already exists
         /// </summary>
         /// <param name="CapsUrl"></param>
-        /// <param name="UrlToInform"></param>
         void AddSEEDCap(string CapsUrl);
 
         void AddCAPS(string method, string caps);
@@ -388,7 +386,6 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="method"></param>
         /// <param name="httpMethod"></param>
-        /// <param name="path"></param>
         void RemoveStreamHandler(string method, string httpMethod);
 
         /// <summary>
@@ -433,13 +430,13 @@ namespace Aurora.Framework
         /// <summary>
         ///     Initialise the service
         /// </summary>
-        /// <param name="regionHandle"></param>
+        /// <param name="RegionID"></param>
+        /// <param name="registry"></param>
         void Initialise(UUID RegionID, IRegistryCore registry);
 
         /// <summary>
         ///     Close the service and all underlieing services
         /// </summary>
-        /// <param name="regionHandle"></param>
         void Close();
 
         /// <summary>

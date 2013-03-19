@@ -449,7 +449,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///     Linear interpolates B<->C using percent A
+        ///     Linear interpolates B&lt;-&gt;C using percent A
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
@@ -465,8 +465,8 @@ namespace Aurora.Framework
         ///     Layout:
         ///     A B
         ///     C D
-        ///     A<->C = Y
-        ///     C<->D = X
+        ///     A&lt;-&gt;C = Y
+        ///     C&lt;-&gt;D = X
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -544,7 +544,7 @@ namespace Aurora.Framework
 
         /// <summary>
         ///     Get a normalized form of a 3d vector
-        ///     The vector paramater cannot be <0,0,0>
+        ///     The vector paramater cannot be &lt;0,0,0&gt;
         /// </summary>
         /// <param name="a">A 3d vector</param>
         /// <returns>A new vector which is normalized form of the vector</returns>
@@ -909,7 +909,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Removes all invalid filename chars (OS dependent)
         /// </summary>
-        /// <param name="path">filename</param>
+        /// <param name="filename">filename</param>
         /// <returns>safe filename</returns>
         public static string safeFileName(string filename)
         {
@@ -1560,7 +1560,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Produces an OSDMap from its string representation on a stream
         /// </summary>
-        /// <param name="data">The stream</param>
+        /// <param name="stream">The stream</param>
         /// <param name="length">The size of the data on the stream</param>
         /// <returns>The OSDMap or an exception</returns>
         public static OSDMap GetOSDMap(Stream stream, int length)

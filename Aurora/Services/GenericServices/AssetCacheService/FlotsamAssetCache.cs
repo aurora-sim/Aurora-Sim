@@ -696,6 +696,7 @@ namespace Aurora.Services
         ///     removes empty tier directories.
         /// </summary>
         /// <param name="dir"></param>
+        /// <param name="purgeLine"></param>
         private void CleanExpiredFiles(string dir, DateTime purgeLine)
         {
             foreach (string file in Directory.GetFiles(dir))
@@ -811,7 +812,7 @@ namespace Aurora.Services
         ///     tier directories along the way
         /// </summary>
         /// <param name="filename"></param>
-        /// <param name="asset"></param>
+        /// <param name="data"></param>
         private void WriteFileCache(string filename, byte[] data)
         {
             // Make sure the target cache directory exists

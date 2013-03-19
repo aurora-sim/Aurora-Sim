@@ -47,8 +47,7 @@ namespace Aurora.Modules.Startup
         /// <param name="physEngineName"></param>
         /// <param name="meshEngineName"></param>
         /// <param name="config"></param>
-        /// <param name="region"></param>
-        /// <param name="registry"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config,
                                             IScene scene)

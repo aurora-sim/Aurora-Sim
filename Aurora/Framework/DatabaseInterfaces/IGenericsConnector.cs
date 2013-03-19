@@ -51,7 +51,6 @@ namespace Aurora.Framework
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
         /// <param name="Key"></param>
-        /// <param name="data">a default T to copy all data into</param>
         /// <returns></returns>
         T GetGeneric<T>(UUID OwnerID, string Type, string Key) where T : IDataTransferable;
 
@@ -61,7 +60,6 @@ namespace Aurora.Framework
         /// <typeparam name="T"></typeparam>
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
-        /// <param name="data">a default T</param>
         /// <returns></returns>
         List<T> GetGenerics<T>(UUID OwnerID, string Type) where T : IDataTransferable;
 
@@ -109,10 +107,8 @@ namespace Aurora.Framework
         /// <summary>
         ///     Gets the number of list of generic T's from the database
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="OwnerID"></param>
         /// <param name="Type"></param>
-        /// <param name="data">a default T</param>
         /// <returns></returns>
         int GetGenericCount(UUID OwnerID, string Type);
     }

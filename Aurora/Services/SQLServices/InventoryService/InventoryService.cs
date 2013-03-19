@@ -1071,6 +1071,7 @@ namespace Aurora.Services.SQLServices.InventoryService
         ///     The id of the receipient folder in which the send folder should be placed.  If UUID.Zero then the
         ///     recipient folder is the root folder
         /// </param>
+        /// <param name="success"></param>
         /// <returns>
         ///     The inventory folder copy given, null if the copy was unsuccessful
         /// </returns>
@@ -1140,6 +1141,7 @@ namespace Aurora.Services.SQLServices.InventoryService
         ///     appropriate default folder.
         /// </param>
         /// <param name="doOwnerCheck">This is for when the item is being given away publically, such as when it is posted on a group notice</param>
+        /// <param name="success"></param>
         /// <returns>
         ///     The inventory item copy given, null if the give was unsuccessful
         /// </returns>

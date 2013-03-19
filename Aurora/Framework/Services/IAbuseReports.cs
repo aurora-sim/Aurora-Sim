@@ -118,7 +118,6 @@ namespace Aurora.Framework
         ///     Adds a new abuse report to the database
         /// </summary>
         /// <param name="report"></param>
-        /// <param name="Password"></param>
         void AddAbuseReport(AbuseReport report);
 
         /// <summary>
@@ -139,7 +138,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="start"></param>
         /// <param name="count"></param>
-        /// <param name="filter"></param>
+        /// <param name="active"></param>
         /// <returns></returns>
         List<AbuseReport> GetAbuseReports(int start, int count, bool active);
     }

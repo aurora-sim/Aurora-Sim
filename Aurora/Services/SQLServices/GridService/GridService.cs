@@ -191,7 +191,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <summary>
         ///     Gets the default regions that people land in if they have no other region to enter
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs)
@@ -219,7 +219,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <summary>
         ///     Attempts to find regions that are good for the agent to login to if the default and fallback regions are down.
         /// </summary>
-        /// <param name="scopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
@@ -748,6 +748,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <summary>
         ///     Get the cached list of neighbors or a new list
         /// </summary>
+        /// <param name="scopeIDs"></param>
         /// <param name="region"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -1012,6 +1013,7 @@ namespace Aurora.Services.SQLServices.GridService
         /// <summary>
         ///     Get all agent locations for the given region
         /// </summary>
+        /// <param name="scopeIDs"></param>
         /// <param name="X"></param>
         /// <param name="Y"></param>
         /// <param name="regionHandle"></param>

@@ -93,7 +93,6 @@ namespace Aurora.Framework.Servers.HttpServer
         ///     URI.  So if a handler for "/myapp/" is registered and a request for "/myapp/page" is received, then
         ///     the "/myapp/" handler is invoked if no "/myapp/page" handler exists.
         /// </summary>
-        /// <param name="methodName"></param>
         /// <param name="handler"></param>
         /// <returns>
         ///     true if the handler was successfully registered, false if a handler with the same name already existed.

@@ -285,7 +285,6 @@ namespace Aurora.Region
         /// <summary>
         ///     Shuts down and permanently removes all info associated with the region
         /// </summary>
-        /// <param name="scene"></param>
         /// <param name="cleanup"></param>
         public void RemoveRegion(bool cleanup)
         {
@@ -309,7 +308,6 @@ namespace Aurora.Region
         /// <summary>
         ///     Shuts down a region and removes it from all running modules
         /// </summary>
-        /// <param name="scene"></param>
         /// <param name="type"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>

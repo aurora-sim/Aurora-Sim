@@ -89,7 +89,6 @@ namespace Aurora.Framework
         /// <summary>
         ///     Load all parcels from the database
         /// </summary>
-        /// <param name="regionUUID"></param>
         /// <returns></returns>
         List<LandData> LoadLandObjects();
 
@@ -107,6 +106,7 @@ namespace Aurora.Framework
         ///     Load the region info for this sim
         /// </summary>
         /// <param name="simBase"></param>
+        /// <param name="newRegion"></param>
         /// <returns></returns>
         RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion);
 

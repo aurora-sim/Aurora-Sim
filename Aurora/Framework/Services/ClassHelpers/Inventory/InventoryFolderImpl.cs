@@ -275,7 +275,7 @@ namespace Aurora.Framework
         /// <summary>
         ///     Deletes an item if it exists in this folder or any children
         /// </summary>
-        /// <param name="folderID"></param>
+        /// <param name="itemID"></param>
         /// <returns></returns>
         public bool DeleteItem(UUID itemID)
         {

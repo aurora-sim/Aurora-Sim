@@ -551,7 +551,7 @@ namespace Aurora.Region.Animation
         ///     Sends all clients the given information for this avatar
         /// </summary>
         /// <param name="animations"></param>
-        /// <param name="seqs"></param>
+        /// <param name="sequenceNums"></param>
         /// <param name="objectIDs"></param>
         public void SendAnimPack(UUID[] animations, int[] sequenceNums, UUID[] objectIDs)
         {

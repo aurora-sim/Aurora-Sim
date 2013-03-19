@@ -166,7 +166,6 @@ namespace Aurora.Services.DataService
         ///     Adds a new abuse report to the database
         /// </summary>
         /// <param name="report"></param>
-        /// <param name="Password"></param>
         public void AddAbuseReport(AbuseReport report)
         {
             List<object> InsertValues = new List<object>

@@ -358,7 +358,7 @@ namespace Aurora.Framework
         ///     Deserialization of agent data.
         ///     Avoiding reflection makes it painful to write, but that's the price!
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="args"></param>
         public virtual void Unpack(OSDMap args)
         {
             // DEBUG ON

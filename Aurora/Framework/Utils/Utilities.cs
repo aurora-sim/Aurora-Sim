@@ -119,23 +119,6 @@ namespace Aurora.Framework
         ///     Salt value used along with passphrase to generate password. Salt can
         ///     be any string. In this example we assume that salt is an ASCII string.
         /// </param>
-        /// <param name="hashAlgorithm">
-        ///     Hash algorithm used to generate password. Allowed values are: "MD5" and
-        ///     "SHA1". SHA1 hashes are a bit slower, but more secure than MD5 hashes.
-        /// </param>
-        /// <param name="passwordIterations">
-        ///     Number of iterations used to generate password. One or two iterations
-        ///     should be enough.
-        /// </param>
-        /// <param name="initVector">
-        ///     Initialization vector (or IV). This value is required to encrypt the
-        ///     first block of plaintext data. For RijndaelManaged class IV must be
-        ///     exactly 16 ASCII characters long.
-        /// </param>
-        /// <param name="keySize">
-        ///     Size of encryption key in bits. Allowed values are: 128, 192, and 256.
-        ///     Longer keys are more secure than shorter keys.
-        /// </param>
         /// <returns>
         ///     Encrypted value formatted as a base64-encoded string.
         /// </returns>
@@ -223,23 +206,6 @@ namespace Aurora.Framework
         /// <param name="saltValue">
         ///     Salt value used along with passphrase to generate password. Salt can
         ///     be any string. In this example we assume that salt is an ASCII string.
-        /// </param>
-        /// <param name="hashAlgorithm">
-        ///     Hash algorithm used to generate password. Allowed values are: "MD5" and
-        ///     "SHA1". SHA1 hashes are a bit slower, but more secure than MD5 hashes.
-        /// </param>
-        /// <param name="passwordIterations">
-        ///     Number of iterations used to generate password. One or two iterations
-        ///     should be enough.
-        /// </param>
-        /// <param name="initVector">
-        ///     Initialization vector (or IV). This value is required to encrypt the
-        ///     first block of plaintext data. For RijndaelManaged class IV must be
-        ///     exactly 16 ASCII characters long.
-        /// </param>
-        /// <param name="keySize">
-        ///     Size of encryption key in bits. Allowed values are: 128, 192, and 256.
-        ///     Longer keys are more secure than shorter keys.
         /// </param>
         /// <returns>
         ///     Decrypted string value.

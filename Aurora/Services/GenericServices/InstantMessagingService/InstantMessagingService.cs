@@ -496,7 +496,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Remove the member from this session
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="agentID"></param>
         /// <param name="im"></param>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void DropMemberFromSession(UUID agentID, GridInstantMessage im)
@@ -557,7 +557,7 @@ namespace Aurora.Services
         /// <summary>
         ///     Send chat to all the members of this friend conference
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="agentID"></param>
         /// <param name="im"></param>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void SendChatToSession(UUID agentID, GridInstantMessage im)

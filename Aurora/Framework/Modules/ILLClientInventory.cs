@@ -71,25 +71,21 @@ namespace Aurora.Framework
         /// <summary>
         ///     Move the given item from the object task inventory to the agent's inventory
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="folderID">
-        ///     The user inventory folder to move (or copy) the item to.  If null, then the most
-        ///     suitable system folder is used (e.g. the Objects folder for objects).  If there is no suitable folder, then
-        ///     the item is placed in the user's root inventory folder
-        /// </param>
-        /// <param name="part"></param>
-        /// <param name="itemID"></param>
+        /// <param name="destID"></param>
+        /// <param name="uuid"></param>
+        /// <param name="m_host"></param>
+        /// <param name="objID"></param>
         /// <param name="checkPermissions"></param>
-        InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID destId, UUID uuid, ISceneChildEntity m_host,
-                                                               UUID objId, bool checkPermissions);
+        InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID destID, UUID uuid, ISceneChildEntity m_host,
+                                                               UUID objID, bool checkPermissions);
 
         /// <summary>
         ///     Move the given items from the object task inventory to the agent's inventory
         /// </summary>
-        /// <param name="destID"></param>
-        /// <param name="name"></param>
-        /// <param name="host"></param>
-        /// <param name="items"></param>
+        /// <param name="uuid"></param>
+        /// <param name="p"></param>
+        /// <param name="part"></param>
+        /// <param name="invList"></param>
         /// <returns></returns>
         UUID MoveTaskInventoryItemsToUserInventory(UUID uuid, string p, ISceneChildEntity part, List<UUID> invList);
 
@@ -97,8 +93,8 @@ namespace Aurora.Framework
         ///     Copy a task (prim) inventory item to another task (prim)
         /// </summary>
         /// <param name="destId"></param>
-        /// <param name="part"></param>
-        /// <param name="itemId"></param>
+        /// <param name="m_host"></param>
+        /// <param name="objId"></param>
         void MoveTaskInventoryItemToObject(UUID destId, ISceneChildEntity m_host, UUID objId);
 
         /// <summary>
@@ -106,7 +102,7 @@ namespace Aurora.Framework
         ///     This is used for the LSL function llRemoteLoadScriptPin and requires a valid pin to be used
         /// </summary>
         /// <param name="srcId">The UUID of the script that is going to be copied</param>
-        /// <param name="srcPart">The prim that the script that is going to be copied from</param>
+        /// <param name="m_host">The prim that the script that is going to be copied from</param>
         /// <param name="destId">The UUID of the prim that the </param>
         /// <param name="pin">The ScriptAccessPin of the prim</param>
         /// <param name="running">Whether the script should be running when it is started</param>

@@ -306,8 +306,9 @@ namespace Aurora.Services.SQLServices.UserAccountService
         /// <summary>
         ///     Create a user
         /// </summary>
-        /// <param name="firstName"></param>
-        /// <param name="lastName"></param>
+        /// <param name="userID"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="name"></param>
         /// <param name="password"></param>
         /// <param name="email"></param>
         public string CreateUser(UUID userID, UUID scopeID, string name, string password, string email)
@@ -318,52 +319,53 @@ namespace Aurora.Services.SQLServices.UserAccountService
         /// <summary>
         ///     Create a user
         /// </summary>
-        /// <param name="account"></param>
+        /// <param name="newAccount"></param>
+        /// <param name="password"></param>
         //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
-        public string CreateUser(UserAccount newAcc, string password)
+        public string CreateUser(UserAccount newAccount, string password)
         {
             /*object remoteValue = DoRemoteByURL("UserAccountServerURI", newAcc, password);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? "" : remoteValue.ToString();*/
 
-            UserAccount account = GetUserAccount(null, newAcc.PrincipalID);
-            UserAccount nameaccount = GetUserAccount(null, newAcc.Name);
+            UserAccount account = GetUserAccount(null, newAccount.PrincipalID);
+            UserAccount nameaccount = GetUserAccount(null, newAccount.Name);
             if (null == account && nameaccount == null)
             {
-                if (StoreUserAccount(newAcc))
+                if (StoreUserAccount(newAccount))
                 {
                     bool success;
                     if (m_AuthenticationService != null && password != "")
                     {
-                        success = m_AuthenticationService.SetPasswordHashed(newAcc.PrincipalID, "UserAccount", password);
+                        success = m_AuthenticationService.SetPasswordHashed(newAccount.PrincipalID, "UserAccount", password);
                         if (!success)
                         {
                             MainConsole.Instance.WarnFormat(
                                 "[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
-                                newAcc.Name);
+                                newAccount.Name);
                             return "Unable to set password";
                         }
                     }
 
                     MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully",
-                                                    newAcc.Name);
+                                                    newAccount.Name);
                     //Cache it as well
-                    CacheAccount(newAcc);
+                    CacheAccount(newAccount);
                     m_registry.RequestModuleInterface<ISimulationBase>()
-                              .EventManager.FireGenericEventHandler("CreateUserInformation", newAcc.PrincipalID);
+                              .EventManager.FireGenericEventHandler("CreateUserInformation", newAccount.PrincipalID);
                     return "";
                 }
                 else
                 {
                     MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}",
-                                                     newAcc.Name);
+                                                     newAccount.Name);
                     return "Unable to save account";
                 }
             }
             else
             {
                 MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!",
-                                                 newAcc.Name);
+                                                 newAccount.Name);
                 return "A user with the same name already exists";
             }
         }

@@ -694,8 +694,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// <summary>
         ///     This methods is the start of incoming HTTP request handling.
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
+        /// <param name="context"></param>
         public virtual void HandleRequest(HttpListenerContext context)
         {
             HttpListenerRequest request = context.Request;

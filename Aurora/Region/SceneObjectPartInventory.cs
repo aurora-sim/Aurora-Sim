@@ -373,7 +373,11 @@ namespace Aurora.Region
         /// <summary>
         ///     Updates a script which is in this prim's inventory.
         /// </summary>
-        /// <param name="item"></param>
+        /// <param name="itemID"></param>
+        /// <param name="assetData"></param>
+        /// <param name="startParam"></param>
+        /// <param name="postOnRez"></param>
+        /// <param name="stateSource"></param>
         /// <returns></returns>
         public void UpdateScriptInstance(UUID itemID, byte[] assetData, int startParam, bool postOnRez,
                                          StateSource stateSource)

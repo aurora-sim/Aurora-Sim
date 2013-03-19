@@ -416,10 +416,13 @@ namespace Aurora.Services
         /// <remarks>
         ///     This needs to run asynchronously, as a network timeout may block the thread for a long while
         /// </remarks>
-        /// <param name="remoteClient"></param>
-        /// <param name="a"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="endPoint"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="requestingRegion"></param>
+        /// <param name="circuitData"></param>
+        /// <param name="neighbor"></param>
+        /// <param name="TeleportFlags"></param>
+        /// <param name="agentData"></param>
+        /// <param name="reason"></param>
         public virtual bool InformClientOfNeighbor(UUID AgentID, UUID requestingRegion, AgentCircuitData circuitData,
                                                    ref GridRegion neighbor,
                                                    uint TeleportFlags, AgentData agentData, out string reason)
