@@ -28,7 +28,7 @@
 using System;
 using System.IO;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <summary>
     ///     Interface to region archive functionality

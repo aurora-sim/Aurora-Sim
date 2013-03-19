@@ -27,7 +27,7 @@
 
 using Aurora.Framework.SceneInfo;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface ITerrainChannel
     {

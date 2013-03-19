@@ -28,7 +28,7 @@
 using System.Collections.Generic;
 using Aurora.Framework.SceneInfo;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IRegionModulesController
     {

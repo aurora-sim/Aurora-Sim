@@ -28,7 +28,7 @@
 using System.Collections.Generic;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IDataTransferableOSD
     {

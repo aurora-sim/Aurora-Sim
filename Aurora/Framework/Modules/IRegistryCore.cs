@@ -28,7 +28,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IRegistryCore
     {

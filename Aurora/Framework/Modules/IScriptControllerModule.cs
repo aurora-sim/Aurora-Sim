@@ -2,7 +2,7 @@
 using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public enum ScriptControlled : uint
     {

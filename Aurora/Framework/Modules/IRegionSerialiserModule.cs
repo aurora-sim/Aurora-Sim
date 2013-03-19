@@ -28,7 +28,7 @@
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IRegionSerialiserModule
     {

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Xml;
+using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;

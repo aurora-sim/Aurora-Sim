@@ -28,7 +28,7 @@
 using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IDialogModule
     {

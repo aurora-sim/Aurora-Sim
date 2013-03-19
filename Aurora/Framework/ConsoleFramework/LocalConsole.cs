@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Aurora.Framework.Modules;
 using Nini.Config;
 using log4net.Core;
 

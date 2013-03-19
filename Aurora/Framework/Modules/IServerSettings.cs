@@ -1,4 +1,4 @@
-﻿namespace Aurora.Framework
+﻿namespace Aurora.Framework.Modules
 {
     public delegate void UpdatedSetting(string value);
 

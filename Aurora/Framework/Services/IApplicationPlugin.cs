@@ -28,6 +28,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using Aurora.Framework.Modules;
 using Nini.Config;
 
 namespace Aurora.Framework.Services

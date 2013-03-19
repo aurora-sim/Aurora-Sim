@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Aurora.Framework.Modules;
 
 namespace Aurora.Framework.Utilities
 {

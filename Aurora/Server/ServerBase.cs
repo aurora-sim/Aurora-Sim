@@ -26,6 +26,7 @@
  */
 
 using System;
+using Aurora.Framework.Modules;
 using Aurora.Simulation.Base;
 using Aurora.Framework;
 

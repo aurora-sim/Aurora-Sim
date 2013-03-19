@@ -26,6 +26,7 @@
  */
 
 using Amib.Threading;
+using Aurora.Framework.Modules;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

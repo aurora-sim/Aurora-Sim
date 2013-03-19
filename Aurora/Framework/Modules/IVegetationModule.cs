@@ -29,7 +29,7 @@ using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IVegetationModule : IEntityCreator
     {

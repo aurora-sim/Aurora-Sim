@@ -26,6 +26,7 @@
  */
 
 using System.Linq;
+using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 

@@ -1,6 +1,6 @@
 ﻿using Aurora.Framework.PresenceInfo;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IAvatarAppearanceModule
     {

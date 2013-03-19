@@ -30,7 +30,7 @@ using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IAttachmentsModule
     {

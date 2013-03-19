@@ -29,6 +29,7 @@
 // #define WAIT_ON_INPROGRESS_REQUESTS
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Assets;

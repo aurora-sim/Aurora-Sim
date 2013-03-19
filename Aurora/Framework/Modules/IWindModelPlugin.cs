@@ -30,7 +30,7 @@ using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IWindModelPlugin
     {

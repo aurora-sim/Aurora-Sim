@@ -28,7 +28,7 @@
 using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <value>
     ///     Which set of permissions a user has.

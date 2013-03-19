@@ -28,7 +28,7 @@
 using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <summary>
     ///     Provides methods from manipulating media-on-a-prim

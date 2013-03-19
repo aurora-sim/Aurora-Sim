@@ -27,7 +27,7 @@
 
 using Aurora.Framework.Services.ClassHelpers.Assets;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IImprovedAssetCache
     {

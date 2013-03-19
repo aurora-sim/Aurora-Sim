@@ -29,6 +29,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 
 namespace Aurora.Modules.Terrain.FileLoaders
 {

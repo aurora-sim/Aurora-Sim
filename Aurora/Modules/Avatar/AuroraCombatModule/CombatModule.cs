@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Timers;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Physics;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;

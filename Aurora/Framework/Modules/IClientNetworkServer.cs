@@ -29,7 +29,7 @@ using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IClientNetworkServer
     {

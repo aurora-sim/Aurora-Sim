@@ -31,7 +31,7 @@ using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using GridRegion = Aurora.Framework.Services.GridRegion;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IEntityTransferModule
     {

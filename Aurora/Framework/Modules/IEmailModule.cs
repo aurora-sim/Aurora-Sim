@@ -29,7 +29,7 @@ using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public delegate void NextEmail(Email email);
 

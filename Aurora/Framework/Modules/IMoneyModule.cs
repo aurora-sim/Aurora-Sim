@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     //public delegate void ObjectPaid(UUID objectID, UUID agentID, int amount);
     // For legacy money module. Fumi.Iseki

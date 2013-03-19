@@ -33,6 +33,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Aurora.Framework.Utilities;

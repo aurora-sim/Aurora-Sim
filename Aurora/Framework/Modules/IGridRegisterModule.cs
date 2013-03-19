@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IGridRegisterModule
     {
