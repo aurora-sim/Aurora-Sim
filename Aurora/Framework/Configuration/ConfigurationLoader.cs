@@ -33,7 +33,7 @@ using Aurora.Framework.Utilities;
 using Nini.Config;
 using Nini.Ini;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Configuration
 {
     /// <summary>
     ///     Loads the Configuration files into nIni

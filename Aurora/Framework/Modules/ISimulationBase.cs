@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Configuration;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services.ClassHelpers.Other;
 using Nini.Config;
