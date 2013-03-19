@@ -39,16 +39,14 @@
  * settings use.
  */
 
-using Aurora.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Physics;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Utilities;
-using OdeAPI;
 using OpenMetaverse;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 //using Ode.NET;
 

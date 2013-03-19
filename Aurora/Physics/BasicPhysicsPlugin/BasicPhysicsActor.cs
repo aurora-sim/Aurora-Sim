@@ -27,7 +27,6 @@
 
 using Aurora.Framework.Physics;
 using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Physics.BasicPhysicsPlugin
 {

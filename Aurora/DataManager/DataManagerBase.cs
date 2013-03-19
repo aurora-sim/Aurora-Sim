@@ -25,14 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager.Migration;
-using Aurora.Framework.ConsoleFramework;
-using Aurora.Framework.Services;
-using Aurora.Framework.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Aurora.DataManager.Migration;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.DataManager
 {

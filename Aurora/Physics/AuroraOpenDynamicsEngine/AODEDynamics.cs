@@ -38,12 +38,11 @@
  * settings use.
  */
 
-using Aurora.Framework.Physics;
-using OdeAPI;
-using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.Physics;
+using OpenMetaverse;
 
 //using Ode.NET;
 

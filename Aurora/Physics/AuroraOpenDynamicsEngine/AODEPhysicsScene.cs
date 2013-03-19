@@ -25,21 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
-using Aurora.Framework.ConsoleFramework;
-using Aurora.Framework.Modules;
-using Aurora.Framework.Physics;
-using Aurora.Framework.SceneInfo;
-using Aurora.Framework.Utilities;
-using Nini.Config;
-using OdeAPI;
-using OpenMetaverse;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {

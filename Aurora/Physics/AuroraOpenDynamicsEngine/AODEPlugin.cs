@@ -27,10 +27,8 @@
 
 //#define USE_DRAWSTUFF
 
-using Aurora.Framework;
-using Aurora.Framework.Physics;
-using OdeAPI;
 using System;
+using Aurora.Framework.Physics;
 
 //using Ode.NET;
 //#if USE_DRAWSTUFF

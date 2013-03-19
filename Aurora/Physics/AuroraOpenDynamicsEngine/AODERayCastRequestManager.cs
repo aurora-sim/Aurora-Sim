@@ -25,15 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
-using Aurora.Framework.ConsoleFramework;
-using Aurora.Framework.Physics;
-using OdeAPI;
-using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Physics;
+using OpenMetaverse;
 
 //using Ode.NET;
 

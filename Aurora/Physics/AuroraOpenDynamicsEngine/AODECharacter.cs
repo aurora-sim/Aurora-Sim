@@ -25,11 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
+using System;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Physics;
 using OpenMetaverse;
-using System;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {

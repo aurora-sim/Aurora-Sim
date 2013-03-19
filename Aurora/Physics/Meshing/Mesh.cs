@@ -32,7 +32,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Aurora.Framework.Physics;
 using OpenMetaverse;
-using Aurora.Framework;
 using OSDArray = OpenMetaverse.StructuredData.OSDArray;
 using OSD = OpenMetaverse.StructuredData.OSD;
 
@@ -401,7 +400,7 @@ namespace Aurora.Physics.Meshing
             if (path == null)
                 return;
             String fileName = name + "_" + title + ".raw";
-            String completePath = Path.Combine(path, fileName);
+            String completePath = System.IO.Path.Combine(path, fileName);
             StreamWriter sw = new StreamWriter(completePath);
 #if (!ISWIN)
             foreach (Triangle s in m_triangles)
