@@ -25,15 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Lifetime;
 using System.Xml;
-using Aurora.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using OpenMetaverse;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
