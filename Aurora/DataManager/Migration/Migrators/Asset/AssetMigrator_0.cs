@@ -44,9 +44,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Token", ColumnTypes.String50),
                 ColDef("KeySetting", ColumnTypes.String50),
                 ColDef("ValueSetting", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "Token", "KeySetting" }, IndexType.Primary)
-            ));
+                                            ), IndexDefs(
+                                                IndexDef(new string[2] {"Token", "KeySetting"}, IndexType.Primary)
+                                                   ));
 
             AddSchema("assetblob", ColDefs(
                 ColDef("AssetID", ColumnTypes.Char36),
@@ -54,9 +54,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("OwnerID", ColumnTypes.Char36),
                 ColDef("Data", ColumnTypes.LongBlob),
                 ColDef("Info", ColumnTypes.String512)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "AssetID", "OwnerID" }, IndexType.Primary)
-            ));
+                                       ), IndexDefs(
+                                           IndexDef(new string[2] {"AssetID", "OwnerID"}, IndexType.Primary)
+                                              ));
 
             AddSchema("assettext", ColDefs(
                 ColDef("AssetID", ColumnTypes.Char36),
@@ -64,18 +64,18 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("OwnerID", ColumnTypes.Char36),
                 ColDef("Data", ColumnTypes.Text),
                 ColDef("Info", ColumnTypes.String512)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "AssetID", "OwnerID" }, IndexType.Primary)
-            ));
+                                       ), IndexDefs(
+                                           IndexDef(new string[2] {"AssetID", "OwnerID"}, IndexType.Primary)
+                                              ));
 
             AddSchema("assetmesh", ColDefs(
                 ColDef("AssetID", ColumnTypes.Char36),
                 ColDef("OwnerID", ColumnTypes.Char36),
                 ColDef("Data", ColumnTypes.LongBlob),
                 ColDef("Info", ColumnTypes.String512)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "AssetID", "OwnerID"}, IndexType.Primary)
-            ));
+                                       ), IndexDefs(
+                                           IndexDef(new string[2] {"AssetID", "OwnerID"}, IndexType.Primary)
+                                              ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -61,7 +61,7 @@ namespace Aurora.Services.DataService
 
                 if (GD != null)
                     GD.ConnectToDatabase(connectionString, "Inventory",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(this);
             }
@@ -109,12 +109,12 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < fields.Length; i++)
                 filter.andFilters.Add(fields[i], vals[i]);
 
-            List<string> data = GD.Query(new string[1] { "assetID" }, m_itemsrealm, filter, null, null, null);
+            List<string> data = GD.Query(new string[1] {"assetID"}, m_itemsrealm, filter, null, null, null);
             if (data == null)
                 return null;
             return data.ConvertAll<UUID>((s) => UUID.Parse(s));
         }
-        
+
         public virtual OSDArray GetLLSDItems(string[] fields, string[] vals)
         {
             string query = "where ";
@@ -146,7 +146,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["assetID"] = assetID;
             filter.andFilters["avatarID"] = userID;
 
-            List<string> q = GD.Query(new[] { "*" }, m_itemsrealm, filter, null, null, null);
+            List<string> q = GD.Query(new[] {"*"}, m_itemsrealm, filter, null, null, null);
 
             return !(q != null && q.Count > 0);
         }
@@ -156,13 +156,14 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["assetID"] = assetID;
 
-            List<string> q = GD.Query(new[] { "inventoryName" }, m_itemsrealm, filter, null, null, null);
+            List<string> q = GD.Query(new[] {"inventoryName"}, m_itemsrealm, filter, null, null, null);
 
 
-            return (q != null && q.Count > 0) ? q[0] :  "";
+            return (q != null && q.Count > 0) ? q[0] : "";
         }
 
-        public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID, UUID libraryOwnerID)
+        public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID,
+                                                  UUID libraryOwnerID)
         {
             LLSDSerializationDictionary contents = new LLSDSerializationDictionary();
             contents.WriteStartMap("llsd"); //Start llsd
@@ -186,7 +187,7 @@ namespace Aurora.Services.DataService
                 contents["agent_id"] = AgentID;
                 contents["owner_id"] = owner_id;
                 contents["folder_id"] = folder_id;
-                
+
                 int count = 0;
                 string query = "";
 
@@ -197,7 +198,7 @@ namespace Aurora.Services.DataService
                     List<UUID> moreLinkedItems = new List<UUID>();
                     bool addToCount = true;
                     query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id);
-                redoQuery:
+                    redoQuery:
                     using (DataReaderConnection retVal = GD.QueryData(query, m_itemsrealm, "*"))
                     {
                         try
@@ -215,20 +216,25 @@ namespace Aurora.Services.DataService
                                 contents.WriteStartMap("permissions");
                                 contents["group_id"] = UUID.Parse(retVal.DataReader["groupID"].ToString());
                                 contents["is_owner_group"] = int.Parse(retVal.DataReader["groupOwned"].ToString()) == 1;
-                                contents["group_mask"] = uint.Parse(retVal.DataReader["inventoryGroupPermissions"].ToString());
+                                contents["group_mask"] =
+                                    uint.Parse(retVal.DataReader["inventoryGroupPermissions"].ToString());
                                 contents["owner_id"] = forceOwnerID == UUID.Zero
                                                            ? UUID.Parse(retVal.DataReader["avatarID"].ToString())
                                                            : forceOwnerID;
                                 contents["last_owner_id"] = UUID.Parse(retVal.DataReader["avatarID"].ToString());
-                                contents["next_owner_mask"] = uint.Parse(retVal.DataReader["inventoryNextPermissions"].ToString());
-                                contents["owner_mask"] = uint.Parse(retVal.DataReader["inventoryCurrentPermissions"].ToString());
+                                contents["next_owner_mask"] =
+                                    uint.Parse(retVal.DataReader["inventoryNextPermissions"].ToString());
+                                contents["owner_mask"] =
+                                    uint.Parse(retVal.DataReader["inventoryCurrentPermissions"].ToString());
                                 UUID creator;
                                 if (UUID.TryParse(retVal.DataReader["creatorID"].ToString(), out creator))
                                     contents["creator_id"] = creator;
                                 else
                                     contents["creator_id"] = UUID.Zero;
-                                contents["base_mask"] = uint.Parse(retVal.DataReader["inventoryBasePermissions"].ToString());
-                                contents["everyone_mask"] = uint.Parse(retVal.DataReader["inventoryEveryOnePermissions"].ToString());
+                                contents["base_mask"] =
+                                    uint.Parse(retVal.DataReader["inventoryBasePermissions"].ToString());
+                                contents["everyone_mask"] =
+                                    uint.Parse(retVal.DataReader["inventoryEveryOnePermissions"].ToString());
                                 contents.WriteEndMap( /*Permissions*/);
 
                                 contents.WriteKey("sale_info"); //Start permissions kvp
@@ -262,21 +268,27 @@ namespace Aurora.Services.DataService
                                                     : forceOwnerID;
                                 contents["agent_id"] = avatarID;
 
-                                AssetType assetType = (AssetType)int.Parse(retVal.DataReader["assetType"].ToString());
+                                AssetType assetType = (AssetType) int.Parse(retVal.DataReader["assetType"].ToString());
                                 if (assetType == AssetType.Link)
                                     moreLinkedItems.Add(assetID);
                                 if (assetType == AssetType.Unknown)
                                     assetType = AssetType.Link;
-                                contents["type"] = Utils.AssetTypeToString((AssetType)Util.CheckMeshType((sbyte)assetType));
-                                InventoryType invType = (InventoryType)int.Parse(retVal.DataReader["invType"].ToString());
+                                contents["type"] =
+                                    Utils.AssetTypeToString((AssetType) Util.CheckMeshType((sbyte) assetType));
+                                InventoryType invType =
+                                    (InventoryType) int.Parse(retVal.DataReader["invType"].ToString());
                                 contents["inv_type"] = Utils.InventoryTypeToString(invType);
 
-                                if ((int)invType == -1)
+                                if ((int) invType == -1)
                                 {
                                     //Asset problem, fix it, it's supposed to be 0
                                     List<InventoryItemBase> itms = GetItems(AgentID,
-                                        new string[2] { "inventoryID", "avatarID" },
-                                        new string[2] { inventoryID.ToString(), avatarID.ToString() });
+                                                                            new string[2] {"inventoryID", "avatarID"},
+                                                                            new string[2]
+                                                                                {
+                                                                                    inventoryID.ToString(),
+                                                                                    avatarID.ToString()
+                                                                                });
                                     itms[0].InvType = 0;
                                     StoreItem(itms[0]);
                                 }
@@ -302,7 +314,9 @@ namespace Aurora.Services.DataService
                     foreach (UUID item in moreLinkedItems)
                         query = query + String.Format("{0} = '{1}' or ", "inventoryID", item);
 #else
-                        query = moreLinkedItems.Aggregate(query, (current, t) => current + String.Format("{0} = '{1}' or ", "inventoryID", t));
+                        query = moreLinkedItems.Aggregate(query,
+                                                          (current, t) =>
+                                                          current + String.Format("{0} = '{1}' or ", "inventoryID", t));
 #endif
                         query = query.Remove(query.Length - 4, 4);
                         query += ")";
@@ -311,57 +325,59 @@ namespace Aurora.Services.DataService
                     }
                     contents.WriteEndArray( /*"items"*/); //end array items
                 }
-                    contents.WriteStartArray("categories"); //We don't send any folders
-                    int version = 0;
-                    QueryFilter filter = new QueryFilter();
-                    filter.andFilters["folderID"] = folder_id;
-                    List<string> versionRetVal = GD.Query(new[]{
-                    "version",
-                    "type"
-                }, m_foldersrealm, filter, null, null, null);
+                contents.WriteStartArray("categories"); //We don't send any folders
+                int version = 0;
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["folderID"] = folder_id;
+                List<string> versionRetVal = GD.Query(new[]
+                                                          {
+                                                              "version",
+                                                              "type"
+                                                          }, m_foldersrealm, filter, null, null, null);
 
-                    if (versionRetVal.Count > 0)
+                if (versionRetVal.Count > 0)
+                {
+                    version = int.Parse(versionRetVal[0]);
+
+                    if (fetch_folders)
                     {
-                        version = int.Parse(versionRetVal[0]);
-
-                        if (fetch_folders)
+                        if (int.Parse(versionRetVal[1]) == (int) AssetType.TrashFolder ||
+                            int.Parse(versionRetVal[1]) == (int) AssetType.CurrentOutfitFolder ||
+                            int.Parse(versionRetVal[1]) == (int) AssetType.LinkFolder)
                         {
-                            if (int.Parse(versionRetVal[1]) == (int)AssetType.TrashFolder ||
-                                int.Parse(versionRetVal[1]) == (int)AssetType.CurrentOutfitFolder ||
-                                int.Parse(versionRetVal[1]) == (int)AssetType.LinkFolder)
+                            //If it is the trash folder, we need to send its descendents, because the viewer wants it
+                            query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,
+                                                  "agentID", AgentID);
+                            using (DataReaderConnection retVal = GD.QueryData(query, m_foldersrealm, "*"))
                             {
-                                //If it is the trash folder, we need to send its descendents, because the viewer wants it
-                                query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,
-                                                      "agentID", AgentID);
-                                using (DataReaderConnection retVal = GD.QueryData(query, m_foldersrealm, "*"))
+                                try
                                 {
-                                    try
+                                    while (retVal.DataReader.Read())
                                     {
-                                        while (retVal.DataReader.Read())
-                                        {
-                                            contents.WriteStartMap("folder"); //Start item kvp
-                                            contents["folder_id"] = UUID.Parse(retVal.DataReader["folderID"].ToString());
-                                            contents["parent_id"] = UUID.Parse(retVal.DataReader["parentFolderID"].ToString());
-                                            contents["name"] = retVal.DataReader["folderName"].ToString();
-                                            int type = int.Parse(retVal.DataReader["type"].ToString());
-                                            contents["type"] = type;
-                                            contents["preferred_type"] = type;
+                                        contents.WriteStartMap("folder"); //Start item kvp
+                                        contents["folder_id"] = UUID.Parse(retVal.DataReader["folderID"].ToString());
+                                        contents["parent_id"] =
+                                            UUID.Parse(retVal.DataReader["parentFolderID"].ToString());
+                                        contents["name"] = retVal.DataReader["folderName"].ToString();
+                                        int type = int.Parse(retVal.DataReader["type"].ToString());
+                                        contents["type"] = type;
+                                        contents["preferred_type"] = type;
 
-                                            count++;
-                                            contents.WriteEndMap( /*"folder"*/); //end array items
-                                        }
+                                        count++;
+                                        contents.WriteEndMap( /*"folder"*/); //end array items
                                     }
-                                    catch
-                                    {
-                                    }
-                                    finally
-                                    {
-                                        GD.CloseDatabase(retVal);
-                                    }
+                                }
+                                catch
+                                {
+                                }
+                                finally
+                                {
+                                    GD.CloseDatabase(retVal);
                                 }
                             }
                         }
                     }
+                }
 
                 contents.WriteEndArray( /*"categories"*/);
                 contents["descendents"] = count;
@@ -483,7 +499,7 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["inventoryID"] = itemID;
-            List<string> values = GD.Query(new string[] { "parentFolderID" }, m_itemsrealm, filter, null, null, null);
+            List<string> values = GD.Query(new string[] {"parentFolderID"}, m_itemsrealm, filter, null, null, null);
             if (values.Count > 0)
             {
                 IncrementFolder(UUID.Parse(values[0]));

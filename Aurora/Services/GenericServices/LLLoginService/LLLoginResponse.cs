@@ -41,7 +41,7 @@ using GridRegion = Aurora.Framework.GridRegion;
 namespace Aurora.Services
 {
     /// <summary>
-    ///   A class to handle LL login response.
+    ///     A class to handle LL login response.
     /// </summary>
     public class LLLoginResponse : LoginResponse
     {
@@ -102,7 +102,8 @@ namespace Aurora.Services
                                string where, string startlocation, Vector3 position, Vector3 lookAt,
                                List<InventoryItemBase> gestures,
                                GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating,
-                               ArrayList eventValues, ArrayList eventNotificationValues, ArrayList classifiedValues, string seedCap, IConfigSource source,
+                               ArrayList eventValues, ArrayList eventNotificationValues, ArrayList classifiedValues,
+                               string seedCap, IConfigSource source,
                                string DisplayName)
             : this()
         {
@@ -605,12 +606,14 @@ namespace Aurora.Services
         private static BuddyList ConvertFriendListItem(FriendInfo[] friendsList)
         {
             BuddyList buddylistreturn = new BuddyList();
-            foreach (BuddyList.BuddyInfo buddyitem in from finfo in friendsList where finfo.TheirFlags != -1 select new BuddyList.BuddyInfo(finfo.Friend)
-                                                                                                              {
-                                                                                                                  BuddyID = finfo.Friend,
-                                                                                                                  BuddyRightsHave = finfo.TheirFlags,
-                                                                                                                  BuddyRightsGiven = finfo.MyFlags
-                                                                                                              })
+            foreach (BuddyList.BuddyInfo buddyitem in from finfo in friendsList
+                                                      where finfo.TheirFlags != -1
+                                                      select new BuddyList.BuddyInfo(finfo.Friend)
+                                                                 {
+                                                                     BuddyID = finfo.Friend,
+                                                                     BuddyRightsHave = finfo.TheirFlags,
+                                                                     BuddyRightsGiven = finfo.MyFlags
+                                                                 })
             {
                 buddylistreturn.AddNewBuddy(buddyitem);
             }
@@ -639,7 +642,7 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Converts the inventory library skeleton into the form required by the rpc request.
+        ///     Converts the inventory library skeleton into the form required by the rpc request.
         /// </summary>
         /// <returns></returns>
         protected virtual ArrayList GetInventoryLibrary(ILibraryService library, IInventoryService inventoryService)
@@ -654,19 +657,22 @@ namespace Aurora.Services
             RootHash["folder_id"] = library.LibraryRootFolderID.ToString();
             AgentInventoryArray.Add(RootHash);
 
-            List<UUID> rootFolderUUIDs = (from rootFolder in rootFolders where rootFolder.Name != "My Inventory" select rootFolder.ID).ToList();
+            List<UUID> rootFolderUUIDs =
+                (from rootFolder in rootFolders where rootFolder.Name != "My Inventory" select rootFolder.ID).ToList();
 
             if (rootFolderUUIDs.Count != 0)
             {
                 foreach (UUID rootfolderID in rootFolderUUIDs)
                 {
-                    TraverseFolder(library.LibraryOwner, rootfolderID, inventoryService, library, true, ref AgentInventoryArray);
+                    TraverseFolder(library.LibraryOwner, rootfolderID, inventoryService, library, true,
+                                   ref AgentInventoryArray);
                 }
             }
             return AgentInventoryArray;
         }
 
-        private void TraverseFolder(UUID agentID, UUID folderID, IInventoryService invService, ILibraryService library, bool rootFolder,
+        private void TraverseFolder(UUID agentID, UUID folderID, IInventoryService invService, ILibraryService library,
+                                    bool rootFolder,
                                     ref ArrayList table)
         {
             List<InventoryFolderBase> folders = invService.GetFolderFolders(agentID, folderID);
@@ -688,9 +694,9 @@ namespace Aurora.Services
             }
         }
 
-        ///<summary>
-        ///</summary>
-        ///<returns></returns>
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
         protected virtual ArrayList GetLibraryOwner(ILibraryService libService)
         {
             //for now create random inventory library owner
@@ -906,14 +912,14 @@ namespace Aurora.Services
 
         public string DestinationURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue("DestinationURL"); }
+            get { return (string) LLLoginResponseRegister.GetValue("DestinationURL"); }
         }
 
         public string MarketPlaceURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue("MarketPlaceURL"); }
+            get { return (string) LLLoginResponseRegister.GetValue("MarketPlaceURL"); }
         }
-        
+
         public string Message
         {
             get
@@ -1005,7 +1011,7 @@ namespace Aurora.Services
     }
 
     /// <summary>
-    ///   A generic kvp register so that we can store values for multiple LLLoginResponses
+    ///     A generic kvp register so that we can store values for multiple LLLoginResponses
     /// </summary>
     public class LLLoginResponseRegister
     {

@@ -45,17 +45,17 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Archive", ColumnTypes.Blob),
                 ColDef("Snapshot", ColumnTypes.Char36),
                 ColDef("IsPublic", ColumnTypes.Integer11)
-            ), IndexDefs(
-                IndexDef(new string[1] { "Name" }, IndexType.Primary),
-                IndexDef(new string[1] { "IsPublic" }, IndexType.Index)
-            ));
+                                            ), IndexDefs(
+                                                IndexDef(new string[1] {"Name"}, IndexType.Primary),
+                                                IndexDef(new string[1] {"IsPublic"}, IndexType.Index)
+                                                   ));
 
             AddSchema("passwords", ColDefs(
                 ColDef("Method", ColumnTypes.String50),
                 ColDef("Password", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "Method" }, IndexType.Primary )
-            ));
+                                       ), IndexDefs(
+                                           IndexDef(new string[1] {"Method"}, IndexType.Primary)
+                                              ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

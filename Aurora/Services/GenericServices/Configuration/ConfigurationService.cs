@@ -35,7 +35,7 @@ using Aurora.Framework;
 namespace Aurora.Services
 {
     /// <summary>
-    ///   This is an application plugin so that it loads asap as it is used by many things (IService modules especially)
+    ///     This is an application plugin so that it loads asap as it is used by many things (IService modules especially)
     /// </summary>
     public class ConfigurationService : IConfigurationService, IApplicationPlugin
     {

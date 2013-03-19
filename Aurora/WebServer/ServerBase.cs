@@ -34,7 +34,7 @@ namespace Aurora.Server
     public class AuroraBase : SimulationBase
     {
         /// <summary>
-        ///   Performs initialisation of the scene, such as loading configuration from disk.
+        ///     Performs initialisation of the scene, such as loading configuration from disk.
         /// </summary>
         public override void Startup()
         {

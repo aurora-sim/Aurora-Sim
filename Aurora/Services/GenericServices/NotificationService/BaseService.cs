@@ -75,7 +75,7 @@ namespace Aurora.Services
             {
                 if (appender.Name == "Console")
                 {
-                    m_consoleAppender = (OpenSimAppender)appender;
+                    m_consoleAppender = (OpenSimAppender) appender;
                     break;
                 }
             }
@@ -105,7 +105,7 @@ namespace Aurora.Services
             {
                 if (logFileAppender is FileAppender)
                 {
-                    FileAppender appender = (FileAppender)logFileAppender;
+                    FileAppender appender = (FileAppender) logFileAppender;
                     IConfig startupConfig = config.Configs["Startup"];
                     string fileName = startupConfig.GetString("LogFile", String.Empty);
                     if (fileName != String.Empty)
@@ -123,11 +123,14 @@ namespace Aurora.Services
 
             MainConsole.Instance.MaxLogLevel = m_consoleAppender.Threshold;
             if (m_consoleAppender != null)
-                MainConsole.Instance.Fatal(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
+                MainConsole.Instance.Fatal(String.Format("[Console]: Console log level is {0}",
+                                                         m_consoleAppender.Threshold));
 
-            MainConsole.Instance.Commands.AddCommand("set log level", "set log level [level]", "Set the console logging level", HandleLogLevel);
+            MainConsole.Instance.Commands.AddCommand("set log level", "set log level [level]",
+                                                     "Set the console logging level", HandleLogLevel);
 
-            MainConsole.Instance.Commands.AddCommand("get log level", "get log level", "Returns the current console logging level", HandleGetLogLevel);
+            MainConsole.Instance.Commands.AddCommand("get log level", "get log level",
+                                                     "Returns the current console logging level", HandleGetLogLevel);
         }
 
         public void PostInitialise()
@@ -163,7 +166,8 @@ namespace Aurora.Services
         {
             if (null == m_consoleAppender)
             {
-                MainConsole.Instance.Fatal("No appender named Console found (see the log4net config file for this executable)!");
+                MainConsole.Instance.Fatal(
+                    "No appender named Console found (see the log4net config file for this executable)!");
                 return;
             }
 

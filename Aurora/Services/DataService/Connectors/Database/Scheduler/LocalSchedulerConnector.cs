@@ -39,16 +39,17 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         private IGenericData m_Gd;
 
         private readonly string[] theFields = new[]
-                                         {
-                                             "id", "fire_function", "fire_params", "run_once", "run_every",
-                                             "runs_next", "keep_history", "require_reciept", "last_history_id", 
-                                             "create_time", "start_time", "run_every_type", "enabled", "schedule_for"
-                                         };
+                                                  {
+                                                      "id", "fire_function", "fire_params", "run_once", "run_every",
+                                                      "runs_next", "keep_history", "require_reciept", "last_history_id",
+                                                      "create_time", "start_time", "run_every_type", "enabled",
+                                                      "schedule_for"
+                                                  };
 
         #region Implementation of IAuroraDataPlugin
 
         /// <summary>
-        ///   Returns the plugin name
+        ///     Returns the plugin name
         /// </summary>
         /// <returns></returns>
         public string Name
@@ -57,13 +58,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         }
 
         /// <summary>
-        ///   Starts the database plugin, performs migrations if needed
+        ///     Starts the database plugin, performs migrations if needed
         /// </summary>
-        /// <param name = "GenericData">The Database Plugin</param>
-        /// <param name = "source">Config if more parameters are needed</param>
+        /// <param name="GenericData">The Database Plugin</param>
+        /// <param name="source">Config if more parameters are needed</param>
         /// <param name="simBase"></param>
-        /// <param name = "DefaultConnectionString">The connection string to use</param>
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString)
+        /// <param name="DefaultConnectionString">The connection string to use</param>
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string DefaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("SchedulerConnector", "LocalConnector") != "LocalConnector")
                 return;
@@ -72,7 +74,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                 DefaultConnectionString = source.Configs[Name].GetString("ConnectionString", DefaultConnectionString);
             if (GenericData != null)
                 GenericData.ConnectToDatabase(DefaultConnectionString, "Scheduler",
-                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                              source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             m_Gd = GenericData;
             DataManager.DataManager.RegisterPlugin(this);
@@ -114,29 +116,30 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         private object[] GetDBValues(SchedulerItem I)
         {
-            return new object[]{
-                I.id, 
-                I.FireFunction, 
-                I.FireParams, 
-                I.RunOnce,
-                I.RunEvery, 
-                I.TimeToRun,
-                I.HisotryKeep,
-                I.HistoryReciept,
-                I.HistoryLastID,
-                I.CreateTime,
-                I.StartTime,
-                (int)I.RunEveryType,
-                I.Enabled,
-                I.ScheduleFor
-            };
+            return new object[]
+                       {
+                           I.id,
+                           I.FireFunction,
+                           I.FireParams,
+                           I.RunOnce,
+                           I.RunEvery,
+                           I.TimeToRun,
+                           I.HisotryKeep,
+                           I.HistoryReciept,
+                           I.HistoryLastID,
+                           I.CreateTime,
+                           I.StartTime,
+                           (int) I.RunEveryType,
+                           I.Enabled,
+                           I.ScheduleFor
+                       };
         }
 
         public bool SchedulerExist(string id)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["id"] = id;
-            return m_Gd.Query(new string[] { "id" }, "scheduler", filter, null, null, null).Count >= 1;
+            return m_Gd.Query(new string[] {"id"}, "scheduler", filter, null, null, null).Count >= 1;
         }
 
 
@@ -146,7 +149,10 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             DataReaderConnection dr = null;
             try
             {
-                dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < '" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + "' ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
+                dr =
+                    m_Gd.QueryData(
+                        "WHERE enabled = 1 AND runs_next < '" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") +
+                        "' ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
                 if (dr != null && dr.DataReader != null)
                 {
                     while (dr.DataReader.Read())
@@ -155,12 +161,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                     }
                 }
             }
-            catch{}
+            catch
+            {
+            }
             finally
             {
                 m_Gd.CloseDatabase(dr);
             }
-            
+
             return returnValue;
         }
 
@@ -261,7 +269,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                            HistoryReciept = bool.Parse(dr["require_reciept"].ToString()),
                            RunEvery = int.Parse(dr["run_every"].ToString()),
                            RunOnce = bool.Parse(dr["run_once"].ToString()),
-                           RunEveryType = (RepeatType)int.Parse(dr["run_every_type"].ToString()),
+                           RunEveryType = (RepeatType) int.Parse(dr["run_every_type"].ToString()),
                            StartTime = DateTime.Parse(dr["start_time"].ToString()),
                            ScheduleFor = UUID.Parse(dr["schedule_for"].ToString())
                        };
@@ -272,22 +280,22 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             if (values == null) return null;
             if (values.Count == 0) return null;
             return new SchedulerItem
-            {
-                id = values[0],
-                FireFunction = values[1],
-                FireParams = values[2],
-                RunOnce = bool.Parse(values[3]),
-                RunEvery = int.Parse(values[4]),
-                TimeToRun = DateTime.Parse(values[5]),
-                HisotryKeep = bool.Parse(values[6]),
-                HistoryReciept = bool.Parse(values[7]),
-                HistoryLastID = values[8],
-                CreateTime = DateTime.Parse(values[9]),
-                StartTime = DateTime.Parse(values[10]),
-                RunEveryType = (RepeatType)int.Parse(values[11]),
-                Enabled = bool.Parse(values[12]),
-                ScheduleFor = UUID.Parse(values[13])
-            };
+                       {
+                           id = values[0],
+                           FireFunction = values[1],
+                           FireParams = values[2],
+                           RunOnce = bool.Parse(values[3]),
+                           RunEvery = int.Parse(values[4]),
+                           TimeToRun = DateTime.Parse(values[5]),
+                           HisotryKeep = bool.Parse(values[6]),
+                           HistoryReciept = bool.Parse(values[7]),
+                           HistoryLastID = values[8],
+                           CreateTime = DateTime.Parse(values[9]),
+                           StartTime = DateTime.Parse(values[10]),
+                           RunEveryType = (RepeatType) int.Parse(values[11]),
+                           Enabled = bool.Parse(values[12]),
+                           ScheduleFor = UUID.Parse(values[13])
+                       };
         }
 
         #endregion

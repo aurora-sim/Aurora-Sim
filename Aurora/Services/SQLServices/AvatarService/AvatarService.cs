@@ -78,7 +78,8 @@ namespace Aurora.Services.SQLServices.AvatarService
         {
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAvatarData>();
             m_ArchiveService = registry.RequestModuleInterface<IAvatarAppearanceArchiver>();
-            registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);
+            registry.RequestModuleInterface<ISimulationBase>()
+                    .EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);
         }
 
         public void FinishedStartup()
@@ -101,12 +102,13 @@ namespace Aurora.Services.SQLServices.AvatarService
         {
             object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (AvatarAppearance)remoteValue;
+                return (AvatarAppearance) remoteValue;
 
             return m_Database.Get(principalID);
         }
 
-        public AvatarAppearance GetAndEnsureAppearance(UUID principalID, string avatarName, string defaultUserAvatarArchive, out bool loadedArchive)
+        public AvatarAppearance GetAndEnsureAppearance(UUID principalID, string avatarName,
+                                                       string defaultUserAvatarArchive, out bool loadedArchive)
         {
             loadedArchive = false;
             AvatarAppearance avappearance = GetAppearance(principalID);
@@ -133,12 +135,13 @@ namespace Aurora.Services.SQLServices.AvatarService
         {
             object remoteValue = DoRemoteByURL("AvatarServerURI", principalID, appearance);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("SetAppearance",
                                                                                                       new object[2]
                                                                                                           {
-                                                                                                              principalID,
+                                                                                                              principalID
+                                                                                                              ,
                                                                                                               appearance
                                                                                                           });
             RemoveOldBaked(principalID, appearance);
@@ -150,7 +153,7 @@ namespace Aurora.Services.SQLServices.AvatarService
         {
             object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             return m_Database.Delete(principalID);
         }
@@ -164,7 +167,9 @@ namespace Aurora.Services.SQLServices.AvatarService
             for (uint i = 0; i < olddata.Texture.FaceTextures.Length; i++)
             {
                 if ((olddata.Texture.FaceTextures[i] == null) || ((newdata.Texture.FaceTextures[i] != null) &&
-                    (olddata.Texture.FaceTextures[i].TextureID == newdata.Texture.FaceTextures[i].TextureID))) continue;
+                                                                  (olddata.Texture.FaceTextures[i].TextureID ==
+                                                                   newdata.Texture.FaceTextures[i].TextureID)))
+                    continue;
 
                 AssetBase ab = m_assetService.Get(olddata.Texture.FaceTextures[i].TextureID.ToString());
                 if ((ab != null) && (ab.Name == "Baked Texture"))
@@ -174,7 +179,7 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         private object DeleteUserInformation(string name, object param)
         {
-            UUID user = (UUID)param;
+            UUID user = (UUID) param;
             ResetAvatar(user);
             return null;
         }
@@ -194,7 +199,8 @@ namespace Aurora.Services.SQLServices.AvatarService
                 return;
             }
             ResetAvatar(acc.PrincipalID);
-            InventoryFolderBase folder = m_invService.GetFolderForType(acc.PrincipalID, (InventoryType)0, AssetType.CurrentOutfitFolder);
+            InventoryFolderBase folder = m_invService.GetFolderForType(acc.PrincipalID, (InventoryType) 0,
+                                                                       AssetType.CurrentOutfitFolder);
             if (folder != null)
                 m_invService.ForcePurgeFolder(folder);
 

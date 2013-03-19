@@ -63,9 +63,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ShowInSearch", ColumnTypes.String50),
                 ColDef("SnapshotID", ColumnTypes.String50),
                 ColDef("Bitmap", ColumnTypes.LongText)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary)
-            ));
+                                          ), IndexDefs(
+                                              IndexDef(new string[1] {"ParcelID"}, IndexType.Primary)
+                                                 ));
 
             AddSchema("events", ColDefs(
                 ColDef("EOwnerID", ColumnTypes.String50),
@@ -82,9 +82,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("EFlags", ColumnTypes.String50),
                 ColDef("EMature", ColumnTypes.String50),
                 ColDef("EDuration", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "EID" }, IndexType.Primary)
-            ));
+                                    ), IndexDefs(
+                                        IndexDef(new string[1] {"EID"}, IndexType.Primary)
+                                           ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

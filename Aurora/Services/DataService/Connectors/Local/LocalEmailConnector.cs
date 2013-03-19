@@ -48,12 +48,12 @@ namespace Aurora.Services.DataService
 
             if (GD != null)
                 GD.ConnectToDatabase(defaultConnectionString, "Generics",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("EmailConnector", "LocalConnector") ==
-                 "LocalConnector")
+                "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
@@ -66,16 +66,16 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets all offline messages for the user in GridInstantMessage format.
+        ///     Gets all offline messages for the user in GridInstantMessage format.
         /// </summary>
-        /// <param name = "objectID"></param>
+        /// <param name="objectID"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<Email> GetEmails(UUID objectID)
         {
             object remoteValue = DoRemote(objectID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<Email>)remoteValue;
+                return (List<Email>) remoteValue;
 
             //Get all the messages
             List<Email> emails = GenericUtils.GetGenerics<Email>(objectID, "Emails", GD);
@@ -84,9 +84,9 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Adds a new offline message for the user.
+        ///     Adds a new offline message for the user.
         /// </summary>
-        /// <param name = "email"></param>
+        /// <param name="email"></param>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void InsertEmail(Email email)
         {
@@ -95,7 +95,7 @@ namespace Aurora.Services.DataService
                 return;
 
             GenericUtils.AddGeneric(email.toPrimID, "Emails", UUID.Random().ToString(),
-                                            email.ToOSD(), GD);
+                                    email.ToOSD(), GD);
         }
 
         #endregion

@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Reflection;
 using Aurora.DataManager;
 using Nini.Config;
@@ -71,7 +71,8 @@ namespace Aurora.RedisServices.AssetService
             if (assetConfig != null)
                 m_doConversion = assetConfig.GetBoolean("DoConversion", true);
 
-            m_connectionPool = new Pool<RedisClient<byte[]>>(() => new RedisClient<byte[]>(m_connectionDNS, m_connectionPort));
+            m_connectionPool =
+                new Pool<RedisClient<byte[]>>(() => new RedisClient<byte[]>(m_connectionDNS, m_connectionPort));
 
             if (MainConsole.Instance != null)
             {
@@ -103,7 +104,6 @@ namespace Aurora.RedisServices.AssetService
         {
         }
 
-
         #endregion
 
         #region IAssetService Members
@@ -129,8 +129,8 @@ namespace Aurora.RedisServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
             {
                 if (doDatabaseCaching && cache != null)
-                    cache.Cache(id, (AssetBase)remoteValue);
-                return (AssetBase)remoteValue;
+                    cache.Cache(id, (AssetBase) remoteValue);
+                return (AssetBase) remoteValue;
             }
 
             AssetBase asset = RedisGetAsset(id);
@@ -167,7 +167,7 @@ namespace Aurora.RedisServices.AssetService
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                byte[] data = (byte[])remoteValue;
+                byte[] data = (byte[]) remoteValue;
                 if (doDatabaseCaching && cache != null)
                     cache.CacheData(id, data);
                 return data;
@@ -185,17 +185,14 @@ namespace Aurora.RedisServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             return RedisExistsAsset(id);
         }
 
         public virtual void Get(String id, Object sender, AssetRetrieved handler)
         {
-            Util.FireAndForget((o) =>
-            {
-                handler(id, sender, Get(id));
-            });
+            Util.FireAndForget((o) => { handler(id, sender, Get(id)); });
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -209,7 +206,7 @@ namespace Aurora.RedisServices.AssetService
             {
                 if (remoteValue == null)
                     return UUID.Zero;
-                asset.ID = (UUID)remoteValue;
+                asset.ID = (UUID) remoteValue;
             }
             else
                 RedisSetAsset(asset);
@@ -229,7 +226,7 @@ namespace Aurora.RedisServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id, data);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? UUID.Zero : (UUID)remoteValue;
+                return remoteValue == null ? UUID.Zero : (UUID) remoteValue;
 
             AssetBase asset = RedisGetAsset(id.ToString());
             if (asset == null)
@@ -238,7 +235,7 @@ namespace Aurora.RedisServices.AssetService
             asset.Data = data;
             bool success = RedisSetAsset(asset);
             if (!success)
-                return UUID.Zero;//We weren't able to update the asset
+                return UUID.Zero; //We weren't able to update the asset
             return newID;
         }
 
@@ -247,7 +244,7 @@ namespace Aurora.RedisServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             RedisDeleteAsset(id.ToString());
             return true;
@@ -262,13 +259,18 @@ namespace Aurora.RedisServices.AssetService
             {
                 client = m_connectionPool.GetFreeItem();
                 if (func == null)
-                    return null;//Checking whether the connection is alive
+                    return null; //Checking whether the connection is alive
                 return func(client);
             }
             catch (Exception)
             {
-                try { client.Dispose(); }
-                catch { }
+                try
+                {
+                    client.Dispose();
+                }
+                catch
+                {
+                }
                 m_connectionPool.DestroyItem(client);
                 client = null;
             }
@@ -287,13 +289,18 @@ namespace Aurora.RedisServices.AssetService
             {
                 client = m_connectionPool.GetFreeItem();
                 if (func == null)
-                    return false;//Checking whether the connection is alive
+                    return false; //Checking whether the connection is alive
                 return func(client);
             }
             catch (Exception)
             {
-                try { client.Dispose(); }
-                catch { }
+                try
+                {
+                    client.Dispose();
+                }
+                catch
+                {
+                }
                 m_connectionPool.DestroyItem(client);
                 client = null;
             }
@@ -315,20 +322,20 @@ namespace Aurora.RedisServices.AssetService
             try
             {
                 RedisEnsureConnection((conn) =>
-                {
-                    byte[] data = conn.Get(id);
-                    if (data == null)
-                        return null;
+                                          {
+                                              byte[] data = conn.Get(id);
+                                              if (data == null)
+                                                  return null;
 
-                    MemoryStream memStream = new MemoryStream(data);
-                    asset = ProtoBuf.Serializer.Deserialize<AssetBase>(memStream);
-                    memStream.Close();
-                    byte[] assetdata = conn.Get(DATA_PREFIX + asset.HashCode);
-                    if (assetdata == null || asset.HashCode == "")
-                        return null;
-                    asset.Data = assetdata;
-                    return null;
-                });
+                                              MemoryStream memStream = new MemoryStream(data);
+                                              asset = ProtoBuf.Serializer.Deserialize<AssetBase>(memStream);
+                                              memStream.Close();
+                                              byte[] assetdata = conn.Get(DATA_PREFIX + asset.HashCode);
+                                              if (assetdata == null || asset.HashCode == "")
+                                                  return null;
+                                              asset.Data = assetdata;
+                                              return null;
+                                          });
 
                 if (asset == null)
                     return CheckForConversion(id);
@@ -338,7 +345,8 @@ namespace Aurora.RedisServices.AssetService
 #if DEBUG
                 long endTime = System.Diagnostics.Stopwatch.GetTimestamp();
                 if (MainConsole.Instance != null && asset != null)
-                    MainConsole.Instance.Warn("[REDIS ASSET SERVICE]: Took " + (endTime - startTime) /10000 + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
+                    MainConsole.Instance.Warn("[REDIS ASSET SERVICE]: Took " + (endTime - startTime)/10000 +
+                                              " to get asset " + id + " sized " + asset.Data.Length/(1024) + "kbs");
 #endif
             }
             return asset;
@@ -377,7 +385,7 @@ namespace Aurora.RedisServices.AssetService
         public bool RedisSetAsset(AssetBase asset)
         {
             bool duplicate = RedisEnsureConnection((conn) => conn.Exists(DATA_PREFIX + asset.HashCode));
-            
+
             MemoryStream memStream = new MemoryStream();
             byte[] data = asset.Data;
             string hash = asset.HashCode;
@@ -391,7 +399,8 @@ namespace Aurora.RedisServices.AssetService
                 if (duplicate)
                 {
                     if (MainConsole.Instance != null)
-                        MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString + " for " + asset.IDString);
+                        MainConsole.Instance.Debug("[REDIS ASSET SERVICE]: Found duplicate asset " + asset.IDString +
+                                                   " for " + asset.IDString);
 
                     //Only set id --> asset, and not the hashcode --> data to deduplicate
                     RedisEnsureConnection((conn) => conn.Set(asset.IDString, memStream.ToArray()));
@@ -399,14 +408,14 @@ namespace Aurora.RedisServices.AssetService
                 }
 
                 RedisEnsureConnection((conn) =>
-                    {
-                        conn.Pipeline((c) =>
-                        {
-                            c.Set(asset.IDString, memStream.ToArray());
-                            c.Set(DATA_PREFIX + hash, data);
-                        });
-                        return true;
-                    });
+                                          {
+                                              conn.Pipeline((c) =>
+                                                                {
+                                                                    c.Set(asset.IDString, memStream.ToArray());
+                                                                    c.Set(DATA_PREFIX + hash, data);
+                                                                });
+                                              return true;
+                                          });
                 return true;
             }
             catch
@@ -456,7 +465,7 @@ namespace Aurora.RedisServices.AssetService
 
             for (i = 0; i < 5; i++)
             {
-                int off = i * 16;
+                int off = i*16;
                 if (asset.Data.Length <= off)
                     break;
                 int len = 16;
@@ -501,7 +510,7 @@ namespace Aurora.RedisServices.AssetService
             }
 
             AssetBase asset = RedisGetAsset(args[2]);
-            if(asset == null)
+            if (asset == null)
                 asset = RedisGetAsset(args[2]);
 
             if (asset == null || asset.Data.Length == 0)

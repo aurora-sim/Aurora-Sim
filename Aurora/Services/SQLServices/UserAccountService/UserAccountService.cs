@@ -132,7 +132,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, firstName, lastName);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                UserAccount acc = (UserAccount)remoteValue;
+                UserAccount acc = (UserAccount) remoteValue;
                 if (remoteValue != null)
                     m_cache.Cache(acc.PrincipalID, acc);
 
@@ -142,8 +142,8 @@ namespace Aurora.Services.SQLServices.UserAccountService
             UserAccount[] d;
 
             d = m_Database.Get(scopeIDs,
-                    new[] {"FirstName", "LastName"},
-                    new[] {firstName, lastName});
+                               new[] {"FirstName", "LastName"},
+                               new[] {firstName, lastName});
 
             if (d.Length < 1)
                 return null;
@@ -171,7 +171,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, name);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                UserAccount acc = (UserAccount)remoteValue;
+                UserAccount acc = (UserAccount) remoteValue;
                 if (remoteValue != null)
                     m_cache.Cache(acc.PrincipalID, acc);
 
@@ -181,8 +181,8 @@ namespace Aurora.Services.SQLServices.UserAccountService
             UserAccount[] d;
 
             d = m_Database.Get(scopeIDs,
-                    new[] {"Name"},
-                    new[] {name});
+                               new[] {"Name"},
+                               new[] {name});
 
             if (d.Length < 1)
             {
@@ -197,7 +197,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             return d[0];
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod="GetUserAccountUUID")]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod = "GetUserAccountUUID")]
         public UserAccount GetUserAccount(List<UUID> scopeIDs, UUID principalID)
         {
             UserAccount account;
@@ -207,7 +207,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, principalID);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                UserAccount acc = (UserAccount)remoteValue;
+                UserAccount acc = (UserAccount) remoteValue;
                 if (remoteValue != null)
                     m_cache.Cache(principalID, acc);
 
@@ -217,8 +217,8 @@ namespace Aurora.Services.SQLServices.UserAccountService
             UserAccount[] d;
 
             d = m_Database.Get(scopeIDs,
-                    new[] {"PrincipalID"},
-                    new[] {principalID.ToString()});
+                               new[] {"PrincipalID"},
+                               new[] {principalID.ToString()});
 
             if (d.Length < 1)
             {
@@ -239,7 +239,8 @@ namespace Aurora.Services.SQLServices.UserAccountService
 
             if (data.UserTitle == null)
                 data.UserTitle = "";
-            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UpdateUserInformation", data.PrincipalID);
+            m_registry.RequestModuleInterface<ISimulationBase>()
+                      .EventManager.FireGenericEventHandler("UpdateUserInformation", data.PrincipalID);
             return m_Database.Store(data);
         }
 
@@ -248,7 +249,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
         {
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<UserAccount>)remoteValue;
+                return (List<UserAccount>) remoteValue;
 
             UserAccount[] d = m_Database.GetUsers(scopeIDs, query);
 
@@ -264,7 +265,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
         {
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<UserAccount>)remoteValue;
+                return (List<UserAccount>) remoteValue;
 
             UserAccount[] d = m_Database.GetUsers(scopeIDs, query, start, count);
 
@@ -280,7 +281,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
         {
             object remoteValue = DoRemoteByURL("UserAccountServerURI", level, flags);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<UserAccount>)remoteValue;
+                return (List<UserAccount>) remoteValue;
 
             UserAccount[] d = m_Database.GetUsers(scopeIDs, level, flags);
 
@@ -296,7 +297,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
         {
             object remoteValue = DoRemoteByURL("UserAccountServerURI", scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
-                return (uint)remoteValue;
+                return (uint) remoteValue;
 
             return m_Database.NumberOfUsers(scopeIDs, query);
         }
@@ -307,21 +308,21 @@ namespace Aurora.Services.SQLServices.UserAccountService
         }
 
         /// <summary>
-        ///   Create a user
+        ///     Create a user
         /// </summary>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
-        /// <param name = "password"></param>
-        /// <param name = "email"></param>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="password"></param>
+        /// <param name="email"></param>
         public string CreateUser(UUID userID, UUID scopeID, string name, string password, string email)
         {
             return CreateUser(new UserAccount(scopeID, userID, name, email), password);
         }
-        
+
         /// <summary>
-        ///   Create a user
+        ///     Create a user
         /// </summary>
-        /// <param name = "account"></param>
+        /// <param name="account"></param>
         //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public string CreateUser(UserAccount newAcc, string password)
         {
@@ -341,27 +342,32 @@ namespace Aurora.Services.SQLServices.UserAccountService
                         success = m_AuthenticationService.SetPasswordHashed(newAcc.PrincipalID, "UserAccount", password);
                         if (!success)
                         {
-                            MainConsole.Instance.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
-                                             newAcc.Name);
+                            MainConsole.Instance.WarnFormat(
+                                "[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
+                                newAcc.Name);
                             return "Unable to set password";
                         }
                     }
 
-                    MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", newAcc.Name);
+                    MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully",
+                                                    newAcc.Name);
                     //Cache it as well
                     CacheAccount(newAcc);
-                    m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("CreateUserInformation", newAcc.PrincipalID);
+                    m_registry.RequestModuleInterface<ISimulationBase>()
+                              .EventManager.FireGenericEventHandler("CreateUserInformation", newAcc.PrincipalID);
                     return "";
                 }
                 else
                 {
-                    MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", newAcc.Name);
+                    MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}",
+                                                     newAcc.Name);
                     return "Unable to save account";
                 }
             }
             else
             {
-                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", newAcc.Name);
+                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!",
+                                                 newAcc.Name);
                 return "A user with the same name already exists";
             }
         }
@@ -369,16 +375,19 @@ namespace Aurora.Services.SQLServices.UserAccountService
         public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
         {
             if (password != "" && m_AuthenticationService.Authenticate(userID, "UserAccount", password, 0) == "")
-                return;//Not authed
+                return; //Not authed
 
             if (!m_Database.DeleteAccount(userID, archiveInformation))
             {
-                MainConsole.Instance.WarnFormat("Failed to remove the account for {0}, please check that the database is valid after this operation!", userID);
+                MainConsole.Instance.WarnFormat(
+                    "Failed to remove the account for {0}, please check that the database is valid after this operation!",
+                    userID);
                 return;
             }
 
-            if(wipeFromDatabase)
-                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("DeleteUserInformation", userID);
+            if (wipeFromDatabase)
+                m_registry.RequestModuleInterface<ISimulationBase>()
+                          .EventManager.FireGenericEventHandler("DeleteUserInformation", userID);
         }
 
         #endregion
@@ -392,8 +401,10 @@ namespace Aurora.Services.SQLServices.UserAccountService
 
             if (m_profileConnector != null)
             {
-                IUserProfileInfo firstProfile = m_profileConnector.GetUserProfile(GetUserAccount(null, first).PrincipalID);
-                IUserProfileInfo secondProfile = m_profileConnector.GetUserProfile(GetUserAccount(null, second).PrincipalID);
+                IUserProfileInfo firstProfile =
+                    m_profileConnector.GetUserProfile(GetUserAccount(null, first).PrincipalID);
+                IUserProfileInfo secondProfile =
+                    m_profileConnector.GetUserProfile(GetUserAccount(null, second).PrincipalID);
 
                 firstProfile.Partner = secondProfile.PrincipalID;
                 secondProfile.Partner = firstProfile.PrincipalID;
@@ -432,9 +443,11 @@ namespace Aurora.Services.SQLServices.UserAccountService
             }
             bool success = StoreUserAccount(account);
             if (!success)
-                MainConsole.Instance.InfoFormat("Unable to set user profile title for account {0} {1}.", firstName, lastName);
+                MainConsole.Instance.InfoFormat("Unable to set user profile title for account {0} {1}.", firstName,
+                                                lastName);
             else
-                MainConsole.Instance.InfoFormat("User profile title set for user {0} {1} to {2}", firstName, lastName, title);
+                MainConsole.Instance.InfoFormat("User profile title set for user {0} {1} to {2}", firstName, lastName,
+                                                title);
         }
 
         protected void HandleSetUserLevel(string[] cmdparams)
@@ -501,9 +514,9 @@ namespace Aurora.Services.SQLServices.UserAccountService
         }
 
         /// <summary>
-        ///   Handle the create user command from the console.
+        ///     Handle the create user command from the console.
         /// </summary>
-        /// <param name = "cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
+        /// <param name="cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
         protected void HandleCreateUser(string[] cmdparams)
         {
             string name, password, email, uuid, scopeID;
@@ -516,7 +529,8 @@ namespace Aurora.Services.SQLServices.UserAccountService
 
             uuid = MainConsole.Instance.Prompt("UUID (Don't change unless you have a reason)", UUID.Random().ToString());
 
-            scopeID = MainConsole.Instance.Prompt("Scope (Don't change unless you know what this is)", UUID.Zero.ToString());
+            scopeID = MainConsole.Instance.Prompt("Scope (Don't change unless you know what this is)",
+                                                  UUID.Zero.ToString());
 
             CreateUser(UUID.Parse(uuid), UUID.Parse(scopeID), name, Util.Md5Hash(password), email);
         }
@@ -539,7 +553,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
                 success = m_AuthenticationService.SetPassword(account.PrincipalID, "UserAccount", newPassword);
             if (!success)
                 MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Unable to reset password for account {0}.",
-                                  name);
+                                                 name);
             else
                 MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Password reset for user {0}", name);
         }

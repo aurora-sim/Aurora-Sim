@@ -29,25 +29,14 @@ namespace Aurora.BotManager
 
         public bool SetAlwaysRun
         {
-            get
-            {
-                return m_run;
-            }
-            set
-            {
-                m_run = value;
-            }
+            get { return m_run; }
+            set { m_run = value; }
         }
 
         public bool ForceFly
         {
-            get
-            {
-                return false;
-            }
-            set
-            {
-            }
+            get { return false; }
+            set { }
         }
 
         public PhysicsActor PhysicsActor
@@ -69,14 +58,15 @@ namespace Aurora.BotManager
         {
             IChatModule chatModule = m_object.Scene.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
-                chatModule.SimChat(message, (ChatTypeEnum)sayType, channel,
-                    m_object.RootChild.AbsolutePosition, m_object.Name, m_object.UUID, false, m_object.Scene);
+                chatModule.SimChat(message, (ChatTypeEnum) sayType, channel,
+                                   m_object.RootChild.AbsolutePosition, m_object.Name, m_object.UUID, false,
+                                   m_object.Scene);
         }
 
         public void SendInstantMessage(GridInstantMessage im)
         {
             IMessageTransferModule m_TransferModule =
-                    m_object.Scene.RequestModuleInterface<IMessageTransferModule>();
+                m_object.Scene.RequestModuleInterface<IMessageTransferModule>();
             if (m_TransferModule != null)
                 m_TransferModule.SendInstantMessage(im);
         }
@@ -92,15 +82,15 @@ namespace Aurora.BotManager
 
         public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, Quaternion bodyRotation, bool isMoving)
         {
-            if(isMoving)
+            if (isMoving)
                 m_hasStoppedMoving = false;
-            m_object.AbsolutePosition += toward * (m_speed * (1f / 45f));
+            m_object.AbsolutePosition += toward*(m_speed*(1f/45f));
             m_object.ScheduleGroupTerseUpdate();
         }
 
         public void UpdateMovementAnimations(bool sendTerseUpdate)
         {
-            if(sendTerseUpdate)
+            if (sendTerseUpdate)
                 m_object.ScheduleGroupTerseUpdate();
         }
 
@@ -124,9 +114,9 @@ namespace Aurora.BotManager
             if (clearPath)
                 m_bot.m_nodeGraph.Clear();
             //Send the stop message
-            m_bot.m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
+            m_bot.m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
             if (fly)
-                m_bot.m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+                m_bot.m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
             OnBotAgentUpdate(Vector3.Zero, m_bot.m_movementFlag, m_bot.m_bodyDirection, false);
 
             if (m_object.RootChild.PhysActor != null)

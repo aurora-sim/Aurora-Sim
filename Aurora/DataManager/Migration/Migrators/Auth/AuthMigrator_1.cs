@@ -51,17 +51,17 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("passwordHash", ColumnTypes.Char32),
                 ColDef("passwordSalt", ColumnTypes.Char32),
                 ColDef("accountType", ColumnTypes.Char32)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "UUID", "accountType" }, IndexType.Primary)
-            ));
+                                  ), IndexDefs(
+                                      IndexDef(new string[2] {"UUID", "accountType"}, IndexType.Primary)
+                                         ));
 
             AddSchema("tokens", ColDefs(
                 ColDef("UUID", ColumnTypes.Char36),
                 ColDef("token", ColumnTypes.String255),
                 ColDef("validity", ColumnTypes.Date)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "UUID", "token" }, IndexType.Primary)
-            ));
+                                    ), IndexDefs(
+                                        IndexDef(new string[2] {"UUID", "token"}, IndexType.Primary)
+                                           ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

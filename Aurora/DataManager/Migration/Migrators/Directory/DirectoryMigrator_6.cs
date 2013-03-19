@@ -64,9 +64,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("SnapshotID", ColumnTypes.String50),
                 ColDef("Bitmap", ColumnTypes.LongText),
                 ColDef("Category", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary)
-            ));
+                                          ), IndexDefs(
+                                              IndexDef(new string[1] {"ParcelID"}, IndexType.Primary)
+                                                 ));
 
             AddSchema("asevents", ColDefs(
                 ColDef("EID", ColumnTypes.Integer11),
@@ -84,9 +84,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("name", ColumnTypes.String50),
                 ColDef("description", ColumnTypes.String255),
                 ColDef("category", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "EID" }, IndexType.Primary)
-            ));
+                                      ), IndexDefs(
+                                          IndexDef(new string[1] {"EID"}, IndexType.Primary)
+                                             ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

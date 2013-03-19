@@ -45,20 +45,22 @@ namespace Aurora.Services
         private IRegionClientCapsService m_service;
 
         /// <summary>
-        /// Callback for a viewerstats cap
+        ///     Callback for a viewerstats cap
         /// </summary>
-        /// <param name = "request"></param>
-        /// <param name = "path"></param>
-        /// <param name = "httpRequest"></param>
-        /// <param name = "httpResponse"></param>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         public byte[] ViewerStatsReport(string path, Stream request, OSHttpRequest httpRequest,
-                                                            OSHttpResponse httpResponse)
+                                        OSHttpResponse httpResponse)
         {
-            IUserStatsDataConnector dataConnector = Aurora.DataManager.DataManager.RequestPlugin<IUserStatsDataConnector>();
+            IUserStatsDataConnector dataConnector =
+                Aurora.DataManager.DataManager.RequestPlugin<IUserStatsDataConnector>();
 
-            OpenMetaverse.Messages.Linden.ViewerStatsMessage vsm = new OpenMetaverse.Messages.Linden.ViewerStatsMessage();
-            vsm.Deserialize((OSDMap)OSDParser.DeserializeLLSDXml(request));
+            OpenMetaverse.Messages.Linden.ViewerStatsMessage vsm =
+                new OpenMetaverse.Messages.Linden.ViewerStatsMessage();
+            vsm.Deserialize((OSDMap) OSDParser.DeserializeLLSDXml(request));
             dataConnector.UpdateUserStats(vsm, m_service.AgentID, m_service.Region.RegionID);
 
             return MainServer.BlankResponse;
@@ -67,7 +69,9 @@ namespace Aurora.Services
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
-            service.AddStreamHandler("ViewerStats", new GenericStreamHandler("POST", service.CreateCAPS("ViewerStats", ""), ViewerStatsReport));
+            service.AddStreamHandler("ViewerStats",
+                                     new GenericStreamHandler("POST", service.CreateCAPS("ViewerStats", ""),
+                                                              ViewerStatsReport));
         }
 
         public void DeregisterCaps()
@@ -89,7 +93,8 @@ namespace Aurora.Services
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             MainConsole.Instance.Commands.AddCommand("user metrics", "user metrics", "Gives metrics on users", Metrics);
-            MainConsole.Instance.Commands.AddCommand("clear user metrics", "clear user metrics", "Clear all saved user metrics", ClearMetrics);
+            MainConsole.Instance.Commands.AddCommand("clear user metrics", "clear user metrics",
+                                                     "Clear all saved user metrics", ClearMetrics);
         }
 
         public void FinishedStartup()
@@ -108,13 +113,15 @@ namespace Aurora.Services
             IUserStatsDataConnector dc = Aurora.DataManager.DataManager.RequestPlugin<IUserStatsDataConnector>();
             if (dc != null)
             {
-                MainConsole.Instance.Info(string.Format("Graphic cards: {0} logins have used ATI, {1} logins have used NVIDIA, {2} logins have used Intel graphics",
-                    dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "ATI")),
-                    dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "NVIDIA")),
-                    dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "Intel"))));
+                MainConsole.Instance.Info(
+                    string.Format(
+                        "Graphic cards: {0} logins have used ATI, {1} logins have used NVIDIA, {2} logins have used Intel graphics",
+                        dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "ATI")),
+                        dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "NVIDIA")),
+                        dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "Intel"))));
 
                 List<float> fps = dc.Get("fps").ConvertAll<float>((s) => float.Parse(s));
-                if(fps.Count > 0)
+                if (fps.Count > 0)
                     MainConsole.Instance.Info(string.Format("Average fps: {0}", fps.Average()));
 
                 List<float> run_time = dc.Get("run_time").ConvertAll<float>((s) => float.Parse(s));
@@ -127,7 +134,7 @@ namespace Aurora.Services
 
                 List<int> mem_use = dc.Get("mem_use").ConvertAll<int>((s) => int.Parse(s));
                 if (mem_use.Count > 0)
-                    MainConsole.Instance.Info(string.Format("Average viewer memory use: {0} mb", mem_use.Average() / 1000));
+                    MainConsole.Instance.Info(string.Format("Average viewer memory use: {0} mb", mem_use.Average()/1000));
 
                 List<float> ping = dc.Get("ping").ConvertAll<float>((s) => float.Parse(s));
                 if (ping.Count > 0)
@@ -139,5 +146,4 @@ namespace Aurora.Services
             }
         }
     }
-
 }

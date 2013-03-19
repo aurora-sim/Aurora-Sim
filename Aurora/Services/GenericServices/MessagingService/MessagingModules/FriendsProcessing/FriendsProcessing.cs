@@ -98,7 +98,8 @@ namespace Aurora.Services
                             //Find the root agent
                             OnlineFriends.Add(FriendToInform);
                             //Post!
-                            asyncPoster.Post(user.CurrentRegionURI, SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
+                            asyncPoster.Post(user.CurrentRegionURI,
+                                             SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
                         }
                     }
                     //If the user is coming online, send all their friends online statuses to them
@@ -120,7 +121,7 @@ namespace Aurora.Services
             //We need to check and see if this is an AgentStatusChange
             if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChange")
             {
-                OSDMap innerMessage = (OSDMap)message["Message"];
+                OSDMap innerMessage = (OSDMap) message["Message"];
                 //We got a message, now pass it on to the clients that need it
                 UUID AgentID = innerMessage["AgentID"].AsUUID();
                 UUID FriendToInformID = innerMessage["FriendToInformID"].AsUUID();
@@ -140,9 +141,9 @@ namespace Aurora.Services
             }
             else if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChanges")
             {
-                OSDMap innerMessage = (OSDMap)message["Message"];
+                OSDMap innerMessage = (OSDMap) message["Message"];
                 //We got a message, now pass it on to the clients that need it
-                List<UUID> AgentIDs = ((OSDArray)innerMessage["AgentIDs"]).ConvertAll<UUID>((o)=>o);
+                List<UUID> AgentIDs = ((OSDArray) innerMessage["AgentIDs"]).ConvertAll<UUID>((o) => o);
                 UUID FriendToInformID = innerMessage["FriendToInformID"].AsUUID();
                 bool NewStatus = innerMessage["NewStatus"].AsBoolean();
 
@@ -154,7 +155,7 @@ namespace Aurora.Services
                     if (friendsModule != null)
                     {
                         //Send the message
-                        foreach(UUID agentID in AgentIDs)
+                        foreach (UUID agentID in AgentIDs)
                             friendsModule.SendFriendsStatusMessage(FriendToInformID, agentID, NewStatus);
                     }
                 }
@@ -165,7 +166,8 @@ namespace Aurora.Services
                 UUID targetID = body["Target"].AsUUID();
                 IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
                 UserInfo info;
-                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null &&
+                    info.IsOnline)
                 {
                     //Forward the message
                     asyncPost.Post(info.CurrentRegionURI, message);
@@ -177,7 +179,8 @@ namespace Aurora.Services
                 UUID targetID = body["Friend"].AsUUID();
                 IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
                 UserInfo info;
-                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null &&
+                    info.IsOnline)
                 {
                     //Forward the message
                     asyncPost.Post(info.CurrentRegionURI, message);
@@ -189,7 +192,8 @@ namespace Aurora.Services
                 UUID targetID = body["ExFriend"].AsUUID();
                 IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
                 UserInfo info;
-                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null &&
+                    info.IsOnline)
                 {
                     //Forward the message
                     asyncPost.Post(info.CurrentRegionURI, message);
@@ -201,7 +205,8 @@ namespace Aurora.Services
                 UUID targetID = body["FriendID"].AsUUID();
                 IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
                 UserInfo info;
-                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null &&
+                    info.IsOnline)
                 {
                     //Forward the message
                     asyncPost.Post(info.CurrentRegionURI, message);
@@ -213,7 +218,8 @@ namespace Aurora.Services
                 UUID targetID = body["FriendID"].AsUUID();
                 IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
                 UserInfo info;
-                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null && info.IsOnline)
+                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(targetID.ToString())) != null &&
+                    info.IsOnline)
                 {
                     //Forward the message
                     asyncPost.Post(info.CurrentRegionURI, message);

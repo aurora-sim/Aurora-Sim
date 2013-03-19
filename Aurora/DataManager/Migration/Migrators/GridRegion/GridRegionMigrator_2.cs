@@ -60,12 +60,12 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Flags", ColumnTypes.Integer11),
                 ColDef("SessionID", ColumnTypes.String45),
                 ColDef("Info", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[2] { "ScopeID", "RegionUUID" }, IndexType.Primary),
-                IndexDef(new string[1] { "RegionName" }, IndexType.Unique),
-                IndexDef(new string[2] { "Flags", "ScopeID" }, IndexType.Index),
-                IndexDef(new string[3] { "LocX", "LocY", "ScopeID" }, IndexType.Unique)
-            ));
+                                         ), IndexDefs(
+                                             IndexDef(new string[2] {"ScopeID", "RegionUUID"}, IndexType.Primary),
+                                             IndexDef(new string[1] {"RegionName"}, IndexType.Unique),
+                                             IndexDef(new string[2] {"Flags", "ScopeID"}, IndexType.Index),
+                                             IndexDef(new string[3] {"LocX", "LocY", "ScopeID"}, IndexType.Unique)
+                                                ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

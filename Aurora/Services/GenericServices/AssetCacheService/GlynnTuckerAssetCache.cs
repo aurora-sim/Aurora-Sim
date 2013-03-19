@@ -116,7 +116,7 @@ namespace Aurora.Services
             found = asset != null;
             Debug(asset);
 
-            return (AssetBase)asset;
+            return (AssetBase) asset;
         }
 
         public byte[] GetData(string id, out bool found)
@@ -153,7 +153,7 @@ namespace Aurora.Services
 
                 if ((m_Requests%m_DebugRate) == 0)
                     MainConsole.Instance.DebugFormat("[ASSET CACHE]: Hit Rate {0} / {1} == {2}%", m_Hits, m_Requests,
-                                      (m_Hits/(float) m_Requests)*100.0f);
+                                                     (m_Hits/(float) m_Requests)*100.0f);
             }
             // End instrumentation
         }

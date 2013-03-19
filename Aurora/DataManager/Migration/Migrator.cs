@@ -250,7 +250,7 @@ namespace Aurora.DataManager.Migration
 
         protected IndexDefinition IndexDef(string[] fields, IndexType indexType)
         {
-            return new IndexDefinition { Fields = fields, Type = indexType };
+            return new IndexDefinition {Fields = fields, Type = indexType};
         }
 
         protected void AddSchema(string table, ColumnDefinition[] definitions)
@@ -272,11 +272,11 @@ namespace Aurora.DataManager.Migration
         {
             //Remove all of the tables that have this name
             schema.RemoveAll(delegate(SchemaDefinition r)
-            {
-                if (r.Name == table)
-                    return true;
-                return false;
-            });
+                                 {
+                                     if (r.Name == table)
+                                         return true;
+                                     return false;
+                                 });
         }
 
         protected void EnsureAllTablesInSchemaExist(IDataConnector genericData)
@@ -342,9 +342,11 @@ namespace Aurora.DataManager.Migration
             }
         }
 
-        private void CopyTableToTempVersion(IDataConnector genericData, string tablename, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
+        private void CopyTableToTempVersion(IDataConnector genericData, string tablename,
+                                            ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
-            genericData.CopyTableToTable(tablename, GetTempTableNameFromTableName(tablename), columnDefinitions, indexDefinitions);
+            genericData.CopyTableToTable(tablename, GetTempTableNameFromTableName(tablename), columnDefinitions,
+                                         indexDefinitions);
         }
 
         private string GetTempTableNameFromTableName(string tablename)
@@ -352,9 +354,11 @@ namespace Aurora.DataManager.Migration
             return tablename + "_temp";
         }
 
-        private void RestoreTempTableToReal(IDataConnector genericData, string tablename, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
+        private void RestoreTempTableToReal(IDataConnector genericData, string tablename,
+                                            ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
-            genericData.CopyTableToTable(GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)), tablename, columnDefinitions, indexDefinitions);
+            genericData.CopyTableToTable(GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)),
+                                         tablename, columnDefinitions, indexDefinitions);
         }
 
         public void ClearRestorePoint(IDataConnector genericData)

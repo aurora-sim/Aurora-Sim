@@ -55,9 +55,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("UserFlags", ColumnTypes.Integer11),
                 ColDef("UserTitle", ColumnTypes.String64),
                 ColDef("Name", ColumnTypes.String255)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "PrincipalID" }, IndexType.Primary)
-            ));
+                                          ), IndexDefs(
+                                              IndexDef(new string[1] {"PrincipalID"}, IndexType.Primary)
+                                                 ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

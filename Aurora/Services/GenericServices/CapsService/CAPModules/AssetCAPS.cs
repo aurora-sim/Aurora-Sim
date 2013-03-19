@@ -59,17 +59,19 @@ namespace Aurora.Services
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
 
             service.AddStreamHandler("GetTexture",
-                new GenericStreamHandler("GET", service.CreateCAPS("GetTexture", ""),
-                                                        ProcessGetTexture));
+                                     new GenericStreamHandler("GET", service.CreateCAPS("GetTexture", ""),
+                                                              ProcessGetTexture));
             service.AddStreamHandler("UploadBakedTexture",
-                new GenericStreamHandler("POST", service.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
-                                                        UploadBakedTexture));
+                                     new GenericStreamHandler("POST",
+                                                              service.CreateCAPS("UploadBakedTexture",
+                                                                                 m_uploadBakedTexturePath),
+                                                              UploadBakedTexture));
             service.AddStreamHandler("GetMesh",
-                new GenericStreamHandler("GET", service.CreateCAPS("GetMesh", ""),
-                                                       ProcessGetMesh));
+                                     new GenericStreamHandler("GET", service.CreateCAPS("GetMesh", ""),
+                                                              ProcessGetMesh));
             service.AddStreamHandler("UpdateAvatarAppearance",
-                new GenericStreamHandler("GET", service.CreateCAPS("UpdateAvatarAppearance", ""),
-                                                        UpdateAvatarAppearance));
+                                     new GenericStreamHandler("GET", service.CreateCAPS("UpdateAvatarAppearance", ""),
+                                                              UpdateAvatarAppearance));
         }
 
         public void EnteringRegion()
@@ -86,7 +88,8 @@ namespace Aurora.Services
 
         #region Get Texture
 
-        private byte[] ProcessGetTexture(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        private byte[] ProcessGetTexture(string path, Stream request, OSHttpRequest httpRequest,
+                                         OSHttpResponse httpResponse)
         {
             //MainConsole.Instance.DebugFormat("[GETTEXTURE]: called in {0}", m_scene.RegionInfo.RegionName);
 
@@ -97,7 +100,7 @@ namespace Aurora.Services
 
             if (m_assetService == null)
             {
-                httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
                 return MainServer.NoResponse;
             }
 
@@ -106,12 +109,12 @@ namespace Aurora.Services
             {
                 string[] formats;
                 if (!string.IsNullOrEmpty(format))
-                    formats = new[] { format.ToLower() };
+                    formats = new[] {format.ToLower()};
                 else
                 {
                     formats = WebUtils.GetPreferredImageTypes(httpRequest.Headers.Get("Accept"));
                     if (formats.Length == 0)
-                        formats = new[] { DefaultFormat }; // default
+                        formats = new[] {DefaultFormat}; // default
                 }
                 // OK, we have an array with preferred formats, possibly with only one entry
                 byte[] response;
@@ -123,22 +126,23 @@ namespace Aurora.Services
             }
             else
             {
-                MainConsole.Instance.Warn("[GETTEXTURE]: Failed to parse a texture_id from GetTexture request: " + httpRequest.Url);
+                MainConsole.Instance.Warn("[GETTEXTURE]: Failed to parse a texture_id from GetTexture request: " +
+                                          httpRequest.Url);
             }
 
-            httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+            httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
             return MainServer.NoResponse;
         }
 
         /// <summary>
-        ///
         /// </summary>
         /// <param name="httpRequest"></param>
         /// <param name="httpResponse"></param>
         /// <param name="textureID"></param>
         /// <param name="format"></param>
         /// <returns>False for "caller try another codec"; true otherwise</returns>
-        private bool FetchTexture(OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID textureID, string format, out byte[] response)
+        private bool FetchTexture(OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID textureID, string format,
+                                  out byte[] response)
         {
             //MainConsole.Instance.DebugFormat("[GETTEXTURE]: {0} with requested format {1}", textureID, format);
             AssetBase texture;
@@ -154,9 +158,10 @@ namespace Aurora.Services
 
                 if (texture != null)
                 {
-                    if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
+                    if (texture.Type != (sbyte) AssetType.Texture && texture.Type != (sbyte) AssetType.Unknown &&
+                        texture.Type != (sbyte) AssetType.Simstate)
                     {
-                        httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                        httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
                         response = MainServer.NoResponse;
                         return true;
                     }
@@ -185,9 +190,10 @@ namespace Aurora.Services
 
                     if (texture != null)
                     {
-                        if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
+                        if (texture.Type != (sbyte) AssetType.Texture && texture.Type != (sbyte) AssetType.Unknown &&
+                            texture.Type != (sbyte) AssetType.Simstate)
                         {
-                            httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                            httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
                             response = MainServer.NoResponse;
                             return true;
                         }
@@ -215,9 +221,10 @@ namespace Aurora.Services
                 }
                 else // it was on the cache
                 {
-                    if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
+                    if (texture.Type != (sbyte) AssetType.Texture && texture.Type != (sbyte) AssetType.Unknown &&
+                        texture.Type != (sbyte) AssetType.Simstate)
                     {
-                        httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                        httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
                         response = MainServer.NoResponse;
                         return true;
                     }
@@ -226,12 +233,11 @@ namespace Aurora.Services
                     texture = null;
                     return true;
                 }
-
             }
 
             // not found
             MainConsole.Instance.Warn("[GETTEXTURE]: Texture " + textureID + " not found");
-            httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+            httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
             response = MainServer.NoResponse;
             return true;
         }
@@ -253,7 +259,7 @@ namespace Aurora.Services
                     // sending back the last byte instead of an error status
                     if (start >= texture.Data.Length)
                     {
-                        response.StatusCode = (int)System.Net.HttpStatusCode.RequestedRangeNotSatisfiable;
+                        response.StatusCode = (int) System.Net.HttpStatusCode.RequestedRangeNotSatisfiable;
                         return MainServer.NoResponse;
                     }
                     else
@@ -265,12 +271,13 @@ namespace Aurora.Services
                         //MainConsole.Instance.Debug("Serving " + start + " to " + end + " of " + texture.Data.Length + " bytes for texture " + texture.ID);
 
                         if (len < texture.Data.Length)
-                            response.StatusCode = (int)System.Net.HttpStatusCode.PartialContent;
+                            response.StatusCode = (int) System.Net.HttpStatusCode.PartialContent;
                         else
-                            response.StatusCode = (int)System.Net.HttpStatusCode.OK;
+                            response.StatusCode = (int) System.Net.HttpStatusCode.OK;
 
                         response.ContentType = texture.TypeString;
-                        response.AddHeader("Content-Range", String.Format("bytes {0}-{1}/{2}", start, end, texture.Data.Length));
+                        response.AddHeader("Content-Range",
+                                           String.Format("bytes {0}-{1}/{2}", start, end, texture.Data.Length));
                         byte[] array = new byte[len];
                         Array.Copy(texture.Data, start, array, 0, len);
                         return array;
@@ -279,14 +286,14 @@ namespace Aurora.Services
                 else
                 {
                     MainConsole.Instance.Warn("[GETTEXTURE]: Malformed Range header: " + range);
-                    response.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
+                    response.StatusCode = (int) System.Net.HttpStatusCode.BadRequest;
                     return MainServer.NoResponse;
                 }
             }
             else // JP2's or other formats
             {
                 // Full content request
-                response.StatusCode = (int)System.Net.HttpStatusCode.OK;
+                response.StatusCode = (int) System.Net.HttpStatusCode.OK;
                 response.ContentType = texture.TypeString;
                 if (format == DefaultFormat)
                     response.ContentType = texture.TypeString;
@@ -347,12 +354,12 @@ namespace Aurora.Services
                     }
                     else
                         MainConsole.Instance.WarnFormat("[GETTEXTURE]: No such codec {0}", format);
-
                 }
             }
             catch (Exception e)
             {
-                MainConsole.Instance.WarnFormat("[GETTEXTURE]: Unable to convert texture {0} to {1}: {2}", texture.ID, format, e.Message);
+                MainConsole.Instance.WarnFormat("[GETTEXTURE]: Unable to convert texture {0} to {1}: {2}", texture.ID,
+                                                format, e.Message);
             }
             finally
             {
@@ -392,7 +399,8 @@ namespace Aurora.Services
 
         #region Baked Textures
 
-        public byte[] UploadBakedTexture(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] UploadBakedTexture(string path, Stream request, OSHttpRequest httpRequest,
+                                         OSHttpResponse httpResponse)
         {
             try
             {
@@ -403,12 +411,12 @@ namespace Aurora.Services
                 string uploadpath = m_service.CreateCAPS("Upload" + uploaderPath, uploaderPath);
                 BakedTextureUploader uploader =
                     new BakedTextureUploader(uploadpath, "Upload" + uploaderPath,
-                        m_service);
+                                             m_service);
                 uploader.OnUpLoad += BakedTextureUploaded;
 
                 m_service.AddStreamHandler(uploadpath,
-                        new GenericStreamHandler("POST", uploadpath,
-                        uploader.uploaderCaps));
+                                           new GenericStreamHandler("POST", uploadpath,
+                                                                    uploader.uploaderCaps));
 
                 string uploaderURL = m_service.HostUri + uploadpath;
                 OSDMap map = new OSDMap();
@@ -425,6 +433,7 @@ namespace Aurora.Services
         }
 
         public delegate void UploadedBakedTexture(byte[] data, out UUID newAssetID);
+
         public class BakedTextureUploader
         {
             public event UploadedBakedTexture OnUpLoad;
@@ -442,14 +451,13 @@ namespace Aurora.Services
             }
 
             /// <summary>
-            ///
             /// </summary>
             /// <param name="data"></param>
             /// <param name="path"></param>
             /// <param name="param"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
-                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 handlerUpLoad = OnUpLoad;
                 UUID newAssetID;
@@ -495,13 +503,13 @@ namespace Aurora.Services
                 AssetBase mesh = m_assetService.GetCached(meshID.ToString());
                 if (mesh != null)
                 {
-                    if (mesh.Type == (SByte)AssetType.Mesh)
+                    if (mesh.Type == (SByte) AssetType.Mesh)
                     {
                         httpResponse.StatusCode = 200;
                         httpResponse.ContentType = "application/vnd.ll.mesh";
                         return mesh.Data;
                     }
-                    // Optionally add additional mesh types here
+                        // Optionally add additional mesh types here
                     else
                     {
                         httpResponse.StatusCode = 404; //501; //410; //404;
@@ -514,13 +522,13 @@ namespace Aurora.Services
                     mesh = m_assetService.GetMesh(meshID.ToString());
                     if (mesh != null)
                     {
-                        if (mesh.Type == (SByte)AssetType.Mesh)
+                        if (mesh.Type == (SByte) AssetType.Mesh)
                         {
                             httpResponse.StatusCode = 200;
                             httpResponse.ContentType = "application/vnd.ll.mesh";
                             return mesh.Data;
                         }
-                        // Optionally add additional mesh types here
+                            // Optionally add additional mesh types here
                         else
                         {
                             httpResponse.StatusCode = 404; //501; //410; //404;
@@ -536,7 +544,6 @@ namespace Aurora.Services
                         return Encoding.UTF8.GetBytes("Your Mesh wasn't found.  Sorry!");
                     }
                 }
-
             }
 
             httpResponse.StatusCode = 404;
@@ -547,11 +554,12 @@ namespace Aurora.Services
 
         #region Server Side Baked Textures
 
-        public byte[] UpdateAvatarAppearance(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] UpdateAvatarAppearance(string path, Stream request, OSHttpRequest httpRequest,
+                                             OSHttpResponse httpResponse)
         {
             try
             {
-                OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
                 int cof_version = rm["cof_version"].AsInteger();
 
                 OSDMap map = new OSDMap();

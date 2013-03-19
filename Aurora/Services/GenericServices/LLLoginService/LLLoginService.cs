@@ -100,15 +100,21 @@ namespace Aurora.Services
             m_forceUserToWearFolderName = m_loginServerConfig.GetString("forceUserToWearFolderName", "");
             m_forceUserToWearFolderOwnerUUID = m_loginServerConfig.GetString("forceUserToWearFolderOwner", "");
             m_DefaultHomeRegion = m_loginServerConfig.GetString("DefaultHomeRegion", "");
-            m_DefaultUserAvatarArchive = m_loginServerConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
+            m_DefaultUserAvatarArchive = m_loginServerConfig.GetString("DefaultAvatarArchiveForNewUser",
+                                                                       m_DefaultUserAvatarArchive);
             m_AllowAnonymousLogin = m_loginServerConfig.GetBoolean("AllowAnonymousLogin", false);
             m_AllowDuplicateLogin = m_loginServerConfig.GetBoolean("AllowDuplicateLogin", false);
-            LLLoginResponseRegister.RegisterValue("AllowFirstLife", m_loginServerConfig.GetBoolean("AllowFirstLifeInProfile", true) ? "Y" : "N");
+            LLLoginResponseRegister.RegisterValue("AllowFirstLife",
+                                                  m_loginServerConfig.GetBoolean("AllowFirstLifeInProfile", true)
+                                                      ? "Y"
+                                                      : "N");
             LLLoginResponseRegister.RegisterValue("MaxAgentGroups", m_loginServerConfig.GetInt("MaxAgentGroups", 100));
-            LLLoginResponseRegister.RegisterValue("VoiceServerType", m_loginServerConfig.GetString("VoiceServerType", "vivox"));
+            LLLoginResponseRegister.RegisterValue("VoiceServerType",
+                                                  m_loginServerConfig.GetString("VoiceServerType", "vivox"));
             ReadEventValues(m_loginServerConfig);
             ReadClassifiedValues(m_loginServerConfig);
-            LLLoginResponseRegister.RegisterValue("AllowExportPermission", m_loginServerConfig.GetBoolean("AllowUsageOfExportPermissions", true));
+            LLLoginResponseRegister.RegisterValue("AllowExportPermission",
+                                                  m_loginServerConfig.GetBoolean("AllowUsageOfExportPermissions", true));
 
             m_DefaultRegionName = m_loginServerConfig.GetString("DefaultRegion", String.Empty);
             m_WelcomeMessage = m_loginServerConfig.GetString("WelcomeMessage", "");
@@ -124,8 +130,10 @@ namespace Aurora.Services
             m_AllowRemoteSetLoginLevel = m_loginServerConfig.GetBoolean("AllowRemoteSetLoginLevel", false);
             m_MinLoginLevel = m_loginServerConfig.GetInt("MinLoginLevel", 0);
             LLLoginResponseRegister.RegisterValue("SunTexture", m_loginServerConfig.GetString("SunTexture", sunTexture));
-            LLLoginResponseRegister.RegisterValue("MoonTexture", m_loginServerConfig.GetString("MoonTexture", moonTexture));
-            LLLoginResponseRegister.RegisterValue("CloudTexture", m_loginServerConfig.GetString("CloudTexture", cloudTexture));
+            LLLoginResponseRegister.RegisterValue("MoonTexture",
+                                                  m_loginServerConfig.GetString("MoonTexture", moonTexture));
+            LLLoginResponseRegister.RegisterValue("CloudTexture",
+                                                  m_loginServerConfig.GetString("CloudTexture", cloudTexture));
             registry.RegisterModuleInterface<ILoginService>(this);
             m_registry = registry;
         }
@@ -182,30 +190,30 @@ namespace Aurora.Services
 
         public void ReadEventValues(IConfig config)
         {
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Discussion, "Discussion");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Sports, "Sports");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.LiveMusic, "Live Music");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Commercial, "Commercial");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Nightlife, "Nightlife/Entertainment");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Games, "Games/Contests");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Pageants, "Pageants");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Education, "Education");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Arts, "Arts and Culture");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Charity, "Charity/Support Groups");
-            SetEventCategories((Int32)DirectoryManager.EventCategories.Miscellaneous, "Miscellaneous");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Discussion, "Discussion");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Sports, "Sports");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.LiveMusic, "Live Music");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Commercial, "Commercial");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Nightlife, "Nightlife/Entertainment");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Games, "Games/Contests");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Pageants, "Pageants");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Education, "Education");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Arts, "Arts and Culture");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Charity, "Charity/Support Groups");
+            SetEventCategories((Int32) DirectoryManager.EventCategories.Miscellaneous, "Miscellaneous");
         }
 
         public void ReadClassifiedValues(IConfig config)
         {
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Shopping, "Shopping");
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.LandRental, "Land Rental");
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.PropertyRental, "Property Rental");
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.SpecialAttraction, "Special Attraction");
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.NewProducts, "New Products");
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Employment, "Employment");
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Wanted, "Wanted");
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Service, "Service");
-            AddClassifiedCategory((Int32)DirectoryManager.ClassifiedCategories.Personal, "Personal");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.Shopping, "Shopping");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.LandRental, "Land Rental");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.PropertyRental, "Property Rental");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.SpecialAttraction, "Special Attraction");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.NewProducts, "New Products");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.Employment, "Employment");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.Wanted, "Wanted");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.Service, "Service");
+            AddClassifiedCategory((Int32) DirectoryManager.ClassifiedCategories.Personal, "Personal");
         }
 
         public void SetEventCategories(Int32 value, string categoryName)
@@ -237,7 +245,8 @@ namespace Aurora.Services
                 UserAccount account = m_UserAccountService.GetUserAccount(null, firstName, lastName);
                 if (account == null)
                 {
-                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Set Level failed, user {0} {1} not found", firstName, lastName);
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Set Level failed, user {0} {1} not found",
+                                                    firstName, lastName);
                     return response;
                 }
 
@@ -267,7 +276,8 @@ namespace Aurora.Services
             }
 
             m_MinLoginLevel = level;
-            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login level set to {0} by {1} {2}", level, firstName, lastName);
+            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login level set to {0} by {1} {2}", level, firstName,
+                                            lastName);
 
             response["success"] = true;
             return response;
@@ -275,14 +285,17 @@ namespace Aurora.Services
 
         public bool VerifyClient(UUID AgentID, string name, string authType, string passwd)
         {
-            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}", AgentID == UUID.Zero ?
-                name : AgentID.ToString());
+            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
+                                            AgentID == UUID.Zero
+                                                ? name
+                                                : AgentID.ToString());
 
             //
             // Get the account and check that it exists
             //
-            UserAccount account = AgentID != UUID.Zero ? m_UserAccountService.GetUserAccount(null, AgentID) :
-                m_UserAccountService.GetUserAccount(null, name);
+            UserAccount account = AgentID != UUID.Zero
+                                      ? m_UserAccountService.GetUserAccount(null, AgentID)
+                                      : m_UserAccountService.GetUserAccount(null, name);
 
             if (account == null)
             {
@@ -313,16 +326,19 @@ namespace Aurora.Services
         }
 
         public LoginResponse Login(UUID AgentID, string Name, string authType, string passwd, string startLocation,
-            string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData)
+                                   string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP,
+                                   Hashtable requestData)
         {
             LoginResponse response;
             UUID session = UUID.Random();
             UUID secureSession = UUID.Zero;
 
-            UserAccount account = AgentID != UUID.Zero ? m_UserAccountService.GetUserAccount(null, AgentID) : m_UserAccountService.GetUserAccount(null, Name);
+            UserAccount account = AgentID != UUID.Zero
+                                      ? m_UserAccountService.GetUserAccount(null, AgentID)
+                                      : m_UserAccountService.GetUserAccount(null, Name);
             if (account == null && m_AllowAnonymousLogin)
             {
-                m_UserAccountService.CreateUser(Name, passwd.StartsWith("$1$") ? passwd.Remove(0, 3):passwd, "");
+                m_UserAccountService.CreateUser(Name, passwd.StartsWith("$1$") ? passwd.Remove(0, 3) : passwd, "");
                 account = m_UserAccountService.GetUserAccount(null, Name);
             }
             if (account == null)
@@ -331,12 +347,14 @@ namespace Aurora.Services
                 return LLFailedLoginResponse.AccountProblem;
             }
 
-            if (account.UserLevel < 0)//No allowing anyone less than 0
+            if (account.UserLevel < 0) //No allowing anyone less than 0
                 return LLFailedLoginResponse.PermanentBannedProblem;
 
             if (account.UserLevel < m_MinLoginLevel)
             {
-                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {1}, reason: login is blocked for user level {0}", account.UserLevel, account.Name);
+                MainConsole.Instance.InfoFormat(
+                    "[LLOGIN SERVICE]: Login failed for user {1}, reason: login is blocked for user level {0}",
+                    account.UserLevel, account.Name);
                 return LLFailedLoginResponse.LoginBlockedProblem;
             }
 
@@ -357,10 +375,11 @@ namespace Aurora.Services
                 if ((response = module.Login(requestData, account, agent, authType, passwd, out data)) != null)
                     return response;
                 if (data != null)
-                    secureSession = (UUID)data;//TODO: NEED TO FIND BETTER WAY TO GET THIS DATA
+                    secureSession = (UUID) data; //TODO: NEED TO FIND BETTER WAY TO GET THIS DATA
             }
 
-            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
+            MainConsole.Instance.InfoFormat(
+                "[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
                 Name, clientIP.Address, clientVersion, startLocation);
             try
             {
@@ -373,29 +392,40 @@ namespace Aurora.Services
                 //
                 if (m_RequireInventory && m_InventoryService == null)
                 {
-                    MainConsole.Instance.WarnFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: inventory service not set up", account.Name);
+                    MainConsole.Instance.WarnFormat(
+                        "[LLOGIN SERVICE]: Login failed for user {0}, reason: inventory service not set up",
+                        account.Name);
                     return LLFailedLoginResponse.InventoryProblem;
                 }
                 List<InventoryFolderBase> inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                 if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel.Count == 0)))
                 {
                     List<InventoryItemBase> defaultItems;
-                    m_InventoryService.CreateUserInventory(account.PrincipalID, m_DefaultUserAvatarArchive == "", out defaultItems);
+                    m_InventoryService.CreateUserInventory(account.PrincipalID, m_DefaultUserAvatarArchive == "",
+                                                           out defaultItems);
                     inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                     if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel.Count == 0)))
                     {
-                        MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: unable to retrieve user inventory", account.Name);
+                        MainConsole.Instance.InfoFormat(
+                            "[LLOGIN SERVICE]: Login failed for user {0}, reason: unable to retrieve user inventory",
+                            account.Name);
                         return LLFailedLoginResponse.InventoryProblem;
                     }
                     if (defaultItems.Count > 0)
                     {
                         avappearance = new AvatarAppearance(account.PrincipalID);
-                        avappearance.SetWearable((int)WearableType.Shape, new AvatarWearable(defaultItems[0].ID, defaultItems[0].AssetID));
-                        avappearance.SetWearable((int)WearableType.Skin, new AvatarWearable(defaultItems[1].ID, defaultItems[1].AssetID));
-                        avappearance.SetWearable((int)WearableType.Hair, new AvatarWearable(defaultItems[2].ID, defaultItems[2].AssetID));
-                        avappearance.SetWearable((int)WearableType.Eyes, new AvatarWearable(defaultItems[3].ID, defaultItems[3].AssetID));
-                        avappearance.SetWearable((int)WearableType.Shirt, new AvatarWearable(defaultItems[4].ID, defaultItems[4].AssetID));
-                        avappearance.SetWearable((int)WearableType.Pants, new AvatarWearable(defaultItems[5].ID, defaultItems[5].AssetID));
+                        avappearance.SetWearable((int) WearableType.Shape,
+                                                 new AvatarWearable(defaultItems[0].ID, defaultItems[0].AssetID));
+                        avappearance.SetWearable((int) WearableType.Skin,
+                                                 new AvatarWearable(defaultItems[1].ID, defaultItems[1].AssetID));
+                        avappearance.SetWearable((int) WearableType.Hair,
+                                                 new AvatarWearable(defaultItems[2].ID, defaultItems[2].AssetID));
+                        avappearance.SetWearable((int) WearableType.Eyes,
+                                                 new AvatarWearable(defaultItems[3].ID, defaultItems[3].AssetID));
+                        avappearance.SetWearable((int) WearableType.Shirt,
+                                                 new AvatarWearable(defaultItems[4].ID, defaultItems[4].AssetID));
+                        avappearance.SetWearable((int) WearableType.Pants,
+                                                 new AvatarWearable(defaultItems[5].ID, defaultItems[5].AssetID));
                         m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
                     }
                 }
@@ -412,7 +442,9 @@ namespace Aurora.Services
                         //profileData.UpdateUserProfile(UPI); //It gets hit later by the next thing
                     }
                     //Find which is set, if any
-                    string archiveName = (UPI.AArchiveName != "" && UPI.AArchiveName != " ") ? UPI.AArchiveName : m_DefaultUserAvatarArchive;
+                    string archiveName = (UPI.AArchiveName != "" && UPI.AArchiveName != " ")
+                                             ? UPI.AArchiveName
+                                             : m_DefaultUserAvatarArchive;
                     if (UPI.IsNewUser && archiveName != "")
                     {
                         avappearance = m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
@@ -465,8 +497,8 @@ namespace Aurora.Services
 
                 if (guinfo == null || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
                 {
-                    if(guinfo == null)
-                        guinfo = new UserInfo { UserID = account.PrincipalID.ToString() };
+                    if (guinfo == null)
+                        guinfo = new UserInfo {UserID = account.PrincipalID.ToString()};
                     GridRegion DefaultRegion = null, FallbackRegion = null, SafeRegion = null;
                     if (m_GridService != null)
                     {
@@ -507,10 +539,11 @@ namespace Aurora.Services
                     guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
                     guinfo.HomeLookAt = guinfo.CurrentLookAt = new Vector3(0, 0, 0);
 
-                    m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition, guinfo.HomeLookAt);
+                    m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition,
+                                                       guinfo.HomeLookAt);
 
                     MainConsole.Instance.Info("[LLLoginService]: User did not have a home, set to " +
-                        (DefaultRegion == null ? "(no region found)" : DefaultRegion.RegionName));
+                                              (DefaultRegion == null ? "(no region found)" : DefaultRegion.RegionName));
                 }
 
                 //
@@ -520,10 +553,12 @@ namespace Aurora.Services
                 Vector3 position = Vector3.Zero;
                 Vector3 lookAt = Vector3.Zero;
                 TeleportFlags tpFlags = TeleportFlags.ViaLogin;
-                GridRegion destination = FindDestination(account, guinfo, session, startLocation, home, out tpFlags, out where, out position, out lookAt);
+                GridRegion destination = FindDestination(account, guinfo, session, startLocation, home, out tpFlags,
+                                                         out where, out position, out lookAt);
                 if (destination == null)
                 {
-                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: destination not found", account.Name);
+                    MainConsole.Instance.InfoFormat(
+                        "[LLOGIN SERVICE]: Login failed for user {0}, reason: destination not found", account.Name);
                     return LLFailedLoginResponse.DeadRegionProblem;
                 }
 
@@ -535,7 +570,8 @@ namespace Aurora.Services
                 if (m_AvatarService != null)
                 {
                     bool loadedArchive;
-                    avappearance = m_AvatarService.GetAndEnsureAppearance(account.PrincipalID, account.Name, m_DefaultUserAvatarArchive, out loadedArchive);
+                    avappearance = m_AvatarService.GetAndEnsureAppearance(account.PrincipalID, account.Name,
+                                                                          m_DefaultUserAvatarArchive, out loadedArchive);
                     if (loadedArchive)
                         //Must reload this, as we created a new folder
                         inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
@@ -561,12 +597,15 @@ namespace Aurora.Services
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
                 string reason = "", seedCap = "";
-                AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, tpFlags, account, avappearance, session, secureSession, position, where,
-                    clientIP, out where, out reason, out seedCap, out destination);
+                AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, tpFlags, account, avappearance, session,
+                                                              secureSession, position, where,
+                                                              clientIP, out where, out reason, out seedCap,
+                                                              out destination);
 
                 if (aCircuit == null)
                 {
-                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {1}, reason: {0}", reason, account.Name);
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {1}, reason: {0}", reason,
+                                                    account.Name);
                     return new LLFailedLoginResponse(LoginResponseEnum.InternalError, reason, false);
                 }
 
@@ -576,8 +615,10 @@ namespace Aurora.Services
                     friendsList = m_FriendsService.GetFriends(account.PrincipalID);
 
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
-                m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt, destination.ServerURI);
-                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, destination.RegionID, destination.ServerURI);
+                m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position,
+                                                   lookAt, destination.ServerURI);
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, destination.RegionID,
+                                               destination.ServerURI);
                 m_agentInfoService.FireUserStatusChangeEvent(account.PrincipalID.ToString(), true, destination.RegionID);
 
                 //
@@ -587,21 +628,28 @@ namespace Aurora.Services
                 string MaxMaturity = "A";
                 if (agent != null)
                 {
-                    MaturityRating = agent.MaturityRating == 0 ? "P" :
-                        agent.MaturityRating == 1 ? "M" : "A";
-                    MaxMaturity = agent.MaxMaturity == 0 ? "P" :
-                        agent.MaxMaturity == 1 ? "M" : "A";
+                    MaturityRating = agent.MaturityRating == 0
+                                         ? "P"
+                                         : agent.MaturityRating == 1 ? "M" : "A";
+                    MaxMaturity = agent.MaxMaturity == 0
+                                      ? "P"
+                                      : agent.MaxMaturity == 1 ? "M" : "A";
                 }
 
 
                 ArrayList eventNotifications = new ArrayList();
                 BuildEventNotifications(account.PrincipalID, ref eventNotifications);
 
-                response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList.ToArray(), m_InventoryService, m_LibraryService,
-                    where, startLocation, position, lookAt, gestures, home, clientIP, MaxMaturity, MaturityRating,
-                    eventCategories, eventNotifications, classifiedCategories, seedCap, m_config, DisplayName);
+                response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel,
+                                               friendsList.ToArray(), m_InventoryService, m_LibraryService,
+                                               where, startLocation, position, lookAt, gestures, home, clientIP,
+                                               MaxMaturity, MaturityRating,
+                                               eventCategories, eventNotifications, classifiedCategories, seedCap,
+                                               m_config, DisplayName);
 
-                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
+                MainConsole.Instance.InfoFormat(
+                    "[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " +
+                    destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;
             }
             catch (Exception e)
@@ -618,12 +666,13 @@ namespace Aurora.Services
 
         private void BuildEventNotifications(UUID principalID, ref ArrayList eventNotifications)
         {
-            IDirectoryServiceConnector dirService = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            IDirectoryServiceConnector dirService =
+                Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (dirService == null)
                 return;
             List<EventData> events = dirService.GetEventNotifications(principalID);
 
-            foreach(EventData ev in events)
+            foreach (EventData ev in events)
             {
                 Hashtable hash = new Hashtable();
                 hash["event_id"] = ev.eventID;
@@ -638,7 +687,9 @@ namespace Aurora.Services
             }
         }
 
-        protected GridRegion FindDestination(UserAccount account, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out TeleportFlags tpFlags, out string where, out Vector3 position, out Vector3 lookAt)
+        protected GridRegion FindDestination(UserAccount account, UserInfo pinfo, UUID sessionID, string startLocation,
+                                             GridRegion home, out TeleportFlags tpFlags, out string where,
+                                             out Vector3 position, out Vector3 lookAt)
         {
             where = "home";
             position = new Vector3(128, 128, 25);
@@ -703,7 +754,8 @@ namespace Aurora.Services
                             }
                             else
                             {
-                                MainConsole.Instance.WarnFormat("[LLOGIN SERVICE]: User {0} {1} does not have a valid home and this grid does not have default locations. Attempting to find random region",
+                                MainConsole.Instance.WarnFormat(
+                                    "[LLOGIN SERVICE]: User {0} {1} does not have a valid home and this grid does not have default locations. Attempting to find random region",
                                     account.FirstName, account.LastName);
                                 defaults = m_GridService.GetRegionsByName(account.AllScopeIDs, "", 0, 1);
                                 if (defaults != null && defaults.Count > 0)
@@ -729,7 +781,8 @@ namespace Aurora.Services
 
                 GridRegion region = null;
 
-                if (pinfo.CurrentRegionID.Equals(UUID.Zero) || (region = m_GridService.GetRegionByUUID(account.AllScopeIDs, pinfo.CurrentRegionID)) == null)
+                if (pinfo.CurrentRegionID.Equals(UUID.Zero) ||
+                    (region = m_GridService.GetRegionByUUID(account.AllScopeIDs, pinfo.CurrentRegionID)) == null)
                 {
                     tpFlags &= ~TeleportFlags.ViaLandmark;
                     List<GridRegion> defaults = m_GridService.GetDefaultRegions(account.AllScopeIDs);
@@ -756,7 +809,6 @@ namespace Aurora.Services
                             }
                         }
                     }
-
                 }
                 else
                 {
@@ -825,11 +877,12 @@ namespace Aurora.Services
                     return regions[0];
                 }
                 //This is so that you can login to other grids via IWC (or HG), example"RegionTest@testingserver.com:8002". All this really needs to do is inform the other grid that we have a user who wants to connect. IWC allows users to login by default to other regions (without the host names), but if one is provided and we don't have a link, we need to create one here.
-                string[] parts = regionName.Split(new char[] { '@' });
+                string[] parts = regionName.Split(new char[] {'@'});
                 if (parts.Length < 2)
                 {
-                    MainConsole.Instance.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}",
-                                     startLocation, regionName);
+                    MainConsole.Instance.InfoFormat(
+                        "[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}",
+                        startLocation, regionName);
                     return null;
                 }
                 // Valid specification of a remote grid
@@ -882,9 +935,12 @@ namespace Aurora.Services
             }
         }
 
-        protected AgentCircuitData LaunchAgentAtGrid(GridRegion destination, TeleportFlags tpFlags, UserAccount account, AvatarAppearance appearance,
-            UUID session, UUID secureSession, Vector3 position, string currentWhere,
-            IPEndPoint clientIP, out string where, out string reason, out string seedCap, out GridRegion dest)
+        protected AgentCircuitData LaunchAgentAtGrid(GridRegion destination, TeleportFlags tpFlags, UserAccount account,
+                                                     AvatarAppearance appearance,
+                                                     UUID session, UUID secureSession, Vector3 position,
+                                                     string currentWhere,
+                                                     IPEndPoint clientIP, out string where, out string reason,
+                                                     out string seedCap, out GridRegion dest)
         {
             where = currentWhere;
             reason = string.Empty;
@@ -894,11 +950,12 @@ namespace Aurora.Services
 
             #region Launch Agent
 
-            circuitCode = (uint)Util.RandomClass.Next();
-            aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP);
-            aCircuit.teleportFlags = (uint)tpFlags;
+            circuitCode = (uint) Util.RandomClass.Next();
+            aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position,
+                                 clientIP);
+            aCircuit.teleportFlags = (uint) tpFlags;
             LoginAgentArgs args = m_registry.RequestModuleInterface<IAgentProcessing>().
-                LoginAgent(destination, aCircuit);
+                                             LoginAgent(destination, aCircuit);
             aCircuit.OtherInformation = args.CircuitData.OtherInformation;
             aCircuit.CapsPath = args.CircuitData.CapsPath;
             aCircuit.RegionUDPPort = args.CircuitData.RegionUDPPort;
@@ -910,7 +967,7 @@ namespace Aurora.Services
             if (!success && m_GridService != null)
             {
                 //Remove the landmark flag (landmark is used for ignoring the landing points in the region)
-                aCircuit.teleportFlags &= ~(uint)TeleportFlags.ViaLandmark;
+                aCircuit.teleportFlags &= ~(uint) TeleportFlags.ViaLandmark;
                 m_GridService.SetRegionUnsafe(destination.RegionID);
 
                 // Make sure the client knows this isn't where they wanted to land
@@ -921,28 +978,35 @@ namespace Aurora.Services
                 if (defaultRegions != null)
                 {
                     success = TryFindGridRegionForAgentLogin(defaultRegions, account,
-                        appearance, session, secureSession, circuitCode, position,
-                        clientIP, aCircuit, out seedCap, out reason, out dest);
+                                                             appearance, session, secureSession, circuitCode, position,
+                                                             clientIP, aCircuit, out seedCap, out reason, out dest);
                 }
                 if (!success)
                 {
                     // Try the fallback regions
-                    List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.AllScopeIDs, destination.RegionLocX, destination.RegionLocY);
+                    List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.AllScopeIDs,
+                                                                                  destination.RegionLocX,
+                                                                                  destination.RegionLocY);
                     if (fallbacks != null)
                     {
                         success = TryFindGridRegionForAgentLogin(fallbacks, account,
-                            appearance, session, secureSession, circuitCode, position,
-                            clientIP, aCircuit, out seedCap, out reason, out dest);
+                                                                 appearance, session, secureSession, circuitCode,
+                                                                 position,
+                                                                 clientIP, aCircuit, out seedCap, out reason, out dest);
                     }
                     if (!success)
                     {
                         //Try to find any safe region
-                        List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.AllScopeIDs, destination.RegionLocX, destination.RegionLocY);
+                        List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.AllScopeIDs,
+                                                                                    destination.RegionLocX,
+                                                                                    destination.RegionLocY);
                         if (safeRegions != null)
                         {
                             success = TryFindGridRegionForAgentLogin(safeRegions, account,
-                                appearance, session, secureSession, circuitCode, position,
-                                clientIP, aCircuit, out seedCap, out reason, out dest);
+                                                                     appearance, session, secureSession, circuitCode,
+                                                                     position,
+                                                                     clientIP, aCircuit, out seedCap, out reason,
+                                                                     out dest);
                             if (!success)
                                 reason = "No Region Found";
                         }
@@ -962,14 +1026,16 @@ namespace Aurora.Services
         }
 
         protected bool TryFindGridRegionForAgentLogin(List<GridRegion> regions, UserAccount account,
-            AvatarAppearance appearance, UUID session, UUID secureSession, uint circuitCode, Vector3 position,
-            IPEndPoint clientIP, AgentCircuitData aCircuit, out string seedCap, out string reason, out GridRegion destination)
+                                                      AvatarAppearance appearance, UUID session, UUID secureSession,
+                                                      uint circuitCode, Vector3 position,
+                                                      IPEndPoint clientIP, AgentCircuitData aCircuit, out string seedCap,
+                                                      out string reason, out GridRegion destination)
         {
             LoginAgentArgs args = null;
             foreach (GridRegion r in regions)
             {
                 args = m_registry.RequestModuleInterface<IAgentProcessing>().
-                    LoginAgent(r, aCircuit);
+                                  LoginAgent(r, aCircuit);
                 if (args.Success)
                 {
                     aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP);
@@ -995,22 +1061,23 @@ namespace Aurora.Services
         }
 
         protected AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
-            AvatarAppearance appearance, UUID session, UUID secureSession, uint circuit, Vector3 position,
-            IPEndPoint clientIP)
+                                             AvatarAppearance appearance, UUID session, UUID secureSession, uint circuit,
+                                             Vector3 position,
+                                             IPEndPoint clientIP)
         {
             AgentCircuitData aCircuit = new AgentCircuitData
-            {
-                AgentID = account.PrincipalID,
-                Appearance = appearance ?? new AvatarAppearance(account.PrincipalID),
-                CapsPath = CapsUtil.GetRandomCapsObjectPath(),
-                child = false,
-                circuitcode = circuit,
-                SecureSessionID = secureSession,
-                SessionID = session,
-                startpos = position,
-                IPAddress = clientIP.Address.ToString(),
-                ClientIPEndPoint = clientIP
-            };
+                                            {
+                                                AgentID = account.PrincipalID,
+                                                Appearance = appearance ?? new AvatarAppearance(account.PrincipalID),
+                                                CapsPath = CapsUtil.GetRandomCapsObjectPath(),
+                                                child = false,
+                                                circuitcode = circuit,
+                                                SecureSessionID = secureSession,
+                                                SessionID = session,
+                                                startpos = position,
+                                                IPAddress = clientIP.Address.ToString(),
+                                                ClientIPEndPoint = clientIP
+                                            };
 
 
             // the first login agent is root
@@ -1025,17 +1092,17 @@ namespace Aurora.Services
             if (MainConsole.Instance == null)
                 return;
             MainConsole.Instance.Commands.AddCommand("login level",
-                    "login level <level>",
-                    "Set the minimum user level to log in", HandleLoginCommand);
+                                                     "login level <level>",
+                                                     "Set the minimum user level to log in", HandleLoginCommand);
 
             MainConsole.Instance.Commands.AddCommand("login reset",
-                    "login reset",
-                    "Reset the login level to allow all users",
-                    HandleLoginCommand);
+                                                     "login reset",
+                                                     "Reset the login level to allow all users",
+                                                     HandleLoginCommand);
 
             MainConsole.Instance.Commands.AddCommand("login text",
-                    "login text <text>",
-                    "Set the text users will see on login", HandleLoginCommand);
+                                                     "login text <text>",
+                                                     "Set the text users will see on login", HandleLoginCommand);
         }
 
         protected void HandleLoginCommand(string[] cmd)
@@ -1068,7 +1135,8 @@ namespace Aurora.Services
 
         public AvatarAppearance WearFolder(AvatarAppearance avappearance, UUID user, UUID folderOwnerID)
         {
-            InventoryFolderBase Folder2Wear = m_InventoryService.GetFolderByOwnerAndName(folderOwnerID, m_forceUserToWearFolderName);
+            InventoryFolderBase Folder2Wear = m_InventoryService.GetFolderByOwnerAndName(folderOwnerID,
+                                                                                         m_forceUserToWearFolderName);
             if (Folder2Wear != null)
             {
                 List<InventoryItemBase> itemsInFolder = m_InventoryService.GetFolderItems(UUID.Zero, Folder2Wear.ID);
@@ -1136,8 +1204,8 @@ namespace Aurora.Services
                 foreach (InventoryItemBase itemBase in itemsInFolder)
                 {
                     InventoryItemBase newcopy = m_InventoryService.InnerGiveInventoryItem(user, folderOwnerID, itemBase,
-                                                                                                    folderForAppearance.ID,
-                                                                                                    true);
+                                                                                          folderForAppearance.ID,
+                                                                                          true);
 
                     if (newcopy.InvType == (int) InventoryType.Object)
                     {
@@ -1194,8 +1262,9 @@ namespace Aurora.Services
 
         public AvatarAppearance FixCurrentOutFitFolder(UUID user, AvatarAppearance avappearance)
         {
-            InventoryFolderBase CurrentOutFitFolder = m_InventoryService.GetFolderForType(user, 0, AssetType.CurrentOutfitFolder);
-			if (CurrentOutFitFolder == null) return avappearance;
+            InventoryFolderBase CurrentOutFitFolder = m_InventoryService.GetFolderForType(user, 0,
+                                                                                          AssetType.CurrentOutfitFolder);
+            if (CurrentOutFitFolder == null) return avappearance;
             List<InventoryItemBase> ic = m_InventoryService.GetFolderItems(user, CurrentOutFitFolder.ID);
             List<UUID> brokenLinks = new List<UUID>();
             List<UUID> OtherStuff = new List<UUID>();
@@ -1205,11 +1274,11 @@ namespace Aurora.Services
                 if ((linkedItem = m_InventoryService.GetItem(user, i.AssetID)) == null)
                     brokenLinks.Add(i.ID);
                 else if (linkedItem.ID == AvatarWearable.DEFAULT_EYES_ITEM ||
-                            linkedItem.ID == AvatarWearable.DEFAULT_BODY_ITEM ||
-                            linkedItem.ID == AvatarWearable.DEFAULT_HAIR_ITEM ||
-                            linkedItem.ID == AvatarWearable.DEFAULT_PANTS_ITEM ||
-                            linkedItem.ID == AvatarWearable.DEFAULT_SHIRT_ITEM ||
-                            linkedItem.ID == AvatarWearable.DEFAULT_SKIN_ITEM)
+                         linkedItem.ID == AvatarWearable.DEFAULT_BODY_ITEM ||
+                         linkedItem.ID == AvatarWearable.DEFAULT_HAIR_ITEM ||
+                         linkedItem.ID == AvatarWearable.DEFAULT_PANTS_ITEM ||
+                         linkedItem.ID == AvatarWearable.DEFAULT_SHIRT_ITEM ||
+                         linkedItem.ID == AvatarWearable.DEFAULT_SKIN_ITEM)
                     brokenLinks.Add(i.ID); //Default item link, needs removed
                 else if (!OtherStuff.Contains(i.AssetID))
                     OtherStuff.Add(i.AssetID);
@@ -1225,9 +1294,9 @@ namespace Aurora.Services
                         InventoryItemBase linkedItem2 = null;
                         if ((linkedItem2 = m_InventoryService.GetItem(user, wearable[ii].ItemID)) != null)
                         {
-                            InventoryItemBase linkedItem3 = (InventoryItemBase)linkedItem2.Clone();
+                            InventoryItemBase linkedItem3 = (InventoryItemBase) linkedItem2.Clone();
                             linkedItem3.AssetID = linkedItem2.ID;
-                            linkedItem3.AssetType = (int)AssetType.Link;
+                            linkedItem3.AssetType = (int) AssetType.Link;
                             linkedItem3.ID = UUID.Random();
                             linkedItem3.CurrentPermissions = linkedItem2.NextPermissions;
                             linkedItem3.EveryOnePermissions = linkedItem2.NextPermissions;
@@ -1252,9 +1321,9 @@ namespace Aurora.Services
                         InventoryItemBase linkedItem2 = null;
                         if ((linkedItem2 = m_InventoryService.GetItem(user, attachment.ItemID)) != null)
                         {
-                            InventoryItemBase linkedItem3 = (InventoryItemBase)linkedItem2.Clone();
+                            InventoryItemBase linkedItem3 = (InventoryItemBase) linkedItem2.Clone();
                             linkedItem3.AssetID = linkedItem2.ID;
-                            linkedItem3.AssetType = (int)AssetType.Link;
+                            linkedItem3.AssetType = (int) AssetType.Link;
                             linkedItem3.ID = UUID.Random();
                             linkedItem3.CurrentPermissions = linkedItem2.NextPermissions;
                             linkedItem3.EveryOnePermissions = linkedItem2.NextPermissions;
@@ -1277,7 +1346,6 @@ namespace Aurora.Services
                 m_InventoryService.DeleteItems(user, brokenLinks);
 
             return avappearance;
-
         }
 
         #endregion

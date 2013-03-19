@@ -56,16 +56,17 @@ namespace Aurora.Services
                 m_allowCapsMessage = config.GetBoolean("AllowCapsMessage", m_allowCapsMessage);
 
             HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
-                                                            OSHttpResponse httpResponse)
-            {
-                return MapLayerRequest(request.ReadUntilEnd(), httpRequest, httpResponse, m_service.AgentID);
-            };
+                                               OSHttpResponse httpResponse)
+                                          {
+                                              return MapLayerRequest(request.ReadUntilEnd(), httpRequest, httpResponse,
+                                                                     m_service.AgentID);
+                                          };
             m_service.AddStreamHandler("MapLayer",
                                        new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayer", ""),
-                                                             method));
+                                                                method));
             m_service.AddStreamHandler("MapLayerGod",
                                        new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", ""),
-                                                             method));
+                                                                method));
         }
 
         public void EnteringRegion()
@@ -82,14 +83,15 @@ namespace Aurora.Services
         #endregion
 
         /// <summary>
-        ///   Callback for a map layer request
+        ///     Callback for a map layer request
         /// </summary>
-        /// <param name = "request"></param>
-        /// <param name = "httpRequest"></param>
-        /// <param name = "httpResponse"></param>
-        /// <param name = "agentID"></param>
+        /// <param name="request"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
-        public byte[] MapLayerRequest(string request, OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
+        public byte[] MapLayerRequest(string request, OSHttpRequest httpRequest, OSHttpResponse httpResponse,
+                                      UUID agentID)
         {
             int bottom = (m_service.RegionY/Constants.RegionSize) - m_mapDistance;
             int top = (m_service.RegionY/Constants.RegionSize) + m_mapDistance;
@@ -111,11 +113,12 @@ namespace Aurora.Services
             {
                 if (m_mapLayer == null || m_mapLayer.Count == 0)
                 {
-                    List<GridRegion> regions = m_gridService.GetRegionRange(m_service.ClientCaps.AccountInfo.AllScopeIDs,
-                                                                            left*Constants.RegionSize,
-                                                                            right*Constants.RegionSize,
-                                                                            bottom*Constants.RegionSize,
-                                                                            top*Constants.RegionSize);
+                    List<GridRegion> regions = m_gridService.GetRegionRange(
+                        m_service.ClientCaps.AccountInfo.AllScopeIDs,
+                        left*Constants.RegionSize,
+                        right*Constants.RegionSize,
+                        bottom*Constants.RegionSize,
+                        top*Constants.RegionSize);
                     foreach (GridRegion r in regions)
                     {
                         m_mapLayer.Add(MapBlockFromGridRegion(r, flags));
@@ -166,9 +169,9 @@ namespace Aurora.Services
             return map;
         }
 
-        ///<summary>
-        ///</summary>
-        ///<returns></returns>
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
         protected static OSDMap GetOSDMapLayerResponse(int bottom, int left, int right, int top, UUID imageID)
         {
             OSDMap mapLayer = new OSDMap();

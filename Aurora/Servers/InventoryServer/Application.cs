@@ -33,16 +33,27 @@ using System.Collections.Generic;
 namespace Aurora.Servers.InventoryServer
 {
     /// <summary>
-    ///   Starting class for the Aurora Server
+    ///     Starting class for the Aurora Server
     /// </summary>
     public class Application
     {
         public static void Main(string[] args)
         {
             BaseApplication.BaseMain(args, "Aurora.InventoryServer.ini",
-                new MinimalSimulationBase("Aurora.InventoryServer ", 
-                    new List<Type> { typeof(IInventoryData), typeof(IUserAccountData), typeof(IAssetDataPlugin) }, 
-                    new List<Type> { typeof(IInventoryService), typeof(ILibraryService), typeof(IUserAccountService), typeof(IAssetService) }));
+                                     new MinimalSimulationBase("Aurora.InventoryServer ",
+                                                               new List<Type>
+                                                                   {
+                                                                       typeof (IInventoryData),
+                                                                       typeof (IUserAccountData),
+                                                                       typeof (IAssetDataPlugin)
+                                                                   },
+                                                               new List<Type>
+                                                                   {
+                                                                       typeof (IInventoryService),
+                                                                       typeof (ILibraryService),
+                                                                       typeof (IUserAccountService),
+                                                                       typeof (IAssetService)
+                                                                   }));
         }
     }
 }

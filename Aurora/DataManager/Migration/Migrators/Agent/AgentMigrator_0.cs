@@ -44,21 +44,21 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ID", ColumnTypes.String45),
                 ColDef("Key", ColumnTypes.String50),
                 ColDef("Value", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "ID", "Key" }, IndexType.Primary)
-            ));
+                                      ), IndexDefs(
+                                          IndexDef(new string[2] {"ID", "Key"}, IndexType.Primary)
+                                             ));
 
             AddSchema("macban", ColDefs(
                 ColDef("macAddress", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "macAddress" }, IndexType.Primary)
-            ));
+                                    ), IndexDefs(
+                                        IndexDef(new string[1] {"macAddress"}, IndexType.Primary)
+                                           ));
 
             AddSchema("bannedviewers", ColDefs(
                 ColDef("Client", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "Client" }, IndexType.Primary)
-            ));
+                                           ), IndexDefs(
+                                               IndexDef(new string[1] {"Client"}, IndexType.Primary)
+                                                  ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

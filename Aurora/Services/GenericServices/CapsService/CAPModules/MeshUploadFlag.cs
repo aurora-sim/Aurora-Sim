@@ -51,7 +51,7 @@ namespace Aurora.Services
             m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
             m_service.AddStreamHandler("MeshUploadFlag",
                                        new GenericStreamHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),
-                                                           MeshUploadFlagCAP));
+                                                                MeshUploadFlagCAP));
         }
 
         public void DeregisterCaps()
@@ -66,7 +66,7 @@ namespace Aurora.Services
         #endregion
 
         private byte[] MeshUploadFlagCAP(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                         OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             OSDMap data = new OSDMap();
             IUserProfileInfo info = m_profileConnector.GetUserProfile(m_service.AgentID);
@@ -79,7 +79,9 @@ namespace Aurora.Services
             data["legacy_last_name"] = m_service.ClientCaps.AccountInfo.LastName;
             data["mesh_upload_status"] = "valid"; // add if account has ability to upload mesh?
             bool isDisplayNameNDefault = (info.DisplayName == m_service.ClientCaps.AccountInfo.Name) ||
-                                         (info.DisplayName == m_service.ClientCaps.AccountInfo.FirstName + "." + m_service.ClientCaps.AccountInfo.LastName);
+                                         (info.DisplayName ==
+                                          m_service.ClientCaps.AccountInfo.FirstName + "." +
+                                          m_service.ClientCaps.AccountInfo.LastName);
             data["is_display_name_default"] = isDisplayNameNDefault;
 
             //Send back data

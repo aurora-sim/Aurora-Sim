@@ -39,6 +39,7 @@ namespace Aurora.Services
     public class LocalSimulationServiceConnector : IService, ISimulationService
     {
         private IRegistryCore m_registry;
+
         public string Name
         {
             get { return GetType().Name; }
@@ -97,7 +98,7 @@ namespace Aurora.Services
                                                         out reason);
 
             MainConsole.Instance.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Did not find region {0} for CreateAgent",
-                              destination.RegionName);
+                                             destination.RegionName);
             map["Reason"] = "Did not find region " + destination.RegionName;
             map["Success"] = false;
             reason = OSDParser.SerializeJsonString(map);
@@ -160,7 +161,8 @@ namespace Aurora.Services
             return true;
         }
 
-        public bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID agentID, string reason, bool isCrossing)
+        public bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID agentID, string reason,
+                                          bool isCrossing)
         {
             if (Scene == null)
                 return false;
@@ -168,8 +170,8 @@ namespace Aurora.Services
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send FailedToTeleportAgent");
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule == null) return false;
-            transferModule.FailedToTeleportAgent(new GridRegion() { RegionID = failedRegionID }, 
-                agentID, reason, isCrossing);
+            transferModule.FailedToTeleportAgent(new GridRegion() {RegionID = failedRegionID},
+                                                 agentID, reason, isCrossing);
             return true;
         }
 

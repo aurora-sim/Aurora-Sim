@@ -20,7 +20,7 @@ namespace Aurora.RedisServices.ConnectionHelpers
 
         public void FlagFreeItem(T item)
         {
-            lock(_lock)
+            lock (_lock)
                 freeItems.Enqueue(item);
         }
 

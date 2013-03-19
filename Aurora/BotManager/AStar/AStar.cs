@@ -32,9 +32,9 @@ using Tanis.Collections;
 namespace Games.Pathfinding
 {
     /// <summary>
-    ///   Base class for pathfinding nodes, it holds no actual information about the map. 
-    ///   An inherited class must be constructed from this class and all virtual methods must be 
-    ///   implemented. Note, that calling base() in the overridden methods is not needed.
+    ///     Base class for pathfinding nodes, it holds no actual information about the map.
+    ///     An inherited class must be constructed from this class and all virtual methods must be
+    ///     implemented. Note, that calling base() in the overridden methods is not needed.
     /// </summary>
     public class AStarNode : IComparable
     {
@@ -44,17 +44,17 @@ namespace Games.Pathfinding
         private AStarNode FGoalNode;
 
         /// <summary>
-        ///   The parent of the node.
+        ///     The parent of the node.
         /// </summary>
         public AStarNode Parent { get; set; }
 
         /// <summary>
-        ///   The accumulative cost of the path until now.
+        ///     The accumulative cost of the path until now.
         /// </summary>
         public double Cost { set; get; }
 
         /// <summary>
-        ///   The estimated cost to the goal from here.
+        ///     The estimated cost to the goal from here.
         /// </summary>
         public double GoalEstimate
         {
@@ -67,7 +67,7 @@ namespace Games.Pathfinding
         }
 
         /// <summary>
-        ///   The cost plus the estimated cost to the goal from here.
+        ///     The cost plus the estimated cost to the goal from here.
         /// </summary>
         public double TotalCost
         {
@@ -75,7 +75,7 @@ namespace Games.Pathfinding
         }
 
         /// <summary>
-        ///   The goal node.
+        ///     The goal node.
         /// </summary>
         public AStarNode GoalNode
         {
@@ -92,11 +92,11 @@ namespace Games.Pathfinding
         #region Constructors
 
         /// <summary>
-        ///   Constructor.
+        ///     Constructor.
         /// </summary>
-        /// <param name = "AParent">The node's parent</param>
-        /// <param name = "AGoalNode">The goal node</param>
-        /// <param name = "ACost">The accumulative cost until now</param>
+        /// <param name="AParent">The node's parent</param>
+        /// <param name="AGoalNode">The goal node</param>
+        /// <param name="ACost">The accumulative cost until now</param>
         public AStarNode(AStarNode AParent, AStarNode AGoalNode, double ACost)
         {
             Parent = AParent;
@@ -109,7 +109,7 @@ namespace Games.Pathfinding
         #region Public Methods
 
         /// <summary>
-        ///   Determines wheather the current node is the goal.
+        ///     Determines wheather the current node is the goal.
         /// </summary>
         /// <returns>Returns true if current node is the goal</returns>
         public bool IsGoal()
@@ -122,9 +122,9 @@ namespace Games.Pathfinding
         #region Virtual Methods
 
         /// <summary>
-        ///   Determines wheather the current node is the same state as the on passed.
+        ///     Determines wheather the current node is the same state as the on passed.
         /// </summary>
-        /// <param name = "ANode">AStarNode to compare the current node to</param>
+        /// <param name="ANode">AStarNode to compare the current node to</param>
         /// <returns>Returns true if they are the same state</returns>
         public virtual bool IsSameState(AStarNode ANode)
         {
@@ -132,7 +132,7 @@ namespace Games.Pathfinding
         }
 
         /// <summary>
-        ///   Calculates the estimated cost for the remaining trip to the goal.
+        ///     Calculates the estimated cost for the remaining trip to the goal.
         /// </summary>
         public virtual void Calculate()
         {
@@ -140,9 +140,9 @@ namespace Games.Pathfinding
         }
 
         /// <summary>
-        ///   Gets all successors nodes from the current node and adds them to the successor list
+        ///     Gets all successors nodes from the current node and adds them to the successor list
         /// </summary>
-        /// <param name = "ASuccessors">List in which the successors will be added</param>
+        /// <param name="ASuccessors">List in which the successors will be added</param>
         public virtual void GetSuccessors(ArrayList ASuccessors)
         {
         }
@@ -174,7 +174,7 @@ namespace Games.Pathfinding
     }
 
     /// <summary>
-    ///   Class for performing A* pathfinding
+    ///     Class for performing A* pathfinding
     /// </summary>
     public sealed class AStar
     {
@@ -195,7 +195,7 @@ namespace Games.Pathfinding
         private bool m_pathPossible = true;
 
         /// <summary>
-        ///   Holds the solution after pathfinding is done. <see>FindPath()</see>
+        ///     Holds the solution after pathfinding is done. <see>FindPath()</see>
         /// </summary>
         public ArrayList Solution
         {
@@ -224,9 +224,9 @@ namespace Games.Pathfinding
         #region Private Methods
 
         /// <summary>
-        ///   Prints all the nodes in a list
+        ///     Prints all the nodes in a list
         /// </summary>
-        /// <param name = "ANodeList">List to print</param>
+        /// <param name="ANodeList">List to print</param>
         private void PrintNodeList(object ANodeList)
         {
             Console.WriteLine("Node list:");
@@ -242,10 +242,10 @@ namespace Games.Pathfinding
         #region Public Methods
 
         /// <summary>
-        ///   Finds the shortest path from the start node to the goal node
+        ///     Finds the shortest path from the start node to the goal node
         /// </summary>
-        /// <param name = "AStartNode">Start node</param>
-        /// <param name = "AGoalNode">Goal node</param>
+        /// <param name="AStartNode">Start node</param>
+        /// <param name="AGoalNode">Goal node</param>
         public void FindPath(AStarNode AStartNode, AStarNode AGoalNode)
         {
             FStartNode = AStartNode;

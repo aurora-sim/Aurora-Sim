@@ -56,8 +56,8 @@ namespace Aurora.Services
             if (m_imService != null)
             {
                 service.AddStreamHandler("ChatSessionRequest",
-                    new GenericStreamHandler("POST", service.CreateCAPS("ChatSessionRequest", ""),
-                                                            ChatSessionRequest));
+                                         new GenericStreamHandler("POST", service.CreateCAPS("ChatSessionRequest", ""),
+                                                                  ChatSessionRequest));
             }
         }
 
@@ -72,11 +72,12 @@ namespace Aurora.Services
 
         #region Baked Textures
 
-        public byte[] ChatSessionRequest(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] ChatSessionRequest(string path, Stream request, OSHttpRequest httpRequest,
+                                         OSHttpResponse httpResponse)
         {
             try
             {
-                OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
                 return Encoding.UTF8.GetBytes(m_imService.ChatSessionRequest(m_service, rm));
             }

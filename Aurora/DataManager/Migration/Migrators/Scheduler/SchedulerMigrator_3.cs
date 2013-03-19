@@ -55,20 +55,20 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
                 ColDef("run_every_type", ColumnTypes.Integer30),
                 ColDef("enabled", ColumnTypes.TinyInt1),
                 new ColumnDefinition
-                {
-                    Name = "schedule_for",
-                    Type = new ColumnTypeDef
                     {
-                        Type = ColumnType.String,
-                        Size = 36,
-                        defaultValue = OpenMetaverse.UUID.Zero.ToString()
+                        Name = "schedule_for",
+                        Type = new ColumnTypeDef
+                                   {
+                                       Type = ColumnType.String,
+                                       Size = 36,
+                                       defaultValue = OpenMetaverse.UUID.Zero.ToString()
+                                   }
                     }
-                }
-            ), IndexDefs(
-                IndexDef(new[] { "id" }, IndexType.Primary),
-                IndexDef(new[] { "runs_next", "enabled" },IndexType.Index),
-                IndexDef(new[] { "schedule_for", "fire_function" }, IndexType.Index)
-            ));
+                                       ), IndexDefs(
+                                           IndexDef(new[] {"id"}, IndexType.Primary),
+                                           IndexDef(new[] {"runs_next", "enabled"}, IndexType.Index),
+                                           IndexDef(new[] {"schedule_for", "fire_function"}, IndexType.Index)
+                                              ));
 
             AddSchema("scheduler_history", ColDefs(
                 ColDef("id", ColumnTypes.String36),
@@ -78,9 +78,9 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
                 ColDef("reciept", ColumnTypes.String1024),
                 ColDef("is_complete", ColumnTypes.TinyInt1),
                 ColDef("complete_time", ColumnTypes.DateTime)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "id", "scheduler_id" }, IndexType.Primary)
-            ));
+                                               ), IndexDefs(
+                                                   IndexDef(new string[2] {"id", "scheduler_id"}, IndexType.Primary)
+                                                      ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

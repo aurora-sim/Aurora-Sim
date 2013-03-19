@@ -51,7 +51,9 @@ namespace Aurora.Services
             if (OnMessageReceived != null)
             {
                 MessageReceived eventCopy = OnMessageReceived;
-                foreach (OSDMap r in from MessageReceived messagedelegate in eventCopy.GetInvocationList() select messagedelegate(message) into r where r != null select r)
+                foreach (OSDMap r in from MessageReceived messagedelegate in eventCopy.GetInvocationList()
+                                     select messagedelegate(message)
+                                     into r where r != null select r)
                 {
                     result = r;
                 }

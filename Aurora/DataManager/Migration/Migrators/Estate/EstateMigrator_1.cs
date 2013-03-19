@@ -46,9 +46,9 @@ namespace Aurora.DataManager.Migration.Migrators
             AddSchema("estateregions", ColDefs(
                 ColDef("RegionID", ColumnTypes.String36),
                 ColDef("EstateID", ColumnTypes.Integer11)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary)
-            ));
+                                           ), IndexDefs(
+                                               IndexDef(new string[1] {"RegionID"}, IndexType.Primary)
+                                                  ));
 
             AddSchema("estatesettings", ColDefs(
                 ColDef("EstateID", ColumnTypes.Integer11),
@@ -56,9 +56,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("EstateOwner", ColumnTypes.String36),
                 ColDef("ParentEstateID", ColumnTypes.Integer11),
                 ColDef("Settings", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "EstateID" }, IndexType.Primary)
-            ));
+                                            ), IndexDefs(
+                                                IndexDef(new string[1] {"EstateID"}, IndexType.Primary)
+                                                   ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)
@@ -84,7 +84,8 @@ namespace Aurora.DataManager.Migration.Migrators
         public override void FinishedMigration(IDataConnector genericData)
         {
             if (!genericData.TableExists("estates")) return;
-            DataReaderConnection dr = genericData.QueryData("WHERE `Key` = 'EstateID'", "estates", "`ID`, `Key`, `Value`");
+            DataReaderConnection dr = genericData.QueryData("WHERE `Key` = 'EstateID'", "estates",
+                                                            "`ID`, `Key`, `Value`");
 
             if (dr != null)
             {
@@ -99,32 +100,37 @@ namespace Aurora.DataManager.Migration.Migrators
                             QueryFilter filter = new QueryFilter();
                             filter.andFilters["`ID`"] = value;
                             filter.andFilters["`Key`"] = "EstateSettings";
-                            List<string> results = genericData.Query(new string[1] { "`Value`" }, "estates", filter, null, null, null);
+                            List<string> results = genericData.Query(new string[1] {"`Value`"}, "estates", filter, null,
+                                                                     null, null);
                             if ((results != null) && (results.Count >= 1))
                             {
                                 EstateSettings es = new EstateSettings();
-                                es.FromOSD((OSDMap)OSDParser.DeserializeLLSDXml(results[0]));
-                                genericData.Insert("estateregions", new object[] { ID, value });
+                                es.FromOSD((OSDMap) OSDParser.DeserializeLLSDXml(results[0]));
+                                genericData.Insert("estateregions", new object[] {ID, value});
 
                                 filter = new QueryFilter();
                                 filter.andFilters["`EstateID`"] = value;
 
-                                List<string> exist = genericData.Query(new string[1] { "`EstateID`" }, "estatesettings", filter, null, null, null);
+                                List<string> exist = genericData.Query(new string[1] {"`EstateID`"}, "estatesettings",
+                                                                       filter, null, null, null);
                                 if (exist == null || exist.Count == 0)
                                 {
-                                    genericData.Insert("estatesettings", new object[] { value, es.EstateName, es.EstateOwner, es.ParentEstateID, es.ToOSD() });
+                                    genericData.Insert("estatesettings",
+                                                       new object[]
+                                                           {
+                                                               value, es.EstateName, es.EstateOwner, es.ParentEstateID,
+                                                               es.ToOSD()
+                                                           });
                                 }
                             }
                         }
                         catch
                         {
-
                         }
                     }
                 }
                 catch
                 {
-
                 }
                 finally
                 {

@@ -12,6 +12,7 @@ namespace Aurora.Services
     public class PasswordLoginModule : ILoginModule
     {
         protected IAuthenticationService m_AuthenticationService;
+
         public string Name
         {
             get { return GetType().Name; }
@@ -22,7 +23,8 @@ namespace Aurora.Services
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
         }
 
-        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
+        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType,
+                                   string password, out object data)
         {
             data = null;
             //

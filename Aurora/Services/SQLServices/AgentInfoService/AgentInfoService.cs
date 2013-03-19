@@ -84,7 +84,7 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(userID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (UserInfo)remoteValue;
+                return (UserInfo) remoteValue;
 
             return GetUserInfo(userID, true);
         }
@@ -94,20 +94,20 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(userIDs);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<UserInfo>)remoteValue;
+                return (List<UserInfo>) remoteValue;
 
             List<UserInfo> infos = new List<UserInfo>();
             for (int i = 0; i < userIDs.Count; i++)
             {
                 var userInfo = GetUserInfo(userIDs[i]);
-                if(userInfo != null)
+                if (userInfo != null)
                     infos.Add(userInfo);
             }
             return infos;
         }
 
         /// <summary>
-        /// Gets a list of userinfos that are logged into the given region
+        ///     Gets a list of userinfos that are logged into the given region
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
@@ -116,7 +116,7 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(regionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<UserInfo>)remoteValue;
+                return (List<UserInfo>) remoteValue;
 
             return m_agentInfoConnector.GetByCurrentRegion(regionID.ToString());
         }
@@ -126,7 +126,7 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(requestor, userIDs);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<string>)remoteValue;
+                return (List<string>) remoteValue;
 
             string[] infos = new string[userIDs.Count];
             for (int i = 0; i < userIDs.Count; i++)
@@ -147,14 +147,15 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(userID, homeID, homePosition, homeLookAt);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             m_agentInfoConnector.SetHomePosition(userID, homeID, homePosition, homeLookAt);
             return true;
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt, string regionURI)
+        public virtual void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt,
+                                            string regionURI)
         {
             object remoteValue = DoRemote(userID, regionID, lastPosition, lastLookAt);
             if (remoteValue != null || m_doRemoteOnly)
@@ -209,7 +210,7 @@ namespace Aurora.Services
         {
             //Trigger an event so listeners know
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                "UserStatusChange", new object[] { userID, loggingIn, enteringRegion });
+                "UserStatusChange", new object[] {userID, loggingIn, enteringRegion});
         }
 
         #endregion

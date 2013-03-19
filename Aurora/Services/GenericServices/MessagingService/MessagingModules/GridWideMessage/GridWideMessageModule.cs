@@ -42,7 +42,7 @@ namespace Aurora.Services
         protected IRegistryCore m_registry;
         protected ISyncMessagePosterService m_messagePost;
         protected ICapsService m_capsService;
-            
+
         #endregion
 
         #region IGridWideMessageModule Members
@@ -58,15 +58,16 @@ namespace Aurora.Services
                 {
                     //Send the message to the client
                     m_messagePost.Get(regionClient.Region.ServerURI,
-                                     BuildRequest("KickUserMessage", message, regionClient.AgentID.ToString()),
-                                     (resp)=>
-                    {
-                        IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
-                        if (agentProcessor != null)
-                            agentProcessor.LogoutAgent(regionClient, true);
-                        MainConsole.Instance.Info("User has been kicked.");
-                    });
-                    
+                                      BuildRequest("KickUserMessage", message, regionClient.AgentID.ToString()),
+                                      (resp) =>
+                                          {
+                                              IAgentProcessing agentProcessor =
+                                                  m_registry.RequestModuleInterface<IAgentProcessing>();
+                                              if (agentProcessor != null)
+                                                  agentProcessor.LogoutAgent(regionClient, true);
+                                              MainConsole.Instance.Info("User has been kicked.");
+                                          });
+
                     return;
                 }
             }
@@ -84,7 +85,7 @@ namespace Aurora.Services
                 {
                     //Send the message to the client
                     m_messagePost.Post(regionClient.Region.ServerURI,
-                                     BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
+                                       BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
                     MainConsole.Instance.Info("Message sent to the user.");
                     return;
                 }
@@ -98,12 +99,18 @@ namespace Aurora.Services
             List<IClientCapsService> clients = m_capsService.GetClientsCapsServices();
 
             //Go through all clients, and send the message asyncly to all agents that are root
-            foreach (IRegionClientCapsService regionClient in from client in clients from regionClient in client.GetCapsServices() where regionClient.RootAgent select regionClient)
+            foreach (
+                IRegionClientCapsService regionClient in
+                    from client in clients
+                    from regionClient in client.GetCapsServices()
+                    where regionClient.RootAgent
+                    select regionClient)
             {
-                MainConsole.Instance.Debug("[GridWideMessageModule]: Informed " + regionClient.ClientCaps.AccountInfo.Name);
+                MainConsole.Instance.Debug("[GridWideMessageModule]: Informed " +
+                                           regionClient.ClientCaps.AccountInfo.Name);
                 //Send the message to the client
                 m_messagePost.Post(regionClient.Region.ServerURI,
-                                 BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
+                                   BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
             }
             MainConsole.Instance.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid shortly.");
         }
@@ -265,7 +272,8 @@ namespace Aurora.Services
                     if (manager.Scene.TryGetScenePresence(UUID.Parse(user), out sp))
                     {
                         sp.ControllingClient.Kick(value == "" ? "The Aurora Grid Manager kicked you out." : value);
-                        IEntityTransferModule transferModule = manager.Scene.RequestModuleInterface<IEntityTransferModule>();
+                        IEntityTransferModule transferModule =
+                            manager.Scene.RequestModuleInterface<IEntityTransferModule>();
                         if (transferModule != null)
                             transferModule.IncomingCloseAgent(manager.Scene, sp.UUID);
                     }

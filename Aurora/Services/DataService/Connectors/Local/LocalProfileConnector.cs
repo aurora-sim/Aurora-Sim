@@ -51,7 +51,7 @@ namespace Aurora.Services.DataService
 
             if (GD != null)
                 GD.ConnectToDatabase(defaultConnectionString, "Agent",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
@@ -68,16 +68,16 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Get a user's profile
+        ///     Get a user's profile
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public IUserProfileInfo GetUserProfile(UUID agentID)
         {
             object remoteValue = DoRemote(agentID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (IUserProfileInfo)remoteValue;
+                return (IUserProfileInfo) remoteValue;
 
             IUserProfileInfo UserProfile = new IUserProfileInfo();
             //Try from the user profile first before getting from the DB
@@ -89,7 +89,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["`Key`"] = "LLProfile";
             List<string> query = null;
             //Grab it from the almost generic interface
-            query = GD.Query(new[] { "Value" }, "userdata", filter, null, null, null);
+            query = GD.Query(new[] {"Value"}, "userdata", filter, null, null, null);
 
             if (query == null || query.Count == 0)
                 return null;
@@ -106,16 +106,16 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Update a user's profile (Note: this does not work if the user does not have a profile)
+        ///     Update a user's profile (Note: this does not work if the user does not have a profile)
         /// </summary>
-        /// <param name = "Profile"></param>
+        /// <param name="Profile"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
             object remoteValue = DoRemote(Profile);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue != null && (bool)remoteValue;
+                return remoteValue != null && (bool) remoteValue;
 
             IUserProfileInfo previousProfile = GetUserProfile(Profile.PrincipalID);
             //Make sure the previous one exists
@@ -141,9 +141,9 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Create a new profile for a user
+        ///     Create a new profile for a user
         /// </summary>
-        /// <param name = "AgentID"></param>
+        /// <param name="AgentID"></param>
         //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public void CreateNewProfile(UUID AgentID)
         {
@@ -166,7 +166,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(classified);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue != null && (bool)remoteValue;
+                return remoteValue != null && (bool) remoteValue;
 
             if (GetUserProfile(classified.CreatorUUID) == null)
                 return false;
@@ -177,17 +177,18 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ClassifiedUUID"] = classified.ClassifiedUUID;
             GD.Delete("userclassifieds", filter);
-            List<object> values = new List<object>{
-                classified.Name,
-                classified.Category,
-                classified.SimName,
-                classified.CreatorUUID,
-                classified.ScopeID,
-                classified.ClassifiedUUID,
-                OSDParser.SerializeJsonString(classified.ToOSD()),
-                classified.PriceForListing,
-                keywords
-            };
+            List<object> values = new List<object>
+                                      {
+                                          classified.Name,
+                                          classified.Category,
+                                          classified.SimName,
+                                          classified.CreatorUUID,
+                                          classified.ScopeID,
+                                          classified.ClassifiedUUID,
+                                          OSDParser.SerializeJsonString(classified.ToOSD()),
+                                          classified.PriceForListing,
+                                          keywords
+                                      };
             return GD.Insert("userclassifieds", values.ToArray());
         }
 
@@ -196,12 +197,12 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(ownerID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<Classified>)remoteValue;
+                return (List<Classified>) remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = ownerID;
 
-            List<string> query = GD.Query(new[] { "*" }, "userclassifieds", filter, null, null, null);
+            List<string> query = GD.Query(new[] {"*"}, "userclassifieds", filter, null, null, null);
 
             List<Classified> classifieds = new List<Classified>();
             for (int i = 0; i < query.Count; i += 9)
@@ -218,12 +219,12 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(queryClassifiedID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (Classified)remoteValue;
+                return (Classified) remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ClassifiedUUID"] = queryClassifiedID;
 
-            List<string> query = GD.Query(new[] { "*" }, "userclassifieds", filter, null, null, null);
+            List<string> query = GD.Query(new[] {"*"}, "userclassifieds", filter, null, null, null);
 
             if (query.Count < 9)
             {
@@ -251,7 +252,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(pick);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue != null && (bool)remoteValue;
+                return remoteValue != null && (bool) remoteValue;
 
             if (GetUserProfile(pick.CreatorUUID) == null)
                 return false;
@@ -276,12 +277,12 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(queryPickID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (ProfilePickInfo)remoteValue;
+                return (ProfilePickInfo) remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["PickUUID"] = queryPickID;
 
-            List<string> query = GD.Query(new[] { "*" }, "userpicks", filter, null, null, null);
+            List<string> query = GD.Query(new[] {"*"}, "userpicks", filter, null, null, null);
 
             if (query.Count < 5)
                 return null;
@@ -295,12 +296,12 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(ownerID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<ProfilePickInfo>)remoteValue;
+                return (List<ProfilePickInfo>) remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = ownerID;
 
-            List<string> query = GD.Query(new[] { "*" }, "userpicks", filter, null, null, null);
+            List<string> query = GD.Query(new[] {"*"}, "userpicks", filter, null, null, null);
 
             List<ProfilePickInfo> picks = new List<ProfilePickInfo>();
             for (int i = 0; i < query.Count; i += 5)

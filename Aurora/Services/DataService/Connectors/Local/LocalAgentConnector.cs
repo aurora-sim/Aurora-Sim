@@ -51,7 +51,7 @@ namespace Aurora.Services.DataService
 
             if (GD != null)
                 GD.ConnectToDatabase(defaultConnectionString, "Agent",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "LocalConnector")
@@ -68,11 +68,11 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets the info about the agent (TOS data, maturity info, language, etc)
+        ///     Gets the info about the agent (TOS data, maturity info, language, etc)
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel=ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public IAgentInfo GetAgent(UUID agentID)
         {
             IAgentInfo agent = new IAgentInfo();
@@ -84,8 +84,8 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemoteForUser(agentID, agentID);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                m_cache.Cache(agentID, (IAgentInfo)remoteValue);
-                return (IAgentInfo)remoteValue;
+                m_cache.Cache(agentID, (IAgentInfo) remoteValue);
+                return (IAgentInfo) remoteValue;
             }
 
             List<string> query = null;
@@ -94,7 +94,7 @@ namespace Aurora.Services.DataService
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["ID"] = agentID;
                 filter.andFilters["`Key`"] = "AgentInfo";
-                query = GD.Query(new string[1] { "`Value`" }, "userdata", filter, null, null, null);
+                query = GD.Query(new string[1] {"`Value`"}, "userdata", filter, null, null, null);
             }
             catch
             {
@@ -115,10 +115,10 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Updates the language and maturity params of the agent.
-        ///   Note: we only allow for this on the grid side
+        ///     Updates the language and maturity params of the agent.
+        ///     Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name = "agent"></param>
+        /// <param name="agent"></param>
         //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public void UpdateAgent(IAgentInfo agent)
         {
@@ -143,10 +143,10 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Creates a new database entry for the agent.
-        ///   Note: we only allow for this on the grid side
+        ///     Creates a new database entry for the agent.
+        ///     Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         public void CreateNewAgent(UUID agentID)
         {
             List<object> values = new List<object> {agentID, "AgentInfo"};

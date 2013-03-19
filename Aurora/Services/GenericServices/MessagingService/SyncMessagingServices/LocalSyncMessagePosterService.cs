@@ -71,10 +71,7 @@ namespace Aurora.Services
         {
             if (m_doRemote)
             {
-                Util.FireAndForget((o) =>
-                {
-                    PostInternal(true, url, request);
-                });
+                Util.FireAndForget((o) => { PostInternal(true, url, request); });
             }
             else
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
@@ -93,10 +90,7 @@ namespace Aurora.Services
         {
             if (m_doRemote)
             {
-                Util.FireAndForget((o) =>
-                {
-                    PostToServerInternal(true, request);
-                });
+                Util.FireAndForget((o) => { PostToServerInternal(true, request); });
             }
             else
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
@@ -115,10 +109,7 @@ namespace Aurora.Services
         {
             if (m_doRemote)
             {
-                Util.FireAndForget((o) =>
-                {
-                    response(GetInternal(true, url, request));
-                });
+                Util.FireAndForget((o) => { response(GetInternal(true, url, request)); });
             }
             else
                 response(m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request));

@@ -97,10 +97,10 @@ namespace Aurora.Services
 
         public XmlRpcResponse HandleXMLRPCLogin(XmlRpcRequest request, IPEndPoint remoteClient)
         {
-            Hashtable requestData = (Hashtable)request.Params[0];
+            Hashtable requestData = (Hashtable) request.Params[0];
             if (m_Proxy && request.Params[3] != null)
             {
-                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string)request.Params[3]);
+                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string) request.Params[3]);
                 if (ep != null)
                     // Bang!
                     remoteClient = ep;
@@ -132,7 +132,7 @@ namespace Aurora.Services
                         clientVersion = requestData["version"].ToString();
 
                     //MAC BANNING START
-                    string mac = (string)requestData["mac"];
+                    string mac = (string) requestData["mac"];
                     if (mac == "")
                         return FailedXMLRPCResponse("Bad Viewer Connection.");
 
@@ -151,9 +151,10 @@ namespace Aurora.Services
 
 
                     string loginName = (name == "" || name == null) ? first + " " + last : name;
-                    reply = m_loginService.Login(UUID.Zero, loginName, "UserAccount", passwd, startLocation, clientVersion, channel,
-                                                     mac, id0, remoteClient, requestData);
-                    XmlRpcResponse response = new XmlRpcResponse { Value = reply.ToHashtable() };
+                    reply = m_loginService.Login(UUID.Zero, loginName, "UserAccount", passwd, startLocation,
+                                                 clientVersion, channel,
+                                                 mac, id0, remoteClient, requestData);
+                    XmlRpcResponse response = new XmlRpcResponse {Value = reply.ToHashtable()};
                     return response;
                 }
             }
@@ -163,7 +164,7 @@ namespace Aurora.Services
 
         public XmlRpcResponse HandleXMLRPCSetLoginLevel(XmlRpcRequest request, IPEndPoint remoteClient)
         {
-            Hashtable requestData = (Hashtable)request.Params[0];
+            Hashtable requestData = (Hashtable) request.Params[0];
 
             if (requestData != null)
             {
@@ -177,11 +178,12 @@ namespace Aurora.Services
                     string passwd = requestData["passwd"].ToString();
                     int level = Int32.Parse(requestData["level"].ToString());
 
-                    MainConsole.Instance.InfoFormat("[LOGIN]: XMLRPC Set Level to {2} Requested by {0} {1}", first, last, level);
+                    MainConsole.Instance.InfoFormat("[LOGIN]: XMLRPC Set Level to {2} Requested by {0} {1}", first, last,
+                                                    level);
 
                     Hashtable reply = m_loginService.SetLevel(first, last, passwd, level, remoteClient);
 
-                    XmlRpcResponse response = new XmlRpcResponse { Value = reply };
+                    XmlRpcResponse response = new XmlRpcResponse {Value = reply};
 
                     return response;
                 }
@@ -199,7 +201,7 @@ namespace Aurora.Services
         {
             if (request.Type == OSDType.Map)
             {
-                OSDMap map = (OSDMap)request;
+                OSDMap map = (OSDMap) request;
 
                 if (map.ContainsKey("first") && map.ContainsKey("last") && map.ContainsKey("passwd"))
                 {
@@ -209,14 +211,15 @@ namespace Aurora.Services
                         startLocation = map["start"].AsString();
 
                     MainConsole.Instance.Info("[LOGIN]: LLSD Login Requested for: '" + map["first"].AsString() + "' '" +
-                               map["last"].AsString() + "' / " + startLocation);
+                                              map["last"].AsString() + "' / " + startLocation);
 
                     LoginResponse reply = null;
                     string loginName = map["name"].AsString() == ""
                                            ? map["first"].AsString() + " " + map["last"].AsString()
                                            : map["name"].AsString();
-                    reply = m_loginService.Login(UUID.Zero, loginName, "UserAccount", map["passwd"].AsString(), startLocation,
-                                                     "", "", "", "", remoteClient, new Hashtable());
+                    reply = m_loginService.Login(UUID.Zero, loginName, "UserAccount", map["passwd"].AsString(),
+                                                 startLocation,
+                                                 "", "", "", "", remoteClient, new Hashtable());
                     return reply.ToOSDMap();
                 }
             }
@@ -231,7 +234,7 @@ namespace Aurora.Services
             hash["message"] = "Incomplete login credentials. Check your username and password.";
             hash["login"] = "false";
 
-            XmlRpcResponse response = new XmlRpcResponse { Value = hash };
+            XmlRpcResponse response = new XmlRpcResponse {Value = hash};
 
             return response;
         }
@@ -243,7 +246,7 @@ namespace Aurora.Services
             hash["message"] = message;
             hash["login"] = "false";
 
-            XmlRpcResponse response = new XmlRpcResponse { Value = hash };
+            XmlRpcResponse response = new XmlRpcResponse {Value = hash};
 
             return response;
         }

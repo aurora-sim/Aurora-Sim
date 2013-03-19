@@ -33,16 +33,16 @@ using Aurora.Simulation.Base;
 namespace Aurora.Servers.AssetServer
 {
     /// <summary>
-    ///   Starting class for the Aurora Server
+    ///     Starting class for the Aurora Server
     /// </summary>
     public class Application
     {
         public static void Main(string[] args)
         {
             BaseApplication.BaseMain(args, "Aurora.AssetServer.ini",
-                new MinimalSimulationBase("Aurora.AssetServer ", 
-                    new List<Type> { typeof(IAssetDataPlugin) }, 
-                    new List<Type> { typeof(IAssetService) }));
+                                     new MinimalSimulationBase("Aurora.AssetServer ",
+                                                               new List<Type> {typeof (IAssetDataPlugin)},
+                                                               new List<Type> {typeof (IAssetService)}));
         }
     }
 }

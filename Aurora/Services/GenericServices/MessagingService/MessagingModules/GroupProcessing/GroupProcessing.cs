@@ -127,10 +127,12 @@ namespace Aurora.Services
                                     //Set them to the most limited role since their role is gone
                                     con.SetAgentGroupSelectedRole(data.MemberID, groupID, everyone.RoleID);
                                 //Need to update their title inworld
-                                
-                                IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+
+                                IAgentInfoService agentInfoService =
+                                    m_registry.RequestModuleInterface<IAgentInfoService>();
                                 UserInfo info;
-                                if (agentInfoService != null && (info = agentInfoService.GetUserInfo(agentID.ToString())) != null && info.IsOnline)
+                                if (agentInfoService != null &&
+                                    (info = agentInfoService.GetUserInfo(agentID.ToString())) != null && info.IsOnline)
                                 {
                                     //Forward the message
                                     regionsToBeUpdated.Add(info);
@@ -141,7 +143,8 @@ namespace Aurora.Services
                 }
                 if (regionsToBeUpdated.Count != 0)
                 {
-                    ISyncMessagePosterService messagePost = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+                    ISyncMessagePosterService messagePost =
+                        m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                     if (messagePost != null)
                     {
                         foreach (UserInfo userInfo in regionsToBeUpdated)

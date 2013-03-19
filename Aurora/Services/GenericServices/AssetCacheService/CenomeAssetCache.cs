@@ -34,50 +34,50 @@ using System.Reflection;
 namespace Aurora.Services
 {
     /// <summary>
-    ///   Cenome memory asset cache.
+    ///     Cenome memory asset cache.
     /// </summary>
     /// <remarks>
-    ///   <para>
-    ///     Cache is enabled by setting "AssetCaching" configuration to value "CenomeMemoryAssetCache". 
-    ///     When cache is successfully enable log should have message 
-    ///     "[ASSET CACHE]: Cenome asset cache enabled (MaxSize = XXX bytes, MaxCount = XXX, ExpirationTime = XXX)".
-    ///   </para>
-    ///   <para>
-    ///     Cache's size is limited by two parameters:
-    ///     maximal allowed size in bytes and maximal allowed asset count. When new asset 
-    ///     is added to cache that have achieved either size or count limitation, cache
-    ///     will automatically remove less recently used assets from cache. Additionally
-    ///     asset's lifetime is controlled by expiration time. 
-    ///   </para>
-    ///   <para>
-    ///     <list type = "table">
-    ///       <listheader>
-    ///         <term>Configuration</term>
-    ///         <description>Description</description>
-    ///       </listheader>
-    ///       <item>
-    ///         <term>MaxSize</term>
-    ///         <description>Maximal size of the cache in bytes. Default value: 128MB (134 217 728 bytes).</description>
-    ///       </item>
-    ///       <item>
-    ///         <term>MaxCount</term>
-    ///         <description>Maximal count of assets stored to cache. Default value: 4096 assets.</description>
-    ///       </item>
-    ///       <item>
-    ///         <term>ExpirationTime</term>
-    ///         <description>Asset's expiration time in minutes. Default value: 30 minutes.</description>
-    ///       </item>
-    ///     </list>
-    ///   </para>
+    ///     <para>
+    ///         Cache is enabled by setting "AssetCaching" configuration to value "CenomeMemoryAssetCache".
+    ///         When cache is successfully enable log should have message
+    ///         "[ASSET CACHE]: Cenome asset cache enabled (MaxSize = XXX bytes, MaxCount = XXX, ExpirationTime = XXX)".
+    ///     </para>
+    ///     <para>
+    ///         Cache's size is limited by two parameters:
+    ///         maximal allowed size in bytes and maximal allowed asset count. When new asset
+    ///         is added to cache that have achieved either size or count limitation, cache
+    ///         will automatically remove less recently used assets from cache. Additionally
+    ///         asset's lifetime is controlled by expiration time.
+    ///     </para>
+    ///     <para>
+    ///         <list type="table">
+    ///             <listheader>
+    ///                 <term>Configuration</term>
+    ///                 <description>Description</description>
+    ///             </listheader>
+    ///             <item>
+    ///                 <term>MaxSize</term>
+    ///                 <description>Maximal size of the cache in bytes. Default value: 128MB (134 217 728 bytes).</description>
+    ///             </item>
+    ///             <item>
+    ///                 <term>MaxCount</term>
+    ///                 <description>Maximal count of assets stored to cache. Default value: 4096 assets.</description>
+    ///             </item>
+    ///             <item>
+    ///                 <term>ExpirationTime</term>
+    ///                 <description>Asset's expiration time in minutes. Default value: 30 minutes.</description>
+    ///             </item>
+    ///         </list>
+    ///     </para>
     /// </remarks>
     /// <example>
-    ///   Enabling Cenome Asset Cache:
-    ///   <code>
+    ///     Enabling Cenome Asset Cache:
+    ///     <code>
     ///     [Modules]
     ///     AssetCaching = "CenomeMemoryAssetCache"
     ///   </code>
-    ///   Setting size and expiration time limitations:
-    ///   <code>
+    ///     Setting size and expiration time limitations:
+    ///     <code>
     ///     [AssetCache]
     ///     ; 256 MB (default: 134217728)
     ///     MaxSize =  268435456
@@ -92,62 +92,62 @@ namespace Aurora.Services
         #region Declares
 
         /// <summary>
-        ///   Cache's default maximal asset count.
+        ///     Cache's default maximal asset count.
         /// </summary>
         /// <remarks>
-        ///   <para>
-        ///     Assuming that average asset size is about 32768 bytes.
-        ///   </para>
+        ///     <para>
+        ///         Assuming that average asset size is about 32768 bytes.
+        ///     </para>
         /// </remarks>
         public const int DefaultMaxCount = 4096;
 
         /// <summary>
-        ///   Default maximal size of the cache in bytes
+        ///     Default maximal size of the cache in bytes
         /// </summary>
         /// <remarks>
-        ///   <para>
-        ///     128MB = 128 * 1024^2 = 134 217 728 bytes.
-        ///   </para>
+        ///     <para>
+        ///         128MB = 128 * 1024^2 = 134 217 728 bytes.
+        ///     </para>
         /// </remarks>
         public const long DefaultMaxSize = 134217728;
 
         /// <summary>
-        ///   Asset's default expiration time in the cache.
+        ///     Asset's default expiration time in the cache.
         /// </summary>
         public static readonly TimeSpan DefaultExpirationTime = TimeSpan.FromMinutes(30.0);
 
         /// <summary>
-        ///   Cache object.
+        ///     Cache object.
         /// </summary>
         private ICnmCache<string, AssetBase> m_cache;
 
         /// <summary>
-        ///   Count of cache commands
+        ///     Count of cache commands
         /// </summary>
         private int m_cachedCount;
 
         /// <summary>
-        ///   How many gets before dumping statistics
+        ///     How many gets before dumping statistics
         /// </summary>
         /// <remarks>
-        ///   If 0 or less, then disabled.
+        ///     If 0 or less, then disabled.
         /// </remarks>
         private int m_debugEpoch;
 
         /// <summary>
-        ///   Count of get requests
+        ///     Count of get requests
         /// </summary>
         private int m_getCount;
 
         /// <summary>
-        ///   How many hits
+        ///     How many hits
         /// </summary>
         private int m_hitCount;
 
         #endregion
 
         /// <summary>
-        ///   Gets region module's name.
+        ///     Gets region module's name.
         /// </summary>
         public string Name
         {
@@ -157,10 +157,10 @@ namespace Aurora.Services
         #region IImprovedAssetCache Members
 
         /// <summary>
-        ///   Cache asset.
+        ///     Cache asset.
         /// </summary>
-        /// <param name = "asset">
-        ///   The asset that is being cached.
+        /// <param name="asset">
+        ///     The asset that is being cached.
         /// </param>
         public void Cache(string assetID, AssetBase asset)
         {
@@ -179,7 +179,7 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Clear asset cache.
+        ///     Clear asset cache.
         /// </summary>
         public void Clear()
         {
@@ -192,10 +192,10 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Expire (remove) asset stored to cache.
+        ///     Expire (remove) asset stored to cache.
         /// </summary>
-        /// <param name = "id">
-        ///   The expired asset's id.
+        /// <param name="id">
+        ///     The expired asset's id.
         /// </param>
         public void Expire(string id)
         {
@@ -203,19 +203,19 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Get asset stored
+        ///     Get asset stored
         /// </summary>
-        /// <param name = "id">
-        ///   The asset's id.
+        /// <param name="id">
+        ///     The asset's id.
         /// </param>
         /// <returns>
-        ///   Asset if it is found from cache; otherwise <see langword = "null" />.
+        ///     Asset if it is found from cache; otherwise <see langword="null" />.
         /// </returns>
         /// <remarks>
-        ///   <para>
-        ///     Caller should always check that is return value <see langword = "null" />.
-        ///     Cache doesn't guarantee in any situation that asset is stored to it.
-        ///   </para>
+        ///     <para>
+        ///         Caller should always check that is return value <see langword="null" />.
+        ///         Cache doesn't guarantee in any situation that asset is stored to it.
+        ///     </para>
         /// </remarks>
         public AssetBase Get(string id)
         {
@@ -310,16 +310,16 @@ namespace Aurora.Services
         #endregion
 
         /// <summary>
-        ///   Initialize asset cache module, with custom parameters.
+        ///     Initialize asset cache module, with custom parameters.
         /// </summary>
-        /// <param name = "maximalSize">
-        ///   Cache's maximal size in bytes.
+        /// <param name="maximalSize">
+        ///     Cache's maximal size in bytes.
         /// </param>
-        /// <param name = "maximalCount">
-        ///   Cache's maximal count of assets.
+        /// <param name="maximalCount">
+        ///     Cache's maximal count of assets.
         /// </param>
-        /// <param name = "expirationTime">
-        ///   Asset's expiration time.
+        /// <param name="expirationTime">
+        ///     Asset's expiration time.
         /// </param>
         protected void Initialize(long maximalSize, int maximalCount, TimeSpan expirationTime)
         {

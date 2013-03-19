@@ -55,7 +55,7 @@ namespace Aurora.Services.DataService
 
             if (GD != null)
                 GD.ConnectToDatabase(defaultConnectionString, "Estate",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
@@ -78,7 +78,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return ReturnEstateSettings(remoteValue);
 
-            EstateSettings settings = new EstateSettings() { EstateID = 0 };
+            EstateSettings settings = new EstateSettings() {EstateID = 0};
             int estateID = GetEstateID(regionID);
             if (estateID == 0)
                 return settings;
@@ -97,8 +97,8 @@ namespace Aurora.Services.DataService
 
         private EstateSettings ReturnEstateSettings(object remoteValue)
         {
-            EstateSettings es = (EstateSettings)remoteValue;
-            if(es != null)
+            EstateSettings es = (EstateSettings) remoteValue;
+            if (es != null)
                 es.OnSave += SaveEstateSettings;
             return es;
         }
@@ -108,8 +108,8 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateName"] = name;
             return ReturnEstateSettings(GetEstate(
-                int.Parse(GD.Query(new string[1]{ "EstateID" }, "estatesettings", filter, null, null, null)[0]))
-            );
+                int.Parse(GD.Query(new string[1] {"EstateID"}, "estatesettings", filter, null, null, null)[0]))
+                );
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -117,7 +117,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(es.ToOSD(), RegionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (int)remoteValue;
+                return (int) remoteValue;
 
 
             int estateID = GetEstate(es.EstateOwner, es.EstateName);
@@ -129,8 +129,8 @@ namespace Aurora.Services.DataService
             }
             es.EstateID = GetNewEstateID();
             SaveEstateSettings(es, true);
-            LinkRegion(RegionID, (int)es.EstateID);
-            return (int)es.EstateID;
+            LinkRegion(RegionID, (int) es.EstateID);
+            return (int) es.EstateID;
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -148,7 +148,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(regionID, estateID);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             Dictionary<string, object> row = new Dictionary<string, object>(2);
             row["RegionID"] = regionID;
@@ -163,7 +163,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(regionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["RegionID"] = regionID;
@@ -177,7 +177,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(estateID);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateID"] = estateID;
@@ -192,13 +192,13 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(ownerID, name);
             if (remoteValue != null || m_doRemoteOnly)
-                return (int)remoteValue;
+                return (int) remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateName"] = name;
             filter.andFilters["EstateOwner"] = ownerID;
 
-            List<string> retVal = GD.Query(new string[1] { "EstateID" }, "estatesettings", filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] {"EstateID"}, "estatesettings", filter, null, null, null);
 
             if (retVal.Count > 0)
                 return int.Parse(retVal[0]);
@@ -210,17 +210,19 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(estateID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<UUID>)remoteValue;
+                return (List<UUID>) remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateID"] = estateID;
-            return GD.Query(new string[1] { "RegionID" }, m_estateRegionsTable, filter, null, null, null).ConvertAll(x => UUID.Parse(x));
+            return
+                GD.Query(new string[1] {"RegionID"}, m_estateRegionsTable, filter, null, null, null)
+                  .ConvertAll(x => UUID.Parse(x));
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
-            return GetEstates(OwnerID, new Dictionary<string,bool>(0));
+            return GetEstates(OwnerID, new Dictionary<string, bool>(0));
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -228,22 +230,27 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(OwnerID, boolFields);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<EstateSettings>)remoteValue;
+                return (List<EstateSettings>) remoteValue;
 
             List<EstateSettings> settings = new List<EstateSettings>();
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateOwner"] = OwnerID;
-            List<int> retVal = GD.Query(new string[1] { "EstateID" }, m_estateTable, filter, null, null, null).ConvertAll(x => int.Parse(x));
+            List<int> retVal =
+                GD.Query(new string[1] {"EstateID"}, m_estateTable, filter, null, null, null)
+                  .ConvertAll(x => int.Parse(x));
             foreach (int estateID in retVal)
             {
                 bool Add = true;
                 EstateSettings es = GetEstate(estateID);
 
-                if(boolFields.Count > 0){
+                if (boolFields.Count > 0)
+                {
                     OSDMap esmap = es.ToOSD();
-                    foreach(KeyValuePair<string, bool> field in boolFields){
-                        if(esmap.ContainsKey(field.Key) && esmap[field.Key].AsBoolean() != field.Value){
+                    foreach (KeyValuePair<string, bool> field in boolFields)
+                    {
+                        if (esmap.ContainsKey(field.Key) && esmap[field.Key].AsBoolean() != field.Value)
+                        {
                             Add = false;
                             break;
                         }
@@ -267,7 +274,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["RegionID"] = regionID;
 
-            List<string> retVal = GD.Query(new string[1] { "EstateID" }, m_estateRegionsTable, filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] {"EstateID"}, m_estateRegionsTable, filter, null, null, null);
 
             return (retVal.Count > 0) ? int.Parse(retVal[0]) : 0;
         }
@@ -276,13 +283,14 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateID"] = estateID;
-            List<string> retVals = GD.Query(new string[1] { "*" }, m_estateTable, filter, null, null, null);
-            EstateSettings settings = new EstateSettings{
-                EstateID = 0
-            };
+            List<string> retVals = GD.Query(new string[1] {"*"}, m_estateTable, filter, null, null, null);
+            EstateSettings settings = new EstateSettings
+                                          {
+                                              EstateID = 0
+                                          };
             if (retVals.Count > 0)
             {
-                settings.FromOSD((OSDMap)OSDParser.DeserializeJson(retVals[4]));
+                settings.FromOSD((OSDMap) OSDParser.DeserializeJson(retVals[4]));
             }
             settings.OnSave += SaveEstateSettings;
             return settings;
@@ -290,10 +298,11 @@ namespace Aurora.Services.DataService
 
         private uint GetNewEstateID()
         {
-            List<string> QueryResults = GD.Query(new string[2]{
-                "COUNT(EstateID)",
-                "MAX(EstateID)"
-            }, m_estateTable, null, null, null, null);
+            List<string> QueryResults = GD.Query(new string[2]
+                                                     {
+                                                         "COUNT(EstateID)",
+                                                         "MAX(EstateID)"
+                                                     }, m_estateTable, null, null, null, null);
             return (uint.Parse(QueryResults[0]) > 0) ? uint.Parse(QueryResults[1]) + 1 : 100;
         }
 

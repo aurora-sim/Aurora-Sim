@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Reflection;
 using Aurora.DataManager;
 using Nini.Config;
@@ -86,7 +86,6 @@ namespace Aurora.FileBasedServices.AssetService
         {
         }
 
-
         #endregion
 
         #region IAssetService Members
@@ -112,8 +111,8 @@ namespace Aurora.FileBasedServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
             {
                 if (doDatabaseCaching && cache != null)
-                    cache.Cache(id, (AssetBase)remoteValue);
-                return (AssetBase)remoteValue;
+                    cache.Cache(id, (AssetBase) remoteValue);
+                return (AssetBase) remoteValue;
             }
 
             AssetBase asset = FileGetAsset(id);
@@ -150,7 +149,7 @@ namespace Aurora.FileBasedServices.AssetService
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                byte[] data = (byte[])remoteValue;
+                byte[] data = (byte[]) remoteValue;
                 if (doDatabaseCaching && cache != null)
                     cache.CacheData(id, data);
                 return data;
@@ -168,17 +167,14 @@ namespace Aurora.FileBasedServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             return FileExistsAsset(id);
         }
 
         public virtual void Get(String id, Object sender, AssetRetrieved handler)
         {
-            Util.FireAndForget((o) =>
-            {
-                handler(id, sender, Get(id));
-            });
+            Util.FireAndForget((o) => { handler(id, sender, Get(id)); });
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -192,11 +188,11 @@ namespace Aurora.FileBasedServices.AssetService
             {
                 if (remoteValue == null)
                     return UUID.Zero;
-                asset.ID = (UUID)remoteValue;
+                asset.ID = (UUID) remoteValue;
             }
             else
                 FileSetAsset(asset);
-            
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (doDatabaseCaching && cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
             {
@@ -212,7 +208,7 @@ namespace Aurora.FileBasedServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id, data);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? UUID.Zero : (UUID)remoteValue;
+                return remoteValue == null ? UUID.Zero : (UUID) remoteValue;
 
             AssetBase asset = FileGetAsset(id.ToString());
             if (asset == null)
@@ -221,7 +217,7 @@ namespace Aurora.FileBasedServices.AssetService
             asset.Data = data;
             bool success = FileSetAsset(asset);
             if (!success)
-                return UUID.Zero;//We weren't able to update the asset
+                return UUID.Zero; //We weren't able to update the asset
             return newID;
         }
 
@@ -230,7 +226,7 @@ namespace Aurora.FileBasedServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             FileDeleteAsset(id.ToString());
             return true;
@@ -246,7 +242,8 @@ namespace Aurora.FileBasedServices.AssetService
             if (!Directory.Exists(Path.Combine(m_assetsDirectory, "data")))
                 Directory.CreateDirectory(Path.Combine(m_assetsDirectory, "data"));
 
-            MainConsole.Instance.InfoFormat("[FILE BASED ASSET SERVICE]: Set up File Based Assets in {0}.", m_assetsDirectory);
+            MainConsole.Instance.InfoFormat("[FILE BASED ASSET SERVICE]: Set up File Based Assets in {0}.",
+                                            m_assetsDirectory);
         }
 
         private string GetPathForID(string id)
@@ -255,7 +252,7 @@ namespace Aurora.FileBasedServices.AssetService
             string baseStr = m_assetsDirectory;
             for (int i = 0; i < 4; i++)
             {
-                baseStr = Path.Combine(baseStr, fileName.Substring(i * 2, 2));
+                baseStr = Path.Combine(baseStr, fileName.Substring(i*2, 2));
                 if (!Directory.Exists(baseStr))
                     Directory.CreateDirectory(baseStr);
             }
@@ -268,20 +265,23 @@ namespace Aurora.FileBasedServices.AssetService
             string baseStr = Path.Combine(m_assetsDirectory, "data");
             for (int i = 0; i < 4; i++)
             {
-                baseStr = Path.Combine(baseStr, fileName.Substring(i * 2, 2));
+                baseStr = Path.Combine(baseStr, fileName.Substring(i*2, 2));
                 if (!Directory.Exists(baseStr))
                     Directory.CreateDirectory(baseStr);
             }
             return Path.Combine(baseStr, fileName + ".data");
         }
+
         private static string MakeValidFileName(string name)
         {
-            string invalidChars = System.Text.RegularExpressions.Regex.Escape(new string(System.IO.Path.GetInvalidFileNameChars())) + "+=";
+            string invalidChars =
+                System.Text.RegularExpressions.Regex.Escape(new string(System.IO.Path.GetInvalidFileNameChars())) + "+=";
             string invalidReStr = string.Format(@"([{0}]*\.+$)|([{0}]+)", invalidChars);
             return System.Text.RegularExpressions.Regex.Replace(name, invalidReStr, "");
         }
 
         private object _lock = new object();
+
         public AssetBase FileGetAsset(string id)
         {
             AssetBase asset = null;
@@ -310,7 +310,8 @@ namespace Aurora.FileBasedServices.AssetService
 #if DEBUG
                 long endTime = System.Diagnostics.Stopwatch.GetTimestamp();
                 if (MainConsole.Instance != null && asset != null)
-                    MainConsole.Instance.Warn("[FILE BASED ASSET SERVICE]: Took " + (endTime - startTime) /10000 + " to get asset " + id + " sized " + asset.Data.Length / (1024) + "kbs");
+                    MainConsole.Instance.Warn("[FILE BASED ASSET SERVICE]: Took " + (endTime - startTime)/10000 +
+                                              " to get asset " + id + " sized " + asset.Data.Length/(1024) + "kbs");
 #endif
             }
             return asset;
@@ -422,7 +423,7 @@ namespace Aurora.FileBasedServices.AssetService
 
             for (i = 0; i < 5; i++)
             {
-                int off = i * 16;
+                int off = i*16;
                 if (asset.Data.Length <= off)
                     break;
                 int len = 16;
@@ -467,7 +468,7 @@ namespace Aurora.FileBasedServices.AssetService
             }
 
             AssetBase asset = FileGetAsset(args[2]);
-            if(asset == null)
+            if (asset == null)
                 asset = FileGetAsset(args[2]);
 
             if (asset == null || asset.Data.Length == 0)

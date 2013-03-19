@@ -49,7 +49,7 @@ namespace Aurora.Services.DataService
 
             if (GD != null)
                 GD.ConnectToDatabase(defaultConnectionString, "Generics",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
@@ -68,19 +68,20 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets all offline messages for the user in GridInstantMessage format.
+        ///     Gets all offline messages for the user in GridInstantMessage format.
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GridInstantMessage> GetOfflineMessages(UUID agentID)
         {
             object remoteValue = DoRemote(agentID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GridInstantMessage>)remoteValue;
+                return (List<GridInstantMessage>) remoteValue;
 
             //Get all the messages
-            List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages", GD);
+            List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages",
+                                                                                             GD);
             Messages.AddRange(GenericUtils.GetGenerics<GridInstantMessage>(agentID, "GroupOfflineMessages", GD));
             //Clear them out now that we have them
             GenericUtils.RemoveGenericByType(agentID, "OfflineMessages", GD);
@@ -89,18 +90,18 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Adds a new offline message for the user.
+        ///     Adds a new offline message for the user.
         /// </summary>
-        /// <param name = "message"></param>
+        /// <param name="message"></param>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool AddOfflineMessage(GridInstantMessage message)
         {
             object remoteValue = DoRemote(message);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             if (m_maxOfflineMessages <= 0 ||
-                    GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
+                GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
             {
                 GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(),
                                         message.ToOSD(), GD);

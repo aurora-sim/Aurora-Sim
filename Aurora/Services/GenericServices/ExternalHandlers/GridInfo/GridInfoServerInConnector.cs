@@ -56,10 +56,10 @@ namespace Aurora.Services
             handlerConfig = config.Configs["GridInfoService"];
             IHttpServer server =
                 registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
-                    (uint)handlerConfig.GetInt("GridInfoInHandlerPort", 0));
+                    (uint) handlerConfig.GetInt("GridInfoInHandlerPort", 0));
 
             server.AddStreamHandler(new GenericStreamHandler("GET", "/get_grid_info",
-                                                          handlers.RestGetGridInfoMethod));
+                                                             handlers.RestGetGridInfoMethod));
             server.AddXmlRPCHandler("get_grid_info", handlers.XmlRpcGridInfoMethod);
         }
 

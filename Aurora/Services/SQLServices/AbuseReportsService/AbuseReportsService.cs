@@ -64,8 +64,8 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        /// Cannot be reflected on purpose, so it can only be used locally.
-        /// Gets the abuse report associated with the number without authentication.
+        ///     Cannot be reflected on purpose, so it can only be used locally.
+        ///     Gets the abuse report associated with the number without authentication.
         /// </summary>
         /// <param name="Number"></param>
         /// <returns></returns>
@@ -91,7 +91,7 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(start, count, active);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<AbuseReport>)remoteValue;
+                return (List<AbuseReport>) remoteValue;
 
             IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)

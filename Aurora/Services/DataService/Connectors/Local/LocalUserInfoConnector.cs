@@ -65,7 +65,7 @@ namespace Aurora.Services.DataService
                 }
                 if (GD != null)
                     GD.ConnectToDatabase(connectionString, "UserInfo",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(this);
             }
@@ -82,7 +82,7 @@ namespace Aurora.Services.DataService
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
             values[2] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
-                //Convert to binary so that it can be converted easily
+            //Convert to binary so that it can be converted easily
             values[3] = info.IsOnline ? 1 : 0;
             values[4] = Util.ToUnixTime(info.LastLogin);
             values[5] = Util.ToUnixTime(info.LastLogout);
@@ -109,7 +109,8 @@ namespace Aurora.Services.DataService
             GD.Update(m_realm, values, null, filter, null, null);
         }
 
-        public void SetLastPosition(string userID, UUID regionID, string regionURI, Vector3 lastPosition, Vector3 lastLookAt)
+        public void SetLastPosition(string userID, UUID regionID, string regionURI, Vector3 lastPosition,
+                                    Vector3 lastLookAt)
         {
             Dictionary<string, object> values = new Dictionary<string, object>(5);
             values["CurrentRegionID"] = regionID;
@@ -136,19 +137,19 @@ namespace Aurora.Services.DataService
         {
             List<UserInfo> users = new List<UserInfo>();
 
-            if (query.Count % 14 == 0)
+            if (query.Count%14 == 0)
             {
                 for (int i = 0; i < query.Count; i += 14)
                 {
                     UserInfo user = new UserInfo
-                    {
-                        UserID = query[i],
-                        CurrentRegionID = UUID.Parse(query[i + 1]),
-                        IsOnline = query[i + 3] == "1",
-                        LastLogin = Util.ToDateTime(int.Parse(query[i + 4])),
-                        LastLogout = Util.ToDateTime(int.Parse(query[i + 5])),
-                        Info = (OSDMap)OSDParser.DeserializeJson(query[i + 6])
-                    };
+                                        {
+                                            UserID = query[i],
+                                            CurrentRegionID = UUID.Parse(query[i + 1]),
+                                            IsOnline = query[i + 3] == "1",
+                                            LastLogin = Util.ToDateTime(int.Parse(query[i + 4])),
+                                            LastLogout = Util.ToDateTime(int.Parse(query[i + 5])),
+                                            Info = (OSDMap) OSDParser.DeserializeJson(query[i + 6])
+                                        };
                     try
                     {
                         user.CurrentRegionID = UUID.Parse(query[i + 7]);
@@ -179,7 +180,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["CurrentRegionID"] = regionID;
             filter.andFilters["IsOnline"] = "1";
-            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
+            List<string> query = GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null);
 
             if (query.Count == 0)
                 return new List<UserInfo>();
@@ -193,7 +194,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UserID"] = userID;
-            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
+            List<string> query = GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null);
 
             if (query.Count == 0)
             {
@@ -207,10 +208,10 @@ namespace Aurora.Services.DataService
             if (checkOnlineStatus && m_checkLastSeen && user.IsOnline && (timeLastSeen.AddHours(1) < timeNow))
             {
                 MainConsole.Instance.Warn("[UserInfoService]: Found a user (" + user.UserID +
-                               ") that was not seen within the last hour " +
-                               "(since " + timeLastSeen.ToLocalTime().ToString() + ", time elapsed " +
-                               (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours +
-                               " hours)! Logging them out.");
+                                          ") that was not seen within the last hour " +
+                                          "(since " + timeLastSeen.ToLocalTime().ToString() + ", time elapsed " +
+                                          (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours +
+                                          " hours)! Logging them out.");
                 user.IsOnline = false;
                 Set(user);
                 onlineStatusChanged = true;
@@ -220,7 +221,7 @@ namespace Aurora.Services.DataService
 
         public uint RecentlyOnline(uint secondsAgo, bool stillOnline)
         {
-            int now = (int)Utils.DateTimeToUnixTime(DateTime.Now) - (int)secondsAgo;
+            int now = (int) Utils.DateTimeToUnixTime(DateTime.Now) - (int) secondsAgo;
 
             QueryFilter filter = new QueryFilter();
             filter.orGreaterThanEqFilters["LastLogin"] = now;
@@ -231,12 +232,13 @@ namespace Aurora.Services.DataService
                 filter.andFilters["IsOnline"] = "1";
             }
 
-            return uint.Parse(GD.Query(new string[1] { "COUNT(UserID)" }, m_realm, filter, null, null, null)[0]);
+            return uint.Parse(GD.Query(new string[1] {"COUNT(UserID)"}, m_realm, filter, null, null, null)[0]);
         }
 
-        public List<UserInfo> RecentlyOnline(uint secondsAgo, bool stillOnline, Dictionary<string, bool> sort, uint start, uint count)
+        public List<UserInfo> RecentlyOnline(uint secondsAgo, bool stillOnline, Dictionary<string, bool> sort,
+                                             uint start, uint count)
         {
-            int now = (int)Utils.DateTimeToUnixTime(DateTime.Now) - (int)secondsAgo;
+            int now = (int) Utils.DateTimeToUnixTime(DateTime.Now) - (int) secondsAgo;
 
             QueryFilter filter = new QueryFilter();
             filter.orGreaterThanEqFilters["LastLogin"] = now;
@@ -247,7 +249,7 @@ namespace Aurora.Services.DataService
                 filter.andFilters["IsOnline"] = "1";
             }
 
-            List<string> query = GD.Query(new string[] { "*" }, m_realm, filter, sort, start, count);
+            List<string> query = GD.Query(new string[] {"*"}, m_realm, filter, sort, start, count);
 
             return ParseQuery(query);
         }

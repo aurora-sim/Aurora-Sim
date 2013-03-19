@@ -34,13 +34,15 @@ using System.Collections.Generic;
 namespace Aurora.Services.DataService
 {
     public class LocalUserStatsDataConnector : IUserStatsDataConnector
-	{
+    {
         private IGenericData GD = null;
         private const string m_realm = "statsdata";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("WebStatsDataConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("WebStatsDataConnector", "LocalConnector") ==
+                "LocalConnector")
             {
                 GD = GenericData;
 
@@ -48,7 +50,8 @@ namespace Aurora.Services.DataService
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
                 if (GD != null)
-                    GD.ConnectToDatabase(defaultConnectionString, "Stats", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                    GD.ConnectToDatabase(defaultConnectionString, "Stats",
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
@@ -64,7 +67,7 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        /// Add/Update a user's stats in the database
+        ///     Add/Update a user's stats in the database
         /// </summary>
         /// <param name="uid"></param>
         /// <param name="agentID"></param>
@@ -114,21 +117,21 @@ namespace Aurora.Services.DataService
         public List<string> Get(string columnName)
         {
             QueryFilter filter = new QueryFilter();
-            return GD.Query(new string[1] { columnName }, m_realm, filter, null, null, null);
+            return GD.Query(new string[1] {columnName}, m_realm, filter, null, null, null);
         }
 
         public int GetCount(string columnName, KeyValuePair<string, object> whereCheck)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters.Add(whereCheck.Key, whereCheck.Value);
-            return int.Parse(GD.Query(new string[1] { "count(" + columnName + ")" }, m_realm, filter, null, null, null)[0]);
+            return int.Parse(GD.Query(new string[1] {"count(" + columnName + ")"}, m_realm, filter, null, null, null)[0]);
         }
 
         public ViewerStatsMessage GetBySession(UUID sessionID)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters.Add("session_id", sessionID);
-            List<string> results = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
+            List<string> results = GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null);
             return BuildSession(results, 0);
         }
 
@@ -177,5 +180,5 @@ namespace Aurora.Services.DataService
             }
             return message;
         }
-	}
+    }
 }

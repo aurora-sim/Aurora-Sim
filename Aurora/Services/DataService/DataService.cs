@@ -59,7 +59,7 @@ namespace Aurora.Services.DataService
 
                 DataConnector = GenericData;
             }
-            /*else if (StorageProvider == "MSSQL2008")
+                /*else if (StorageProvider == "MSSQL2008")
             {
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
 
@@ -84,12 +84,14 @@ namespace Aurora.Services.DataService
             {
                 try
                 {
-                    plugin.Initialize(DataConnector == null ? null : DataConnector.Copy(), source, simBase, ConnectionString);
+                    plugin.Initialize(DataConnector == null ? null : DataConnector.Copy(), source, simBase,
+                                      ConnectionString);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     if (MainConsole.Instance != null)
-                        MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                        MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " +
+                                                  plugin.Name + ", " + ex.ToString());
                 }
             }
         }
@@ -105,13 +107,13 @@ namespace Aurora.Services.DataService
 
             IGenericData DataConnector = null;
             if (StorageProvider == "MySQL")
-            //Allow for fallback when AuroraData isn't set
+                //Allow for fallback when AuroraData isn't set
             {
                 MySQLDataLoader GenericData = new MySQLDataLoader();
 
                 DataConnector = GenericData;
             }
-            /*else if (StorageProvider == "MSSQL2008")
+                /*else if (StorageProvider == "MSSQL2008")
             {
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
 
@@ -124,7 +126,7 @@ namespace Aurora.Services.DataService
                 DataConnector = GenericData;
             }*/
             else if (StorageProvider == "SQLite")
-            //Allow for fallback when AuroraData isn't set
+                //Allow for fallback when AuroraData isn't set
             {
                 SQLiteLoader GenericData = new SQLiteLoader();
 
@@ -143,7 +145,8 @@ namespace Aurora.Services.DataService
                     catch (Exception ex)
                     {
                         if (MainConsole.Instance != null)
-                            MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                            MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " +
+                                                      plugin.Name + ", " + ex.ToString());
                     }
                 }
             }

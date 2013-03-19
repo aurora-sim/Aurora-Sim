@@ -34,19 +34,15 @@ using OpenMetaverse.StructuredData;
 namespace Aurora.Services.DataService
 {
     /// <summary>
-    ///   Some background to this class
-    /// 
-    ///   This class saves any class that implements the IDataTransferable interface.
-    ///   When implementing the IDataTransferable interface, it is heavily recommending to implement ToOSD and FromOSD first, then use the Utility methods to convert OSDMaps into Dictionarys, as shown in the LandData class.
-    /// 
-    ///   This method of saving uses 4 columns in the database, OwnerID, Type, Key, and Value
-    /// 
-    ///   - OwnerID : This is a way to be able to save Agent or Region or anything with a UUID into the database and have it be set to that UUID only.
-    ///   - Type : What made this data? This just tells what module created the given row in the database.
-    ///   - Key : Another identifying setting so that you can store more than one row under an OwnerID and Type
-    ///   - Value : The value of the row
-    /// 
-    ///   This class deals with the Getting/Setting/Removing of these generic interfaces.
+    ///     Some background to this class
+    ///     This class saves any class that implements the IDataTransferable interface.
+    ///     When implementing the IDataTransferable interface, it is heavily recommending to implement ToOSD and FromOSD first, then use the Utility methods to convert OSDMaps into Dictionarys, as shown in the LandData class.
+    ///     This method of saving uses 4 columns in the database, OwnerID, Type, Key, and Value
+    ///     - OwnerID : This is a way to be able to save Agent or Region or anything with a UUID into the database and have it be set to that UUID only.
+    ///     - Type : What made this data? This just tells what module created the given row in the database.
+    ///     - Key : Another identifying setting so that you can store more than one row under an OwnerID and Type
+    ///     - Value : The value of the row
+    ///     This class deals with the Getting/Setting/Removing of these generic interfaces.
     /// </summary>
     public class LocalGenericsConnector : IGenericsConnector
     {
@@ -66,7 +62,7 @@ namespace Aurora.Services.DataService
 
                 if (GD != null)
                     GD.ConnectToDatabase(defaultConnectionString, "Generics",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(this);
             }
@@ -78,13 +74,13 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets a Generic type as set by the ownerID, Type, and Key
+        ///     Gets a Generic type as set by the ownerID, Type, and Key
         /// </summary>
-        /// <typeparam name = "T">return value of type IDataTransferable</typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "Key"></param>
-        /// <param name = "data">a default T to copy all data into</param>
+        /// <typeparam name="T">return value of type IDataTransferable</typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <param name="data">a default T to copy all data into</param>
         /// <returns></returns>
         public T GetGeneric<T>(UUID OwnerID, string Type, string Key) where T : IDataTransferable
         {
@@ -92,12 +88,12 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets a list of generic T's from the database
+        ///     Gets a list of generic T's from the database
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "data">a default T</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="data">a default T</param>
         /// <returns></returns>
         public List<T> GetGenerics<T>(UUID OwnerID, string Type) where T : IDataTransferable
         {
@@ -105,12 +101,12 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets the number of list of generic T's from the database
+        ///     Gets the number of list of generic T's from the database
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "data">a default T</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="data">a default T</param>
         /// <returns></returns>
         public int GetGenericCount(UUID OwnerID, string Type)
         {
@@ -118,33 +114,33 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Adds a generic IDataTransferable into the database
+        ///     Adds a generic IDataTransferable into the database
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "Key"></param>
-        /// <param name = "Value"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <param name="Value"></param>
         public void AddGeneric(UUID AgentID, string Type, string Key, OSDMap Value)
         {
             GenericUtils.AddGeneric(AgentID, Type, Key, Value, GD);
         }
 
         /// <summary>
-        ///   Removes a generic IDataTransferable from the database
+        ///     Removes a generic IDataTransferable from the database
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "Key"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
         public void RemoveGeneric(UUID AgentID, string Type, string Key)
         {
             GenericUtils.RemoveGenericByKeyAndType(AgentID, Type, Key, GD);
         }
 
         /// <summary>
-        ///   Removes a generic IDataTransferable from the database
+        ///     Removes a generic IDataTransferable from the database
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "Type"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="Type"></param>
         public void RemoveGeneric(UUID AgentID, string Type)
         {
             GenericUtils.RemoveGenericByType(AgentID, Type, GD);
@@ -154,6 +150,7 @@ namespace Aurora.Services.DataService
         {
             return GenericUtils.GetOwnersByGeneric(GD, Type, Key);
         }
+
         public List<UUID> GetOwnersByGeneric(string Type, string Key, OSDMap value)
         {
             return GenericUtils.GetOwnersByGeneric(GD, Type, Key, value);

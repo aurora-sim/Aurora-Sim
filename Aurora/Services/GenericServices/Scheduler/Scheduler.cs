@@ -41,16 +41,16 @@ namespace Aurora.Services
         public AuroraEventManager EventManager = new AuroraEventManager();
         private ISchedulerDataPlugin m_database;
         private bool m_enabled = false;
-        
+
         private readonly Timer scheduleTimer = new Timer();
 
         #region Implementation of IService
 
         /// <summary>
-        ///   Set up and register the module
+        ///     Set up and register the module
         /// </summary>
-        /// <param name = "config">Config file</param>
-        /// <param name = "registry">Place to register the modules into</param>
+        /// <param name="config">Config file</param>
+        /// <param name="registry">Place to register the modules into</param>
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IScheduleService>(this);
@@ -58,17 +58,16 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Load other IService modules now that this is set up
+        ///     Load other IService modules now that this is set up
         /// </summary>
-        /// <param name = "config">Config file</param>
-        /// <param name = "registry">Place to register and retrieve module interfaces</param>
+        /// <param name="config">Config file</param>
+        /// <param name="registry">Place to register and retrieve module interfaces</param>
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            
         }
 
         /// <summary>
-        ///   All modules have started up and it is ready to run
+        ///     All modules have started up and it is ready to run
         /// </summary>
         public void FinishedStartup()
         {
@@ -92,7 +91,6 @@ namespace Aurora.Services
 
         #region Implementation of IScheduleService
 
-
         public bool Register(SchedulerItem I, OnGenericEventHandler handler)
         {
             if (m_doRemoteCalls) return false;
@@ -100,7 +98,7 @@ namespace Aurora.Services
             return true;
         }
 
-        
+
         public bool Register(string fName, OnGenericEventHandler handler)
         {
             if (m_doRemoteCalls) return false;
@@ -112,7 +110,7 @@ namespace Aurora.Services
         public string Save(SchedulerItem I)
         {
             if (m_doRemoteCalls)
-                return (string)DoRemote(I);
+                return (string) DoRemote(I);
             return m_database.SchedulerSave(I);
         }
 
@@ -139,7 +137,7 @@ namespace Aurora.Services
         public SchedulerItem Get(string ID)
         {
             if (m_doRemoteCalls)
-                return (SchedulerItem)DoRemote(ID);
+                return (SchedulerItem) DoRemote(ID);
             return m_database.Get(ID);
         }
 
@@ -147,13 +145,14 @@ namespace Aurora.Services
         public SchedulerItem Get(string scheduleFor, string fireFunction)
         {
             if (m_doRemoteCalls)
-                return (SchedulerItem)DoRemote(scheduleFor, fireFunction);
+                return (SchedulerItem) DoRemote(scheduleFor, fireFunction);
             return m_database.Get(scheduleFor, fireFunction);
         }
 
         #endregion
 
         #region Timer
+
         private void t_Elapsed(object sender, ElapsedEventArgs e)
         {
             scheduleTimer.Enabled = false;
@@ -211,8 +210,6 @@ namespace Aurora.Services
                     }
 #endif
                 }
-            
-                
             }
             catch (Exception e)
             {
@@ -227,6 +224,4 @@ namespace Aurora.Services
 
         #endregion
     }
-
-    
 }

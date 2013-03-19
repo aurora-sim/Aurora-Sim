@@ -66,10 +66,10 @@ namespace Aurora.Services
         #endregion
 
         /// <summary>
-        ///   Server side
+        ///     Server side
         /// </summary>
-        /// <param name = "FunctionName"></param>
-        /// <param name = "parameters"></param>
+        /// <param name="FunctionName"></param>
+        /// <param name="parameters"></param>
         /// <returns></returns>
         protected object OnGenericEvent(string FunctionName, object parameters)
         {
@@ -82,7 +82,7 @@ namespace Aurora.Services
                 IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                 if (estateConnector != null)
                 {
-                    List<UUID> regions = estateConnector.GetRegions((int)es.EstateID);
+                    List<UUID> regions = estateConnector.GetRegions((int) es.EstateID);
                     if (regions != null)
                     {
                         foreach (UUID region in regions)
@@ -103,9 +103,9 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Region side
+        ///     Region side
         /// </summary>
-        /// <param name = "message"></param>
+        /// <param name="message"></param>
         /// <returns></returns>
         protected OSDMap OnMessageReceived(OSDMap message)
         {
@@ -121,7 +121,8 @@ namespace Aurora.Services
                 {
                     if (manager.Scene.RegionInfo.EstateSettings.EstateID == estateID)
                     {
-                        IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                        IEstateConnector estateConnector =
+                            Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
                         if (estateConnector != null)
                         {
                             EstateSettings es = null;

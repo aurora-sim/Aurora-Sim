@@ -47,9 +47,10 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("folderName", ColumnTypes.String64),
                 ColDef("type", ColumnTypes.Integer11),
                 ColDef("version", ColumnTypes.Integer11)
-            ), IndexDefs(
-                IndexDef(new string[3]{ "folderID", "agentID", "parentFolderID" }, IndexType.Primary)
-            ));
+                                              ), IndexDefs(
+                                                  IndexDef(new string[3] {"folderID", "agentID", "parentFolderID"},
+                                                           IndexType.Primary)
+                                                     ));
 
             AddSchema("inventoryitems", ColDefs(
                 ColDef("assetID", ColumnTypes.Char36),
@@ -72,13 +73,18 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("avatarID", ColumnTypes.Char36),
                 ColDef("parentFolderID", ColumnTypes.Char36),
                 ColDef("inventoryGroupPermissions", ColumnTypes.Integer11)
-            ), IndexDefs(
-                IndexDef(new string[5]{ "assetType", "flags", "inventoryID", "avatarID", "parentFolderID" }, IndexType.Primary),
-                IndexDef(new string[2]{ "parentFolderID", "avatarID" }, IndexType.Index),
-                IndexDef(new string[2]{ "avatarID", "assetType"}, IndexType.Index),
-                IndexDef(new string[1]{ "inventoryID" }, IndexType.Index),
-                IndexDef(new string[2]{ "assetID", "avatarID" }, IndexType.Index)
-            ));
+                                            ), IndexDefs(
+                                                IndexDef(
+                                                    new string[5]
+                                                        {
+                                                            "assetType", "flags", "inventoryID", "avatarID",
+                                                            "parentFolderID"
+                                                        }, IndexType.Primary),
+                                                IndexDef(new string[2] {"parentFolderID", "avatarID"}, IndexType.Index),
+                                                IndexDef(new string[2] {"avatarID", "assetType"}, IndexType.Index),
+                                                IndexDef(new string[1] {"inventoryID"}, IndexType.Index),
+                                                IndexDef(new string[2] {"assetID", "avatarID"}, IndexType.Index)
+                                                   ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

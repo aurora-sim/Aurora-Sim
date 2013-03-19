@@ -42,7 +42,8 @@ namespace Aurora.Services.DataService
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
                                string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AvatarArchiverConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("AvatarArchiverConnector", "LocalConnector") ==
+                "LocalConnector")
             {
                 GD = GenericData;
 
@@ -53,7 +54,7 @@ namespace Aurora.Services.DataService
 
                 if (GD != null)
                     GD.ConnectToDatabase(defaultConnectionString, "AvatarArchive",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
                 DataManager.DataManager.RegisterPlugin(this);
             }
         }
@@ -67,18 +68,21 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Name"] = Name;
-            List<string> RetVal = GD.Query(new string[] { "*" }, "avatararchives", filter, null, null, null);
+            List<string> RetVal = GD.Query(new string[] {"*"}, "avatararchives", filter, null, null, null);
 
-            return (RetVal.Count == 0) ?  null :  new AvatarArchive {
-                Name = RetVal[0],
-                ArchiveXML = RetVal[1]
-            };
+            return (RetVal.Count == 0)
+                       ? null
+                       : new AvatarArchive
+                             {
+                                 Name = RetVal[0],
+                                 ArchiveXML = RetVal[1]
+                             };
         }
 
         /// <summary>
-        ///   Returns a list object of AvatarArchives. This is being used for WebUI
+        ///     Returns a list object of AvatarArchives. This is being used for WebUI
         /// </summary>
-        /// <param name = "isPublic"></param>
+        /// <param name="isPublic"></param>
         /// <returns></returns>
         public List<AvatarArchive> GetAvatarArchives(bool isPublic)
         {
@@ -109,15 +113,16 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Name"] = archive.Name;
-            List<string> Check = GD.Query(new string[] { "Name" }, "avatararchives", filter, null, null, null);
+            List<string> Check = GD.Query(new string[] {"Name"}, "avatararchives", filter, null, null, null);
             if (Check.Count == 0)
             {
-                GD.Insert("avatararchives", new object[]{
-                    archive.Name,
-                    archive.ArchiveXML,
-                    archive.Snapshot,
-                    archive.IsPublic
-                });
+                GD.Insert("avatararchives", new object[]
+                                                {
+                                                    archive.Name,
+                                                    archive.ArchiveXML,
+                                                    archive.Snapshot,
+                                                    archive.IsPublic
+                                                });
             }
             else
             {

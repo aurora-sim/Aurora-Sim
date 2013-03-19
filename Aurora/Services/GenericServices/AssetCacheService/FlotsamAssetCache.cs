@@ -57,10 +57,14 @@ namespace Aurora.Services
         private ulong m_HitRateDisplay = 1; // How often to display hit statistics, given in requests
 
         private static ulong m_Requests;
-        private PreAddedDictionary<string, AssetRequest> m_assetRequests = new PreAddedDictionary<string, AssetRequest>(() => new AssetRequest());
+
+        private PreAddedDictionary<string, AssetRequest> m_assetRequests =
+            new PreAddedDictionary<string, AssetRequest>(() => new AssetRequest());
+
         private class AssetRequest
         {
             private int _amt = 1;
+
             public int Amt
             {
                 get { return _amt; }
@@ -73,7 +77,9 @@ namespace Aurora.Services
                     LastAccessed = DateTime.Now;
                 }
             }
+
             private int _savedamt = 1;
+
             public int SavedAmt
             {
                 get { return _savedamt; }
@@ -86,10 +92,12 @@ namespace Aurora.Services
                     LastAccessed = DateTime.Now;
                 }
             }
+
             public TimeSpan LastAccessedTimeSpan = TimeSpan.FromDays(1000);
             public DateTime LastAccessed = DateTime.Now;
             public object Lock = new object();
         }
+
         private static ulong m_RequestsForInprogress;
         private static ulong m_DiskHits;
         private static ulong m_MemoryHits;
@@ -247,8 +255,8 @@ namespace Aurora.Services
         public void FinishedStartup()
         {
             IMonitorModule monitor = m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>();
-            if(monitor != null)
-                _assetMonitor = (IAssetMonitor)monitor.GetMonitor("", MonitorModuleHelper.AssetMonitor);
+            if (monitor != null)
+                _assetMonitor = (IAssetMonitor) monitor.GetMonitor("", MonitorModuleHelper.AssetMonitor);
         }
 
         #endregion
@@ -339,7 +347,7 @@ namespace Aurora.Services
             else
             {
                 m_assetRequests[assetID].SavedAmt++;
-                
+
                 if (m_assetRequests[assetID].SavedAmt > _forceMemoryCacheAmount)
                     UpdateMemoryCache(assetID, asset, true);
             }
@@ -468,19 +476,20 @@ namespace Aurora.Services
 #endif
             }
 
-            if (((m_logLevel >= 1)) && (m_HitRateDisplay != 0) && (m_Requests % m_HitRateDisplay == 0))
+            if (((m_logLevel >= 1)) && (m_HitRateDisplay != 0) && (m_Requests%m_HitRateDisplay == 0))
             {
                 m_HitRateFile = (double) m_DiskHits/m_Requests*100.0;
 
-                MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Get :: {0} :: {1}", id, asset == null ? "Miss" : "Hit");
+                MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Get :: {0} :: {1}", id,
+                                                asset == null ? "Miss" : "Hit");
                 MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE]: File Hit Rate {0}% for {1} requests",
-                                 m_HitRateFile.ToString("0.00"), m_Requests);
+                                                m_HitRateFile.ToString("0.00"), m_Requests);
 
                 if (m_MemoryCacheEnabled)
                 {
                     m_HitRateMemory = (double) m_MemoryHits/m_Requests*100.0;
                     MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE]: Memory Hit Rate {0}% for {1} requests",
-                                     m_HitRateMemory.ToString("0.00"), m_Requests);
+                                                    m_HitRateMemory.ToString("0.00"), m_Requests);
                 }
 
                 MainConsole.Instance.InfoFormat(
@@ -503,7 +512,7 @@ namespace Aurora.Services
                 return asset.Data;
 
             byte[] data = null;
-            
+
             string filename = GetFileName("DataOnly" + id);
             if (File.Exists(filename))
             {
@@ -663,7 +672,7 @@ namespace Aurora.Services
         {
             if (m_logLevel >= 2)
                 MainConsole.Instance.DebugFormat("[FLOTSAM ASSET CACHE]: Checking for expired files older then {0}.",
-                                  m_FileExpiration.ToString());
+                                                 m_FileExpiration.ToString());
 
             // Purge all files last accessed prior to this point
             DateTime purgeLine = DateTime.Now - m_FileExpiration;
@@ -675,7 +684,7 @@ namespace Aurora.Services
             {
                 CacheScenes();
             }
-            
+
             lock (m_fileCacheLock)
             {
                 foreach (string dir in Directory.GetDirectories(m_CacheDirectory))
@@ -686,11 +695,11 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Recurses through specified directory checking for asset files last 
-        ///   accessed prior to the specified purge line and deletes them.  Also 
-        ///   removes empty tier directories.
+        ///     Recurses through specified directory checking for asset files last
+        ///     accessed prior to the specified purge line and deletes them.  Also
+        ///     removes empty tier directories.
         /// </summary>
-        /// <param name = "dir"></param>
+        /// <param name="dir"></param>
         private void CleanExpiredFiles(string dir, DateTime purgeLine)
         {
             foreach (string file in Directory.GetFiles(dir))
@@ -718,9 +727,9 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Determines the filename for an AssetID stored in the file cache
+        ///     Determines the filename for an AssetID stored in the file cache
         /// </summary>
-        /// <param name = "id"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         private string GetFileName(string id)
         {
@@ -743,11 +752,11 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Writes a file to the file cache, creating any nessesary 
-        ///   tier directories along the way
+        ///     Writes a file to the file cache, creating any nessesary
+        ///     tier directories along the way
         /// </summary>
-        /// <param name = "filename"></param>
-        /// <param name = "asset"></param>
+        /// <param name="filename"></param>
+        /// <param name="asset"></param>
         private void WriteFileCache(string filename, AssetBase asset)
         {
             Stream stream = null;
@@ -802,11 +811,11 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Writes a file to the file cache, creating any nessesary 
-        ///   tier directories along the way
+        ///     Writes a file to the file cache, creating any nessesary
+        ///     tier directories along the way
         /// </summary>
-        /// <param name = "filename"></param>
-        /// <param name = "asset"></param>
+        /// <param name="filename"></param>
+        /// <param name="asset"></param>
         private void WriteFileCache(string filename, byte[] data)
         {
             // Make sure the target cache directory exists
@@ -871,15 +880,15 @@ namespace Aurora.Services
             string[] text = e.ToString().Split(new[] {'\n'});
             foreach (string t in text)
             {
-                if(t.Trim() != "")
+                if (t.Trim() != "")
                     MainConsole.Instance.ErrorFormat("[FLOTSAM ASSET CACHE]: {0} ", t);
             }
         }
 
         /// <summary>
-        ///   Scan through the file cache, and return number of assets currently cached.
+        ///     Scan through the file cache, and return number of assets currently cached.
         /// </summary>
-        /// <param name = "dir"></param>
+        /// <param name="dir"></param>
         /// <returns></returns>
         private int GetFileCacheCount(string dir)
         {
@@ -889,14 +898,15 @@ namespace Aurora.Services
                 sum += GetFileCacheCount(subdir);
             return Directory.GetFiles(dir).Length + sum;
 #else
-            return Directory.GetFiles(dir).Length + Directory.GetDirectories(dir).Sum(subdir => GetFileCacheCount(subdir));
+            return Directory.GetFiles(dir).Length +
+                   Directory.GetDirectories(dir).Sum(subdir => GetFileCacheCount(subdir));
 #endif
         }
 
         /// <summary>
-        ///   This notes the last time the Region had a deep asset scan performed on it.
+        ///     This notes the last time the Region had a deep asset scan performed on it.
         /// </summary>
-        /// <param name = "RegionID"></param>
+        /// <param name="RegionID"></param>
         private void StampRegionStatusFile(UUID RegionID)
         {
             string RegionCacheStatusFile = Path.Combine(m_CacheDirectory, "RegionStatus_" + RegionID.ToString() + ".fac");
@@ -917,9 +927,9 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Iterates through all Scenes, doing a deep scan through assets 
-        ///   to cache all assets present in the scene or referenced by assets 
-        ///   in the scene
+        ///     Iterates through all Scenes, doing a deep scan through assets
+        ///     to cache all assets present in the scene or referenced by assets
+        ///     in the scene
         /// </summary>
         /// <returns></returns>
         private int CacheScenes()
@@ -956,7 +966,7 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Deletes all cache contents
+        ///     Deletes all cache contents
         /// </summary>
         private void ClearFileCache()
         {
@@ -998,19 +1008,21 @@ namespace Aurora.Services
                 switch (cmd)
                 {
                     case "status":
-                        MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE] Memory Cache : {0} assets", m_MemoryCache.Count);
+                        MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE] Memory Cache : {0} assets",
+                                                        m_MemoryCache.Count);
 
                         int fileCount = GetFileCacheCount(m_CacheDirectory);
                         MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE] File Cache : {0} assets", fileCount);
 
                         foreach (string s in Directory.GetFiles(m_CacheDirectory, "*.fac"))
                         {
-                            MainConsole.Instance.Info("[FLOTSAM ASSET CACHE] Deep Scans were performed on the following regions:");
+                            MainConsole.Instance.Info(
+                                "[FLOTSAM ASSET CACHE] Deep Scans were performed on the following regions:");
 
                             string RegionID = s.Remove(0, s.IndexOf("_")).Replace(".fac", "");
                             DateTime RegionDeepScanTMStamp = File.GetLastWriteTime(s);
                             MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE] Region: {0}, {1}", RegionID,
-                                             RegionDeepScanTMStamp.ToString("MM/dd/yyyy hh:mm:ss"));
+                                                            RegionDeepScanTMStamp.ToString("MM/dd/yyyy hh:mm:ss"));
                         }
 
                         break;
@@ -1085,8 +1097,10 @@ namespace Aurora.Services
             else if (cmdparams.Length == 1)
             {
                 MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache status - Display cache status");
-                MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache clearmem - Remove all assets cached in memory");
-                MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache clearfile - Remove all assets cached on disk");
+                MainConsole.Instance.InfoFormat(
+                    "[FLOTSAM ASSET CACHE] flotsamcache clearmem - Remove all assets cached in memory");
+                MainConsole.Instance.InfoFormat(
+                    "[FLOTSAM ASSET CACHE] flotsamcache clearfile - Remove all assets cached on disk");
                 MainConsole.Instance.InfoFormat(
                     "[FLOTSAM ASSET CACHE] flotsamcache cachescenes - Attempt a deep cache of all assets in all scenes");
                 MainConsole.Instance.InfoFormat(

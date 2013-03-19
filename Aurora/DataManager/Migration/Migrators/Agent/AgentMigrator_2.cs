@@ -44,9 +44,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ID", ColumnTypes.String45),
                 ColDef("Key", ColumnTypes.String50),
                 ColDef("Value", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[2] { "ID", "Key" }, IndexType.Primary)
-            ));
+                                      ), IndexDefs(
+                                          IndexDef(new string[2] {"ID", "Key"}, IndexType.Primary)
+                                             ));
 
             AddSchema("userclassifieds", ColDefs(
                 ColDef("Name", ColumnTypes.String50),
@@ -55,11 +55,11 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("OwnerUUID", ColumnTypes.String50),
                 ColDef("ClassifiedUUID", ColumnTypes.String50),
                 ColDef("Classified", ColumnTypes.String8196)
-            ), IndexDefs(
-                IndexDef(new string[1] { "ClassifiedUUID" }, IndexType.Primary),
-                IndexDef(new string[2] { "Name", "Category" }, IndexType.Index),
-                IndexDef(new string[1] { "OwnerUUID" }, IndexType.Index)
-            ));
+                                             ), IndexDefs(
+                                                 IndexDef(new string[1] {"ClassifiedUUID"}, IndexType.Primary),
+                                                 IndexDef(new string[2] {"Name", "Category"}, IndexType.Index),
+                                                 IndexDef(new string[1] {"OwnerUUID"}, IndexType.Index)
+                                                    ));
 
             AddSchema("userpicks", ColDefs(
                 ColDef("Name", ColumnTypes.String50),
@@ -67,22 +67,22 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("OwnerUUID", ColumnTypes.String50),
                 ColDef("PickUUID", ColumnTypes.String50),
                 ColDef("Pick", ColumnTypes.String8196)
-            ), IndexDefs(
-                IndexDef(new string[1] { "PickUUID" }, IndexType.Primary),
-                IndexDef(new string[1] { "OwnerUUID" }, IndexType.Index)
-            ));
+                                       ), IndexDefs(
+                                           IndexDef(new string[1] {"PickUUID"}, IndexType.Primary),
+                                           IndexDef(new string[1] {"OwnerUUID"}, IndexType.Index)
+                                              ));
 
             AddSchema("macban", ColDefs(
                 ColDef("macAddress", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1] { "macAddress" }, IndexType.Primary)
-            ));
+                                    ), IndexDefs(
+                                        IndexDef(new string[1] {"macAddress"}, IndexType.Primary)
+                                           ));
 
             AddSchema("bannedviewers", ColDefs(
                 ColDef("Client", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1] { "Client" }, IndexType.Primary)
-            ));
+                                           ), IndexDefs(
+                                               IndexDef(new string[1] {"Client"}, IndexType.Primary)
+                                                  ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

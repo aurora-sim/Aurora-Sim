@@ -42,10 +42,10 @@ namespace Aurora.Services
         {
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null && manager.Scene != null && manager.Scene.RegionInfo.RegionID == region.RegionID)
-                {
-                    //Found the region, check permissions
-                    return manager.Scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);
-                }
+            {
+                //Found the region, check permissions
+                return manager.Scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);
+            }
             reason = "Not Authorized as region does not exist.";
             return false;
         }

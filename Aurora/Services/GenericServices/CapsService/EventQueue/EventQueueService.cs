@@ -70,10 +70,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteCalls && m_doRemoteOnly)
             {
-                Util.FireAndForget((none) =>
-                    {
-                        EnqueueInternal(o, agentID, regionID);
-                    });
+                Util.FireAndForget((none) => { EnqueueInternal(o, agentID, regionID); });
                 return true;
             }
 
@@ -82,7 +79,8 @@ namespace Aurora.Services
             if (service == null)
                 return false;
             RegionClientEventQueueService eventQueueService = service.GetServiceConnectors().
-                OfType<RegionClientEventQueueService>().FirstOrDefault();
+                                                                      OfType<RegionClientEventQueueService>()
+                                                                     .FirstOrDefault();
             if (eventQueueService == null)
                 return false;
 
@@ -296,10 +294,10 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Add the given event into the client's queue so that it is sent on the next
+        ///     Add the given event into the client's queue so that it is sent on the next
         /// </summary>
-        /// <param name = "ev"></param>
-        /// <param name = "avatarID"></param>
+        /// <param name="ev"></param>
+        /// <param name="avatarID"></param>
         /// <returns></returns>
         public bool Enqueue(OSD ev)
         {
@@ -414,11 +412,11 @@ namespace Aurora.Services
 
             // Register this as a caps handler
             m_service.AddStreamHandler("EventQueueGet", new GenericStreamHandler("POST", m_capsPath,
-                                                           delegate(string path, System.IO.Stream request,
-                                                               OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                           {
-                                                               return new byte[0];
-                                                           }));
+                                                                                 delegate(string path,
+                                                                                          System.IO.Stream request,
+                                                                                          OSHttpRequest httpRequest,
+                                                                                          OSHttpResponse httpResponse)
+                                                                                     { return new byte[0]; }));
 
             // This will persist this beyond the expiry of the caps handlers
             _isValid = true;

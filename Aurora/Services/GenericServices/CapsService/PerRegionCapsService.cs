@@ -33,7 +33,7 @@ using GridRegion = Aurora.Framework.GridRegion;
 namespace Aurora.Services
 {
     /// <summary>
-    ///   This keeps track of what clients are in the given region
+    ///     This keeps track of what clients are in the given region
     /// </summary>
     public class PerRegionCapsService : IRegionCapsService
     {
@@ -57,9 +57,15 @@ namespace Aurora.Services
             get { return Region.RegionHandle; }
         }
 
-        public int RegionX { get { return Region.RegionLocX; } }
+        public int RegionX
+        {
+            get { return Region.RegionLocX; }
+        }
 
-        public int RegionY { get { return Region.RegionLocY; } }
+        public int RegionY
+        {
+            get { return Region.RegionLocY; }
+        }
 
         public GridRegion Region
         {
@@ -80,10 +86,10 @@ namespace Aurora.Services
         #region Initialize
 
         /// <summary>
-        ///   Initialise the service
+        ///     Initialise the service
         /// </summary>
-        /// <param name = "regionID"></param>
-        /// <param name = "registry"></param>
+        /// <param name="regionID"></param>
+        /// <param name="registry"></param>
         public void Initialise(UUID regionID, IRegistryCore registry)
         {
             m_RegionID = regionID;
@@ -104,9 +110,9 @@ namespace Aurora.Services
         #region Add/Get/Remove clients
 
         /// <summary>
-        ///   Add this client to the region
+        ///     Add this client to the region
         /// </summary>
-        /// <param name = "service"></param>
+        /// <param name="service"></param>
         public void AddClientToRegion(IRegionClientCapsService service)
         {
             if (!m_clientsInThisRegion.ContainsKey(service.AgentID))
@@ -116,9 +122,9 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Remove the client from this region
+        ///     Remove the client from this region
         /// </summary>
-        /// <param name = "service"></param>
+        /// <param name="service"></param>
         public void RemoveClientFromRegion(IRegionClientCapsService service)
         {
             if (m_clientsInThisRegion.ContainsKey(service.AgentID))
@@ -126,9 +132,9 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Get an agent's Caps by UUID
+        ///     Get an agent's Caps by UUID
         /// </summary>
-        /// <param name = "AgentID"></param>
+        /// <param name="AgentID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetClient(UUID AgentID)
         {
@@ -138,7 +144,7 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Get all clients in this region
+        ///     Get all clients in this region
         /// </summary>
         /// <returns></returns>
         public List<IRegionClientCapsService> GetClients()

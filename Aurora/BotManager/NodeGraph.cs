@@ -38,7 +38,7 @@ namespace Aurora.BotManager
         public int CurrentPos;
 
         /// <summary>
-        ///   Loop through the current positions over and over
+        ///     Loop through the current positions over and over
         /// </summary>
         public bool FollowIndefinitely;
 

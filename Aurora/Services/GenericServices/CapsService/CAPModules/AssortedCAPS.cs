@@ -33,7 +33,6 @@ using System.Web;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using GridRegion = Aurora.Framework.GridRegion;
-
 using OpenMetaverse;
 using Aurora.DataManager;
 using OpenMetaverse.StructuredData;
@@ -56,41 +55,38 @@ namespace Aurora.Services
             m_agentProcessing = service.Registry.RequestModuleInterface<IAgentProcessing>();
 
             HttpServerHandle method = delegate(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return ProcessUpdateAgentLanguage(request, m_service.AgentID);
-            };
-            service.AddStreamHandler("UpdateAgentLanguage", new GenericStreamHandler("POST", service.CreateCAPS("UpdateAgentLanguage", ""),
-                                                      method));
+                                               OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                          { return ProcessUpdateAgentLanguage(request, m_service.AgentID); };
+            service.AddStreamHandler("UpdateAgentLanguage",
+                                     new GenericStreamHandler("POST", service.CreateCAPS("UpdateAgentLanguage", ""),
+                                                              method));
 
 
             method = delegate(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return ProcessUpdateAgentInfo(request, m_service.AgentID);
-            };
-            service.AddStreamHandler("UpdateAgentInformation", new GenericStreamHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
-                                method));
+                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                         { return ProcessUpdateAgentInfo(request, m_service.AgentID); };
+            service.AddStreamHandler("UpdateAgentInformation",
+                                     new GenericStreamHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
+                                                              method));
 
-            service.AddStreamHandler ("AvatarPickerSearch", new GenericStreamHandler ("GET", service.CreateCAPS("AvatarPickerSearch", ""),
-                                                      ProcessAvatarPickerSearch));
-
-            method = delegate(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HomeLocation(request, m_service.AgentID);
-            };
-            service.AddStreamHandler("HomeLocation", new GenericStreamHandler("POST", service.CreateCAPS("HomeLocation", ""),
-                                                      method));
+            service.AddStreamHandler("AvatarPickerSearch",
+                                     new GenericStreamHandler("GET", service.CreateCAPS("AvatarPickerSearch", ""),
+                                                              ProcessAvatarPickerSearch));
 
             method = delegate(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return TeleportLocation(request, m_service.AgentID);
-            };
+                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                         { return HomeLocation(request, m_service.AgentID); };
+            service.AddStreamHandler("HomeLocation",
+                                     new GenericStreamHandler("POST", service.CreateCAPS("HomeLocation", ""),
+                                                              method));
 
-            service.AddStreamHandler("TeleportLocation", new GenericStreamHandler("POST", service.CreateCAPS("TeleportLocation", ""),
-                                                      method));
+            method = delegate(string path, Stream request,
+                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                         { return TeleportLocation(request, m_service.AgentID); };
+
+            service.AddStreamHandler("TeleportLocation",
+                                     new GenericStreamHandler("POST", service.CreateCAPS("TeleportLocation", ""),
+                                                              method));
         }
 
         public void EnteringRegion()
@@ -99,29 +95,29 @@ namespace Aurora.Services
 
         public void DeregisterCaps()
         {
-            m_service.RemoveStreamHandler ("UpdateAgentLanguage", "POST");
-            m_service.RemoveStreamHandler ("UpdateAgentInformation", "POST");
-            m_service.RemoveStreamHandler ("AvatarPickerSearch", "GET");
-            m_service.RemoveStreamHandler ("HomeLocation", "POST");
-            m_service.RemoveStreamHandler ("TeleportLocation", "POST");
+            m_service.RemoveStreamHandler("UpdateAgentLanguage", "POST");
+            m_service.RemoveStreamHandler("UpdateAgentInformation", "POST");
+            m_service.RemoveStreamHandler("AvatarPickerSearch", "GET");
+            m_service.RemoveStreamHandler("HomeLocation", "POST");
+            m_service.RemoveStreamHandler("TeleportLocation", "POST");
         }
 
         #region Other CAPS
 
         private byte[] HomeLocation(Stream request, UUID agentID)
         {
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             OSDMap HomeLocation = rm["HomeLocation"] as OSDMap;
             if (HomeLocation != null)
             {
                 OSDMap pos = HomeLocation["LocationPos"] as OSDMap;
-                Vector3 position = new Vector3((float)pos["X"].AsReal(),
-                                               (float)pos["Y"].AsReal(),
-                                               (float)pos["Z"].AsReal());
+                Vector3 position = new Vector3((float) pos["X"].AsReal(),
+                                               (float) pos["Y"].AsReal(),
+                                               (float) pos["Z"].AsReal());
                 OSDMap lookat = HomeLocation["LocationLookAt"] as OSDMap;
-                Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
-                                             (float)lookat["Y"].AsReal(),
-                                             (float)lookat["Z"].AsReal());
+                Vector3 lookAt = new Vector3((float) lookat["X"].AsReal(),
+                                             (float) lookat["Y"].AsReal(),
+                                             (float) lookat["Z"].AsReal());
                 //int locationID = HomeLocation["LocationId"].AsInteger();
 
                 m_agentInfoService.SetHomePosition(agentID.ToString(), m_service.Region.RegionID, position, lookAt);
@@ -149,15 +145,18 @@ namespace Aurora.Services
             return MainServer.BlankResponse;
         }
 
-        private byte[] ProcessAvatarPickerSearch(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        private byte[] ProcessAvatarPickerSearch(string path, Stream request, OSHttpRequest httpRequest,
+                                                 OSHttpResponse httpResponse)
         {
             NameValueCollection query = HttpUtility.ParseQueryString(httpRequest.Url.Query);
             string amt = query.GetOne("page-size");
             if (amt == null)
                 amt = query.GetOne("page_size");
             string name = query.GetOne("names");
-            List<UserAccount> accounts = m_service.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(m_service.ClientCaps.AccountInfo.AllScopeIDs, name, 0, uint.Parse(amt)) ??
-                                         new List<UserAccount>(0);
+            List<UserAccount> accounts =
+                m_service.Registry.RequestModuleInterface<IUserAccountService>()
+                         .GetUserAccounts(m_service.ClientCaps.AccountInfo.AllScopeIDs, name, 0, uint.Parse(amt)) ??
+                new List<UserAccount>(0);
 
             OSDMap body = new OSDMap();
             OSDArray array = new OSDArray();
@@ -165,8 +164,12 @@ namespace Aurora.Services
             {
                 OSDMap map = new OSDMap();
                 map["agent_id"] = account.PrincipalID;
-                IUserProfileInfo profileInfo = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
-                map["display_name"] = (profileInfo == null || profileInfo.DisplayName == "") ? account.Name : profileInfo.DisplayName;
+                IUserProfileInfo profileInfo =
+                    Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>()
+                          .GetUserProfile(account.PrincipalID);
+                map["display_name"] = (profileInfo == null || profileInfo.DisplayName == "")
+                                          ? account.Name
+                                          : profileInfo.DisplayName;
                 map["username"] = account.Name;
                 map["slid"] = account.PrincipalID;
                 map["born_on"] = Util.ToDateTime(account.Created).ToShortDateString();
@@ -180,8 +183,8 @@ namespace Aurora.Services
         private byte[] ProcessUpdateAgentInfo(Stream request, UUID agentID)
         {
             OSD r = OSDParser.DeserializeLLSDXml(request);
-            OSDMap rm = (OSDMap)r;
-            OSDMap access = (OSDMap)rm["access_prefs"];
+            OSDMap rm = (OSDMap) r;
+            OSDMap access = (OSDMap) rm["access_prefs"];
             string Level = access["max"].AsString();
             int maxLevel = 0;
             if (Level == "PG")
@@ -201,7 +204,8 @@ namespace Aurora.Services
         }
 
         private bool _isInTeleportCurrently = false;
-        private byte[] TeleportLocation (Stream request, UUID agentID)
+
+        private byte[] TeleportLocation(Stream request, UUID agentID)
         {
             OSDMap retVal = new OSDMap();
             if (_isInTeleportCurrently)
@@ -212,11 +216,11 @@ namespace Aurora.Services
             }
             _isInTeleportCurrently = true;
 
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             OSDMap pos = rm["LocationPos"] as OSDMap;
-            Vector3 position = new Vector3((float)pos["X"].AsReal(),
-                (float)pos["Y"].AsReal(),
-                (float)pos["Z"].AsReal());
+            Vector3 position = new Vector3((float) pos["X"].AsReal(),
+                                           (float) pos["Y"].AsReal(),
+                                           (float) pos["Z"].AsReal());
             /*OSDMap lookat = rm["LocationLookAt"] as OSDMap;
             Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
                 (float)lookat["Y"].AsReal(),
@@ -249,7 +253,7 @@ namespace Aurora.Services
                     circuitData.startpos = position;
                 }
             }
-            if(destination == null || circuitData == null)
+            if (destination == null || circuitData == null)
             {
                 retVal.Add("reason", "Could not find the destination region.");
                 retVal.Add("success", OSD.FromBoolean(false));
@@ -258,14 +262,15 @@ namespace Aurora.Services
             circuitData.reallyischild = false;
             circuitData.child = false;
 
-            if(m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
-                m_service.AgentID, m_service.RegionID, out reason) || reason == "")
+            if (m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int) ad.Far, circuitData, ad,
+                                                m_service.AgentID, m_service.RegionID, out reason) || reason == "")
             {
                 retVal.Add("success", OSD.FromBoolean(true));
             }
             else
             {
-                if (reason != "Already in a teleport")//If this error occurs... don't kick them out of their current region
+                if (reason != "Already in a teleport")
+                    //If this error occurs... don't kick them out of their current region
                     simService.FailedToMoveAgentIntoNewRegion(m_service.AgentID, destination.RegionID);
                 retVal.Add("reason", reason);
                 retVal.Add("success", OSD.FromBoolean(false));
@@ -277,7 +282,6 @@ namespace Aurora.Services
         }
 
         #endregion
-
 
         #endregion
     }

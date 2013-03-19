@@ -49,8 +49,8 @@ namespace Aurora.Services
             m_groupService = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
 
             service.AddStreamHandler("GroupMemberData",
-                new GenericStreamHandler("POST", service.CreateCAPS("GroupMemberData", ""),
-                                                        GroupMemberData));
+                                     new GenericStreamHandler("POST", service.CreateCAPS("GroupMemberData", ""),
+                                                              GroupMemberData));
         }
 
         public void EnteringRegion()
@@ -64,24 +64,25 @@ namespace Aurora.Services
 
         #region Group Members
 
-        public byte[] GroupMemberData(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] GroupMemberData(string path, Stream request, OSHttpRequest httpRequest,
+                                      OSHttpResponse httpResponse)
         {
             try
             {
                 //MainConsole.Instance.Debug("[CAPS]: UploadBakedTexture Request in region: " +
                 //        m_regionName);
 
-                OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
                 UUID groupID = rm["group_id"].AsUUID();
 
                 OSDMap defaults = new OSDMap();
-                ulong EveryonePowers = (ulong)(GroupPowers.AllowSetHome |
-                                                           GroupPowers.Accountable |
-                                                           GroupPowers.JoinChat |
-                                                           GroupPowers.AllowVoiceChat |
-                                                           GroupPowers.ReceiveNotices |
-                                                           GroupPowers.StartProposal |
-                                                           GroupPowers.VoteOnProposal);
+                ulong EveryonePowers = (ulong) (GroupPowers.AllowSetHome |
+                                                GroupPowers.Accountable |
+                                                GroupPowers.JoinChat |
+                                                GroupPowers.AllowVoiceChat |
+                                                GroupPowers.ReceiveNotices |
+                                                GroupPowers.StartProposal |
+                                                GroupPowers.VoteOnProposal);
                 defaults["default_powers"] = EveryonePowers;
 
                 List<string> titles = new List<string>();
@@ -95,7 +96,7 @@ namespace Aurora.Services
                     member["last_login"] = gmd.OnlineStatus;
                     if (titles.Contains(gmd.Title))
                     {
-                        member["title"] = titles.FindIndex((s) => s==gmd.Title);
+                        member["title"] = titles.FindIndex((s) => s == gmd.Title);
                     }
                     else
                     {
@@ -106,7 +107,7 @@ namespace Aurora.Services
                     count++;
                     members[gmd.AgentID.ToString()] = member;
                 }
-                
+
                 OSDMap map = new OSDMap();
                 map["member_count"] = count;
                 map["group_id"] = groupID;

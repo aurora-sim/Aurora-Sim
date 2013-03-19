@@ -60,9 +60,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("HomeRegionID", ColumnTypes.Char36),
                 ColDef("HomePosition", ColumnTypes.String16),
                 ColDef("HomeLookat", ColumnTypes.String16)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "UserID" }, IndexType.Primary)
-            ));
+                                      ), IndexDefs(
+                                          IndexDef(new string[1] {"UserID"}, IndexType.Primary)
+                                             ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

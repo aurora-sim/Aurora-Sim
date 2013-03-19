@@ -107,7 +107,7 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Close out all of the CAPS for this user
+        ///     Close out all of the CAPS for this user
         /// </summary>
         public void Close()
         {
@@ -120,10 +120,10 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Attempt to find the CapsService for the given user/region
+        ///     Attempt to find the CapsService for the given user/region
         /// </summary>
-        /// <param name = "regionID"></param>
-        /// <param name = "agentID"></param>
+        /// <param name="regionID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetCapsService(UUID regionID)
         {
@@ -133,10 +133,10 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Attempt to find the CapsService for the root user/region
+        ///     Attempt to find the CapsService for the root user/region
         /// </summary>
-        /// <param name = "regionID"></param>
-        /// <param name = "agentID"></param>
+        /// <param name="regionID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetRootCapsService()
         {
@@ -149,9 +149,9 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Find, or create if one does not exist, a Caps Service for the given region
+        ///     Find, or create if one does not exist, a Caps Service for the given region
         /// </summary>
-        /// <param name = "regionID"></param>
+        /// <param name="regionID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetOrCreateCapsService(UUID regionID, string CAPSBase,
                                                                AgentCircuitData circuitData, uint port)
@@ -173,10 +173,10 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Remove the CAPS for the given user in the given region
+        ///     Remove the CAPS for the given user in the given region
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "regionHandle"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="regionHandle"></param>
         public void RemoveCAPS(UUID regionHandle)
         {
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
@@ -195,9 +195,9 @@ namespace Aurora.Services
         #endregion
 
         /// <summary>
-        ///   Add a new Caps Service for the given region if one does not already exist
+        ///     Add a new Caps Service for the given region if one does not already exist
         /// </summary>
-        /// <param name = "regionHandle"></param>
+        /// <param name="regionHandle"></param>
         protected void AddCapsServiceForRegion(UUID regionID, string CAPSBase, AgentCircuitData circuitData,
                                                uint port)
         {

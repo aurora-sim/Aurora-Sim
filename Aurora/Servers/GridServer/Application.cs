@@ -33,16 +33,24 @@ using System.Collections.Generic;
 namespace Aurora.Servers.AssetServer
 {
     /// <summary>
-    ///   Starting class for the Aurora Server
+    ///     Starting class for the Aurora Server
     /// </summary>
     public class Application
     {
         public static void Main(string[] args)
         {
             BaseApplication.BaseMain(args, "Aurora.GridServer.ini",
-                new MinimalSimulationBase("Aurora.GridServer ", 
-                    new List<Type> { typeof(IRegionData), typeof(IAgentInfoConnector) }, 
-                    new List<Type> { typeof(IGridService), typeof(IAgentInfoService) }));
+                                     new MinimalSimulationBase("Aurora.GridServer ",
+                                                               new List<Type>
+                                                                   {
+                                                                       typeof (IRegionData),
+                                                                       typeof (IAgentInfoConnector)
+                                                                   },
+                                                               new List<Type>
+                                                                   {
+                                                                       typeof (IGridService),
+                                                                       typeof (IAgentInfoService)
+                                                                   }));
         }
     }
 }

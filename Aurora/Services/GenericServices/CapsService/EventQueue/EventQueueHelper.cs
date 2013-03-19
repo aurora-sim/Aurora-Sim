@@ -301,7 +301,7 @@ namespace Aurora.Services
                                                                            parentEstateID,
                                                                            position, ttl, transactionID, fromGroup,
                                                                            binaryBucket)
-                                    },
+                                },
                                 {"agent_params", AgentParams(fromAgent, checkEstate, godLevel, limitedToEstate)}
                             };
 
@@ -349,7 +349,7 @@ namespace Aurora.Services
                                                                        parentEstateID, position,
                                                                        ttl, transactionID, fromGroup, binaryBucket, true,
                                                                        0, true)
-                                      }
+                                  }
                               };
 
             OSDMap chatterboxInvitation = new OSDMap(2)
@@ -380,7 +380,7 @@ namespace Aurora.Services
                                                                {
                                                                    "message",
                                                                    OSD.FromString("ChatterBoxSessionAgentListUpdates")
-                                                                   },
+                                                               },
                                                                {"body", body}
                                                            };
 
@@ -418,7 +418,7 @@ namespace Aurora.Services
                                                                {
                                                                    "message",
                                                                    OSD.FromString("ChatterBoxSessionAgentListUpdates")
-                                                                   },
+                                                               },
                                                                {"body", body}
                                                            };
 
@@ -454,13 +454,58 @@ namespace Aurora.Services
 #else
             foreach (OSDMap groupDataMap in groupUpdatePacket.GroupData.Select(groupDataBlock => new OSDMap
                                                                                                      {
-                                                                                                         {"ListInProfile", OSD.FromBoolean(false)},
-                                                                                                         {"GroupID", OSD.FromUUID(groupDataBlock.GroupID)},
-                                                                                                         {"GroupInsigniaID", OSD.FromUUID(groupDataBlock.GroupInsigniaID)},
-                                                                                                         {"Contribution", OSD.FromInteger(groupDataBlock.Contribution)},
-                                                                                                         {"GroupPowers", OSD.FromBinary(ulongToByteArray(groupDataBlock.GroupPowers))},
-                                                                                                         {"GroupName", OSD.FromString(Utils.BytesToString(groupDataBlock.GroupName))},
-                                                                                                         {"AcceptNotices", OSD.FromBoolean(groupDataBlock.AcceptNotices)}
+                                                                                                         {
+                                                                                                             "ListInProfile"
+                                                                                                             ,
+                                                                                                             OSD
+                                                                                                             .FromBoolean
+                                                                                                             (false)
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "GroupID",
+                                                                                                             OSD.FromUUID(
+                                                                                                                 groupDataBlock
+                                                                                                                     .GroupID)
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "GroupInsigniaID"
+                                                                                                             ,
+                                                                                                             OSD
+                                                                                                             .FromUUID(
+                                                                                                                 groupDataBlock
+                                                                                                                     .GroupInsigniaID)
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "Contribution"
+                                                                                                             ,
+                                                                                                             OSD
+                                                                                                             .FromInteger
+                                                                                                             (groupDataBlock
+                                                                                                                  .Contribution)
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "GroupPowers",
+                                                                                                             OSD.FromBinary
+                                                                                                             (ulongToByteArray
+                                                                                                                  (groupDataBlock
+                                                                                                                       .GroupPowers))
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "GroupName",
+                                                                                                             OSD.FromString
+                                                                                                             (Utils
+                                                                                                                  .BytesToString
+                                                                                                                  (groupDataBlock
+                                                                                                                       .GroupName))
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "AcceptNotices"
+                                                                                                             ,
+                                                                                                             OSD
+                                                                                                             .FromBoolean
+                                                                                                             (groupDataBlock
+                                                                                                                  .AcceptNotices)
+                                                                                                         }
                                                                                                      }))
             {
                 groupData.Add(groupDataMap);

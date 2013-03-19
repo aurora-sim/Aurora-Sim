@@ -64,14 +64,15 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("SnapshotID", ColumnTypes.String50),
                 ColDef("Bitmap", ColumnTypes.LongText),
                 ColDef("Category", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary),
-                IndexDef(new string[4]{ "RegionID", "OwnerID", "Flags", "Category" }, IndexType.Index),
-                IndexDef(new string[2]{ "RegionID", "Name" }, IndexType.Index),
-                IndexDef(new string[1]{ "OwnerID" }, IndexType.Index),
+                                          ), IndexDefs(
+                                              IndexDef(new string[1] {"ParcelID"}, IndexType.Primary),
+                                              IndexDef(new string[4] {"RegionID", "OwnerID", "Flags", "Category"},
+                                                       IndexType.Index),
+                                              IndexDef(new string[2] {"RegionID", "Name"}, IndexType.Index),
+                                              IndexDef(new string[1] {"OwnerID"}, IndexType.Index),
 //                IndexDef(new string[4]{ "Name", "Description", "ShowInSearch", "Category" }, IndexType.Index),
-                IndexDef(new string[3]{ "ForSale", "SalePrice", "Area" }, IndexType.Index)
-            ));
+                                              IndexDef(new string[3] {"ForSale", "SalePrice", "Area"}, IndexType.Index)
+                                                 ));
 
             AddSchema("asevents", ColDefs(
                 ColDef("EID", ColumnTypes.Integer11),
@@ -89,12 +90,12 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("name", ColumnTypes.String50),
                 ColDef("description", ColumnTypes.String255),
                 ColDef("category", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "EID" }, IndexType.Primary),
-                IndexDef(new string[1]{ "name" }, IndexType.Index),
-                IndexDef(new string[2]{ "date", "flags" }, IndexType.Index),
-                IndexDef(new string[2]{ "region", "maturity" }, IndexType.Index)
-            ));
+                                      ), IndexDefs(
+                                          IndexDef(new string[1] {"EID"}, IndexType.Primary),
+                                          IndexDef(new string[1] {"name"}, IndexType.Index),
+                                          IndexDef(new string[2] {"date", "flags"}, IndexType.Index),
+                                          IndexDef(new string[2] {"region", "maturity"}, IndexType.Index)
+                                             ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

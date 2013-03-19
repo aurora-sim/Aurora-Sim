@@ -82,7 +82,7 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(PrincipalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<FriendInfo>)remoteValue;
+                return (List<FriendInfo>) remoteValue;
 
             return new List<FriendInfo>(m_Database.GetFriends(PrincipalID));
         }
@@ -92,7 +92,7 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(PrincipalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<FriendInfo>)remoteValue;
+                return (List<FriendInfo>) remoteValue;
 
             return new List<FriendInfo>(m_Database.GetFriendsRequest(PrincipalID));
         }
@@ -102,7 +102,7 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(PrincipalID, friend, flags);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             return m_Database.Store(PrincipalID, friend, flags, 0);
         }
@@ -112,7 +112,7 @@ namespace Aurora.Services
         {
             object remoteValue = DoRemote(PrincipalID, friend);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             return m_Database.Delete(PrincipalID, friend);
         }

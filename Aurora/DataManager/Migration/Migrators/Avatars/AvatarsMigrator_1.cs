@@ -45,9 +45,9 @@ namespace Aurora.DataManager.Migration.Migrators
             AddSchema("appearance", ColDefs(
                 ColDef("PrincipalID", ColumnTypes.Char36),
                 ColDef("Appearance", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "PrincipalID" }, IndexType.Primary)
-            ));
+                                        ), IndexDefs(
+                                            IndexDef(new string[1] {"PrincipalID"}, IndexType.Primary)
+                                               ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

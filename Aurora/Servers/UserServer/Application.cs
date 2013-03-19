@@ -33,16 +33,25 @@ using System.Collections.Generic;
 namespace Aurora.Servers.UserServer
 {
     /// <summary>
-    ///   Starting class for the Aurora Server
+    ///     Starting class for the Aurora Server
     /// </summary>
     public class Application
     {
         public static void Main(string[] args)
         {
             BaseApplication.BaseMain(args, "Aurora.UserServer.ini",
-                new MinimalSimulationBase("Aurora.UserServer ",
-                    new List<Type> { typeof(IUserAccountData), typeof(IProfileConnector), typeof(IAuthenticationData) }, 
-                    new List<Type> { typeof(IUserAccountService), typeof(IAuthenticationService) }));
+                                     new MinimalSimulationBase("Aurora.UserServer ",
+                                                               new List<Type>
+                                                                   {
+                                                                       typeof (IUserAccountData),
+                                                                       typeof (IProfileConnector),
+                                                                       typeof (IAuthenticationData)
+                                                                   },
+                                                               new List<Type>
+                                                                   {
+                                                                       typeof (IUserAccountService),
+                                                                       typeof (IAuthenticationService)
+                                                                   }));
         }
     }
 }

@@ -39,9 +39,10 @@ namespace Aurora.Services
     public class SimulationServiceConnector : ISimulationService, IService
     {
         /// <summary>
-        ///   These are regions that have timed out and we are not sending updates to until the (int) time passes
+        ///     These are regions that have timed out and we are not sending updates to until the (int) time passes
         /// </summary>
         protected Dictionary<string, int> m_blackListedRegions = new Dictionary<string, int>();
+
         protected LocalSimulationServiceConnector m_localBackend = new LocalSimulationServiceConnector();
         protected IRegistryCore m_registry;
 
@@ -177,7 +178,8 @@ namespace Aurora.Services
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: FailedToMoveAgentIntoNewRegion failed with exception: " + e);
+                MainConsole.Instance.Warn(
+                    "[REMOTE SIMULATION CONNECTOR]: FailedToMoveAgentIntoNewRegion failed with exception: " + e);
             }
             return false;
         }
@@ -206,7 +208,8 @@ namespace Aurora.Services
             return false;
         }
 
-        public bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID AgentID, string reason, bool isCrossing)
+        public bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID AgentID, string reason,
+                                          bool isCrossing)
         {
             if (m_localBackend.FailedToTeleportAgent(destination, failedRegionID, AgentID, reason, isCrossing))
                 return true;
@@ -227,7 +230,8 @@ namespace Aurora.Services
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: FailedToTeleportAgent failed with exception: " + e);
+                MainConsole.Instance.Warn(
+                    "[REMOTE SIMULATION CONNECTOR]: FailedToTeleportAgent failed with exception: " + e);
             }
             return false;
         }
@@ -235,7 +239,7 @@ namespace Aurora.Services
         public bool RetrieveAgent(GridRegion destination, UUID id, bool agentIsLeaving, out AgentData agent,
                                   out AgentCircuitData circuitData)
         {
-             // Try local first
+            // Try local first
             if (m_localBackend.RetrieveAgent(destination, id, agentIsLeaving, out agent, out circuitData))
                 return true;
 
@@ -247,7 +251,7 @@ namespace Aurora.Services
             circuitData = null;
             // Eventually, we want to use a caps url instead of the agentID
             string uri = MakeUri(destination, true) + id + "/" + destination.RegionID.ToString() + "/" +
-                            agentIsLeaving.ToString() + "/";
+                         agentIsLeaving.ToString() + "/";
 
             try
             {
@@ -262,9 +266,9 @@ namespace Aurora.Services
                     if (!result.ContainsKey("AgentData"))
                         return false; //Disable old simulators
 
-                    agent.Unpack((OSDMap)result["AgentData"]);
+                    agent.Unpack((OSDMap) result["AgentData"]);
                     circuitData = new AgentCircuitData();
-                    circuitData.UnpackAgentCircuitData((OSDMap)result["CircuitData"]);
+                    circuitData.UnpackAgentCircuitData((OSDMap) result["CircuitData"]);
                     return true;
                 }
             }
@@ -278,7 +282,7 @@ namespace Aurora.Services
 
         public bool CloseAgent(GridRegion destination, UUID id)
         {
-             // Try local first
+            // Try local first
             if (m_localBackend.CloseAgent(destination, id))
                 return true;
 
@@ -332,7 +336,8 @@ namespace Aurora.Services
                 if (m_blackListedRegions[uri] > 3 &&
                     Util.EnvironmentTickCountSubtract(m_blackListedRegions[uri]) > 0)
                 {
-                    MainConsole.Instance.Warn("[SimServiceConnector]: Blacklisted region " + destination.RegionName + " requested");
+                    MainConsole.Instance.Warn("[SimServiceConnector]: Blacklisted region " + destination.RegionName +
+                                              " requested");
                     //Still blacklisted
                     return false;
                 }
@@ -366,7 +371,7 @@ namespace Aurora.Services
                 //Clear out the blacklist if it went through
                 m_blackListedRegions.Remove(uri);
 
-                OSDMap innerResult = (OSDMap)OSDParser.DeserializeJson(result);
+                OSDMap innerResult = (OSDMap) OSDParser.DeserializeJson(result);
                 return innerResult["Updated"].AsBoolean();
             }
             catch (Exception e)
@@ -383,7 +388,7 @@ namespace Aurora.Services
 
         public bool CreateObject(GridRegion destination, ISceneEntity sog)
         {
-             // Try local first
+            // Try local first
             if (m_localBackend != null && m_localBackend.CreateObject(destination, sog))
             {
                 //MainConsole.Instance.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
@@ -422,7 +427,7 @@ namespace Aurora.Services
             // else do the remote thing
             if (m_localBackend.IsLocalRegion(destination.RegionHandle))
                 return false;
-            
+
             bool successful = false;
             string uri = MakeUri(destination, false) + itemID + "/";
             //MainConsole.Instance.Debug("   >>> DoCreateObjectCall <<< " + uri);

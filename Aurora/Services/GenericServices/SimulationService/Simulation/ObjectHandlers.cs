@@ -141,9 +141,10 @@ namespace Aurora.Services
             try
             {
                 //MainConsole.Instance.DebugFormat("[OBJECT HANDLER]: received {0}", sogXmlStr);
-                IRegionSerialiserModule mod =  m_SimulationService.Scene.RequestModuleInterface<IRegionSerialiserModule>();
+                IRegionSerialiserModule mod =
+                    m_SimulationService.Scene.RequestModuleInterface<IRegionSerialiserModule>();
                 if (mod != null)
-                    sog = mod.DeserializeGroupFromXml2(sogXmlStr,  m_SimulationService.Scene);
+                    sog = mod.DeserializeGroupFromXml2(sogXmlStr, m_SimulationService.Scene);
             }
             catch (Exception ex)
             {
@@ -157,7 +158,8 @@ namespace Aurora.Services
 
             if (sog == null)
             {
-                MainConsole.Instance.ErrorFormat("[OBJECT HANDLER]: error on deserializing scene object as the object was null!");
+                MainConsole.Instance.ErrorFormat(
+                    "[OBJECT HANDLER]: error on deserializing scene object as the object was null!");
 
                 responsedata["int_response_code"] = HttpStatusCode.OK;
                 responsedata["str_response_string"] = result.ToString();

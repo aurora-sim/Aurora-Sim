@@ -39,9 +39,9 @@ using Aurora.Framework;
 namespace Aurora.Services
 {
     /// <summary>
-    /// CapsHandlers is a cap handler container but also takes
-    /// care of adding and removing cap handlers to and from the
-    /// supplied BaseHttpServer.
+    ///     CapsHandlers is a cap handler container but also takes
+    ///     care of adding and removing cap handlers to and from the
+    ///     supplied BaseHttpServer.
     /// </summary>
     public class PerRegionClientCapsService : IRegionClientCapsService
     {
@@ -67,57 +67,43 @@ namespace Aurora.Services
 
         public ulong RegionHandle
         {
-            get
-            {
-                return m_regionCapsService.RegionHandle;
-            }
+            get { return m_regionCapsService.RegionHandle; }
         }
 
         public UUID RegionID
         {
-            get
-            {
-                return m_regionCapsService.Region.RegionID;
-            }
+            get { return m_regionCapsService.Region.RegionID; }
         }
 
         public int RegionX
         {
-            get
-            {
-                return m_regionCapsService.RegionX;
-            }
+            get { return m_regionCapsService.RegionX; }
         }
 
         public int RegionY
         {
-            get
-            {
-                return m_regionCapsService.RegionY;
-            }
+            get { return m_regionCapsService.RegionY; }
         }
 
         public GridRegion Region
         {
-            get
-            {
-                return m_regionCapsService.Region;
-            }
+            get { return m_regionCapsService.Region; }
         }
 
         public Vector3 LastPosition { get; set; }
 
         /// <summary>
-        /// This is the /CAPS/UUID 0000/ string
+        ///     This is the /CAPS/UUID 0000/ string
         /// </summary>
         protected String m_capsUrlBase;
-        
+
         public UUID AgentID
         {
             get { return m_clientCapsService.AgentID; }
         }
 
         protected bool m_isRootAgent = false;
+
         public bool RootAgent
         {
             get { return m_isRootAgent; }
@@ -125,12 +111,14 @@ namespace Aurora.Services
         }
 
         protected IClientCapsService m_clientCapsService;
+
         public IClientCapsService ClientCaps
         {
             get { return m_clientCapsService; }
         }
 
         protected IRegionCapsService m_regionCapsService;
+
         public IRegionCapsService RegionCaps
         {
             get { return m_regionCapsService; }
@@ -153,19 +141,17 @@ namespace Aurora.Services
         public IHttpServer Server
         {
             get { return m_server ?? (m_server = m_clientCapsService.Server); }
-            set
-            {
-                m_server = value;
-            }
+            set { m_server = value; }
         }
 
         private string m_overrideCapsURL; // ONLY FOR OPENSIM
+
         /// <summary>
-        /// This is the full URL to the Caps SEED request
+        ///     This is the full URL to the Caps SEED request
         /// </summary>
         public String CapsUrl
         {
-            get 
+            get
             {
                 if (!string.IsNullOrEmpty(m_overrideCapsURL))
                     return m_overrideCapsURL;
@@ -178,15 +164,16 @@ namespace Aurora.Services
 
         #region Initialize
 
-        public void Initialise(IClientCapsService clientCapsService, IRegionCapsService regionCapsService, string capsBase, AgentCircuitData circuitData, uint port)
+        public void Initialise(IClientCapsService clientCapsService, IRegionCapsService regionCapsService,
+                               string capsBase, AgentCircuitData circuitData, uint port)
         {
             m_clientCapsService = clientCapsService;
             m_regionCapsService = regionCapsService;
             m_circuitData = circuitData;
-            if (port != 0)//Someone requested a non standard port, probably for OpenSim
+            if (port != 0) //Someone requested a non standard port, probably for OpenSim
             {
-                ISimulationBase simBase = Registry.RequestModuleInterface<ISimulationBase> ();
-                Server = simBase.GetHttpServer (port);
+                ISimulationBase simBase = Registry.RequestModuleInterface<ISimulationBase>();
+                Server = simBase.GetHttpServer(port);
             }
             AddSEEDCap(capsBase);
 
@@ -218,7 +205,7 @@ namespace Aurora.Services
         {
             foreach (KeyValuePair<string, OSD> kvp in caps)
             {
-                if(!registeredCAPS.ContainsKey(kvp.Key))
+                if (!registeredCAPS.ContainsKey(kvp.Key))
                     registeredCAPS[kvp.Key] = kvp.Value;
             }
         }
@@ -238,23 +225,23 @@ namespace Aurora.Services
             AddCAPS(method, handler.Path);
         }
 
-        public void RemoveStreamHandler (string method, string httpMethod, string path)
+        public void RemoveStreamHandler(string method, string httpMethod, string path)
         {
-            Server.RemoveStreamHandler (httpMethod, path);
-            RemoveCaps (method);
+            Server.RemoveStreamHandler(httpMethod, path);
+            RemoveCaps(method);
         }
 
-        public void RemoveStreamHandler (string method, string httpMethod)
+        public void RemoveStreamHandler(string method, string httpMethod)
         {
-            string path = registeredCAPS[method].AsString ();
-            if (path != "")//If it doesn't exist...
+            string path = registeredCAPS[method].AsString();
+            if (path != "") //If it doesn't exist...
             {
-                if (path.StartsWith (HostUri))//Only try to remove local ones
+                if (path.StartsWith(HostUri)) //Only try to remove local ones
                 {
-                    path = path.Remove (0, HostUri.Length);
-                    Server.RemoveStreamHandler (httpMethod, path);
+                    path = path.Remove(0, HostUri.Length);
+                    Server.RemoveStreamHandler(httpMethod, path);
                 }
-                RemoveCaps (method);
+                RemoveCaps(method);
             }
         }
 
@@ -275,11 +262,11 @@ namespace Aurora.Services
         {
             //Remove our SEED cap
             RemoveStreamHandler("SEED", "POST", m_capsUrlBase);
-            RemoveCAPS ();
+            RemoveCAPS();
         }
 
         public virtual byte[] CapsRequest(string path, Stream request, OSHttpRequest httpRequest,
-                                                            OSHttpResponse httpResponse)
+                                          OSHttpResponse httpResponse)
         {
             MainConsole.Instance.Info("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl);
             return OSDParser.SerializeLLSDXmlBytes(registeredCAPS);

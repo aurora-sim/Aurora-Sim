@@ -51,7 +51,7 @@ namespace Aurora.Services
         private IProfileConnector m_profileConnector;
         private IRegionClientCapsService m_service;
         private IUserAccountService m_userService;
-        
+
         #region ICapsServiceConnector Members
 
         public void RegisterCaps(IRegionClientCapsService service)
@@ -75,12 +75,12 @@ namespace Aurora.Services
             string post = CapsUtil.CreateCAPS("SetDisplayName", "");
             service.AddCAPS("SetDisplayName", post);
             service.AddStreamHandler("SetDisplayName", new GenericStreamHandler("POST", post,
-                                                                           ProcessSetDisplayName));
+                                                                                ProcessSetDisplayName));
 
             post = CapsUtil.CreateCAPS("GetDisplayNames", "");
             service.AddCAPS("GetDisplayNames", post);
             service.AddStreamHandler("GetDisplayNames", new GenericStreamHandler("GET", post,
-                                                                          ProcessGetDisplayName));
+                                                                                 ProcessGetDisplayName));
         }
 
         public void EnteringRegion()
@@ -90,7 +90,7 @@ namespace Aurora.Services
         public void DeregisterCaps()
         {
             if (m_service == null)
-                return;//If display names aren't enabled
+                return; //If display names aren't enabled
             m_service.RemoveStreamHandler("SetDisplayName", "POST");
             m_service.RemoveStreamHandler("GetDisplayNames", "GET");
         }
@@ -100,13 +100,13 @@ namespace Aurora.Services
         #region Caps Messages
 
         /// <summary>
-        ///   Set the display name for the given user
+        ///     Set the display name for the given user
         /// </summary>
-        /// <param name = "mDhttpMethod"></param>
-        /// <param name = "agentID"></param>
+        /// <param name="mDhttpMethod"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         private byte[] ProcessSetDisplayName(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             try
             {
@@ -116,7 +116,9 @@ namespace Aurora.Services
                 string newDisplayName = display_name[1].AsString();
 
                 //Check to see if their name contains a banned character
-                if (bannedNames.Select(bannedUserName => bannedUserName.Replace(" ", "")).Any(BannedUserName => newDisplayName.ToLower().Contains(BannedUserName.ToLower())))
+                if (
+                    bannedNames.Select(bannedUserName => bannedUserName.Replace(" ", ""))
+                               .Any(BannedUserName => newDisplayName.ToLower().Contains(BannedUserName.ToLower())))
                 {
                     newDisplayName = m_service.ClientCaps.AccountInfo.Name;
                 }
@@ -133,12 +135,16 @@ namespace Aurora.Services
                     m_profileConnector.UpdateUserProfile(info);
 
                     //One for us
-                    DisplayNameUpdate(newDisplayName, oldDisplayName, m_service.ClientCaps.AccountInfo, m_service.AgentID);
+                    DisplayNameUpdate(newDisplayName, oldDisplayName, m_service.ClientCaps.AccountInfo,
+                                      m_service.AgentID);
 
-                    foreach (IRegionClientCapsService avatar in m_service.RegionCaps.GetClients().Where(avatar => avatar.AgentID != m_service.AgentID))
+                    foreach (
+                        IRegionClientCapsService avatar in
+                            m_service.RegionCaps.GetClients().Where(avatar => avatar.AgentID != m_service.AgentID))
                     {
                         //Update all others
-                        DisplayNameUpdate(newDisplayName, oldDisplayName, m_service.ClientCaps.AccountInfo, avatar.AgentID);
+                        DisplayNameUpdate(newDisplayName, oldDisplayName, m_service.ClientCaps.AccountInfo,
+                                          avatar.AgentID);
                     }
                     //The reply
                     SetDisplayNameReply(newDisplayName, oldDisplayName, m_service.ClientCaps.AccountInfo);
@@ -152,10 +158,10 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Get the user's display name, currently not used?
+        ///     Get the user's display name, currently not used?
         /// </summary>
-        /// <param name = "mDhttpMethod"></param>
-        /// <param name = "agentID"></param>
+        /// <param name="mDhttpMethod"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         private byte[] ProcessGetDisplayName(string path, Stream request, OSHttpRequest httpRequest,
                                              OSHttpResponse httpResponse)
@@ -174,11 +180,13 @@ namespace Aurora.Services
             {
                 foreach (string id in ids)
                 {
-                    UserAccount account = m_userService.GetUserAccount(m_service.ClientCaps.AccountInfo.AllScopeIDs, UUID.Parse(id));
+                    UserAccount account = m_userService.GetUserAccount(m_service.ClientCaps.AccountInfo.AllScopeIDs,
+                                                                       UUID.Parse(id));
                     if (account != null)
                     {
                         IUserProfileInfo info =
-                            Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
+                            Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>()
+                                  .GetUserProfile(account.PrincipalID);
                         if (info != null)
                             PackUserInfo(info, account, ref agents);
                         else
@@ -190,11 +198,13 @@ namespace Aurora.Services
             }
             else if (username != null)
             {
-                UserAccount account = m_userService.GetUserAccount(m_service.ClientCaps.AccountInfo.AllScopeIDs, username.Replace('.', ' '));
+                UserAccount account = m_userService.GetUserAccount(m_service.ClientCaps.AccountInfo.AllScopeIDs,
+                                                                   username.Replace('.', ' '));
                 if (account != null)
                 {
                     IUserProfileInfo info =
-                        Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
+                        Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>()
+                              .GetUserProfile(account.PrincipalID);
                     if (info != null)
                         PackUserInfo(info, account, ref agents);
                     else
@@ -230,12 +240,12 @@ namespace Aurora.Services
         #region Event Queue
 
         /// <summary>
-        ///   Send the user a display name update
+        ///     Send the user a display name update
         /// </summary>
-        /// <param name = "newDisplayName"></param>
-        /// <param name = "oldDisplayName"></param>
-        /// <param name = "InfoFromAv"></param>
-        /// <param name = "ToAgentID"></param>
+        /// <param name="newDisplayName"></param>
+        /// <param name="oldDisplayName"></param>
+        /// <param name="InfoFromAv"></param>
+        /// <param name="ToAgentID"></param>
         public void DisplayNameUpdate(string newDisplayName, string oldDisplayName, UserAccount InfoFromAv,
                                       UUID ToAgentID)
         {
@@ -265,11 +275,11 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Reply to the set display name reply
+        ///     Reply to the set display name reply
         /// </summary>
-        /// <param name = "newDisplayName"></param>
-        /// <param name = "oldDisplayName"></param>
-        /// <param name = "m_avatar"></param>
+        /// <param name="newDisplayName"></param>
+        /// <param name="oldDisplayName"></param>
+        /// <param name="m_avatar"></param>
         public void SetDisplayNameReply(string newDisplayName, string oldDisplayName, UserAccount m_avatar)
         {
             if (m_eventQueue != null)
@@ -285,15 +295,15 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Tell the user about an update
+        ///     Tell the user about an update
         /// </summary>
-        /// <param name = "newDisplayName"></param>
-        /// <param name = "oldDisplayName"></param>
-        /// <param name = "ID"></param>
-        /// <param name = "isDefault"></param>
-        /// <param name = "First"></param>
-        /// <param name = "Last"></param>
-        /// <param name = "Account"></param>
+        /// <param name="newDisplayName"></param>
+        /// <param name="oldDisplayName"></param>
+        /// <param name="ID"></param>
+        /// <param name="isDefault"></param>
+        /// <param name="First"></param>
+        /// <param name="Last"></param>
+        /// <param name="Account"></param>
         /// <returns></returns>
         public OSD DisplayNameUpdate(string newDisplayName, string oldDisplayName, UUID ID, bool isDefault, string First,
                                      string Last, string Account)
@@ -308,7 +318,7 @@ namespace Aurora.Services
                                            "display_name_next_update", OSD.FromDate(
                                                DateTime.ParseExact("1970-01-01 00:00:00 +0", "yyyy-MM-dd hh:mm:ss z",
                                                                    DateTimeFormatInfo.InvariantInfo).ToUniversalTime())
-                                           },
+                                       },
                                        {"id", OSD.FromUUID(ID)},
                                        {"is_display_name_default", OSD.FromBoolean(isDefault)},
                                        {"legacy_first_name", OSD.FromString(First)},
@@ -325,15 +335,15 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        ///   Send back a user's display name
+        ///     Send back a user's display name
         /// </summary>
-        /// <param name = "newDisplayName"></param>
-        /// <param name = "oldDisplayName"></param>
-        /// <param name = "ID"></param>
-        /// <param name = "isDefault"></param>
-        /// <param name = "First"></param>
-        /// <param name = "Last"></param>
-        /// <param name = "Account"></param>
+        /// <param name="newDisplayName"></param>
+        /// <param name="oldDisplayName"></param>
+        /// <param name="ID"></param>
+        /// <param name="isDefault"></param>
+        /// <param name="First"></param>
+        /// <param name="Last"></param>
+        /// <param name="Account"></param>
         /// <returns></returns>
         public OSD DisplayNameReply(string newDisplayName, string oldDisplayName, UUID ID, bool isDefault, string First,
                                     string Last, string Account)

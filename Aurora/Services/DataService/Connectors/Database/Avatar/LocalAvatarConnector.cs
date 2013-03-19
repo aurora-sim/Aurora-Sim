@@ -55,7 +55,7 @@ namespace Aurora.Services.DataService
 
                 if (GD != null)
                     GD.ConnectToDatabase(connectionString, "Avatars",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(this);
             }
@@ -77,14 +77,14 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["PrincipalID"] = PrincipalID;
             List<string> data;
-            lock(m_lock)
+            lock (m_lock)
             {
-                data = GD.Query(new string[]{ "Appearance" }, m_realm, filter, null, null, null);
+                data = GD.Query(new string[] {"Appearance"}, m_realm, filter, null, null, null);
             }
-            if(data.Count == 0)
+            if (data.Count == 0)
                 return null;
             AvatarAppearance appearance = new AvatarAppearance();
-            appearance.FromOSD((OSDMap)OSDParser.DeserializeJson(data[0]));
+            appearance.FromOSD((OSDMap) OSDParser.DeserializeJson(data[0]));
             return appearance;
         }
 
@@ -95,7 +95,7 @@ namespace Aurora.Services.DataService
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["PrincipalID"] = PrincipalID;
                 GD.Delete(m_realm, filter);
-                GD.Insert(m_realm, new[] { PrincipalID.ToString(), OSDParser.SerializeJsonString(data.ToOSD()) });
+                GD.Insert(m_realm, new[] {PrincipalID.ToString(), OSDParser.SerializeJsonString(data.ToOSD())});
             }
             return true;
         }

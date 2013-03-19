@@ -46,7 +46,7 @@ namespace Aurora.Services
 
             m_service.AddStreamHandler("SimulatorFeatures",
                                        new GenericStreamHandler("GET", m_service.CreateCAPS("SimulatorFeatures", ""),
-                                                           SimulatorFeaturesCAP));
+                                                                SimulatorFeaturesCAP));
         }
 
         public void DeregisterCaps()
@@ -61,7 +61,7 @@ namespace Aurora.Services
         #endregion
 
         private byte[] SimulatorFeaturesCAP(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             OSDMap data = new OSDMap();
             data["MeshRezEnabled"] = true;

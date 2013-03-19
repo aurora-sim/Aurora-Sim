@@ -31,18 +31,18 @@ using System.Collections;
 namespace Tanis.Collections
 {
     /// <summary>
-    ///   The Heap allows to maintain a list sorted as long as needed.
-    ///   If no IComparer interface has been provided at construction, then the list expects the Objects to implement IComparer.
-    ///   If the list is not sorted it behaves like an ordinary list.
-    ///   When sorted, the list's "Add" method will put new objects at the right place.
-    ///   As well the "Contains" and "IndexOf" methods will perform a binary search.
+    ///     The Heap allows to maintain a list sorted as long as needed.
+    ///     If no IComparer interface has been provided at construction, then the list expects the Objects to implement IComparer.
+    ///     If the list is not sorted it behaves like an ordinary list.
+    ///     When sorted, the list's "Add" method will put new objects at the right place.
+    ///     As well the "Contains" and "IndexOf" methods will perform a binary search.
     /// </summary>
     public class Heap : IList, ICloneable
     {
         #region Delegates
 
         /// <summary>
-        ///   Defines an equality for two objects
+        ///     Defines an equality for two objects
         /// </summary>
         public delegate bool Equality(object Object1, object Object2);
 
@@ -55,8 +55,8 @@ namespace Tanis.Collections
         #region Constructors
 
         /// <summary>
-        ///   Default constructor.
-        ///   Since no IComparer is provided here, added objects must implement the IComparer interface.
+        ///     Default constructor.
+        ///     Since no IComparer is provided here, added objects must implement the IComparer interface.
         /// </summary>
         public Heap()
         {
@@ -64,29 +64,33 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Constructor.
-        ///   Since no IComparer is provided, added objects must implement the IComparer interface.
+        ///     Constructor.
+        ///     Since no IComparer is provided, added objects must implement the IComparer interface.
         /// </summary>
-        /// <param name = "Capacity">Capacity of the list (<see cref = "ArrayList.Capacity">ArrayList.Capacity</see>)</param>
+        /// <param name="Capacity">
+        ///     Capacity of the list (<see cref="ArrayList.Capacity">ArrayList.Capacity</see>)
+        /// </param>
         public Heap(int Capacity)
         {
             InitProperties(null, Capacity);
         }
 
         /// <summary>
-        ///   Constructor.
+        ///     Constructor.
         /// </summary>
-        /// <param name = "Comparer">Will be used to compare added elements for sort and search operations.</param>
+        /// <param name="Comparer">Will be used to compare added elements for sort and search operations.</param>
         public Heap(IComparer Comparer)
         {
             InitProperties(Comparer, 0);
         }
 
         /// <summary>
-        ///   Constructor.
+        ///     Constructor.
         /// </summary>
-        /// <param name = "Comparer">Will be used to compare added elements for sort and search operations.</param>
-        /// <param name = "Capacity">Capacity of the list (<see cref = "ArrayList.Capacity">ArrayList.Capacity</see>)</param>
+        /// <param name="Comparer">Will be used to compare added elements for sort and search operations.</param>
+        /// <param name="Capacity">
+        ///     Capacity of the list (<see cref="ArrayList.Capacity">ArrayList.Capacity</see>)
+        /// </param>
         public Heap(IComparer Comparer, int Capacity)
         {
             InitProperties(Comparer, Capacity);
@@ -99,7 +103,7 @@ namespace Tanis.Collections
         private bool FAddDuplicates;
 
         /// <summary>
-        ///   If set to true, it will not be possible to add an object to the list if its value is already in the list.
+        ///     If set to true, it will not be possible to add an object to the list if its value is already in the list.
         /// </summary>
         public bool AddDuplicates
         {
@@ -108,7 +112,7 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         public int Capacity
         {
@@ -121,8 +125,8 @@ namespace Tanis.Collections
         #region ICloneable Members
 
         /// <summary>
-        ///   ICloneable implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     ICloneable implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         /// <returns>Cloned object.</returns>
         public object Clone()
@@ -137,12 +141,12 @@ namespace Tanis.Collections
         #region IList Members
 
         /// <summary>
-        ///   IList implementation.
-        ///   Gets object's value at a specified index.
-        ///   The set operation is impossible on a Heap.
+        ///     IList implementation.
+        ///     Gets object's value at a specified index.
+        ///     The set operation is impossible on a Heap.
         /// </summary>
-        /// <exception cref = "ArgumentOutOfRangeException">Index is less than zero or Index is greater than Count.</exception>
-        /// <exception cref = "InvalidOperationException">[] operator cannot be used to set a value on a Heap.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Index is less than zero or Index is greater than Count.</exception>
+        /// <exception cref="InvalidOperationException">[] operator cannot be used to set a value on a Heap.</exception>
         public object this[int Index]
         {
             get
@@ -155,12 +159,12 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Adds the object at the right place.
+        ///     IList implementation.
+        ///     Adds the object at the right place.
         /// </summary>
-        /// <param name = "O">The object to add.</param>
+        /// <param name="O">The object to add.</param>
         /// <returns>The index where the object has been added.</returns>
-        /// <exception cref = "ArgumentException">The Heap is set to use object's IComparable interface, and the specifed object does not implement this interface.</exception>
+        /// <exception cref="ArgumentException">The Heap is set to use object's IComparable interface, and the specifed object does not implement this interface.</exception>
         public int Add(object O)
         {
             int Return = -1;
@@ -176,12 +180,12 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Search for a specified object in the list.
-        ///   If the list is sorted, a &lt;see cref = &quot;ArrayList.BinarySearch&quot;&gt;BinarySearch&lt;/see&gt; is performed using IComparer interface.
-        ///   Else the &lt;see cref = &quot;Equals&quot;&gt;Object.Equals&lt;/see&gt; implementation is used.
+        ///     IList implementation.
+        ///     Search for a specified object in the list.
+        ///     If the list is sorted, a &lt;see cref = &quot;ArrayList.BinarySearch&quot;&gt;BinarySearch&lt;/see&gt; is performed using IComparer interface.
+        ///     Else the &lt;see cref = &quot;Equals&quot;&gt;Object.Equals&lt;/see&gt; implementation is used.
         /// </summary>
-        /// <param name = "O">The object to look for</param>
+        /// <param name="O">The object to look for</param>
         /// <returns>true if the object is in the list, otherwise false.</returns>
         public bool Contains(object O)
         {
@@ -189,15 +193,15 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Returns the index of the specified object in the list.
-        ///   If the list is sorted, a &lt;see cref = &quot;ArrayList.BinarySearch&quot;&gt;BinarySearch&lt;/see&gt; is performed using IComparer interface.
-        ///   Else the &lt;see cref = &quot;Equals&quot;&gt;Object.Equals&lt;/see&gt; implementation of objects is used.
+        ///     IList implementation.
+        ///     Returns the index of the specified object in the list.
+        ///     If the list is sorted, a &lt;see cref = &quot;ArrayList.BinarySearch&quot;&gt;BinarySearch&lt;/see&gt; is performed using IComparer interface.
+        ///     Else the &lt;see cref = &quot;Equals&quot;&gt;Object.Equals&lt;/see&gt; implementation of objects is used.
         /// </summary>
-        /// <param name = "O">The object to locate.</param>
+        /// <param name="O">The object to locate.</param>
         /// <returns>
-        ///   If the object has been found, a positive integer corresponding to its position.
-        ///   If the objects has not been found, a negative integer which is the bitwise complement of the index of the next element.
+        ///     If the object has been found, a positive integer corresponding to its position.
+        ///     If the objects has not been found, a negative integer which is the bitwise complement of the index of the next element.
         /// </returns>
         public int IndexOf(object O)
         {
@@ -209,8 +213,8 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         public bool IsFixedSize
         {
@@ -218,8 +222,8 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         public bool IsReadOnly
         {
@@ -227,8 +231,8 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         public void Clear()
         {
@@ -236,51 +240,51 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Cannot be used on a Heap.
+        ///     IList implementation.
+        ///     Cannot be used on a Heap.
         /// </summary>
-        /// <param name = "Index">The index before which the object must be added.</param>
-        /// <param name = "O">The object to add.</param>
-        /// <exception cref = "InvalidOperationException">Insert method cannot be called on a Heap.</exception>
+        /// <param name="Index">The index before which the object must be added.</param>
+        /// <param name="O">The object to add.</param>
+        /// <exception cref="InvalidOperationException">Insert method cannot be called on a Heap.</exception>
         public void Insert(int Index, object O)
         {
             throw new InvalidOperationException("Insert method cannot be called on a Heap.");
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
-        /// <param name = "Value">The object whose value must be removed if found in the list.</param>
+        /// <param name="Value">The object whose value must be removed if found in the list.</param>
         public void Remove(object Value)
         {
             FList.Remove(Value);
         }
 
         /// <summary>
-        ///   IList implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
-        /// <param name = "Index">Index of object to remove.</param>
+        /// <param name="Index">Index of object to remove.</param>
         public void RemoveAt(int Index)
         {
             FList.RemoveAt(Index);
         }
 
         /// <summary>
-        ///   IList.ICollection implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList.ICollection implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
-        /// <param name = "array"></param>
-        /// <param name = "arrayIndex"></param>
+        /// <param name="array"></param>
+        /// <param name="arrayIndex"></param>
         public void CopyTo(Array array, int arrayIndex)
         {
             FList.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
-        ///   IList.ICollection implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList.ICollection implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         public int Count
         {
@@ -288,8 +292,8 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList.ICollection implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList.ICollection implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         public bool IsSynchronized
         {
@@ -297,8 +301,8 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList.ICollection implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList.ICollection implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         public object SyncRoot
         {
@@ -306,8 +310,8 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   IList.IEnumerable implementation.
-        ///   Idem <see cref = "ArrayList">ArrayList</see>
+        ///     IList.IEnumerable implementation.
+        ///     Idem <see cref="ArrayList">ArrayList</see>
         /// </summary>
         /// <returns>Enumerator on the list.</returns>
         public IEnumerator GetEnumerator()
@@ -318,8 +322,8 @@ namespace Tanis.Collections
         #endregion
 
         /// <summary>
-        ///   Object.ToString() override.
-        ///   Build a string to represent the list.
+        ///     Object.ToString() override.
+        ///     Build a string to represent the list.
         /// </summary>
         /// <returns>The string refecting the list.</returns>
         public override string ToString()
@@ -331,7 +335,7 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Object.Equals() override.
+        ///     Object.Equals() override.
         /// </summary>
         /// <returns>true if object is equal to this, otherwise false.</returns>
         public override bool Equals(object Object)
@@ -346,7 +350,7 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Object.GetHashCode() override.
+        ///     Object.GetHashCode() override.
         /// </summary>
         /// <returns>Hash code for this.</returns>
         public override int GetHashCode()
@@ -355,10 +359,10 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Idem IndexOf(object), but starting at a specified position in the list
+        ///     Idem IndexOf(object), but starting at a specified position in the list
         /// </summary>
-        /// <param name = "Object">The object to locate.</param>
-        /// <param name = "Start">The index for start position.</param>
+        /// <param name="Object">The object to locate.</param>
+        /// <param name="Start">The index for start position.</param>
         /// <returns></returns>
         public int IndexOf(object Object, int Start)
         {
@@ -370,10 +374,10 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Idem IndexOf(object), but with a specified equality function
+        ///     Idem IndexOf(object), but with a specified equality function
         /// </summary>
-        /// <param name = "Object">The object to locate.</param>
-        /// <param name = "AreEqual">Equality function to use for the search.</param>
+        /// <param name="Object">The object to locate.</param>
+        /// <param name="AreEqual">Equality function to use for the search.</param>
         /// <returns></returns>
         public int IndexOf(object Object, Equality AreEqual)
         {
@@ -383,11 +387,11 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Idem IndexOf(object), but with a start index and a specified equality function
+        ///     Idem IndexOf(object), but with a start index and a specified equality function
         /// </summary>
-        /// <param name = "Object">The object to locate.</param>
-        /// <param name = "Start">The index for start position.</param>
-        /// <param name = "AreEqual">Equality function to use for the search.</param>
+        /// <param name="Object">The object to locate.</param>
+        /// <param name="Start">The index for start position.</param>
+        /// <param name="AreEqual">Equality function to use for the search.</param>
         /// <returns></returns>
         public int IndexOf(object Object, int Start, Equality AreEqual)
         {
@@ -399,11 +403,11 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   The objects will be added at the right place.
+        ///     The objects will be added at the right place.
         /// </summary>
-        /// <param name = "C">The object to add.</param>
+        /// <param name="C">The object to add.</param>
         /// <returns>The index where the object has been added.</returns>
-        /// <exception cref = "ArgumentException">The Heap is set to use object's IComparable interface, and the specifed object does not implement this interface.</exception>
+        /// <exception cref="ArgumentException">The Heap is set to use object's IComparable interface, and the specifed object does not implement this interface.</exception>
         public void AddRange(ICollection C)
         {
             foreach (object Object in C)
@@ -411,23 +415,23 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Cannot be called on a Heap.
+        ///     Cannot be called on a Heap.
         /// </summary>
-        /// <param name = "Index">The index before which the objects must be added.</param>
-        /// <param name = "C">The object to add.</param>
-        /// <exception cref = "InvalidOperationException">Insert cannot be called on a Heap.</exception>
+        /// <param name="Index">The index before which the objects must be added.</param>
+        /// <param name="C">The object to add.</param>
+        /// <exception cref="InvalidOperationException">Insert cannot be called on a Heap.</exception>
         public void InsertRange(int Index, ICollection C)
         {
             throw new InvalidOperationException("Insert cannot be called on a Heap.");
         }
 
         /// <summary>
-        ///   Limits the number of occurrences of a specified value.
-        ///   Same values are equals according to the Equals() method of objects in the list.
-        ///   The first occurrences encountered are kept.
+        ///     Limits the number of occurrences of a specified value.
+        ///     Same values are equals according to the Equals() method of objects in the list.
+        ///     The first occurrences encountered are kept.
         /// </summary>
-        /// <param name = "Value">Value whose occurrences number must be limited.</param>
-        /// <param name = "NumberToKeep">Number of occurrences to keep</param>
+        /// <param name="Value">Value whose occurrences number must be limited.</param>
+        /// <param name="NumberToKeep">Number of occurrences to keep</param>
         public void LimitOccurrences(object Value, int NumberToKeep)
         {
             if (Value == null)
@@ -448,8 +452,8 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Removes all duplicates in the list.
-        ///   Each value encountered will have only one representant.
+        ///     Removes all duplicates in the list.
+        ///     Each value encountered will have only one representant.
         /// </summary>
         public void RemoveDuplicates()
         {
@@ -465,7 +469,7 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Returns the object of the list whose value is minimum
+        ///     Returns the object of the list whose value is minimum
         /// </summary>
         /// <returns>The minimum object in the list</returns>
         public int IndexOfMin()
@@ -477,7 +481,7 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Returns the object of the list whose value is maximum
+        ///     Returns the object of the list whose value is maximum
         /// </summary>
         /// <returns>The maximum object in the list</returns>
         public int IndexOfMax()
@@ -491,7 +495,7 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Returns the topmost object on the list and removes it from the list
+        ///     Returns the topmost object on the list and removes it from the list
         /// </summary>
         /// <returns>Returns the topmost object on the list</returns>
         public object Pop()
@@ -504,9 +508,9 @@ namespace Tanis.Collections
         }
 
         /// <summary>
-        ///   Pushes an object on list. It will be inserted at the right spot.
+        ///     Pushes an object on list. It will be inserted at the right spot.
         /// </summary>
-        /// <param name = "Object">Object to add to the list</param>
+        /// <param name="Object">Object to add to the list</param>
         /// <returns></returns>
         public int Push(object Object)
         {

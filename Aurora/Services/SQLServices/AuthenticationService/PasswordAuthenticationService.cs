@@ -89,7 +89,8 @@ namespace Aurora.Services
                 {
                     string hashed = Util.Md5Hash(password + ":" + data.PasswordSalt);
 
-                    MainConsole.Instance.TraceFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.PasswordHash);
+                    MainConsole.Instance.TraceFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password,
+                                                     hashed, data.PasswordHash);
 
                     if (data.PasswordHash == hashed)
                     {

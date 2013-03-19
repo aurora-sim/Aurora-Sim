@@ -77,8 +77,10 @@ namespace Aurora.Services.SQLServices.GridService
             {
                 m_DisableRegistrations = gridConfig.GetBoolean("DisableRegistrations", m_DisableRegistrations);
                 m_AllowNewRegistrations = gridConfig.GetBoolean("AllowNewRegistrations", m_AllowNewRegistrations);
-                m_AllowNewRegistrationsWithPass = gridConfig.GetBoolean("AllowNewRegistrationsWithPass", m_AllowNewRegistrationsWithPass);
-                m_RegisterRegionPassword = Util.Md5Hash(gridConfig.GetString("RegisterRegionPassword", m_RegisterRegionPassword));
+                m_AllowNewRegistrationsWithPass = gridConfig.GetBoolean("AllowNewRegistrationsWithPass",
+                                                                        m_AllowNewRegistrationsWithPass);
+                m_RegisterRegionPassword =
+                    Util.Md5Hash(gridConfig.GetString("RegisterRegionPassword", m_RegisterRegionPassword));
                 m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", m_maxRegionSize);
                 m_cachedRegionViewSize = gridConfig.GetInt("RegionSightSize", m_cachedRegionViewSize);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", !m_UseSessionID);
@@ -157,11 +159,12 @@ namespace Aurora.Services.SQLServices.GridService
             if (m_cachedMaxRegionSize != 0)
                 return m_cachedMaxRegionSize;
             object remoteValue = DoRemoteByURL("GridServerURI");
-            if (remoteValue != null || m_doRemoteOnly) {
-                m_cachedMaxRegionSize = (int)remoteValue == 0 ? 8192 : (int)remoteValue;
-                if ((int)remoteValue == 0) return 8192;
-                return (int)remoteValue;
-             }
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                m_cachedMaxRegionSize = (int) remoteValue == 0 ? 8192 : (int) remoteValue;
+                if ((int) remoteValue == 0) return 8192;
+                return (int) remoteValue;
+            }
             if (m_maxRegionSize == 0) return 8192;
             return m_maxRegionSize;
         }
@@ -174,7 +177,7 @@ namespace Aurora.Services.SQLServices.GridService
             object remoteValue = DoRemoteByURL("GridServerURI");
             if (remoteValue != null && m_doRemoteOnly)
             {
-                m_cachedRegionViewSize = (int)remoteValue;
+                m_cachedRegionViewSize = (int) remoteValue;
             }
             else m_cachedRegionViewSize = 1;
             return m_cachedRegionViewSize;
@@ -186,7 +189,7 @@ namespace Aurora.Services.SQLServices.GridService
         }
 
         /// <summary>
-        /// Gets the default regions that people land in if they have no other region to enter
+        ///     Gets the default regions that people land in if they have no other region to enter
         /// </summary>
         /// <param name="scopeID"></param>
         /// <returns></returns>
@@ -195,7 +198,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GridRegion>)remoteValue;
+                return (List<GridRegion>) remoteValue;
 
             List<GridRegion> regions = m_Database.GetDefaultRegions(scopeIDs);
 
@@ -206,7 +209,7 @@ namespace Aurora.Services.SQLServices.GridService
                 if ((r.Flags & (int) RegionFlags.RegionOnline) != 0) ret.Add(r);
             }
 #else
-            List<GridRegion> ret = regions.Where(r => (r.Flags & (int)RegionFlags.RegionOnline) != 0).ToList();
+            List<GridRegion> ret = regions.Where(r => (r.Flags & (int) RegionFlags.RegionOnline) != 0).ToList();
 #endif
 
             MainConsole.Instance.DebugFormat("[GRID SERVICE]: GetDefaultRegions returning {0} regions", ret.Count);
@@ -214,26 +217,26 @@ namespace Aurora.Services.SQLServices.GridService
         }
 
         /// <summary>
-        ///   Attempts to find regions that are good for the agent to login to if the default and fallback regions are down.
+        ///     Attempts to find regions that are good for the agent to login to if the default and fallback regions are down.
         /// </summary>
-        /// <param name = "scopeID"></param>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetSafeRegions(List<UUID> scopeIDs, int x, int y)
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, x, y);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GridRegion>)remoteValue;
+                return (List<GridRegion>) remoteValue;
 
             return m_Database.GetSafeRegions(scopeIDs, x, y);
         }
 
         /// <summary>
-        ///   Tells the grid server that this region is not able to be connected to.
-        ///   This updates the down flag in the map and blocks it from becoming a 'safe' region fallback
-        ///   Only called by LLLoginService
+        ///     Tells the grid server that this region is not able to be connected to.
+        ///     This updates the down flag in the map and blocks it from becoming a 'safe' region fallback
+        ///     Only called by LLLoginService
         /// </summary>
         //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual void SetRegionUnsafe(UUID id)
@@ -253,9 +256,9 @@ namespace Aurora.Services.SQLServices.GridService
         }
 
         /// <summary>
-        ///   Tells the grid server that this region is able to be connected to.
-        ///   This updates the down flag in the map and allows it to become a 'safe' region fallback
-        ///   Only called by LLLoginService
+        ///     Tells the grid server that this region is able to be connected to.
+        ///     This updates the down flag in the map and allows it to become a 'safe' region fallback
+        ///     Only called by LLLoginService
         /// </summary>
         //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public virtual void SetRegionSafe(UUID id)
@@ -279,7 +282,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, x, y);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GridRegion>)remoteValue;
+                return (List<GridRegion>) remoteValue;
 
             List<GridRegion> regions = m_Database.GetFallbackRegions(scopeIDs, x, y);
 
@@ -302,7 +305,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (int)remoteValue;
+                return (int) remoteValue;
 
             GridRegion region = m_Database.Get(regionID, scopeIDs);
 
@@ -315,11 +318,12 @@ namespace Aurora.Services.SQLServices.GridService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual multipleMapItemReply GetMapItems(List<UUID> scopeIDs, ulong regionHandle, GridItemType gridItemType)
+        public virtual multipleMapItemReply GetMapItems(List<UUID> scopeIDs, ulong regionHandle,
+                                                        GridItemType gridItemType)
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionHandle, gridItemType);
             if (remoteValue != null || m_doRemoteOnly)
-                return (multipleMapItemReply)remoteValue;
+                return (multipleMapItemReply) remoteValue;
 
             multipleMapItemReply allItems = new multipleMapItemReply();
             if (gridItemType == GridItemType.AgentLocations) //Grid server only cares about agent locations
@@ -334,30 +338,37 @@ namespace Aurora.Services.SQLServices.GridService
 
         [CanBeReflected(ThreatLevel = ThreatLevel.None)]
         public virtual RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password,
-            int majorProtocolVersion, int minorProtocolVersion)
+                                                     int majorProtocolVersion, int minorProtocolVersion)
         {
-            RegisterRegion rr = new RegisterRegion ();
-            object remoteValue = DoRemoteByURL("GridServerURI", regionInfos, oldSessionID, password, majorProtocolVersion, minorProtocolVersion);
-            if (remoteValue != null || m_doRemoteOnly) {
-                rr = (RegisterRegion)remoteValue;
+            RegisterRegion rr = new RegisterRegion();
+            object remoteValue = DoRemoteByURL("GridServerURI", regionInfos, oldSessionID, password,
+                                               majorProtocolVersion, minorProtocolVersion);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                rr = (RegisterRegion) remoteValue;
                 if (rr == null)
-                    rr = new RegisterRegion { Error = "Could not reach grid service." };
+                    rr = new RegisterRegion {Error = "Could not reach grid service."};
                 return rr;
             }
 
             if (majorProtocolVersion < ProtocolVersion.MINIMUM_MAJOR_PROTOCOL_VERSION ||
                 minorProtocolVersion < ProtocolVersion.MINIMUM_MINOR_PROTOCOL_VERSION)
             {
-                return new RegisterRegion { Error = "You need to update your version of Aurora, the protocol version is too low to connect to this server." };
+                return new RegisterRegion
+                           {
+                               Error =
+                                   "You need to update your version of Aurora, the protocol version is too low to connect to this server."
+                           };
             }
 
             if (m_DisableRegistrations)
-                return new RegisterRegion { Error = "Registrations are disabled." };
+                return new RegisterRegion {Error = "Registrations are disabled."};
 
             UUID NeedToDeletePreviousRegion = UUID.Zero;
 
             //Get the range of this so that we get the full count and make sure that we are not overlapping smaller regions
-            List<GridRegion> regions = m_Database.Get (regionInfos.RegionLocX - GetMaxRegionSize (), regionInfos.RegionLocY - GetMaxRegionSize (),
+            List<GridRegion> regions = m_Database.Get(regionInfos.RegionLocX - GetMaxRegionSize(),
+                                                      regionInfos.RegionLocY - GetMaxRegionSize(),
                                                       regionInfos.RegionLocX + regionInfos.RegionSizeX - 1,
                                                       regionInfos.RegionLocY + regionInfos.RegionSizeY - 1,
                                                       null);
@@ -367,10 +378,10 @@ namespace Aurora.Services.SQLServices.GridService
                                   r.RegionLocY < regionInfos.RegionLocY + regionInfos.RegionSizeY) &&
                                  r.RegionID != regionInfos.RegionID))
             {
-                MainConsole.Instance.WarnFormat (
+                MainConsole.Instance.WarnFormat(
                     "[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
                     regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
-                return new RegisterRegion { Error = "Region overlaps another region" };
+                return new RegisterRegion {Error = "Region overlaps another region"};
             }
 
             GridRegion region = m_Database.Get(regionInfos.RegionID, null);
@@ -383,31 +394,34 @@ namespace Aurora.Services.SQLServices.GridService
                     MainConsole.Instance.WarnFormat(
                         "[GRID SERVICE]: Region {0} called register, but the sessionID they provided is wrong!",
                         region.RegionName);
-                    return new RegisterRegion { Error = "Wrong Session ID" };
+                    return new RegisterRegion {Error = "Wrong Session ID"};
                 }
             }
 
             if ((!m_AllowNewRegistrations && region == null) && (!m_AllowNewRegistrationsWithPass))
             {
-                MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register but registrations are disabled.",
-                                 regionInfos.RegionName);
-                return new RegisterRegion { Error = "Registrations are disabled." };
+                MainConsole.Instance.WarnFormat(
+                    "[GRID SERVICE]: Region {0} tried to register but registrations are disabled.",
+                    regionInfos.RegionName);
+                return new RegisterRegion {Error = "Registrations are disabled."};
             }
 
             if (region == null && m_AllowNewRegistrationsWithPass && password != m_RegisterRegionPassword)
             {
-                MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register but passwords didn't match.",regionInfos.RegionName);
+                MainConsole.Instance.WarnFormat(
+                    "[GRID SERVICE]: Region {0} tried to register but passwords didn't match.", regionInfos.RegionName);
                 // don't want to leak info so just tell them its disabled
-                return new RegisterRegion { Error = "Registrations are disabled." };
+                return new RegisterRegion {Error = "Registrations are disabled."};
             }
 
             if (m_maxRegionSize != 0 &&
                 (regionInfos.RegionSizeX > m_maxRegionSize || regionInfos.RegionSizeY > m_maxRegionSize))
             {
                 //Too big... kick it out
-                MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register with too large of a size {1},{2}.",
-                                 regionInfos.RegionName, regionInfos.RegionSizeX, regionInfos.RegionSizeY);
-                return new RegisterRegion { Error = "Region is too large, reduce its size." };
+                MainConsole.Instance.WarnFormat(
+                    "[GRID SERVICE]: Region {0} tried to register with too large of a size {1},{2}.",
+                    regionInfos.RegionName, regionInfos.RegionSizeX, regionInfos.RegionSizeY);
+                return new RegisterRegion {Error = "Region is too large, reduce its size."};
             }
 
             if ((region != null) && (region.RegionID != regionInfos.RegionID))
@@ -415,14 +429,19 @@ namespace Aurora.Services.SQLServices.GridService
                 MainConsole.Instance.WarnFormat(
                     "[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
                     regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
-                return new RegisterRegion { Error = "Region overlaps another region" };
+                return new RegisterRegion {Error = "Region overlaps another region"};
             }
 
             if ((region != null) && (region.RegionID == regionInfos.RegionID) &&
                 ((region.RegionLocX != regionInfos.RegionLocX) || (region.RegionLocY != regionInfos.RegionLocY)))
             {
                 if ((region.Flags & (int) RegionFlags.NoMove) != 0)
-                    return new RegisterRegion { Error = "Can't move this region," + region.RegionLocX + "," + region.RegionLocY };
+                    return new RegisterRegion
+                               {
+                                   Error =
+                                       "Can't move this region," + region.RegionLocX + "," +
+                                       region.RegionLocY
+                               };
 
                 // Region reregistering in other coordinates. Delete the old entry
                 MainConsole.Instance.DebugFormat(
@@ -446,7 +465,7 @@ namespace Aurora.Services.SQLServices.GridService
                 {
                     // Regions reserved for the null key cannot be taken.
                     if (region.SessionID == UUID.Zero)
-                        return new RegisterRegion { Error = "Region location is reserved" };
+                        return new RegisterRegion {Error = "Region location is reserved"};
 
                     // Treat it as an auth request
                     //
@@ -464,9 +483,10 @@ namespace Aurora.Services.SQLServices.GridService
                 {
                     if (dupe.Any(d => d.RegionID != regionInfos.RegionID))
                     {
-                        MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.",
-                                         regionInfos.RegionName, regionInfos.RegionID);
-                        return new RegisterRegion { Error = "Duplicate region name" };
+                        MainConsole.Instance.WarnFormat(
+                            "[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.",
+                            regionInfos.RegionName, regionInfos.RegionID);
+                        return new RegisterRegion {Error = "Duplicate region name"};
                     }
                 }
             }
@@ -475,7 +495,7 @@ namespace Aurora.Services.SQLServices.GridService
             {
                 //If we are locked out, we can't come in
                 if ((region.Flags & (int) RegionFlags.LockedOut) != 0)
-                    return new RegisterRegion { Error = "Region locked out" };
+                    return new RegisterRegion {Error = "Region locked out"};
 
                 //Remove the reservation if we are there now
                 region.Flags &= ~(int) RegionFlags.Reservation;
@@ -499,7 +519,8 @@ namespace Aurora.Services.SQLServices.GridService
                     newFlags = ParseFlags(newFlags, gridConfig.GetString("DefaultRegionFlags", String.Empty));
                     newFlags = ParseFlags(newFlags, gridConfig.GetString("Region_" + regionName, String.Empty));
                     newFlags = ParseFlags(newFlags,
-                                          gridConfig.GetString("Region_" + regionInfos.RegionHandle.ToString(), String.Empty));
+                                          gridConfig.GetString("Region_" + regionInfos.RegionHandle.ToString(),
+                                                               String.Empty));
                     regionInfos.Flags = newFlags;
                 }
             }
@@ -526,15 +547,16 @@ namespace Aurora.Services.SQLServices.GridService
                     FixNeighbors(regionInfos, neighbors, false);
 
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
-                                      regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY);
+                                                     regionInfos.RegionName, regionInfos.RegionLocX,
+                                                     regionInfos.RegionLocY);
                     return new RegisterRegion
-                    {
-                        Error = "",
-                        Neighbors = neighbors,
-                        RegionFlags = regionInfos.Flags,
-                        SessionID = SessionID,
-                        Region = regionInfos
-                    };
+                               {
+                                   Error = "",
+                                   Neighbors = neighbors,
+                                   RegionFlags = regionInfos.Flags,
+                                   SessionID = SessionID,
+                                   Region = regionInfos
+                               };
                 }
             }
             catch (Exception e)
@@ -542,7 +564,7 @@ namespace Aurora.Services.SQLServices.GridService
                 MainConsole.Instance.WarnFormat("[GRID SERVICE]: Database exception: {0}", e);
             }
 
-            return new RegisterRegion { Error = "Failed to save region into the database." };
+            return new RegisterRegion {Error = "Failed to save region into the database."};
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -550,7 +572,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", gregion, online);
             if (remoteValue != null || m_doRemoteOnly)
-                return (string)remoteValue;
+                return (string) remoteValue;
 
             GridRegion region = m_Database.Get(gregion.RegionID, null);
             if (region != null)
@@ -568,13 +590,13 @@ namespace Aurora.Services.SQLServices.GridService
 
                 if (online)
                 {
-                    region.Flags |= (int)RegionFlags.RegionOnline;
-                    region.Flags |= (int)RegionFlags.Safe;
+                    region.Flags |= (int) RegionFlags.RegionOnline;
+                    region.Flags |= (int) RegionFlags.Safe;
                 }
                 else
                 {
-                    region.Flags &= ~(int)RegionFlags.RegionOnline;
-                    region.Flags &= ~(int)RegionFlags.Safe;
+                    region.Flags &= ~(int) RegionFlags.RegionOnline;
+                    region.Flags &= ~(int) RegionFlags.Safe;
                 }
 
                 region.TerrainImage = gregion.TerrainImage;
@@ -611,7 +633,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", gregion);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue != null && (bool)remoteValue;
+                return remoteValue != null && (bool) remoteValue;
 
             GridRegion region = m_Database.Get(gregion.RegionID, null);
             if (region == null)
@@ -636,7 +658,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (GridRegion)remoteValue;
+                return (GridRegion) remoteValue;
 
             return m_Database.Get(regionID, scopeIDs);
         }
@@ -646,7 +668,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, x, y);
             if (remoteValue != null || m_doRemoteOnly)
-                return (GridRegion)remoteValue;
+                return (GridRegion) remoteValue;
 
             return m_Database.GetZero(x, y, scopeIDs);
         }
@@ -656,7 +678,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, regionName);
             if (remoteValue != null || m_doRemoteOnly)
-                return (GridRegion)remoteValue;
+                return (GridRegion) remoteValue;
 
             List<GridRegion> rdatas = m_Database.Get(regionName + "%", scopeIDs, 0, 1);
             if ((rdatas != null) && (rdatas.Count > 0))
@@ -676,7 +698,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, name, start, count);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GridRegion>)remoteValue;
+                return (List<GridRegion>) remoteValue;
 
             List<GridRegion> rdatas = m_Database.Get(name + "%", scopeIDs, start, count);
 
@@ -696,7 +718,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, name);
             if (remoteValue != null || m_doRemoteOnly)
-                return (uint)remoteValue;
+                return (uint) remoteValue;
 
             return m_Database.GetCount(name + "%", scopeIDs);
         }
@@ -704,32 +726,36 @@ namespace Aurora.Services.SQLServices.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetRegionRange(List<UUID> scopeIDs, int xmin, int xmax, int ymin, int ymax)
         {
-            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, xmin,xmax, ymin, ymax);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, xmin, xmax, ymin, ymax);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GridRegion>)remoteValue;
+                return (List<GridRegion>) remoteValue;
 
             return m_Database.Get(xmin, ymin, xmax, ymax, scopeIDs);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual List<GridRegion> GetRegionRange(List<UUID> scopeIDs, float centerX, float centerY, uint squareRangeFromCenterInMeters)
+        public virtual List<GridRegion> GetRegionRange(List<UUID> scopeIDs, float centerX, float centerY,
+                                                       uint squareRangeFromCenterInMeters)
         {
-            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, centerX, centerY, squareRangeFromCenterInMeters);
+            object remoteValue = DoRemoteByURL("GridServerURI", scopeIDs, centerX, centerY,
+                                               squareRangeFromCenterInMeters);
 
-            return (remoteValue != null || m_doRemoteOnly) ? (List<GridRegion>)remoteValue : m_Database.Get(scopeIDs, UUID.Zero, centerX, centerY, squareRangeFromCenterInMeters);
+            return (remoteValue != null || m_doRemoteOnly)
+                       ? (List<GridRegion>) remoteValue
+                       : m_Database.Get(scopeIDs, UUID.Zero, centerX, centerY, squareRangeFromCenterInMeters);
         }
 
         /// <summary>
-        ///   Get the cached list of neighbors or a new list
+        ///     Get the cached list of neighbors or a new list
         /// </summary>
-        /// <param name = "region"></param>
+        /// <param name="region"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual List<GridRegion> GetNeighbors(List<UUID> scopeIDs, GridRegion region)
         {
             object remoteValue = DoRemoteByURL("GridServerURI", region);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GridRegion>)remoteValue;
+                return (List<GridRegion>) remoteValue;
 
             List<GridRegion> neighbors = new List<GridRegion>();
             if (!m_KnownNeighbors.TryGetValue(region.RegionID, out neighbors))
@@ -749,7 +775,7 @@ namespace Aurora.Services.SQLServices.GridService
         private void HandleClearAllRegions(string[] cmd)
         {
             //Delete everything... give no criteria to just do 'delete from gridregions'
-            m_Database.DeleteAll(new[]{ "1" }, new object[]{ 1 });
+            m_Database.DeleteAll(new[] {"1"}, new object[] {1});
             MainConsole.Instance.Warn("[GridService]: Cleared all regions");
         }
 
@@ -779,7 +805,8 @@ namespace Aurora.Services.SQLServices.GridService
             IConfig gridConfig = m_config.Configs["GridService"];
             if (gridConfig != null)
                 gridConfig.Set("AllowNewRegistrations", enabled);
-            MainConsole.Instance.Info("[GridService]: Registrations have been " + (enabled ? "enabled" : "disabled") + " for new regions");
+            MainConsole.Instance.Info("[GridService]: Registrations have been " + (enabled ? "enabled" : "disabled") +
+                                      " for new regions");
         }
 
         private void HandleClearAllDownRegions(string[] cmd)
@@ -814,7 +841,8 @@ namespace Aurora.Services.SQLServices.GridService
 
             foreach (GridRegion r in regions)
             {
-                MainConsole.Instance.Info("-------------------------------------------------------------------------------");
+                MainConsole.Instance.Info(
+                    "-------------------------------------------------------------------------------");
                 RegionFlags flags = (RegionFlags) Convert.ToInt32(r.Flags);
                 MainConsole.Instance.Info("Region Name: " + r.RegionName);
                 MainConsole.Instance.Info("Region UUID: " + r.RegionID);
@@ -823,7 +851,8 @@ namespace Aurora.Services.SQLServices.GridService
                 MainConsole.Instance.Info("Region URI: " + r.ServerURI);
                 MainConsole.Instance.Info("Region Owner: " + r.EstateOwner);
                 MainConsole.Instance.Info("Region Flags: " + flags);
-                MainConsole.Instance.Info("-------------------------------------------------------------------------------");
+                MainConsole.Instance.Info(
+                    "-------------------------------------------------------------------------------");
             }
         }
 
@@ -935,9 +964,9 @@ namespace Aurora.Services.SQLServices.GridService
         #region Helpers
 
         /// <summary>
-        ///   Normalize the current float to the nearest block of 5 meters
+        ///     Normalize the current float to the nearest block of 5 meters
         /// </summary>
-        /// <param name = "number"></param>
+        /// <param name="number"></param>
         /// <returns></returns>
         private float NormalizePosition(float number)
         {
@@ -981,11 +1010,11 @@ namespace Aurora.Services.SQLServices.GridService
         }
 
         /// <summary>
-        ///   Get all agent locations for the given region
+        ///     Get all agent locations for the given region
         /// </summary>
-        /// <param name = "X"></param>
-        /// <param name = "Y"></param>
-        /// <param name = "regionHandle"></param>
+        /// <param name="X"></param>
+        /// <param name="Y"></param>
+        /// <param name="regionHandle"></param>
         /// <returns></returns>
         private List<mapItemReply> GetItems(List<UUID> scopeIDs, int X, int Y, ulong regionHandle)
         {
@@ -1013,21 +1042,21 @@ namespace Aurora.Services.SQLServices.GridService
 
             //Build the mapItemReply blocks
             mapItems = Positions.Select(position => new mapItemReply
-                                                                           {
-                                                                               x =
-                                                                                   (uint)
-                                                                                   (region.RegionLocX + position.Key.X),
-                                                                               y =
-                                                                                   (uint)
-                                                                                   (region.RegionLocY + position.Key.Y),
-                                                                               id = UUID.Zero,
-                                                                               name =
-                                                                                   Util.Md5Hash(region.RegionName +
-                                                                                                Environment.TickCount.
-                                                                                                    ToString()),
-                                                                               Extra = position.Value,
-                                                                               Extra2 = 0
-                                                                           }).ToList();
+                                                        {
+                                                            x =
+                                                                (uint)
+                                                                (region.RegionLocX + position.Key.X),
+                                                            y =
+                                                                (uint)
+                                                                (region.RegionLocY + position.Key.Y),
+                                                            id = UUID.Zero,
+                                                            name =
+                                                                Util.Md5Hash(region.RegionName +
+                                                                             Environment.TickCount.
+                                                                                         ToString()),
+                                                            Extra = position.Value,
+                                                            Extra2 = 0
+                                                        }).ToList();
 
             //If there are no agents, we send one blank one to the client
             if (mapItems.Count == 0)
@@ -1057,16 +1086,17 @@ namespace Aurora.Services.SQLServices.GridService
                     if (down)
                         m_KnownNeighbors[r.RegionID].Remove(regionInfos);
                     else if (m_KnownNeighbors[r.RegionID].Find(delegate(GridRegion rr)
-                    {
-                        if (rr.RegionID == regionInfos.RegionID)
-                            return true;
-                        return false;
-                    }) == null)
+                                                                   {
+                                                                       if (rr.RegionID == regionInfos.RegionID)
+                                                                           return true;
+                                                                       return false;
+                                                                   }) == null)
                         m_KnownNeighbors[r.RegionID].Add(regionInfos);
                 }
 
                 if (postService != null)
-                    postService.Post(r.ServerURI, SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
+                    postService.Post(r.ServerURI,
+                                     SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
             }
 
             if (down)
@@ -1074,9 +1104,9 @@ namespace Aurora.Services.SQLServices.GridService
         }
 
         /// <summary>
-        ///   Get all the neighboring regions of the given region
+        ///     Get all the neighboring regions of the given region
         /// </summary>
-        /// <param name = "region"></param>
+        /// <param name="region"></param>
         /// <returns></returns>
         protected virtual List<GridRegion> FindNewNeighbors(GridRegion region)
         {
@@ -1095,17 +1125,17 @@ namespace Aurora.Services.SQLServices.GridService
             List<GridRegion> neighbors = GetRegionRange(null, startX, endX, startY, endY);
 
             neighbors.RemoveAll(delegate(GridRegion r)
-            {
-                if (r.RegionID == region.RegionID)
-                    return true;
+                                    {
+                                        if (r.RegionID == region.RegionID)
+                                            return true;
 
-                if (r.RegionLocX + r.RegionSizeX - 1 < (region.RegionLocX - GetRegionViewSize()) ||
-                    r.RegionLocY + r.RegionSizeY - 1 < (region.RegionLocY - GetRegionViewSize()))
-                    //Check for regions outside of the boundry (created above when checking for large regions next to us)
-                    return true;
+                                        if (r.RegionLocX + r.RegionSizeX - 1 < (region.RegionLocX - GetRegionViewSize()) ||
+                                            r.RegionLocY + r.RegionSizeY - 1 < (region.RegionLocY - GetRegionViewSize()))
+                                            //Check for regions outside of the boundry (created above when checking for large regions next to us)
+                                            return true;
 
-                return false;
-            });
+                                        return false;
+                                    });
             return neighbors;
         }
 

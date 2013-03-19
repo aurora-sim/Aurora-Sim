@@ -81,7 +81,8 @@ namespace Aurora.Services
                 uri = uri.Remove(0, 37); //Remove the secure UUID from the uri
             if (!WebUtils.GetParams(uri, out agentID, out regionID, out action, out other))
             {
-                MainConsole.Instance.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);
+                MainConsole.Instance.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}",
+                                                request["uri"]);
                 responsedata["int_response_code"] = 404;
                 responsedata["str_response_string"] = "false";
 
@@ -107,10 +108,14 @@ namespace Aurora.Services
                 {
                     if (request["content-type"].ToString() == "application/x-gzip")
                     {
-                        System.IO.Stream inputStream = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(Utils.StringToBytes(request["body"].ToString())), System.IO.Compression.CompressionMode.Decompress);
-                        System.IO.StreamReader reader = new System.IO.StreamReader(inputStream, System.Text.Encoding.UTF8);
+                        System.IO.Stream inputStream =
+                            new System.IO.Compression.GZipStream(
+                                new System.IO.MemoryStream(Utils.StringToBytes(request["body"].ToString())),
+                                System.IO.Compression.CompressionMode.Decompress);
+                        System.IO.StreamReader reader = new System.IO.StreamReader(inputStream,
+                                                                                   System.Text.Encoding.UTF8);
                         string requestBody = reader.ReadToEnd();
-                        map = (OSDMap)OSDParser.DeserializeJson(requestBody);
+                        map = (OSDMap) OSDParser.DeserializeJson(requestBody);
                     }
                 }
                 if (map != null)
@@ -120,7 +125,8 @@ namespace Aurora.Services
                     else if (map["Method"] == "FailedToMoveAgentIntoNewRegion")
                         FailedToMoveAgentIntoNewRegion(agentID, regionID);
                     else if (map["Method"] == "FailedToTeleportAgent")
-                        FailedToTeleportAgent(map["FailedRegionID"].AsUUID(), agentID, map["Reason"].AsString(), map["IsCrossing"].AsBoolean());
+                        FailedToTeleportAgent(map["FailedRegionID"].AsUUID(), agentID, map["Reason"].AsString(),
+                                              map["IsCrossing"].AsBoolean());
                     else
                         DoAgentPost(request, responsedata, agentID);
                 }
@@ -160,7 +166,7 @@ namespace Aurora.Services
 
         private void DoMakeChildAgent(UUID agentID, UUID leavingRegion, UUID regionID, bool isCrossing)
         {
-            m_SimulationService.MakeChildAgent(agentID, leavingRegion, new GridRegion { RegionID = regionID }, isCrossing);
+            m_SimulationService.MakeChildAgent(agentID, leavingRegion, new GridRegion {RegionID = regionID}, isCrossing);
         }
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
@@ -170,8 +176,8 @@ namespace Aurora.Services
 
         public bool FailedToTeleportAgent(UUID failedRegionID, UUID AgentID, string reason, bool isCrossing)
         {
-            return m_SimulationService.FailedToTeleportAgent(null, failedRegionID, 
-                AgentID, reason, isCrossing);
+            return m_SimulationService.FailedToTeleportAgent(null, failedRegionID,
+                                                             AgentID, reason, isCrossing);
         }
 
         protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)
@@ -215,7 +221,8 @@ namespace Aurora.Services
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex);
+                    MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}",
+                                                    ex);
                 }
             }
 
@@ -324,7 +331,8 @@ namespace Aurora.Services
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
+                    MainConsole.Instance.InfoFormat(
+                        "[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
                     responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                     responsedata["str_response_string"] = "Bad request";
                     return;
@@ -343,7 +351,8 @@ namespace Aurora.Services
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
+                    MainConsole.Instance.InfoFormat(
+                        "[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
                     return;
                 }
                 //agent.Dump();
@@ -394,7 +403,8 @@ namespace Aurora.Services
                     }
                     catch (Exception e)
                     {
-                        MainConsole.Instance.WarnFormat("[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e);
+                        MainConsole.Instance.WarnFormat(
+                            "[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e);
                         responsedata["int_response_code"] = HttpStatusCode.InternalServerError;
                         // ignore. buffer will be empty, caller should check.
                     }

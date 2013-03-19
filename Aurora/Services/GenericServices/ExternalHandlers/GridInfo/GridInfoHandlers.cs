@@ -59,15 +59,15 @@ namespace Aurora.Services
         public string GridSnapshotConfigURI { get; protected set; }
 
         /// <summary>
-        ///   Instantiate a GridInfoService object.
+        ///     Instantiate a GridInfoService object.
         /// </summary>
-        /// <param name = "configSource">path to config path containing grid information</param>
-        /// <param name = "registry"></param>
+        /// <param name="configSource">path to config path containing grid information</param>
+        /// <param name="registry"></param>
         /// <remarks>
-        ///   GridInfoService uses the [GridInfo] section of the
-        ///   standard Aurora.ini file --- which is not optimal, but
-        ///   anything else requires a general redesign of the config
-        ///   system.
+        ///     GridInfoService uses the [GridInfo] section of the
+        ///     standard Aurora.ini file --- which is not optimal, but
+        ///     anything else requires a general redesign of the config
+        ///     system.
         /// </remarks>
         public GridInfoHandlers(IConfigSource configSource, IRegistryCore registry)
         {
@@ -87,7 +87,7 @@ namespace Aurora.Services
                     if (moneyModule != null)
                         GridEconomyURI = MainServer.Instance.FullHostName + ":" + moneyModule.ClientPort + "/";
                     else
-                        GridEconomyURI = MainServer.Instance.FullHostName + ":" + 9000 + "/";//Fallback... we dunno
+                        GridEconomyURI = MainServer.Instance.FullHostName + ":" + 9000 + "/"; //Fallback... we dunno
                 }
                 if (GridEconomyURI != "" && !GridEconomyURI.EndsWith("/"))
                     GridEconomyURI += "/";
@@ -102,7 +102,7 @@ namespace Aurora.Services
                         if (port == "" || port == "0")
                             port = MainServer.Instance.Port.ToString();
                         GridLoginURI = MainServer.Instance.FullHostName +
-                            ":" + port + "/";
+                                       ":" + port + "/";
                     }
                     else
                     {
@@ -142,10 +142,12 @@ namespace Aurora.Services
             }
             catch (Exception)
             {
-                MainConsole.Instance.Warn("[GRID INFO SERVICE]: Cannot get grid info from config source, using minimal defaults");
+                MainConsole.Instance.Warn(
+                    "[GRID INFO SERVICE]: Cannot get grid info from config source, using minimal defaults");
             }
 
-            MainConsole.Instance.DebugFormat("[GRID INFO SERVICE]: Grid info service initialized with {0} keys", _info.Count);
+            MainConsole.Instance.DebugFormat("[GRID INFO SERVICE]: Grid info service initialized with {0} keys",
+                                             _info.Count);
         }
 
         private string GetConfig(IConfigSource config, string p)
@@ -157,7 +159,8 @@ namespace Aurora.Services
         private void IssueWarning()
         {
             MainConsole.Instance.Warn("[GRID INFO SERVICE]: found no [GridInfo] section in your configuration files");
-            MainConsole.Instance.Warn("[GRID INFO SERVICE]: trying to guess sensible defaults, you might want to provide better ones:");
+            MainConsole.Instance.Warn(
+                "[GRID INFO SERVICE]: trying to guess sensible defaults, you might want to provide better ones:");
 
             foreach (string k in _info.Keys)
             {
@@ -182,7 +185,7 @@ namespace Aurora.Services
         }
 
         public byte[] RestGetGridInfoMethod(string path, Stream request, OSHttpRequest httpRequest,
-                                                            OSHttpResponse httpResponse)
+                                            OSHttpResponse httpResponse)
         {
             StringBuilder sb = new StringBuilder();
 

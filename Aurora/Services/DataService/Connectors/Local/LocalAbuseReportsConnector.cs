@@ -42,7 +42,8 @@ namespace Aurora.Services.DataService
 
         #region IAbuseReportsConnector Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             GD = GenericData;
 
@@ -50,7 +51,8 @@ namespace Aurora.Services.DataService
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
             if (GD != null)
-                GD.ConnectToDatabase(defaultConnectionString, "AbuseReports", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                GD.ConnectToDatabase(defaultConnectionString, "AbuseReports",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
             if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
@@ -74,18 +76,18 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets the abuse report associated with the number and uses the pass to authenticate.
+        ///     Gets the abuse report associated with the number and uses the pass to authenticate.
         /// </summary>
-        /// <param name = "Number"></param>
-        /// <param name = "Password"></param>
+        /// <param name="Number"></param>
+        /// <param name="Password"></param>
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
-            return (!CheckPassword(Password)) ? null :GetAbuseReport(Number);
+            return (!CheckPassword(Password)) ? null : GetAbuseReport(Number);
         }
 
         /// <summary>
-        /// Gets the abuse report associated with the number without authentication
+        ///     Gets the abuse report associated with the number without authentication
         /// </summary>
         /// <param name="Number"></param>
         /// <returns></returns>
@@ -93,27 +95,29 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Number"] = Number;
-            List<string> Reports = GD.Query(new string[] { "*" }, m_abuseReportsTable, filter, null, null, null);
+            List<string> Reports = GD.Query(new string[] {"*"}, m_abuseReportsTable, filter, null, null, null);
 
-            return (Reports.Count == 0) ? null : new AbuseReport
-            {
-                Category = Reports[0],
-                ReporterName = Reports[1],
-                ObjectName = Reports[2],
-                ObjectUUID = new UUID(Reports[3]),
-                AbuserName = Reports[4],
-                AbuseLocation = Reports[5],
-                AbuseDetails = Reports[6],
-                ObjectPosition = Reports[7],
-                RegionName = Reports[8],
-                ScreenshotID = new UUID(Reports[9]),
-                AbuseSummary = Reports[10],
-                Number = int.Parse(Reports[11]),
-                AssignedTo = Reports[12],
-                Active = int.Parse(Reports[13]) == 1,
-                Checked = int.Parse(Reports[14]) == 1,
-                Notes = Reports[15]
-            };
+            return (Reports.Count == 0)
+                       ? null
+                       : new AbuseReport
+                             {
+                                 Category = Reports[0],
+                                 ReporterName = Reports[1],
+                                 ObjectName = Reports[2],
+                                 ObjectUUID = new UUID(Reports[3]),
+                                 AbuserName = Reports[4],
+                                 AbuseLocation = Reports[5],
+                                 AbuseDetails = Reports[6],
+                                 ObjectPosition = Reports[7],
+                                 RegionName = Reports[8],
+                                 ScreenshotID = new UUID(Reports[9]),
+                                 AbuseSummary = Reports[10],
+                                 Number = int.Parse(Reports[11]),
+                                 AssignedTo = Reports[12],
+                                 Active = int.Parse(Reports[13]) == 1,
+                                 Checked = int.Parse(Reports[14]) == 1,
+                                 Notes = Reports[15]
+                             };
         }
 
         public List<AbuseReport> GetAbuseReports(int start, int count, bool active)
@@ -122,34 +126,34 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andGreaterThanEqFilters["CAST(number AS UNSIGNED)"] = start;
             filter.andFilters["Active"] = active ? 1 : 0;
-            List<string> query = GD.Query(new string[1] { "*" }, m_abuseReportsTable, filter, null, null, null);
-            if (query.Count % 16 != 0)
+            List<string> query = GD.Query(new string[1] {"*"}, m_abuseReportsTable, filter, null, null, null);
+            if (query.Count%16 != 0)
             {
                 return rv;
             }
             try
             {
-                for(int i=0;i<query.Count;i+=16)
+                for (int i = 0; i < query.Count; i += 16)
                 {
                     AbuseReport report = new AbuseReport
-                    {
-                        Category = query[i + 0],
-                        ReporterName = query[i + 1],
-                        ObjectName = query[i + 2],
-                        ObjectUUID = new UUID(query[i + 3]),
-                        AbuserName = query[i + 4],
-                        AbuseLocation = query[i + 5],
-                        AbuseDetails = query[i + 6],
-                        ObjectPosition = query[i + 7],
-                        RegionName = query[i + 8],
-                        ScreenshotID = new UUID(query[i + 9]),
-                        AbuseSummary = query[i + 10],
-                        Number = int.Parse(query[i + 11]),
-                        AssignedTo = query[i + 12],
-                        Active = int.Parse(query[i + 13]) == 1,
-                        Checked = int.Parse(query[i + 14]) == 1,
-                        Notes = query[i + 15]
-                    };
+                                             {
+                                                 Category = query[i + 0],
+                                                 ReporterName = query[i + 1],
+                                                 ObjectName = query[i + 2],
+                                                 ObjectUUID = new UUID(query[i + 3]),
+                                                 AbuserName = query[i + 4],
+                                                 AbuseLocation = query[i + 5],
+                                                 AbuseDetails = query[i + 6],
+                                                 ObjectPosition = query[i + 7],
+                                                 RegionName = query[i + 8],
+                                                 ScreenshotID = new UUID(query[i + 9]),
+                                                 AbuseSummary = query[i + 10],
+                                                 Number = int.Parse(query[i + 11]),
+                                                 AssignedTo = query[i + 12],
+                                                 Active = int.Parse(query[i + 13]) == 1,
+                                                 Checked = int.Parse(query[i + 14]) == 1,
+                                                 Notes = query[i + 15]
+                                             };
                     rv.Add(report);
                 }
             }
@@ -160,31 +164,32 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Adds a new abuse report to the database
+        ///     Adds a new abuse report to the database
         /// </summary>
-        /// <param name = "report"></param>
-        /// <param name = "Password"></param>
+        /// <param name="report"></param>
+        /// <param name="Password"></param>
         public void AddAbuseReport(AbuseReport report)
         {
-            List<object> InsertValues = new List<object>{
-                report.Category.ToString(),
-                report.ReporterName,
-                report.ObjectName,
-                report.ObjectUUID,
-                report.AbuserName,
-                report.AbuseLocation,
-                report.AbuseDetails,
-                report.ObjectPosition,
-                report.RegionName,
-                report.ScreenshotID,
-                report.AbuseSummary
-            };
+            List<object> InsertValues = new List<object>
+                                            {
+                                                report.Category.ToString(),
+                                                report.ReporterName,
+                                                report.ObjectName,
+                                                report.ObjectUUID,
+                                                report.AbuserName,
+                                                report.AbuseLocation,
+                                                report.AbuseDetails,
+                                                report.ObjectPosition,
+                                                report.RegionName,
+                                                report.ScreenshotID,
+                                                report.AbuseSummary
+                                            };
 
             Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
             sort["Number"] = false;
 
             //We do not trust the number sent by the region. Always find it ourselves
-            List<string> values = GD.Query(new string[1] { "Number" }, m_abuseReportsTable, null, sort, null, null);
+            List<string> values = GD.Query(new string[1] {"Number"}, m_abuseReportsTable, null, sort, null, null);
             report.Number = values.Count == 0 ? 0 : int.Parse(values[0]);
 
             report.Number++;
@@ -200,10 +205,10 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Updates an abuse report and authenticates with the password.
+        ///     Updates an abuse report and authenticates with the password.
         /// </summary>
-        /// <param name = "report"></param>
-        /// <param name = "Password"></param>
+        /// <param name="report"></param>
+        /// <param name="Password"></param>
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
             if (!CheckPassword(Password))
@@ -215,7 +220,7 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        /// Updates an abuse reprot without authentication
+        ///     Updates an abuse reprot without authentication
         /// </summary>
         /// <param name="report"></param>
         public void UpdateAbuseReport(AbuseReport report)
@@ -249,9 +254,9 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Check the user's password, not currently used
+        ///     Check the user's password, not currently used
         /// </summary>
-        /// <param name = "Password"></param>
+        /// <param name="Password"></param>
         /// <returns></returns>
         private bool CheckPassword(string Password)
         {
@@ -266,12 +271,12 @@ namespace Aurora.Services.DataService
             }
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Method"] = "abusereports";
-            List<string> TruePassword = GD.Query(new string[] { "Password" }, "passwords", filter, null, null, null);
+            List<string> TruePassword = GD.Query(new string[] {"Password"}, "passwords", filter, null, null, null);
 
             return !(
-                TruePassword.Count == 0 ||
-                OtherPass == TruePassword[0]
-            );
+                        TruePassword.Count == 0 ||
+                        OtherPass == TruePassword[0]
+                    );
         }
     }
 }

@@ -53,9 +53,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Spawns", ColumnTypes.String1024),
                 ColDef("ObjectUUID", ColumnTypes.String50),
                 ColDef("Name", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary)
-            ));
+                                      ), IndexDefs(
+                                          IndexDef(new string[1] {"RegionID"}, IndexType.Primary)
+                                             ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

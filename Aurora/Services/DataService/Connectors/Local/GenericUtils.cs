@@ -33,30 +33,26 @@ using System.Collections.Generic;
 namespace Aurora.Services.DataService
 {
     /// <summary>
-    ///   Some background to this class
-    /// 
-    ///   This class saves any class that implements the IDataTransferable interface.
-    ///   When implementing the IDataTransferable interface, it is heavily recommending to implement ToOSD and FromOSD first, then use the Utility methods to convert OSDMaps into Dictionarys, as shown in the LandData class.
-    /// 
-    ///   This method of saving uses 4 columns in the database, OwnerID, Type, Key, and Value
-    /// 
-    ///   - OwnerID : This is a way to be able to save Agent or Region or anything with a UUID into the database and have it be set to that UUID only.
-    ///   - Type : What made this data? This just tells what module created the given row in the database.
-    ///   - Key : Another identifying setting so that you can store more than one row under an OwnerID and Type
-    ///   - Value : The value of the row
-    /// 
-    ///   This class deals with the Getting/Setting/Removing of these generic interfaces.
+    ///     Some background to this class
+    ///     This class saves any class that implements the IDataTransferable interface.
+    ///     When implementing the IDataTransferable interface, it is heavily recommending to implement ToOSD and FromOSD first, then use the Utility methods to convert OSDMaps into Dictionarys, as shown in the LandData class.
+    ///     This method of saving uses 4 columns in the database, OwnerID, Type, Key, and Value
+    ///     - OwnerID : This is a way to be able to save Agent or Region or anything with a UUID into the database and have it be set to that UUID only.
+    ///     - Type : What made this data? This just tells what module created the given row in the database.
+    ///     - Key : Another identifying setting so that you can store more than one row under an OwnerID and Type
+    ///     - Value : The value of the row
+    ///     This class deals with the Getting/Setting/Removing of these generic interfaces.
     /// </summary>
     public class GenericUtils
     {
         /// <summary>
-        ///   Gets a list of generic T's from the database
+        ///     Gets a list of generic T's from the database
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
-        /// <param name = "data">a default T</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="GD"></param>
+        /// <param name="data">a default T</param>
         /// <returns></returns>
         public static List<T> GetGenerics<T>(UUID OwnerID, string Type, IGenericData GD) where T : IDataTransferable
         {
@@ -65,7 +61,7 @@ namespace Aurora.Services.DataService
             List<T> Values = new List<T>();
             foreach (OSDMap map in retVal)
             {
-                T data = (T)System.Activator.CreateInstance(typeof(T));
+                T data = (T) System.Activator.CreateInstance(typeof (T));
                 data.FromOSD(map);
                 Values.Add(data);
             }
@@ -74,25 +70,25 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets a list of OSDMaps from the database
+        ///     Gets a list of OSDMaps from the database
         /// </summary>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
-        /// <param name = "data">a default T</param>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="GD"></param>
+        /// <param name="data">a default T</param>
         /// <returns></returns>
         public static List<OSDMap> GetGenerics(UUID OwnerID, string Type, IGenericData GD)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerID"] = OwnerID;
             filter.andFilters["Type"] = Type;
-            List<string> retVal = GD.Query(new string[1] { "`value`" }, "generics", filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] {"`value`"}, "generics", filter, null, null, null);
 
             List<OSDMap> Values = new List<OSDMap>();
             foreach (string ret in retVal)
             {
-                OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
-                if(map != null)
+                OSDMap map = (OSDMap) OSDParser.DeserializeJson(ret);
+                if (map != null)
                     Values.Add(map);
             }
 
@@ -100,33 +96,34 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets a Generic type as set by T
+        ///     Gets a Generic type as set by T
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "Key"></param>
-        /// <param name = "GD"></param>
-        /// <param name = "data">a default T to copy all data into</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <param name="GD"></param>
+        /// <param name="data">a default T to copy all data into</param>
         /// <returns></returns>
-        public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD) where T : IDataTransferable
+        public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD)
+            where T : IDataTransferable
         {
             OSDMap map = GetGeneric(OwnerID, Type, Key, GD);
-			if (map == null) return null;
-            T data = (T)System.Activator.CreateInstance(typeof(T));
+            if (map == null) return null;
+            T data = (T) System.Activator.CreateInstance(typeof (T));
             data.FromOSD(map);
             return data;
         }
 
         /// <summary>
-        ///   Gets a Generic type as set by T
+        ///     Gets a Generic type as set by T
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "Key"></param>
-        /// <param name = "GD"></param>
-        /// <param name = "data">a default T to copy all data into</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <param name="GD"></param>
+        /// <param name="data">a default T to copy all data into</param>
         /// <returns></returns>
         public static OSDMap GetGeneric(UUID OwnerID, string Type, string Key, IGenericData GD)
         {
@@ -134,39 +131,39 @@ namespace Aurora.Services.DataService
             filter.andFilters["OwnerID"] = OwnerID;
             filter.andFilters["Type"] = Type;
             filter.andFilters["`Key`"] = Key;
-            List<string> retVal = GD.Query(new string[1] { "`value`" }, "generics", filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] {"`value`"}, "generics", filter, null, null, null);
 
             if (retVal.Count == 0)
                 return null;
 
-            return (OSDMap)OSDParser.DeserializeJson(retVal[0]);
+            return (OSDMap) OSDParser.DeserializeJson(retVal[0]);
         }
 
         /// <summary>
-        ///   Gets the number of generic entries
+        ///     Gets the number of generic entries
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="GD"></param>
         /// <returns></returns>
         public static int GetGenericCount(UUID OwnerID, string Type, IGenericData GD)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerID"] = OwnerID;
             filter.andFilters["Type"] = Type;
-            List<string> retVal = GD.Query(new string[1] { "COUNT(*)" }, "generics", filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] {"COUNT(*)"}, "generics", filter, null, null, null);
 
             return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
 
         /// <summary>
-        ///   Gets the number of generic entries
+        ///     Gets the number of generic entries
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="GD"></param>
         /// <returns></returns>
         public static int GetGenericCount(UUID OwnerID, string Type, string Key, IGenericData GD)
         {
@@ -174,35 +171,35 @@ namespace Aurora.Services.DataService
             filter.andFilters["OwnerID"] = OwnerID;
             filter.andFilters["Type"] = Type;
             filter.andFilters["`Key`"] = Key;
-            List<string> retVal = GD.Query(new string[1] { "COUNT(*)" }, "generics", filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] {"COUNT(*)"}, "generics", filter, null, null, null);
 
             return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
 
         /// <summary>
-        ///   Gets the number of generic entries
+        ///     Gets the number of generic entries
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "GD"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="GD"></param>
         /// <returns></returns>
         public static int GetGenericCount(UUID OwnerID, IGenericData GD)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerID"] = OwnerID;
-            List<string> retVal = GD.Query(new string[1] { "COUNT(*)" }, "generics", filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] {"COUNT(*)"}, "generics", filter, null, null, null);
 
             return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
 
         /// <summary>
-        ///   Adds a generic into the database
+        ///     Adds a generic into the database
         /// </summary>
-        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
-        /// <param name = "Type"></param>
-        /// <param name = "Key"></param>
-        /// <param name = "Value"></param>
-        /// <param name = "GD"></param>
+        /// <param name="OwnerID">ID of the entity that owns the generic data</param>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <param name="Value"></param>
+        /// <param name="GD"></param>
         public static void AddGeneric(UUID OwnerID, string Type, string Key, OSDMap Value, IGenericData GD)
         {
             Dictionary<string, object> row = new Dictionary<string, object>(4);
@@ -214,7 +211,7 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        /// Remove generic data for the specified owner by type and key
+        ///     Remove generic data for the specified owner by type and key
         /// </summary>
         /// <param name="OwnerID">ID of the entity that owns the generic data</param>
         /// <param name="Type"></param>
@@ -230,11 +227,11 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Removes a generic from the database
+        ///     Removes a generic from the database
         /// </summary>
-        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
-        /// <param name = "Key"></param>
-        /// <param name = "GD"></param>
+        /// <param name="OwnerID">ID of the entity that owns the generic data</param>
+        /// <param name="Key"></param>
+        /// <param name="GD"></param>
         public static void RemoveGenericByKey(UUID OwnerID, string Key, IGenericData GD)
         {
             QueryFilter filter = new QueryFilter();
@@ -244,11 +241,11 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Removes a generic from the database
+        ///     Removes a generic from the database
         /// </summary>
-        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
+        /// <param name="OwnerID">ID of the entity that owns the generic data</param>
+        /// <param name="Type"></param>
+        /// <param name="GD"></param>
         public static void RemoveGenericByType(UUID OwnerID, string Type, IGenericData GD)
         {
             QueryFilter filter = new QueryFilter();
@@ -262,15 +259,20 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Type"] = Type;
             filter.andFilters["`Key`"] = Key;
-            return GD.Query(new string[1] { "OwnerID" }, "generics", filter, null, null, null).ConvertAll<UUID>(x => new UUID(x));
+            return
+                GD.Query(new string[1] {"OwnerID"}, "generics", filter, null, null, null)
+                  .ConvertAll<UUID>(x => new UUID(x));
         }
+
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key, OSDMap Value)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Type"] = Type;
             filter.andFilters["`Key`"] = Key;
             filter.andFilters["`Value`"] = OSDParser.SerializeJsonString(Value);
-            return GD.Query(new string[1] { "OwnerID" }, "generics", filter, null, null, null).ConvertAll<UUID>(x => new UUID(x));
+            return
+                GD.Query(new string[1] {"OwnerID"}, "generics", filter, null, null, null)
+                  .ConvertAll<UUID>(x => new UUID(x));
         }
     }
 }

@@ -41,7 +41,10 @@ namespace Aurora.Services.DataService
         private IGenericData GD;
         private const string m_realm = "useraccounts";
 
-        public string Realm { get { return "useraccounts"; } }
+        public string Realm
+        {
+            get { return "useraccounts"; }
+        }
 
         #region IUserAccountData Members
 
@@ -59,7 +62,7 @@ namespace Aurora.Services.DataService
 
                 if (GD != null)
                     GD.ConnectToDatabase(connectionString, "UserAccounts",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(this);
             }
@@ -79,10 +82,10 @@ namespace Aurora.Services.DataService
                 where[fields[i]] = values[i];
             }
 
-            List<string> query = GD.Query(new[] { "*" }, m_realm, new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> query = GD.Query(new[] {"*"}, m_realm, new QueryFilter
+                                                                    {
+                                                                        andFilters = where
+                                                                    }, null, null, null);
 
             return ParseQuery(scopeIDs, query).ToArray();
         }
@@ -111,8 +114,9 @@ namespace Aurora.Services.DataService
         {
             if (archiveInformation)
             {
-                return GD.Update(m_realm, new Dictionary<string, object> { { "UserLevel", -2 } }, null,
-                    new QueryFilter { andFilters = new Dictionary<string, object> { { "PrincipalID", userID } } }, null, null);
+                return GD.Update(m_realm, new Dictionary<string, object> {{"UserLevel", -2}}, null,
+                                 new QueryFilter {andFilters = new Dictionary<string, object> {{"PrincipalID", userID}}},
+                                 null, null);
             }
             QueryFilter filter = new QueryFilter();
             filter.andFilters.Add("PrincipalID", userID);
@@ -128,7 +132,7 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
 
-            string[] words = query.Split(new[] { ' ' });
+            string[] words = query.Split(new[] {' '});
 
             for (int i = 0; i < words.Length; i++)
             {
@@ -164,9 +168,11 @@ namespace Aurora.Services.DataService
 
             Dictionary<string, bool> sort = new Dictionary<string, bool>(2);
             sort["LastName"] = true;
-            sort["FirstName"] = true; // these are in this order so results should be ordered by last name first, then first name
+            sort["FirstName"] = true;
+                // these are in this order so results should be ordered by last name first, then first name
 
-            List<string> retVal = GD.Query(new[]{
+            List<string> retVal = GD.Query(new[]
+                                               {
                                                    "PrincipalID",
                                                    "ScopeID",
                                                    "FirstName",
@@ -177,7 +183,8 @@ namespace Aurora.Services.DataService
                                                    "UserLevel",
                                                    "UserFlags",
                                                    "UserTitle",
-                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name"
+                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) +
+                                                   ") as Name"
                                                }, m_realm, filter, sort, start, count);
 
             return ParseQuery(scopeIDs, retVal).ToArray();
@@ -187,14 +194,16 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andGreaterThanEqFilters["UserLevel"] = level;
-            if (flag != 0)  
-                filter.andBitfieldAndFilters["UserFlags"] = (uint)flag;
+            if (flag != 0)
+                filter.andBitfieldAndFilters["UserFlags"] = (uint) flag;
 
             Dictionary<string, bool> sort = new Dictionary<string, bool>(2);
             sort["LastName"] = true;
-            sort["FirstName"] = true; // these are in this order so results should be ordered by last name first, then first name
+            sort["FirstName"] = true;
+                // these are in this order so results should be ordered by last name first, then first name
 
-            List<string> retVal = GD.Query(new[]{
+            List<string> retVal = GD.Query(new[]
+                                               {
                                                    "PrincipalID",
                                                    "ScopeID",
                                                    "FirstName",
@@ -205,7 +214,8 @@ namespace Aurora.Services.DataService
                                                    "UserLevel",
                                                    "UserFlags",
                                                    "UserTitle",
-                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name"
+                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) +
+                                                   ") as Name"
                                                }, m_realm, filter, sort, null, null);
 
             return ParseQuery(scopeIDs, retVal).ToArray();
@@ -213,7 +223,7 @@ namespace Aurora.Services.DataService
 
         public uint NumberOfUsers(List<UUID> scopeIDs, string query)
         {
-            return uint.Parse(GD.Query(new[] { "COUNT(*)" }, m_realm, GetUsersFilter(query), null, null, null)[0]);
+            return uint.Parse(GD.Query(new[] {"COUNT(*)"}, m_realm, GetUsersFilter(query), null, null, null)[0]);
         }
 
         #endregion
@@ -227,7 +237,11 @@ namespace Aurora.Services.DataService
             List<UserAccount> list = new List<UserAccount>();
             for (int i = 0; i < query.Count; i += 11)
             {
-                UserAccount data = new UserAccount { PrincipalID = UUID.Parse(query[i + 0]), ScopeID = UUID.Parse(query[i + 1]) };
+                UserAccount data = new UserAccount
+                                       {
+                                           PrincipalID = UUID.Parse(query[i + 0]),
+                                           ScopeID = UUID.Parse(query[i + 1])
+                                       };
                 //We keep these even though we don't always use them because we might need to create the "Name" from them
                 string FirstName = query[i + 2];
                 string LastName = query[i + 3];

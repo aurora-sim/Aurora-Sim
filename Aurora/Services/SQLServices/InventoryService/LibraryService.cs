@@ -36,14 +36,17 @@ using System.Collections.Generic;
 namespace Aurora.Services.SQLServices.InventoryService
 {
     /// <summary>
-    ///   Basically a hack to give us a Inventory library while we don't have a inventory server
-    ///   once the server is fully implemented then should read the data from that
+    ///     Basically a hack to give us a Inventory library while we don't have a inventory server
+    ///     once the server is fully implemented then should read the data from that
     /// </summary>
     public class LibraryService : ILibraryService, IService
     {
         private readonly UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
 
-        public UUID LibraryRootFolderID { get { return new UUID("00000112-000f-0000-0000-000100bba000"); } }
+        public UUID LibraryRootFolderID
+        {
+            get { return new UUID("00000112-000f-0000-0000-000100bba000"); }
+        }
 
         private string libOwnerName = "Library Owner";
         private bool m_enabled;
@@ -115,9 +118,11 @@ namespace Aurora.Services.SQLServices.InventoryService
             {
                 return;
             }
-            else if (!File.Exists("DefaultInventory/Inventory.ini") && !File.Exists("DefaultInventory/Inventory.ini.example"))
+            else if (!File.Exists("DefaultInventory/Inventory.ini") &&
+                     !File.Exists("DefaultInventory/Inventory.ini.example"))
             {
-                MainConsole.Instance.Error("Could not find DefaultInventory/Inventory.ini or DefaultInventory/Inventory.ini.example");
+                MainConsole.Instance.Error(
+                    "Could not find DefaultInventory/Inventory.ini or DefaultInventory/Inventory.ini.example");
                 return;
             }
             List<IDefaultLibraryLoader> Loaders = AuroraModuleLoader.PickupModules<IDefaultLibraryLoader>();
@@ -127,7 +132,8 @@ namespace Aurora.Services.SQLServices.InventoryService
                 {
                     File.Copy("DefaultInventory/Inventory.ini.example", "DefaultInventory/Inventory.ini");
                 }
-                IniConfigSource iniSource = new IniConfigSource("DefaultInventory/Inventory.ini", IniFileType.AuroraStyle);
+                IniConfigSource iniSource = new IniConfigSource("DefaultInventory/Inventory.ini",
+                                                                IniFileType.AuroraStyle);
                 if (iniSource != null)
                 {
                     foreach (IDefaultLibraryLoader loader in Loaders)

@@ -40,22 +40,24 @@ namespace Aurora.Services
         #region Declares
 
         /// <summary>
-        /// A list of all clients and their Client Caps Handlers
+        ///     A list of all clients and their Client Caps Handlers
         /// </summary>
         protected Dictionary<UUID, IClientCapsService> m_ClientCapsServices = new Dictionary<UUID, IClientCapsService>();
 
         /// <summary>
-        /// A list of all regions Caps Services
+        ///     A list of all regions Caps Services
         /// </summary>
         protected Dictionary<UUID, IRegionCapsService> m_RegionCapsServices = new Dictionary<UUID, IRegionCapsService>();
 
         protected IRegistryCore m_registry;
+
         public IRegistryCore Registry
         {
             get { return m_registry; }
         }
 
         protected IHttpServer m_server;
+
         public IHttpServer Server
         {
             get { return m_server; }
@@ -90,7 +92,8 @@ namespace Aurora.Services
             m_server = simBase.GetHttpServer(0);
 
             if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand("show presences", "show presences", "Shows all presences in the grid", ShowUsers);
+                MainConsole.Instance.Commands.AddCommand("show presences", "show presences",
+                                                         "Shows all presences in the grid", ShowUsers);
         }
 
         public void FinishedStartup()
@@ -113,19 +116,21 @@ namespace Aurora.Services
                     if ((client.RootAgent || showChildAgents)) count++;
                 }
 #else
-            int count = m_RegionCapsServices.Values.SelectMany(regionCaps => regionCaps.GetClients()).Count(clientCaps => (clientCaps.RootAgent || showChildAgents));
+            int count =
+                m_RegionCapsServices.Values.SelectMany(regionCaps => regionCaps.GetClients())
+                                    .Count(clientCaps => (clientCaps.RootAgent || showChildAgents));
 #endif
-            MainConsole.Instance.WarnFormat ("{0} agents found: ", count);
+            MainConsole.Instance.WarnFormat("{0} agents found: ", count);
             foreach (IClientCapsService clientCaps in m_ClientCapsServices.Values)
             {
-                foreach(IRegionClientCapsService caps in clientCaps.GetCapsServices())
+                foreach (IRegionClientCapsService caps in clientCaps.GetCapsServices())
                 {
-                    if((caps.RootAgent || showChildAgents))
+                    if ((caps.RootAgent || showChildAgents))
                     {
-                        MainConsole.Instance.InfoFormat("Region - {0}, User {1}, {2}, {3}", 
-                            caps.Region.RegionName, clientCaps.AccountInfo.Name,
-                            caps.RootAgent ? "Root Agent" : "Child Agent",
-                            caps.Disabled ? "Disabled" : "Not Disabled");
+                        MainConsole.Instance.InfoFormat("Region - {0}, User {1}, {2}, {3}",
+                                                        caps.Region.RegionName, clientCaps.AccountInfo.Name,
+                                                        caps.RootAgent ? "Root Agent" : "Child Agent",
+                                                        caps.Disabled ? "Disabled" : "Not Disabled");
                     }
                 }
             }
@@ -138,47 +143,52 @@ namespace Aurora.Services
         #region Client Caps
 
         /// <summary>
-        /// Remove the all of the user's CAPS from the system
+        ///     Remove the all of the user's CAPS from the system
         /// </summary>
         /// <param name="AgentID"></param>
         public void RemoveCAPS(UUID AgentID)
         {
-            if(m_ClientCapsServices.ContainsKey(AgentID))
+            if (m_ClientCapsServices.ContainsKey(AgentID))
             {
                 IClientCapsService perClient = m_ClientCapsServices[AgentID];
                 perClient.Close();
                 m_ClientCapsServices.Remove(AgentID);
-                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserLogout", AgentID);
+                m_registry.RequestModuleInterface<ISimulationBase>()
+                          .EventManager.FireGenericEventHandler("UserLogout", AgentID);
             }
         }
 
         /// <summary>
-        /// Create a Caps URL for the given user/region. Called normally by the EventQueueService or the LLLoginService on login
+        ///     Create a Caps URL for the given user/region. Called normally by the EventQueueService or the LLLoginService on login
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="CAPSBase"></param>
         /// <param name="regionHandle"></param>
         /// <param name="IsRootAgent">Will this child be a root agent</param>
         /// <param name="circuitData"></param>
-        /// <param name = "port">The port to use for the CAPS service</param>
+        /// <param name="port">The port to use for the CAPS service</param>
         /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string CAPSBase, UUID regionID, bool IsRootAgent, AgentCircuitData circuitData, uint port)
+        public string CreateCAPS(UUID AgentID, string CAPSBase, UUID regionID, bool IsRootAgent,
+                                 AgentCircuitData circuitData, uint port)
         {
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
-            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionID, CAPSBase, circuitData, port);
-            
+            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionID, CAPSBase, circuitData,
+                                                                                    port);
+
             //Fix the root agent status
             clientService.RootAgent = IsRootAgent;
 
-            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserLogin", AgentID);
-            MainConsole.Instance.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " for agent " + AgentID);
+            m_registry.RequestModuleInterface<ISimulationBase>()
+                      .EventManager.FireGenericEventHandler("UserLogin", AgentID);
+            MainConsole.Instance.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " for agent " +
+                                       AgentID);
             return clientService.CapsUrl;
         }
 
         /// <summary>
-        /// Get or create a new Caps Service for the given client
-        /// Note: This does not add them to a region if one is created. 
+        ///     Get or create a new Caps Service for the given client
+        ///     Note: This does not add them to a region if one is created.
         /// </summary>
         /// <param name="AgentID"></param>
         /// <returns></returns>
@@ -194,7 +204,7 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        /// Get a Caps Service for the given client
+        ///     Get a Caps Service for the given client
         /// </summary>
         /// <param name="AgentID"></param>
         /// <returns></returns>
@@ -229,7 +239,7 @@ namespace Aurora.Services
         #region Region Caps
 
         /// <summary>
-        /// Get a region handler for the given region
+        ///     Get a region handler for the given region
         /// </summary>
         /// <param name="RegionHandle"></param>
         public IRegionCapsService GetCapsForRegion(UUID regionID)
@@ -243,7 +253,7 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        /// Create a caps handler for the given region
+        ///     Create a caps handler for the given region
         /// </summary>
         /// <param name="RegionHandle"></param>
         public void AddCapsForRegion(UUID regionID)
@@ -258,7 +268,7 @@ namespace Aurora.Services
         }
 
         /// <summary>
-        /// Remove the handler for the given region
+        ///     Remove the handler for the given region
         /// </summary>
         /// <param name="RegionHandle"></param>
         public void RemoveCapsForRegion(UUID regionID)

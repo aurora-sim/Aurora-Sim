@@ -34,13 +34,15 @@ namespace Aurora.Services
             m_LoginService = service;
         }
 
-        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
+        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType,
+                                   string password, out object data)
         {
             IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
             data = null;
 
             if (request == null)
-                return null;//If its null, its just a verification request, allow them to see things even if they are banned
+                return null;
+                    //If its null, its just a verification request, allow them to see things even if they are banned
 
             bool tosExists = false;
             string tosAccepted = "";
@@ -51,7 +53,7 @@ namespace Aurora.Services
             }
 
             //MAC BANNING START
-            string mac = (string)request["mac"];
+            string mac = (string) request["mac"];
             if (mac == "")
                 return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, "Bad Viewer Connection", false);
 
@@ -87,7 +89,8 @@ namespace Aurora.Services
 
             if ((agentInfo.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan)
             {
-                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: user is permanently banned.", account.Name);
+                MainConsole.Instance.InfoFormat(
+                    "[LLOGIN SERVICE]: Login failed for user {0}, reason: user is permanently banned.", account.Name);
                 return LLFailedLoginResponse.PermanentBannedProblem;
             }
 
@@ -99,7 +102,8 @@ namespace Aurora.Services
                 if (agentInfo.OtherAgentInformation.ContainsKey("TemperaryBanInfo"))
                 {
                     DateTime bannedTime = agentInfo.OtherAgentInformation["TemperaryBanInfo"].AsDate();
-                    until = string.Format(" until {0} {1}", bannedTime.ToShortDateString(), bannedTime.ToLongTimeString());
+                    until = string.Format(" until {0} {1}", bannedTime.ToShortDateString(),
+                                          bannedTime.ToLongTimeString());
 
                     //Check to make sure the time hasn't expired
                     if (bannedTime.Ticks < DateTime.Now.Ticks)
@@ -111,8 +115,13 @@ namespace Aurora.Services
 
                 if (IsBanned)
                 {
-                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: user is temporarily banned {1}.", account.Name, until);
-                    return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, string.Format("You are blocked from connecting to this service{0}.", until), false);
+                    MainConsole.Instance.InfoFormat(
+                        "[LLOGIN SERVICE]: Login failed for user {0}, reason: user is temporarily banned {1}.",
+                        account.Name, until);
+                    return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant,
+                                                     string.Format(
+                                                         "You are blocked from connecting to this service{0}.", until),
+                                                     false);
                 }
             }
             return null;

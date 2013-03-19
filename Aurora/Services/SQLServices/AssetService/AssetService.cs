@@ -93,7 +93,6 @@ namespace Aurora.Services.SQLServices.AssetService
         {
         }
 
-
         #endregion
 
         #region IAssetService Members
@@ -124,8 +123,8 @@ namespace Aurora.Services.SQLServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
             {
                 if (doDatabaseCaching && cache != null)
-                    cache.Cache(id, (AssetBase)remoteValue);
-                return (AssetBase)remoteValue;
+                    cache.Cache(id, (AssetBase) remoteValue);
+                return (AssetBase) remoteValue;
             }
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
@@ -158,7 +157,7 @@ namespace Aurora.Services.SQLServices.AssetService
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                byte[] data = (byte[])remoteValue;
+                byte[] data = (byte[]) remoteValue;
                 if (doDatabaseCaching && cache != null)
                     cache.CacheData(id, data);
                 return data;
@@ -176,7 +175,7 @@ namespace Aurora.Services.SQLServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             return m_database.ExistsAsset(UUID.Parse(id));
         }
@@ -184,10 +183,7 @@ namespace Aurora.Services.SQLServices.AssetService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual void Get(String id, Object sender, AssetRetrieved handler)
         {
-            Util.FireAndForget((o) =>
-                {
-                    handler(id, sender, Get(id));
-                });
+            Util.FireAndForget((o) => { handler(id, sender, Get(id)); });
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -198,7 +194,7 @@ namespace Aurora.Services.SQLServices.AssetService
             {
                 if (remoteValue == null)
                     return UUID.Zero;
-                asset.ID = (UUID)remoteValue;
+                asset.ID = (UUID) remoteValue;
             }
             else
                 asset.ID = m_database.Store(asset);
@@ -217,7 +213,7 @@ namespace Aurora.Services.SQLServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id, data);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? UUID.Zero : (UUID)remoteValue;
+                return remoteValue == null ? UUID.Zero : (UUID) remoteValue;
 
             UUID newID;
             m_database.UpdateContent(id, data, out newID);
@@ -232,7 +228,7 @@ namespace Aurora.Services.SQLServices.AssetService
         {
             object remoteValue = DoRemoteByURL("AssetServerURI", id);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
             return m_database.Delete(id);
         }
