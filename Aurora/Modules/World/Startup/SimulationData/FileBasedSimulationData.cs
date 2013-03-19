@@ -104,43 +104,16 @@ namespace Aurora.Modules
             ReadBackup();
             RegionInfo info;
 
-            bool noGui = false;
-            IConfig startupconfig = simBase.ConfigSource.Configs["Startup"];
-            if (startupconfig != null)
-                noGui = startupconfig.GetBoolean("NoGUI", false);
-
             if (_regionData == null || _regionData.RegionInfo == null)
             {
             retry:
-                if (noGui)
-                {
-                    info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
-                }
-                else
-                {
-                    try
-                    {
-                        info = Aurora.Management.RegionManagerHelper.StartSynchronously(true,
-                            Management.RegionManagerPage.CreateRegion,
-                            simBase.ConfigSource, simBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), null);
-                    }
-                    catch
-                    {
-                        noGui = true;
-                        goto retry;
-                    }
-                }
+                info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
                 if (info == null)
                     goto retry;
                 newRegion = true;
             }
             else
-            {
-                if (noGui)
-                    info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
-                else
-                    info = _regionData.RegionInfo;
-            }
+                info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
             return info;
         }
 
@@ -170,7 +143,6 @@ namespace Aurora.Modules
                 System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(config.GetString("InternalAddress", "0.0.0.0"));
                 int intPort = config.GetInt("InternalPort", 9000);
                 info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
-                info.UDPPorts.Add(info.InternalEndPoint.Port);
 
                 info.ObjectCapacity = config.GetInt("MaxPrims", info.ObjectCapacity);
                 info.RegionType = config.GetString("RegionType", "");

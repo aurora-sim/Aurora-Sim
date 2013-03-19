@@ -56,7 +56,6 @@ namespace Aurora.Framework
         private UUID m_GridSecureSessionID = UUID.Zero;
         public bool NewRegion = false;
         public bool HasBeenDeleted { get; set; }
-        private List<int> m_UDPPorts = new List<int>();
         private bool m_seeIntoThisSimFromNeighbor = true;
 
         [ProtoMember(1)]
@@ -109,13 +108,6 @@ namespace Aurora.Framework
 
         [ProtoMember(11)]
         public bool InfiniteRegion = false;
-
-        [ProtoMember(12)]
-        public List<int> UDPPorts
-        {
-            get { return m_UDPPorts; }
-            set { m_UDPPorts = value; }
-        }
 
         [ProtoMember(13)]
         public bool SeeIntoThisSimFromNeighbor
@@ -207,8 +199,6 @@ namespace Aurora.Framework
             args["region_size_x"] = OSD.FromInteger(RegionSizeX);
             args["region_size_y"] = OSD.FromInteger(RegionSizeY);
             args["region_size_z"] = OSD.FromInteger(RegionSizeZ);
-            OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(a => a));
-            args["UDPPorts"] = ports;
             args["InfiniteRegion"] = OSD.FromBoolean(InfiniteRegion);
             args["scope_id"] = OSD.FromUUID(ScopeID);
             args["all_scope_ids"] = AllScopeIDs.ToOSDArray();
@@ -287,12 +277,6 @@ namespace Aurora.Framework
             }
             if (args.ContainsKey("GridSecureSessionID"))
                 GridSecureSessionID = args["GridSecureSessionID"];
-            if (args.ContainsKey ("UDPPorts"))
-            {
-                OSDArray ports = (OSDArray)args["UDPPorts"];
-                foreach (OSD p in ports)
-                    m_UDPPorts.Add (p.AsInteger ());
-            }
             if (args.ContainsKey("OpenRegionSettings"))
             {
                 OpenRegionSettings = new OpenRegionSettings();
@@ -302,8 +286,6 @@ namespace Aurora.Framework
                 OpenRegionSettings = new OpenRegionSettings();
             if (args.ContainsKey("EnvironmentSettings"))
                 EnvironmentSettings = args["EnvironmentSettings"];
-            if (!m_UDPPorts.Contains (InternalEndPoint.Port))
-                m_UDPPorts.Add (InternalEndPoint.Port);
         }
 
         public override void FromOSD(OSDMap map)

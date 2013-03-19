@@ -1546,7 +1546,7 @@ namespace Aurora.Modules.Inventory
             {
                 // object cannot copy items to an object owned by a different owner
                 // unless llAllowInventoryDrop has been called
-
+                
                 return;
             }
 

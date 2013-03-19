@@ -1411,7 +1411,7 @@ namespace Aurora.Region
         {
             IGroupsModule module = Scene.RequestModuleInterface<IGroupsModule>();
             if (module != null)
-                if (!module.GroupPermissionCheck(attemptingUserID, GroupID2, GroupPowers.None))
+                if (GroupID2 != UUID.Zero && !module.GroupPermissionCheck(attemptingUserID, GroupID2, GroupPowers.None))
                     return; // No settings to groups you arn't in
             foreach (SceneObjectPart part in m_partsList)
             {
@@ -1916,24 +1916,12 @@ namespace Aurora.Region
 
             scriptEvents aggregateScriptEvents = 0;
 
-#if (!ISWIN)
-            foreach (SceneObjectPart part in m_partsList)
-            {
-                if (part != null)
-                {
-                    if (part != RootPart)
-                        part.Flags = objectflagupdate;
-                    aggregateScriptEvents |= part.AggregateScriptEvents;
-                }
-            }
-#else
             foreach (SceneObjectPart part in m_partsList.Where(part => part != null))
             {
                 if (part != RootPart)
                     part.Flags = objectflagupdate;
                 aggregateScriptEvents |= part.AggregateScriptEvents;
             }
-#endif
 
             m_scriptListens_atTarget = ((aggregateScriptEvents & scriptEvents.at_target) != 0);
             m_scriptListens_notAtTarget = ((aggregateScriptEvents & scriptEvents.not_at_target) != 0);
@@ -3014,20 +3002,10 @@ namespace Aurora.Region
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdate(UpdateFlags);
 
-#if (!ISWIN)
-            foreach (SceneObjectPart part in m_partsList)
-            {
-                if (part != RootPart)
-                {
-                    part.ScheduleUpdate(UpdateFlags);
-                }
-            }
-#else
             foreach (SceneObjectPart part in m_partsList.Where(part => part != RootPart))
             {
                 part.ScheduleUpdate(UpdateFlags);
             }
-#endif
         }
 
         /// <summary>
@@ -3038,20 +3016,10 @@ namespace Aurora.Region
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleTerseUpdate();
 
-#if (!ISWIN)
-            foreach (SceneObjectPart part in m_partsList)
-            {
-                if (part != RootPart)
-                {
-                    part.ScheduleTerseUpdate();
-                }
-            }
-#else
             foreach (SceneObjectPart part in m_partsList.Where(part => part != RootPart))
             {
                 part.ScheduleTerseUpdate();
             }
-#endif
         }
 
         public void Update()

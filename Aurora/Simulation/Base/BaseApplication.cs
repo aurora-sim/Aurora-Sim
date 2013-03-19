@@ -234,32 +234,6 @@ namespace Aurora.Simulation.Base
                         gridIPAddress = ReadLine("The external domain name or IP address of the grid server you wish to connect to",
                             gridIPAddress);
 
-                    if (isAuroraExe)
-                    {
-                        MakeSureExists("Aurora.ini");
-                        IniConfigSource aurora_ini = new IniConfigSource("Aurora.ini", Nini.Ini.IniFileType.AuroraStyle);
-                        IniConfigSource aurora_ini_example = new IniConfigSource("Aurora.ini.example", Nini.Ini.IniFileType.AuroraStyle);
-
-                        foreach (IConfig config in aurora_ini_example.Configs)
-                        {
-                            IConfig newConfig = aurora_ini.AddConfig(config.Name);
-                            foreach (string key in config.GetKeys())
-                            {
-                                //No GUI for mono
-                                if (key == "NoGUI" &&
-                                    Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
-                                    newConfig.Set(key, true);
-                                else
-                                    newConfig.Set(key, config.Get(key));
-                            }
-                        }
-
-                        aurora_ini.Save();
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your Aurora.ini has been successfully configured");
-                        Console.ResetColor();
-                    }
-
                     //Data.ini setup
                     if (mode == "1")
                     {

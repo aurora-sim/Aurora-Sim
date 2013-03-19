@@ -412,8 +412,6 @@ namespace Aurora.Region
             MainConsole.Instance.Commands.AddCommand("debug packet", "debug packet [level]", "Turn on packet debugging", Debug);
             MainConsole.Instance.Commands.AddCommand("debug scene", "debug scene [scripting] [collisions] [physics]", "Turn on scene debugging", Debug);
 
-            MainConsole.Instance.Commands.AddCommand("open region manager", "open region manager", "Opens the region manager to edit region properties", OpenRegionManager);
-
             MainConsole.Instance.Commands.AddCommand("load oar", "load oar [oar name] [--merge] [--skip-assets] [--OffsetX=#] [--OffsetY=#] [--OffsetZ=#] [--FlipX] [--FlipY] [--UseParcelOwnership] [--CheckOwnership]",
                 "Load a region's data from OAR archive.  \n" +
                 "--merge will merge the oar with the existing scene (including parcels).  \n" +
@@ -441,13 +439,6 @@ namespace Aurora.Region
             MainConsole.Instance.Commands.AddCommand ("modules list", "modules list", "Lists all simulator modules", HandleModulesList);
 
             MainConsole.Instance.Commands.AddCommand ("modules unload", "modules unload [module]", "Unload the given simulator module", HandleModulesUnload);
-        }
-
-        private void OpenRegionManager(string[] cmdparams)
-        {
-            m_scene.RegionInfo = Aurora.Management.RegionManagerHelper.StartSynchronously(false, Aurora.Management.RegionManagerPage.CreateRegion,
-                m_config, m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>(), m_scene.RegionInfo);
-            m_simulationDataService.ForceBackup();
         }
 
         /// <summary>

@@ -3667,14 +3667,6 @@ namespace Aurora.Region
                 }
             }
 
-            if (m_parentGroup == null)
-            {
-//                MainConsole.Instance.DebugFormat(
-//                    "[SCENE OBJECT PART]: Scheduling part {0} {1} for full update in aggregateScriptEvents() since m_parentGroup == null", Name, LocalId);
-                ScheduleUpdate(PrimUpdateFlags.FullUpdate);
-                return;
-            }
-
             LocalFlags = (PrimFlags) objectflagupdate;
 
             if (m_parentGroup != null && m_parentGroup.RootPart == this)
