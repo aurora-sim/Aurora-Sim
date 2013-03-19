@@ -31,7 +31,6 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Aurora.Services
 {

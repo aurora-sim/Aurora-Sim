@@ -27,7 +27,6 @@
 
 using Aurora.Framework;
 using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services

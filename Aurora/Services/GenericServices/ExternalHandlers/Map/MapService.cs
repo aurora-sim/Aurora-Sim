@@ -28,10 +28,8 @@
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;

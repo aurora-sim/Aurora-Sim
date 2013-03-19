@@ -31,7 +31,6 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
 using FriendInfo = Aurora.Framework.FriendInfo;
-using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services
 {

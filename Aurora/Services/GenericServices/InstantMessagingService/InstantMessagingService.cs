@@ -3,10 +3,8 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace Aurora.Services

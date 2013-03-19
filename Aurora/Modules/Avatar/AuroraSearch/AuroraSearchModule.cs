@@ -174,13 +174,11 @@ namespace Aurora.Modules.Search
             {
                 DirPeopleQuery(remoteClient, queryID, queryText, queryFlags,
                                queryStart);
-                return;
             }
             else if ((queryFlags & 32) != 0) //Events query
             {
                 DirEventsQuery(remoteClient, queryID, queryText, queryFlags,
                                queryStart);
-                return;
             }
         }
 

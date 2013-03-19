@@ -28,16 +28,14 @@
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.StructuredData;
 using System;
-using System.Collections;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Web;
 using Encoder = System.Drawing.Imaging.Encoder;

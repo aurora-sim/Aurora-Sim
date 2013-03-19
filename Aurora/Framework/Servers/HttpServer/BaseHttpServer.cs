@@ -25,18 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Nwc.XmlRpc;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml;
-using Nwc.XmlRpc;
-using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework.Servers.HttpServer
 {

@@ -26,9 +26,7 @@
  */
 
 using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
 using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Linq;
 

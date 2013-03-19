@@ -25,10 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
 using Nini.Config;
-using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -32,7 +32,6 @@ using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Net;
-using System.Reflection;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services

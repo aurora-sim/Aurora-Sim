@@ -25,12 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.IO;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using OpenMetaverse.StructuredData;
+using System.IO;
 
 namespace Aurora.Services
 {

@@ -29,7 +29,6 @@ using Aurora.Framework;
 using GlynnTucker.Cache;
 using Nini.Config;
 using System;
-using System.Reflection;
 
 namespace Aurora.Services
 {

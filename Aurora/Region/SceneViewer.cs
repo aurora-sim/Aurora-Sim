@@ -27,16 +27,15 @@
 //#define UseRemovingEntityUpdates
 
 #define UseDictionaryForEntityUpdates
+using Aurora.Framework;
+using Mischel.Collections;
+using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reflection;
 using System.Timers;
-using Mischel.Collections;
-using OpenMetaverse;
-using Aurora.Framework;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Region

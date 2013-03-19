@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Nini.Config;
@@ -33,13 +32,11 @@ using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml;
-using GridRegion = Aurora.Framework.GridRegion;
 using FriendInfo = Aurora.Framework.FriendInfo;
+using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services
 {

@@ -38,8 +38,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Timers;
-using Timer = System.Timers.Timer;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

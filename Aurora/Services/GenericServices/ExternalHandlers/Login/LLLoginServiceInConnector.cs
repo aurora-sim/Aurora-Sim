@@ -32,9 +32,8 @@ using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
-using System.Reflection;
-using System.Net;
 using System.Collections;
+using System.Net;
 
 namespace Aurora.Services
 {

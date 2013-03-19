@@ -27,9 +27,7 @@
 
 using Aurora.Framework;
 using Nini.Config;
-using OpenMetaverse;
 using System;
-using System.Reflection;
 
 namespace Aurora.Services
 {

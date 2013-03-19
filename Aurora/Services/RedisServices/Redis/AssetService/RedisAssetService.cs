@@ -1,15 +1,10 @@
-﻿using System;
-using System.Reflection;
-using Aurora.DataManager;
+﻿using Aurora.Framework;
+using Aurora.RedisServices.ConnectionHelpers;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using System.IO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Threading;
 using Sider;
-using Aurora.RedisServices.ConnectionHelpers;
+using System;
+using System.IO;
 
 namespace Aurora.RedisServices.AssetService
 {

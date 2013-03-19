@@ -25,12 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using log4net.Core;
+using Nini.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using Nini.Config;
-using log4net.Core;
 
 namespace Aurora.Framework
 {

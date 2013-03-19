@@ -29,12 +29,9 @@ using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenMetaverse.Imaging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Aurora.Services
 {

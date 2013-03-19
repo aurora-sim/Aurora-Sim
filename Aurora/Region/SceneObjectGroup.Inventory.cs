@@ -25,9 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Reflection;
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace Aurora.Region
 {

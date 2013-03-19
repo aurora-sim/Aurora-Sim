@@ -27,8 +27,6 @@
 
 using Aurora.Framework;
 using Nini.Config;
-using System.Linq;
-using System.Reflection;
 
 namespace Aurora.Services
 {

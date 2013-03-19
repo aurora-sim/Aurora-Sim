@@ -25,13 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.DataManager;
 using Aurora.Framework;
-using System.Collections.Generic;
-using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 using GridRegion = Aurora.Framework.GridRegion;
 
 namespace Aurora.Services

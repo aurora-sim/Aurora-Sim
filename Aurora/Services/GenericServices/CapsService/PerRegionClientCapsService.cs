@@ -25,16 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Reflection;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework.Servers.HttpServer;
 using GridRegion = Aurora.Framework.GridRegion;
-using Aurora.Framework;
 
 namespace Aurora.Services
 {

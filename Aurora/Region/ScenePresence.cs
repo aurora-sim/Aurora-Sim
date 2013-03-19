@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Region.Animation;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Region.Animation;
 using GridRegion = Aurora.Framework.GridRegion;
 using PrimType = Aurora.Framework.PrimType;
 

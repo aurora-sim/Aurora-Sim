@@ -25,6 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using log4net.Core;
+using Nwc.XmlRpc;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -34,11 +38,6 @@ using System.Net;
 using System.Text;
 using System.Web;
 using System.Xml;
-using Aurora.Framework;
-using Nwc.XmlRpc;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using log4net.Core;
 
 namespace Aurora.Framework
 {

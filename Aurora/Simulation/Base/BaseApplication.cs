@@ -27,21 +27,16 @@
 
 //#define BlockUnsupportedVersions
 
+using Aurora.Framework;
+using log4net.Config;
+using Nini.Config;
 using System;
-using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Aurora.Framework.Servers.HttpServer;
-using Nini.Config;
-using Aurora.Framework;
-using log4net.Config;
-using System.Net;
-using System.Text;
 
 namespace Aurora.Simulation.Base
 {

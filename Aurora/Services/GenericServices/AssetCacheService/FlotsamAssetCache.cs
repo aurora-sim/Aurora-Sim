@@ -31,14 +31,10 @@
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Timers;
 
 namespace Aurora.Services

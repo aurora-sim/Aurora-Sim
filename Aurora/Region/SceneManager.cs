@@ -25,16 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using OpenMetaverse;
-using Nini.Config;
-using Aurora.Framework;
-using System.Timers;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Region
