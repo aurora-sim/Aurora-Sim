@@ -25,19 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.DataManager.Migration;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
+using Community.CsharpSqlite.SQLiteClient;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Aurora.DataManager.Migration;
-using Aurora.Framework;
-using Aurora.Framework.ConsoleFramework;
-using Aurora.Framework.Services;
-using Aurora.Framework.Utilities;
-using Community.CsharpSqlite.SQLiteClient;
-using OpenMetaverse;
 
 //using System.Data.Sqlite;
 

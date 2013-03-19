@@ -27,10 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.UserAccounts
 {
     public class UserAccountsMigrator_3 : Migrator
     {

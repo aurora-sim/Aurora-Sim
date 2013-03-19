@@ -25,16 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using Aurora.DataManager.Migration;
-using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 
 namespace Aurora.DataManager.MySQL
 {

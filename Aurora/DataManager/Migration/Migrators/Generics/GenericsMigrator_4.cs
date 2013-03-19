@@ -27,10 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.Generics
 {
     public class GenericsMigrator_4 : Migrator
     {
