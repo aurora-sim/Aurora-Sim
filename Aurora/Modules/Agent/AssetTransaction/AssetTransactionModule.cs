@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Nini.Config;
 using OpenMetaverse;

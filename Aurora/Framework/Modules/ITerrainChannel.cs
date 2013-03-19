@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.SceneInfo;
+
 namespace Aurora.Framework
 {
     public interface ITerrainChannel

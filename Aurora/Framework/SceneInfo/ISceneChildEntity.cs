@@ -5,7 +5,7 @@ using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
 
     #region Enumerations

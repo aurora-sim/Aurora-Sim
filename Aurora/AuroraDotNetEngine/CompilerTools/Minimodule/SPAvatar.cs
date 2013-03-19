@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule

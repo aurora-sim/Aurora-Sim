@@ -32,7 +32,7 @@ using ProtoBuf;
 using System;
 using System.Net;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public enum StartupType
     {

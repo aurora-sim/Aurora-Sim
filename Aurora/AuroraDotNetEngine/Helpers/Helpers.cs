@@ -28,6 +28,7 @@
 using System;
 using System.Runtime.Serialization;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine

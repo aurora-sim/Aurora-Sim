@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers;
 using Nini.Config;
 using Nwc.XmlRpc;

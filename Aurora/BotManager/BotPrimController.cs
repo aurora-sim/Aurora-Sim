@@ -1,4 +1,6 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
 namespace Aurora.BotManager

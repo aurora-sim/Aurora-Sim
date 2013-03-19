@@ -26,6 +26,7 @@
  */
 
 using System;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
 namespace Aurora.Framework

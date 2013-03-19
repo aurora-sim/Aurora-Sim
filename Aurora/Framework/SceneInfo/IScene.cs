@@ -27,12 +27,13 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Other;
 using Nini.Config;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <value>
     ///     Indicate what action to take on an object derez request

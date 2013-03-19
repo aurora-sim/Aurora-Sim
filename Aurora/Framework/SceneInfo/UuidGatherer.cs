@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Assets;
@@ -38,7 +39,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     Gather uuids for a given entity.

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;

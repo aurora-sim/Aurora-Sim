@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Serialization;
 
 namespace Aurora.Framework

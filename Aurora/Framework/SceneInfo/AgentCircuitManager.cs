@@ -30,7 +30,7 @@ using System.Linq;
 using System.Net;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     Manage client circuits

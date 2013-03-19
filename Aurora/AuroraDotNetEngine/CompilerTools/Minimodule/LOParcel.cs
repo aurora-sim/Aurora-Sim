@@ -27,6 +27,7 @@
 
 using System;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

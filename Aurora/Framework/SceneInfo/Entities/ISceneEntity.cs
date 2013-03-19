@@ -32,7 +32,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo.Entities
 {
     public delegate void BlankHandler();
 

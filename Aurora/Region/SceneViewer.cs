@@ -28,6 +28,8 @@
 
 #define UseDictionaryForEntityUpdates
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;

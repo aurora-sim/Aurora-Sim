@@ -1,6 +1,7 @@
-﻿using OpenMetaverse;
+﻿using Aurora.Framework.SceneInfo.Entities;
+using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     Interface to a class that is capable of creating entities

@@ -28,9 +28,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
 
     #region Delegates

@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
 namespace Aurora.Framework.Serialization.External

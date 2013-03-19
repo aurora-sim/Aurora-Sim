@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Utilities;
 using Nini.Config;

@@ -34,7 +34,7 @@ using System.Xml.Serialization;
 using OpenMetaverse;
 using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     A dictionary for task inventory.

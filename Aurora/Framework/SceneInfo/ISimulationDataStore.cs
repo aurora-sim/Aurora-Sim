@@ -26,8 +26,9 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.SceneInfo.Entities;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public interface ISimulationDataStore
     {

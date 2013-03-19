@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Other;
@@ -36,7 +37,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using GridRegion = Aurora.Framework.Services.GridRegion;
-using PrimType = Aurora.Framework.PrimType;
+using PrimType = Aurora.Framework.SceneInfo.PrimType;
 
 namespace Aurora.Region
 {

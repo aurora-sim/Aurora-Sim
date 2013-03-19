@@ -28,6 +28,7 @@
 using System;
 using System.IO;
 using System.Net;
+using Aurora.Framework.SceneInfo.Entities;
 
 namespace Aurora.Framework.Serialization
 {

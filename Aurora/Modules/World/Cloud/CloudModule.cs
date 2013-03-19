@@ -26,6 +26,7 @@
  */
 
 using System;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using Aurora.Framework;
 

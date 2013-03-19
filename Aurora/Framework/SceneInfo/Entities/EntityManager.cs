@@ -31,7 +31,7 @@ using System.Linq;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo.Entities
 {
     public class EntityManager
     {

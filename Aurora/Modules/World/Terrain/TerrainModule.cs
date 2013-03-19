@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Utilities;
 using Aurora.Modules.Terrain.FileLoaders;
 using Aurora.Modules.Terrain.FloodBrushes;

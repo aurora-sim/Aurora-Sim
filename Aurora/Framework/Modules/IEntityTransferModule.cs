@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using GridRegion = Aurora.Framework.Services.GridRegion;
 

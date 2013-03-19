@@ -1,5 +1,5 @@
-﻿using Aurora.Framework.Servers;
-using Aurora.Framework.Servers.HttpServer;
+﻿using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using GridRegion = Aurora.Framework.Services.GridRegion;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
     ///     A class for triggering remote scene events.

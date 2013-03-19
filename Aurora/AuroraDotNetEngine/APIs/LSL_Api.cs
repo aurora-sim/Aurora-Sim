@@ -27,6 +27,8 @@
 
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Services;
@@ -56,7 +58,7 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
-using PrimType = Aurora.Framework.PrimType;
+using PrimType = Aurora.Framework.SceneInfo.PrimType;
 using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs

@@ -36,7 +36,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public enum ProfileShape : byte
     {

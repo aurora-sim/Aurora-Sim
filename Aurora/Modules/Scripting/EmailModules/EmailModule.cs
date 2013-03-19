@@ -31,6 +31,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Utilities;
 using DotNetOpenMail;
 using DotNetOpenMail.SmtpAuth;

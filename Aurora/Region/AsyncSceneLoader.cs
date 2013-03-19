@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Nini.Config;
 

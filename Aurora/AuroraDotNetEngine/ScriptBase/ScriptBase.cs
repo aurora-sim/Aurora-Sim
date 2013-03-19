@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting.Lifetime;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {

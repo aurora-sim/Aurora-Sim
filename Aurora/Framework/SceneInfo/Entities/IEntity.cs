@@ -1,6 +1,6 @@
 ﻿using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo.Entities
 {
     public interface IEntity
     {

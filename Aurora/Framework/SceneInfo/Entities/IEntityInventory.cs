@@ -29,7 +29,7 @@ using OpenMetaverse;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo.Entities
 {
     /// <summary>
     ///     Interface to an ISceneChildEntity's inventory

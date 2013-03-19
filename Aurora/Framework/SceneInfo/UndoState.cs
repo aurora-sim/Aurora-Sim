@@ -28,7 +28,7 @@
 using System.Linq;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public class UndoState
     {

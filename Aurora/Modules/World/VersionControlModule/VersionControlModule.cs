@@ -28,6 +28,7 @@
 using System;
 using System.Linq;
 using System.Timers;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using Aurora.Framework;
 

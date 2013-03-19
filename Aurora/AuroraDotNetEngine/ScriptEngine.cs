@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Services;
 using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;

@@ -1,4 +1,5 @@
-﻿using OpenMetaverse;
+﻿using Aurora.Framework.SceneInfo;
+using OpenMetaverse;
 
 namespace Aurora.Framework
 {

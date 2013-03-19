@@ -26,6 +26,7 @@
  */
 
 using System.Net;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
 namespace Aurora.Modules.Chat

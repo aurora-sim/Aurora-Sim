@@ -26,6 +26,7 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;

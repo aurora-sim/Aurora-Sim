@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Services.ClassHelpers.Assets;
@@ -40,7 +41,7 @@ using System.Drawing;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using PrimType = Aurora.Framework.PrimType;
+using PrimType = Aurora.Framework.SceneInfo.PrimType;
 
 namespace Aurora.Region
 {

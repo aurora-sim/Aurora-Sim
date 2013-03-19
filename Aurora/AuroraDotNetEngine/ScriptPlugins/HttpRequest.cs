@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using System;
 
