@@ -40,7 +40,7 @@ using System;
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     /// <summary>
-    ///   ODE plugin
+    ///     ODE plugin
     /// </summary>
     public class AuroraODEPlugin : IPhysicsPlugin
     {
@@ -74,7 +74,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _mScene = new AuroraODEPhysicsScene();
                 }
             }
-            
+
             return _mScene;
         }
 
@@ -91,7 +91,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     }
 
     /// <summary>
-    ///   Various properties that ODE uses for AMotors but isn't exposed in ODE.NET so we must define them ourselves.
+    ///     Various properties that ODE uses for AMotors but isn't exposed in ODE.NET so we must define them ourselves.
     /// </summary>
     public enum dParam
     {
@@ -119,7 +119,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     }
 
     /// <summary>
-    ///   Collision flags
+    ///     Collision flags
     /// </summary>
     [Flags]
     public enum CollisionCategories
@@ -137,7 +137,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     }
 
     /// <summary>
-    ///   Material type for a primitive
+    ///     Material type for a primitive
     /// </summary>
     public enum Material
     {

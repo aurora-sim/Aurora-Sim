@@ -45,7 +45,7 @@ namespace Aurora.Region
     public class SceneObjectPart : ISceneChildEntity
     {
         /// <value>
-        ///   Denote all sides of the prim
+        ///     Denote all sides of the prim
         /// </value>
         public const int ALL_SIDES = -1;
 
@@ -57,7 +57,7 @@ namespace Aurora.Region
         #region ISceneChildEntity Members
 
         /// <value>
-        ///   Is this sop a root part?
+        ///     Is this sop a root part?
         /// </value>
         [XmlIgnore]
         public bool IsRoot
@@ -118,7 +118,10 @@ namespace Aurora.Region
         [XmlIgnore] public Vector3 RotationAxis = Vector3.One;
         [XmlIgnore] public Quaternion SpinOldOrientation = Quaternion.Identity;
         [XmlIgnore] public uint TimeStampLastActivity; // Will be used for AutoReturn
-        [XmlIgnore] public bool Undoing { get; set; }
+
+        [XmlIgnore]
+        public bool Undoing { get; set; }
+
         private UUID _creatorID;
 
         [XmlIgnore] private UUID m_AttachedAvatar;
@@ -149,7 +152,7 @@ namespace Aurora.Region
         protected uint m_localId;
 
         /// <summary>
-        ///   Stores media texture data
+        ///     Stores media texture data
         /// </summary>
         protected string m_mediaUrl;
 
@@ -160,10 +163,10 @@ namespace Aurora.Region
         [XmlIgnore] private float m_partBSphereRadiusSQ; // the square of the radius of a sphere containing the oob
 
         [XmlIgnore] private Vector3 m_partOOBoffset;
-                                    // the position center of the bounding box relative to it's Position
+        // the position center of the bounding box relative to it's Position
 
         [XmlIgnore] private Vector3 m_partOOBsize;
-                                    // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+        // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
 
         protected byte[] m_particleSystem = Utils.EmptyBytes;
         private int m_passTouches;
@@ -187,78 +190,43 @@ namespace Aurora.Region
 
         [XmlIgnore]
         [ProtoMember(92)]
-        public bool RETURN_AT_EDGE
-        {
-            get;
-            set;
-        }
+        public bool RETURN_AT_EDGE { get; set; }
 
         [XmlIgnore]
         [ProtoMember(93)]
-        public bool BlockGrab
-        {
-            get;
-            set;
-        }
+        public bool BlockGrab { get; set; }
 
         [XmlIgnore]
         [ProtoMember(94)]
-        public bool BlockGrabObject
-        {
-            get;
-            set;
-        }
+        public bool BlockGrabObject { get; set; }
 
         [XmlIgnore]
         public bool IsLoading { get; set; }
 
         [XmlIgnore]
         [ProtoMember(96)]
-        public bool StatusSandbox
-        {
-            get;
-            set;
-        }
+        public bool StatusSandbox { get; set; }
 
         [XmlIgnore]
         [ProtoMember(97)]
-        public Vector3 StatusSandboxPos
-        {
-            get;
-            set;
-        }
+        public Vector3 StatusSandboxPos { get; set; }
 
         [XmlIgnore]
         [ProtoMember(98)]
-        public int STATUS_ROTATE_X
-        {
-            get;
-            set;
-        }
+        public int STATUS_ROTATE_X { get; set; }
 
         [XmlIgnore]
         [ProtoMember(99)]
-        public int STATUS_ROTATE_Y
-        {
-            get;
-            set;
-        }
+        public int STATUS_ROTATE_Y { get; set; }
 
         [XmlIgnore]
         [ProtoMember(100)]
-        public int STATUS_ROTATE_Z
-        {
-            get;
-            set;
-        }
+        public int STATUS_ROTATE_Z { get; set; }
 
         [XmlIgnore]
         public bool ValidpartOOB
         {
-            set
-            {
-                m_ValidpartOOB = value;
-            }
+            set { m_ValidpartOOB = value; }
         }
 
         // the size of a bounding box oriented as the prim, is future will consider cutted prims, meshs etc
@@ -303,21 +271,13 @@ namespace Aurora.Region
 
         [XmlIgnore]
         [ProtoMember(91)]
-        public bool DIE_AT_EDGE
-        {
-            get;
-            set;
-        }
+        public bool DIE_AT_EDGE { get; set; }
 
         [XmlIgnore]
         [ProtoMember(90)]
-        public int UseSoundQueue
-        {
-            get;
-            set;
-        }
+        public int UseSoundQueue { get; set; }
 
-        [ProtoMember(70, OverwriteList=true)]
+        [ProtoMember(70, OverwriteList = true)]
         public int[] PayPrice
         {
             get { return m_PayPrice; }
@@ -339,56 +299,31 @@ namespace Aurora.Region
         [ProtoMember(71)]
         public UUID Sound
         {
-            get
-            {
-                return m_sound;
-            }
-            set
-            {
-                m_sound = value;
-            }
+            get { return m_sound; }
+            set { m_sound = value; }
         }
 
         [XmlIgnore]
         [ProtoMember(72)]
-        public byte SoundFlags
-        {
-            get;
-            set;
-        }
+        public byte SoundFlags { get; set; }
 
         [XmlIgnore]
         [ProtoMember(73)]
-        public double SoundGain
-        {
-            get;
-            set;
-        }
+        public double SoundGain { get; set; }
 
         [XmlIgnore]
         [ProtoMember(74)]
-        public double SoundRadius
-        {
-            get;
-            set;
-        }
+        public double SoundRadius { get; set; }
 
         [XmlIgnore]
         [ProtoMember(75)]
-        public Vector3 PIDTarget
-        {
-            get;
-            set;
-        }
+        public Vector3 PIDTarget { get; set; }
 
         [XmlIgnore]
         [ProtoMember(76)]
         public bool PIDActive
         {
-            get
-            {
-                return m_pidActive;
-            }
+            get { return m_pidActive; }
             set
             {
                 IScene s = ParentGroup == null ? null : ParentGroup.Scene ?? null;
@@ -405,45 +340,23 @@ namespace Aurora.Region
 
         [XmlIgnore]
         [ProtoMember(77)]
-        public float PIDTau
-        {
-            get;
-            set;
-        }
+        public float PIDTau { get; set; }
 
         [ProtoMember(78)]
-        public float PIDHoverHeight
-        {
-            get;
-            set;
-        }
+        public float PIDHoverHeight { get; set; }
 
         [ProtoMember(79)]
-        public float PIDHoverTau
-        {
-            get;
-            set;
-        }
+        public float PIDHoverTau { get; set; }
 
         [ProtoMember(80)]
         public bool PIDHoverActive
         {
-            get
-            {
-                return m_pidhoverActive;
-            }
-            set
-            {
-                m_pidhoverActive = value;
-            }
+            get { return m_pidhoverActive; }
+            set { m_pidhoverActive = value; }
         }
 
         [ProtoMember(81)]
-        public PIDHoverType PIDHoverType
-        {
-            get;
-            set;
-        }
+        public PIDHoverType PIDHoverType { get; set; }
 
         [XmlIgnore]
         [ProtoMember(82)]
@@ -471,47 +384,33 @@ namespace Aurora.Region
         public Vector3 AttachedPos { get; set; }
 
         /// <summary>
-        ///   NOTE: THIS WILL NOT BE UP TO DATE AS THEY WILL BE ONE REV BEHIND
-        ///   Used to save attachment pos and point over rezzing/taking
+        ///     NOTE: THIS WILL NOT BE UP TO DATE AS THEY WILL BE ONE REV BEHIND
+        ///     Used to save attachment pos and point over rezzing/taking
         /// </summary>
         [XmlIgnore]
         public int AttachmentPoint { get; set; }
 
         /// <summary>
-        ///   NOTE: THIS WILL NOT BE UP TO DATE AS THEY WILL BE ONE REV BEHIND
-        ///   Used to save attachment pos and point over rezzing/taking
+        ///     NOTE: THIS WILL NOT BE UP TO DATE AS THEY WILL BE ONE REV BEHIND
+        ///     Used to save attachment pos and point over rezzing/taking
         /// </summary>
         [ProtoMember(84)]
-        public Vector3 SavedAttachedPos
-        {
-            get;
-            set;
-        }
+        public Vector3 SavedAttachedPos { get; set; }
 
 
         [ProtoMember(85)]
-        public int SavedAttachmentPoint
-        {
-            get;
-            set;
-        }
+        public int SavedAttachmentPoint { get; set; }
 
         [XmlIgnore]
         [ProtoMember(86)]
         public bool VolumeDetectActive
         {
-            get
-            {
-                return m_volumeDetectActive;
-            }
-            set
-            {
-                m_volumeDetectActive = value;
-            }
+            get { return m_volumeDetectActive; }
+            set { m_volumeDetectActive = value; }
         }
 
         /// <summary>
-        ///   This part's inventory
+        ///     This part's inventory
         /// </summary>
         [XmlIgnore]
         public IEntityInventory Inventory
@@ -520,39 +419,19 @@ namespace Aurora.Region
         }
 
         [ProtoMember(87)]
-        public Vector3 CameraEyeOffset
-        {
-            get;
-            set;
-        }
+        public Vector3 CameraEyeOffset { get; set; }
 
         [ProtoMember(88)]
-        public Vector3 CameraAtOffset
-        {
-            get;
-            set;
-        }
+        public Vector3 CameraAtOffset { get; set; }
 
         [ProtoMember(89)]
-        public bool ForceMouselook
-        {
-            get;
-            set;
-        }
+        public bool ForceMouselook { get; set; }
 
         [ProtoMember(102)]
-        public KeyframeAnimation KeyframeAnimation
-        {
-            get;
-            set;
-        }
+        public KeyframeAnimation KeyframeAnimation { get; set; }
 
         [ProtoMember(103)]
-        public Dictionary<UUID, StateSave> StateSaves 
-        { 
-            get; 
-            set;
-        }
+        public Dictionary<UUID, StateSave> StateSaves { get; set; }
 
         public Vector3 GroupScale()
         {
@@ -564,7 +443,7 @@ namespace Aurora.Region
         #region Constructors
 
         /// <summary>
-        ///   No arg constructor called by region restore db code
+        ///     No arg constructor called by region restore db code
         /// </summary>
         public SceneObjectPart()
         {
@@ -573,17 +452,17 @@ namespace Aurora.Region
 
             m_inventory = new SceneObjectPartInventory(this);
             m_shape = new PrimitiveBaseShape();
-            Material = (int)OpenMetaverse.Material.Wood;
+            Material = (int) OpenMetaverse.Material.Wood;
         }
 
         /// <summary>
-        ///   Create a completely new SceneObjectPart (prim).  This will need to be added separately to a SceneObjectGroup
+        ///     Create a completely new SceneObjectPart (prim).  This will need to be added separately to a SceneObjectGroup
         /// </summary>
-        /// <param name = "ownerID"></param>
-        /// <param name = "shape"></param>
-        /// <param name = "position"></param>
-        /// <param name = "rotationOffset"></param>
-        /// <param name = "offsetPosition"></param>
+        /// <param name="ownerID"></param>
+        /// <param name="shape"></param>
+        /// <param name="position"></param>
+        /// <param name="rotationOffset"></param>
+        /// <param name="offsetPosition"></param>
         public SceneObjectPart(
             UUID ownerID, PrimitiveBaseShape shape, Vector3 groupPosition,
             Quaternion rotationOffset, Vector3 offsetPosition, string name)
@@ -626,7 +505,7 @@ namespace Aurora.Region
             //m_undo = new UndoStack<UndoState>(ParentGroup.GetSceneMaxUndo());
 
             m_inventory = new SceneObjectPartInventory(this);
-            Material = (int)OpenMetaverse.Material.Wood;
+            Material = (int) OpenMetaverse.Material.Wood;
         }
 
         public override int GetHashCode()
@@ -666,9 +545,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Used by the DB layer to retrieve / store the entire user identification.
-        ///   The identification can either be a simple UUID or a string of the form
-        ///   uuid[;profile_url[;name]]
+        ///     Used by the DB layer to retrieve / store the entire user identification.
+        ///     The identification can either be a simple UUID or a string of the form
+        ///     uuid[;profile_url[;name]]
         /// </summary>
         public string CreatorIdentification
         {
@@ -714,7 +593,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   This is idential to the Flags property, except that the returned value is uint rather than PrimFlags
+        ///     This is idential to the Flags property, except that the returned value is uint rather than PrimFlags
         /// </summary>
         [Obsolete("Use Flags property instead")]
         public uint ObjectFlags
@@ -729,6 +608,7 @@ namespace Aurora.Region
         }
 
         private Quaternion m_APIDTarget;
+
         [XmlIgnore, ProtoMember(65)]
         public Quaternion APIDTarget
         {
@@ -748,32 +628,16 @@ namespace Aurora.Region
         }
 
         [XmlIgnore, ProtoMember(66)]
-        public float APIDDamp
-        {
-            get;
-            set;
-        }
+        public float APIDDamp { get; set; }
 
         [XmlIgnore, ProtoMember(67)]
-        public float APIDStrength
-        {
-            get;
-            set;
-        }
+        public float APIDStrength { get; set; }
 
         [ProtoMember(68)]
-        public int APIDIterations
-        {
-            get;
-            set;
-        }
+        public int APIDIterations { get; set; }
 
         [ProtoMember(69)]
-        public bool APIDEnabled
-        {
-            get;
-            set;
-        }
+        public bool APIDEnabled { get; set; }
 
         [XmlIgnore]
         public SceneObjectPart PlaySoundMasterPrim { get; set; }
@@ -796,11 +660,7 @@ namespace Aurora.Region
         }
 
         [XmlIgnore, ProtoMember(64)]
-        public float Damage
-        {
-            get;
-            set;
-        }
+        public float Damage { get; set; }
 
         public Vector3 RelativePosition
         {
@@ -828,7 +688,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Data about the creator in the form profile_url;name
+        ///     Data about the creator in the form profile_url;name
         /// </summary>
         [ProtoMember(3)]
         public string CreatorData
@@ -838,7 +698,7 @@ namespace Aurora.Region
         }
 
         /// <value>
-        ///   Access should be via Inventory directly - this property temporarily remains for xml serialization purposes
+        ///     Access should be via Inventory directly - this property temporarily remains for xml serialization purposes
         /// </value>
         [ProtoMember(4)]
         public uint InventorySerial
@@ -848,7 +708,7 @@ namespace Aurora.Region
         }
 
         /// <value>
-        ///   Access should be via Inventory directly - this property temporarily remains for xml serialization purposes
+        ///     Access should be via Inventory directly - this property temporarily remains for xml serialization purposes
         /// </value>
         [ProtoMember(5)]
         public TaskInventoryDictionary TaskInventory
@@ -877,22 +737,12 @@ namespace Aurora.Region
         [ProtoMember(7)]
         public uint LocalId
         {
-            get
-            {
-                return m_localId;
-            }
-            set
-            {
-                m_localId = value;
-            }
+            get { return m_localId; }
+            set { m_localId = value; }
         }
 
         [XmlIgnore]
-        public uint CRC
-        {
-            get;
-            set;
-        }
+        public uint CRC { get; set; }
 
         [ProtoMember(8)]
         public virtual string Name
@@ -910,11 +760,7 @@ namespace Aurora.Region
         }
 
         [ProtoMember(9)]
-        public int Material
-        {
-            get;
-            set;
-        }
+        public int Material { get; set; }
 
         public void UpdateMaterial(int val)
         {
@@ -973,7 +819,7 @@ namespace Aurora.Region
             set { m_scriptAccessPin = value; }
         }
 
-        [ProtoMember(60, OverwriteList=true)]
+        [ProtoMember(60, OverwriteList = true)]
         public Byte[] TextureAnimation
         {
             get { return m_textureAnimation; }
@@ -981,35 +827,21 @@ namespace Aurora.Region
         }
 
         [XmlIgnore]
-        [ProtoMember(61, OverwriteList=true)]
+        [ProtoMember(61, OverwriteList = true)]
         public Byte[] ParticleSystem
         {
-            get
-            {
-                return m_ParticleSystem;
-            }
-            set
-            {
-                m_ParticleSystem = value;
-            }
+            get { return m_ParticleSystem; }
+            set { m_ParticleSystem = value; }
         }
 
         [XmlIgnore, ProtoMember(62)]
-        public DateTime Expires
-        {
-            get;
-            set;
-        }
+        public DateTime Expires { get; set; }
 
         [XmlIgnore, ProtoMember(63)]
-        public DateTime Rezzed
-        {
-            get;
-            set;
-        }
+        public DateTime Rezzed { get; set; }
 
         /// <summary>
-        ///   The position of the entire group that this prim belongs to.
+        ///     The position of the entire group that this prim belongs to.
         /// </summary>
         [ProtoMember(14)]
         public Vector3 GroupPosition
@@ -1049,11 +881,7 @@ namespace Aurora.Region
         }
 
         [ProtoMember(16)]
-        public Quaternion RotationOffset
-        {
-            get;
-            set;
-        }
+        public Quaternion RotationOffset { get; set; }
 
         public Quaternion GetRotationOffset()
         {
@@ -1070,6 +898,7 @@ namespace Aurora.Region
         }
 
         private Vector3 m_tempVelocity = Vector3.Zero;
+
         /// <summary>
         /// </summary>
         [ProtoMember(17)]
@@ -1158,15 +987,11 @@ namespace Aurora.Region
         }
 
         /// <value>
-        ///   Text color.
+        ///     Text color.
         /// </value>
         [XmlIgnore]
         [ProtoMember(21)]
-        public Color Color
-        {
-            get;
-            set;
-        }
+        public Color Color { get; set; }
 
         public void UpdateColor(Color c, bool triggerChangedColor)
         {
@@ -1178,7 +1003,7 @@ namespace Aurora.Region
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 Color = c;
-                if(triggerChangedColor)
+                if (triggerChangedColor)
                     TriggerScriptChangedEvent(Changed.COLOR);
 
                 /* ScheduleFullUpdate() need not be called b/c after
@@ -1311,7 +1136,7 @@ namespace Aurora.Region
                         if (actor != null && m_parentGroup != null &&
                             m_parentGroup.Scene != null &&
                             m_parentGroup.Scene.PhysicsScene != null)
-                                    actor.Size = m_shape.Scale;
+                            actor.Size = m_shape.Scale;
                         TriggerScriptChangedEvent(Changed.SCALE);
                     }
                 }
@@ -1319,7 +1144,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Used for media on a prim.
+        ///     Used for media on a prim.
         /// </summary>
         /// Do not change this value directly - always do it through an IMoapModule.
         [ProtoMember(29)]
@@ -1442,39 +1267,19 @@ namespace Aurora.Region
         }
 
         [ProtoMember(30)]
-        public Quaternion SitTargetOrientation
-        {
-            get;
-            set;
-        }
+        public Quaternion SitTargetOrientation { get; set; }
 
         [ProtoMember(31)]
-        public Vector3 SitTargetPosition
-        {
-            get;
-            set;
-        }
+        public Vector3 SitTargetPosition { get; set; }
 
         [ProtoMember(32)]
-        public Vector3 OmegaAxis
-        {
-            get;
-            set;
-        }
+        public Vector3 OmegaAxis { get; set; }
 
         [ProtoMember(33)]
-        public double OmegaSpinRate
-        {
-            get;
-            set;
-        }
+        public double OmegaSpinRate { get; set; }
 
         [ProtoMember(34)]
-        public double OmegaGain
-        {
-            get;
-            set;
-        }
+        public double OmegaGain { get; set; }
 
         [ProtoMember(35)]
         public uint ParentID
@@ -1485,7 +1290,7 @@ namespace Aurora.Region
 
         [ProtoMember(36)]
         public int CreationDate { get; set; }
-        
+
         [ProtoMember(37)]
         public int SalePrice
         {
@@ -1553,11 +1358,7 @@ namespace Aurora.Region
         }
 
         [ProtoMember(50)]
-        public byte PhysicsType
-        {
-            get;
-            set;
-        }
+        public byte PhysicsType { get; set; }
 
         [ProtoMember(51)]
         public float Density
@@ -1580,10 +1381,7 @@ namespace Aurora.Region
                     return m_friction;
                 return (m_friction = 0.6f);
             }
-            set
-            {
-                m_friction = value;
-            }
+            set { m_friction = value; }
         }
 
         [ProtoMember(53)]
@@ -1595,10 +1393,7 @@ namespace Aurora.Region
                     return m_restitution;
                 return (m_restitution = 0.5f);
             }
-            set
-            {
-                m_restitution = value;
-            }
+            set { m_restitution = value; }
         }
 
         [ProtoMember(54)]
@@ -1610,14 +1405,11 @@ namespace Aurora.Region
                     return m_gravityMultiplier;
                 return (m_gravityMultiplier = 1);
             }
-            set
-            {
-                m_gravityMultiplier = value;
-            }
+            set { m_gravityMultiplier = value; }
         }
 
         /// <summary>
-        ///   Property flags.  See OpenMetaverse.PrimFlags
+        ///     Property flags.  See OpenMetaverse.PrimFlags
         /// </summary>
         /// Example properties are PrimFlags.Phantom and PrimFlags.DieAtEdge
         [ProtoMember(55)]
@@ -1634,11 +1426,7 @@ namespace Aurora.Region
         }
 
         [XmlIgnore]
-        public List<UUID> SitTargetAvatar
-        {
-            get;
-            set;
-        }
+        public List<UUID> SitTargetAvatar { get; set; }
 
         [XmlIgnore]
         public UUID ParentUUID
@@ -1714,7 +1502,7 @@ namespace Aurora.Region
 
         public void FinishedSerializingGenericProperties()
         {
-            if ((APIDEnabled || PIDActive) && this.ParentEntity != null)//Make sure to activate it
+            if ((APIDEnabled || PIDActive) && this.ParentEntity != null) //Make sure to activate it
                 this.ParentEntity.Scene.EventManager.OnFrame += UpdateLookAt;
         }
 
@@ -1914,7 +1702,7 @@ namespace Aurora.Region
             }
             StoreUndoState();
             m_offsetPosition = value;
-            if(ParentEntity != null)
+            if (ParentEntity != null)
                 ParentEntity.ScheduleGroupTerseUpdate();
             ValidpartOOB = false;
 
@@ -2006,12 +1794,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   hook to the physics scene to apply impulse
-        ///   This is sent up to the group, which then finds the root prim
-        ///   and applies the force on the root prim of the group
+        ///     hook to the physics scene to apply impulse
+        ///     This is sent up to the group, which then finds the root prim
+        ///     and applies the force on the root prim of the group
         /// </summary>
-        /// <param name = "impulsei">Vector force</param>
-        /// <param name = "localGlobalTF">true for the local frame, false for the global frame</param>
+        /// <param name="impulsei">Vector force</param>
+        /// <param name="localGlobalTF">true for the local frame, false for the global frame</param>
         public void ApplyImpulse(Vector3 impulsei, bool localGlobalTF)
         {
             Vector3 impulse = impulsei;
@@ -2032,12 +1820,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   hook to the physics scene to apply angular impulse
-        ///   This is sent up to the group, which then finds the root prim
-        ///   and applies the force on the root prim of the group
+        ///     hook to the physics scene to apply angular impulse
+        ///     This is sent up to the group, which then finds the root prim
+        ///     and applies the force on the root prim of the group
         /// </summary>
-        /// <param name = "impulsei">Vector force</param>
-        /// <param name = "localGlobalTF">true for the local frame, false for the global frame</param>
+        /// <param name="impulsei">Vector force</param>
+        /// <param name="localGlobalTF">true for the local frame, false for the global frame</param>
         public void ApplyAngularImpulse(Vector3 impulsei, bool localGlobalTF)
         {
             Vector3 impulse = impulsei;
@@ -2058,12 +1846,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   hook to the physics scene to apply angular impulse
-        ///   This is sent up to the group, which then finds the root prim
-        ///   and applies the force on the root prim of the group
+        ///     hook to the physics scene to apply angular impulse
+        ///     This is sent up to the group, which then finds the root prim
+        ///     and applies the force on the root prim of the group
         /// </summary>
-        /// <param name = "impulsei">Vector force</param>
-        /// <param name = "localGlobalTF">true for the local frame, false for the global frame</param>
+        /// <param name="impulsei">Vector force</param>
+        /// <param name="localGlobalTF">true for the local frame, false for the global frame</param>
         public void SetAngularImpulse(Vector3 impulsei, bool localGlobalTF)
         {
             Vector3 impulse = impulsei;
@@ -2231,17 +2019,17 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Method for a prim to get it's world position from the group.
-        ///   Remember, the Group Position simply gives the position of the group itself
+        ///     Method for a prim to get it's world position from the group.
+        ///     Remember, the Group Position simply gives the position of the group itself
         /// </summary>
         /// <returns>A Linked Child Prim objects position in world</returns>
         public Vector3 GetWorldPosition()
         {
-            return IsRoot ? GroupPosition : GroupPosition + OffsetPosition * ParentGroup.RootPart.GetRotationOffset();
+            return IsRoot ? GroupPosition : GroupPosition + OffsetPosition*ParentGroup.RootPart.GetRotationOffset();
         }
 
         /// <summary>
-        ///   Gets the rotation of this prim offset by the group rotation
+        ///     Gets the rotation of this prim offset by the group rotation
         /// </summary>
         /// <returns></returns>
         public Quaternion GetWorldRotation()
@@ -2270,11 +2058,11 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Uses a PID to attempt to clamp the object on the Z axis at the given height over tau seconds.
+        ///     Uses a PID to attempt to clamp the object on the Z axis at the given height over tau seconds.
         /// </summary>
-        /// <param name = "height">Height to hover.  Height of zero disables hover.</param>
-        /// <param name = "hoverType">Determines what the height is relative to </param>
-        /// <param name = "tau">Number of seconds over which to reach target</param>
+        /// <param name="height">Height to hover.  Height of zero disables hover.</param>
+        /// <param name="hoverType">Determines what the height is relative to </param>
+        /// <param name="tau">Number of seconds over which to reach target</param>
         public void SetHoverHeight(float height, PIDHoverType hoverType, float tau)
         {
             m_parentGroup.SetHoverHeight(height, hoverType, tau);
@@ -2303,7 +2091,9 @@ namespace Aurora.Region
                         }
                     }
 #else
-                    foreach (KeyValuePair<UUID, TaskInventoryItem> item in TaskInventory.Where(item => item.Value.Name == sound))
+                    foreach (
+                        KeyValuePair<UUID, TaskInventoryItem> item in
+                            TaskInventory.Where(item => item.Value.Name == sound))
                     {
                         soundID = item.Value.ItemID;
                         break;
@@ -2385,12 +2175,12 @@ namespace Aurora.Region
             APIDDamp = damp;
             APIDStrength = strength;
             APIDTarget = rot;
-            APIDIterations = 1 + (int)(Math.PI * APIDStrength);
+            APIDIterations = 1 + (int) (Math.PI*APIDStrength);
         }
 
         /// <summary>
-        ///   Schedule a terse update for this prim.  Terse updates only send position,
-        ///   rotation, velocity, and rotational velocity information.
+        ///     Schedule a terse update for this prim.  Terse updates only send position,
+        ///     rotation, velocity, and rotational velocity information.
         /// </summary>
         public void ScheduleTerseUpdate()
         {
@@ -2398,9 +2188,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Tell all avatars in the Scene about the new update
+        ///     Tell all avatars in the Scene about the new update
         /// </summary>
-        /// <param name = "UpdateFlags"></param>
+        /// <param name="UpdateFlags"></param>
         public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
             if (m_parentGroup != null && m_parentGroup.Scene != null)
@@ -2432,12 +2222,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Trigger or play an attached sound in this part's inventory.
+        ///     Trigger or play an attached sound in this part's inventory.
         /// </summary>
-        /// <param name = "sound"></param>
-        /// <param name = "volume"></param>
-        /// <param name = "triggered"></param>
-        /// <param name = "flags"></param>
+        /// <param name="sound"></param>
+        /// <param name="volume"></param>
+        /// <param name="triggered"></param>
+        /// <param name="flags"></param>
         public void SendSound(string sound, double volume, bool triggered, byte flags, float radius, bool useMaster,
                               bool isMaster)
         {
@@ -2468,7 +2258,10 @@ namespace Aurora.Region
                         }
                     }
 #else
-                    foreach (KeyValuePair<UUID, TaskInventoryItem> item in TaskInventory.Where(item => item.Value.Name == sound && item.Value.Type == (int) AssetType.Sound))
+                    foreach (
+                        KeyValuePair<UUID, TaskInventoryItem> item in
+                            TaskInventory.Where(
+                                item => item.Value.Name == sound && item.Value.Type == (int) AssetType.Sound))
                     {
                         soundID = item.Value.ItemID;
                         break;
@@ -2645,10 +2438,10 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Set the color of prim faces
+        ///     Set the color of prim faces
         /// </summary>
-        /// <param name = "color"></param>
-        /// <param name = "face"></param>
+        /// <param name="color"></param>
+        /// <param name="face"></param>
         public void SetFaceColor(Vector3 color, int face)
         {
             Primitive.TextureEntry tex = Shape.Textures;
@@ -2700,7 +2493,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Get the number of sides that this part has.
+        ///     Get the number of sides that this part has.
         /// </summary>
         /// <returns></returns>
         public int GetNumberOfSides()
@@ -2771,9 +2564,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Tell us what type this prim is
+        ///     Tell us what type this prim is
         /// </summary>
-        /// <param name = "primShape"></param>
+        /// <param name="primShape"></param>
         /// <returns></returns>
         public PrimType GetPrimType()
         {
@@ -2810,8 +2603,8 @@ namespace Aurora.Region
             return PrimType.BOX;
         }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public void SetParent(ISceneEntity parent)
         {
             m_parentGroup = (SceneObjectGroup) parent;
@@ -2824,10 +2617,10 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Set the events that this part will pass on to listeners.
+        ///     Set the events that this part will pass on to listeners.
         /// </summary>
-        /// <param name = "scriptid"></param>
-        /// <param name = "events"></param>
+        /// <param name="scriptid"></param>
+        /// <param name="events"></param>
         public void SetScriptEvents(UUID scriptid, long events)
         {
             // scriptEvents oldparts;
@@ -2857,19 +2650,19 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Set the text displayed for this part.
+        ///     Set the text displayed for this part.
         /// </summary>
-        /// <param name = "text"></param>
-        /// <param name = "color"></param>
-        /// <param name = "alpha"></param>
+        /// <param name="text"></param>
+        /// <param name="color"></param>
+        /// <param name="alpha"></param>
         public void SetText(string text, Vector3 color, double alpha)
         {
             //No triggering Changed_Color, so not using Color
             //Color = ...
-            UpdateColor(Color.FromArgb((int)(alpha * 0xff),
-                                         (int) (color.X*0xff),
-                                         (int) (color.Y*0xff),
-                                         (int)(color.Z * 0xff)), false);
+            UpdateColor(Color.FromArgb((int) (alpha*0xff),
+                                       (int) (color.X*0xff),
+                                       (int) (color.Y*0xff),
+                                       (int) (color.Z*0xff)), false);
             Text = text;
 
             ScheduleUpdate(PrimUpdateFlags.Text);
@@ -3311,9 +3104,9 @@ namespace Aurora.Region
             }
         }
 
-        ///<summary>
-        ///</summary>
-        ///<param name = "pos"></param>
+        /// <summary>
+        /// </summary>
+        /// <param name="pos"></param>
         public void UpdateOffSet(Vector3 pos)
         {
             if ((pos.X != OffsetPosition.X) ||
@@ -3499,38 +3292,38 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Update the shape of this part.
+        ///     Update the shape of this part.
         /// </summary>
-        /// <param name = "shapeBlock"></param>
+        /// <param name="shapeBlock"></param>
         public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock)
         {
             UpdateShape(shapeBlock, true);
         }
 
         /// <summary>
-        ///   Having this function because I found when scripts updated the shape.. over and over, it would fill up the memory
-        ///   Having the extra paramater updatePhysics can prevent physics updates on the changes
-        ///   The onlyplace this effects is if a script changes the shape
-        ///   If the LocklessQueue gets updated this can be removed
+        ///     Having this function because I found when scripts updated the shape.. over and over, it would fill up the memory
+        ///     Having the extra paramater updatePhysics can prevent physics updates on the changes
+        ///     The onlyplace this effects is if a script changes the shape
+        ///     If the LocklessQueue gets updated this can be removed
         /// </summary>
-        /// <param name = "shapeBlock"></param>
+        /// <param name="shapeBlock"></param>
         /// <param name="UpdatePhysics"></param>
         public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool UpdatePhysics)
         {
             IOpenRegionSettingsModule module = ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (module != null)
             {
-                if (shapeBlock.ProfileHollow > (module.MaximumHollowSize * 500) &&
+                if (shapeBlock.ProfileHollow > (module.MaximumHollowSize*500) &&
                     module.MaximumHollowSize != -1)
-                //This is so that it works correctly, since the packet sends (N * 500)
+                    //This is so that it works correctly, since the packet sends (N * 500)
                 {
-                    shapeBlock.ProfileHollow = (ushort)(module.MaximumHollowSize * 500);
+                    shapeBlock.ProfileHollow = (ushort) (module.MaximumHollowSize*500);
                 }
-                if (shapeBlock.PathScaleY > (200 - (module.MinimumHoleSize * 100)) &&
+                if (shapeBlock.PathScaleY > (200 - (module.MinimumHoleSize*100)) &&
                     module.MinimumHoleSize != -1 && shapeBlock.PathCurve == 32)
-                //This is how the packet is set up... so this is how we check for it...
+                    //This is how the packet is set up... so this is how we check for it...
                 {
-                    shapeBlock.PathScaleY = Convert.ToByte((200 - (module.MinimumHoleSize * 100)));
+                    shapeBlock.PathScaleY = Convert.ToByte((200 - (module.MinimumHoleSize*100)));
                 }
             }
 
@@ -3577,12 +3370,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Update the textures on the part.
+        ///     Update the textures on the part.
         /// </summary>
         /// Added to handle bug in libsecondlife's TextureEntry.ToBytes()
         /// not handling RGBA properly. Cycles through, and "fixes" the color
         /// info
-        /// <param name = "tex"></param>
+        /// <param name="tex"></param>
         public void UpdateTexture(Primitive.TextureEntry tex, bool sendChangedEvent)
         {
             //Color4 tmpcolor;
@@ -3721,11 +3514,7 @@ namespace Aurora.Region
 
         private OSDMap m_VehicleParams;
 
-        public int VehicleType
-        {
-            get;
-            set;
-        }
+        public int VehicleType { get; set; }
 
         public OSDArray VehicleFlags
         {
@@ -3924,7 +3713,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Duplicates this part.
+        ///     Duplicates this part.
         /// </summary>
         /// <param name="parent"></param>
         /// <param name="clonePhys"></param>
@@ -3993,9 +3782,11 @@ namespace Aurora.Region
 
             bool isMesh = asset == null ? false : (asset.Type == (int) AssetType.Mesh);
             if (isMesh)
-                this.Shape.SculptType = (byte)SculptType.Mesh;
+                this.Shape.SculptType = (byte) SculptType.Mesh;
             PrimitiveBaseShape shape = Shape.Copy();
-            if ((bool) sender && this.PhysActor != null && (asset != null || (this.Shape.SculptData != null && this.Shape.SculptData.Length != 0))) //Update physics
+            if ((bool) sender && this.PhysActor != null &&
+                (asset != null || (this.Shape.SculptData != null && this.Shape.SculptData.Length != 0)))
+                //Update physics
             {
                 //Get physics to update in a hackish way
                 this.PhysActor.Shape = shape;
@@ -4119,25 +3910,25 @@ namespace Aurora.Region
                     case ActorTypes.Prim:
                         switch (Material)
                         {
-                            case (int)OpenMetaverse.Material.Flesh:
+                            case (int) OpenMetaverse.Material.Flesh:
                                 SendSound(SoundFleshCollision, 1, true, 0, 0, false, false);
                                 break;
-                            case (int)OpenMetaverse.Material.Glass:
+                            case (int) OpenMetaverse.Material.Glass:
                                 SendSound(SoundGlassCollision, 1, true, 0, 0, false, false);
                                 break;
-                            case (int)OpenMetaverse.Material.Metal:
+                            case (int) OpenMetaverse.Material.Metal:
                                 SendSound(SoundMetalCollision, 1, true, 0, 0, false, false);
                                 break;
-                            case (int)OpenMetaverse.Material.Plastic:
+                            case (int) OpenMetaverse.Material.Plastic:
                                 SendSound(SoundPlasticCollision, 1, true, 0, 0, false, false);
                                 break;
-                            case (int)OpenMetaverse.Material.Rubber:
+                            case (int) OpenMetaverse.Material.Rubber:
                                 SendSound(SoundRubberCollision, 1, true, 0, 0, false, false);
                                 break;
-                            case (int)OpenMetaverse.Material.Stone:
+                            case (int) OpenMetaverse.Material.Stone:
                                 SendSound(SoundStoneCollision, 1, true, 0, 0, false, false);
                                 break;
-                            case (int)OpenMetaverse.Material.Wood:
+                            case (int) OpenMetaverse.Material.Wood:
                                 SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
                                 break;
                         }
@@ -4184,7 +3975,8 @@ namespace Aurora.Region
                                 string data = "";
                                 if (obj != null)
                                 {
-                                    if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.Name))
+                                    if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) ||
+                                        m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.Name))
                                     {
                                         bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1, out data);
                                         //If it is 1, it is to accept ONLY collisions from this object
@@ -4192,7 +3984,14 @@ namespace Aurora.Region
                                         {
                                             DetectedObject detobj = new DetectedObject
                                                                         {
-                                                                            keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
+                                                                            keyUUID = obj.UUID,
+                                                                            nameStr = obj.Name,
+                                                                            ownerUUID = obj.OwnerID,
+                                                                            posVector = obj.AbsolutePosition,
+                                                                            rotQuat = obj.GetWorldRotation(),
+                                                                            velVector = obj.Velocity,
+                                                                            colliderType = 0,
+                                                                            groupUUID = obj.GroupID
                                                                         };
                                             colliding.Add(detobj);
                                         }
@@ -4209,7 +4008,14 @@ namespace Aurora.Region
                                         {
                                             DetectedObject detobj = new DetectedObject
                                                                         {
-                                                                            keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
+                                                                            keyUUID = obj.UUID,
+                                                                            nameStr = obj.Name,
+                                                                            ownerUUID = obj.OwnerID,
+                                                                            posVector = obj.AbsolutePosition,
+                                                                            rotQuat = obj.GetWorldRotation(),
+                                                                            velVector = obj.Velocity,
+                                                                            colliderType = 0,
+                                                                            groupUUID = obj.GroupID
                                                                         };
                                             colliding.Add(detobj);
                                         }
@@ -4222,15 +4028,27 @@ namespace Aurora.Region
                                     {
                                         if (av.LocalId == localId)
                                         {
-                                            if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
+                                            if (
+                                                m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) ||
+                                                m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
                                             {
-                                                bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1, out data);
+                                                bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1,
+                                                                                                                out data);
                                                 //If it is 1, it is to accept ONLY collisions from this avatar
                                                 if (found)
                                                 {
                                                     DetectedObject detobj = new DetectedObject
                                                                                 {
-                                                                                    keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                                    keyUUID = av.UUID,
+                                                                                    nameStr = av.ControllingClient.Name,
+                                                                                    ownerUUID = av.UUID,
+                                                                                    posVector = av.AbsolutePosition,
+                                                                                    rotQuat = av.Rotation,
+                                                                                    velVector = av.Velocity,
+                                                                                    colliderType = 0,
+                                                                                    groupUUID =
+                                                                                        av.ControllingClient
+                                                                                          .ActiveGroupId
                                                                                 };
                                                     colliding.Add(detobj);
                                                 }
@@ -4241,13 +4059,23 @@ namespace Aurora.Region
                                             }
                                             else
                                             {
-                                                bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1, out data);
+                                                bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1,
+                                                                                                                out data);
                                                 //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
                                                 if (!found)
                                                 {
                                                     DetectedObject detobj = new DetectedObject
                                                                                 {
-                                                                                    keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                                    keyUUID = av.UUID,
+                                                                                    nameStr = av.ControllingClient.Name,
+                                                                                    ownerUUID = av.UUID,
+                                                                                    posVector = av.AbsolutePosition,
+                                                                                    rotQuat = av.Rotation,
+                                                                                    velVector = av.Velocity,
+                                                                                    colliderType = 0,
+                                                                                    groupUUID =
+                                                                                        av.ControllingClient
+                                                                                          .ActiveGroupId
                                                                                 };
                                                     colliding.Add(detobj);
                                                 }
@@ -4313,7 +4141,8 @@ namespace Aurora.Region
                                 string data = "";
                                 if (obj != null)
                                 {
-                                    if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.Name))
+                                    if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) ||
+                                        m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.Name))
                                     {
                                         bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1, out data);
                                         //If it is 1, it is to accept ONLY collisions from this object
@@ -4321,7 +4150,14 @@ namespace Aurora.Region
                                         {
                                             DetectedObject detobj = new DetectedObject
                                                                         {
-                                                                            keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
+                                                                            keyUUID = obj.UUID,
+                                                                            nameStr = obj.Name,
+                                                                            ownerUUID = obj.OwnerID,
+                                                                            posVector = obj.AbsolutePosition,
+                                                                            rotQuat = obj.GetWorldRotation(),
+                                                                            velVector = obj.Velocity,
+                                                                            colliderType = 0,
+                                                                            groupUUID = obj.GroupID
                                                                         };
                                             colliding.Add(detobj);
                                         }
@@ -4338,7 +4174,14 @@ namespace Aurora.Region
                                         {
                                             DetectedObject detobj = new DetectedObject
                                                                         {
-                                                                            keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
+                                                                            keyUUID = obj.UUID,
+                                                                            nameStr = obj.Name,
+                                                                            ownerUUID = obj.OwnerID,
+                                                                            posVector = obj.AbsolutePosition,
+                                                                            rotQuat = obj.GetWorldRotation(),
+                                                                            velVector = obj.Velocity,
+                                                                            colliderType = 0,
+                                                                            groupUUID = obj.GroupID
                                                                         };
                                             colliding.Add(detobj);
                                         }
@@ -4349,7 +4192,8 @@ namespace Aurora.Region
                                     IScenePresence av = ParentGroup.Scene.GetScenePresence(localId);
                                     if (av != null)
                                     {
-                                        if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
+                                        if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) ||
+                                            m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
                                         {
                                             bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1, out data);
                                             //If it is 1, it is to accept ONLY collisions from this avatar
@@ -4357,7 +4201,15 @@ namespace Aurora.Region
                                             {
                                                 DetectedObject detobj = new DetectedObject
                                                                             {
-                                                                                keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                                keyUUID = av.UUID,
+                                                                                nameStr = av.ControllingClient.Name,
+                                                                                ownerUUID = av.UUID,
+                                                                                posVector = av.AbsolutePosition,
+                                                                                rotQuat = av.Rotation,
+                                                                                velVector = av.Velocity,
+                                                                                colliderType = 0,
+                                                                                groupUUID =
+                                                                                    av.ControllingClient.ActiveGroupId
                                                                             };
                                                 colliding.Add(detobj);
                                             }
@@ -4374,7 +4226,15 @@ namespace Aurora.Region
                                             {
                                                 DetectedObject detobj = new DetectedObject
                                                                             {
-                                                                                keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                                keyUUID = av.UUID,
+                                                                                nameStr = av.ControllingClient.Name,
+                                                                                ownerUUID = av.UUID,
+                                                                                posVector = av.AbsolutePosition,
+                                                                                rotQuat = av.Rotation,
+                                                                                velVector = av.Velocity,
+                                                                                colliderType = 0,
+                                                                                groupUUID =
+                                                                                    av.ControllingClient.ActiveGroupId
                                                                             };
                                                 colliding.Add(detobj);
                                             }
@@ -4439,7 +4299,8 @@ namespace Aurora.Region
                                 string data = "";
                                 if (obj != null)
                                 {
-                                    if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.Name))
+                                    if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) ||
+                                        m_parentGroup.RootPart.CollisionFilter.ContainsValue(obj.Name))
                                     {
                                         bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1, out data);
                                         //If it is 1, it is to accept ONLY collisions from this object
@@ -4447,7 +4308,14 @@ namespace Aurora.Region
                                         {
                                             DetectedObject detobj = new DetectedObject
                                                                         {
-                                                                            keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
+                                                                            keyUUID = obj.UUID,
+                                                                            nameStr = obj.Name,
+                                                                            ownerUUID = obj.OwnerID,
+                                                                            posVector = obj.AbsolutePosition,
+                                                                            rotQuat = obj.GetWorldRotation(),
+                                                                            velVector = obj.Velocity,
+                                                                            colliderType = 0,
+                                                                            groupUUID = obj.GroupID
                                                                         };
                                             colliding.Add(detobj);
                                         }
@@ -4464,7 +4332,14 @@ namespace Aurora.Region
                                         {
                                             DetectedObject detobj = new DetectedObject
                                                                         {
-                                                                            keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
+                                                                            keyUUID = obj.UUID,
+                                                                            nameStr = obj.Name,
+                                                                            ownerUUID = obj.OwnerID,
+                                                                            posVector = obj.AbsolutePosition,
+                                                                            rotQuat = obj.GetWorldRotation(),
+                                                                            velVector = obj.Velocity,
+                                                                            colliderType = 0,
+                                                                            groupUUID = obj.GroupID
                                                                         };
                                             colliding.Add(detobj);
                                         }
@@ -4477,15 +4352,27 @@ namespace Aurora.Region
                                     {
                                         if (av.LocalId == localId)
                                         {
-                                            if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
+                                            if (
+                                                m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) ||
+                                                m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
                                             {
-                                                bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1, out data);
+                                                bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1,
+                                                                                                                out data);
                                                 //If it is 1, it is to accept ONLY collisions from this avatar
                                                 if (found)
                                                 {
                                                     DetectedObject detobj = new DetectedObject
                                                                                 {
-                                                                                    keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                                    keyUUID = av.UUID,
+                                                                                    nameStr = av.ControllingClient.Name,
+                                                                                    ownerUUID = av.UUID,
+                                                                                    posVector = av.AbsolutePosition,
+                                                                                    rotQuat = av.Rotation,
+                                                                                    velVector = av.Velocity,
+                                                                                    colliderType = 0,
+                                                                                    groupUUID =
+                                                                                        av.ControllingClient
+                                                                                          .ActiveGroupId
                                                                                 };
                                                     colliding.Add(detobj);
                                                 }
@@ -4496,13 +4383,23 @@ namespace Aurora.Region
                                             }
                                             else
                                             {
-                                                bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1, out data);
+                                                bool found = m_parentGroup.RootPart.CollisionFilter.TryGetValue(1,
+                                                                                                                out data);
                                                 //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
                                                 if (!found)
                                                 {
                                                     DetectedObject detobj = new DetectedObject
                                                                                 {
-                                                                                    keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                                    keyUUID = av.UUID,
+                                                                                    nameStr = av.ControllingClient.Name,
+                                                                                    ownerUUID = av.UUID,
+                                                                                    posVector = av.AbsolutePosition,
+                                                                                    rotQuat = av.Rotation,
+                                                                                    velVector = av.Velocity,
+                                                                                    colliderType = 0,
+                                                                                    groupUUID =
+                                                                                        av.ControllingClient
+                                                                                          .ActiveGroupId
                                                                                 };
                                                     colliding.Add(detobj);
                                                 }
@@ -4559,7 +4456,15 @@ namespace Aurora.Region
                                                           where localId == 0
                                                           select new DetectedObject
                                                                      {
-                                                                         keyUUID = UUID.Zero, nameStr = "", ownerUUID = UUID.Zero, posVector = m_parentGroup.RootPart.AbsolutePosition, rotQuat = Quaternion.Identity, velVector = Vector3.Zero, colliderType = 0, groupUUID = UUID.Zero
+                                                                         keyUUID = UUID.Zero,
+                                                                         nameStr = "",
+                                                                         ownerUUID = UUID.Zero,
+                                                                         posVector =
+                                                                             m_parentGroup.RootPart.AbsolutePosition,
+                                                                         rotQuat = Quaternion.Identity,
+                                                                         velVector = Vector3.Zero,
+                                                                         colliderType = 0,
+                                                                         groupUUID = UUID.Zero
                                                                      }).ToList();
 
                         if (colliding.Count > 0)
@@ -4647,8 +4552,9 @@ namespace Aurora.Region
                                 }
                                 if (this.PassCollisions == PASS_ALWAYS)
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptLandColliding(this.ParentGroup.RootPart,
-                                                                                            LandCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptLandColliding(
+                                        this.ParentGroup.RootPart,
+                                        LandCollidingMessage);
                                 }
                                 else if (((this.ScriptEvents & scriptEvents.land_collision) == 0) &&
                                          this.PassCollisions == PASS_IF_NOT_HANDLED)
@@ -4670,7 +4576,15 @@ namespace Aurora.Region
                                                           where localId == 0
                                                           select new DetectedObject
                                                                      {
-                                                                         keyUUID = UUID.Zero, nameStr = "", ownerUUID = UUID.Zero, posVector = m_parentGroup.RootPart.AbsolutePosition, rotQuat = Quaternion.Identity, velVector = Vector3.Zero, colliderType = 0, groupUUID = UUID.Zero
+                                                                         keyUUID = UUID.Zero,
+                                                                         nameStr = "",
+                                                                         ownerUUID = UUID.Zero,
+                                                                         posVector =
+                                                                             m_parentGroup.RootPart.AbsolutePosition,
+                                                                         rotQuat = Quaternion.Identity,
+                                                                         velVector = Vector3.Zero,
+                                                                         colliderType = 0,
+                                                                         groupUUID = UUID.Zero
                                                                      }).ToList();
 
                         if (colliding.Count > 0)
@@ -4714,7 +4628,9 @@ namespace Aurora.Region
 
         public void PhysicsOutOfBounds(Vector3 pos)
         {
-            MainConsole.Instance.Error("[Physics]: Physical object " + Name + ", localID " + LocalId + " went out of bounds at " + pos + ".  Stopping at " + AbsolutePosition + " and making non-physical.");
+            MainConsole.Instance.Error("[Physics]: Physical object " + Name + ", localID " + LocalId +
+                                       " went out of bounds at " + pos + ".  Stopping at " + AbsolutePosition +
+                                       " and making non-physical.");
             lock (ParentGroup.Scene.PhysicsReturns)
             {
                 if (!ParentGroup.Scene.PhysicsReturns.Contains(ParentGroup))
@@ -4751,9 +4667,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Resize this part.
+        ///     Resize this part.
         /// </summary>
-        /// <param name = "scale"></param>
+        /// <param name="scale"></param>
         public void Resize(Vector3 scale)
         {
             Scale = scale;
@@ -4768,9 +4684,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Check to see whether the given flags make it a terse update
+        ///     Check to see whether the given flags make it a terse update
         /// </summary>
-        /// <param name = "flags"></param>
+        /// <param name="flags"></param>
         /// <returns></returns>
         private bool IsTerse(PrimUpdateFlags flags)
         {
@@ -4817,14 +4733,14 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Tell us if this object has cut, hollow, dimple, and other factors affecting the number of faces
+        ///     Tell us if this object has cut, hollow, dimple, and other factors affecting the number of faces
         /// </summary>
-        /// <param name = "primType"></param>
-        /// <param name = "shape"></param>
-        /// <param name = "hasCut"></param>
-        /// <param name = "hasHollow"></param>
-        /// <param name = "hasDimple"></param>
-        /// <param name = "hasProfileCut"></param>
+        /// <param name="primType"></param>
+        /// <param name="shape"></param>
+        /// <param name="hasCut"></param>
+        /// <param name="hasHollow"></param>
+        /// <param name="hasDimple"></param>
+        /// <param name="hasProfileCut"></param>
         protected static void HasCutHollowDimpleProfileCut(PrimType primType, PrimitiveBaseShape shape, out bool hasCut,
                                                            out bool hasHollow,
                                                            out bool hasDimple, out bool hasProfileCut)
@@ -4856,9 +4772,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Serialize this part to xml.
+        ///     Serialize this part to xml.
         /// </summary>
-        /// <param name = "xmlWriter"></param>
+        /// <param name="xmlWriter"></param>
         public void ToXml(XmlTextWriter xmlWriter)
         {
             SceneEntitySerializer.SceneObjectSerializer.ToXmlFormat(this, xmlWriter);
@@ -4951,10 +4867,10 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Update the texture entry for this part.
+        ///     Update the texture entry for this part.
         /// </summary>
-        /// <param name = "textureEntry"></param>
-        /// <param name = "sendChangedEvent"></param>
+        /// <param name="textureEntry"></param>
+        /// <param name="sendChangedEvent"></param>
         public void UpdateTextureEntry(byte[] textureEntry, bool sendChangedEvent)
         {
             bool same = true;
@@ -5103,7 +5019,7 @@ namespace Aurora.Region
                         return;
                     }
 
-                    Quaternion rot = Quaternion.Slerp(GetRotationOffset(), APIDTarget, 1.0f / (float)APIDIterations);
+                    Quaternion rot = Quaternion.Slerp(GetRotationOffset(), APIDTarget, 1.0f/(float) APIDIterations);
                     UpdateRotation(rot);
 
                     APIDIterations--;

@@ -46,22 +46,22 @@ using System.Text;
 namespace Aurora.Simulation.Base
 {
     /// <summary>
-    ///   Starting class for the Aurora Server
+    ///     Starting class for the Aurora Server
     /// </summary>
     public class BaseApplication
     {
         /// <summary>
-        ///   Save Crashes in the bin/crashes folder.  Configurable with m_crashDir
+        ///     Save Crashes in the bin/crashes folder.  Configurable with m_crashDir
         /// </summary>
         public static bool m_saveCrashDumps;
 
         /// <summary>
-        ///   Loader of configuration files
+        ///     Loader of configuration files
         /// </summary>
         private static readonly ConfigurationLoader m_configLoader = new ConfigurationLoader();
 
         /// <summary>
-        ///   Directory to save crash reports to.  Relative to bin/
+        ///     Directory to save crash reports to.  Relative to bin/
         /// </summary>
         public static string m_crashDir = "crashes";
 
@@ -140,10 +140,11 @@ namespace Aurora.Simulation.Base
             bool Aurora_log = (File.Exists(Path.Combine(Util.configDir(), "Aurora.log")));
             bool Aurora_Server_log = (File.Exists(Path.Combine(Util.configDir(), "Aurora.Server.log")));
             bool isAuroraExe = System.AppDomain.CurrentDomain.FriendlyName == "Aurora.exe" ||
-                System.AppDomain.CurrentDomain.FriendlyName == "Aurora.vshost.exe";
+                               System.AppDomain.CurrentDomain.FriendlyName == "Aurora.vshost.exe";
 
-            if (requested || !(isAuroraExe ?
-                Aurora_log : Aurora_Server_log))
+            if (requested || !(isAuroraExe
+                                   ? Aurora_log
+                                   : Aurora_Server_log))
             {
                 string resp = "no";
                 if (!requested)
@@ -151,7 +152,8 @@ namespace Aurora.Simulation.Base
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("\n\n*************Required Configuration files not found.*************");
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("\n\n   This is your first time running Aurora, if not and you already configured your " +
+                    Console.WriteLine(
+                        "\n\n   This is your first time running Aurora, if not and you already configured your " +
                         "*ini.example files, please ignore this warning and press enter; " +
                         "Otherwise type yes and Aurora will guide you trough configuration files.\n\nRemember, " +
                         "these file names are Case Sensitive in Linux and Proper Cased.\n1. ./Aurora.ini\nand\n2. " +
@@ -206,7 +208,8 @@ namespace Aurora.Simulation.Base
                         dbType = ReadLine("Choose 1 or 2", dbType);
                         if (dbType == "2")
                         {
-                            Console.WriteLine("Note: this setup does not automatically create a MySQL installation for you.\n" +
+                            Console.WriteLine(
+                                "Note: this setup does not automatically create a MySQL installation for you.\n" +
                                 "You must install MySQL on your own");
 
                             dbSchema = ReadLine("MySQL database name for your region", dbSchema);
@@ -223,30 +226,33 @@ namespace Aurora.Simulation.Base
                         gridName = ReadLine("Name of your Aurora-Sim Grid", gridName);
 
                         welcomeMessage = "Welcome to " + gridName + ", <USERNAME>!";
-                        welcomeMessage = ReadLine("Welcome Message to show during login (putting <USERNAME> into the " + 
-                            "welcome message will insert the user's name)", welcomeMessage);
+                        welcomeMessage = ReadLine("Welcome Message to show during login (putting <USERNAME> into the " +
+                                                  "welcome message will insert the user's name)", welcomeMessage);
 
                         allowAnonLogin = ReadLine("Create accounts automatically when users log in " +
-                            "(you don't have to create all accounts manually or have a web interface then)", allowAnonLogin);
+                                                  "(you don't have to create all accounts manually or have a web interface then)",
+                                                  allowAnonLogin);
                     }
 
                     if (mode == "2")
-                        gridIPAddress = ReadLine("The external domain name or IP address of the grid server you wish to connect to",
-                            gridIPAddress);
+                        gridIPAddress =
+                            ReadLine("The external domain name or IP address of the grid server you wish to connect to",
+                                     gridIPAddress);
 
                     //Data.ini setup
                     if (mode == "1")
                     {
                         string folder = isAuroraExe ? "Configuration/" : "AuroraServerConfiguration/";
                         MakeSureExists(folder + "Data/Data.ini");
-                        IniConfigSource data_ini = new IniConfigSource(folder + "Data/Data.ini", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource data_ini = new IniConfigSource(folder + "Data/Data.ini",
+                                                                       Nini.Ini.IniFileType.AuroraStyle);
                         IConfig conf = data_ini.AddConfig("DataFile");
                         if (dbType == "1")
                             conf.Set("Include-SQLite", folder + "Data/SQLite.ini");
                         else
                             conf.Set("Include-MySQL", folder + "Data/MySQL.ini");
 
-                        if(isAuroraExe)
+                        if (isAuroraExe)
                             conf.Set("Include-FileBased", "Configuration/Data/FileBased.ini");
 
                         conf = data_ini.AddConfig("AuroraConnectors");
@@ -257,19 +263,23 @@ namespace Aurora.Simulation.Base
                         Console.WriteLine("Your Data.ini has been successfully configured");
                         Console.ResetColor();
 
-                        if (dbType == "2")//MySQL setup
+                        if (dbType == "2") //MySQL setup
                         {
                             MakeSureExists(folder + "Data/MySQL.ini");
-                            IniConfigSource mysql_ini = new IniConfigSource(folder + "Data/MySQL.ini", Nini.Ini.IniFileType.AuroraStyle);
-                            IniConfigSource mysql_ini_example = new IniConfigSource(folder + "Data/MySQL.ini.example", Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource mysql_ini = new IniConfigSource(folder + "Data/MySQL.ini",
+                                                                            Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource mysql_ini_example = new IniConfigSource(folder + "Data/MySQL.ini.example",
+                                                                                    Nini.Ini.IniFileType.AuroraStyle);
                             foreach (IConfig config in mysql_ini_example.Configs)
                             {
                                 IConfig newConfig = mysql_ini.AddConfig(config.Name);
                                 foreach (string key in config.GetKeys())
                                 {
                                     if (key == "ConnectionString")
-                                        newConfig.Set(key, string.Format("\"Data Source={0};Port=3306;Database={1};User ID={2};Password={3};\"",
-                                            dbSource, dbSchema, dbUser, dbPasswd));
+                                        newConfig.Set(key,
+                                                      string.Format(
+                                                          "\"Data Source={0};Port=3306;Database={1};User ID={2};Password={3};\"",
+                                                          dbSource, dbSchema, dbUser, dbPasswd));
                                     else
                                         newConfig.Set(key, config.Get(key));
                                 }
@@ -284,7 +294,8 @@ namespace Aurora.Simulation.Base
                     if (isAuroraExe)
                     {
                         MakeSureExists("Configuration/Main.ini");
-                        IniConfigSource main_ini = new IniConfigSource("Configuration/Main.ini", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource main_ini = new IniConfigSource("Configuration/Main.ini",
+                                                                       Nini.Ini.IniFileType.AuroraStyle);
 
                         IConfig conf = main_ini.AddConfig("Architecture");
                         if (mode == "1")
@@ -301,8 +312,12 @@ namespace Aurora.Simulation.Base
                         if (mode == "1")
                         {
                             MakeSureExists("Configuration/Standalone/StandaloneCommon.ini");
-                            IniConfigSource standalone_ini = new IniConfigSource("Configuration/Standalone/StandaloneCommon.ini", Nini.Ini.IniFileType.AuroraStyle);
-                            IniConfigSource standalone_ini_example = new IniConfigSource("Configuration/Standalone/StandaloneCommon.ini.example", Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource standalone_ini =
+                                new IniConfigSource("Configuration/Standalone/StandaloneCommon.ini",
+                                                    Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource standalone_ini_example =
+                                new IniConfigSource("Configuration/Standalone/StandaloneCommon.ini.example",
+                                                    Nini.Ini.IniFileType.AuroraStyle);
                             foreach (IConfig config in standalone_ini_example.Configs)
                             {
                                 IConfig newConfig = standalone_ini.AddConfig(config.Name);
@@ -335,7 +350,8 @@ namespace Aurora.Simulation.Base
                         else
                         {
                             MakeSureExists("Configuration/Grid/AuroraGridCommon.ini");
-                            IniConfigSource grid_ini = new IniConfigSource("Configuration/Grid/AuroraGridCommon.ini", Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource grid_ini = new IniConfigSource("Configuration/Grid/AuroraGridCommon.ini",
+                                                                           Nini.Ini.IniFileType.AuroraStyle);
 
                             conf = grid_ini.AddConfig("Includes");
                             conf.Set("Include-Grid", "Configuration/Grid/Grid.ini");
@@ -346,7 +362,7 @@ namespace Aurora.Simulation.Base
                             conf.Set("GridServerURI", "http://" + gridIPAddress + ":8012/grid/");
                             conf.Set("InventoryServerURI", "http://" + gridIPAddress + ":8013/inventory/");
                             conf.Set("SyncMessageServerURI", "http://" + gridIPAddress + ":8014/syncmessage/");
-                            conf.Set("InstantMessageServerURI", "http://" + gridIPAddress + ":8014/im/"); 
+                            conf.Set("InstantMessageServerURI", "http://" + gridIPAddress + ":8014/im/");
                             conf.Set("UserAccountServerURI", "http://" + gridIPAddress + ":8015/user/");
                             conf.Set("CurrencyServerURI", "http://" + gridIPAddress + ":8002/currency/");
 
@@ -359,8 +375,11 @@ namespace Aurora.Simulation.Base
                     if (!isAuroraExe)
                     {
                         MakeSureExists("AuroraServerConfiguration/Login.ini");
-                        IniConfigSource login_ini = new IniConfigSource("AuroraServerConfiguration/Login.ini", Nini.Ini.IniFileType.AuroraStyle);
-                        IniConfigSource login_ini_example = new IniConfigSource("AuroraServerConfiguration/Login.ini.example", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource login_ini = new IniConfigSource("AuroraServerConfiguration/Login.ini",
+                                                                        Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource login_ini_example =
+                            new IniConfigSource("AuroraServerConfiguration/Login.ini.example",
+                                                Nini.Ini.IniFileType.AuroraStyle);
                         foreach (IConfig config in login_ini_example.Configs)
                         {
                             IConfig newConfig = login_ini.AddConfig(config.Name);
@@ -380,7 +399,9 @@ namespace Aurora.Simulation.Base
                         Console.ResetColor();
 
                         MakeSureExists("AuroraServerConfiguration/GridInfoService.ini");
-                        IniConfigSource grid_info_ini = new IniConfigSource("AuroraServerConfiguration/GridInfoService.ini", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource grid_info_ini =
+                            new IniConfigSource("AuroraServerConfiguration/GridInfoService.ini",
+                                                Nini.Ini.IniFileType.AuroraStyle);
                         IConfig conf = grid_info_ini.AddConfig("GridInfoService");
                         conf.Set("GridInfoInHandlerPort", 8002);
                         conf.Set("login", "http://" + gridIPAddress + ":8002");
@@ -414,7 +435,8 @@ namespace Aurora.Simulation.Base
                         Console.ResetColor();
                     }
                     Console.WriteLine("\n====================================================================\n");
-                    Console.WriteLine("If you ever want to rerun this configurator, you can type \"run configurator\" into the console to bring this prompt back up.");
+                    Console.WriteLine(
+                        "If you ever want to rerun this configurator, you can type \"run configurator\" into the console to bring this prompt back up.");
                 }
             }
         }
@@ -480,10 +502,10 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        ///   Load the configuration for the Application
+        ///     Load the configuration for the Application
         /// </summary>
-        /// <param name = "configSource"></param>
-        /// <param name = "defaultIniFile"></param>
+        /// <param name="configSource"></param>
+        /// <param name="defaultIniFile"></param>
         /// <returns></returns>
         private static IConfigSource Configuration(IConfigSource configSource, string defaultIniFile)
         {
@@ -493,10 +515,10 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        ///   Global exception handler -- all unhandlet exceptions end up here :)
+        ///     Global exception handler -- all unhandlet exceptions end up here :)
         /// </summary>
-        /// <param name = "sender"></param>
-        /// <param name = "e"></param>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (_IsHandlingException)
@@ -532,10 +554,10 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        ///   Deal with sending the error to the error reporting service and saving the dump to the harddrive if needed
+        ///     Deal with sending the error to the error reporting service and saving the dump to the harddrive if needed
         /// </summary>
-        /// <param name = "msg"></param>
-        /// <param name = "ex"></param>
+        /// <param name="msg"></param>
+        /// <param name="ex"></param>
         public static void handleException(string msg, Exception ex)
         {
             if (m_saveCrashDumps)

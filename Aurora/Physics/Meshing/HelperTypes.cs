@@ -115,8 +115,6 @@ public class Vertex : IComparable<Vertex>
                         };
 
 
-
-
         return v2;
     }
 

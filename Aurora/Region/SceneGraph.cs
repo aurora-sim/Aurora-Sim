@@ -37,8 +37,8 @@ using System.Threading;
 namespace Aurora.Region
 {
     /// <summary>
-    /// This class used to be called InnerScene and may not yet truly be a SceneGraph.  The non scene graph components
-    /// should be migrated out over time.
+    ///     This class used to be called InnerScene and may not yet truly be a SceneGraph.  The non scene graph components
+    ///     should be migrated out over time.
     /// </summary>
     public class SceneGraph : ISceneGraph
     {
@@ -52,8 +52,8 @@ namespace Aurora.Region
         protected string m_DefaultObjectName = "Primitive";
 
         /// <summary>
-        /// The last allocated local prim id.  When a new local id is requested, the next number in the sequence is
-        /// dispensed.
+        ///     The last allocated local prim id.  When a new local id is requested, the next number in the sequence is
+        ///     dispensed.
         /// </summary>
         protected uint m_lastAllocatedLocalId = 720000;
 
@@ -68,10 +68,7 @@ namespace Aurora.Region
         public PhysicsScene PhysicsScene
         {
             get { return _PhyScene; }
-            set
-            {
-                _PhyScene = value;
-            }
+            set { _PhyScene = value; }
         }
 
         #endregion
@@ -81,7 +78,7 @@ namespace Aurora.Region
         protected internal SceneGraph(IScene parent, RegionInfo regInfo)
         {
             Random random = new Random();
-            m_lastAllocatedLocalId = (uint)(random.NextDouble() * (uint.MaxValue / 2)) + uint.MaxValue / 4;
+            m_lastAllocatedLocalId = (uint) (random.NextDouble()*(uint.MaxValue/2)) + uint.MaxValue/4;
             m_parentScene = parent;
             m_regInfo = regInfo;
 
@@ -117,20 +114,21 @@ namespace Aurora.Region
 
             // PhysX does this (runs in the background).
 
-            if(_PhyScene != null && _PhyScene.IsThreaded)
+            if (_PhyScene != null && _PhyScene.IsThreaded)
             {
                 _PhyScene.GetResults();
             }
         }
 
-        private readonly object m_taintedPresencesLock = new object ();
-        private readonly List<IScenePresence> m_taintedPresences = new List<IScenePresence> ();
+        private readonly object m_taintedPresencesLock = new object();
+        private readonly List<IScenePresence> m_taintedPresences = new List<IScenePresence>();
+
         public void TaintPresenceForUpdate(IScenePresence presence, PresenceTaint taint)
         {
             lock (m_taintedPresencesLock)
             {
-                if (!presence.IsTainted)//We ONLY set the IsTainted under this lock, so we can trust it
-                    m_taintedPresences.Add (presence);
+                if (!presence.IsTainted) //We ONLY set the IsTainted under this lock, so we can trust it
+                    m_taintedPresences.Add(presence);
                 presence.Taints |= taint;
             }
         }
@@ -144,16 +142,17 @@ namespace Aurora.Region
                 m_taintedPresences.CopyTo(presences);
                 m_taintedPresences.Clear();
             }
-            foreach(IScenePresence presence in presences)
+            foreach (IScenePresence presence in presences)
             {
-                presence.IsTainted = false;//We set this first so that it is cleared out, but also so that the method can re-taint us
-                presence.Update ();
+                presence.IsTainted = false;
+                    //We set this first so that it is cleared out, but also so that the method can re-taint us
+                presence.Update();
             }
         }
 
         protected internal void UpdatePhysics(double elapsed)
         {
-            if(_PhyScene == null)
+            if (_PhyScene == null)
                 return;
             lock (m_syncRoot)
             {
@@ -176,7 +175,7 @@ namespace Aurora.Region
                 //
                 // Therefore, JointMoved and JointDeactivated events will be fired as a result of the following Simulate().
 
-                _PhyScene.Simulate((float)elapsed);
+                _PhyScene.Simulate((float) elapsed);
             }
         }
 
@@ -188,7 +187,7 @@ namespace Aurora.Region
             coarseLocations = new List<Vector3>();
             avatarUUIDs = new List<UUID>();
 
-            List<IScenePresence> presences = GetScenePresences ();
+            List<IScenePresence> presences = GetScenePresences();
             for (int i = 0; i < Math.Min(presences.Count, maxLocations); i++)
             {
                 IScenePresence sp = presences[i];
@@ -199,7 +198,7 @@ namespace Aurora.Region
                 if (sp.ParentID != UUID.Zero)
                 {
                     // sitting avatar
-                    ISceneChildEntity sop = m_parentScene.GetSceneObjectPart (sp.ParentID);
+                    ISceneChildEntity sop = m_parentScene.GetSceneObjectPart(sp.ParentID);
                     if (sop != null)
                     {
                         coarseLocations.Add(sop.AbsolutePosition + sp.OffsetPosition);
@@ -220,7 +219,7 @@ namespace Aurora.Region
                 }
             }
 
-            if(m_oldCoarseLocations.Count == coarseLocations.Count)
+            if (m_oldCoarseLocations.Count == coarseLocations.Count)
             {
                 List<UUID> foundAvies = new List<UUID>(m_oldAvatarUUIDs);
                 foreach (UUID t in avatarUUIDs)
@@ -256,7 +255,7 @@ namespace Aurora.Region
         {
             if (primId != UUID.Zero)
             {
-                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (primId);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart(primId);
                 if (part != null)
                     if (m_parentScene.Permissions.CanEditObject(part.UUID, remoteClient.AgentId))
                         part.Undo();
@@ -267,7 +266,7 @@ namespace Aurora.Region
         {
             if (primId != UUID.Zero)
             {
-                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (primId);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart(primId);
                 if (part != null)
                     if (m_parentScene.Permissions.CanEditObject(part.UUID, remoteClient.AgentId))
                         part.Redo();
@@ -281,24 +280,24 @@ namespace Aurora.Region
             if (TryGetEntity(LocalID, out entity))
             {
                 if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
-                    if (((ISceneEntity)entity).OwnerID == remoteClient.AgentId)
-                        ((ISceneEntity)entity).SetGroup(GroupID, remoteClient.AgentId, true);
+                    if (((ISceneEntity) entity).OwnerID == remoteClient.AgentId)
+                        ((ISceneEntity) entity).SetGroup(GroupID, remoteClient.AgentId, true);
             }
         }
 
         /// <summary>
-        /// Add a presence to the scene
+        ///     Add a presence to the scene
         /// </summary>
         /// <param name="presence"></param>
-        protected internal void AddScenePresence (IScenePresence presence)
+        protected internal void AddScenePresence(IScenePresence presence)
         {
-            AddEntity (presence, true);
+            AddEntity(presence, true);
         }
 
         /// <summary>
-        /// Remove a presence from the scene
+        ///     Remove a presence from the scene
         /// </summary>
-        protected internal void RemoveScenePresence (IEntity agent)
+        protected internal void RemoveScenePresence(IEntity agent)
         {
             if (!Entities.Remove(agent))
             {
@@ -314,39 +313,39 @@ namespace Aurora.Region
         #region Get Methods
 
         /// <summary>
-        /// Get a reference to the scene presence list. Changes to the list will be done in a copy
-        /// There is no guarantee that presences will remain in the scene after the list is returned.
-        /// This list should remain private to SceneGraph. Callers wishing to iterate should instead
-        /// pass a delegate to ForEachScenePresence.
+        ///     Get a reference to the scene presence list. Changes to the list will be done in a copy
+        ///     There is no guarantee that presences will remain in the scene after the list is returned.
+        ///     This list should remain private to SceneGraph. Callers wishing to iterate should instead
+        ///     pass a delegate to ForEachScenePresence.
         /// </summary>
         /// <returns></returns>
-        public List<IScenePresence> GetScenePresences ()
+        public List<IScenePresence> GetScenePresences()
         {
-            return Entities.GetPresences ();
+            return Entities.GetPresences();
         }
 
         /// <summary>
-        /// Request a scene presence by UUID. Fast, indexed lookup.
+        ///     Request a scene presence by UUID. Fast, indexed lookup.
         /// </summary>
         /// <param name="agentID"></param>
         /// <returns>null if the presence was not found</returns>
-        protected internal IScenePresence GetScenePresence (UUID agentID)
+        protected internal IScenePresence GetScenePresence(UUID agentID)
         {
             IScenePresence sp;
-            Entities.TryGetPresenceValue (agentID, out sp);
+            Entities.TryGetPresenceValue(agentID, out sp);
             return sp;
         }
 
         /// <summary>
-        /// Request the scene presence by name.
-        /// NOTE: Depricated, use the ScenePresence GetScenePresence (string Name) instead!
+        ///     Request the scene presence by name.
+        ///     NOTE: Depricated, use the ScenePresence GetScenePresence (string Name) instead!
         /// </summary>
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
         /// <returns>null if the presence was not found</returns>
-        public IScenePresence GetScenePresence (string firstName, string lastName)
+        public IScenePresence GetScenePresence(string firstName, string lastName)
         {
-            List<IScenePresence> presences = GetScenePresences ();
+            List<IScenePresence> presences = GetScenePresences();
 #if (!ISWIN)
             foreach (IScenePresence presence in presences)
             {
@@ -359,13 +358,13 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Request the scene presence by localID.
+        ///     Request the scene presence by localID.
         /// </summary>
         /// <param name="localID"></param>
         /// <returns>null if the presence was not found</returns>
-        public IScenePresence GetScenePresence (uint localID)
+        public IScenePresence GetScenePresence(uint localID)
         {
-            List<IScenePresence> presences = GetScenePresences ();
+            List<IScenePresence> presences = GetScenePresences();
 #if (!ISWIN)
             foreach (IScenePresence presence in presences)
             {
@@ -377,12 +376,12 @@ namespace Aurora.Region
 #endif
         }
 
-        protected internal bool TryGetScenePresence (UUID agentID, out IScenePresence avatar)
+        protected internal bool TryGetScenePresence(UUID agentID, out IScenePresence avatar)
         {
-            return Entities.TryGetPresenceValue (agentID, out avatar);
+            return Entities.TryGetPresenceValue(agentID, out avatar);
         }
 
-        protected internal bool TryGetAvatarByName (string name, out IScenePresence avatar)
+        protected internal bool TryGetAvatarByName(string name, out IScenePresence avatar)
         {
 #if (!ISWIN)
             avatar = null;
@@ -395,13 +394,15 @@ namespace Aurora.Region
                 }
             }
 #else
-            avatar = GetScenePresences().FirstOrDefault(presence => String.Compare(name, presence.ControllingClient.Name, true) == 0);
+            avatar =
+                GetScenePresences()
+                    .FirstOrDefault(presence => String.Compare(name, presence.ControllingClient.Name, true) == 0);
 #endif
             return (avatar != null);
         }
 
         /// <summary>
-        /// Get a scene object group that contains the prim with the given uuid
+        ///     Get a scene object group that contains the prim with the given uuid
         /// </summary>
         /// <param name="hray"></param>
         /// <param name="frontFacesOnly"></param>
@@ -412,12 +413,12 @@ namespace Aurora.Region
             // Primitive Ray Tracing
             float closestDistance = 280f;
             EntityIntersection result = new EntityIntersection();
-            ISceneEntity[] EntityList = Entities.GetEntities (hray.Origin, closestDistance);
+            ISceneEntity[] EntityList = Entities.GetEntities(hray.Origin, closestDistance);
             foreach (ISceneEntity ent in EntityList)
             {
                 if (ent is SceneObjectGroup)
                 {
-                    SceneObjectGroup reportingG = (SceneObjectGroup)ent;
+                    SceneObjectGroup reportingG = (SceneObjectGroup) ent;
                     EntityIntersection inter = reportingG.TestIntersection(hray, frontFacesOnly, faceCenters);
                     if (inter.HitTF && inter.distance < closestDistance)
                     {
@@ -430,10 +431,11 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Gets a list of scene object group that intersect with the given ray
+        ///     Gets a list of scene object group that intersect with the given ray
         /// </summary>
         public List<EntityIntersection> GetIntersectingPrims(Ray hray, float length, int count,
-            bool frontFacesOnly, bool faceCenters, bool getAvatars, bool getLand, bool getPrims)
+                                                             bool frontFacesOnly, bool faceCenters, bool getAvatars,
+                                                             bool getLand, bool getPrims)
         {
             // Primitive Ray Tracing
             List<EntityIntersection> result = new List<EntityIntersection>(count);
@@ -452,7 +454,10 @@ namespace Aurora.Region
                     }
                 }
 #else
-                result.AddRange(EntityList.OfType<SceneObjectGroup>().Select(reportingG => reportingG.TestIntersection(hray, frontFacesOnly, faceCenters)).Where(inter => inter.HitTF));
+                result.AddRange(
+                    EntityList.OfType<SceneObjectGroup>()
+                              .Select(reportingG => reportingG.TestIntersection(hray, frontFacesOnly, faceCenters))
+                              .Where(inter => inter.HitTF));
 #endif
             }
             if (getAvatars)
@@ -464,11 +469,11 @@ namespace Aurora.Region
                     Vector3 newPos = hray.Origin;
                     for (int i = 0; i < 100; i++)
                     {
-                        newPos += ((Vector3.One * (length * (i / 100))) * hray.Direction);
-                        if (ent.AbsolutePosition.ApproxEquals(newPos, ent.PhysicsActor.Size.X * 2))
+                        newPos += ((Vector3.One*(length*(i/100)))*hray.Direction);
+                        if (ent.AbsolutePosition.ApproxEquals(newPos, ent.PhysicsActor.Size.X*2))
                         {
                             EntityIntersection intersection = new EntityIntersection();
-                            intersection.distance = length * (i / 100);
+                            intersection.distance = length*(i/100);
                             intersection.face = 0;
                             intersection.HitTF = true;
                             intersection.obj = ent;
@@ -492,7 +497,7 @@ namespace Aurora.Region
 #else
             result.Sort((a, b) => a.distance.CompareTo(b.distance));
 #endif
-            if(result.Count > count)
+            if (result.Count > count)
                 result.RemoveRange(count, result.Count - count);
             return result;
         }
@@ -502,12 +507,12 @@ namespace Aurora.Region
         #region ForEach* Methods
 
         /// <summary>
-        /// Performs action on all scene object groups.
+        ///     Performs action on all scene object groups.
         /// </summary>
         /// <param name="action"></param>
         protected internal void ForEachSceneEntity(Action<ISceneEntity> action)
         {
-            ISceneEntity[] objlist = Entities.GetEntities ();
+            ISceneEntity[] objlist = Entities.GetEntities();
             foreach (ISceneEntity obj in objlist)
             {
                 try
@@ -517,18 +522,19 @@ namespace Aurora.Region
                 catch (Exception e)
                 {
                     // Catch it and move on. This includes situations where splist has inconsistent info
-                    MainConsole.Instance.WarnFormat("[SCENE]: Problem processing action in ForEachSOG: {0}", e.ToString());
+                    MainConsole.Instance.WarnFormat("[SCENE]: Problem processing action in ForEachSOG: {0}",
+                                                    e.ToString());
                 }
             }
         }
 
         /// <summary>
-        /// Performs action on all scene presences. This can ultimately run the actions in parallel but
-        /// any delegates passed in will need to implement their own locking on data they reference and
-        /// modify outside of the scope of the delegate. 
+        ///     Performs action on all scene presences. This can ultimately run the actions in parallel but
+        ///     any delegates passed in will need to implement their own locking on data they reference and
+        ///     modify outside of the scope of the delegate.
         /// </summary>
         /// <param name="action"></param>
-        public void ForEachScenePresence (Action<IScenePresence> action)
+        public void ForEachScenePresence(Action<IScenePresence> action)
         {
             // Once all callers have their delegates configured for parallelism, we can unleash this
             /*
@@ -547,7 +553,7 @@ namespace Aurora.Region
             Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
             */
             // For now, perform actions serially
-            List<IScenePresence> presences = new List<IScenePresence>(GetScenePresences ());
+            List<IScenePresence> presences = new List<IScenePresence>(GetScenePresences());
             foreach (IScenePresence sp in presences)
             {
                 try
@@ -594,7 +600,7 @@ namespace Aurora.Region
             client.OnObjectPermissions += HandleObjectPermissionsUpdate;
             client.OnGrabObject += ProcessObjectGrab;
             client.OnGrabUpdate += ProcessObjectGrabUpdate;
-            client.OnDeGrabObject += ProcessObjectDeGrab; 
+            client.OnDeGrabObject += ProcessObjectDeGrab;
             client.OnUndo += HandleUndo;
             client.OnRedo += HandleRedo;
             client.OnObjectDescription += PrimDescription;
@@ -644,7 +650,8 @@ namespace Aurora.Region
             client.OnObjectDuplicateOnRay -= doObjectDuplicateOnRay;
         }
 
-        public virtual void ProcessObjectGrab(uint localID, Vector3 offsetPos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        public virtual void ProcessObjectGrab(uint localID, Vector3 offsetPos, IClientAPI remoteClient,
+                                              List<SurfaceTouchEventArgs> surfaceArgs)
         {
             SurfaceTouchEventArgs surfaceArg = null;
             if (surfaceArgs != null && surfaceArgs.Count > 0)
@@ -664,7 +671,8 @@ namespace Aurora.Region
 
                     // If the touched prim handles touches, deliver it
                     // If not, deliver to root prim
-                    m_parentScene.EventManager.TriggerObjectGrab(part, part, part.OffsetPosition, remoteClient, surfaceArg);
+                    m_parentScene.EventManager.TriggerObjectGrab(part, part, part.OffsetPosition, remoteClient,
+                                                                 surfaceArg);
                     // Deliver to the root prim if the touched prim doesn't handle touches
                     // or if we're meant to pass on touches anyway. Don't send to root prim
                     // if prim touched is the root prim as we just did it
@@ -678,18 +686,22 @@ namespace Aurora.Region
                         }
                         if (part.PassTouch == PASS_ALWAYS)
                         {
-                            m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                            m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition,
+                                                                         remoteClient, surfaceArg);
                         }
-                        else if (((part.ScriptEvents & scriptEvents.touch_start) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                        else if (((part.ScriptEvents & scriptEvents.touch_start) == 0) &&
+                                 part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                         {
-                            m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                            m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition,
+                                                                         remoteClient, surfaceArg);
                         }
                     }
                 }
             }
         }
 
-        public virtual void ProcessObjectGrabUpdate(UUID objectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        public virtual void ProcessObjectGrabUpdate(UUID objectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient,
+                                                    List<SurfaceTouchEventArgs> surfaceArgs)
         {
             SurfaceTouchEventArgs surfaceArg = null;
             if (surfaceArgs != null && surfaceArgs.Count > 0)
@@ -708,7 +720,8 @@ namespace Aurora.Region
 
                     // If the touched prim handles touches, deliver it
                     // If not, deliver to root prim
-                    m_parentScene.EventManager.TriggerObjectGrabbing(part, part, part.OffsetPosition, remoteClient, surfaceArg);
+                    m_parentScene.EventManager.TriggerObjectGrabbing(part, part, part.OffsetPosition, remoteClient,
+                                                                     surfaceArg);
                     // Deliver to the root prim if the touched prim doesn't handle touches
                     // or if we're meant to pass on touches anyway. Don't send to root prim
                     // if prim touched is the root prim as we just did it
@@ -723,18 +736,23 @@ namespace Aurora.Region
                         }
                         if (part.PassTouch == PASS_ALWAYS)
                         {
-                            m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                            m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition,
+                                                                             remoteClient, surfaceArg);
                         }
-                        else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                        else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) ||
+                                  ((part.ScriptEvents & scriptEvents.touch) == 0)) &&
+                                 part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                         {
-                            m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                            m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition,
+                                                                             remoteClient, surfaceArg);
                         }
                     }
                 }
             }
         }
 
-        public virtual void ProcessObjectDeGrab(uint localID, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        public virtual void ProcessObjectDeGrab(uint localID, IClientAPI remoteClient,
+                                                List<SurfaceTouchEventArgs> surfaceArgs)
         {
             SurfaceTouchEventArgs surfaceArg = null;
             if (surfaceArgs != null && surfaceArgs.Count > 0)
@@ -763,9 +781,12 @@ namespace Aurora.Region
                         {
                             m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
                         }
-                        else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch_end) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                        else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) ||
+                                  ((part.ScriptEvents & scriptEvents.touch_end) == 0)) &&
+                                 part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                         {
-                            m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
+                            m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient,
+                                                                           surfaceArg);
                         }
                     }
                 }
@@ -773,7 +794,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Gets a new rez location based on the raycast and the size of the object that is being rezzed.
+        ///     Gets a new rez location based on the raycast and the size of the object that is being rezzed.
         /// </summary>
         /// <param name="RayStart"></param>
         /// <param name="RayEnd"></param>
@@ -785,7 +806,9 @@ namespace Aurora.Region
         /// <param name="scale"></param>
         /// <param name="FaceCenter"></param>
         /// <returns></returns>
-        public Vector3 GetNewRezLocation(Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot, byte bypassRayCast, byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter)
+        public Vector3 GetNewRezLocation(Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot,
+                                         byte bypassRayCast, byte RayEndIsIntersection, bool frontFacesOnly,
+                                         Vector3 scale, bool FaceCenter)
         {
             Vector3 pos = Vector3.Zero;
             if (RayEndIsIntersection == 1)
@@ -796,7 +819,7 @@ namespace Aurora.Region
 
             if (RayTargetID != UUID.Zero)
             {
-                ISceneChildEntity target = m_parentScene.GetSceneObjectPart (RayTargetID);
+                ISceneChildEntity target = m_parentScene.GetSceneObjectPart(RayTargetID);
 
                 Vector3 direction = Vector3.Normalize(RayEnd - RayStart);
                 Vector3 AXOrigin = new Vector3(RayStart.X, RayStart.Y, RayStart.Z);
@@ -813,7 +836,8 @@ namespace Aurora.Region
                     Ray NewRay = new Ray(AXOrigin, AXdirection);
 
                     // Ray Trace against target here
-                    EntityIntersection ei = target.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, FaceCenter);
+                    EntityIntersection ei = target.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly,
+                                                                       FaceCenter);
 
                     // Un-comment out the following line to Get Raytrace results printed to the console.
                     //MainConsole.Instance.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
@@ -830,14 +854,13 @@ namespace Aurora.Region
                         Vector3 intersectionpoint = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
                         Vector3 normal = new Vector3(ei.normal.X, ei.normal.Y, ei.normal.Z);
                         // Set the position to the intersection point
-                        Vector3 offset = (normal * (ScaleOffset / 2f));
+                        Vector3 offset = (normal*(ScaleOffset/2f));
                         pos = (intersectionpoint + offset);
 
                         //Seems to make no sense to do this as this call is used for rezzing from inventory as well, and with inventory items their size is not always 0.5f
                         //And in cases when we weren't rezzing from inventory we were re-adding the 0.25 straight after calling this method
                         // Un-offset the prim (it gets offset later by the consumer method)
                         //pos.Z -= 0.25F; 
-
                     }
 
                     return pos;
@@ -861,15 +884,17 @@ namespace Aurora.Region
 
             //increase height so its above the ground.
             //should be getting the normal of the ground at the rez point and using that?
-            pos.Z += scale.Z / 2f;
+            pos.Z += scale.Z/2f;
             return pos;
         }
 
-        public virtual void AddNewPrim(UUID ownerID, UUID groupID, Vector3 RayEnd, Quaternion rot, PrimitiveBaseShape shape,
+        public virtual void AddNewPrim(UUID ownerID, UUID groupID, Vector3 RayEnd, Quaternion rot,
+                                       PrimitiveBaseShape shape,
                                        byte bypassRaycast, Vector3 RayStart, UUID RayTargetID,
                                        byte RayEndIsIntersection)
         {
-            Vector3 pos = GetNewRezLocation(RayStart, RayEnd, RayTargetID, rot, bypassRaycast, RayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false);
+            Vector3 pos = GetNewRezLocation(RayStart, RayEnd, RayTargetID, rot, bypassRaycast, RayEndIsIntersection,
+                                            true, new Vector3(0.5f, 0.5f, 0.5f), false);
 
             string reason;
             if (m_parentScene.Permissions.CanRezObject(1, ownerID, pos, out reason))
@@ -878,12 +903,13 @@ namespace Aurora.Region
             }
             else
             {
-                GetScenePresence(ownerID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
+                GetScenePresence(ownerID)
+                    .ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
             }
         }
 
         /// <summary>
-        /// Create a New SceneObjectGroup/Part by raycasting
+        ///     Create a New SceneObjectGroup/Part by raycasting
         /// </summary>
         /// <param name="ownerID"></param>
         /// <param name="groupID"></param>
@@ -893,12 +919,15 @@ namespace Aurora.Region
         public virtual ISceneEntity AddNewPrim(
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
-            SceneObjectGroup sceneObject = new SceneObjectGroup (ownerID, pos, rot, shape, m_DefaultObjectName, m_parentScene);
+            SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_DefaultObjectName,
+                                                                m_parentScene);
 
             // If an entity creator has been registered for this prim type then use that
-            if (m_entityCreators.ContainsKey((PCode)shape.PCode))
+            if (m_entityCreators.ContainsKey((PCode) shape.PCode))
             {
-                sceneObject = (SceneObjectGroup)m_entityCreators[(PCode)shape.PCode].CreateEntity (sceneObject, ownerID, groupID, pos, rot, shape);
+                sceneObject =
+                    (SceneObjectGroup)
+                    m_entityCreators[(PCode) shape.PCode].CreateEntity(sceneObject, ownerID, groupID, pos, rot, shape);
             }
             else
             {
@@ -913,8 +942,8 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Duplicates object specified by localID at position raycasted against RayTargetObject using 
-        /// RayEnd and RayStart to determine what the angle of the ray is
+        ///     Duplicates object specified by localID at position raycasted against RayTargetObject using
+        ///     RayEnd and RayStart to determine what the angle of the ray is
         /// </summary>
         /// <param name="localID">ID of object to duplicate</param>
         /// <param name="dupeFlags"></param>
@@ -929,13 +958,14 @@ namespace Aurora.Region
         /// <param name="CopyRotates">Rotate the object the same as the localID object</param>
         public void doObjectDuplicateOnRay(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
                                            UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart,
-                                           bool BypassRaycast, bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates)
+                                           bool BypassRaycast, bool RayEndIsIntersection, bool CopyCenters,
+                                           bool CopyRotates)
         {
             const bool frontFacesOnly = true;
             //MainConsole.Instance.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
-            ISceneChildEntity target = m_parentScene.GetSceneObjectPart (localID);
-            ISceneChildEntity target2 = m_parentScene.GetSceneObjectPart (RayTargetObj);
-            IScenePresence Sp = GetScenePresence (AgentID);
+            ISceneChildEntity target = m_parentScene.GetSceneObjectPart(localID);
+            ISceneChildEntity target2 = m_parentScene.GetSceneObjectPart(RayTargetObj);
+            IScenePresence Sp = GetScenePresence(AgentID);
             if (target != null && target2 != null)
             {
                 Vector3 pos;
@@ -957,7 +987,8 @@ namespace Aurora.Region
                     Ray NewRay = new Ray(AXOrigin, AXdirection);
 
                     // Ray Trace against target here
-                    EntityIntersection ei = target2.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, CopyCenters);
+                    EntityIntersection ei = target2.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly,
+                                                                        CopyCenters);
 
                     // Un-comment out the following line to Get Raytrace results printed to the console.
                     //MainConsole.Instance.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
@@ -974,7 +1005,7 @@ namespace Aurora.Region
                         ScaleOffset = Math.Abs(ScaleOffset);
                         Vector3 intersectionpoint = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
                         Vector3 normal = new Vector3(ei.normal.X, ei.normal.Y, ei.normal.Z);
-                        Vector3 offset = normal * (ScaleOffset / 2f);
+                        Vector3 offset = normal*(ScaleOffset/2f);
                         pos = intersectionpoint + offset;
 
                         // stick in offset format from the original prim
@@ -990,7 +1021,8 @@ namespace Aurora.Region
                         }
                         else
                         {
-                            DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID, Quaternion.Identity);
+                            DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID,
+                                            Quaternion.Identity);
                         }
                     }
 
@@ -1002,7 +1034,7 @@ namespace Aurora.Region
         }
 
         /// <value>
-        /// Registered classes that are capable of creating entities.
+        ///     Registered classes that are capable of creating entities.
         /// </value>
         protected Dictionary<PCode, IEntityCreator> m_entityCreators = new Dictionary<PCode, IEntityCreator>();
 
@@ -1018,7 +1050,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Unregister a module commander and all its commands
+        ///     Unregister a module commander and all its commands
         /// </summary>
         /// <param name="entityCreator"></param>
         public void UnregisterEntityCreatorCommander(IEntityCreator entityCreator)
@@ -1043,11 +1075,11 @@ namespace Aurora.Region
                     return;
             }
 
-            List<ISceneEntity> groups = new List<ISceneEntity> ();
+            List<ISceneEntity> groups = new List<ISceneEntity>();
 
             foreach (uint localID in localIDs)
             {
-                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (localID);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart(localID);
                 if (!groups.Contains(part.ParentEntity))
                     groups.Add(part.ParentEntity);
             }
@@ -1058,7 +1090,7 @@ namespace Aurora.Region
                 {
                     sog.SetOwnerId(ownerID);
                     sog.SetGroup(groupID, remoteClient.AgentId, true);
-                    sog.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                    sog.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
                     foreach (ISceneChildEntity child in sog.ChildrenEntities())
                         child.Inventory.ChangeInventoryOwner(ownerID);
@@ -1086,13 +1118,12 @@ namespace Aurora.Region
 
             foreach (uint localID in localIDs)
             {
-                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (localID);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart(localID);
                 part.GetProperties(remoteClient);
             }
         }
 
         /// <summary>
-        ///
         /// </summary>
         /// <param name="LocalID"></param>
         /// <param name="scale"></param>
@@ -1102,9 +1133,9 @@ namespace Aurora.Region
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup) entity).UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).Resize(scale, LocalID);
+                    ((SceneObjectGroup) entity).Resize(scale, LocalID);
                 }
             }
         }
@@ -1116,12 +1147,13 @@ namespace Aurora.Region
             {
                 if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).GroupResize(scale, LocalID);
+                    ((SceneObjectGroup) entity).GroupResize(scale, LocalID);
                 }
             }
         }
 
-        public void HandleObjectPermissionsUpdate(IClientAPI controller, UUID agentID, UUID sessionID, byte field, uint localId, uint mask, byte set)
+        public void HandleObjectPermissionsUpdate(IClientAPI controller, UUID agentID, UUID sessionID, byte field,
+                                                  uint localId, uint mask, byte set)
         {
             // Check for spoofing..  since this is permissions we're talking about here!
             if ((controller.SessionId == sessionID) && (controller.AgentId == agentID))
@@ -1129,7 +1161,7 @@ namespace Aurora.Region
                 // Tell the object to do permission update
                 if (localId != 0)
                 {
-                    ISceneEntity chObjectGroup = m_parentScene.GetGroupByPrim (localId);
+                    ISceneEntity chObjectGroup = m_parentScene.GetGroupByPrim(localId);
                     if (chObjectGroup != null)
                     {
                         if (m_parentScene.Permissions.CanEditObject(chObjectGroup.UUID, controller.AgentId))
@@ -1140,26 +1172,25 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// This handles the nifty little tool tip that you get when you drag your mouse over an object
-        /// Send to the Object Group to process.  We don't know enough to service the request
+        ///     This handles the nifty little tool tip that you get when you drag your mouse over an object
+        ///     Send to the Object Group to process.  We don't know enough to service the request
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="AgentID"></param>
         /// <param name="RequestFlags"></param>
         /// <param name="ObjectID"></param>
         protected internal void RequestObjectPropertiesFamily(
-             IClientAPI remoteClient, UUID AgentID, uint RequestFlags, UUID ObjectID)
+            IClientAPI remoteClient, UUID AgentID, uint RequestFlags, UUID ObjectID)
         {
             IEntity group;
             if (TryGetEntity(ObjectID, out group))
             {
-                if(group is SceneObjectGroup)
-                    ((SceneObjectGroup)group).ServiceObjectPropertiesFamilyRequest(remoteClient, AgentID, RequestFlags);
+                if (group is SceneObjectGroup)
+                    ((SceneObjectGroup) group).ServiceObjectPropertiesFamilyRequest(remoteClient, AgentID, RequestFlags);
             }
         }
 
         /// <summary>
-        ///
         /// </summary>
         /// <param name="LocalID"></param>
         /// <param name="rot"></param>
@@ -1169,52 +1200,50 @@ namespace Aurora.Region
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup) entity).UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).UpdateSingleRotation(rot, LocalID);
+                    ((SceneObjectGroup) entity).UpdateSingleRotation(rot, LocalID);
                 }
             }
         }
 
         /// <summary>
-        ///
         /// </summary>
-        ///<param name="LocalID"></param>
-        ///<param name="rot"></param>
-        ///<param name="pos"></param>
-        ///<param name="remoteClient"></param>
-        protected internal void UpdatePrimSingleRotationPosition(uint LocalID, Quaternion rot, Vector3 pos, IClientAPI remoteClient)
+        /// <param name="LocalID"></param>
+        /// <param name="rot"></param>
+        /// <param name="pos"></param>
+        /// <param name="remoteClient"></param>
+        protected internal void UpdatePrimSingleRotationPosition(uint LocalID, Quaternion rot, Vector3 pos,
+                                                                 IClientAPI remoteClient)
         {
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup) entity).UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).UpdateSingleRotation(rot, pos, LocalID);
+                    ((SceneObjectGroup) entity).UpdateSingleRotation(rot, pos, LocalID);
                 }
             }
         }
 
         /// <summary>
-        ///
         /// </summary>
-        ///<param name="LocalID"></param>
-        ///<param name="rot"></param>
+        /// <param name="LocalID"></param>
+        /// <param name="rot"></param>
         /// <param name="remoteClient"></param>
         protected internal void UpdatePrimRotation(uint LocalID, Quaternion rot, IClientAPI remoteClient)
         {
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup) entity).UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).UpdateGroupRotationR(rot);
+                    ((SceneObjectGroup) entity).UpdateGroupRotationR(rot);
                 }
             }
         }
 
         /// <summary>
-        ///
         /// </summary>
         /// <param name="LocalID"></param>
         /// <param name="pos"></param>
@@ -1225,34 +1254,36 @@ namespace Aurora.Region
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup) entity).UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).UpdateGroupRotationPR(pos, rot);
+                    ((SceneObjectGroup) entity).UpdateGroupRotationPR(pos, rot);
                 }
             }
         }
 
         /// <summary>
-        /// Update the position of the given part
+        ///     Update the position of the given part
         /// </summary>
         /// <param name="LocalID"></param>
         /// <param name="pos"></param>
         /// <param name="remoteClient"></param>
         /// <param name="SaveUpdate"></param>
-        protected internal void UpdatePrimSinglePosition(uint LocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
+        protected internal void UpdatePrimSinglePosition(uint LocalID, Vector3 pos, IClientAPI remoteClient,
+                                                         bool SaveUpdate)
         {
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId) || ((SceneObjectGroup)entity).IsAttachment)
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup) entity).UUID, remoteClient.AgentId) ||
+                    ((SceneObjectGroup) entity).IsAttachment)
                 {
-                    ((SceneObjectGroup)entity).UpdateSinglePosition(pos, LocalID, SaveUpdate);
+                    ((SceneObjectGroup) entity).UpdateSinglePosition(pos, LocalID, SaveUpdate);
                 }
             }
         }
 
         /// <summary>
-        /// Update the position of the given part
+        ///     Update the position of the given part
         /// </summary>
         /// <param name="LocalID"></param>
         /// <param name="pos"></param>
@@ -1263,34 +1294,36 @@ namespace Aurora.Region
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (((SceneObjectGroup)entity).IsAttachment || (((SceneObjectGroup)entity).RootPart.Shape.PCode == 9 && ((SceneObjectGroup)entity).RootPart.Shape.State != 0))
+                if (((SceneObjectGroup) entity).IsAttachment ||
+                    (((SceneObjectGroup) entity).RootPart.Shape.PCode == 9 &&
+                     ((SceneObjectGroup) entity).RootPart.Shape.State != 0))
                 {
                     //We don't deal with attachments, they handle themselves in the IAttachmentModule
                 }
                 else
                 {
                     //Move has edit permission as well
-                    if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId) &&
-                        m_parentScene.Permissions.CanObjectEntry(((SceneObjectGroup)entity).UUID, false, pos, remoteClient.AgentId))
+                    if (
+                        m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup) entity).UUID, remoteClient.AgentId) &&
+                        m_parentScene.Permissions.CanObjectEntry(((SceneObjectGroup) entity).UUID, false, pos,
+                                                                 remoteClient.AgentId))
                     {
-                        ((SceneObjectGroup)entity).UpdateGroupPosition(pos, SaveUpdate);
+                        ((SceneObjectGroup) entity).UpdateGroupPosition(pos, SaveUpdate);
                     }
                     else
                     {
-                        IScenePresence SP = GetScenePresence (remoteClient.AgentId);
-                        ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                        IScenePresence SP = GetScenePresence(remoteClient.AgentId);
+                        ((SceneObjectGroup) entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Update the texture entry of the given prim.
+        ///     Update the texture entry of the given prim.
         /// </summary>
-        /// 
         /// A texture entry is an object that contains details of all the textures of the prim's face.  In this case,
         /// the texture is given in its byte serialized form.
-        /// 
         /// <param name="LocalID"></param>
         /// <param name="texture"></param>
         /// <param name="remoteClient"></param>
@@ -1299,15 +1332,15 @@ namespace Aurora.Region
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup) entity).UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).UpdateTextureEntry(LocalID, texture, true);
+                    ((SceneObjectGroup) entity).UpdateTextureEntry(LocalID, texture, true);
                 }
             }
         }
 
         /// <summary>
-        /// A user has changed an object setting
+        ///     A user has changed an object setting
         /// </summary>
         /// <param name="LocalID"></param>
         /// <param name="blocks"></param>
@@ -1315,40 +1348,45 @@ namespace Aurora.Region
         /// <param name="UsePhysics"></param>
         /// <param name="IsTemporary"></param>
         /// <param name="IsPhantom"></param>
-        protected internal void UpdatePrimFlags (uint LocalID, bool UsePhysics, bool IsTemporary, bool IsPhantom, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks, IClientAPI remoteClient)
+        protected internal void UpdatePrimFlags(uint LocalID, bool UsePhysics, bool IsTemporary, bool IsPhantom,
+                                                ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks,
+                                                IClientAPI remoteClient)
         {
             IEntity entity;
             if (TryGetEntity(LocalID, out entity))
             {
                 if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).UpdatePrimFlags(LocalID, UsePhysics, IsTemporary, IsPhantom, false, blocks); // VolumeDetect can't be set via UI and will always be off when a change is made there
+                    ((SceneObjectGroup) entity).UpdatePrimFlags(LocalID, UsePhysics, IsTemporary, IsPhantom, false,
+                                                                blocks);
+                        // VolumeDetect can't be set via UI and will always be off when a change is made there
                 }
             }
         }
 
         /// <summary>
-        /// Move the given object
+        ///     Move the given object
         /// </summary>
         /// <param name="ObjectID"></param>
         /// <param name="offset"></param>
         /// <param name="pos"></param>
         /// <param name="remoteClient"></param>
         /// <param name="surfaceArgs"></param>
-        protected internal void MoveObject(UUID ObjectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        protected internal void MoveObject(UUID ObjectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient,
+                                           List<SurfaceTouchEventArgs> surfaceArgs)
         {
             IEntity group;
             if (TryGetEntity(ObjectID, out group))
             {
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))// && PermissionsMngr.)
+                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId)) // && PermissionsMngr.)
                 {
-                    ((SceneObjectGroup)group).GrabMovement(offset, pos, remoteClient);
+                    ((SceneObjectGroup) group).GrabMovement(offset, pos, remoteClient);
                 }
             }
         }
 
         /// <summary>
-        /// Start spinning the given object
+        ///     Start spinning the given object
         /// </summary>
         /// <param name="ObjectID"></param>
         /// <param name="remoteClient"></param>
@@ -1357,15 +1395,15 @@ namespace Aurora.Region
             IEntity group;
             if (TryGetEntity(ObjectID, out group))
             {
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))// && PermissionsMngr.)
+                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId)) // && PermissionsMngr.)
                 {
-                    ((SceneObjectGroup)group).SpinStart(remoteClient);
+                    ((SceneObjectGroup) group).SpinStart(remoteClient);
                 }
             }
         }
 
         /// <summary>
-        /// Spin the given object
+        ///     Spin the given object
         /// </summary>
         /// <param name="ObjectID"></param>
         /// <param name="rotation"></param>
@@ -1375,24 +1413,23 @@ namespace Aurora.Region
             IEntity group;
             if (TryGetEntity(ObjectID, out group))
             {
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))// && PermissionsMngr.)
+                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId)) // && PermissionsMngr.)
                 {
-                    ((SceneObjectGroup)group).SpinMovement(rotation, remoteClient);
+                    ((SceneObjectGroup) group).SpinMovement(rotation, remoteClient);
                 }
                 // This is outside the above permissions condition
                 // so that if the object is locked the client moving the object
                 // get's it's position on the simulator even if it was the same as before
                 // This keeps the moving user's client in sync with the rest of the world.
-                ((SceneObjectGroup)group).ScheduleGroupTerseUpdate();
+                ((SceneObjectGroup) group).ScheduleGroupTerseUpdate();
             }
         }
 
         /// <summary>
-        ///
         /// </summary>
-        ///<param name="remoteClient"></param>
-        ///<param name="LocalID"></param>
-        ///<param name="name"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="LocalID"></param>
+        /// <param name="name"></param>
         protected internal void PrimName(IClientAPI remoteClient, uint LocalID, string name)
         {
             IEntity group;
@@ -1400,18 +1437,17 @@ namespace Aurora.Region
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)group).SetPartName(Util.CleanString(name), LocalID);
-                    ((SceneObjectGroup)group).ScheduleGroupUpdate(PrimUpdateFlags.FindBest);
+                    ((SceneObjectGroup) group).SetPartName(Util.CleanString(name), LocalID);
+                    ((SceneObjectGroup) group).ScheduleGroupUpdate(PrimUpdateFlags.FindBest);
                 }
             }
         }
 
         /// <summary>
-        ///
         /// </summary>
-        ///<param name="LocalID"></param>
-        ///<param name="description"></param>
-        ///<param name="remoteClient"></param>
+        /// <param name="LocalID"></param>
+        /// <param name="description"></param>
+        /// <param name="remoteClient"></param>
         protected internal void PrimDescription(IClientAPI remoteClient, uint LocalID, string description)
         {
             IEntity group;
@@ -1419,8 +1455,8 @@ namespace Aurora.Region
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)group).SetPartDescription(Util.CleanString(description), LocalID);
-                    ((SceneObjectGroup)group).ScheduleGroupUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup) group).SetPartDescription(Util.CleanString(description), LocalID);
+                    ((SceneObjectGroup) group).ScheduleGroupUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1434,7 +1470,7 @@ namespace Aurora.Region
                 {
                     ISceneChildEntity part = m_parentScene.GetSceneObjectPart(LocalID);
                     part.ClickAction = Convert.ToByte(clickAction);
-                    ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
+                    ((ISceneEntity) group).ScheduleGroupUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1446,14 +1482,15 @@ namespace Aurora.Region
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    ISceneChildEntity part = m_parentScene.GetSceneObjectPart (LocalID);
+                    ISceneChildEntity part = m_parentScene.GetSceneObjectPart(LocalID);
                     part.UpdateMaterial(Convert.ToInt32(material));
                     //Update the client here as well... we changed restitution and friction in the physics engine probably
-                    IEventQueueService eqs = m_parentScene.RequestModuleInterface<IEventQueueService> ();
+                    IEventQueueService eqs = m_parentScene.RequestModuleInterface<IEventQueueService>();
                     if (eqs != null)
-                        eqs.ObjectPhysicsProperties(new[] { part }, remoteClient.AgentId, m_parentScene.RegionInfo.RegionID);
+                        eqs.ObjectPhysicsProperties(new[] {part}, remoteClient.AgentId,
+                                                    m_parentScene.RegionInfo.RegionID);
 
-                    ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
+                    ((ISceneEntity) group).ScheduleGroupUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1465,17 +1502,16 @@ namespace Aurora.Region
             {
                 if (m_parentScene.Permissions.CanEditObject(part.UUID, agentID))
                 {
-                    ((SceneObjectPart)part).UpdateExtraParam(type, inUse, data);
+                    ((SceneObjectPart) part).UpdateExtraParam(type, inUse, data);
                 }
             }
         }
 
         /// <summary>
-        ///
         /// </summary>
-        ///<param name="LocalID"></param>
-        ///<param name="shapeBlock"></param>
-        ///<param name="agentID"></param>
+        /// <param name="LocalID"></param>
+        /// <param name="shapeBlock"></param>
+        /// <param name="agentID"></param>
         protected internal void UpdatePrimShape(UUID agentID, uint LocalID, UpdateShapeArgs shapeBlock)
         {
             ISceneChildEntity part;
@@ -1506,13 +1542,13 @@ namespace Aurora.Region
                                                                           ProfileHollow = shapeBlock.ProfileHollow
                                                                       };
 
-                    ((SceneObjectPart)part).UpdateShape(shapeData);
+                    ((SceneObjectPart) part).UpdateShape(shapeData);
                 }
             }
         }
 
         /// <summary>
-        /// Make this object be added to search
+        ///     Make this object be added to search
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="IncludeInSearch"></param>
@@ -1524,7 +1560,7 @@ namespace Aurora.Region
             IEntity entity;
             if (!TryGetEntity(LocalID, out entity))
                 return;
-            SceneObjectGroup grp = (SceneObjectGroup)entity;
+            SceneObjectGroup grp = (SceneObjectGroup) entity;
             //Protip: In my day, we didn't call them searchable objects, we called them limited point-to-point joints
             //aka ObjectFlags.JointWheel = IncludeInSearch
 
@@ -1552,7 +1588,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Duplicate the given entity and add it to the world
+        ///     Duplicate the given entity and add it to the world
         /// </summary>
         /// <param name="LocalID">LocalID of the object to duplicate</param>
         /// <param name="offset">Duplicated objects position offset from the original entity</param>
@@ -1568,16 +1604,18 @@ namespace Aurora.Region
 
             if (TryGetEntity(LocalID, out entity))
             {
-                SceneObjectGroup original = (SceneObjectGroup)entity;
+                SceneObjectGroup original = (SceneObjectGroup) entity;
                 string reason = "You cannot duplicate this object.";
-                if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition) &&
+                if (
+                    m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID,
+                                                                 original.AbsolutePosition) &&
                     m_parentScene.Permissions.CanRezObject(1, AgentID, original.AbsolutePosition + offset, out reason))
                 {
-                    ISceneEntity duplicatedEntity = DuplicateEntity (original);
+                    ISceneEntity duplicatedEntity = DuplicateEntity(original);
 
                     duplicatedEntity.AbsolutePosition = duplicatedEntity.AbsolutePosition + offset;
 
-                    SceneObjectGroup duplicatedGroup = (SceneObjectGroup)duplicatedEntity;
+                    SceneObjectGroup duplicatedGroup = (SceneObjectGroup) duplicatedEntity;
 
                     if (original.OwnerID != AgentID)
                     {
@@ -1615,7 +1653,7 @@ namespace Aurora.Region
 
                     duplicatedGroup.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero, false);
                     duplicatedGroup.HasGroupChanged = true;
-                    duplicatedGroup.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                    duplicatedGroup.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
                     // required for physics to update it's position
                     duplicatedGroup.AbsolutePosition = duplicatedGroup.AbsolutePosition;
@@ -1654,8 +1692,8 @@ namespace Aurora.Region
         {
             List<UUID> owners = new List<UUID>();
 
-            List<ISceneChildEntity> children = new List<ISceneChildEntity> ();
-            ISceneChildEntity root = m_parentScene.GetSceneObjectPart (parentPrimId);
+            List<ISceneChildEntity> children = new List<ISceneChildEntity>();
+            ISceneChildEntity root = m_parentScene.GetSceneObjectPart(parentPrimId);
 
             if (root == null)
             {
@@ -1671,7 +1709,7 @@ namespace Aurora.Region
 
             foreach (uint localID in childPrimIds)
             {
-                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (localID);
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart(localID);
 
                 if (part == null)
                     continue;
@@ -1712,7 +1750,8 @@ namespace Aurora.Region
                 if (LinkCount > module.MaximumLinkCount &&
                     module.MaximumLinkCount != -1)
                 {
-                    client.SendAlertMessage("You cannot link more than " + module.MaximumLinkCount + " prims. Please try again with fewer prims.");
+                    client.SendAlertMessage("You cannot link more than " + module.MaximumLinkCount +
+                                            " prims. Please try again with fewer prims.");
                     return;
                 }
                 if ((root.Flags & PrimFlags.Physics) == PrimFlags.Physics)
@@ -1721,7 +1760,8 @@ namespace Aurora.Region
                     if (LinkCount > module.MaximumLinkCountPhys &&
                         module.MaximumLinkCountPhys != -1)
                     {
-                        client.SendAlertMessage("You cannot link more than " + module.MaximumLinkCountPhys + " physical prims. Please try again with fewer prims.");
+                        client.SendAlertMessage("You cannot link more than " + module.MaximumLinkCountPhys +
+                                                " physical prims. Please try again with fewer prims.");
                         return;
                     }
                 }
@@ -1731,18 +1771,18 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Initial method invoked when we receive a link objects request from the client.
+        ///     Initial method invoked when we receive a link objects request from the client.
         /// </summary>
         /// <param name="root"></param>
         /// <param name="children"></param>
-        protected internal void LinkObjects (ISceneChildEntity root, List<ISceneChildEntity> children)
+        protected internal void LinkObjects(ISceneChildEntity root, List<ISceneChildEntity> children)
         {
             Monitor.Enter(m_updateLock);
             try
             {
                 ISceneEntity parentGroup = root.ParentEntity;
 
-                List<ISceneEntity> childGroups = new List<ISceneEntity> ();
+                List<ISceneEntity> childGroups = new List<ISceneEntity>();
                 if (parentGroup != null)
                 {
                     // We do this in reverse to get the link order of the prims correct
@@ -1781,7 +1821,7 @@ namespace Aurora.Region
                 parentGroup.HasGroupChanged = true;
                 //parentGroup.RootPart.SendFullUpdateToAllClients(PrimUpdateFlags.FullUpdate);
                 //parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
-                parentGroup.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                parentGroup.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 parentGroup.TriggerScriptChangedEvent(Changed.LINK);
             }
             finally
@@ -1791,17 +1831,17 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Delink a linkset
+        ///     Delink a linkset
         /// </summary>
         /// <param name="prims"></param>
-        protected internal void DelinkObjects (List<ISceneChildEntity> prims)
+        protected internal void DelinkObjects(List<ISceneChildEntity> prims)
         {
             Monitor.Enter(m_updateLock);
             try
             {
-                List<ISceneChildEntity> childParts = new List<ISceneChildEntity> ();
-                List<ISceneChildEntity> rootParts = new List<ISceneChildEntity> ();
-                List<ISceneEntity> affectedGroups = new List<ISceneEntity> ();
+                List<ISceneChildEntity> childParts = new List<ISceneChildEntity>();
+                List<ISceneChildEntity> rootParts = new List<ISceneChildEntity>();
+                List<ISceneEntity> affectedGroups = new List<ISceneEntity>();
                 // Look them all up in one go, since that is comparatively expensive
                 //
                 foreach (ISceneChildEntity part in prims)
@@ -1842,7 +1882,7 @@ namespace Aurora.Region
                     // However, editing linked parts and unlinking may be different
                     //
                     ISceneEntity group = root.ParentEntity;
-                    List<ISceneChildEntity> newSet = new List<ISceneChildEntity> (group.ChildrenEntities());
+                    List<ISceneChildEntity> newSet = new List<ISceneChildEntity>(group.ChildrenEntities());
                     int numChildren = group.PrimCount;
 
                     // If there are prims left in a link set, but the root is
@@ -1883,7 +1923,7 @@ namespace Aurora.Region
 
                             LinkObjects(newRoot, newSet);
                             if (!affectedGroups.Contains(newRoot.ParentEntity))
-                                affectedGroups.Add (newRoot.ParentEntity);
+                                affectedGroups.Add(newRoot.ParentEntity);
                         }
                     }
                 }
@@ -1894,7 +1934,7 @@ namespace Aurora.Region
                 {
                     g.TriggerScriptChangedEvent(Changed.LINK);
                     g.HasGroupChanged = true; // Persist
-                    g.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                    g.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
                 //Fix undo states now that the linksets have been changed
                 foreach (ISceneChildEntity part in prims)
@@ -1909,12 +1949,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Sorts a list of Parts by Link Number so they end up in the correct order
+        ///     Sorts a list of Parts by Link Number so they end up in the correct order
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public int LinkSetSorter (ISceneChildEntity a, ISceneChildEntity b)
+        public int LinkSetSorter(ISceneChildEntity a, ISceneChildEntity b)
         {
             return a.LinkNum.CompareTo(b.LinkNum);
         }
@@ -1925,14 +1965,14 @@ namespace Aurora.Region
 
         #region New Scene Entity Manager Code
 
-        public bool LinkPartToSOG (ISceneEntity grp, ISceneChildEntity part, int linkNum)
+        public bool LinkPartToSOG(ISceneEntity grp, ISceneChildEntity part, int linkNum)
         {
             part.SetParentLocalId(grp.RootChild.LocalId);
             part.SetParent(grp);
             // Insert in terms of link numbers, the new links
             // before the current ones (with the exception of 
             // the root prim. Shuffle the old ones up
-            foreach (ISceneChildEntity otherPart in grp.ChildrenEntities ())
+            foreach (ISceneChildEntity otherPart in grp.ChildrenEntities())
             {
                 if (otherPart.LinkNum >= linkNum)
                 {
@@ -1945,36 +1985,36 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Dupliate the entity and add it to the Scene
+        ///     Dupliate the entity and add it to the Scene
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public ISceneEntity DuplicateEntity (ISceneEntity entity)
+        public ISceneEntity DuplicateEntity(ISceneEntity entity)
         {
             //Make an exact copy of the entity
-            ISceneEntity copiedEntity = entity.Copy (false);
+            ISceneEntity copiedEntity = entity.Copy(false);
             //Add the entity to the scene and back it up
             //Reset the entity IDs
-            ResetEntityIDs (copiedEntity);
+            ResetEntityIDs(copiedEntity);
 
             //Force the prim to backup now that it has been added
-            copiedEntity.ForcePersistence ();
+            copiedEntity.ForcePersistence();
             //Tell the entity that they are being added to a scene
-            copiedEntity.AttachToScene (m_parentScene);
+            copiedEntity.AttachToScene(m_parentScene);
             //Now save the entity that we have 
-            AddEntity (copiedEntity, false);
+            AddEntity(copiedEntity, false);
             //Fix physics representation now
 //            entity.RebuildPhysicalRepresentation();
             return copiedEntity;
         }
 
         /// <summary>
-        /// Add the new part to the group in the EntityManager
+        ///     Add the new part to the group in the EntityManager
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="part"></param>
         /// <returns></returns>
-        public bool LinkPartToEntity (ISceneEntity entity, ISceneChildEntity part)
+        public bool LinkPartToEntity(ISceneEntity entity, ISceneChildEntity part)
         {
             //Remove the entity so that we can rebuild
             RemoveEntity(entity);
@@ -1986,12 +2026,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Delinks the object from the group in the EntityManager
+        ///     Delinks the object from the group in the EntityManager
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="part"></param>
         /// <returns></returns>
-        public bool DeLinkPartFromEntity (ISceneEntity entity, ISceneChildEntity part)
+        public bool DeLinkPartFromEntity(ISceneEntity entity, ISceneChildEntity part)
         {
             //Remove the entity so that we can rebuild
             RemoveEntity(entity);
@@ -2003,13 +2043,13 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// THIS IS TO ONLY BE CALLED WHEN AN OBJECT UUID IS UPDATED!!!
-        /// This method is HIGHLY unsafe and destroys the integrity of the checks above!
-        /// This is NOT to be used lightly! Do NOT use this unless you have to!
+        ///     THIS IS TO ONLY BE CALLED WHEN AN OBJECT UUID IS UPDATED!!!
+        ///     This method is HIGHLY unsafe and destroys the integrity of the checks above!
+        ///     This is NOT to be used lightly! Do NOT use this unless you have to!
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="newID">new UUID to set the root part to</param>
-        public void UpdateEntity (ISceneEntity entity, UUID newID)
+        public void UpdateEntity(ISceneEntity entity, UUID newID)
         {
             RemoveEntity(entity);
             //Set it to the root so that we don't create an infinite loop as the ONLY place this should be being called is from the setter in SceneObjectGroup.UUID
@@ -2022,7 +2062,7 @@ namespace Aurora.Region
         #region Public Methods
 
         /// <summary>
-        /// Try to get an EntityBase as given by its UUID
+        ///     Try to get an EntityBase as given by its UUID
         /// </summary>
         /// <param name="ID"></param>
         /// <param name="entity"></param>
@@ -2033,7 +2073,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Try to get an EntityBase as given by it's LocalID
+        ///     Try to get an EntityBase as given by it's LocalID
         /// </summary>
         /// <param name="LocalID"></param>
         /// <param name="entity"></param>
@@ -2044,53 +2084,53 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Get a part (SceneObjectPart) from the EntityManager by LocalID
+        ///     Get a part (SceneObjectPart) from the EntityManager by LocalID
         /// </summary>
         /// <param name="LocalID"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public bool TryGetPart (uint LocalID, out ISceneChildEntity entity)
+        public bool TryGetPart(uint LocalID, out ISceneChildEntity entity)
         {
-            return Entities.TryGetChildPrim (LocalID, out entity);
+            return Entities.TryGetChildPrim(LocalID, out entity);
         }
-        
+
         /// <summary>
-        /// Get a part (SceneObjectPart) from the EntityManager by UUID
+        ///     Get a part (SceneObjectPart) from the EntityManager by UUID
         /// </summary>
         /// <param name="ID"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public bool TryGetPart (UUID ID, out ISceneChildEntity entity)
+        public bool TryGetPart(UUID ID, out ISceneChildEntity entity)
         {
             IEntity ent;
             if (Entities.TryGetValue(ID, out ent))
             {
                 if (ent is ISceneEntity)
                 {
-                    ISceneEntity parent = (ISceneEntity)ent;
-                    return parent.GetChildPrim (ID, out entity);
+                    ISceneEntity parent = (ISceneEntity) ent;
+                    return parent.GetChildPrim(ID, out entity);
                 }
             }
 
             entity = null;
             return false;
         }
-        
+
         /// <summary>
-        /// Get this prim ready to add to the scene
+        ///     Get this prim ready to add to the scene
         /// </summary>
         /// <param name="entity"></param>
-        public void PrepPrimForAdditionToScene (ISceneEntity entity)
+        public void PrepPrimForAdditionToScene(ISceneEntity entity)
         {
             ResetEntityIDs(entity);
         }
 
         /// <summary>
-        /// Add the Entity to the Scene and back it up
+        ///     Add the Entity to the Scene and back it up
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public bool AddPrimToScene (ISceneEntity entity)
+        public bool AddPrimToScene(ISceneEntity entity)
         {
             //Reset the entity IDs
             ResetEntityIDs(entity);
@@ -2103,14 +2143,14 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Add the Entity to the Scene and back it up, but do NOT reset its ID's
+        ///     Add the Entity to the Scene and back it up, but do NOT reset its ID's
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="force"></param>
         /// <returns></returns>
         public bool RestorePrimToScene(ISceneEntity entity, bool force)
         {
-            List<ISceneChildEntity> children = entity.ChildrenEntities ();
+            List<ISceneChildEntity> children = entity.ChildrenEntities();
             //Sort so that we rebuild in the same order and the root being first
             children.Sort(LinkSetSorter);
 
@@ -2119,47 +2159,47 @@ namespace Aurora.Region
             foreach (ISceneChildEntity child in children)
             {
                 if (child.LocalId == 0)
-                    child.LocalId = AllocateLocalId ();
-                if (((SceneObjectPart)child).PhysActor != null)
+                    child.LocalId = AllocateLocalId();
+                if (((SceneObjectPart) child).PhysActor != null)
                 {
-                    ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
-                    ((SceneObjectPart)child).PhysActor.UUID = child.UUID;
+                    ((SceneObjectPart) child).PhysActor.LocalID = child.LocalId;
+                    ((SceneObjectPart) child).PhysActor.UUID = child.UUID;
                 }
                 child.Flags &= ~PrimFlags.Scripted;
-                child.TrimPermissions ();
+                child.TrimPermissions();
                 entity.AddChild(child, child.LinkNum);
             }
             //Tell the entity that they are being added to a scene
             entity.AttachToScene(m_parentScene);
             //Now save the entity that we have 
             bool success = AddEntity(entity, false);
-            
+
             if (force && !success)
             {
                 IBackupModule backup = m_parentScene.RequestModuleInterface<IBackupModule>();
-                backup.DeleteSceneObjects(new ISceneEntity[1] { entity }, false, true);
+                backup.DeleteSceneObjects(new ISceneEntity[1] {entity}, false, true);
                 return RestorePrimToScene(entity, false);
             }
             return success;
         }
 
         /// <summary>
-        /// Move this group from inside of another group into the Scene as a full member
-        ///  This does not reset IDs so that it is updated correctly in the client
+        ///     Move this group from inside of another group into the Scene as a full member
+        ///     This does not reset IDs so that it is updated correctly in the client
         /// </summary>
         /// <param name="entity"></param>
-        public void DelinkPartToScene (ISceneEntity entity)
+        public void DelinkPartToScene(ISceneEntity entity)
         {
             //Force the prim to backup now that it has been added
             entity.ForcePersistence();
             //Tell the entity that they are being added to a scene
-            entity.RebuildPhysicalRepresentation (true);
+            entity.RebuildPhysicalRepresentation(true);
             //Now save the entity that we have 
             AddEntity(entity, false);
         }
 
         /// <summary>
-        /// Destroy the entity and remove it from the scene
+        ///     Destroy the entity and remove it from the scene
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -2172,12 +2212,11 @@ namespace Aurora.Region
 
         #region Private Methods
 
-        ///These methods are UNSAFE to be accessed from outside this manager, if they are, BAD things WILL happen.
+        /// These methods are UNSAFE to be accessed from outside this manager, if they are, BAD things WILL happen.
         /// If these are changed so that they can be accessed from the outside, ghost prims and other nasty things will occur unless you are EXTREMELY careful.
         /// If more changes need to occur in this area, you must use public methods to safely add/update/remove objects from the EntityManager
-
         /// <summary>
-        /// Remove this entity fully from the EntityManager
+        ///     Remove this entity fully from the EntityManager
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -2187,23 +2226,23 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Add this entity to the EntityManager
+        ///     Add this entity to the EntityManager
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="AllowUpdate"></param>
         /// <returns></returns>
-        private bool AddEntity (IEntity entity, bool AllowUpdate)
+        private bool AddEntity(IEntity entity, bool AllowUpdate)
         {
             return Entities.Add(entity);
         }
 
         /// <summary>
-        /// Reset all of the UUID's, localID's, etc in this group (includes children)
+        ///     Reset all of the UUID's, localID's, etc in this group (includes children)
         /// </summary>
         /// <param name="entity"></param>
-        private void ResetEntityIDs (ISceneEntity entity)
+        private void ResetEntityIDs(ISceneEntity entity)
         {
-            List<ISceneChildEntity> children = entity.ChildrenEntities ();
+            List<ISceneChildEntity> children = entity.ChildrenEntities();
             //Sort so that we rebuild in the same order and the root being first
             children.Sort(LinkSetSorter);
 
@@ -2212,36 +2251,36 @@ namespace Aurora.Region
             {
                 UUID oldID = child.UUID;
                 child.ResetEntityIDs();
-                entity.AddChild (child, child.LinkNum);
+                entity.AddChild(child, child.LinkNum);
             }
             //This clears the xml file, which will need rebuilt now that we have changed the UUIDs
             entity.HasGroupChanged = true;
             foreach (ISceneChildEntity child in children)
             {
-                if(!child.IsRoot)
+                if (!child.IsRoot)
                 {
-                    child.SetParentLocalId (entity.RootChild.LocalId);
+                    child.SetParentLocalId(entity.RootChild.LocalId);
                 }
             }
         }
-        
+
         /// <summary>
-        /// Returns a new unallocated local ID
+        ///     Returns a new unallocated local ID
         /// </summary>
         /// <returns>A brand new local ID</returns>
         public uint AllocateLocalId()
         {
-            lock(_primAllocateLock)
+            lock (_primAllocateLock)
                 return ++m_lastAllocatedLocalId;
         }
 
         /// <summary>
-        /// Check all the localIDs in this group to make sure that they have not been used previously
+        ///     Check all the localIDs in this group to make sure that they have not been used previously
         /// </summary>
         /// <param name="group"></param>
-        public void CheckAllocationOfLocalIds (ISceneEntity group)
+        public void CheckAllocationOfLocalIds(ISceneEntity group)
         {
-            foreach (ISceneChildEntity part in group.ChildrenEntities ())
+            foreach (ISceneChildEntity part in group.ChildrenEntities())
             {
                 if (part.LocalId != 0)
                     CheckAllocationOfLocalId(part.LocalId);
@@ -2249,7 +2288,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Make sure that this localID has not been used earlier in the Scene Startup
+        ///     Make sure that this localID has not been used earlier in the Scene Startup
         /// </summary>
         /// <param name="LocalID"></param>
         private void CheckAllocationOfLocalId(uint LocalID)

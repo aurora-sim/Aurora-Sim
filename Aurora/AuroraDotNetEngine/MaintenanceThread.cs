@@ -45,7 +45,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private readonly EventManager EventManager;
 
         /// <summary>
-        ///   Queue that handles the loading and unloading of scripts
+        ///     Queue that handles the loading and unloading of scripts
         /// </summary>
         private readonly StartPerformanceQueue LUQueue = new StartPerformanceQueue();
 
@@ -140,7 +140,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #region Loops
 
         /// <summary>
-        ///   This loop deals with starting and stoping scripts
+        ///     This loop deals with starting and stoping scripts
         /// </summary>
         /// <returns></returns>
         public void ScriptChangeQueue()
@@ -185,16 +185,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     FiredStartupEvent = true;
                     m_ScriptEngine.Scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
-                                                                          m_ScriptEngine.ScriptErrorMessages);
+                                                                                     m_ScriptEngine.ScriptErrorMessages);
 
                     m_ScriptEngine.Scene.EventManager.TriggerModuleFinishedStartup("ScriptEngine", new List<string>
-                                                                                            {
-                                                                                                m_ScriptEngine.
-                                                                                                    ScriptFailCount.
-                                                                                                    ToString(),
-                                                                                                m_ScriptEngine.
-                                                                                                    ScriptErrorMessages
-                                                                                            }); //Tell that we are done
+                                                                                                       {
+                                                                                                           m_ScriptEngine
+                                                                                                               .
+                                                                                                               ScriptFailCount
+                                                                                                               .
+                                                                                                               ToString(),
+                                                                                                           m_ScriptEngine
+                                                                                                               .
+                                                                                                               ScriptErrorMessages
+                                                                                                       });
+                        //Tell that we are done
                 }
             }
             ScriptChangeIsRunning = false;
@@ -202,8 +206,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(m_ScriptEngine.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
-                if(scriptMonitor != null)
+                ITimeMonitor scriptMonitor =
+                    (ITimeMonitor)
+                    module.GetMonitor(m_ScriptEngine.Scene.RegionInfo.RegionID.ToString(),
+                                      MonitorModuleHelper.ScriptFrameTime);
+                if (scriptMonitor != null)
                 {
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
@@ -215,7 +222,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<LUStruct> NeedsFired = new List<LUStruct>();
             foreach (LUStruct item in items)
             {
-                if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || m_ScriptEngine.Scene == null || !m_ScriptEngine.Scene.ShouldRunHeartbeat)
+                if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || m_ScriptEngine.Scene == null ||
+                    !m_ScriptEngine.Scene.ShouldRunHeartbeat)
                     break;
 
                 if (item.Action == LUType.Unload)
@@ -224,7 +232,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     item.ID.CloseAndDispose(true);
                 }
                 else if (item.Action == LUType.Load ||
-                    item.Action == LUType.Reupload)
+                         item.Action == LUType.Reupload)
                 {
                     try
                     {
@@ -234,7 +242,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                     catch (Exception ex)
                     {
-                        MainConsole.Instance.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex);
+                        MainConsole.Instance.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " +
+                                                   ex);
                     }
                 }
             }
@@ -270,13 +279,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
+                MainConsole.Instance.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName,
+                                                ex);
             }
 
             if (module != null)
             {
-                ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(m_ScriptEngine.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
-                if(scriptMonitor != null)
+                ITimeMonitor scriptMonitor =
+                    (ITimeMonitor)
+                    module.GetMonitor(m_ScriptEngine.Scene.RegionInfo.RegionID.ToString(),
+                                      MonitorModuleHelper.ScriptFrameTime);
+                if (scriptMonitor != null)
                 {
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
@@ -368,9 +381,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        ///   Queue the event loop given by thread
+        ///     Queue the event loop given by thread
         /// </summary>
-        /// <param name = "thread"></param>
+        /// <param name="thread"></param>
         private void StartThread(string thread)
         {
             if (thread == "Change")
@@ -385,7 +398,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        ///   Makes sure that all the threads that need to be running are running and starts them if they need to be running
+        ///     Makes sure that all the threads that need to be running are running and starts them if they need to be running
         /// </summary>
         public void PokeThreads(UUID itemID)
         {
@@ -459,7 +472,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptEvents.Enqueue(QIS);
 
             long threadCount = Interlocked.Read(ref scriptThreadpool.nthreads);
-            if (threadCount == 0 || threadCount < (ScriptEvents.Count + (SleepingScriptEventCount / 2)) * EventPerformance)
+            if (threadCount == 0 || threadCount < (ScriptEvents.Count + (SleepingScriptEventCount/2))*EventPerformance)
             {
                 scriptThreadpool.QueueEvent(eventLoop, 2);
             }
@@ -485,7 +498,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 lock (SleepingScriptEvents)
                 {
-                    long time = priority == EventPriority.Suspended ? DateTime.Now.AddMilliseconds(10).Ticks : DateTime.Now.Ticks;
+                    long time = priority == EventPriority.Suspended
+                                    ? DateTime.Now.AddMilliseconds(10).Ticks
+                                    : DateTime.Now.Ticks;
                     //Let it sleep for 10ms so that other scripts can process before it, any repeating plugins ought to use this
                     SleepingScriptEvents.Enqueue(QIS, time);
                     SleepingScriptEventCount++;
@@ -498,7 +513,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptEvents.Enqueue(QIS);
 
             long threadCount = Interlocked.Read(ref scriptThreadpool.nthreads);
-            if (threadCount == 0 || threadCount < (ScriptEvents.Count + (SleepingScriptEventCount / 2)) * EventPerformance)
+            if (threadCount == 0 || threadCount < (ScriptEvents.Count + (SleepingScriptEventCount/2))*EventPerformance)
             {
                 scriptThreadpool.QueueEvent(eventLoop, 2);
             }
@@ -508,7 +523,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void eventLoop()
         {
             int numberOfEmptyWork = 0;
-            while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled && m_ScriptEngine.Scene.ShouldRunHeartbeat)
+            while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled &&
+                   m_ScriptEngine.Scene.ShouldRunHeartbeat)
             {
                 //int numScriptsProcessed = 0;
                 int numSleepScriptsProcessed = 0;
@@ -524,7 +540,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         if (SleepingScriptEvents.Count > 0)
                         {
                             QIS = SleepingScriptEvents.Dequeue().Value;
-                        restart:
+                            restart:
                             if (QIS.RunningNumber > 2 && SleepingScriptEventCount > 0 &&
                                 numSleepScriptsProcessed < SleepingScriptEventCount)
                             {
@@ -601,7 +617,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //    goto processMoreScripts;
 
                 if (ScriptEvents.Count == 0 && NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
-                    timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
+                    timeToSleep = (int) (NextSleepersTest - DateTime.Now).TotalMilliseconds;
                 if (timeToSleep < 5)
                     timeToSleep = 5;
                 if (timeToSleep > 50)
@@ -611,23 +627,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     numberOfEmptyWork++;
                     if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME)
-                    //Don't break immediately, otherwise we have to wait to spawn more threads
+                        //Don't break immediately, otherwise we have to wait to spawn more threads
                     {
                         break; //No more events, end
                     }
-                    else if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME / 20)
+                    else if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME/20)
                         timeToSleep += 10;
                 }
                 else if (Interlocked.Read(ref scriptThreadpool.nthreads) >
-                         (ScriptEvents.Count + (int)((SleepingScriptEventCount / 2f + 0.5f))) ||
+                         (ScriptEvents.Count + (int) ((SleepingScriptEventCount/2f + 0.5f))) ||
                          Interlocked.Read(ref scriptThreadpool.nthreads) > MaxScriptThreads)
                 {
                     numberOfEmptyWork++;
-                    if (numberOfEmptyWork > (EMPTY_WORK_KILL_THREAD_TIME / 2)) //Don't break immediately
+                    if (numberOfEmptyWork > (EMPTY_WORK_KILL_THREAD_TIME/2)) //Don't break immediately
                     {
                         break; //Too many threads, kill some off
                     }
-                    else if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME / 20)
+                    else if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME/20)
                         timeToSleep += 5;
                 }
                 else
@@ -660,12 +676,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (QIS.functionName != "link_message" &&
                 QIS.VersionID != Interlocked.Read(ref QIS.ID.VersionID))
             {
-                MainConsole.Instance.WarnFormat("FOUND BAD VERSION ID, OLD {0}, NEW {1}, FUNCTION NAME {2}", QIS.VersionID,
-                                 Interlocked.Read(ref QIS.ID.VersionID), QIS.functionName);
+                MainConsole.Instance.WarnFormat("FOUND BAD VERSION ID, OLD {0}, NEW {1}, FUNCTION NAME {2}",
+                                                QIS.VersionID,
+                                                Interlocked.Read(ref QIS.ID.VersionID), QIS.functionName);
                 //return;
             }
 
-            MainConsole.Instance.Trace("[ADNE]: Running Event " + QIS.functionName + " in object " + QIS.ID.Part.ToString() + " in region " + QIS.ID.Part.ParentEntity.Scene.RegionInfo.RegionName);
+            MainConsole.Instance.Trace("[ADNE]: Running Event " + QIS.functionName + " in object " +
+                                       QIS.ID.Part.ToString() + " in region " +
+                                       QIS.ID.Part.ParentEntity.Scene.RegionInfo.RegionName);
             if (!EventSchProcessQIS(ref QIS)) //Execute the event
             {
                 //All done
@@ -714,7 +733,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 QIS.ID.Part.ParentEntity.Scene.RequestModuleInterface<IBackupModule>();
                             if (backup != null)
                                 backup.DeleteSceneObjects(
-                                    new ISceneEntity[1] { QIS.ID.Part.ParentEntity }, true, true);
+                                    new ISceneEntity[1] {QIS.ID.Part.ParentEntity}, true, true);
                         }
                     }
                     else if (ex.Message.Contains("ScriptDeleteException"))
@@ -722,7 +741,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         if (QIS.ID.Part != null && QIS.ID.Part.ParentEntity != null)
                             QIS.ID.Part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
                     }
-                    //Log it for the user
+                        //Log it for the user
                     else if (!(ex.Message.Contains("EventAbortException")) &&
                              !(ex.Message.Contains("MinEventDelayException")))
                         QIS.ID.DisplayUserNotification(ex.ToString(), "executing", false, true);

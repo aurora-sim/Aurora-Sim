@@ -32,116 +32,116 @@ using Aurora.Framework;
 namespace Aurora.ClientStack
 {
     /// <summary>
-    ///   Holds drip rates and maximum burst rates for throttling with hierarchical
-    ///   token buckets. The maximum burst rates set here are hard limits and can
-    ///   not be overridden by client requests
+    ///     Holds drip rates and maximum burst rates for throttling with hierarchical
+    ///     token buckets. The maximum burst rates set here are hard limits and can
+    ///     not be overridden by client requests
     /// </summary>
     public sealed class ThrottleRates
     {
         /// <summary>
-        ///   Drip rate for asset packets
+        ///     Drip rate for asset packets
         /// </summary>
         public int Asset;
 
         /// <summary>
-        ///   Maximum burst rate for asset packets
+        ///     Maximum burst rate for asset packets
         /// </summary>
         public int AssetLimit;
 
         /// <summary>
-        ///   Drip rate for AvatarInfo packets
+        ///     Drip rate for AvatarInfo packets
         /// </summary>
         public int AvatarInfo;
 
         /// <summary>
-        ///   Burst rate for the parent token bucket
+        ///     Burst rate for the parent token bucket
         /// </summary>
         public int AvatarInfoLimit;
 
         /// <summary>
-        ///   Drip rate for cloud packets
+        ///     Drip rate for cloud packets
         /// </summary>
         public int Cloud;
 
         /// <summary>
-        ///   Maximum burst rate for cloud packets
+        ///     Maximum burst rate for cloud packets
         /// </summary>
         public int CloudLimit;
 
         /// <summary>
-        ///   Drip rate for terrain packets
+        ///     Drip rate for terrain packets
         /// </summary>
         public int Land;
 
         /// <summary>
-        ///   Maximum burst rate for land packets
+        ///     Maximum burst rate for land packets
         /// </summary>
         public int LandLimit;
 
         /// <summary>
-        ///   Drip rate for resent packets
+        ///     Drip rate for resent packets
         /// </summary>
         public int Resend;
 
         /// <summary>
-        ///   Maximum burst rate for resent packets
+        ///     Maximum burst rate for resent packets
         /// </summary>
         public int ResendLimit;
 
         /// <summary>
-        ///   Drip rate for state packets
+        ///     Drip rate for state packets
         /// </summary>
         public int State;
 
         /// <summary>
-        ///   Maximum burst rate for state packets
+        ///     Maximum burst rate for state packets
         /// </summary>
         public int StateLimit;
 
         /// <summary>
-        ///   Drip rate for task packets
+        ///     Drip rate for task packets
         /// </summary>
         public int Task;
 
         /// <summary>
-        ///   Maximum burst rate for task (state and transaction) packets
+        ///     Maximum burst rate for task (state and transaction) packets
         /// </summary>
         public int TaskLimit;
 
         /// <summary>
-        ///   Drip rate for texture packets
+        ///     Drip rate for texture packets
         /// </summary>
         public int Texture;
 
         /// <summary>
-        ///   Maximum burst rate for texture packets
+        ///     Maximum burst rate for texture packets
         /// </summary>
         public int TextureLimit;
 
         /// <summary>
-        ///   Drip rate for the parent token bucket
+        ///     Drip rate for the parent token bucket
         /// </summary>
         public int Total;
 
         /// <summary>
-        ///   Burst rate for the parent token bucket
+        ///     Burst rate for the parent token bucket
         /// </summary>
         public int TotalLimit;
 
         /// <summary>
-        ///   Drip rate for wind packets
+        ///     Drip rate for wind packets
         /// </summary>
         public int Wind;
 
         /// <summary>
-        ///   Maximum burst rate for wind packets
+        ///     Maximum burst rate for wind packets
         /// </summary>
         public int WindLimit;
 
         /// <summary>
-        ///   Default constructor
+        ///     Default constructor
         /// </summary>
-        /// <param name = "config">Config source to load defaults from</param>
+        /// <param name="config">Config source to load defaults from</param>
         public ThrottleRates(IConfigSource config)
         {
             try

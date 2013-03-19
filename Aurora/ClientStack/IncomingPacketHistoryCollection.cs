@@ -30,8 +30,8 @@ using System.Collections.Generic;
 namespace Aurora.ClientStack
 {
     /// <summary>
-    ///   A circular buffer and hashset for tracking incoming packet sequence
-    ///   numbers
+    ///     A circular buffer and hashset for tracking incoming packet sequence
+    ///     numbers
     /// </summary>
     public sealed class IncomingPacketHistoryCollection
     {

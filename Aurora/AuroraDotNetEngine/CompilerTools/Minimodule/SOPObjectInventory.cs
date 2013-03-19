@@ -77,11 +77,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         #endregion
 
         /// <summary>
-        ///   Fully populate the public dictionary with the contents of the private dictionary
+        ///     Fully populate the public dictionary with the contents of the private dictionary
         /// </summary>
         /// <description>
-        ///   This will only convert those items which hasn't already been converted. ensuring that
-        ///   no items are converted twice, and that any references already in use are maintained.
+        ///     This will only convert those items which hasn't already been converted. ensuring that
+        ///     no items are converted twice, and that any references already in use are maintained.
         /// </description>
         private void SynchronizeDictionaries()
         {
@@ -92,7 +92,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                     m_publicInventory.Add(privateItem.ItemID, new InventoryItem(m_rootScene, privateItem));
             }
 #else
-            foreach (TaskInventoryItem privateItem in m_privateInventory.Values.Where(privateItem => !m_publicInventory.ContainsKey(privateItem.ItemID)))
+            foreach (
+                TaskInventoryItem privateItem in
+                    m_privateInventory.Values.Where(privateItem => !m_publicInventory.ContainsKey(privateItem.ItemID)))
                 m_publicInventory.Add(privateItem.ItemID, new InventoryItem(m_rootScene, privateItem));
 #endif
         }

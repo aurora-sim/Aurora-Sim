@@ -39,16 +39,16 @@ using System.Xml;
 namespace Aurora.Region.Serialization
 {
     /// <summary>
-    ///   Serialize and deserialize scene objects.
+    ///     Serialize and deserialize scene objects.
     /// </summary>
     /// This should really be in Aurora.Framework.Serialization but this would mean circular dependency problems
     /// right now - hopefully this isn't forever.
     public class SceneObjectSerializer : ISceneObjectSerializer
     {
         /// <summary>
-        ///   Restore this part from the serialized xml representation.
+        ///     Restore this part from the serialized xml representation.
         /// </summary>
-        /// <param name = "xmlReader"></param>
+        /// <param name="xmlReader"></param>
         /// <returns></returns>
         protected SceneObjectPart FromXml(XmlTextReader xmlReader)
         {
@@ -61,10 +61,10 @@ namespace Aurora.Region.Serialization
         }
 
         /// <summary>
-        ///   Deserialize a scene object from the original xml format
+        ///     Deserialize a scene object from the original xml format
         /// </summary>
-        /// <param name = "serialization"></param>
-        /// <param name = "scene"></param>
+        /// <param name="serialization"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         public ISceneEntity FromOriginalXmlFormat(string serialization, IRegistryCore scene)
         {
@@ -72,14 +72,14 @@ namespace Aurora.Region.Serialization
         }
 
         /// <summary>
-        ///   Deserialize a scene object from the original xml format
+        ///     Deserialize a scene object from the original xml format
         /// </summary>
-        /// <param name = "fromUserInventoryItemID"></param>
-        /// <param name = "xmlData"></param>
-        /// <param name = "scene"></param>
+        /// <param name="fromUserInventoryItemID"></param>
+        /// <param name="xmlData"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         public ISceneEntity FromOriginalXmlFormat(UUID fromUserInventoryItemID, string xmlData,
-                                                             IRegistryCore scene)
+                                                  IRegistryCore scene)
         {
             //MainConsole.Instance.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
@@ -140,9 +140,9 @@ namespace Aurora.Region.Serialization
         }
 
         /// <summary>
-        ///   Serialize a scene object to the original xml format
+        ///     Serialize a scene object to the original xml format
         /// </summary>
-        /// <param name = "sceneObject"></param>
+        /// <param name="sceneObject"></param>
         /// <returns></returns>
         public string ToOriginalXmlFormat(ISceneEntity sceneObject)
         {
@@ -160,9 +160,9 @@ namespace Aurora.Region.Serialization
         }
 
         /// <summary>
-        ///   Serialize a scene object to the original xml format
+        ///     Serialize a scene object to the original xml format
         /// </summary>
-        /// <param name = "sceneObject"></param>
+        /// <param name="sceneObject"></param>
         /// <returns></returns>
         protected void ToOriginalXmlFormat(SceneObjectGroup sceneObject, XmlTextWriter writer)
         {
@@ -211,7 +211,8 @@ namespace Aurora.Region.Serialization
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
+                MainConsole.Instance.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e,
+                                                 xmlData);
                 return null;
             }
             finally
@@ -233,7 +234,7 @@ namespace Aurora.Region.Serialization
                 doc.Load(ms);
 
                 grp = InternalFromXml2Format(doc, scene);
-                foreach(var c in grp.ChildrenList)
+                foreach (var c in grp.ChildrenList)
                     c.FinishedSerializingGenericProperties();
                 return grp;
             }
@@ -287,15 +288,16 @@ namespace Aurora.Region.Serialization
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, doc.Value);
+                MainConsole.Instance.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e,
+                                                 doc.Value);
                 return null;
             }
         }
 
         /// <summary>
-        ///   Serialize a scene object to the 'xml2' format.
+        ///     Serialize a scene object to the 'xml2' format.
         /// </summary>
-        /// <param name = "sceneObject"></param>
+        /// <param name="sceneObject"></param>
         /// <returns></returns>
         public string ToXml2Format(ISceneEntity sceneObject)
         {
@@ -317,9 +319,9 @@ namespace Aurora.Region.Serialization
         }
 
         /// <summary>
-        ///   Serialize a scene object to the 'xml2' format.
+        ///     Serialize a scene object to the 'xml2' format.
         /// </summary>
-        /// <param name = "sceneObject"></param>
+        /// <param name="sceneObject"></param>
         /// <returns></returns>
         public byte[] ToBinaryXml2Format(ISceneEntity sceneObject)
         {
@@ -419,12 +421,13 @@ namespace Aurora.Region.Serialization
             m_SOPXmlProcessors.Add("PayPrice4", ProcessPayPrice4);
             m_SOPXmlProcessors.Add("FromUserInventoryAssetID", ProcessFromUserInventoryAssetID);
             m_SOPXmlProcessors.Add("FromUserInventoryItemID", ProcessFromUserInventoryItemID);
-            Type sopType = typeof(SceneObjectPart);
+            Type sopType = typeof (SceneObjectPart);
             m_SOPXmlProcessors.Add("RETURN_AT_EDGE", ((sop, xml) => GenericBool(sop, xml, "RETURN_AT_EDGE", sopType)));
             m_SOPXmlProcessors.Add("BlockGrab", ((sop, xml) => GenericBool(sop, xml, "BlockGrab", sopType)));
             m_SOPXmlProcessors.Add("BlockGrabObject", ((sop, xml) => GenericBool(sop, xml, "BlockGrabObject", sopType)));
             m_SOPXmlProcessors.Add("StatusSandbox", ((sop, xml) => GenericBool(sop, xml, "StatusSandbox", sopType)));
-            m_SOPXmlProcessors.Add("StatusSandboxPos", ((sop, xml) => GenericVector3(sop, xml, "StatusSandboxPos", sopType)));
+            m_SOPXmlProcessors.Add("StatusSandboxPos",
+                                   ((sop, xml) => GenericVector3(sop, xml, "StatusSandboxPos", sopType)));
             m_SOPXmlProcessors.Add("STATUS_ROTATE_X", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_X", sopType)));
             m_SOPXmlProcessors.Add("STATUS_ROTATE_Y", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_Y", sopType)));
             m_SOPXmlProcessors.Add("STATUS_ROTATE_Z", ((sop, xml) => GenericInt(sop, xml, "STATUS_ROTATE_Z", sopType)));
@@ -435,7 +438,8 @@ namespace Aurora.Region.Serialization
             m_SOPXmlProcessors.Add("Density", ((sop, xml) => GenericFloat(sop, xml, "Density", sopType)));
             m_SOPXmlProcessors.Add("Friction", ((sop, xml) => GenericFloat(sop, xml, "Friction", sopType)));
             m_SOPXmlProcessors.Add("Restitution", ((sop, xml) => GenericFloat(sop, xml, "Restitution", sopType)));
-            m_SOPXmlProcessors.Add("GravityMultiplier", ((sop, xml) => GenericFloat(sop, xml, "GravityMultiplier", sopType)));
+            m_SOPXmlProcessors.Add("GravityMultiplier",
+                                   ((sop, xml) => GenericFloat(sop, xml, "GravityMultiplier", sopType)));
             m_SOPXmlProcessors.Add("DIE_AT_EDGE", ((sop, xml) => GenericBool(sop, xml, "DIE_AT_EDGE", sopType)));
             m_SOPXmlProcessors.Add("UseSoundQueue", ((sop, xml) => GenericInt(sop, xml, "UseSoundQueue", sopType)));
             m_SOPXmlProcessors.Add("Sound", ((sop, xml) => GenericUUID(sop, xml, "Sound", sopType)));
@@ -448,10 +452,14 @@ namespace Aurora.Region.Serialization
             m_SOPXmlProcessors.Add("PIDHoverHeight", ((sop, xml) => GenericFloat(sop, xml, "PIDHoverHeight", sopType)));
             m_SOPXmlProcessors.Add("PIDHoverTau", ((sop, xml) => GenericFloat(sop, xml, "PIDHoverTau", sopType)));
             m_SOPXmlProcessors.Add("VehicleType", ((sop, xml) => GenericInt(sop, xml, "VehicleType", sopType)));
-            m_SOPXmlProcessors.Add("SavedAttachedPos", ((sop, xml) => GenericVector3(sop, xml, "SavedAttachedPos", sopType)));
-            m_SOPXmlProcessors.Add("SavedAttachmentPoint", ((sop, xml) => GenericInt(sop, xml, "SavedAttachmentPoint", sopType)));
-            m_SOPXmlProcessors.Add("VolumeDetectActive", ((sop, xml) => GenericBool(sop, xml, "VolumeDetectActive", sopType)));
-            m_SOPXmlProcessors.Add("CameraEyeOffset", ((sop, xml) => GenericVector3(sop, xml, "CameraEyeOffset", sopType)));
+            m_SOPXmlProcessors.Add("SavedAttachedPos",
+                                   ((sop, xml) => GenericVector3(sop, xml, "SavedAttachedPos", sopType)));
+            m_SOPXmlProcessors.Add("SavedAttachmentPoint",
+                                   ((sop, xml) => GenericInt(sop, xml, "SavedAttachmentPoint", sopType)));
+            m_SOPXmlProcessors.Add("VolumeDetectActive",
+                                   ((sop, xml) => GenericBool(sop, xml, "VolumeDetectActive", sopType)));
+            m_SOPXmlProcessors.Add("CameraEyeOffset",
+                                   ((sop, xml) => GenericVector3(sop, xml, "CameraEyeOffset", sopType)));
             m_SOPXmlProcessors.Add("CameraAtOffset", ((sop, xml) => GenericVector3(sop, xml, "CameraAtOffset", sopType)));
             m_SOPXmlProcessors.Add("ForceMouselook", ((sop, xml) => GenericBool(sop, xml, "ForceMouselook", sopType)));
             m_SOPXmlProcessors.Add("APIDTarget", ((sop, xml) => GenericQuaternion(sop, xml, "APIDTarget", sopType)));
@@ -460,7 +468,7 @@ namespace Aurora.Region.Serialization
             m_SOPXmlProcessors.Add("APIDIterations", ((sop, xml) => GenericInt(sop, xml, "APIDIterations", sopType)));
             m_SOPXmlProcessors.Add("APIDEnabled", ((sop, xml) => GenericBool(sop, xml, "APIDEnabled", sopType)));
             m_SOPXmlProcessors.Add("Damage", ((sop, xml) => GenericFloat(sop, xml, "Damage", sopType)));
-            
+
             #endregion
 
             #region TaskInventoryXmlProcessors initialization
@@ -554,7 +562,8 @@ namespace Aurora.Region.Serialization
                 m_genericSerializers.Add(Name, processor.Serialization);
             }
             else
-                MainConsole.Instance.Warn("[SCENEOBJECTSERIALIZER]: Tried to add an additional SOP processor for " + Name);
+                MainConsole.Instance.Warn("[SCENEOBJECTSERIALIZER]: Tried to add an additional SOP processor for " +
+                                          Name);
         }
 
         public void RemoveSerializer(string Name)
@@ -566,7 +575,7 @@ namespace Aurora.Region.Serialization
             }
             else
                 MainConsole.Instance.Warn("[SCENEOBJECTSERIALIZER]: Tried to remove a SOP processor for " + Name +
-                           " that did not exist");
+                                          " that did not exist");
         }
 
         ////////// Write /////////
@@ -701,9 +710,9 @@ namespace Aurora.Region.Serialization
             WriteVector(writer, "PIDTarget", sop.PIDTarget);
 
             writer.WriteElementString("PIDActive", sop.PIDActive.ToString().ToLower());
-            writer.WriteElementString("PIDTau", sop.PIDTau.ToString());//fl
-            writer.WriteElementString("PIDHoverHeight", sop.PIDHoverHeight.ToString());//fl
-            writer.WriteElementString("PIDHoverTau", sop.PIDHoverTau.ToString());//fl
+            writer.WriteElementString("PIDTau", sop.PIDTau.ToString()); //fl
+            writer.WriteElementString("PIDHoverHeight", sop.PIDHoverHeight.ToString()); //fl
+            writer.WriteElementString("PIDHoverTau", sop.PIDHoverTau.ToString()); //fl
             writer.WriteElementString("VehicleType", sop.VehicleType.ToString());
 
             WriteVector(writer, "SavedAttachedPos", sop.SavedAttachedPos);
@@ -727,7 +736,7 @@ namespace Aurora.Region.Serialization
             foreach (KeyValuePair<string, Serialization> kvp in m_genericSerializers)
             {
                 string val = kvp.Value(sop);
-                if(val != null)
+                if (val != null)
                     writer.WriteElementString(kvp.Key, val);
             }
 
@@ -773,7 +782,7 @@ namespace Aurora.Region.Serialization
         }
 
         private void WriteTaskInventory(XmlTextWriter writer, TaskInventoryDictionary tinv,
-                                               Dictionary<string, object> options, IScene scene)
+                                        Dictionary<string, object> options, IScene scene)
         {
             if (tinv.Count > 0) // otherwise skip this
             {
@@ -969,7 +978,8 @@ namespace Aurora.Region.Serialization
                     }
                     catch (Exception e)
                     {
-                        MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: exception while parsing {0}: {1}", nodeName, e);
+                        MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: exception while parsing {0}: {1}",
+                                                         nodeName, e);
                         if (reader.NodeType == XmlNodeType.EndElement)
                             reader.Read();
                     }
@@ -1000,7 +1010,7 @@ namespace Aurora.Region.Serialization
                 {
                     if (!property.CanRead || !property.CanWrite)
                         continue;
-                    var data = property.GetCustomAttributes(typeof(ProtoBuf.ProtoMemberAttribute), false);
+                    var data = property.GetCustomAttributes(typeof (ProtoBuf.ProtoMemberAttribute), false);
                     if (data.Length == 0)
                         continue;
                     var initialPropValue = property.GetValue(initial, null);
@@ -1010,14 +1020,15 @@ namespace Aurora.Region.Serialization
                     {
                         if (initialPropValue != null && resultPropValue != null)
                         {
-                            Array initialArray = (Array)initialPropValue;
-                            Array resultArray = (Array)resultPropValue;
+                            Array initialArray = (Array) initialPropValue;
+                            Array resultArray = (Array) resultPropValue;
                             for (int i = 0; i < initialArray.Length; i++)
                             {
                                 if (!object.Equals(initialArray.GetValue(i),
-                                    resultArray.GetValue(i)))
+                                                   resultArray.GetValue(i)))
                                 {
-                                    MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name, initialPropValue, resultPropValue);
+                                    MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name,
+                                                                    initialPropValue, resultPropValue);
                                 }
                             }
                         }
@@ -1025,15 +1036,17 @@ namespace Aurora.Region.Serialization
                     else if (initialPropValue != null && property.PropertyType.IsClass)
                     {
                         if (!AreMatch(initialPropValue, resultPropValue))
-                            MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name, initialPropValue, resultPropValue);
+                            MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name,
+                                                            initialPropValue, resultPropValue);
                     }
                     else if (!object.Equals(initialPropValue, resultPropValue))
                     {
                         //if(property.Name != "Color")
-                        MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name, initialPropValue, resultPropValue);
+                        MainConsole.Instance.WarnFormat("Failed to verify {0}, {1} != {2}", property.Name,
+                                                        initialPropValue, resultPropValue);
                     }
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                 }
             }
@@ -1129,8 +1142,9 @@ namespace Aurora.Region.Serialization
                     }
                     catch (Exception e)
                     {
-                        MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: exception while parsing Inventory Items {0}: {1}",
-                                          reader.Name, e);
+                        MainConsole.Instance.DebugFormat(
+                            "[SceneObjectSerializer]: exception while parsing Inventory Items {0}: {1}",
+                            reader.Name, e);
                     }
                 }
                 reader.ReadEndElement(); // TaskInventoryItem
@@ -1170,7 +1184,8 @@ namespace Aurora.Region.Serialization
                     }
                     catch (Exception e)
                     {
-                        MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: exception while parsing Shape {0}: {1}", nodeName, e);
+                        MainConsole.Instance.DebugFormat(
+                            "[SceneObjectSerializer]: exception while parsing Shape {0}: {1}", nodeName, e);
                         if (reader.NodeType == XmlNodeType.EndElement)
                             reader.Read();
                     }
@@ -1505,22 +1520,26 @@ namespace Aurora.Region.Serialization
 
         private void GenericInt(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
         {
-            SOPType.GetProperty(name).SetValue(obj, int.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+            SOPType.GetProperty(name)
+                   .SetValue(obj, int.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
         }
 
         private void GenericDouble(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
         {
-            SOPType.GetProperty(name).SetValue(obj, double.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+            SOPType.GetProperty(name)
+                   .SetValue(obj, double.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
         }
 
         private void GenericFloat(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
         {
-            SOPType.GetProperty(name).SetValue(obj, float.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+            SOPType.GetProperty(name)
+                   .SetValue(obj, float.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
         }
 
         private void GenericByte(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
         {
-            SOPType.GetProperty(name).SetValue(obj, byte.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
+            SOPType.GetProperty(name)
+                   .SetValue(obj, byte.Parse(reader.ReadElementContentAsString(name, String.Empty)), null);
         }
 
         private void GenericUUID(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)

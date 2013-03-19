@@ -157,15 +157,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (!found)
                 MainConsole.Instance.Error("[Compiler]: " +
-                            "Config error. Default language \"" + DefaultCompileLanguage +
-                            "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
+                                           "Config error. Default language \"" + DefaultCompileLanguage +
+                                           "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
 
             // Is this language in allow-list?
             if (!AllowedCompilers.ContainsKey(DefaultCompileLanguage))
             {
                 MainConsole.Instance.Error("[Compiler]: " +
-                            "Config error. Default language \"" + DefaultCompileLanguage +
-                            "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
+                                           "Config error. Default language \"" + DefaultCompileLanguage +
+                                           "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
             }
 
             // We now have an allow-list, a mapping list, and a default language
@@ -196,12 +196,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         #region Compile script
 
         /// <summary>
-        ///   Converts script (if needed) and compiles
+        ///     Converts script (if needed) and compiles
         /// </summary>
-        /// <param name = "script">LSL script</param>
-        /// <param name = "itemID"></param>
-        /// <param name = "ownerUUID"></param>
-        /// <param name = "assembly"></param>
+        /// <param name="script">LSL script</param>
+        /// <param name="itemID"></param>
+        /// <param name="ownerUUID"></param>
+        /// <param name="assembly"></param>
         /// <returns>Filename to .dll assembly</returns>
         public void PerformScriptCompile(string script, UUID itemID, UUID ownerUUID, out string assembly)
         {
@@ -237,10 +237,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Converts script (if needed) and compiles into memory
+        ///     Converts script (if needed) and compiles into memory
         /// </summary>
-        /// <param name = "Script"></param>
-        /// <param name = "itemID"></param>
+        /// <param name="Script"></param>
+        /// <param name="itemID"></param>
         /// <returns></returns>
         public void PerformInMemoryScriptCompile(string Script, UUID itemID)
         {
@@ -286,7 +286,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 #else
             IScriptConverter language = converters.FirstOrDefault(convert => convert.Name == DefaultCompileLanguage);
-            foreach (IScriptConverter convert in converters.Where(convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
+            foreach (
+                IScriptConverter convert in
+                    converters.Where(
+                        convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
             {
                 language = convert;
             }
@@ -311,7 +314,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
             }
 #else
-            foreach (IScriptConverter convert in converters.Where(convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
+            foreach (
+                IScriptConverter convert in
+                    converters.Where(
+                        convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
             {
                 language = convert.Name;
             }
@@ -445,13 +451,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Compile .NET script to .Net assembly (.dll)
+        ///     Compile .NET script to .Net assembly (.dll)
         /// </summary>
-        /// <param name = "script">CS script</param>
-        /// <param name = "converter"></param>
-        /// <param name = "assembly"></param>
-        /// <param name = "originalScript"></param>
-        /// <param name = "inMemory"></param>
+        /// <param name="script">CS script</param>
+        /// <param name="converter"></param>
+        /// <param name="assembly"></param>
+        /// <param name="originalScript"></param>
+        /// <param name="inMemory"></param>
         /// <returns>Filename to .dll assembly</returns>
         internal void CompileFromDotNetText(string script, IScriptConverter converter, string assembly,
                                             string originalScript, bool inMemory)
@@ -487,13 +493,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {
                     MainConsole.Instance.Error("[Compiler]: Exception while " +
-                                "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex);
+                                               "trying to write script source to file \"" +
+                                               srcFileName + "\": " + ex);
                 }
             }
 
             // Do actual compile
-            CompilerParameters parameters = new CompilerParameters { IncludeDebugInformation = true };
+            CompilerParameters parameters = new CompilerParameters {IncludeDebugInformation = true};
 
 
             string rootPath =
@@ -536,8 +542,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {
                     MainConsole.Instance.Error("[Compiler]: Exception while " +
-                                "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex);
+                                               "trying to write script source to file \"" +
+                                               srcFileName + "\": " + ex);
                 }
 
                 foreach (CompilerError CompErr in results.Errors)

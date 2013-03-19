@@ -81,7 +81,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected int HashspaceHigh = 8;
 
         protected int GridSpaceScaleBits = 5;
-                    // used to do shifts to find space from position. Value decided from region size in init
+        // used to do shifts to find space from position. Value decided from region size in init
 
         protected int nspacesPerSideX = 8;
         protected int nspacesPerSideY = 8;
@@ -111,10 +111,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override List<PhysicsObject> ActiveObjects
         {
-            get
-            {
-                return new List<AuroraODEPrim>(_activeprims).ConvertAll<PhysicsObject>(prim => prim);
-            }
+            get { return new List<AuroraODEPrim>(_activeprims).ConvertAll<PhysicsObject>(prim => prim); }
         }
 
         public ConcurrentQueue<NoParam> SimulationChangesQueue = new ConcurrentQueue<NoParam>();
@@ -203,65 +200,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Stats
 
-        public override int StatPhysicsTaintTime
-        {
-            get;
-            protected set;
-        }
+        public override int StatPhysicsTaintTime { get; protected set; }
 
-        public override int StatPhysicsMoveTime
-        {
-            get;
-            protected set;
-        }
+        public override int StatPhysicsMoveTime { get; protected set; }
 
-        public override int StatCollisionOptimizedTime
-        {
-            get;
-            protected set;
-        }
+        public override int StatCollisionOptimizedTime { get; protected set; }
 
-        public override int StatSendCollisionsTime
-        {
-            get;
-            protected set;
-        }
+        public override int StatSendCollisionsTime { get; protected set; }
 
-        public override int StatAvatarUpdatePosAndVelocity
-        {
-            get;
-            protected set;
-        }
+        public override int StatAvatarUpdatePosAndVelocity { get; protected set; }
 
-        public override int StatPrimUpdatePosAndVelocity
-        {
-            get;
-            protected set;
-        }
+        public override int StatPrimUpdatePosAndVelocity { get; protected set; }
 
-        public override int StatUnlockedArea
-        {
-            get;
-            protected set;
-        }
+        public override int StatUnlockedArea { get; protected set; }
 
-        public override int StatFindContactsTime
-        {
-            get;
-            protected set;
-        }
+        public override int StatFindContactsTime { get; protected set; }
 
-        public override int StatContactLoopTime
-        {
-            get;
-            protected set;
-        }
+        public override int StatContactLoopTime { get; protected set; }
 
-        public override int StatCollisionAccountingTime
-        {
-            get;
-            protected set;
-        }
+        public override int StatCollisionAccountingTime { get; protected set; }
 
         #endregion
 
@@ -270,9 +227,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Constructor/Initialization
 
         /// <summary>
-        ///   Initiailizes the scene
-        ///   Sets many properties that ODE requires to be stable
-        ///   These settings need to be tweaked 'exactly' right or weird stuff happens.
+        ///     Initiailizes the scene
+        ///     Sets many properties that ODE requires to be stable
+        ///     These settings need to be tweaked 'exactly' right or weird stuff happens.
         /// </summary>
         public AuroraODEPhysicsScene()
         {
@@ -317,7 +274,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     gravityVectorNormalized.Normalize();
 
                     AvDecayTime = physicsconfig.GetFloat("avDecayTime", AvDecayTime);
-                    
+
                     AllowUnderwaterPhysics = physicsconfig.GetBoolean("useUnderWaterPhysics", false);
                     AllowAvGravity = physicsconfig.GetBoolean("useAvGravity", true);
                     AvGravityHeight = physicsconfig.GetInt("avGravityHeight", 4096);
@@ -368,7 +325,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_useFlightCeilingHeight = physicsconfig.GetBoolean("Use_Flight_Ceiling_Height_Max",
                                                                         m_useFlightCeilingHeight);
                     m_flightCeilingHeight = physicsconfig.GetFloat("Flight_Ceiling_Height_Max", m_flightCeilingHeight);
-                        //Rex
+                    //Rex
 
                     minimumGroundFlightOffset = physicsconfig.GetFloat("minimum_ground_flight_offset", 6f);
                     maximumMassObject = physicsconfig.GetFloat("maximum_mass_object", 100000.01f);
@@ -377,10 +334,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             // alloc unmanaged memory to receive information from colision contact joints              
-            ContactgeomsArray = Marshal.AllocHGlobal(contactsPerCollision * d.ContactGeom.unmanagedSizeOf);
+            ContactgeomsArray = Marshal.AllocHGlobal(contactsPerCollision*d.ContactGeom.unmanagedSizeOf);
 
             // alloc unmanaged memory to pass information to colision contact joints              
-            GlobalContactsArray = Marshal.AllocHGlobal(maxContactsbeforedeath * d.Contact.unmanagedSizeOf);
+            GlobalContactsArray = Marshal.AllocHGlobal(maxContactsbeforedeath*d.Contact.unmanagedSizeOf);
 
             newGlobalcontact.surface.mode = CommumContactFlags;
             newGlobalcontact.surface.soft_cfm = 0.0001f;
@@ -416,24 +373,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (WorldExtents.X < WorldExtents.Y)
                 // // constant is 1/log(2),  -3 for division by 8 plus 0.5 for rounding
-                GridSpaceScaleBits = (int)(Math.Log(WorldExtents.X) * 1.4426950f - 2.5f);
+                GridSpaceScaleBits = (int) (Math.Log(WorldExtents.X)*1.4426950f - 2.5f);
             else
-                GridSpaceScaleBits = (int)(Math.Log(WorldExtents.Y) * 1.4426950f - 2.5f);
+                GridSpaceScaleBits = (int) (Math.Log(WorldExtents.Y)*1.4426950f - 2.5f);
 
             if (GridSpaceScaleBits < 4) // no less than 16m side
                 GridSpaceScaleBits = 4;
             else if (GridSpaceScaleBits > 10)
                 GridSpaceScaleBits = 10; // no more than 1Km side
 
-            int nspacesPerSideX2 = (int)(WorldExtents.X) >> GridSpaceScaleBits;
-            int nspacesPerSideY2 = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
+            int nspacesPerSideX2 = (int) (WorldExtents.X) >> GridSpaceScaleBits;
+            int nspacesPerSideY2 = (int) (WorldExtents.Y) >> GridSpaceScaleBits;
 
-            if ((int)(WorldExtents.X) > nspacesPerSideX2 << GridSpaceScaleBits)
+            if ((int) (WorldExtents.X) > nspacesPerSideX2 << GridSpaceScaleBits)
                 nspacesPerSideX2++;
-            if ((int)(WorldExtents.Y) > nspacesPerSideY2 << GridSpaceScaleBits)
+            if ((int) (WorldExtents.Y) > nspacesPerSideY2 << GridSpaceScaleBits)
                 nspacesPerSideY2++;
 
-            staticPrimspace = new IntPtr[nspacesPerSideX2, nspacesPerSideY2];
+            staticPrimspace = new IntPtr[nspacesPerSideX2,nspacesPerSideY2];
 
             IntPtr aSpace;
 
@@ -443,7 +400,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     aSpace = d.HashSpaceCreate(space);
                     staticPrimspace[i, j] = aSpace;
-                    d.GeomSetCategoryBits(aSpace, (int)CollisionCategories.Space);
+                    d.GeomSetCategoryBits(aSpace, (int) CollisionCategories.Space);
                     d.HashSpaceSetLevels(aSpace, -2, 8);
                     d.SpaceSetSublevel(aSpace, 1);
                 }
@@ -485,11 +442,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   This is our near callback.  A geometry is near a body
+        ///     This is our near callback.  A geometry is near a body
         /// </summary>
-        /// <param name = "space">The space that contains the geoms.  Remember, spaces are also geoms</param>
-        /// <param name = "g1">a geometry or space</param>
-        /// <param name = "g2">another geometry or space</param>
+        /// <param name="space">The space that contains the geoms.  Remember, spaces are also geoms</param>
+        /// <param name="g1">a geometry or space</param>
+        /// <param name="g2">another geometry or space</param>
         private void near(IntPtr space, IntPtr g1, IntPtr g2)
         {
             if (g1 == IntPtr.Zero || g2 == IntPtr.Zero || g1 == g2)
@@ -540,14 +497,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 PhysicsActor badObj;
                 if (actor_name_map.TryGetValue(g1, out badObj))
                     if (badObj is AuroraODEPrim)
-                        RemovePrim((AuroraODEPrim)badObj);
+                        RemovePrim((AuroraODEPrim) badObj);
                     else if (badObj is AuroraODECharacter)
-                        RemoveAvatar((AuroraODECharacter)badObj);
+                        RemoveAvatar((AuroraODECharacter) badObj);
                 if (actor_name_map.TryGetValue(g2, out badObj))
                     if (badObj is AuroraODEPrim)
-                        RemovePrim((AuroraODEPrim)badObj);
+                        RemovePrim((AuroraODEPrim) badObj);
                     else if (badObj is AuroraODECharacter)
-                        RemoveAvatar((AuroraODECharacter)badObj);
+                        RemoveAvatar((AuroraODECharacter) badObj);
                 return;
             }
 
@@ -577,7 +534,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             int NotSkipedCount = 0;
 
             //StatContactLoopTime = CollectTime(() =>
+
             #region Contact Loop
+
             {
                 for (int i = 0; i < count; i++)
                 {
@@ -590,7 +549,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         maxDepthContact.Position.X = curContact.pos.X;
                         maxDepthContact.Position.Y = curContact.pos.Y;
                         maxDepthContact.Position.Z = curContact.pos.Z;
-                        maxDepthContact.Type = (ActorTypes)p1.PhysicsActorType;
+                        maxDepthContact.Type = (ActorTypes) p1.PhysicsActorType;
                         maxDepthContact.SurfaceNormal.X = curContact.normal.X;
                         maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
                         maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
@@ -606,9 +565,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!GetCurContactGeom(i, ref curContact))
                         break;
                     AddODECollision(curContact, p1, p2, b1, b2, maxDepthContact, ref NotSkipedCount);
-
                 }
             }
+
             #endregion//);
 
             //StatCollisionAccountingTime = CollectTime(() =>
@@ -625,20 +584,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                 }
                 collision_accounting_events(p1, p2, maxDepthContact);
-            }//);
+            } //);
         }
 
-        private void AddODECollision(d.ContactGeom curContact, PhysicsActor p1, PhysicsActor p2, IntPtr b1, IntPtr b2, ContactPoint maxDepthContact, ref int NotSkipedCount)
+        private void AddODECollision(d.ContactGeom curContact, PhysicsActor p1, PhysicsActor p2, IntPtr b1, IntPtr b2,
+                                     ContactPoint maxDepthContact, ref int NotSkipedCount)
         {
             IntPtr joint = IntPtr.Zero;
 
             bool p2col = true;
 
             // We only need to test p2 for 'jump crouch purposes'
-            if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
+            if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int) ActorTypes.Prim)
             {
                 // Testing if the collision is at the feet of the avatar
-                if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z * 0.5f))
+                if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z*0.5f))
                     p2col = false;
             }
 
@@ -651,12 +611,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // appears to be phantom for the world
 
             // No collision on volume detect prims
-            if ((p1 is PhysicsObject && ((PhysicsObject)p1).VolumeDetect) ||
-                (p2 is PhysicsObject && ((PhysicsObject)p2).VolumeDetect))
+            if ((p1 is PhysicsObject && ((PhysicsObject) p1).VolumeDetect) ||
+                (p2 is PhysicsObject && ((PhysicsObject) p2).VolumeDetect))
                 return;
 
             if (curContact.depth < 0f)
-                return;//Has to be penetrating
+                return; //Has to be penetrating
 
             if (m_filterCollisions &&
                 checkDupe(curContact, p2.PhysicsActorType))
@@ -667,11 +627,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             NotSkipedCount++;
 
             // If we're colliding against terrain
-            if (p1.PhysicsActorType == (int)ActorTypes.Ground)
+            if (p1.PhysicsActorType == (int) ActorTypes.Ground)
             {
-                if (p2.PhysicsActorType == (int)ActorTypes.Prim)
+                if (p2.PhysicsActorType == (int) ActorTypes.Prim)
                 {
-                    ((AuroraODEPrim)p2).GetContactParam(p2, ref newGlobalcontact);
+                    ((AuroraODEPrim) p2).GetContactParam(p2, ref newGlobalcontact);
 
                     joint = CreateContacJoint(curContact);
                 }
@@ -687,17 +647,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 //Can't collide against anything else, agents do their own ground checks
             }
-            else if ((p1.PhysicsActorType == (int)ActorTypes.Agent) &&
-                        (p2.PhysicsActorType == (int)ActorTypes.Agent))
+            else if ((p1.PhysicsActorType == (int) ActorTypes.Agent) &&
+                     (p2.PhysicsActorType == (int) ActorTypes.Agent))
             {
                 GetContactParam(0.0f, AvatarContactBounce, ref newGlobalcontact);
 
                 joint = CreateContacJoint(curContact);
             }
-            else if (p1.PhysicsActorType == (int)ActorTypes.Prim)
+            else if (p1.PhysicsActorType == (int) ActorTypes.Prim)
             {
                 //Add restitution and friction changes
-                ((AuroraODEPrim)p1).GetContactParam(p2, ref newGlobalcontact);
+                ((AuroraODEPrim) p1).GetContactParam(p2, ref newGlobalcontact);
 
                 joint = CreateContacJoint(curContact);
             }
@@ -782,9 +742,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   This is our collision testing routine in ODE
+        ///     This is our collision testing routine in ODE
         /// </summary>
-        /// <param name = "timeStep"></param>
+        /// <param name="timeStep"></param>
         private void collision_optimized(float timeStep)
         {
             m_global_contactcount = 0;
@@ -794,7 +754,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 chr.IsColliding = false;
                 chr.IsTruelyColliding = false;
             }
-            foreach (AuroraODECharacter chr in _characters.Where(chr => chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero))
+            foreach (
+                AuroraODECharacter chr in
+                    _characters.Where(chr => chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero))
             {
                 // test the avatar's geometry for collision with the space
                 // This will return near and the space that they are the closest to
@@ -982,19 +944,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             pos.Y = position.Y;
             pos.Z = position.Z;
             ODESpecificAvatar newAv = new ODESpecificAvatar(avName, this, pos, rotation, size)
-                                           {
-                                               LocalID = localID,
-                                               UUID = UUID,
-                                               Flying = isFlying,
-                                               MinimumGroundFlightOffset = minimumGroundFlightOffset
-                                           };
+                                          {
+                                              LocalID = localID,
+                                              UUID = UUID,
+                                              Flying = isFlying,
+                                              MinimumGroundFlightOffset = minimumGroundFlightOffset
+                                          };
 
             return newAv;
         }
 
         /// <summary>
-        /// Adds a character to the list of avatars in the scene
-        /// Internally locked, as it is called only in the Simulation Changes loop
+        ///     Adds a character to the list of avatars in the scene
+        ///     Internally locked, as it is called only in the Simulation Changes loop
         /// </summary>
         /// <param name="chr"></param>
         internal void AddCharacter(AuroraODECharacter chr)
@@ -1004,8 +966,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        /// Removes a character from the list of avatars currently in the scene
-        /// Internally locked, as it is called only in the Simulation Changes loop
+        ///     Removes a character from the list of avatars currently in the scene
+        ///     Internally locked, as it is called only in the Simulation Changes loop
         /// </summary>
         /// <param name="chr"></param>
         internal void RemoveCharacter(AuroraODECharacter chr)
@@ -1022,11 +984,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         internal void BadCharacter(AuroraODECharacter chr)
         {
             RemoveAvatar(chr);
-            AddAvatar(chr.Name, new Vector3(m_region.RegionSizeX / 2,
-                                                m_region.RegionSizeY / 2,
-                                                m_region.RegionSizeZ / 2), chr.Orientation,
-                        new Vector3(chr.CAPSULE_RADIUS * 2, chr.CAPSULE_RADIUS * 2,
-                                    chr.CAPSULE_LENGTH * 2), true, chr.LocalID, chr.UUID);
+            AddAvatar(chr.Name, new Vector3(m_region.RegionSizeX/2,
+                                            m_region.RegionSizeY/2,
+                                            m_region.RegionSizeZ/2), chr.Orientation,
+                      new Vector3(chr.CAPSULE_RADIUS*2, chr.CAPSULE_RADIUS*2,
+                                  chr.CAPSULE_LENGTH*2), true, chr.LocalID, chr.UUID);
         }
 
         internal void BadPrim(AuroraODEPrim auroraODEPrim)
@@ -1042,7 +1004,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             bool isPhysical = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);
             bool isPhantom = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
             bool physical = isPhysical & !isPhantom;
-            AuroraODEPrim  newPrim = new AuroraODEPrim(entity, this, false);
+            AuroraODEPrim newPrim = new AuroraODEPrim(entity, this, false);
 
             if (physical)
                 newPrim.IsPhysical = physical;
@@ -1087,15 +1049,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             DeleteQueue.Enqueue(prim);
         }
 
-        ///<summary>
-        ///  This is called from within simulate but outside the locked portion
-        ///  We need to do our own locking here
-        ///  Essentially, we need to remove the prim from our space segment, whatever segment it's in.
-        ///
-        ///  If there are no more prim in the segment, we need to empty (spacedestroy)the segment and reclaim memory
-        ///  that the space was using.
-        ///</summary>
-        ///<param name = "prim"></param>
+        /// <summary>
+        ///     This is called from within simulate but outside the locked portion
+        ///     We need to do our own locking here
+        ///     Essentially, we need to remove the prim from our space segment, whatever segment it's in.
+        ///     If there are no more prim in the segment, we need to empty (spacedestroy)the segment and reclaim memory
+        ///     that the space was using.
+        /// </summary>
+        /// <param name="prim"></param>
         internal void RemovePrimThreadLocked(AuroraODEPrim prim)
         {
             remCollisionEventReporting(prim);
@@ -1120,7 +1081,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 catch (AccessViolationException)
                 {
-                    MainConsole.Instance.Info("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
+                    MainConsole.Instance.Info(
+                        "[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
                 }
             }
             if (!prim.childPrim)
@@ -1140,11 +1102,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Space Separation Calculation
 
         /// <summary>
-        ///   Called when a static prim moves.  Allocates a space for the prim based on its position
+        ///     Called when a static prim moves.  Allocates a space for the prim based on its position
         /// </summary>
-        /// <param name = "geom">The pointer to the geom that moved</param>
-        /// <param name = "pos">The position that the geom moved to</param>
-        /// <param name = "currentspace">A pointer to the space it was in before it was moved.</param>
+        /// <param name="geom">The pointer to the geom that moved</param>
+        /// <param name="pos">The position that the geom moved to</param>
+        /// <param name="currentspace">A pointer to the space it was in before it was moved.</param>
         /// <returns>A pointer to the new space it's in</returns>
         public IntPtr recalculateSpaceForGeom(IntPtr geom, Vector3 pos, IntPtr currentspace)
         {
@@ -1163,8 +1125,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         d.SpaceRemove(currentspace, geom);
                     else
                     {
-                        MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" + currentspace +
-                                   " Geom:" + geom);
+                        MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
+                                                  currentspace +
+                                                  " Geom:" + geom);
                     }
                 }
                 else
@@ -1177,7 +1140,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else
                         {
                             MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
-                                       sGeomIsIn + " Geom:" + geom);
+                                                      sGeomIsIn + " Geom:" + geom);
                         }
                     }
                 }
@@ -1218,7 +1181,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else
                         {
                             MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
-                                       currentspace + " Geom:" + geom);
+                                                      currentspace + " Geom:" + geom);
                         }
                     }
                     else
@@ -1231,7 +1194,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             else
                             {
                                 MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
-                                           sGeomIsIn + " Geom:" + geom);
+                                                          sGeomIsIn + " Geom:" + geom);
                             }
                         }
                     }
@@ -1255,9 +1218,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Calculates the space the prim should be in by its position
+        ///     Calculates the space the prim should be in by its position
         /// </summary>
-        /// <param name = "pos"></param>
+        /// <param name="pos"></param>
         /// <returns>A pointer to the space. This could be a new space or reused space.</returns>
         public IntPtr calculateSpaceForGeom(Vector3 pos)
         {
@@ -1267,9 +1230,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Holds the space allocation logic
+        ///     Holds the space allocation logic
         /// </summary>
-        /// <param name = "pos"></param>
+        /// <param name="pos"></param>
         /// <returns>an array item based on the position</returns>
         public int[] calculateSpaceArrayItemFromPos(Vector3 pos)
         {
@@ -1292,9 +1255,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Debug space message for printing the space that a prim/avatar is in.
+        ///     Debug space message for printing the space that a prim/avatar is in.
         /// </summary>
-        /// <param name = "pos"></param>
+        /// <param name="pos"></param>
         /// <returns>Returns which split up space the given position is in.</returns>
         public string whichspaceamIin(Vector3 pos)
         {
@@ -1306,9 +1269,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Meshing
 
         /// <summary>
-        ///   Routine to figure out if we need to mesh this prim with our mesher
+        ///     Routine to figure out if we need to mesh this prim with our mesher
         /// </summary>
-        /// <param name = "entity"></param>
+        /// <param name="entity"></param>
         /// <returns></returns>
         internal bool needsMeshing(ISceneChildEntity entity)
         {
@@ -1328,11 +1291,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // let simple spheres use ode sphere object
             PrimitiveBaseShape sphere = PrimitiveBaseShape.CreateSphere();
             if (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte) Extrusion.Curve1
-                && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == sphere.ProfileHollow && pbs.PathBegin == sphere.PathBegin && pbs.PathEnd == sphere.PathEnd &&
-                pbs.PathCurve == sphere.PathCurve && pbs.HollowShape == sphere.HollowShape && pbs.PathRadiusOffset == sphere.PathRadiusOffset && pbs.PathRevolutions == sphere.PathRevolutions &&
-                pbs.PathScaleY == sphere.PathScaleY && pbs.PathShearX == sphere.PathShearX && pbs.PathShearY == sphere.PathShearY && pbs.PathSkew == sphere.PathSkew &&
-                pbs.PathTaperY == sphere.PathTaperY && pbs.PathTwist == sphere.PathTwist && pbs.PathTwistBegin == sphere.PathTwistBegin && pbs.ProfileBegin == sphere.ProfileBegin &&
-                pbs.ProfileEnd == sphere.ProfileEnd && pbs.ProfileHollow == sphere.ProfileHollow && pbs.ProfileShape == sphere.ProfileShape)
+                && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == sphere.ProfileHollow &&
+                pbs.PathBegin == sphere.PathBegin && pbs.PathEnd == sphere.PathEnd &&
+                pbs.PathCurve == sphere.PathCurve && pbs.HollowShape == sphere.HollowShape &&
+                pbs.PathRadiusOffset == sphere.PathRadiusOffset && pbs.PathRevolutions == sphere.PathRevolutions &&
+                pbs.PathScaleY == sphere.PathScaleY && pbs.PathShearX == sphere.PathShearX &&
+                pbs.PathShearY == sphere.PathShearY && pbs.PathSkew == sphere.PathSkew &&
+                pbs.PathTaperY == sphere.PathTaperY && pbs.PathTwist == sphere.PathTwist &&
+                pbs.PathTwistBegin == sphere.PathTwistBegin && pbs.ProfileBegin == sphere.ProfileBegin &&
+                pbs.ProfileEnd == sphere.ProfileEnd && pbs.ProfileHollow == sphere.ProfileHollow &&
+                pbs.ProfileShape == sphere.ProfileShape)
                 return false;
 
             if (pbs.SculptEntry && !meshSculptedPrim)
@@ -1442,8 +1410,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Changes/Tainting
 
         /// <summary>
-        ///   Called to queue a change to a prim
-        ///   to use in place of old taint mechanism so changes do have a time sequence
+        ///     Called to queue a change to a prim
+        ///     to use in place of old taint mechanism so changes do have a time sequence
         /// </summary>
         public void AddSimulationChange(NoParam del)
         {
@@ -1455,13 +1423,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Simulation Loop
 
         /// <summary>
-        ///   This is our main simulate loop
-        ///   It's thread locked by a Mutex in the scene.
-        ///   It holds Collisions, it instructs ODE to step through the physical reactions
-        ///   It moves the objects around in memory
-        ///   It calls the methods that report back to the object owners.. (scenepresence, SceneObjectGroup)
+        ///     This is our main simulate loop
+        ///     It's thread locked by a Mutex in the scene.
+        ///     It holds Collisions, it instructs ODE to step through the physical reactions
+        ///     It moves the objects around in memory
+        ///     It calls the methods that report back to the object owners.. (scenepresence, SceneObjectGroup)
         /// </summary>
-        /// <param name = "timeElapsed"></param>
+        /// <param name="timeElapsed"></param>
         /// <returns></returns>
         public override void Simulate(float timeElapsed)
         {
@@ -1482,8 +1450,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     NoParam del;
                     while (SimulationChangesQueue.TryDequeue(out del) && m_scene.ShouldRunHeartbeat)
-                        try { del(); }
-                        catch { }
+                        try
+                        {
+                            del();
+                        }
+                        catch
+                        {
+                        }
 
                     if (SimulationChangesQueue.Count == 0 && !m_hasSetUpPrims)
                     {
@@ -1496,7 +1469,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         return; //Don't do physics until the sim is completely set up
 
                     // Move characters
-                    foreach (ODESpecificAvatar actor in _characters.Where(actor => actor != null).Cast<ODESpecificAvatar>())
+                    foreach (
+                        ODESpecificAvatar actor in _characters.Where(actor => actor != null).Cast<ODESpecificAvatar>())
                         actor.Move(ODE_STEPSIZE);
 
                     // Move other active objects
@@ -1527,12 +1501,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             PhysicsObject prm;
             while (RemoveQueue.TryDequeue(out prm))
             {
-                AuroraODEPrim p = (AuroraODEPrim)prm;
+                AuroraODEPrim p = (AuroraODEPrim) prm;
                 p.setPrimForRemoval();
             }
             while (DeleteQueue.TryDequeue(out prm))
             {
-                AuroraODEPrim p = (AuroraODEPrim)prm;
+                AuroraODEPrim p = (AuroraODEPrim) prm;
                 p.setPrimForDeletion();
             }
 
@@ -1540,7 +1514,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 lock (_collisionEventListLock)
                 {
-                    foreach (PhysicsActor obj in ActiveAddCollisionQueue.Where(obj => !_collisionEventDictionary.ContainsKey(obj.UUID)))
+                    foreach (
+                        PhysicsActor obj in
+                            ActiveAddCollisionQueue.Where(obj => !_collisionEventDictionary.ContainsKey(obj.UUID)))
                         _collisionEventDictionary.Add(obj.UUID, obj);
                 }
                 ActiveAddCollisionQueue.Clear();
@@ -1567,12 +1543,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
-                actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
+                actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
 
             lock (_activeprimsLock)
             {
                 foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
-                    actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
+                    actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
             }
         }
 
@@ -1592,13 +1568,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_channel = channel;
             float[] _heightmap = ODETerrainHeightFieldHeights;
             if (ODETerrainHeightFieldHeights == null)
-                _heightmap = new float[m_region.RegionSizeX * m_region.RegionSizeY];
-            
+                _heightmap = new float[m_region.RegionSizeX*m_region.RegionSizeY];
+
             for (int x = 0; x < m_region.RegionSizeX; x++)
             {
                 for (int y = 0; y < m_region.RegionSizeY; y++)
                 {
-                    _heightmap[(x * m_region.RegionSizeX) + y] = heightMap[y * m_region.RegionSizeX + x] / Constants.TerrainCompression;
+                    _heightmap[(x*m_region.RegionSizeX) + y] = heightMap[y*m_region.RegionSizeX + x]/
+                                                               Constants.TerrainCompression;
                 }
             }
 
@@ -1606,55 +1583,62 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float hfmax = _heightmap.Max();
 
             SimulationChangesQueue.Enqueue(() =>
-            {
-                if (RegionTerrain != IntPtr.Zero)
-                {
-                    d.GeomHeightfieldDataDestroy(RegionTerrain);
-                    d.SpaceRemove(space, RegionTerrain);
-                    //d.GeomDestroy(RegionTerrain);
-                    GC.RemoveMemoryPressure(_heightmap.Length);
-                }
+                                               {
+                                                   if (RegionTerrain != IntPtr.Zero)
+                                                   {
+                                                       d.GeomHeightfieldDataDestroy(RegionTerrain);
+                                                       d.SpaceRemove(space, RegionTerrain);
+                                                       //d.GeomDestroy(RegionTerrain);
+                                                       GC.RemoveMemoryPressure(_heightmap.Length);
+                                                   }
 
-                const float scale = 1f;
-                const float offset = 0.0f;
-                float thickness = 0.2f;
-                const int wrap = 0;
+                                                   const float scale = 1f;
+                                                   const float offset = 0.0f;
+                                                   float thickness = 0.2f;
+                                                   const int wrap = 0;
 
-                IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
-                GC.AddMemoryPressure(_heightmap.Length);
-                //Add the memory pressure properly (note: should we be doing this since we have it in managed memory?)
-                //Do NOT copy it! Otherwise, it'll copy the terrain into unmanaged memory where we can't release it each time
-                d.GeomHeightfieldDataBuildSingle(HeightmapData, _heightmap, 0, m_region.RegionSizeX, m_region.RegionSizeY,
-                                                m_region.RegionSizeX, m_region.RegionSizeY, scale,
-                                                offset, thickness, wrap);
+                                                   IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
+                                                   GC.AddMemoryPressure(_heightmap.Length);
+                                                   //Add the memory pressure properly (note: should we be doing this since we have it in managed memory?)
+                                                   //Do NOT copy it! Otherwise, it'll copy the terrain into unmanaged memory where we can't release it each time
+                                                   d.GeomHeightfieldDataBuildSingle(HeightmapData, _heightmap, 0,
+                                                                                    m_region.RegionSizeX,
+                                                                                    m_region.RegionSizeY,
+                                                                                    m_region.RegionSizeX,
+                                                                                    m_region.RegionSizeY, scale,
+                                                                                    offset, thickness, wrap);
 
-                d.GeomHeightfieldDataSetBounds(HeightmapData, hfmin - 1.0f, hfmax + 1.0f);
-                RegionTerrain = d.CreateHeightfield(space, HeightmapData, 1);
+                                                   d.GeomHeightfieldDataSetBounds(HeightmapData, hfmin - 1.0f,
+                                                                                  hfmax + 1.0f);
+                                                   RegionTerrain = d.CreateHeightfield(space, HeightmapData, 1);
 
-                d.GeomSetCategoryBits(RegionTerrain, (int)(CollisionCategories.Land));
-                d.GeomSetCollideBits(RegionTerrain, (int)(CollisionCategories.Space));
+                                                   d.GeomSetCategoryBits(RegionTerrain, (int) (CollisionCategories.Land));
+                                                   d.GeomSetCollideBits(RegionTerrain, (int) (CollisionCategories.Space));
 
-                actor_name_map[RegionTerrain] = new NullObjectPhysicsActor();
+                                                   actor_name_map[RegionTerrain] = new NullObjectPhysicsActor();
 
-                d.Matrix3 R = new d.Matrix3();
+                                                   d.Matrix3 R = new d.Matrix3();
 
-                Quaternion q1 = Quaternion.CreateFromAxisAngle(new Vector3(1, 0, 0), 1.5707f);
-                Quaternion q2 = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), 1.5707f);
+                                                   Quaternion q1 = Quaternion.CreateFromAxisAngle(new Vector3(1, 0, 0),
+                                                                                                  1.5707f);
+                                                   Quaternion q2 = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0),
+                                                                                                  1.5707f);
 
-                q1 = q1 * q2;
+                                                   q1 = q1*q2;
 
-                Vector3 v3;
-                float angle;
-                q1.GetAxisAngle(out v3, out angle);
+                                                   Vector3 v3;
+                                                   float angle;
+                                                   q1.GetAxisAngle(out v3, out angle);
 
-                d.RFromAxisAndAngle(out R, v3.X, v3.Y, v3.Z, angle);
+                                                   d.RFromAxisAndAngle(out R, v3.X, v3.Y, v3.Z, angle);
 
-                d.GeomSetRotation(RegionTerrain, ref R);
-                d.GeomSetPosition(RegionTerrain, (m_region.RegionSizeX * 0.5f), (m_region.RegionSizeY * 0.5f), 0);
+                                                   d.GeomSetRotation(RegionTerrain, ref R);
+                                                   d.GeomSetPosition(RegionTerrain, (m_region.RegionSizeX*0.5f),
+                                                                     (m_region.RegionSizeY*0.5f), 0);
 
-                TerrainHeightFieldHeights = heightMap;
-                ODETerrainHeightFieldHeights = _heightmap;
-            });
+                                                   TerrainHeightFieldHeights = heightMap;
+                                                   ODETerrainHeightFieldHeights = _heightmap;
+                                               });
         }
 
         public double GetWaterLevel(float x, float y)
@@ -1719,7 +1703,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                 }
 #else
-                foreach (AuroraODEPrim prm in _prims.Where(prm => prm.CollisionScore > 0).Where(prm => !collidingPrims.Contains(prm)))
+                foreach (
+                    AuroraODEPrim prm in
+                        _prims.Where(prm => prm.CollisionScore > 0).Where(prm => !collidingPrims.Contains(prm)))
                 {
                     collidingPrims.Add(prm);
                 }
@@ -1806,9 +1792,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             public float GravForce;
 
             /// <summary>
-            ///   If this is true, the actor will have the forces applied to them 
-            ///   once they enter the area, rather than having gravity act like it does 
-            ///   in real life (pulling toward the center)
+            ///     If this is true, the actor will have the forces applied to them
+            ///     once they enter the area, rather than having gravity act like it does
+            ///     in real life (pulling toward the center)
             /// </summary>
             public bool PointForce;
 
@@ -1853,9 +1839,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else
                         {
                             //Pulls the actor toward the point
-                            forceVector.X += (pg.Position.X - position.X) * pg.GravForce * radiusScaling * mass * gravityModifier;
-                            forceVector.Y += (pg.Position.Y - position.Y) * pg.GravForce * radiusScaling * mass * gravityModifier;
-                            forceVector.Z += (pg.Position.Z - position.Z) * pg.GravForce * radiusScaling * mass * gravityModifier;
+                            forceVector.X += (pg.Position.X - position.X)*pg.GravForce*radiusScaling*mass*
+                                             gravityModifier;
+                            forceVector.Y += (pg.Position.Y - position.Y)*pg.GravForce*radiusScaling*mass*
+                                             gravityModifier;
+                            forceVector.Z += (pg.Position.Z - position.Z)*pg.GravForce*radiusScaling*mass*
+                                             gravityModifier;
                             /*if (forceVector.Z < 50 && forceVector.Z > 0)
                                 forceVector.Z = 0;
                             else if (forceVector.Z > -50 && forceVector.Z < 0)
@@ -1867,12 +1856,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Sets gravity parameters in the single axis, if you want a point, use the gravity point pieces
+        ///     Sets gravity parameters in the single axis, if you want a point, use the gravity point pieces
         /// </summary>
-        /// <param name = "enabled">Enable one axis gravity (disables point gravity)</param>
-        /// <param name = "forceX"></param>
-        /// <param name = "forceY"></param>
-        /// <param name = "forceZ"></param>
+        /// <param name="enabled">Enable one axis gravity (disables point gravity)</param>
+        /// <param name="forceX"></param>
+        /// <param name="forceY"></param>
+        /// <param name="forceZ"></param>
         public override void SetGravityForce(bool enabled, float forceX, float forceY, float forceZ)
         {
             normalGravityEnabled = enabled;

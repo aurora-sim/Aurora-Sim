@@ -48,10 +48,10 @@ namespace Aurora.Region
         #region IComponentManager Members
 
         /// <summary>
-        ///   Take the serialized string and set up the Components for this object
+        ///     Take the serialized string and set up the Components for this object
         /// </summary>
-        /// <param name = "obj"></param>
-        /// <param name = "serialized"></param>
+        /// <param name="obj"></param>
+        /// <param name="serialized"></param>
         public void DeserializeComponents(ISceneChildEntity obj, string serialized)
         {
             //Pull the OSDMap out for components

@@ -102,32 +102,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private class LimitDef
         {
             /// <summary>
-            ///   What action will be taken
+            ///     What action will be taken
             /// </summary>
             public LimitAction Action = LimitAction.None;
 
             /// <summary>
-            ///   What alert will be triggered by the limitor if it does limit
+            ///     What alert will be triggered by the limitor if it does limit
             /// </summary>
             public LimitAlert Alert = LimitAlert.None;
 
             /// <summary>
-            ///   The number of times a function can be fired over the timescale
+            ///     The number of times a function can be fired over the timescale
             /// </summary>
             public int FunctionsOverTimeScale;
 
             /// <summary>
-            ///   The max number of times a function can be fired (in total, does not decrease)
+            ///     The max number of times a function can be fired (in total, does not decrease)
             /// </summary>
             public int MaxNumberOfTimes;
 
             /// <summary>
-            ///   Time (in ms) that a function has to wait before being fired again
+            ///     Time (in ms) that a function has to wait before being fired again
             /// </summary>
             public int TimeScale;
 
             /// <summary>
-            ///   The group that will be limited by this function
+            ///     The group that will be limited by this function
             /// </summary>
             public LimitType Type = LimitType.None;
         }
@@ -200,21 +200,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     try
                     {
-                        limitDef.Type = (LimitType)Enum.Parse(typeof(LimitType), limitType, true);
+                        limitDef.Type = (LimitType) Enum.Parse(typeof (LimitType), limitType, true);
                     }
                     catch
                     {
                     }
                     try
                     {
-                        limitDef.Alert = (LimitAlert)Enum.Parse(typeof(LimitAlert), limitAlert, true);
+                        limitDef.Alert = (LimitAlert) Enum.Parse(typeof (LimitAlert), limitAlert, true);
                     }
                     catch
                     {
                     }
                     try
                     {
-                        limitDef.Action = (LimitAction)Enum.Parse(typeof(LimitAction), limitAction, true);
+                        limitDef.Action = (LimitAction) Enum.Parse(typeof (LimitAction), limitAction, true);
                     }
                     catch
                     {
@@ -263,9 +263,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                                                                      "SevereUserSet",
                                                                                                      UserSet.None), this);
             m_threatLevelNoAccess = new ThreatLevelDefinition(ThreatLevel.NoAccess,
-                                                            UserSetHelpers.ParseUserSetConfigSetting(config,
-                                                                                                     "NoAccessUserSet",
-                                                                                                     UserSet.None), this);
+                                                              UserSetHelpers.ParseUserSetConfigSetting(config,
+                                                                                                       "NoAccessUserSet",
+                                                                                                       UserSet.None),
+                                                              this);
         }
 
         #endregion
@@ -465,11 +466,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        ///   Fires the action associated with the limitation
+        ///     Fires the action associated with the limitation
         /// </summary>
-        /// <param name = "d"></param>
-        /// <param name = "m_host"></param>
-        /// <param name = "itemID"></param>
+        /// <param name="d"></param>
+        /// <param name="m_host"></param>
+        /// <param name="itemID"></param>
         /// <returns>Whether the event should be dropped</returns>
         private bool TriggerAction(LimitDef d, ISceneChildEntity m_host, UUID itemID)
         {
@@ -495,7 +496,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public class ThreatLevelDefinition
         {
             /// <summary>
-            ///   Which owners have access to which functions
+            ///     Which owners have access to which functions
             /// </summary>
             private readonly Dictionary<string, List<UUID>> m_FunctionPerms = new Dictionary<string, List<UUID>>();
 
@@ -597,13 +598,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         if (bool.TryParse(perm, out allowed))
                         {
                             // Boolean given
-                            FunctionPerms = allowed ? new List<UUID> { UUID.Zero } : new List<UUID>();
+                            FunctionPerms = allowed ? new List<UUID> {UUID.Zero} : new List<UUID>();
                         }
                         else
                         {
                             FunctionPerms = new List<UUID>();
 
-                            string[] ids = perm.Split(new[] { ',' });
+                            string[] ids = perm.Split(new[] {','});
 #if (!ISWIN)
                             foreach (string id in ids)
                             {
@@ -748,9 +749,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #region Previously Compiled Scripts
 
         /// <summary>
-        ///   Reset all lists (if hard), if not hard, just reset previously compiled
+        ///     Reset all lists (if hard), if not hard, just reset previously compiled
         /// </summary>
-        /// <param name = "hard"></param>
+        /// <param name="hard"></param>
         public void Reset(bool hard)
         {
             lock (PreviouslyCompiled)

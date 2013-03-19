@@ -34,7 +34,7 @@ using Aurora.Framework;
 namespace Aurora.ClientStack
 {
     /// <summary>
-    ///   Stores information about a current texture download and a reference to the texture asset
+    ///     Stores information about a current texture download and a reference to the texture asset
     /// </summary>
     public class J2KImage
     {
@@ -74,12 +74,12 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Sends packets for this texture to a client until packetsToSend is 
-        ///   hit or the transfer completes
+        ///     Sends packets for this texture to a client until packetsToSend is
+        ///     hit or the transfer completes
         /// </summary>
-        /// <param name = "client">Reference to the client that the packets are destined for</param>
-        /// <param name = "packetsToSend">Maximum number of packets to send during this call</param>
-        /// <param name = "packetsSent">Number of packets sent during this call</param>
+        /// <param name="client">Reference to the client that the packets are destined for</param>
+        /// <param name="packetsToSend">Maximum number of packets to send during this call</param>
+        /// <param name="packetsSent">Number of packets sent during this call</param>
         /// <returns>True if the transfer completes at the current discard level, otherwise false</returns>
         public bool SendPackets(LLClientView client, int packetsToSend, out int packetsSent)
         {
@@ -171,7 +171,8 @@ namespace Aurora.ClientStack
                         // This shouldn't happen, but if it does, we really can't proceed
                         if (Layers == null)
                         {
-                            MainConsole.Instance.Warn("[J2KIMAGE]: RunUpdate() called with missing Layers. Canceling texture transfer");
+                            MainConsole.Instance.Warn(
+                                "[J2KIMAGE]: RunUpdate() called with missing Layers. Canceling texture transfer");
                             m_currentPacket = m_stopPacket;
                             return;
                         }
@@ -359,7 +360,7 @@ namespace Aurora.ClientStack
         {
             HasAsset = true;
 
-            if (asset == null || asset.Data == null || asset.Type == (int)AssetType.Mesh)
+            if (asset == null || asset.Data == null || asset.Type == (int) AssetType.Mesh)
             {
                 if (m_imageManager.MissingImage != null)
                 {

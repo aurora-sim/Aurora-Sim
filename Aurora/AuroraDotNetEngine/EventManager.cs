@@ -34,7 +34,7 @@ using System.Linq;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     /// <summary>
-    ///   Prepares events so they can be directly executed upon a script by EventQueueManager, then queues it.
+    ///     Prepares events so they can be directly executed upon a script by EventQueueManager, then queues it.
     /// </summary>
     public class EventManager
     {
@@ -159,7 +159,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
             }
             string functionName = "changed";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(change) };
+            object[] param = new Object[] {new LSL_Types.LSLInteger(change)};
 
             foreach (ScriptData ID in datas)
             {
@@ -169,14 +169,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        ///   Handles piping the proper stuff to The script engine for touching
-        ///   Including DetectedParams
+        ///     Handles piping the proper stuff to The script engine for touching
+        ///     Including DetectedParams
         /// </summary>
-        /// <param name = "part"></param>
-        /// <param name = "child"></param>
-        /// <param name = "offsetPos"></param>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "surfaceArgs"></param>
+        /// <param name="part"></param>
+        /// <param name="child"></param>
+        /// <param name="offsetPos"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="surfaceArgs"></param>
         public void touch_start(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
                                 IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
@@ -185,7 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!CoalescedTouchEvents.TryGetValue(part.LocalId, out det))
                 det = new Dictionary<UUID, DetectParams>();
 
-            DetectParams detparam = new DetectParams { Key = remoteClient.AgentId };
+            DetectParams detparam = new DetectParams {Key = remoteClient.AgentId};
 
             detparam.Populate(part.ParentEntity.Scene);
             detparam.LinkNum = child.LinkNum;
@@ -204,7 +204,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch_start";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
             foreach (ScriptData ID in datas)
             {
@@ -245,7 +245,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
             foreach (ScriptData ID in datas)
             {
@@ -263,7 +263,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Add to queue for all scripts in ObjectID object
             DetectParams detparam = new DetectParams();
-            detparam = new DetectParams { Key = remoteClient.AgentId };
+            detparam = new DetectParams {Key = remoteClient.AgentId};
 
             detparam.Populate(part.ParentEntity.Scene);
             detparam.LinkNum = child.LinkNum;
@@ -280,7 +280,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch_end";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
             foreach (ScriptData ID in datas)
             {
@@ -355,7 +355,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "collision_start";
-                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
                 foreach (ScriptData ID in datas)
                 {
@@ -397,7 +397,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "collision";
-                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
                 foreach (ScriptData ID in datas)
                 {
@@ -439,7 +439,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "collision_end";
-                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
                 foreach (ScriptData ID in datas)
                 {
@@ -469,9 +469,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
                                                                           {
-                                                                              Position = new LSL_Types.Vector3(detobj.posVector.X,
-                                                                                                               detobj.posVector.Y,
-                                                                                                               detobj.posVector.Z),
+                                                                              Position =
+                                                                                  new LSL_Types.Vector3(
+                                                                                  detobj.posVector.X,
+                                                                                  detobj.posVector.Y,
+                                                                                  detobj.posVector.Z),
                                                                               Key = detobj.keyUUID
                                                                           }))
             {
@@ -491,7 +493,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "land_collision_start";
-                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
 
                 foreach (ScriptData ID in datas)
                 {
@@ -519,9 +521,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
                                                                           {
-                                                                              Position = new LSL_Types.Vector3(detobj.posVector.X,
-                                                                                                               detobj.posVector.Y,
-                                                                                                               detobj.posVector.Z),
+                                                                              Position =
+                                                                                  new LSL_Types.Vector3(
+                                                                                  detobj.posVector.X,
+                                                                                  detobj.posVector.Y,
+                                                                                  detobj.posVector.Z),
                                                                               Key = detobj.keyUUID
                                                                           }))
             {
@@ -541,7 +545,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "land_collision";
-                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
 
                 foreach (ScriptData ID in datas)
                 {
@@ -569,9 +573,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
                                                                           {
-                                                                              Position = new LSL_Types.Vector3(detobj.posVector.X,
-                                                                                                               detobj.posVector.Y,
-                                                                                                               detobj.posVector.Z),
+                                                                              Position =
+                                                                                  new LSL_Types.Vector3(
+                                                                                  detobj.posVector.X,
+                                                                                  detobj.posVector.Y,
+                                                                                  detobj.posVector.Z),
                                                                               Key = detobj.keyUUID
                                                                           }))
             {
@@ -591,7 +597,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "land_collision_end";
-                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
 
                 foreach (ScriptData ID in datas)
                 {
@@ -643,7 +649,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                      new LSL_Types.LSLString(message),
                                      new LSL_Types.LSLInteger(numLeft)
                                  };
-            
+
             foreach (ScriptData ID in datas)
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
@@ -695,7 +701,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             string functionName = "not_at_target";
             object[] param = new object[0];
-            
+
             foreach (ScriptData ID in datas)
             {
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
@@ -822,17 +828,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        ///   Start multiple scripts in the object
+        ///     Start multiple scripts in the object
         /// </summary>
-        /// <param name = "part"></param>
-        /// <param name = "items"></param>
-        /// <param name = "startParam"></param>
-        /// <param name = "postOnRez"></param>
-        /// <param name = "stateSource"></param>
-        /// <param name = "rezzedFrom"></param>
-        /// <param name = "clearStateSaves"></param>
+        /// <param name="part"></param>
+        /// <param name="items"></param>
+        /// <param name="startParam"></param>
+        /// <param name="postOnRez"></param>
+        /// <param name="stateSource"></param>
+        /// <param name="rezzedFrom"></param>
+        /// <param name="clearStateSaves"></param>
         public void rez_scripts(ISceneChildEntity part, TaskInventoryItem[] items,
-                                int startParam, bool postOnRez, StateSource stateSource, UUID rezzedFrom, bool clearStateSaves)
+                                int startParam, bool postOnRez, StateSource stateSource, UUID rezzedFrom,
+                                bool clearStateSaves)
         {
 #if (!ISWIN)
             List<LUStruct> ItemsToStart = new List<LUStruct>();
@@ -842,18 +849,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (itemToQueue.Action != LUType.Unknown) ItemsToStart.Add(itemToQueue);
             }
 #else
-            List<LUStruct> ItemsToStart = items.Select(item => m_scriptEngine.StartScript(part, item.ItemID, startParam, postOnRez, stateSource, rezzedFrom, clearStateSaves)).Where(itemToQueue => itemToQueue.Action != LUType.Unknown).ToList();
+            List<LUStruct> ItemsToStart =
+                items.Select(
+                    item =>
+                    m_scriptEngine.StartScript(part, item.ItemID, startParam, postOnRez, stateSource, rezzedFrom,
+                                               clearStateSaves))
+                     .Where(itemToQueue => itemToQueue.Action != LUType.Unknown)
+                     .ToList();
 #endif
             if (ItemsToStart.Count != 0)
                 m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToStart.ToArray(), LoadPriority.FirstStart);
         }
 
         /// <summary>
-        ///   This checks the minimum amount of time between script firings as well as control events, making sure that events do NOT fire after scripts reset, close or restart, etc
+        ///     This checks the minimum amount of time between script firings as well as control events, making sure that events do NOT fire after scripts reset, close or restart, etc
         /// </summary>
-        /// <param name = "ID"></param>
-        /// <param name = "FunctionName"></param>
-        /// <param name = "param"></param>
+        /// <param name="ID"></param>
+        /// <param name="FunctionName"></param>
+        /// <param name="param"></param>
         /// <returns></returns>
         public bool CheckIfEventShouldFire(ScriptData ID, string FunctionName, object[] param)
         {
@@ -867,11 +880,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //This will happen if the script doesn't compile correctly
                 if (ID.Script == null)
                 {
-                    MainConsole.Instance.Info("[AuroraDotNetEngine]: Could not load script from item '" + ID.InventoryItem.Name +
-                               "' to fire event " + FunctionName);
+                    MainConsole.Instance.Info("[AuroraDotNetEngine]: Could not load script from item '" +
+                                              ID.InventoryItem.Name +
+                                              "' to fire event " + FunctionName);
                     return false;
                 }
-                scriptEvents eventType = (scriptEvents)Enum.Parse(typeof(scriptEvents), FunctionName);
+                scriptEvents eventType = (scriptEvents) Enum.Parse(typeof (scriptEvents), FunctionName);
 
                 // this must be done even if there is no event method
 
@@ -885,7 +899,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (eventType == scriptEvents.state_entry)
                     ID.ResetEvents();
 
-                if ((ID.Script.GetStateEventFlags(ID.State) & (long)eventType) == 0)
+                if ((ID.Script.GetStateEventFlags(ID.State) & (long) eventType) == 0)
                     return false; //If the script doesn't contain the state, don't even bother queueing it
 
                 //Make sure we can execute events at position
@@ -930,7 +944,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         ID.NotAtRotTargetInQueue = true;
                         break;
                     case scriptEvents.control:
-                        int held = ((LSL_Types.LSLInteger)param[1]).value;
+                        int held = ((LSL_Types.LSLInteger) param[1]).value;
                         // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
 
                         // If the last message was a 0 (nothing held)
@@ -987,9 +1001,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     case scriptEvents.changed:
                         Changed changed;
                         if (param[0] is Changed)
-                            changed = (Changed)param[0];
+                            changed = (Changed) param[0];
                         else
-                            changed = (Changed)(((LSL_Types.LSLInteger)param[0]).value);
+                            changed = (Changed) (((LSL_Types.LSLInteger) param[0]).value);
                         if (ID.ChangedInQueue.Contains(changed))
                             return false;
                         ID.ChangedInQueue.Add(changed);
@@ -1000,14 +1014,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        ///   This removes the event from the queue and allows it to be fired again
+        ///     This removes the event from the queue and allows it to be fired again
         /// </summary>
-        /// <param name = "QIS"></param>
+        /// <param name="QIS"></param>
         public void EventComplete(QueueItemStruct QIS)
         {
             lock (QIS.ID.ScriptEventLock)
             {
-                scriptEvents eventType = (scriptEvents)Enum.Parse(typeof(scriptEvents), QIS.functionName);
+                scriptEvents eventType = (scriptEvents) Enum.Parse(typeof (scriptEvents), QIS.functionName);
                 switch (eventType)
                 {
                     case scriptEvents.timer:
@@ -1060,11 +1074,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Changed changed;
                         if (QIS.param[0] is Changed)
                         {
-                            changed = (Changed)QIS.param[0];
+                            changed = (Changed) QIS.param[0];
                         }
                         else
                         {
-                            changed = (Changed)(((LSL_Types.LSLInteger)QIS.param[0]).value);
+                            changed = (Changed) (((LSL_Types.LSLInteger) QIS.param[0]).value);
                         }
                         QIS.ID.ChangedInQueue.Remove(changed);
                         break;

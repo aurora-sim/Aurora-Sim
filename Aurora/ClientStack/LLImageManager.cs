@@ -69,9 +69,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Handles an incoming texture request or update to an existing texture request
+        ///     Handles an incoming texture request or update to an existing texture request
         /// </summary>
-        /// <param name = "newRequest"></param>
+        /// <param name="newRequest"></param>
         public void EnqueueReq(TextureRequestArgs newRequest)
         {
             //Make sure we're not shutting down..
@@ -115,7 +115,7 @@ namespace Aurora.ClientStack
 
                             //Update the requested priority
                             imgrequest.Priority = newRequest.Priority;
-                            lock(m_syncRoot)
+                            lock (m_syncRoot)
                                 m_queue.Remove(imgrequest);
                             AddImageToQueue(imgrequest);
 
@@ -184,7 +184,7 @@ namespace Aurora.ClientStack
                 // If null was returned, the texture priority queue is currently empty
                 if (image == null)
                     break;
-                        //Break so that we add any images back that we might remove because they arn't finished decoding
+                //Break so that we add any images back that we might remove because they arn't finished decoding
 
                 if (image.IsDecoded)
                 {
@@ -242,7 +242,7 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Faux destructor
+        ///     Faux destructor
         /// </summary>
         public void Close()
         {

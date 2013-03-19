@@ -92,7 +92,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                 }
                 return list.ToArray();
 #else
-                return internalAttachments.Select(attach => new SPAvatarAttachment(m_rootScene, this, attach.AttachPoint, new UUID(attach.ItemID), new UUID(attach.AssetID), m_security)).Cast<IAvatarAttachment>().ToArray();
+                return
+                    internalAttachments.Select(
+                        attach =>
+                        new SPAvatarAttachment(m_rootScene, this, attach.AttachPoint, new UUID(attach.ItemID),
+                                               new UUID(attach.AssetID), m_security))
+                                       .Cast<IAvatarAttachment>()
+                                       .ToArray();
 #endif
             }
         }

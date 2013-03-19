@@ -52,7 +52,7 @@ namespace Aurora.Region
         protected IScene m_scene;
 
         /// <summary>
-        ///   Have we sent all of the objects in the sim that the client can see for the first time?
+        ///     Have we sent all of the objects in the sim that the client can see for the first time?
         /// </summary>
         protected bool m_SentInitialObjects;
 
@@ -283,7 +283,7 @@ namespace Aurora.Region
                 lock (m_lastPresencesInViewLock)
                     if (lastPresencesDInView.ContainsKey(presence.UUID))
                         AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);
-                            //Only send updates if they are in view
+                //Only send updates if they are in view
             }
             else
                 AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);
@@ -301,9 +301,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Add the objects to the queue for which we need to send an update to the client
+        ///     Add the objects to the queue for which we need to send an update to the client
         /// </summary>
-        /// <param name = "part"></param>
+        /// <param name="part"></param>
         public void QueuePartForUpdate(ISceneChildEntity part, PrimUpdateFlags flags)
         {
             if (m_presence == null)
@@ -328,7 +328,9 @@ namespace Aurora.Region
                         QueueEntityUpdate(new EntityUpdate(child, flags));
                     }
 #else
-                    foreach (EntityUpdate update in part.ParentEntity.ChildrenEntities().Select(child => new EntityUpdate(child, flags)))
+                    foreach (
+                        EntityUpdate update in
+                            part.ParentEntity.ChildrenEntities().Select(child => new EntityUpdate(child, flags)))
                     {
                         QueueEntityUpdate(update);
                     }
@@ -344,9 +346,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   NOTE: DO THE LOCKING ON YOUR OWN
+        ///     NOTE: DO THE LOCKING ON YOUR OWN
         /// </summary>
-        /// <param name = "update"></param>
+        /// <param name="update"></param>
         private void QueueEntityUpdate(EntityUpdate update)
         {
             EntityUpdate o = (EntityUpdate) m_objectUpdatesToSend[update.Entity.UUID];
@@ -377,7 +379,11 @@ namespace Aurora.Region
                     }
                 }
 #else
-                foreach (ISceneChildEntity entity in entities.Where(entity => m_culler == null || m_culler.ShowEntityToClient(m_presence, entity.ParentEntity, m_scene)))
+                foreach (
+                    ISceneChildEntity entity in
+                        entities.Where(
+                            entity =>
+                            m_culler == null || m_culler.ShowEntityToClient(m_presence, entity.ParentEntity, m_scene)))
                 {
                     m_objectPropertiesToSend.Remove(entity.UUID);
                     //Insert at the end
@@ -429,10 +435,10 @@ namespace Aurora.Region
         #region Object Culling by draw distance
 
         /// <summary>
-        ///   When the client moves enough to trigger this, make sure that we have sent
-        ///   the client all of the objects that have just entered their FOV in their draw distance.
+        ///     When the client moves enough to trigger this, make sure that we have sent
+        ///     the client all of the objects that have just entered their FOV in their draw distance.
         /// </summary>
-        /// <param name = "remote_client"></param>
+        /// <param name="remote_client"></param>
         private void SignificantClientMovement()
         {
             if (m_culler == null)
@@ -497,10 +503,14 @@ namespace Aurora.Region
             HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity>();
 
             int time = Util.EnvironmentTickCount();
-            foreach (ISceneEntity e in from e in entities where e != null 
-                                       where !e.IsAttachment where !e.IsDeleted
-                                       where !lastGrpsInView.Contains(e) where m_culler != null
-                                       where m_culler.ShowEntityToClient(m_presence, e, m_scene, time) select e)
+            foreach (ISceneEntity e in from e in entities
+                                       where e != null
+                                       where !e.IsAttachment
+                                       where !e.IsDeleted
+                                       where !lastGrpsInView.Contains(e)
+                                       where m_culler != null
+                                       where m_culler.ShowEntityToClient(m_presence, e, m_scene, time)
+                                       select e)
             {
                 NewGrpsInView.Add(e);
             }
@@ -536,7 +546,9 @@ namespace Aurora.Region
                 }
             }
 #else
-            foreach (IScenePresence presence in presences.Where(presence => presence != null && presence.UUID != m_presence.UUID))
+            foreach (
+                IScenePresence presence in
+                    presences.Where(presence => presence != null && presence.UUID != m_presence.UUID))
             {
                 lock (m_lastPresencesInViewLock)
                     if (lastPresencesDInView.ContainsKey(presence.UUID))
@@ -560,10 +572,10 @@ namespace Aurora.Region
         #region SendPrimUpdates
 
         /// <summary>
-        ///   This method is called by the LLUDPServer and should never be called by anyone else
-        ///   It loops through the available updates and sends them out (no waiting)
+        ///     This method is called by the LLUDPServer and should never be called by anyone else
+        ///     It loops through the available updates and sends them out (no waiting)
         /// </summary>
-        /// <param name = "numUpdates">The number of updates to send</param>
+        /// <param name="numUpdates">The number of updates to send</param>
         public void SendPrimUpdates(int numPrimUpdates, int numAvaUpdates)
         {
             if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT)
@@ -625,7 +637,7 @@ namespace Aurora.Region
                             entitiesToRemove.Add(update.Entity.LocalId); //Remove it later
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
                                 SendFullUpdateForPresence((IScenePresence) update.Entity);
-                            else if(!((IScenePresence)update.Entity).IsChildAgent) 
+                            else if (!((IScenePresence) update.Entity).IsChildAgent)
                                 updates.Add(update);
                             e.MoveNext();
 #else
@@ -796,7 +808,13 @@ namespace Aurora.Region
                     HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity>();
                     // build a prioritized list of things we need to send
                     int time = Util.EnvironmentTickCount();
-                    foreach (ISceneEntity e in from e in allEntities where e != null && e is SceneObjectGroup where !e.IsDeleted where !lastGrpsInView.Contains(e) where m_culler != null where m_culler.ShowEntityToClient(m_presence, e, m_scene, time) select e)
+                    foreach (ISceneEntity e in from e in allEntities
+                                               where e != null && e is SceneObjectGroup
+                                               where !e.IsDeleted
+                                               where !lastGrpsInView.Contains(e)
+                                               where m_culler != null
+                                               where m_culler.ShowEntityToClient(m_presence, e, m_scene, time)
+                                               select e)
                     {
                         NewGrpsInView.Add(e);
                     }
@@ -818,9 +836,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Once the packet has been sent, allow newer updates to be sent for the given entity
+        ///     Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
-        /// <param name = "ID"></param>
+        /// <param name="ID"></param>
         public void FinishedEntityPacketSend(IEnumerable<EntityUpdate> updates)
         {
             /*foreach (EntityUpdate update in updates)
@@ -830,9 +848,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Once the packet has been sent, allow newer updates to be sent for the given entity
+        ///     Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
-        /// <param name = "ID"></param>
+        /// <param name="ID"></param>
         public void FinishedPropertyPacketSend(IEnumerable<IEntity> updates)
         {
             /*foreach (IEntity update in updates)
@@ -842,9 +860,9 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Once the packet has been sent, allow newer animations to be sent for the given entity
+        ///     Once the packet has been sent, allow newer animations to be sent for the given entity
         /// </summary>
-        /// <param name = "ID"></param>
+        /// <param name="ID"></param>
         public void FinishedAnimationPacketSend(AnimationGroup update)
         {
             //m_AnimationsInPacketQueue.Remove(update.AvatarID);
@@ -856,7 +874,8 @@ namespace Aurora.Region
             //Enqueue them all
             List<KeyValuePair<double, ISceneEntity>> sortableList = new List<KeyValuePair<double, ISceneEntity>>();
             foreach (ISceneEntity ent in entsqueue)
-                sortableList.Add(new KeyValuePair<double, ISceneEntity>(m_prioritizer.GetUpdatePriority(m_presence, ent), ent));
+                sortableList.Add(new KeyValuePair<double, ISceneEntity>(
+                                     m_prioritizer.GetUpdatePriority(m_presence, ent), ent));
             sortableList.Sort(sortPriority);
             lock (m_objectUpdatesToSendLock)
             {
@@ -890,7 +909,7 @@ namespace Aurora.Region
         #region Reset and Close
 
         /// <summary>
-        ///   The client has left this region and went into a child region
+        ///     The client has left this region and went into a child region
         /// </summary>
         public void Reset()
         {
@@ -902,7 +921,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Reset all lists that have to deal with what updates the viewer has
+        ///     Reset all lists that have to deal with what updates the viewer has
         /// </summary>
         public void Close()
         {
@@ -917,11 +936,11 @@ namespace Aurora.Region
                 m_objectUpdatesToSend.Clear();
             lock (m_presenceUpdatesToSendLock)
                 m_presenceUpdatesToSend.Clear();
-            lock(m_presenceAnimationsToSendLock)
+            lock (m_presenceAnimationsToSendLock)
                 m_presenceAnimationsToSend.Clear();
             lock (m_lastPresencesInViewLock)
                 lastPresencesDInView.Clear();
-            lock(m_objectPropertiesToSendLock)
+            lock (m_objectPropertiesToSendLock)
                 m_objectPropertiesToSend.Clear();
             lastGrpsInView.Clear();
             m_presence.OnSignificantClientMovement -= SignificantClientMovement;

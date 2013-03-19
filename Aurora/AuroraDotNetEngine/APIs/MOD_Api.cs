@@ -102,7 +102,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         /// <summary>
-        ///   We don't have to add any assemblies here
+        ///     We don't have to add any assemblies here
         /// </summary>
         public string[] ReferencedAssemblies
         {
@@ -110,7 +110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         /// <summary>
-        ///   We use the default namespace, so we don't have any to add
+        ///     We use the default namespace, so we don't have any to add
         /// </summary>
         public string[] NamespaceAdditions
         {
@@ -125,7 +125,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public override Object InitializeLifetimeService()
         {
-            ILease lease = (ILease)base.InitializeLifetimeService();
+            ILease lease = (ILease) base.InitializeLifetimeService();
 
             if (lease.CurrentState == LeaseState.Initial)
             {

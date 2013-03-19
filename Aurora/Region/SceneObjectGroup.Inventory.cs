@@ -44,7 +44,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Start the scripts contained in all the prims in this group.
+        ///     Start the scripts contained in all the prims in this group.
         /// </summary>
         public void CreateScriptInstances(int startParam, bool postOnRez,
                                           StateSource stateSource, UUID RezzedFrom, bool clearStateSaves)
@@ -60,11 +60,11 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Stop the scripts contained in all the prims in this group
+        ///     Stop the scripts contained in all the prims in this group
         /// </summary>
-        /// <param name = "sceneObjectBeingDeleted">
-        ///   Should be true if these scripts are being removed because the scene
-        ///   object is being deleted.  This will prevent spurious updates to the client.
+        /// <param name="sceneObjectBeingDeleted">
+        ///     Should be true if these scripts are being removed because the scene
+        ///     object is being deleted.  This will prevent spurious updates to the client.
         /// </param>
         public void RemoveScriptInstances(bool sceneObjectBeingDeleted)
         {
@@ -75,12 +75,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Add an inventory item to a prim in this group.
+        ///     Add an inventory item to a prim in this group.
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "localID"></param>
-        /// <param name = "item"></param>
-        /// <param name = "copyItemID">The item UUID that should be used by the new item.</param>
+        /// <param name="remoteClient"></param>
+        /// <param name="localID"></param>
+        /// <param name="item"></param>
+        /// <param name="copyItemID">The item UUID that should be used by the new item.</param>
         /// <returns></returns>
         public bool AddInventoryItem(IClientAPI remoteClient, uint localID,
                                      InventoryItemBase item, UUID copyItemID)
@@ -154,10 +154,10 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Returns an existing inventory item.  Returns the original, so any changes will be live.
+        ///     Returns an existing inventory item.  Returns the original, so any changes will be live.
         /// </summary>
-        /// <param name = "primID"></param>
-        /// <param name = "itemID"></param>
+        /// <param name="primID"></param>
+        /// <param name="itemID"></param>
         /// <returns>null if the item does not exist</returns>
         public TaskInventoryItem GetInventoryItem(uint primID, UUID itemID)
         {
@@ -175,10 +175,12 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        ///   Update an existing inventory item.
+        ///     Update an existing inventory item.
         /// </summary>
-        /// <param name = "item">The updated item.  An item with the same id must already exist
-        ///   in this prim's inventory</param>
+        /// <param name="item">
+        ///     The updated item.  An item with the same id must already exist
+        ///     in this prim's inventory
+        /// </param>
         /// <returns>false if the item did not exist, true if the update occurred succesfully</returns>
         public bool UpdateInventoryItem(TaskInventoryItem item)
         {
@@ -264,7 +266,7 @@ namespace Aurora.Region
         #endregion
 
         /// <summary>
-        ///   Force all task inventories of prims in the scene object to persist
+        ///     Force all task inventories of prims in the scene object to persist
         /// </summary>
         public void ForceInventoryPersistence()
         {

@@ -34,22 +34,22 @@ namespace PrimMesher
     public struct Quat
     {
         /// <summary>
-        ///   W value
+        ///     W value
         /// </summary>
         public float W;
 
         /// <summary>
-        ///   X value
+        ///     X value
         /// </summary>
         public float X;
 
         /// <summary>
-        ///   Y value
+        ///     Y value
         /// </summary>
         public float Y;
 
         /// <summary>
-        ///   Z value
+        ///     Z value
         /// </summary>
         public float Z;
 
@@ -228,8 +228,6 @@ namespace PrimMesher
                                    q.X*q.X*v.Z +
                                    q.W*q.W*v.Z
                            };
-
-
 
 
             return c2;
@@ -608,7 +606,7 @@ namespace PrimMesher
     }
 
     /// <summary>
-    ///   generates a profile for extrusion
+    ///     generates a profile for extrusion
     /// </summary>
     internal class Profile
     {
@@ -1129,7 +1127,7 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Changes order of the vertex indices and negates the center vertex normal. Does not alter vertex normals of radial vertices
+        ///     Changes order of the vertex indices and negates the center vertex normal. Does not alter vertex normals of radial vertices
         /// </summary>
         internal void FlipNormals()
         {
@@ -1480,7 +1478,7 @@ namespace PrimMesher
         public int numPrimFaces;
 
         /// <summary>
-        ///   Human readable string representation of the parameters used to create a mesh.
+        ///     Human readable string representation of the parameters used to create a mesh.
         /// </summary>
         /// <returns></returns>
         public string ParamsToDisplayString()
@@ -1537,13 +1535,13 @@ namespace PrimMesher
 
 
         /// <summary>
-        ///   Constructs a PrimMesh object and creates the profile for extrusion.
+        ///     Constructs a PrimMesh object and creates the profile for extrusion.
         /// </summary>
-        /// <param name = "sides"></param>
-        /// <param name = "profileStart"></param>
-        /// <param name = "profileEnd"></param>
-        /// <param name = "hollow"></param>
-        /// <param name = "hollowSides"></param>
+        /// <param name="sides"></param>
+        /// <param name="profileStart"></param>
+        /// <param name="profileEnd"></param>
+        /// <param name="hollow"></param>
+        /// <param name="hollowSides"></param>
         public PrimMesh(int sides, float profileStart, float profileEnd, float hollow, int hollowSides)
         {
             coords = new List<Coord>();
@@ -1581,7 +1579,7 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Extrudes a profile along a path.
+        ///     Extrudes a profile along a path.
         /// </summary>
         public void Extrude(PathType pathType)
         {
@@ -2023,8 +2021,8 @@ namespace PrimMesher
 
 
         /// <summary>
-        ///   DEPRICATED - use Extrude(PathType.Linear) instead
-        ///   Extrudes a profile along a straight line path. Used for prim types box, cylinder, and prism.
+        ///     DEPRICATED - use Extrude(PathType.Linear) instead
+        ///     Extrudes a profile along a straight line path. Used for prim types box, cylinder, and prism.
         /// </summary>
         public void ExtrudeLinear()
         {
@@ -2033,8 +2031,8 @@ namespace PrimMesher
 
 
         /// <summary>
-        ///   DEPRICATED - use Extrude(PathType.Circular) instead
-        ///   Extrude a profile into a circular path prim mesh. Used for prim types torus, tube, and ring.
+        ///     DEPRICATED - use Extrude(PathType.Circular) instead
+        ///     Extrude a profile into a circular path prim mesh. Used for prim types torus, tube, and ring.
         /// </summary>
         public void ExtrudeCircular()
         {
@@ -2060,9 +2058,9 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Calculate the surface normal for a face in the list of faces
+        ///     Calculate the surface normal for a face in the list of faces
         /// </summary>
-        /// <param name = "faceIndex"></param>
+        /// <param name="faceIndex"></param>
         /// <returns></returns>
         public Coord SurfaceNormal(int faceIndex)
         {
@@ -2074,7 +2072,7 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Duplicates a PrimMesh object. All object properties are copied by value, including lists.
+        ///     Duplicates a PrimMesh object. All object properties are copied by value, including lists.
         /// </summary>
         /// <returns></returns>
         public PrimMesh Copy()
@@ -2113,7 +2111,7 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Calculate surface normals for all of the faces in the list of faces in this mesh
+        ///     Calculate surface normals for all of the faces in the list of faces in this mesh
         /// </summary>
         public void CalcNormals()
         {
@@ -2143,11 +2141,11 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Adds a value to each XYZ vertex coordinate in the mesh
+        ///     Adds a value to each XYZ vertex coordinate in the mesh
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
-        /// <param name = "z"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
         public void AddPos(float x, float y, float z)
         {
             int i;
@@ -2176,9 +2174,9 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Rotates the mesh
+        ///     Rotates the mesh
         /// </summary>
-        /// <param name = "q"></param>
+        /// <param name="q"></param>
         public void AddRot(Quat q)
         {
             int i;
@@ -2223,11 +2221,11 @@ namespace PrimMesher
 #endif
 
         /// <summary>
-        ///   Scales the mesh
+        ///     Scales the mesh
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
-        /// <param name = "z"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
         public void Scale(float x, float y, float z)
         {
             int i;
@@ -2253,11 +2251,11 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Dumps the mesh to a Blender compatible "Raw" format file
+        ///     Dumps the mesh to a Blender compatible "Raw" format file
         /// </summary>
-        /// <param name = "path"></param>
-        /// <param name = "name"></param>
-        /// <param name = "title"></param>
+        /// <param name="path"></param>
+        /// <param name="name"></param>
+        /// <param name="title"></param>
         public void DumpRaw(String path, String name, String title)
         {
             if (path == null)

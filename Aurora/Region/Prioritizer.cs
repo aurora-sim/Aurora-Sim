@@ -358,7 +358,6 @@ namespace Aurora.Region
             IConfig interestConfig = scene.Config.Configs["InterestManagement"];
             if (interestConfig != null)
                 m_childReprioritizationDistance = interestConfig.GetDouble("ChildReprioritizationDistance", 20.0);
-
         }
 
         #region IPrioritizer Members

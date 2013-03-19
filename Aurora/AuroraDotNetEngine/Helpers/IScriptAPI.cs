@@ -38,29 +38,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         //
 
         /// <summary>
-        ///   Returns the plugin name
+        ///     Returns the plugin name
         /// </summary>
         /// <returns></returns>
         string Name { get; }
 
         /// <summary>
-        ///   The name of the interface that is used to implement the functions
+        ///     The name of the interface that is used to implement the functions
         /// </summary>
         string InterfaceName { get; }
 
         /// <summary>
-        ///   Any assemblies that may need referenced to implement your Api.
-        ///   If you are adding an Api, you will need to have the path to your assembly in this 
-        ///   (along with any other assemblies you may need). You can use this code to add the current assembly 
-        ///   to this list:
-        ///   "this.GetType().Assembly.Location"
-        ///   as shown in the Bot_API.cs in Aurora.BotManager.
+        ///     Any assemblies that may need referenced to implement your Api.
+        ///     If you are adding an Api, you will need to have the path to your assembly in this
+        ///     (along with any other assemblies you may need). You can use this code to add the current assembly
+        ///     to this list:
+        ///     "this.GetType().Assembly.Location"
+        ///     as shown in the Bot_API.cs in Aurora.BotManager.
         /// </summary>
         string[] ReferencedAssemblies { get; }
 
         /// <summary>
-        ///   If you do not use the standard namespaces for your API module, you will need to add them here 
-        ///   As shown in the Bot_API.cs in Aurora.BotManager.
+        ///     If you do not use the standard namespaces for your API module, you will need to add them here
+        ///     As shown in the Bot_API.cs in Aurora.BotManager.
         /// </summary>
         string[] NamespaceAdditions { get; }
 
@@ -68,7 +68,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         ScriptProtectionModule module);
 
         /// <summary>
-        ///   Make a copy of the api so that it can be used again
+        ///     Make a copy of the api so that it can be used again
         /// </summary>
         /// <returns></returns>
         IScriptApi Copy();

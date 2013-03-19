@@ -43,7 +43,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
-        public bool RemoveOnStateChange { get { return true; } }
+        public bool RemoveOnStateChange
+        {
+            get { return true; }
+        }
 
         public void Initialize(ScriptEngine engine)
         {
@@ -131,8 +134,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                        };
 
 
-
-
             lock (DataserverRequests)
             {
                 if (DataserverRequests.ContainsKey(identifier))
@@ -175,7 +176,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 if (DataserverRequests.TryGetValue(handle, out request))
                 {
                     //Wait for the value to be returned in LSL_Api
-                    request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait / 1000 + 0.1);
+                    request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait/1000 + 0.1);
                     request.Reply = reply;
                     //Make sure that the cmd handler thread is running
                     m_ScriptEngine.MaintenanceThread.PokeThreads(request.itemID);

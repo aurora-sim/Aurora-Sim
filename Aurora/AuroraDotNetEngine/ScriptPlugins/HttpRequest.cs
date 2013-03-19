@@ -39,7 +39,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
-        public bool RemoveOnStateChange { get { return false; } }
+        public bool RemoveOnStateChange
+        {
+            get { return false; }
+        }
 
         public void Initialize(ScriptEngine engine)
         {
@@ -70,7 +73,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                 while (httpInfo != null)
                 {
-                    IHttpRequestClass info = (IHttpRequestClass)httpInfo;
+                    IHttpRequestClass info = (IHttpRequestClass) httpInfo;
                     //MainConsole.Instance.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
 
                     // Deliver data to prim's remote_data handler
@@ -86,15 +89,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                           };
 
                     m_ScriptEngine.AddToObjectQueue(info.PrimID, "http_response", new DetectParams[0], resobj);
-                    if (info.Status == (int)Aurora.Framework.Servers.HttpServer.OSHttpStatusCode.ClientErrorJoker && info.VerbroseThrottle)
+                    if (info.Status == (int) Aurora.Framework.Servers.HttpServer.OSHttpStatusCode.ClientErrorJoker &&
+                        info.VerbroseThrottle)
                     {
                         ISceneChildEntity part = m_ScriptEngine.Scene.GetSceneObjectPart(info.PrimID);
                         if (part != null)
                         {
                             IChatModule chatModule = m_ScriptEngine.Scene.RequestModuleInterface<IChatModule>();
                             if (chatModule != null)
-                                chatModule.SimChat(part.Name + "(" + part.AbsolutePosition + ") http_response error: Too many outgoing requests.", ChatTypeEnum.DebugChannel,
-                                                   2147483647, part.AbsolutePosition, part.Name, part.UUID, false, m_ScriptEngine.Scene);
+                                chatModule.SimChat(
+                                    part.Name + "(" + part.AbsolutePosition +
+                                    ") http_response error: Too many outgoing requests.", ChatTypeEnum.DebugChannel,
+                                    2147483647, part.AbsolutePosition, part.Name, part.UUID, false, m_ScriptEngine.Scene);
                         }
                     }
                     httpInfo = iHttpReq.GetNextCompletedRequest();

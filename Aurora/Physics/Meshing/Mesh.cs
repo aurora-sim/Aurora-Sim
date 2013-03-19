@@ -137,7 +137,7 @@ namespace Aurora.Physics.Meshing
         }
 
         /// <summary>
-        ///   creates a list of index values that defines triangle faces. THIS METHOD FREES ALL NON-PINNED MESH DATA
+        ///     creates a list of index values that defines triangle faces. THIS METHOD FREES ALL NON-PINNED MESH DATA
         /// </summary>
         /// <returns></returns>
         public int[] getIndexListAsIntLocked()
@@ -192,7 +192,7 @@ namespace Aurora.Physics.Meshing
         }
 
         /// <summary>
-        ///   frees up the source mesh data to minimize memory - call this method after calling get*Locked() functions
+        ///     frees up the source mesh data to minimize memory - call this method after calling get*Locked() functions
         /// </summary>
         public void releaseSourceMeshData()
         {
@@ -439,13 +439,13 @@ namespace Aurora.Physics.Meshing
 
         public void Deserialize(OSD cachedMesh)
         {
-            OSDArray array = (OSDArray)cachedMesh;
+            OSDArray array = (OSDArray) cachedMesh;
             foreach (OSD triangle in array)
             {
-                OSDArray triangleArray = (OSDArray)triangle;
+                OSDArray triangleArray = (OSDArray) triangle;
                 Add(new Triangle(new Vertex(triangleArray[0].AsVector3()),
-                    new Vertex(triangleArray[1].AsVector3()),
-                    new Vertex(triangleArray[2].AsVector3())));
+                                 new Vertex(triangleArray[1].AsVector3()),
+                                 new Vertex(triangleArray[2].AsVector3())));
             }
         }
 

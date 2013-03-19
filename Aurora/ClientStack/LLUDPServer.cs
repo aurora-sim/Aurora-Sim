@@ -41,18 +41,18 @@ using System.Threading;
 namespace Aurora.ClientStack
 {
     /// <summary>
-    ///   The LLUDP server for a region. This handles incoming and outgoing
-    ///   packets for all UDP connections to the region
+    ///     The LLUDP server for a region. This handles incoming and outgoing
+    ///     packets for all UDP connections to the region
     /// </summary>
     public class LLUDPServer : OpenSimUDPBase, IClientNetworkServer
     {
         /// <summary>
-        ///   Maximum transmission unit, or UDP packet size, for the LLUDP protocol
+        ///     Maximum transmission unit, or UDP packet size, for the LLUDP protocol
         /// </summary>
         public const int MTU = 1400;
 
         /// <summary>
-        ///   Number of packets to send per loop per LLUDPClient
+        ///     Number of packets to send per loop per LLUDPClient
         /// </summary>
         public const int MAX_PACKET_SEND = 4;
 
@@ -63,103 +63,103 @@ namespace Aurora.ClientStack
 
         //PacketEventDictionary packetEvents = new PacketEventDictionary();
         /// <summary>
-        ///   Handlers for incoming packets
+        ///     Handlers for incoming packets
         /// </summary>
         /// <summary>
-        ///   Incoming packets that are awaiting handling
+        ///     Incoming packets that are awaiting handling
         /// </summary>
         private readonly OpenMetaverse.BlockingQueue<IncomingPacket> packetInbox =
             new OpenMetaverse.BlockingQueue<IncomingPacket>();
 
         /// <summary>
-        ///   Number of avatar update packets to put on the queue each time the
-        ///   OnQueueEmpty event is triggered
+        ///     Number of avatar update packets to put on the queue each time the
+        ///     OnQueueEmpty event is triggered
         /// </summary>
         public int AvatarUpdatesPerCallBack;
 
         public int ClientTimeOut;
 
         /// <summary>
-        ///   Number of prim updates to put on the queue each time the 
-        ///   OnQueueEmpty event is triggered for updates
+        ///     Number of prim updates to put on the queue each time the
+        ///     OnQueueEmpty event is triggered for updates
         /// </summary>
         public int PrimUpdatesPerCallback;
 
         /// <summary>
-        ///   Number of texture packets to put on the queue each time the
-        ///   OnQueueEmpty event is triggered for textures
+        ///     Number of texture packets to put on the queue each time the
+        ///     OnQueueEmpty event is triggered for textures
         /// </summary>
         public int TextureSendLimit;
 
         /// <summary>
-        ///   The measured resolution of Environment.TickCount
+        ///     The measured resolution of Environment.TickCount
         /// </summary>
         public float TickCountResolution;
 
         /// <summary>
-        ///   Flag to process packets asynchronously or synchronously
+        ///     Flag to process packets asynchronously or synchronously
         /// </summary>
         private bool m_asyncPacketHandling;
 
         /// <summary>
-        ///   Manages authentication for agent circuits
+        ///     Manages authentication for agent circuits
         /// </summary>
         public AgentCircuitManager m_circuitManager;
 
         private int m_defaultRTO;
 
         /// <summary>
-        ///   Keeps track of the number of 100 millisecond periods elapsed in the outgoing packet handler executed
+        ///     Keeps track of the number of 100 millisecond periods elapsed in the outgoing packet handler executed
         /// </summary>
         private int m_elapsed100MSOutgoingPacketHandler;
 
         /// <summary>
-        ///   Keeps track of the number of 500 millisecond periods elapsed in the outgoing packet handler executed
+        ///     Keeps track of the number of 500 millisecond periods elapsed in the outgoing packet handler executed
         /// </summary>
         private int m_elapsed500MSOutgoingPacketHandler;
 
         /// <summary>
-        ///   Keeps track of the number of elapsed milliseconds since the last time the outgoing packet handler looped
+        ///     Keeps track of the number of elapsed milliseconds since the last time the outgoing packet handler looped
         /// </summary>
         private int m_elapsedMSOutgoingPacketHandler;
 
         /// <summary>
-        ///   Environment.TickCount of the last time that packet stats were reported to the scene
+        ///     Environment.TickCount of the last time that packet stats were reported to the scene
         /// </summary>
         private int m_elapsedMSSinceLastStatReport;
 
         private int m_maxRTO;
 
         /// <summary>
-        ///   Tracks whether or not a packet was sent each round so we know
-        ///   whether or not to sleep
+        ///     Tracks whether or not a packet was sent each round so we know
+        ///     whether or not to sleep
         /// </summary>
         private bool m_packetSent;
 
         /// <summary>
-        ///   The size of the receive buffer for the UDP socket. This value
-        ///   is passed up to the operating system and used in the system networking
-        ///   stack. Use zero to leave this value as the default
+        ///     The size of the receive buffer for the UDP socket. This value
+        ///     is passed up to the operating system and used in the system networking
+        ///     stack. Use zero to leave this value as the default
         /// </summary>
         private int m_recvBufferSize;
 
         /// <summary>
-        ///   Flag to signal when clients should check for resends
+        ///     Flag to signal when clients should check for resends
         /// </summary>
         private bool m_resendUnacked;
 
         /// <summary>
-        ///   Reference to the scene this UDP server is attached to
+        ///     Reference to the scene this UDP server is attached to
         /// </summary>
         public IScene m_scene;
 
         /// <summary>
-        ///   Flag to signal when clients should send ACKs
+        ///     Flag to signal when clients should send ACKs
         /// </summary>
         private bool m_sendAcks;
 
         /// <summary>
-        ///   Flag to signal when clients should send pings
+        ///     Flag to signal when clients should send pings
         /// </summary>
         private bool m_sendPing;
 
@@ -167,17 +167,17 @@ namespace Aurora.ClientStack
         /// <summary>
         /// </summary>
         /// <summary>
-        ///   Bandwidth throttle for this UDP server
+        ///     Bandwidth throttle for this UDP server
         /// </summary>
         protected TokenBucket m_throttle;
 
         /// <summary>
-        ///   Bandwidth throttle rates for this UDP server
+        ///     Bandwidth throttle rates for this UDP server
         /// </summary>
         protected ThrottleRates m_throttleRates;
 
         /// <summary>
-        ///   Environment.TickCount of the last time the outgoing packet handler executed
+        ///     Environment.TickCount of the last time the outgoing packet handler executed
         /// </summary>
         private int m_tickLastOutgoingPacketHandler;
 
@@ -192,7 +192,7 @@ namespace Aurora.ClientStack
         {
             IConfig networkConfig = configSource.Configs["Network"];
             IPAddress internalIP = IPAddress.Any;
-            if(networkConfig != null)
+            if (networkConfig != null)
                 IPAddress.TryParse(networkConfig.GetString("internal_ip", "0.0.0.0"), out internalIP);
 
             InitThreadPool(15);
@@ -300,7 +300,8 @@ namespace Aurora.ClientStack
 
         public new void Stop()
         {
-            MainConsole.Instance.Debug("[LLUDPSERVER]: Shutting down the LLUDP server for " + m_scene.RegionInfo.RegionName);
+            MainConsole.Instance.Debug("[LLUDPSERVER]: Shutting down the LLUDP server for " +
+                                       m_scene.RegionInfo.RegionName);
             incomingPacketMonitor.Stop();
             outgoingPacketMonitor.Stop();
             base.Stop();
@@ -338,18 +339,19 @@ namespace Aurora.ClientStack
 
         private Amib.Threading.SmartThreadPool m_ThreadPool;
         private volatile bool m_threadPoolRunning;
+
         public void FireAndForget(Action<object> callback, object obj)
         {
             if (m_ThreadPool == null)
                 InitThreadPool(15);
             if (m_threadPoolRunning) //Check if the thread pool should be running
-                m_ThreadPool.QueueWorkItem((WorkItemCallback)SmartThreadPoolCallback, new[] { callback, obj });
+                m_ThreadPool.QueueWorkItem((WorkItemCallback) SmartThreadPoolCallback, new[] {callback, obj});
         }
 
         private static object SmartThreadPoolCallback(object o)
         {
-            object[] array = (object[])o;
-            Action<object> callback = (Action<object>)array[0];
+            object[] array = (object[]) o;
+            Action<object> callback = (Action<object>) array[0];
             object obj = array[1];
 
             callback(obj);
@@ -362,7 +364,7 @@ namespace Aurora.ClientStack
             {
                 //This stops more tasks and threads from being started
                 m_threadPoolRunning = false;
-                m_ThreadPool.WaitForIdle(60 * 1000);
+                m_ThreadPool.WaitForIdle(60*1000);
                 //Wait for the threads to be idle, but don't wait for more than a minute
                 //Destroy the threadpool now
                 m_ThreadPool.Dispose();
@@ -391,8 +393,9 @@ namespace Aurora.ClientStack
                 int packetCount = datas.Length;
 
                 if (packetCount < 1)
-                    MainConsole.Instance.Error("[LLUDPSERVER]: Failed to split " + packet.Type + " with estimated length " +
-                                packet.Length);
+                    MainConsole.Instance.Error("[LLUDPSERVER]: Failed to split " + packet.Type +
+                                               " with estimated length " +
+                                               packet.Length);
 
                 for (int i = 0; i < packetCount; i++)
                 {
@@ -434,8 +437,9 @@ namespace Aurora.ClientStack
                 int packetCount = datas.Length;
 
                 if (packetCount < 1)
-                    MainConsole.Instance.Error("[LLUDPSERVER]: Failed to split " + packet.Type + " with estimated length " +
-                                packet.Length);
+                    MainConsole.Instance.Error("[LLUDPSERVER]: Failed to split " + packet.Type +
+                                               " with estimated length " +
+                                               packet.Length);
 
                 for (int i = 0; i < packetCount; i++)
                 {
@@ -482,9 +486,11 @@ namespace Aurora.ClientStack
                     // The packet grew larger than the bufferSize while zerocoding.
                     // Remove the MSG_ZEROCODED flag and send the unencoded data
                     // instead
-                    MainConsole.Instance.Debug("[LLUDPSERVER]: Packet exceeded buffer size during zerocoding for " + packet.Type +
-                               ". DataLength=" + dataLength +
-                               " and BufferLength=" + buffer.Data.Length + ". Removing MSG_ZEROCODED flag");
+                    MainConsole.Instance.Debug("[LLUDPSERVER]: Packet exceeded buffer size during zerocoding for " +
+                                               packet.Type +
+                                               ". DataLength=" + dataLength +
+                                               " and BufferLength=" + buffer.Data.Length +
+                                               ". Removing MSG_ZEROCODED flag");
                     data[0] = (byte) (data[0] & ~Helpers.MSG_ZEROCODED);
                 }
             }
@@ -641,7 +647,7 @@ namespace Aurora.ClientStack
                     //    outgoingPacket.SequenceNumber, outgoingPacket.ResendCount, Environment.TickCount - outgoingPacket.TickCount);
 
                     // Set the resent flag
-                    outgoingPacket.Buffer.Data[0] = (byte)(outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
+                    outgoingPacket.Buffer.Data[0] = (byte) (outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
 
                     // resend in its original category
                     outgoingPacket.Category = ThrottleOutPacketType.Resend;
@@ -664,9 +670,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Actually send a packet to a client.
+        ///     Actually send a packet to a client.
         /// </summary>
-        /// <param name = "outgoingPacket"></param>
+        /// <param name="outgoingPacket"></param>
         internal void SendPacketFinal(OutgoingPacket outgoingPacket)
         {
             UDPPacketBuffer buffer = outgoingPacket.Buffer;
@@ -781,8 +787,9 @@ namespace Aurora.ClientStack
             // Fail-safe check
             if (packet == null)
             {
-                MainConsole.Instance.ErrorFormat("[LLUDPSERVER]: Malformed data, cannot parse {0} byte packet from {1}:",
-                                  buffer.DataLength, buffer.RemoteEndPoint);
+                MainConsole.Instance.ErrorFormat(
+                    "[LLUDPSERVER]: Malformed data, cannot parse {0} byte packet from {1}:",
+                    buffer.DataLength, buffer.RemoteEndPoint);
                 MainConsole.Instance.Error(Utils.BytesToHexString(buffer.Data, buffer.DataLength, null));
                 return;
             }
@@ -794,9 +801,9 @@ namespace Aurora.ClientStack
             // UseCircuitCode handling
             if (packet.Type == PacketType.UseCircuitCode)
             {
-                UseCircuitCodePacket cPacket = (UseCircuitCodePacket)packet;
+                UseCircuitCodePacket cPacket = (UseCircuitCodePacket) packet;
                 AgentCircuitData sessionData;
-                IPEndPoint remoteEndPoint = (IPEndPoint)buffer.RemoteEndPoint;
+                IPEndPoint remoteEndPoint = (IPEndPoint) buffer.RemoteEndPoint;
                 if (IsClientAuthorized(cPacket, remoteEndPoint, out sessionData))
                 {
                     lock (m_inQueueCircuitCodes)
@@ -807,9 +814,9 @@ namespace Aurora.ClientStack
                         {
                             MainConsole.Instance.Debug("[LLUDPServer] AddNewClient - already here");
                             return;
-                         }
+                        }
                     }
-                    object[] array = new object[] { buffer, packet, sessionData };
+                    object[] array = new object[] {buffer, packet, sessionData};
                     if (m_asyncPacketHandling)
                         FireAndForget(HandleUseCircuitCode, array);
                     else
@@ -829,8 +836,9 @@ namespace Aurora.ClientStack
             if (!m_scene.ClientManager.TryGetValue(address, out client) || !(client is LLClientView))
             {
                 if (client != null)
-                    MainConsole.Instance.Warn("[LLUDPSERVER]: Received a " + packet.Type + " packet from an unrecognized source: " +
-                               address + " in " + m_scene.RegionInfo.RegionName);
+                    MainConsole.Instance.Warn("[LLUDPSERVER]: Received a " + packet.Type +
+                                              " packet from an unrecognized source: " +
+                                              address + " in " + m_scene.RegionInfo.RegionName);
                 return;
             }
 
@@ -946,20 +954,20 @@ namespace Aurora.ClientStack
             MainConsole.Instance.Debug("[LLUDPServer] HandelUserCircuitCode");
             DateTime startTime = DateTime.Now;
             object[] array = (object[]) o;
-            UDPPacketBuffer buffer = (UDPPacketBuffer)array[0];
-            UseCircuitCodePacket packet = (UseCircuitCodePacket)array[1];
-            AgentCircuitData sessionInfo = (AgentCircuitData)array[2];
+            UDPPacketBuffer buffer = (UDPPacketBuffer) array[0];
+            UseCircuitCodePacket packet = (UseCircuitCodePacket) array[1];
+            AgentCircuitData sessionInfo = (AgentCircuitData) array[2];
 
             IPEndPoint remoteEndPoint = (IPEndPoint) buffer.RemoteEndPoint;
 
             // Begin the process of adding the client to the simulator
             if (AddClient(packet.CircuitCode.Code, packet.CircuitCode.ID,
-                packet.CircuitCode.SessionID, remoteEndPoint, sessionInfo))
+                          packet.CircuitCode.SessionID, remoteEndPoint, sessionInfo))
             {
                 uint ack = 0;
                 lock (m_inQueueCircuitCodes)
                 {
-                    ack = (uint)m_inQueueCircuitCodes[sessionInfo.AgentID];
+                    ack = (uint) m_inQueueCircuitCodes[sessionInfo.AgentID];
                     //And remove it
                     m_inQueueCircuitCodes.Remove(sessionInfo.AgentID);
                 }
@@ -1011,8 +1019,9 @@ namespace Aurora.ClientStack
         protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint,
                                          AgentCircuitData sessionInfo)
         {
-            MainConsole.Instance.Debug("[LLUDPServer] AddClient-" + circuitCode + "-" + agentID + "-" + sessionID + "-" + remoteEndPoint +
-                       "-" + sessionInfo);
+            MainConsole.Instance.Debug("[LLUDPServer] AddClient-" + circuitCode + "-" + agentID + "-" + sessionID + "-" +
+                                       remoteEndPoint +
+                                       "-" + sessionInfo);
             IScenePresence SP;
             if (!m_scene.TryGetScenePresence(agentID, out SP))
             {
@@ -1030,8 +1039,9 @@ namespace Aurora.ClientStack
             }
             else
             {
-                MainConsole.Instance.DebugFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode ({0}) from {1} at {2} ",
-                                  circuitCode, agentID, remoteEndPoint);
+                MainConsole.Instance.DebugFormat(
+                    "[LLUDPSERVER]: Ignoring a repeated UseCircuitCode ({0}) from {1} at {2} ",
+                    circuitCode, agentID, remoteEndPoint);
             }
             return true;
         }
@@ -1134,7 +1144,8 @@ namespace Aurora.ClientStack
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Error("[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
+                MainConsole.Instance.Error(
+                    "[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
             }
             return true;
         }
@@ -1168,7 +1179,7 @@ namespace Aurora.ClientStack
             catch (Exception ex)
             {
                 MainConsole.Instance.Error("[LLUDPSERVER]: OutgoingPacketHandler iteration for " + client.Name +
-                            " threw an exception: " + ex.Message, ex);
+                                           " threw an exception: " + ex.Message, ex);
                 return;
             }
         }
@@ -1246,8 +1257,9 @@ namespace Aurora.ClientStack
             {
                 if (packet != null)
                     if (udpClient != null)
-                        MainConsole.Instance.DebugFormat("[LLUDPSERVER]: Dropping incoming {0} packet for dead client {1}", packet.Type,
-                                          udpClient.AgentID);
+                        MainConsole.Instance.DebugFormat(
+                            "[LLUDPSERVER]: Dropping incoming {0} packet for dead client {1}", packet.Type,
+                            udpClient.AgentID);
             }
         }
 

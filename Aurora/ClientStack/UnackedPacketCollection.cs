@@ -34,39 +34,41 @@ using System.Threading;
 namespace Aurora.ClientStack
 {
     /// <summary>
-    ///   Special collection that is optimized for tracking unacknowledged packets
+    ///     Special collection that is optimized for tracking unacknowledged packets
     /// </summary>
     public sealed class UnackedPacketCollection
     {
         /// <summary>
-        ///   Holds the actual unacked packet data, sorted by sequence number
+        ///     Holds the actual unacked packet data, sorted by sequence number
         /// </summary>
         private readonly Dictionary<uint, OutgoingPacket> m_packets = new Dictionary<uint, OutgoingPacket>();
 
         /// <summary>
-        ///   Holds information about pending acknowledgements
+        ///     Holds information about pending acknowledgements
         /// </summary>
         private readonly ConcurrentQueue<PendingAck> m_pendingAcknowledgements = new ConcurrentQueue<PendingAck>();
 
         /// <summary>
-        ///   Holds packets that need to be added to the unacknowledged list
+        ///     Holds packets that need to be added to the unacknowledged list
         /// </summary>
         private readonly ConcurrentQueue<OutgoingPacket> m_pendingAdds = new ConcurrentQueue<OutgoingPacket>();
 
         /// <summary>
-        ///   Holds information about pending removals
+        ///     Holds information about pending removals
         /// </summary>
         private readonly ConcurrentQueue<uint> m_pendingRemoves = new ConcurrentQueue<uint>();
 
         /// <summary>
-        ///   Add an unacked packet to the collection
+        ///     Add an unacked packet to the collection
         /// </summary>
-        /// <param name = "packet">Packet that is awaiting acknowledgement</param>
-        /// <returns>True if the packet was successfully added, false if the
-        ///   packet already existed in the collection</returns>
+        /// <param name="packet">Packet that is awaiting acknowledgement</param>
+        /// <returns>
+        ///     True if the packet was successfully added, false if the
+        ///     packet already existed in the collection
+        /// </returns>
         /// <remarks>
-        ///   This does not immediately add the ACK to the collection,
-        ///   it only queues it so it can be added in a thread-safe way later
+        ///     This does not immediately add the ACK to the collection,
+        ///     it only queues it so it can be added in a thread-safe way later
         /// </remarks>
         public void Add(OutgoingPacket packet)
         {
@@ -74,18 +76,20 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Marks a packet as acknowledged
-        ///   This method is used when an acknowledgement is received from the network for a previously
-        ///   sent packet. Effects of removal this way are to update unacked byte count, adjust RTT
-        ///   and increase throttle to the coresponding client.
+        ///     Marks a packet as acknowledged
+        ///     This method is used when an acknowledgement is received from the network for a previously
+        ///     sent packet. Effects of removal this way are to update unacked byte count, adjust RTT
+        ///     and increase throttle to the coresponding client.
         /// </summary>
-        /// <param name = "sequenceNumber">Sequence number of the packet to
-        ///   acknowledge</param>
-        /// <param name = "currentTime">Current value of Environment.TickCount</param>
+        /// <param name="sequenceNumber">
+        ///     Sequence number of the packet to
+        ///     acknowledge
+        /// </param>
+        /// <param name="currentTime">Current value of Environment.TickCount</param>
         /// <param name="fromResend"></param>
         /// <remarks>
-        ///   This does not immediately acknowledge the packet, it only
-        ///   queues the ack so it can be handled in a thread-safe way later
+        ///     This does not immediately acknowledge the packet, it only
+        ///     queues the ack so it can be handled in a thread-safe way later
         /// </remarks>
         public void Acknowledge(uint sequenceNumber, int currentTime, bool fromResend)
         {
@@ -93,16 +97,18 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Marks a packet as no longer needing acknowledgement without a received acknowledgement.
-        ///   This method is called when a packet expires and we no longer need an acknowledgement.
-        ///   When some reliable packet types expire, they are handled in a way other than simply
-        ///   resending them. The only effect of removal this way is to update unacked byte count.
+        ///     Marks a packet as no longer needing acknowledgement without a received acknowledgement.
+        ///     This method is called when a packet expires and we no longer need an acknowledgement.
+        ///     When some reliable packet types expire, they are handled in a way other than simply
+        ///     resending them. The only effect of removal this way is to update unacked byte count.
         /// </summary>
-        /// <param name = "sequenceNumber">Sequence number of the packet to
-        ///   acknowledge</param>
+        /// <param name="sequenceNumber">
+        ///     Sequence number of the packet to
+        ///     acknowledge
+        /// </param>
         /// <remarks>
-        ///   The does not immediately remove the packet, it only queues the removal
-        ///   so it can be handled in a thread safe way later
+        ///     The does not immediately remove the packet, it only queues the removal
+        ///     so it can be handled in a thread safe way later
         /// </remarks>
         public void Remove(uint sequenceNumber)
         {
@@ -110,16 +116,20 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Returns a list of all of the packets with a TickCount older than
-        ///   the specified timeout
+        ///     Returns a list of all of the packets with a TickCount older than
+        ///     the specified timeout
         /// </summary>
-        /// <param name = "timeoutMS">Number of ticks (milliseconds) before a
-        ///   packet is considered expired</param>
-        /// <returns>A list of all expired packets according to the given
-        ///   expiration timeout</returns>
+        /// <param name="timeoutMS">
+        ///     Number of ticks (milliseconds) before a
+        ///     packet is considered expired
+        /// </param>
+        /// <returns>
+        ///     A list of all expired packets according to the given
+        ///     expiration timeout
+        /// </returns>
         /// <remarks>
-        ///   This function is not thread safe, and cannot be called
-        ///   multiple times concurrently
+        ///     This function is not thread safe, and cannot be called
+        ///     multiple times concurrently
         /// </remarks>
         public List<OutgoingPacket> GetExpiredPackets(int timeoutMS)
         {
@@ -152,7 +162,10 @@ namespace Aurora.ClientStack
                     }
                 }
 #else
-                foreach (OutgoingPacket packet in m_packets.Values.Where(packet => packet.TickCount != 0).Where(packet => now - packet.TickCount >= timeoutMS))
+                foreach (
+                    OutgoingPacket packet in
+                        m_packets.Values.Where(packet => packet.TickCount != 0)
+                                 .Where(packet => now - packet.TickCount >= timeoutMS))
                 {
                     if (expiredPackets == null)
                         expiredPackets = new List<OutgoingPacket>();
@@ -240,24 +253,24 @@ namespace Aurora.ClientStack
         #region Nested type: PendingAck
 
         /// <summary>
-        ///   Holds information about a pending acknowledgement
+        ///     Holds information about a pending acknowledgement
         /// </summary>
         private struct PendingAck
         {
             /// <summary>
-            ///   Whether or not this acknowledgement was attached to a
-            ///   resent packet. If so, round-trip time will not be calculated
+            ///     Whether or not this acknowledgement was attached to a
+            ///     resent packet. If so, round-trip time will not be calculated
             /// </summary>
             public readonly bool FromResend;
 
             /// <summary>
-            ///   Environment.TickCount value when the remove was queued.
-            ///   This is used to update round-trip times for packets
+            ///     Environment.TickCount value when the remove was queued.
+            ///     This is used to update round-trip times for packets
             /// </summary>
             public readonly int RemoveTime;
 
             /// <summary>
-            ///   Sequence number of the packet to remove
+            ///     Sequence number of the packet to remove
             /// </summary>
             public readonly uint SequenceNumber;
 

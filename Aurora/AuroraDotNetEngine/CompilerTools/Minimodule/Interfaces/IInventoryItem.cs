@@ -31,7 +31,7 @@ using OpenMetaverse.Assets;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     /// <summary>
-    ///   This implements the methods needed to operate on individual inventory items.
+    ///     This implements the methods needed to operate on individual inventory items.
     /// </summary>
     public interface IInventoryItem
     {

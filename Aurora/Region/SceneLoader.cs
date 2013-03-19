@@ -65,10 +65,10 @@ namespace Aurora.Region
         #endregion
 
         /// <summary>
-        ///   Create a scene and its initial base structures.
+        ///     Create a scene and its initial base structures.
         /// </summary>
-        /// <param name = "regionInfo"></param>
-        /// <param name = "configSource"></param>
+        /// <param name="regionInfo"></param>
+        /// <param name="configSource"></param>
         /// <returns></returns>
         protected IScene SetupScene(RegionInfo regionInfo, IConfigSource configSource)
         {

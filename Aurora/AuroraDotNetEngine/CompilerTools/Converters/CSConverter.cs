@@ -233,7 +233,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                 }
 #else
-                foreach (string line in m_includedAssemblies.Where(line => !parameters.ReferencedAssemblies.Contains(line)))
+                foreach (
+                    string line in m_includedAssemblies.Where(line => !parameters.ReferencedAssemblies.Contains(line)))
                 {
                     parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                      line));

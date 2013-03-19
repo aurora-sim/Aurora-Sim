@@ -31,7 +31,7 @@ using Aurora.Framework.Physics;
 namespace Aurora.Physics.BasicPhysicsPlugin
 {
     /// <summary>
-    ///   Effectively a physics plugin that simulates no physics at all.
+    ///     Effectively a physics plugin that simulates no physics at all.
     /// </summary>
     public class BasicPhysicsPlugin : IPhysicsPlugin
     {

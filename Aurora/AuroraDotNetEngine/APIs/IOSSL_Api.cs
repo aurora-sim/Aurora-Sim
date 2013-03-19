@@ -80,18 +80,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         // Animation commands
         void osAvatarPlayAnimation(string avatar, string animation);
         void osAvatarStopAnimation(string avatar, string animation);
-        
+
         void osSetTerrainTexture(int level, LSL_Key texture);
         void osSetTerrainTextureHeight(int corner, double low, double high);
 
         // Attachment commands
         /// <summary>
-        /// Attach the object containing this script to the avatar that owns it without checking for PERMISSION_ATTACH
+        ///     Attach the object containing this script to the avatar that owns it without checking for PERMISSION_ATTACH
         /// </summary>
         /// <param name='attachment'>The attachment point.  For example, ATTACH_CHEST</param>
         void osForceAttachToAvatar(int attachment);
+
         /// <summary>
-        /// Detach the object containing this script from the avatar it is attached to without checking for PERMISSION_ATTACH
+        ///     Detach the object containing this script from the avatar it is attached to without checking for PERMISSION_ATTACH
         /// </summary>
         /// <remarks>Nothing happens if the object is not attached.</remarks>
         void osForceDetachFromAvatar();
@@ -138,7 +139,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osGetScriptEngineName();
         string osGetSimulatorVersion();
         Object osParseJSONNew(string JSON); //patched from OpenSim
-        Hashtable osParseJSON(string JSON); 
+        Hashtable osParseJSON(string JSON);
 
         void osMessageObject(key objectUUID, string message);
 
@@ -166,7 +167,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osLoadedCreationID();
 
         LSL_List osGetLinkPrimitiveParams(int linknumber, LSL_List rules);
-        
+
         key osGetMapTexture();
         key osGetRegionMapTexture(string regionName);
         LSL_List osGetRegionStats();

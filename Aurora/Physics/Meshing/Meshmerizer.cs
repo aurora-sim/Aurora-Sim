@@ -79,7 +79,7 @@ namespace Aurora.Physics.Meshing
         private readonly bool UseMeshesPhysicsMesh;
 
         private float minSizeForComplexMesh = 0.2f;
-                      // prims with all dimensions smaller than this will have a bounding box mesh
+        // prims with all dimensions smaller than this will have a bounding box mesh
 
         private readonly Dictionary<ulong, Mesh> m_uniqueMeshes = new Dictionary<ulong, Mesh>();
 
@@ -91,7 +91,7 @@ namespace Aurora.Physics.Meshing
             cacheSculptMaps = start_config.GetBoolean("CacheSculptMaps", cacheSculptMaps);
             UseMeshesPhysicsMesh = start_config.GetBoolean("UseMeshesPhysicsMesh", UseMeshesPhysicsMesh);
 
-            cacheSculptAlphaMaps = Environment.OSVersion.Platform != PlatformID.Unix && cacheSculptMaps; 
+            cacheSculptAlphaMaps = Environment.OSVersion.Platform != PlatformID.Unix && cacheSculptMaps;
 
             try
             {
@@ -100,22 +100,23 @@ namespace Aurora.Physics.Meshing
             }
             catch (Exception e)
             {
-                MainConsole.Instance.WarnFormat("[SCULPT]: Unable to create {0} directory: ", decodedSculptMapPath, e.ToString());
+                MainConsole.Instance.WarnFormat("[SCULPT]: Unable to create {0} directory: ", decodedSculptMapPath,
+                                                e.ToString());
             }
         }
 
         /// <summary>
-        ///   creates a simple box mesh of the specified size. This mesh is of very low vertex count and may
-        ///   be useful as a backup proxy when level of detail is not needed or when more complex meshes fail
-        ///   for some reason
+        ///     creates a simple box mesh of the specified size. This mesh is of very low vertex count and may
+        ///     be useful as a backup proxy when level of detail is not needed or when more complex meshes fail
+        ///     for some reason
         /// </summary>
-        /// <param name = "minX"></param>
-        /// <param name = "maxX"></param>
-        /// <param name = "minY"></param>
-        /// <param name = "maxY"></param>
-        /// <param name = "minZ"></param>
-        /// <param name = "maxZ"></param>
-        /// <param name = "key"></param>
+        /// <param name="minX"></param>
+        /// <param name="maxX"></param>
+        /// <param name="minY"></param>
+        /// <param name="maxY"></param>
+        /// <param name="minZ"></param>
+        /// <param name="maxZ"></param>
+        /// <param name="key"></param>
         /// <returns></returns>
         private static Mesh CreateSimpleBoxMesh(float minX, float maxX, float minY, float maxY, float minZ, float maxZ,
                                                 ulong key)
@@ -162,10 +163,10 @@ namespace Aurora.Physics.Meshing
 
 
         /// <summary>
-        ///   Creates a simple bounding box mesh for a complex input mesh
+        ///     Creates a simple bounding box mesh for a complex input mesh
         /// </summary>
-        /// <param name = "meshIn"></param>
-        /// <param name = "key"></param>
+        /// <param name="meshIn"></param>
+        /// <param name="key"></param>
         /// <returns></returns>
         private static Mesh CreateBoundingBoxMesh(Mesh meshIn, ulong key)
         {
@@ -270,7 +271,7 @@ namespace Aurora.Physics.Meshing
 
             if (primShape.SculptEntry)
             {
-                if (((SculptType)primShape.SculptType & SculptType.Mesh) == SculptType.Mesh)
+                if (((SculptType) primShape.SculptType & SculptType.Mesh) == SculptType.Mesh)
                 {
                     if (!UseMeshesPhysicsMesh)
                         return null;
@@ -310,16 +311,16 @@ namespace Aurora.Physics.Meshing
                             Mesh cachedMesh = new Mesh(key);
                             cachedMesh.Deserialize(cachedMeshMap);
                             cachedMesh.WasCached = true;
-                            return cachedMesh;//Return here, we found all of the info right here
+                            return cachedMesh; //Return here, we found all of the info right here
                         }
                         if (map.ContainsKey("physics_shape"))
-                            physicsParms = (OSDMap)map["physics_shape"]; // old asset format
+                            physicsParms = (OSDMap) map["physics_shape"]; // old asset format
                         if (physicsParms.Count == 0 && map.ContainsKey("physics_mesh"))
-                            physicsParms = (OSDMap)map["physics_mesh"]; // new asset format
+                            physicsParms = (OSDMap) map["physics_mesh"]; // new asset format
                         if (physicsParms.Count == 0 && map.ContainsKey("physics_convex"))
                             // convex hull format, which we can't read, so instead
                             // read the highest lod that exists, and use it instead
-                            physicsParms = (OSDMap)map["high_lod"]; 
+                            physicsParms = (OSDMap) map["high_lod"];
 
                         int physOffset = physicsParms["offset"].AsInteger() + (int) start;
                         int physSize = physicsParms["size"].AsInteger();
@@ -380,10 +381,11 @@ namespace Aurora.Physics.Meshing
 
                                     Vector3 posMax = new Vector3(0.5f, 0.5f, 0.5f);
                                     Vector3 posMin = new Vector3(-0.5f, -0.5f, -0.5f);
-                                    if (subMeshMap.ContainsKey("PositionDomain"))//Optional, so leave the max and min values otherwise
+                                    if (subMeshMap.ContainsKey("PositionDomain"))
+                                        //Optional, so leave the max and min values otherwise
                                     {
-                                        posMax = ((OSDMap)subMeshMap["PositionDomain"])["Max"].AsVector3();
-                                        posMin = ((OSDMap)subMeshMap["PositionDomain"])["Min"].AsVector3();
+                                        posMax = ((OSDMap) subMeshMap["PositionDomain"])["Max"].AsVector3();
+                                        posMin = ((OSDMap) subMeshMap["PositionDomain"])["Min"].AsVector3();
                                     }
                                     ushort faceIndexOffset = (ushort) coords.Count;
 
@@ -433,7 +435,8 @@ namespace Aurora.Physics.Meshing
                         }
                         catch (Exception e)
                         {
-                            MainConsole.Instance.Error("[SCULPT]: unable to load cached sculpt map " + decodedSculptFileName + " " + e);
+                            MainConsole.Instance.Error("[SCULPT]: unable to load cached sculpt map " +
+                                                       decodedSculptFileName + " " + e);
                         }
                         //if (idata != null)
                         //    MainConsole.Instance.Debug("[SCULPT]: loaded cached map asset for map ID: " + primShape.SculptTexture.ToString());
@@ -450,17 +453,19 @@ namespace Aurora.Physics.Meshing
                             OpenJPEG.DecodeToImage(primShape.SculptData, out unusedData, out idata);
                             unusedData = null;
 
-                            if (cacheSculptMaps && (cacheSculptAlphaMaps || (((ImageFlags)(idata.Flags) & ImageFlags.HasAlpha) == 0)))
+                            if (cacheSculptMaps &&
+                                (cacheSculptAlphaMaps || (((ImageFlags) (idata.Flags) & ImageFlags.HasAlpha) == 0)))
                             {
                                 try
                                 {
-                                    if(idata != null)
+                                    if (idata != null)
                                         idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp);
                                 }
                                 catch (Exception e)
                                 {
-                                    MainConsole.Instance.Error("[SCULPT]: unable to cache sculpt map " + decodedSculptFileName + " " +
-                                                e);
+                                    MainConsole.Instance.Error("[SCULPT]: unable to cache sculpt map " +
+                                                               decodedSculptFileName + " " +
+                                                               e);
                                 }
                             }
                         }
@@ -472,7 +477,8 @@ namespace Aurora.Physics.Meshing
                         }
                         catch (IndexOutOfRangeException)
                         {
-                            MainConsole.Instance.Error("[PHYSICS]: OpenJpeg was unable to decode this. Physics Proxy generation failed");
+                            MainConsole.Instance.Error(
+                                "[PHYSICS]: OpenJpeg was unable to decode this. Physics Proxy generation failed");
                             return null;
                         }
                         catch (Exception ex)
@@ -714,7 +720,7 @@ namespace Aurora.Physics.Meshing
             if (size.Z < 0.01f) size.Z = 0.01f;
 
             if ((!isPhysical) && size.X < minSizeForComplexMesh && size.Y < minSizeForComplexMesh &&
-                    size.Z < minSizeForComplexMesh)
+                size.Z < minSizeForComplexMesh)
             {
 #if SPAM
                 MainConsole.Instance.Debug("Meshmerizer: prim " + primName + " has a size of " + size.ToString() + " which is below threshold of " + 

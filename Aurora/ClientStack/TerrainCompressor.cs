@@ -94,17 +94,23 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Creates a LayerData packet for compressed land data given a full
-        ///   simulator heightmap and an array of indices of patches to compress
+        ///     Creates a LayerData packet for compressed land data given a full
+        ///     simulator heightmap and an array of indices of patches to compress
         /// </summary>
-        /// <param name = "heightmap">A 256 * 256 array of floating point values
-        ///   specifying the height at each meter in the simulator</param>
-        /// <param name = "x">Array of indexes in the 16x16 grid of patches
-        ///   for this simulator. For example if 1 and 17 are specified, patches
-        ///   x=1,y=0 and x=1,y=1 are sent</param>
-        /// <param name = "y">Array of indexes in the 16x16 grid of patches
-        ///   for this simulator. For example if 1 and 17 are specified, patches
-        ///   x=1,y=0 and x=1,y=1 are sent</param>
+        /// <param name="heightmap">
+        ///     A 256 * 256 array of floating point values
+        ///     specifying the height at each meter in the simulator
+        /// </param>
+        /// <param name="x">
+        ///     Array of indexes in the 16x16 grid of patches
+        ///     for this simulator. For example if 1 and 17 are specified, patches
+        ///     x=1,y=0 and x=1,y=1 are sent
+        /// </param>
+        /// <param name="y">
+        ///     Array of indexes in the 16x16 grid of patches
+        ///     for this simulator. For example if 1 and 17 are specified, patches
+        ///     x=1,y=0 and x=1,y=1 are sent
+        /// </param>
         /// <param name="type"></param>
         /// <param name="RegionSizeX"></param>
         /// <param name="RegionSizeY"></param>
@@ -159,15 +165,21 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Add a patch of terrain to a BitPacker
+        ///     Add a patch of terrain to a BitPacker
         /// </summary>
-        /// <param name = "output">BitPacker to write the patch to</param>
-        /// <param name = "heightmap">Heightmap of the simulator, must be a 256 *
-        ///   256 float array</param>
-        /// <param name = "x">X offset of the patch to create, valid values are
-        ///   from 0 to 15</param>
-        /// <param name = "y">Y offset of the patch to create, valid values are
-        ///   from 0 to 15</param>
+        /// <param name="output">BitPacker to write the patch to</param>
+        /// <param name="heightmap">
+        ///     Heightmap of the simulator, must be a 256 *
+        ///     256 float array
+        /// </param>
+        /// <param name="x">
+        ///     X offset of the patch to create, valid values are
+        ///     from 0 to 15
+        /// </param>
+        /// <param name="y">
+        ///     Y offset of the patch to create, valid values are
+        ///     from 0 to 15
+        /// </param>
         /// <param name="RegionSizeX"></param>
         /// <param name="RegionSizeY"></param>
         public static void CreatePatchFromHeightmap(BitPack output, short[] heightmap, int x, int y, int RegionSizeX,

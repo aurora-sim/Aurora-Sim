@@ -40,7 +40,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
-        public bool RemoveOnStateChange { get { return false; } }
+        public bool RemoveOnStateChange
+        {
+            get { return false; }
+        }
 
         public void Initialize(ScriptEngine ScriptEngine)
         {
@@ -60,7 +63,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 if (xmlrpc == null)
                     continue;
                 IXmlRpcRequestInfo rInfo = xmlrpc.GetNextCompletedRequest();
-                ISendRemoteDataRequest srdInfo = (ISendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest();
+                ISendRemoteDataRequest srdInfo = (ISendRemoteDataRequest) xmlrpc.GetNextCompletedSRDRequest();
 
                 if (!needToContinue)
                     needToContinue = xmlrpc.hasRequests();
@@ -113,7 +116,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                                             "remote_data", resobj,
                                                             new DetectParams[0]), EventPriority.Suspended);
 
-                    srdInfo = (ISendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest();
+                    srdInfo = (ISendRemoteDataRequest) xmlrpc.GetNextCompletedSRDRequest();
                 }
             }
             return needToContinue;

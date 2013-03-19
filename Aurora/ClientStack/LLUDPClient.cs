@@ -40,19 +40,25 @@ namespace Aurora.ClientStack
     #region Delegates
 
     /// <summary>
-    ///   Fired when updated networking stats are produced for this client
+    ///     Fired when updated networking stats are produced for this client
     /// </summary>
-    /// <param name = "inPackets">Number of incoming packets received since this
-    ///   event was last fired</param>
-    /// <param name = "outPackets">Number of outgoing packets sent since this
-    ///   event was last fired</param>
-    /// <param name = "unAckedBytes">Current total number of bytes in packets we
-    ///   are waiting on ACKs for</param>
+    /// <param name="inPackets">
+    ///     Number of incoming packets received since this
+    ///     event was last fired
+    /// </param>
+    /// <param name="outPackets">
+    ///     Number of outgoing packets sent since this
+    ///     event was last fired
+    /// </param>
+    /// <param name="unAckedBytes">
+    ///     Current total number of bytes in packets we
+    ///     are waiting on ACKs for
+    /// </param>
     public delegate void PacketStats(int inPackets, int outPackets, int unAckedBytes);
 
     /// <summary>
-    ///   Fired when the queue for one or more packet categories is empty. This 
-    ///   event can be hooked to put more data on the empty queues
+    ///     Fired when the queue for one or more packet categories is empty. This
+    ///     event can be hooked to put more data on the empty queues
     /// </summary>
     public delegate void QueueEmpty(object o);
 
@@ -102,7 +108,7 @@ namespace Aurora.ClientStack
                 while (--i >= 0)
                 {
                     object ob;
-                    if(queues[i].TryDequeue(out ob))
+                    if (queues[i].TryDequeue(out ob))
                         queues[i + 1].Enqueue(ob);
                 }
             }
@@ -131,13 +137,13 @@ namespace Aurora.ClientStack
     }
 
     /// <summary>
-    ///   Tracks state for a client UDP connection and provides client-specific methods
+    ///     Tracks state for a client UDP connection and provides client-specific methods
     /// </summary>
     public sealed class LLUDPClient
     {
         /// <summary>
-        ///   Percentage of the task throttle category that is allocated to avatar and prim
-        ///   state updates
+        ///     Percentage of the task throttle category that is allocated to avatar and prim
+        ///     state updates
         /// </summary>
         private const float STATE_TASK_PERCENTAGE = 0.3f;
 
@@ -149,44 +155,44 @@ namespace Aurora.ClientStack
         private const int MAX_PACKET_SKIP_RATE = 4;
 
         /// <summary>
-        ///   AgentID for this client
+        ///     AgentID for this client
         /// </summary>
         public readonly UUID AgentID;
 
         /// <summary>
-        ///   Circuit code that this client is connected on
+        ///     Circuit code that this client is connected on
         /// </summary>
         public readonly uint CircuitCode;
 
         /// <summary>
-        ///   Packets we have sent that need to be ACKed by the client
+        ///     Packets we have sent that need to be ACKed by the client
         /// </summary>
         public readonly UnackedPacketCollection NeedAcks = new UnackedPacketCollection();
 
         /// <summary>
-        ///   Sequence numbers of packets we've received (for duplicate checking)
+        ///     Sequence numbers of packets we've received (for duplicate checking)
         /// </summary>
         public readonly IncomingPacketHistoryCollection PacketArchive = new IncomingPacketHistoryCollection(200);
 
         //        private readonly TokenBucket[] m_throttleCategories;
         /// <summary>
-        ///   Throttle buckets for each packet category
+        ///     Throttle buckets for each packet category
         /// </summary>
         /// <summary>
-        ///   Outgoing queues for throttled packets
+        ///     Outgoing queues for throttled packets
         /// </summary>
 //        private readonly Aurora.Framework.LocklessQueue<OutgoingPacket>[] m_packetOutboxes = new Aurora.Framework.LocklessQueue<OutgoingPacket>[(int)ThrottleOutPacketType.Count];
         private readonly int[] PacketsCounts = new int[(int) ThrottleOutPacketType.Count];
 
         /// <summary>
-        ///   ACKs that are queued up, waiting to be sent to the client
+        ///     ACKs that are queued up, waiting to be sent to the client
         /// </summary>
         public readonly ConcurrentQueue<uint> PendingAcks = new ConcurrentQueue<uint>();
 
         private readonly int[] Rates;
 
         /// <summary>
-        ///   The remote address of the connected client
+        ///     The remote address of the connected client
         /// </summary>
         public readonly IPEndPoint RemoteEndPoint;
 
@@ -194,84 +200,84 @@ namespace Aurora.ClientStack
         private readonly int m_maxRTO = 20000;
 
         private readonly UDPprioQueue m_outbox = new UDPprioQueue(8, 0x01);
-                                      // 8  priority levels (7 max , 0 lowest), autopromotion on every 2 enqueues
+        // 8  priority levels (7 max , 0 lowest), autopromotion on every 2 enqueues
 
         /// <summary>
-        ///   Throttle bucket for this agent's connection
+        ///     Throttle bucket for this agent's connection
         /// </summary>
         private readonly TokenBucket m_throttle;
 
         /// <summary>
-        ///   A reference to the LLUDPServer that is managing this client
+        ///     A reference to the LLUDPServer that is managing this client
         /// </summary>
         private readonly LLUDPServer m_udpServer;
 
         /// <summary>
-        ///   Number of bytes received since the last acknowledgement was sent out. This is used
-        ///   to loosely follow the TCP delayed ACK algorithm in RFC 1122 (4.2.3.2)
+        ///     Number of bytes received since the last acknowledgement was sent out. This is used
+        ///     to loosely follow the TCP delayed ACK algorithm in RFC 1122 (4.2.3.2)
         /// </summary>
         public int BytesSinceLastACK;
 
         /// <summary>
-        ///   Current ping sequence number
+        ///     Current ping sequence number
         /// </summary>
         public byte CurrentPingSequence;
 
         /// <summary>
-        ///   Current packet sequence number
+        ///     Current packet sequence number
         /// </summary>
         public int CurrentSequence;
 
         /// <summary>
-        ///   True when this connection is alive, otherwise false
+        ///     True when this connection is alive, otherwise false
         /// </summary>
         public bool IsConnected = true;
 
         /// <summary>
-        ///   True when this connection is paused, otherwise false
+        ///     True when this connection is paused, otherwise false
         /// </summary>
         public bool IsPaused;
 
         public int[] MapCatsToPriority = new int[(int) ThrottleOutPacketType.Count];
 
         /// <summary>
-        ///   Number of packets received from this client
+        ///     Number of packets received from this client
         /// </summary>
         public int PacketsReceived;
 
         /// <summary>
-        ///   Total byte count of unacked packets sent to this client
+        ///     Total byte count of unacked packets sent to this client
         /// </summary>
         public int PacketsResent;
 
         /// <summary>
-        ///   Number of packets sent to this client
+        ///     Number of packets sent to this client
         /// </summary>
         public int PacketsSent;
 
         /// <summary>
-        ///   Retransmission timeout. Packets that have not been acknowledged in this number of
-        ///   milliseconds or longer will be resent
+        ///     Retransmission timeout. Packets that have not been acknowledged in this number of
+        ///     milliseconds or longer will be resent
         /// </summary>
         /// <remarks>
-        ///   Calculated from <seealso cref = "SRTT" /> and <seealso cref = "RTTVAR" /> using the
-        ///   guidelines in RFC 2988
+        ///     Calculated from <seealso cref="SRTT" /> and <seealso cref="RTTVAR" /> using the
+        ///     guidelines in RFC 2988
         /// </remarks>
         public int RTO;
 
         /// <summary>
-        ///   Round-trip time variance. Measures the consistency of round-trip times
+        ///     Round-trip time variance. Measures the consistency of round-trip times
         /// </summary>
         public float RTTVAR;
 
         /// <summary>
-        ///   Smoothed round-trip time. A smoothed average of the round-trip time for sending a
-        ///   reliable packet to the client and receiving an ACK
+        ///     Smoothed round-trip time. A smoothed average of the round-trip time for sending a
+        ///     reliable packet to the client and receiving an ACK
         /// </summary>
         public float SRTT;
 
         /// <summary>
-        ///   Environment.TickCount when the last packet was received for this client
+        ///     Environment.TickCount when the last packet was received for this client
         /// </summary>
         public int TickLastPacketReceived;
 
@@ -279,12 +285,12 @@ namespace Aurora.ClientStack
         private int TotalRateRequested;
 
         /// <summary>
-        ///   Total byte count of unacked packets sent to this client
+        ///     Total byte count of unacked packets sent to this client
         /// </summary>
         public int UnackedBytes;
 
         /// <summary>
-        ///   Holds the Environment.TickCount value of when the next OnQueueEmpty can be fired
+        ///     Holds the Environment.TickCount value of when the next OnQueueEmpty can be fired
         /// </summary>
         private int m_nextOnQueueEmpty = 1;
 
@@ -292,30 +298,32 @@ namespace Aurora.ClientStack
         private OutgoingPacket m_nextOutPacket;
 
         /// <summary>
-        ///   Caches packed throttle information
+        ///     Caches packed throttle information
         /// </summary>
         private byte[] m_packedThrottles;
 
         /// <summary>
-        ///   Total number of received packets that we have reported to the OnPacketStats event(s)
+        ///     Total number of received packets that we have reported to the OnPacketStats event(s)
         /// </summary>
         private int m_packetsReceivedReported;
 
         /// <summary>
-        ///   Total number of sent packets that we have reported to the OnPacketStats event(s)
+        ///     Total number of sent packets that we have reported to the OnPacketStats event(s)
         /// </summary>
         private int m_packetsSentReported;
 
         /// <summary>
-        ///   Default constructor
+        ///     Default constructor
         /// </summary>
-        /// <param name = "server">Reference to the UDP server this client is connected to</param>
-        /// <param name = "rates">Default throttling rates and maximum throttle limits</param>
-        /// <param name = "parentThrottle">Parent HTB (hierarchical token bucket)
-        ///   that the child throttles will be governed by</param>
-        /// <param name = "circuitCode">Circuit code for this connection</param>
-        /// <param name = "agentID">AgentID for the connected agent</param>
-        /// <param name = "remoteEndPoint">Remote endpoint for this connection</param>
+        /// <param name="server">Reference to the UDP server this client is connected to</param>
+        /// <param name="rates">Default throttling rates and maximum throttle limits</param>
+        /// <param name="parentThrottle">
+        ///     Parent HTB (hierarchical token bucket)
+        ///     that the child throttles will be governed by
+        /// </param>
+        /// <param name="circuitCode">Circuit code for this connection</param>
+        /// <param name="agentID">AgentID for the connected agent</param>
+        /// <param name="remoteEndPoint">Remote endpoint for this connection</param>
         /// <param name="defaultRTO"></param>
         /// <param name="maxRTO"></param>
         public LLUDPClient(LLUDPServer server, ThrottleRates rates, TokenBucket parentThrottle, uint circuitCode,
@@ -363,18 +371,18 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Fired when updated networking stats are produced for this client
+        ///     Fired when updated networking stats are produced for this client
         /// </summary>
         public event PacketStats OnPacketStats;
 
         /// <summary>
-        ///   Fired when the queue for a packet category is empty. This event can be
-        ///   hooked to put more data on the empty queue
+        ///     Fired when the queue for a packet category is empty. This event can be
+        ///     hooked to put more data on the empty queue
         /// </summary>
         public event QueueEmpty OnQueueEmpty;
 
         /// <summary>
-        ///   Shuts down this client connection
+        ///     Shuts down this client connection
         /// </summary>
         public void Shutdown()
         {
@@ -567,11 +575,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   tries to send queued packets
+        ///     tries to send queued packets
         /// </summary>
         /// <remarks>
-        ///   This function is only called from a synchronous loop in the
-        ///   UDPServer so we don't need to bother making this thread safe
+        ///     This function is only called from a synchronous loop in the
+        ///     UDPServer so we don't need to bother making this thread safe
         /// </remarks>
         /// <returns>True if any packets were sent, otherwise false</returns>
         public bool DequeueOutgoing(int MaxNPacks)
@@ -655,13 +663,15 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Called when an ACK packet is received and a round-trip time for a
-        ///   packet is calculated. This is used to calculate the smoothed
-        ///   round-trip time, round trip time variance, and finally the
-        ///   retransmission timeout
+        ///     Called when an ACK packet is received and a round-trip time for a
+        ///     packet is calculated. This is used to calculate the smoothed
+        ///     round-trip time, round trip time variance, and finally the
+        ///     retransmission timeout
         /// </summary>
-        /// <param name = "r">Round-trip time of a single packet and its
-        ///   acknowledgement</param>
+        /// <param name="r">
+        ///     Round-trip time of a single packet and its
+        ///     acknowledgement
+        /// </param>
         public void UpdateRoundTrip(float r)
         {
             const float ALPHA = 0.125f;
@@ -693,8 +703,8 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Exponential backoff of the retransmission timeout, per section 5.5
-        ///   of RFC 2988
+        ///     Exponential backoff of the retransmission timeout, per section 5.5
+        ///     of RFC 2988
         /// </summary>
         public void BackoffRTO()
         {
@@ -708,12 +718,14 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Fires the OnQueueEmpty callback and sets the minimum time that it
-        ///   can be called again
+        ///     Fires the OnQueueEmpty callback and sets the minimum time that it
+        ///     can be called again
         /// </summary>
-        /// <param name = "o">Throttle categories to fire the callback for,
-        ///   stored as an object to match the WaitCallback delegate
-        ///   signature</param>
+        /// <param name="o">
+        ///     Throttle categories to fire the callback for,
+        ///     stored as an object to match the WaitCallback delegate
+        ///     signature
+        /// </param>
         private void FireQueueEmpty(object o)
         {
             const int MIN_CALLBACK_MS = 30;

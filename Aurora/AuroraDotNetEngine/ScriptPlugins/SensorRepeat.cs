@@ -53,7 +53,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
-        public bool RemoveOnStateChange { get { return true; } }
+        public bool RemoveOnStateChange
+        {
+            get { return true; }
+        }
 
         public void Initialize(ScriptEngine engine)
         {
@@ -84,7 +87,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     if (ts.objectID != objectID && ts.itemID != m_itemID) NewSensors.Add(ts);
                 }
 #else
-                List<SenseRepeatClass> NewSensors = SenseRepeaters.Where(ts => ts.objectID != objectID && ts.itemID != m_itemID).ToList();
+                List<SenseRepeatClass> NewSensors =
+                    SenseRepeaters.Where(ts => ts.objectID != objectID && ts.itemID != m_itemID).ToList();
 #endif
                 SenseRepeaters.Clear();
                 SenseRepeaters = NewSensors;
@@ -151,14 +155,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 foreach (OSDMap map in from ts in SenseRepeaters
                                        where ts.itemID == itemID
                                        select new OSDMap
-                                        {
-                                            {"Interval", ts.interval},
-                                            {"Name", ts.name},
-                                            {"ID", ts.keyID},
-                                            {"Type", ts.type},
-                                            {"Range", ts.range},
-                                            {"Arc", ts.arc}
-                                        })
+                                                  {
+                                                      {"Interval", ts.interval},
+                                                      {"Name", ts.name},
+                                                      {"ID", ts.keyID},
+                                                      {"Type", ts.type},
+                                                      {"Range", ts.range},
+                                                      {"Arc", ts.arc}
+                                                  })
                 {
                     data[itemID.ToString()] = map;
                 }
@@ -178,11 +182,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             if (part == null)
                 return;
 
-            OSDMap save = (OSDMap)data;
+            OSDMap save = (OSDMap) data;
 
             foreach (KeyValuePair<string, OSD> kvp in save)
             {
-                OSDMap map = (OSDMap)kvp.Value;
+                OSDMap map = (OSDMap) kvp.Value;
                 SenseRepeatClass ts = new SenseRepeatClass
                                           {
                                               objectID = objectID,
@@ -195,7 +199,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                               arc = map["Arc"].AsReal(),
                                               host = part
                                           };
-
 
 
                 ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
@@ -319,7 +322,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     {
                         if (ts.host != null && ts.host.ParentEntity != null && ts.host.ParentEntity.Scene != null)
                         {
-                            DetectParams detect = new DetectParams { Key = sensedEntities[idx].itemID };
+                            DetectParams detect = new DetectParams {Key = sensedEntities[idx].itemID};
                             detect.Populate(ts.host.ParentEntity.Scene);
                             detected.Add(detect);
                             if (detected.Count == maximumToReturn &&
@@ -341,7 +344,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     {
                         m_ScriptEngine.PostScriptEvent(ts.itemID, ts.objectID,
                                                        new EventParams("sensor",
-                                                                       new Object[] { new LSL_Types.LSLInteger(detected.Count) },
+                                                                       new Object[]
+                                                                           {new LSL_Types.LSLInteger(detected.Count)},
                                                                        detected.ToArray()), EventPriority.Suspended);
                     }
                 }
@@ -365,13 +369,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 ts.host.ParentEntity.Scene.Entities.TryGetValue(ts.keyID, out e);
                 if (e == null || !(e is ISceneEntity))
                     return sensedEntities;
-                Entities = new List<ISceneEntity> { e as ISceneEntity };
+                Entities = new List<ISceneEntity> {e as ISceneEntity};
             }
             else
             {
                 Entities =
                     new List<ISceneEntity>(ts.host.ParentEntity.Scene.Entities.GetEntities(fromRegionPos,
-                                                                                           (float)ts.range));
+                                                                                           (float) ts.range));
             }
 
             // pre define some things to avoid repeated definitions in the loop body
@@ -395,7 +399,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 q = avatar.Rotation;
             }
             LSL_Types.Quaternion r = new LSL_Types.Quaternion(q.X, q.Y, q.Z, q.W);
-            LSL_Types.Vector3 forward_dir = (new LSL_Types.Vector3(1, 0, 0) * r);
+            LSL_Types.Vector3 forward_dir = (new LSL_Types.Vector3(1, 0, 0)*r);
             double mag_fwd = LSL_Types.Vector3.Mag(forward_dir);
 
             Vector3 ZeroVector = new Vector3(0, 0, 0);
@@ -427,7 +431,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 if (Math.Abs(dx) > ts.range || Math.Abs(dy) > ts.range || Math.Abs(dz) > ts.range)
                     dis = ts.range + 1.0;
                 else
-                    dis = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+                    dis = Math.Sqrt(dx*dx + dy*dy + dz*dz);
 
                 if (keep && dis <= ts.range && ts.host.UUID != ent.UUID)
                 {
@@ -474,7 +478,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                 LSL_Types.Vector3 obj_dir = new LSL_Types.Vector3(diff.X, diff.Y, diff.Z);
                                 double dot = LSL_Types.Vector3.Dot(forward_dir, obj_dir);
                                 double mag_obj = LSL_Types.Vector3.Mag(obj_dir);
-                                ang_obj = Math.Acos(dot / (mag_fwd * mag_obj));
+                                ang_obj = Math.Acos(dot/(mag_fwd*mag_obj));
                             }
                             catch
                             {
@@ -508,7 +512,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             Vector3 fromRegionPos = SensePoint.AbsolutePosition;
             Quaternion q = SensePoint.GetRotationOffset();
             LSL_Types.Quaternion r = new LSL_Types.Quaternion(q.X, q.Y, q.Z, q.W);
-            LSL_Types.Vector3 forward_dir = (new LSL_Types.Vector3(1, 0, 0) * r);
+            LSL_Types.Vector3 forward_dir = (new LSL_Types.Vector3(1, 0, 0)*r);
             double mag_fwd = LSL_Types.Vector3.Mag(forward_dir);
             bool attached = (SensePoint.AttachmentPoint != 0);
             Vector3 toRegionPos;
@@ -550,7 +554,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                                                      double dot = LSL_Types.Vector3.Dot(forward_dir,
                                                                                                         obj_dir);
                                                                      double mag_obj = LSL_Types.Vector3.Mag(obj_dir);
-                                                                     ang_obj = Math.Acos(dot / (mag_fwd * mag_obj));
+                                                                     ang_obj = Math.Acos(dot/(mag_fwd*mag_obj));
                                                                  }
                                                                  catch
                                                                  {
@@ -590,16 +594,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 {
                     ts.host.ParentEntity.Scene.ForEachScenePresence(
                         delegate(IScenePresence ssp)
-                        {
-                            if (ssp.Lastname == "Resident")
                             {
-                                if (ssp.Firstname.ToLower() == ts.name)
+                                if (ssp.Lastname == "Resident")
+                                {
+                                    if (ssp.Firstname.ToLower() == ts.name)
+                                        senseEntity(ssp);
+                                    return;
+                                }
+                                if (ssp.Name.Replace(" ", ".").ToLower() == ts.name)
                                     senseEntity(ssp);
-                                return;
                             }
-                            if (ssp.Name.Replace(" ", ".").ToLower() == ts.name)
-                                senseEntity(ssp);
-                        }
                         );
                 }
             }
@@ -654,7 +658,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             public int CompareTo(object obj)
             {
                 if (!(obj is SensedEntity)) throw new InvalidOperationException();
-                SensedEntity ent = (SensedEntity)obj;
+                SensedEntity ent = (SensedEntity) obj;
                 if (ent == null || ent.distance < distance) return 1;
                 if (ent.distance > distance) return -1;
                 return 0;

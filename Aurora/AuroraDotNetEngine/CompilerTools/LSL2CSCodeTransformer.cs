@@ -37,10 +37,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private readonly SYMBOL m_astRoot;
         private readonly Dictionary<string, string> m_globalVariableValues = new Dictionary<string, string>();
         private readonly Dictionary<string, SYMBOL> m_duplicatedGlobalVariableValues = new Dictionary<string, SYMBOL>();
-        private Dictionary<string, Dictionary<string, SYMBOL>> m_localVariableValues = new Dictionary<string, Dictionary<string, SYMBOL>>();
-        private Dictionary<string, Dictionary<string, string>> m_localVariableValuesStr = new Dictionary<string, Dictionary<string, string>>();
-        private Dictionary<string, Dictionary<string, int>> m_localVariableScope = new Dictionary<string, Dictionary<string, int>>();
-        private readonly Dictionary<string, Dictionary<string, SYMBOL>> m_duplicatedLocalVariableValues = new Dictionary<string, Dictionary<string, SYMBOL>>();
+
+        private Dictionary<string, Dictionary<string, SYMBOL>> m_localVariableValues =
+            new Dictionary<string, Dictionary<string, SYMBOL>>();
+
+        private Dictionary<string, Dictionary<string, string>> m_localVariableValuesStr =
+            new Dictionary<string, Dictionary<string, string>>();
+
+        private Dictionary<string, Dictionary<string, int>> m_localVariableScope =
+            new Dictionary<string, Dictionary<string, int>>();
+
+        private readonly Dictionary<string, Dictionary<string, SYMBOL>> m_duplicatedLocalVariableValues =
+            new Dictionary<string, Dictionary<string, SYMBOL>>();
+
         private string m_currentEvent = "";
         private string m_currentState = "";
 
@@ -48,6 +57,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             get { return m_duplicatedGlobalVariableValues; }
         }
+
         public Dictionary<string, string> GlobalVars
         {
             get { return m_globalVariableValues; }
@@ -57,15 +67,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             get { return m_duplicatedLocalVariableValues; }
         }
+
         public Dictionary<string, Dictionary<string, SYMBOL>> LocalVars
         {
             get { return m_localVariableValues; }
         }
 
         /// <summary>
-        ///   Pass the new CodeTranformer an abstract syntax tree.
+        ///     Pass the new CodeTranformer an abstract syntax tree.
         /// </summary>
-        /// <param name = "astRoot">The root node of the AST.</param>
+        /// <param name="astRoot">The root node of the AST.</param>
         public LSL2CSCodeTransformer(SYMBOL astRoot)
         {
             m_astRoot = astRoot;
@@ -87,7 +98,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Transform the code in the AST we have.
+        ///     Transform the code in the AST we have.
         /// </summary>
         /// <returns>The root node of the transformed AST</returns>
         public SYMBOL Transform()
@@ -105,10 +116,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Recursively called to transform each type of node. Will transform this
-        ///   node, then all it's children.
+        ///     Recursively called to transform each type of node. Will transform this
+        ///     node, then all it's children.
         /// </summary>
-        /// <param name = "s">The current node to transform.</param>
+        /// <param name="s">The current node to transform.</param>
         /// <param name="GlobalMethods"> </param>
         /// <param name="MethodArguements"> </param>
         private void TransformNode(SYMBOL s, Dictionary<string, string> GlobalMethods,
@@ -118,32 +129,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Recursively called to transform each type of node. Will transform this
-        ///   node, then all it's children.
+        ///     Recursively called to transform each type of node. Will transform this
+        ///     node, then all it's children.
         /// </summary>
-        /// <param name = "s">The current node to transform.</param>
+        /// <param name="s">The current node to transform.</param>
         /// <param name="GlobalMethods"> </param>
         /// <param name="MethodArguements"> </param>
         /// <param name="scopesParent"> </param>
         /// <param name="scopeCurrent"> </param>
         private void TransformNode(SYMBOL s, Dictionary<string, string> GlobalMethods,
-                                   Dictionary<string, ObjectList> MethodArguements, List<int> scopesParent, int scopeCurrent)
+                                   Dictionary<string, ObjectList> MethodArguements, List<int> scopesParent,
+                                   int scopeCurrent)
         {
             // make sure to put type lower in the inheritance hierarchy first
             // ie: since IdentConstant and StringConstant inherit from Constant,
             // put IdentConstant and StringConstant before Constant
             if (s is Declaration)
             {
-                Declaration dec = (Declaration)s;
+                Declaration dec = (Declaration) s;
                 dec.Datatype = m_datatypeLSL2OpenSim[dec.Datatype];
             }
             else if (s is Constant)
-                ((Constant)s).Type = m_datatypeLSL2OpenSim[((Constant)s).Type];
+                ((Constant) s).Type = m_datatypeLSL2OpenSim[((Constant) s).Type];
             else if (s is TypecastExpression)
-                ((TypecastExpression)s).TypecastType = m_datatypeLSL2OpenSim[((TypecastExpression)s).TypecastType];
+                ((TypecastExpression) s).TypecastType = m_datatypeLSL2OpenSim[((TypecastExpression) s).TypecastType];
             else if (s is GlobalFunctionDefinition)
             {
-                GlobalFunctionDefinition fun = (GlobalFunctionDefinition)s;
+                GlobalFunctionDefinition fun = (GlobalFunctionDefinition) s;
                 if ("void" == fun.ReturnType) // we don't need to translate "void"
                 {
                     if (GlobalMethods != null && !GlobalMethods.ContainsKey(fun.Name))
@@ -173,13 +185,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             else if (s is State)
             {
                 //Reset the variables, we changed events
-                State evt = (State)s;
+                State evt = (State) s;
                 m_currentState = evt.Name;
             }
             else if (s is StateEvent)
             {
                 //Reset the variables, we changed events
-                StateEvent evt = (StateEvent)s;
+                StateEvent evt = (StateEvent) s;
                 m_currentEvent = evt.Name;
                 m_localVariableValues.Add(m_currentState + "_" + evt.Name, new Dictionary<string, SYMBOL>());
                 m_localVariableValuesStr.Add(m_currentState + "_" + evt.Name, new Dictionary<string, string>());
@@ -192,7 +204,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else if (s is GlobalVariableDeclaration)
             {
-                GlobalVariableDeclaration gvd = (GlobalVariableDeclaration)s;
+                GlobalVariableDeclaration gvd = (GlobalVariableDeclaration) s;
                 foreach (SYMBOL child in gvd.kids)
                 {
                     if (child is Assignment)
@@ -203,13 +215,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         {
                             if (assignmentChild is Declaration)
                             {
-                                Declaration d = (Declaration)assignmentChild;
+                                Declaration d = (Declaration) assignmentChild;
                                 decID = d.Id;
                                 isDeclaration = true;
                             }
                             else if (assignmentChild is IdentExpression)
                             {
-                                IdentExpression identEx = (IdentExpression)assignmentChild;
+                                IdentExpression identEx = (IdentExpression) assignmentChild;
                                 if (isDeclaration)
                                 {
                                     if (m_globalVariableValues.ContainsKey(decID))
@@ -219,12 +231,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                             else if (assignmentChild is ListConstant)
                             {
-                                ListConstant listConst = (ListConstant)assignmentChild;
+                                ListConstant listConst = (ListConstant) assignmentChild;
                                 foreach (SYMBOL listChild in listConst.kids)
                                 {
                                     if (listChild is ArgumentList)
                                     {
-                                        ArgumentList argList = (ArgumentList)listChild;
+                                        ArgumentList argList = (ArgumentList) listChild;
                                         int i = 0;
                                         bool changed = false;
                                         object[] p = new object[argList.kids.Count];
@@ -233,16 +245,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                             p[i] = objChild;
                                             if (objChild is IdentExpression)
                                             {
-                                                IdentExpression identEx = (IdentExpression)objChild;
+                                                IdentExpression identEx = (IdentExpression) objChild;
                                                 if (m_globalVariableValues.ContainsKey(identEx.Name))
                                                 {
                                                     changed = true;
                                                     p[i] = new IdentExpression(identEx.yyps,
                                                                                m_globalVariableValues[identEx.Name])
-                                                    {
-                                                        pos = objChild.pos,
-                                                        m_dollar = objChild.m_dollar
-                                                    };
+                                                               {
+                                                                   pos = objChild.pos,
+                                                                   m_dollar = objChild.m_dollar
+                                                               };
                                                 }
                                             }
                                             i++;
@@ -264,7 +276,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                             else if (assignmentChild is VectorConstant || assignmentChild is RotationConstant)
                             {
-                                Constant listConst = (Constant)assignmentChild;
+                                Constant listConst = (Constant) assignmentChild;
                                 int i = 0;
                                 bool changed = false;
                                 object[] p = new object[listConst.kids.Count];
@@ -273,16 +285,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     p[i] = objChild;
                                     if (objChild is IdentExpression)
                                     {
-                                        IdentExpression identEx = (IdentExpression)objChild;
+                                        IdentExpression identEx = (IdentExpression) objChild;
                                         if (m_globalVariableValues.ContainsKey(identEx.Name))
                                         {
                                             changed = true;
                                             p[i] = new IdentExpression(identEx.yyps,
                                                                        m_globalVariableValues[identEx.Name])
-                                            {
-                                                pos = objChild.pos,
-                                                m_dollar = objChild.m_dollar
-                                            };
+                                                       {
+                                                           pos = objChild.pos,
+                                                           m_dollar = objChild.m_dollar
+                                                       };
                                         }
                                     }
                                     i++;
@@ -302,7 +314,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                             else if (assignmentChild is Constant)
                             {
-                                Constant identEx = (Constant)assignmentChild;
+                                Constant identEx = (Constant) assignmentChild;
                                 if (isDeclaration)
                                 {
                                     if (m_globalVariableValues.ContainsKey(decID))
@@ -316,26 +328,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else if (s is Assignment && m_currentEvent != "")
             {
-                Assignment ass = (Assignment)s;
+                Assignment ass = (Assignment) s;
                 bool isDeclaration = false;
                 string decID = "";
                 foreach (SYMBOL assignmentChild in ass.kids)
                 {
                     if (assignmentChild is Declaration)
                     {
-                        Declaration d = (Declaration)assignmentChild;
+                        Declaration d = (Declaration) assignmentChild;
                         decID = d.Id;
                         isDeclaration = true;
                     }
                     else if (assignmentChild is IdentExpression)
                     {
-                        IdentExpression identEx = (IdentExpression)assignmentChild;
+                        IdentExpression identEx = (IdentExpression) assignmentChild;
                         if (isDeclaration)
                         {
                             if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
                                 !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
                                 scopesParent.Contains(m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
-                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
+                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] =
+                                    m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
                             m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = identEx;
                             m_localVariableValuesStr[GetLocalVariableDictionaryKey()][decID] = identEx.Name;
                             m_localVariableScope[GetLocalVariableDictionaryKey()][decID] = scopeCurrent;
@@ -343,12 +356,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                     else if (assignmentChild is ListConstant)
                     {
-                        ListConstant listConst = (ListConstant)assignmentChild;
+                        ListConstant listConst = (ListConstant) assignmentChild;
                         foreach (SYMBOL listChild in listConst.kids)
                         {
                             if (listChild is ArgumentList)
                             {
-                                ArgumentList argList = (ArgumentList)listChild;
+                                ArgumentList argList = (ArgumentList) listChild;
                                 int i = 0;
                                 bool changed = false;
                                 object[] p = new object[argList.kids.Count];
@@ -357,16 +370,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     p[i] = objChild;
                                     if (objChild is IdentExpression)
                                     {
-                                        IdentExpression identEx = (IdentExpression)objChild;
-                                        if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(identEx.Name))
+                                        IdentExpression identEx = (IdentExpression) objChild;
+                                        if (
+                                            m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(
+                                                identEx.Name))
                                         {
                                             changed = true;
                                             p[i] = new IdentExpression(identEx.yyps,
-                                                                        m_localVariableValuesStr[GetLocalVariableDictionaryKey()][identEx.Name])
-                                            {
-                                                pos = objChild.pos,
-                                                m_dollar = objChild.m_dollar
-                                            };
+                                                                       m_localVariableValuesStr[
+                                                                           GetLocalVariableDictionaryKey()][identEx.Name
+                                                                           ])
+                                                       {
+                                                           pos = objChild.pos,
+                                                           m_dollar = objChild.m_dollar
+                                                       };
                                         }
                                     }
                                     i++;
@@ -380,9 +397,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 if (isDeclaration)
                                 {
                                     if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
-                                        !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
-                                        scopesParent.Contains(m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
-                                        m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
+                                        !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(
+                                            decID) &&
+                                        scopesParent.Contains(
+                                            m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
+                                        m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] =
+                                            m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
                                     m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = listConst;
                                     m_localVariableValuesStr[GetLocalVariableDictionaryKey()][decID] = listConst.Value;
                                     m_localVariableScope[GetLocalVariableDictionaryKey()][decID] = scopeCurrent;
@@ -392,7 +412,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                     else if (assignmentChild is VectorConstant || assignmentChild is RotationConstant)
                     {
-                        Constant listConst = (Constant)assignmentChild;
+                        Constant listConst = (Constant) assignmentChild;
                         int i = 0;
                         bool changed = false;
                         object[] p = new object[listConst.kids.Count];
@@ -401,16 +421,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             p[i] = objChild;
                             if (objChild is IdentExpression)
                             {
-                                IdentExpression identEx = (IdentExpression)objChild;
+                                IdentExpression identEx = (IdentExpression) objChild;
                                 if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(identEx.Name))
                                 {
                                     changed = true;
                                     p[i] = new IdentExpression(identEx.yyps,
-                                                                m_localVariableValuesStr[GetLocalVariableDictionaryKey()][identEx.Name])
-                                    {
-                                        pos = objChild.pos,
-                                        m_dollar = objChild.m_dollar
-                                    };
+                                                               m_localVariableValuesStr[GetLocalVariableDictionaryKey()]
+                                                                   [identEx.Name])
+                                               {
+                                                   pos = objChild.pos,
+                                                   m_dollar = objChild.m_dollar
+                                               };
                                 }
                             }
                             i++;
@@ -426,7 +447,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
                                 !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
                                 scopesParent.Contains(m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
-                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
+                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] =
+                                    m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
                             m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = listConst;
                             m_localVariableValuesStr[GetLocalVariableDictionaryKey()][decID] = listConst.Value;
                             m_localVariableScope[GetLocalVariableDictionaryKey()][decID] = scopeCurrent;
@@ -434,13 +456,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                     else if (assignmentChild is Constant)
                     {
-                        Constant identEx = (Constant)assignmentChild;
+                        Constant identEx = (Constant) assignmentChild;
                         if (isDeclaration)
                         {
                             if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
                                 !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
                                 scopesParent.Contains(m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
-                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
+                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] =
+                                    m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
                             m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = identEx;
                             m_localVariableValuesStr[GetLocalVariableDictionaryKey()][decID] = identEx.Value;
                             m_localVariableScope[GetLocalVariableDictionaryKey()][decID] = scopeCurrent;
@@ -448,7 +471,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                 }
             }
-            
+
             /*if(s is Statement)
             {
                 if(s.kids.Count == 1 && s.kids[0] is Assignment)
@@ -512,7 +535,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // we need to keep track of the scope for dulicate variables
                 if ((s is IfStatement) || (s is WhileStatement) || (s is ForLoopStatement) || (s is DoWhileStatement))
                 {
-                    scopeCurrent = ((SYMBOL)s.kids[i]).pos;
+                    scopeCurrent = ((SYMBOL) s.kids[i]).pos;
                     scopesParent.Add(scopeCurrent);
                     scopeAdded = true;
                 }
@@ -520,13 +543,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 if (!(s is Assignment || s is ArgumentDeclarationList) && s.kids[i] is Declaration)
                     AddImplicitInitialization(s, i);
 
-                TransformNode((SYMBOL)s.kids[i], null, null, scopesParent, scopeCurrent);
+                TransformNode((SYMBOL) s.kids[i], null, null, scopesParent, scopeCurrent);
 
                 // we need to remove the current scope from the parent since we are no longer in that scope
                 if (scopeAdded)
                     scopesParent.Remove(scopeCurrent);
             }
-
         }
 
         private string GetLocalVariableDictionaryKey()
@@ -537,14 +559,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Replaces an instance of the node at s.kids[didx] with an assignment
-        ///   node. The assignment node has the Declaration node on the left hand
-        ///   side and a default initializer on the right hand side.
+        ///     Replaces an instance of the node at s.kids[didx] with an assignment
+        ///     node. The assignment node has the Declaration node on the left hand
+        ///     side and a default initializer on the right hand side.
         /// </summary>
-        /// <param name = "s">
-        ///   The node containing the Declaration node that needs replacing.
+        /// <param name="s">
+        ///     The node containing the Declaration node that needs replacing.
         /// </param>
-        /// <param name = "didx">Index of the Declaration node to replace.</param>
+        /// <param name="didx">Index of the Declaration node to replace.</param>
         private void AddImplicitInitialization(SYMBOL s, int didx)
         {
             // We take the kids for a while to play with them.
@@ -554,7 +576,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 sKids[i] = s.kids.Pop();
 
             // The child to be changed.
-            Declaration currentDeclaration = (Declaration)sKids[didx];
+            Declaration currentDeclaration = (Declaration) sKids[didx];
 
             // We need an assignment node.
             Assignment newAssignment = new Assignment(currentDeclaration.yyps,
@@ -570,16 +592,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Generates the node structure required to generate a default
-        ///   initialization.
+        ///     Generates the node structure required to generate a default
+        ///     initialization.
         /// </summary>
-        /// <param name = "p">
-        ///   Tools.Parser instance to use when instantiating nodes.
+        /// <param name="p">
+        ///     Tools.Parser instance to use when instantiating nodes.
         /// </param>
-        /// <param name = "constantType">String describing the datatype.</param>
+        /// <param name="constantType">String describing the datatype.</param>
         /// <returns>
-        ///   A SYMBOL node conaining the appropriate structure for intializing a
-        ///   constantType.
+        ///     A SYMBOL node conaining the appropriate structure for intializing a
+        ///     constantType.
         /// </returns>
         private SYMBOL GetZeroConstant(Parser p, string constantType)
         {

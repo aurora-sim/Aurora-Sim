@@ -33,7 +33,7 @@ using Aurora.Framework;
 namespace Aurora.Region.Animation
 {
     /// <summary>
-    ///   Handle all animation duties for a scene presence
+    ///     Handle all animation duties for a scene presence
     /// </summary>
     public class Animator : IAnimator
     {
@@ -47,7 +47,7 @@ namespace Aurora.Region.Animation
         protected string m_movementAnimation = "DEFAULT";
 
         /// <value>
-        ///   The scene presence that this animator applies to
+        ///     The scene presence that this animator applies to
         /// </value>
         protected IScenePresence m_scenePresence;
 
@@ -88,7 +88,7 @@ namespace Aurora.Region.Animation
         }
 
         /// <value>
-        ///   The current movement animation
+        ///     The current movement animation
         /// </value>
         public string CurrentMovementAnimation
         {
@@ -119,9 +119,9 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Remove the given animation from the list of current animations
+        ///     Remove the given animation from the list of current animations
         /// </summary>
-        /// <param name = "animID"></param>
+        /// <param name="animID"></param>
         public void RemoveAnimation(UUID animID)
         {
             if (m_scenePresence.IsChildAgent)
@@ -132,9 +132,9 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Remove the given animation from the list of current animations
+        ///     Remove the given animation from the list of current animations
         /// </summary>
-        /// <param name = "name"></param>
+        /// <param name="name"></param>
         public bool RemoveAnimation(string name)
         {
             if (m_scenePresence.IsChildAgent)
@@ -154,7 +154,7 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Clear out all animations
+        ///     Clear out all animations
         /// </summary>
         public void ResetAnimations()
         {
@@ -162,8 +162,8 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   The movement animation is reserved for "main" animations
-        ///   that are mutually exclusive, e.g. flying and sitting.
+        ///     The movement animation is reserved for "main" animations
+        ///     that are mutually exclusive, e.g. flying and sitting.
         /// </summary>
         public void TrySetMovementAnimation(string anim)
         {
@@ -171,8 +171,8 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   The movement animation is reserved for "main" animations
-        ///   that are mutually exclusive, e.g. flying and sitting.
+        ///     The movement animation is reserved for "main" animations
+        ///     that are mutually exclusive, e.g. flying and sitting.
         /// </summary>
         public void TrySetMovementAnimation(string anim, bool sendTerseUpdateIfNotSending)
         {
@@ -199,7 +199,7 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   This method determines the proper movement related animation
+        ///     This method determines the proper movement related animation
         /// </summary>
         public string GetMovementAnimation()
         {
@@ -435,7 +435,7 @@ namespace Aurora.Region.Animation
 
             #region Falling/Floating/Landing
 
-            float walkElapsed = (Util.EnvironmentTickCount() - m_animTickWalk) / 1000f;
+            float walkElapsed = (Util.EnvironmentTickCount() - m_animTickWalk)/1000f;
             if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && actor.Velocity.Z < -2 &&
                 walkElapsed > FALL_AFTER_MOVE_TIME)
             {
@@ -458,7 +458,8 @@ namespace Aurora.Region.Animation
 
                     return "SOFT_LAND";
                 }
-                else if (fallElapsed < 1.1 || (Math.Abs(actor.Velocity.X) > 1 && Math.Abs(actor.Velocity.Y) > 1 && actor.Velocity.Z < 3))
+                else if (fallElapsed < 1.1 ||
+                         (Math.Abs(actor.Velocity.X) > 1 && Math.Abs(actor.Velocity.Y) > 1 && actor.Velocity.Z < 3))
                 {
                     m_animTickFall = Util.EnvironmentTickCount();
 
@@ -494,7 +495,7 @@ namespace Aurora.Region.Animation
                                       actor.Velocity.X != 0 && actor.Velocity.Y != 0))
                 {
                     wasLastFlying = false;
-                    if(actor.IsColliding)
+                    if (actor.IsColliding)
                         m_animTickWalk = Util.EnvironmentTickCount();
                     // Walking / crouchwalking / running
                     if (move.Z < 0f)
@@ -520,7 +521,7 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Update the movement animation of this avatar according to its current state
+        ///     Update the movement animation of this avatar according to its current state
         /// </summary>
         public void UpdateMovementAnimations(bool sendTerseUpdate)
         {
@@ -534,7 +535,7 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Gets a list of the animations that are currently in use by this avatar
+        ///     Gets a list of the animations that are currently in use by this avatar
         /// </summary>
         /// <returns></returns>
         public UUID[] GetAnimationArray()
@@ -547,11 +548,11 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Sends all clients the given information for this avatar
+        ///     Sends all clients the given information for this avatar
         /// </summary>
-        /// <param name = "animations"></param>
-        /// <param name = "seqs"></param>
-        /// <param name = "objectIDs"></param>
+        /// <param name="animations"></param>
+        /// <param name="seqs"></param>
+        /// <param name="objectIDs"></param>
         public void SendAnimPack(UUID[] animations, int[] sequenceNums, UUID[] objectIDs)
         {
             if (m_scenePresence.IsChildAgent)
@@ -577,9 +578,9 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Send an animation update to the given client
+        ///     Send an animation update to the given client
         /// </summary>
-        /// <param name = "client"></param>
+        /// <param name="client"></param>
         public void SendAnimPackToClient(IClientAPI client)
         {
             if (m_scenePresence.IsChildAgent)
@@ -602,7 +603,7 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Send animation information about this avatar to all clients.
+        ///     Send animation information about this avatar to all clients.
         /// </summary>
         public void SendAnimPack()
         {
@@ -621,7 +622,7 @@ namespace Aurora.Region.Animation
         }
 
         /// <summary>
-        ///   Close out and remove any current data
+        ///     Close out and remove any current data
         /// </summary>
         public void Close()
         {

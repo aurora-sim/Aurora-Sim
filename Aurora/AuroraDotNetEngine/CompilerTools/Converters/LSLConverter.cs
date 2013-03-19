@@ -117,7 +117,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void FindErrorLine(CompilerError CompErr, object map, string script, out int LineN, out int CharN)
         {
-            Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap = (Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>)map;
+            Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap =
+                (Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>) map;
             string text = ReplaceTypes(CompErr.ErrorText);
             text = CleanError(text);
             KeyValuePair<int, int> lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
@@ -142,6 +143,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
             }
         }
+
         public static KeyValuePair<int, int> FindErrorPosition(int line,
                                                                int col, Dictionary<KeyValuePair<int, int>,
                                                                             KeyValuePair<int, int>> positionMap)

@@ -113,11 +113,11 @@ namespace PrimMesher
                         if (smallMap)
 //                            pixel = unsafeBMP.GetPixel(x < width ? x : x - 1,
                             pixel = bm.GetPixel(x < width ? x : x - 1,
-                                                       y < height ? y : y - 1);
+                                                y < height ? y : y - 1);
                         else
                             pixel = bm.GetPixel(x < width ? x : x - 1,
 //                            pixel = unsafeBMP.GetPixel(x < width ? x*2 : x*2 - 1,
-                                                       y < height ? y*2 : y*2 - 1);
+                                                y < height ? y*2 : y*2 - 1);
 
                         redBytes[byteNdx] = pixel.R;
                         greenBytes[byteNdx] = pixel.G;
@@ -173,12 +173,11 @@ namespace PrimMesher
         private Bitmap ScaleImage(Bitmap srcImage, int destWidth, int destHeight,
                                   InterpolationMode interpMode)
         {
-
             Bitmap scaledImage = new Bitmap(destWidth, destHeight, PixelFormat.Format24bppRgb);
 
             Color c;
-            float xscale = srcImage.Width / destWidth;
-            float yscale = srcImage.Height / destHeight;
+            float xscale = srcImage.Width/destWidth;
+            float yscale = srcImage.Height/destHeight;
 
             float sy = 0.5f;
             for (int y = 0; y < destHeight; y++)
@@ -188,7 +187,7 @@ namespace PrimMesher
                 {
                     try
                     {
-                        c = srcImage.GetPixel((int)(sx), (int)(sy));
+                        c = srcImage.GetPixel((int) (sx), (int) (sy));
                         scaledImage.SetPixel(x, y, Color.FromArgb(c.R, c.G, c.B));
                     }
                     catch (IndexOutOfRangeException)

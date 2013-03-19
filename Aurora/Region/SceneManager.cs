@@ -40,7 +40,7 @@ using Timer = System.Timers.Timer;
 namespace Aurora.Region
 {
     /// <summary>
-    /// Manager for adding, closing, reseting, and restarting scenes.
+    ///     Manager for adding, closing, reseting, and restarting scenes.
     /// </summary>
     public class SceneManager : ISceneManager, IApplicationPlugin
     {
@@ -48,7 +48,8 @@ namespace Aurora.Region
 
         static SceneManager()
         {
-            Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer = new Aurora.Region.Serialization.SceneObjectSerializer();
+            Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer =
+                new Aurora.Region.Serialization.SceneObjectSerializer();
         }
 
         #endregion
@@ -60,12 +61,14 @@ namespace Aurora.Region
 
         protected ISimulationBase m_OpenSimBase;
         protected IScene m_scene;
+
         public IScene Scene
         {
             get { return m_scene; }
         }
 
         protected ISimulationDataStore m_simulationDataService;
+
         public ISimulationDataStore SimulationDataService
         {
             get { return m_simulationDataService; }
@@ -73,6 +76,7 @@ namespace Aurora.Region
         }
 
         private IConfigSource m_config = null;
+
         public IConfigSource ConfigSource
         {
             get { return m_config; }
@@ -109,7 +113,7 @@ namespace Aurora.Region
                 name = simConfig.GetString("DatabaseLoaderName", "FileBasedDatabase");
             }
 
-            ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore> ().ToArray ();
+            ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore>().ToArray();
             List<string> storeNames = new List<string>();
             foreach (ISimulationDataStore store in stores)
             {
@@ -123,8 +127,10 @@ namespace Aurora.Region
 
             if (m_simulationDataService == null)
             {
-                MainConsole.Instance.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', ONLY OPTIONS ARE {1}, QUITING...", name, string.Join(", ", storeNames.ToArray()));
-                Console.Read ();//Wait till they see
+                MainConsole.Instance.ErrorFormat(
+                    "[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', ONLY OPTIONS ARE {1}, QUITING...",
+                    name, string.Join(", ", storeNames.ToArray()));
+                Console.Read(); //Wait till they see
                 Environment.Exit(0);
             }
             m_simulationDataService.Initialise();
@@ -159,7 +165,7 @@ namespace Aurora.Region
             bool newRegion = false;
             StartRegion(out newRegion);
             MainConsole.Instance.DefaultPrompt = "Region ";
-            if (newRegion)//Save the new info
+            if (newRegion) //Save the new info
                 m_simulationDataService.ForceBackup();
         }
 
@@ -191,28 +197,31 @@ namespace Aurora.Region
 
             TimeSpan timeTaken = DateTime.Now - m_OpenSimBase.StartupTime;
 
-            MainConsole.Instance.InfoFormat("[SceneManager]: Startup Complete for region " + m_scene.RegionInfo.RegionName + ". This took {0}m {1}.{2}s", 
+            MainConsole.Instance.InfoFormat(
+                "[SceneManager]: Startup Complete for region " + m_scene.RegionInfo.RegionName +
+                ". This took {0}m {1}.{2}s",
                 timeTaken.Minutes, timeTaken.Seconds, timeTaken.Milliseconds);
 
-            AuroraModuleLoader.ClearCache ();
+            AuroraModuleLoader.ClearCache();
             // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
             // this is a rare case where we know we have just went through a long cycle of heap
             // allocations, and there is no more work to be done until someone logs in
-            GC.Collect ();
+            GC.Collect();
         }
 
         #endregion
 
         #region Add a region
 
-        public void StartRegion (out bool newRegion)
+        public void StartRegion(out bool newRegion)
         {
             RegionInfo regionInfo = m_simulationDataService.LoadRegionInfo(m_OpenSimBase, out newRegion);
-            MainConsole.Instance.InfoFormat("[SceneManager]: Starting region \"{0}\" at @ {1},{2}", regionInfo.RegionName,
-                regionInfo.RegionLocX / 256, regionInfo.RegionLocY / 256);
-            ISceneLoader sceneLoader = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<ISceneLoader> ();
+            MainConsole.Instance.InfoFormat("[SceneManager]: Starting region \"{0}\" at @ {1},{2}",
+                                            regionInfo.RegionName,
+                                            regionInfo.RegionLocX/256, regionInfo.RegionLocY/256);
+            ISceneLoader sceneLoader = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<ISceneLoader>();
             if (sceneLoader == null)
-                throw new Exception ("No Scene Loader Interface!");
+                throw new Exception("No Scene Loader Interface!");
 
             //Get the new scene from the interface
             m_scene = sceneLoader.CreateScene(regionInfo);
@@ -233,7 +242,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Gets a new copy of the simulation data store, keep one per region
+        ///     Gets a new copy of the simulation data store, keep one per region
         /// </summary>
         /// <returns></returns>
         public ISimulationDataStore GetSimulationDataStore()
@@ -245,14 +254,14 @@ namespace Aurora.Region
 
         #region Reset a region
 
-        public void ResetRegion ()
+        public void ResetRegion()
         {
             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-            if(backup != null)
-                backup.DeleteAllSceneObjects();//Remove all the objects from the region
+            if (backup != null)
+                backup.DeleteAllSceneObjects(); //Remove all the objects from the region
             ITerrainModule module = m_scene.RequestModuleInterface<ITerrainModule>();
             if (module != null)
-                module.ResetTerrain();//Then remove the terrain
+                module.ResetTerrain(); //Then remove the terrain
             //Then reset the textures
             m_scene.RegionInfo.RegionSettings.TerrainTexture1 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_1;
             m_scene.RegionInfo.RegionSettings.TerrainTexture2 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_2;
@@ -265,9 +274,9 @@ namespace Aurora.Region
 
         #region Restart a region
 
-        public void RestartRegion ()
+        public void RestartRegion()
         {
-            CloseRegion (ShutdownType.Immediate, 0);
+            CloseRegion(ShutdownType.Immediate, 0);
             bool newRegion;
             StartRegion(out newRegion);
         }
@@ -277,18 +286,18 @@ namespace Aurora.Region
         #region Shutdown regions
 
         /// <summary>
-        /// Shuts down and permanently removes all info associated with the region
+        ///     Shuts down and permanently removes all info associated with the region
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="cleanup"></param>
-        public void RemoveRegion (bool cleanup)
+        public void RemoveRegion(bool cleanup)
         {
             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
             if (backup != null)
                 backup.DeleteAllSceneObjects();
 
             m_scene.RegionInfo.HasBeenDeleted = true;
-            CloseRegion (ShutdownType.Immediate, 0);
+            CloseRegion(ShutdownType.Immediate, 0);
 
             if (!cleanup)
                 return;
@@ -301,13 +310,13 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Shuts down a region and removes it from all running modules
+        ///     Shuts down a region and removes it from all running modules
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="type"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>
-        public void CloseRegion (ShutdownType type, int seconds)
+        public void CloseRegion(ShutdownType type, int seconds)
         {
             if (type == ShutdownType.Immediate)
             {
@@ -318,10 +327,10 @@ namespace Aurora.Region
             }
             else
             {
-                Timer t = new Timer (seconds * 1000);//Millisecond conversion
+                Timer t = new Timer(seconds*1000); //Millisecond conversion
                 t.Elapsed += (sender, e) => CloseRegion(ShutdownType.Immediate, 0);
                 t.AutoReset = false;
-                t.Start ();
+                t.Start();
             }
         }
 
@@ -329,7 +338,7 @@ namespace Aurora.Region
 
         #region ISharedRegionStartupModule plugins
 
-        protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule> ();
+        protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule>();
 
         protected void StartModules(IScene scene)
         {
@@ -340,14 +349,14 @@ namespace Aurora.Region
                 module.Initialise(scene, m_config, m_OpenSimBase);
             }
             //Then do the ISharedRegionModule and INonSharedRegionModules
-            MainConsole.Instance.Debug ("[Modules]: Loading region modules");
+            MainConsole.Instance.Debug("[Modules]: Loading region modules");
             IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface (out controller))
+            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface(out controller))
             {
-                controller.AddRegionToModules (scene);
+                controller.AddRegionToModules(scene);
             }
             else
-                MainConsole.Instance.Error ("[Modules]: The new RegionModulesController is missing...");
+                MainConsole.Instance.Error("[Modules]: The new RegionModulesController is missing...");
             //Then finish the rest of the SharedRegionStartupModules
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
@@ -371,7 +380,10 @@ namespace Aurora.Region
                 {
                     module.StartupComplete();
                 }
-                catch (Exception ex) { MainConsole.Instance.Warn("[SceneManager]: Exception running StartupComplete, " + ex); }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.Warn("[SceneManager]: Exception running StartupComplete, " + ex);
+                }
             }
         }
 
@@ -403,46 +415,71 @@ namespace Aurora.Region
         {
             if (MainConsole.Instance == null)
                 return;
-            MainConsole.Instance.Commands.AddCommand ("show users", "show users [full]", "Shows users in the given region (if full is added, child agents are shown as well)", HandleShowUsers);
-            MainConsole.Instance.Commands.AddCommand ("show regions", "show regions", "Show information about all regions in this instance", HandleShowRegions);
-            MainConsole.Instance.Commands.AddCommand ("show maturity", "show maturity", "Show all region's maturity levels", HandleShowMaturity);
+            MainConsole.Instance.Commands.AddCommand("show users", "show users [full]",
+                                                     "Shows users in the given region (if full is added, child agents are shown as well)",
+                                                     HandleShowUsers);
+            MainConsole.Instance.Commands.AddCommand("show regions", "show regions",
+                                                     "Show information about all regions in this instance",
+                                                     HandleShowRegions);
+            MainConsole.Instance.Commands.AddCommand("show maturity", "show maturity",
+                                                     "Show all region's maturity levels", HandleShowMaturity);
 
-            MainConsole.Instance.Commands.AddCommand ("force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
+            MainConsole.Instance.Commands.AddCommand("force update", "force update",
+                                                     "Force the update of all objects on clients", HandleForceUpdate);
 
-            MainConsole.Instance.Commands.AddCommand("debug packet", "debug packet [level]", "Turn on packet debugging", Debug);
-            MainConsole.Instance.Commands.AddCommand("debug scene", "debug scene [scripting] [collisions] [physics]", "Turn on scene debugging", Debug);
+            MainConsole.Instance.Commands.AddCommand("debug packet", "debug packet [level]", "Turn on packet debugging",
+                                                     Debug);
+            MainConsole.Instance.Commands.AddCommand("debug scene", "debug scene [scripting] [collisions] [physics]",
+                                                     "Turn on scene debugging", Debug);
 
-            MainConsole.Instance.Commands.AddCommand("load oar", "load oar [oar name] [--merge] [--skip-assets] [--OffsetX=#] [--OffsetY=#] [--OffsetZ=#] [--FlipX] [--FlipY] [--UseParcelOwnership] [--CheckOwnership]",
-                "Load a region's data from OAR archive.  \n" +
-                "--merge will merge the oar with the existing scene (including parcels).  \n" +
-                "--skip-assets will load the oar but ignore the assets it contains. \n" +
-                "--OffsetX will change where the X location of the oar is loaded, and the same for Y and Z.  \n" +
-                "--FlipX flips the region on the X axis.  \n" +
-                "--FlipY flips the region on the Y axis.  \n" +
-                "--UseParcelOwnership changes who the default owner of objects whose owner cannot be found from the Estate Owner to the parcel owner on which the object is found.  \n" +
-                "--CheckOwnership asks for each UUID that is not found on the grid what user it should be changed to (useful for changing UUIDs from other grids, but very long with many users).  ", LoadOar);
+            MainConsole.Instance.Commands.AddCommand("load oar",
+                                                     "load oar [oar name] [--merge] [--skip-assets] [--OffsetX=#] [--OffsetY=#] [--OffsetZ=#] [--FlipX] [--FlipY] [--UseParcelOwnership] [--CheckOwnership]",
+                                                     "Load a region's data from OAR archive.  \n" +
+                                                     "--merge will merge the oar with the existing scene (including parcels).  \n" +
+                                                     "--skip-assets will load the oar but ignore the assets it contains. \n" +
+                                                     "--OffsetX will change where the X location of the oar is loaded, and the same for Y and Z.  \n" +
+                                                     "--FlipX flips the region on the X axis.  \n" +
+                                                     "--FlipY flips the region on the Y axis.  \n" +
+                                                     "--UseParcelOwnership changes who the default owner of objects whose owner cannot be found from the Estate Owner to the parcel owner on which the object is found.  \n" +
+                                                     "--CheckOwnership asks for each UUID that is not found on the grid what user it should be changed to (useful for changing UUIDs from other grids, but very long with many users).  ",
+                                                     LoadOar);
 
-            MainConsole.Instance.Commands.AddCommand("save oar", "save oar [<OAR path>] [--perm=<permissions>] ", "Save a region's data to an OAR archive" + Environment.NewLine
-                                           + "<OAR path> The OAR path must be a filesystem path."
-                                           + "  If this is not given then the oar is saved to region.oar in the current directory." + Environment.NewLine
-                                           + "--perm stops objects with insufficient permissions from being saved to the OAR." + Environment.NewLine
-                                           + "  <permissions> can contain one or more of these characters: \"C\" = Copy, \"T\" = Transfer" + Environment.NewLine, SaveOar);
+            MainConsole.Instance.Commands.AddCommand("save oar", "save oar [<OAR path>] [--perm=<permissions>] ",
+                                                     "Save a region's data to an OAR archive" + Environment.NewLine
+                                                     + "<OAR path> The OAR path must be a filesystem path."
+                                                     +
+                                                     "  If this is not given then the oar is saved to region.oar in the current directory." +
+                                                     Environment.NewLine
+                                                     +
+                                                     "--perm stops objects with insufficient permissions from being saved to the OAR." +
+                                                     Environment.NewLine
+                                                     +
+                                                     "  <permissions> can contain one or more of these characters: \"C\" = Copy, \"T\" = Transfer" +
+                                                     Environment.NewLine, SaveOar);
 
-            MainConsole.Instance.Commands.AddCommand("kick user", "kick user [first] [last] [message]", "Kick a user off the simulator", KickUserCommand);
+            MainConsole.Instance.Commands.AddCommand("kick user", "kick user [first] [last] [message]",
+                                                     "Kick a user off the simulator", KickUserCommand);
 
-            MainConsole.Instance.Commands.AddCommand("reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("reset region", "reset region",
+                                                     "Reset region to the default terrain, wipe all prims, etc.",
+                                                     RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("restart-instance", "restart-instance", "Restarts the instance (as if you closed and re-opened Aurora)", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("restart-instance", "restart-instance",
+                                                     "Restarts the instance (as if you closed and re-opened Aurora)",
+                                                     RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("command-script", "command-script [script]", "Run a command script from file", RunCommand);
+            MainConsole.Instance.Commands.AddCommand("command-script", "command-script [script]",
+                                                     "Run a command script from file", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand ("modules list", "modules list", "Lists all simulator modules", HandleModulesList);
+            MainConsole.Instance.Commands.AddCommand("modules list", "modules list", "Lists all simulator modules",
+                                                     HandleModulesList);
 
-            MainConsole.Instance.Commands.AddCommand ("modules unload", "modules unload [module]", "Unload the given simulator module", HandleModulesUnload);
+            MainConsole.Instance.Commands.AddCommand("modules unload", "modules unload [module]",
+                                                     "Unload the given simulator module", HandleModulesUnload);
         }
 
         /// <summary>
-        /// Kicks users off the region
+        ///     Kicks users off the region
         /// </summary>
         /// <param name="cmdparams">name of avatar to kick</param>
         private void KickUserCommand(string[] cmdparams)
@@ -461,18 +498,20 @@ namespace Aurora.Region
                     {
                         RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-                        MainConsole.Instance.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
+                        MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}",
+                                                                presence.Name, presence.UUID, regionInfo.RegionName));
 
                         // kick client...
                         presence.ControllingClient.Kick(alert ?? "\nThe Aurora manager kicked you out.\n");
 
                         // ...and close on our side
-                        IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
-                        if(transferModule != null)
-                            transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
+                        IEntityTransferModule transferModule =
+                            presence.Scene.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
                     }
                 }
-                else if(UUID.TryParse(cmdparams[2], out avID))
+                else if (UUID.TryParse(cmdparams[2], out avID))
                 {
                     foreach (IScenePresence presence in agents)
                     {
@@ -480,15 +519,17 @@ namespace Aurora.Region
                         {
                             RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-                            MainConsole.Instance.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
+                            MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}",
+                                                                    presence.Name, presence.UUID, regionInfo.RegionName));
 
                             // kick client...
                             presence.ControllingClient.Kick(alert ?? "\nThe Aurora manager kicked you out.\n");
 
                             // ...and close on our side
-                            IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                            IEntityTransferModule transferModule =
+                                presence.Scene.RequestModuleInterface<IEntityTransferModule>();
                             if (transferModule != null)
-                                transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
+                                transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
                         }
                     }
                 }
@@ -500,31 +541,34 @@ namespace Aurora.Region
             foreach (IScenePresence presence in agents)
             {
                 RegionInfo regionInfo = presence.Scene.RegionInfo;
-                string param = Util.CombineParams (cmdparams, 2);
-                if (presence.Name.ToLower().Contains (param.ToLower ()) ||
-                    (presence.Firstname.ToLower ().Contains (cmdparams[2].ToLower ()) && presence.Lastname.ToLower ().Contains (cmdparams[3].ToLower ())))
+                string param = Util.CombineParams(cmdparams, 2);
+                if (presence.Name.ToLower().Contains(param.ToLower()) ||
+                    (presence.Firstname.ToLower().Contains(cmdparams[2].ToLower()) &&
+                     presence.Lastname.ToLower().Contains(cmdparams[3].ToLower())))
                 {
-                    MainConsole.Instance.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
+                    MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}",
+                                                            presence.Name, presence.UUID, regionInfo.RegionName));
 
                     // kick client...
                     presence.ControllingClient.Kick(alert ?? "\nThe Aurora manager kicked you out.\n");
 
                     // ...and close on our side
-                    IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                    IEntityTransferModule transferModule =
+                        presence.Scene.RequestModuleInterface<IEntityTransferModule>();
                     if (transferModule != null)
-                        transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
+                        transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
                 }
             }
-            MainConsole.Instance.Info ("");
+            MainConsole.Instance.Info("");
         }
 
         /// <summary>
-        /// Force resending of all updates to all clients in active region(s)
+        ///     Force resending of all updates to all clients in active region(s)
         /// </summary>
         /// <param name="args"></param>
         private void HandleForceUpdate(string[] args)
         {
-            MainConsole.Instance.Info ("Updating all clients");
+            MainConsole.Instance.Info("Updating all clients");
             ISceneEntity[] EntityList = m_scene.Entities.GetEntities();
 
             foreach (SceneObjectGroup ent in EntityList.OfType<SceneObjectGroup>())
@@ -543,54 +587,57 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Load, Unload, and list Region modules in use
+        ///     Load, Unload, and list Region modules in use
         /// </summary>
         /// <param name="cmd"></param>
         private void HandleModulesUnload(string[] cmd)
         {
-            List<string> args = new List<string> (cmd);
-            args.RemoveAt (0);
-            string[] cmdparams = args.ToArray ();
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+            string[] cmdparams = args.ToArray();
 
-            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController> ();
+            IRegionModulesController controller =
+                m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController>();
             if (cmdparams.Length > 1)
             {
                 foreach (IRegionModuleBase irm in controller.AllModules)
                 {
-                    if (irm.Name.ToLower () == cmdparams[1].ToLower ())
+                    if (irm.Name.ToLower() == cmdparams[1].ToLower())
                     {
-                        MainConsole.Instance.Info (String.Format ("Unloading module: {0}", irm.Name));
+                        MainConsole.Instance.Info(String.Format("Unloading module: {0}", irm.Name));
                         irm.RemoveRegion(m_scene);
-                        irm.Close ();
+                        irm.Close();
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Load, Unload, and list Region modules in use
+        ///     Load, Unload, and list Region modules in use
         /// </summary>
         /// <param name="cmd"></param>
-        private void HandleModulesList (string[] cmd)
+        private void HandleModulesList(string[] cmd)
         {
-            List<string> args = new List<string> (cmd);
-            args.RemoveAt (0);
-            
-            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController> ();
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+
+            IRegionModulesController controller =
+                m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController>();
             foreach (IRegionModuleBase irm in controller.AllModules)
             {
                 if (irm is INonSharedRegionModule)
-                    MainConsole.Instance.Info (String.Format ("Nonshared region module: {0}", irm.Name));
+                    MainConsole.Instance.Info(String.Format("Nonshared region module: {0}", irm.Name));
                 else
-                    MainConsole.Instance.Info (String.Format ("Unknown type " + irm.GetType () + " region module: {0}", irm.Name));
+                    MainConsole.Instance.Info(String.Format("Unknown type " + irm.GetType() + " region module: {0}",
+                                                            irm.Name));
             }
         }
 
         /// <summary>
-        /// Runs commands issued by the server console from the operator
+        ///     Runs commands issued by the server console from the operator
         /// </summary>
         /// <param name="cmdparams">Additional arguments passed to the command</param>
-        private void RunCommand (string[] cmdparams)
+        private void RunCommand(string[] cmdparams)
         {
             List<string> args = new List<string>(cmdparams);
             if (args.Count < 1)
@@ -607,9 +654,10 @@ namespace Aurora.Region
                     if (cmdparams.Length > 0)
                         if (cmdparams[0] == "region")
                         {
-                            if (MainConsole.Instance.Prompt ("Are you sure you want to reset the region?", "yes") != "yes")
+                            if (MainConsole.Instance.Prompt("Are you sure you want to reset the region?", "yes") !=
+                                "yes")
                                 return;
-                            ResetRegion ();
+                            ResetRegion();
                         }
                     break;
                 case "command-script":
@@ -629,7 +677,7 @@ namespace Aurora.Region
         }
 
         /// <summary>
-        /// Turn on some debugging values for Aurora.
+        ///     Turn on some debugging values for Aurora.
         /// </summary>
         /// <param name="args"></param>
         protected void Debug(string[] args)
@@ -649,54 +697,54 @@ namespace Aurora.Region
                         }
                         else
                         {
-                            MainConsole.Instance.Info ("packet debug should be 0..255");
+                            MainConsole.Instance.Info("packet debug should be 0..255");
                         }
-                        MainConsole.Instance.Info (String.Format ("New packet debug: {0}", newDebug));
+                        MainConsole.Instance.Info(String.Format("New packet debug: {0}", newDebug));
                     }
 
                     break;
                 default:
 
-                    MainConsole.Instance.Info ("Unknown debug");
+                    MainConsole.Instance.Info("Unknown debug");
                     break;
             }
         }
 
         /// <summary>
-        /// Set the debug packet level on the current scene.  This level governs which packets are printed out to the
-        /// console.
+        ///     Set the debug packet level on the current scene.  This level governs which packets are printed out to the
+        ///     console.
         /// </summary>
         /// <param name="newDebug"></param>
         private void SetDebugPacketLevelOnCurrentScene(int newDebug)
         {
             m_scene.ForEachScenePresence(scenePresence =>
-                                                        {
-                                                            if (scenePresence.IsChildAgent) return;
-                                                            MainConsole.Instance.DebugFormat(
-                                                                "Packet debug for {0} set to {1}",
-                                                                scenePresence.Name,
-                                                                newDebug);
+                                             {
+                                                 if (scenePresence.IsChildAgent) return;
+                                                 MainConsole.Instance.DebugFormat(
+                                                     "Packet debug for {0} set to {1}",
+                                                     scenePresence.Name,
+                                                     newDebug);
 
-                                                            scenePresence.ControllingClient.SetDebugPacketLevel(
-                                                                newDebug);
-                                                        });
-
+                                                 scenePresence.ControllingClient.SetDebugPacketLevel(
+                                                     newDebug);
+                                             });
         }
 
-        private void HandleShowUsers (string[] cmd)
+        private void HandleShowUsers(string[] cmd)
         {
-            List<string> args = new List<string> (cmd);
-            args.RemoveAt (0);
-            string[] showParams = args.ToArray ();
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+            string[] showParams = args.ToArray();
 
             List<IScenePresence> agents = new List<IScenePresence>();
             agents.AddRange(m_scene.GetScenePresences());
-            if(showParams.Length == 1 || showParams[1] != "full")
+            if (showParams.Length == 1 || showParams[1] != "full")
                 agents.RemoveAll(sp => sp.IsChildAgent);
 
-            MainConsole.Instance.Info (String.Format ("\nAgents connected: {0}\n", agents.Count));
+            MainConsole.Instance.Info(String.Format("\nAgents connected: {0}\n", agents.Count));
 
-            MainConsole.Instance.Info (String.Format ("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", "Firstname", "Lastname", "Agent ID", "Root/Child", "Region", "Position"));
+            MainConsole.Instance.Info(String.Format("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", "Firstname",
+                                                    "Lastname", "Agent ID", "Root/Child", "Region", "Position"));
 
             foreach (IScenePresence presence in agents)
             {
@@ -704,14 +752,16 @@ namespace Aurora.Region
 
                 string regionName = regionInfo == null ? "Unresolvable" : regionInfo.RegionName;
 
-                MainConsole.Instance.Info (String.Format ("{0,-16}{1,-37}{2,-11}{3,-16}{4,-30}", presence.Name, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString ()));
+                MainConsole.Instance.Info(String.Format("{0,-16}{1,-37}{2,-11}{3,-16}{4,-30}", presence.Name,
+                                                        presence.UUID, presence.IsChildAgent ? "Child" : "Root",
+                                                        regionName, presence.AbsolutePosition.ToString()));
             }
 
-            MainConsole.Instance.Info (String.Empty);
-            MainConsole.Instance.Info (String.Empty);
+            MainConsole.Instance.Info(String.Empty);
+            MainConsole.Instance.Info(String.Empty);
         }
 
-        private void HandleShowRegions (string[] cmd)
+        private void HandleShowRegions(string[] cmd)
         {
             MainConsole.Instance.Info(m_scene.ToString());
         }
@@ -731,11 +781,12 @@ namespace Aurora.Region
             {
                 rating = "PG";
             }
-            MainConsole.Instance.Info(String.Format("Region Name: {0}, Region Rating {1}", m_scene.RegionInfo.RegionName, rating));
+            MainConsole.Instance.Info(String.Format("Region Name: {0}, Region Rating {1}", m_scene.RegionInfo.RegionName,
+                                                    rating));
         }
 
         /// <summary>
-        /// Load a whole region from an opensimulator archive.
+        ///     Load a whole region from an opensimulator archive.
         /// </summary>
         /// <param name="cmdparams"></param>
         protected void LoadOar(string[] cmdparams)
@@ -748,12 +799,12 @@ namespace Aurora.Region
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error (e.ToString ());
+                MainConsole.Instance.Error(e.ToString());
             }
         }
 
         /// <summary>
-        /// Save a region to a file, including all the assets needed to restore it.
+        ///     Save a region to a file, including all the assets needed to restore it.
         /// </summary>
         /// <param name="cmdparams"></param>
         protected void SaveOar(string[] cmdparams)

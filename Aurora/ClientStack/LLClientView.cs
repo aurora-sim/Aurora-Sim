@@ -44,13 +44,13 @@ namespace Aurora.ClientStack
     public delegate bool PacketMethod(IClientAPI simClient, Packet packet);
 
     /// <summary>
-    ///   Handles new client connections
-    ///   Constructor takes a single Packet and authenticates everything
+    ///     Handles new client connections
+    ///     Constructor takes a single Packet and authenticates everything
     /// </summary>
     public sealed class LLClientView : IClientAPI, IStatsCollector
     {
         /// <value>
-        ///   Debug packet level.  See OpenSim.RegisterConsoleCommands() for more details.
+        ///     Debug packet level.  See OpenSim.RegisterConsoleCommands() for more details.
         /// </value>
         private int m_debugPacketLevel;
 
@@ -309,7 +309,7 @@ namespace Aurora.ClientStack
         public delegate void BinaryGenericMessage(Object sender, string method, byte[][] args);
 
         /// <summary>
-        ///   Used to adjust Sun Orbit values so Linden based viewers properly position sun
+        ///     Used to adjust Sun Orbit values so Linden based viewers properly position sun
         /// </summary>
         private const float m_sunPainDaHalfOrbitalCutoff = 4.712388980384689858f;
 
@@ -328,14 +328,12 @@ namespace Aurora.ClientStack
 
         private int m_cachedTextureSerial;
 
-        ///<value>
-        ///  Maintain a record of all the objects killed.  This allows us to stop an update being sent from the
-        ///  thread servicing the m_primFullUpdates queue after a kill.  If this happens the object persists as an
-        ///  ownerless phantom.
-        ///
-        ///  All manipulation of this set has to occur under an m_entityUpdates.SyncRoot lock
-        ///
-        ///</value>
+        /// <value>
+        ///     Maintain a record of all the objects killed.  This allows us to stop an update being sent from the
+        ///     thread servicing the m_primFullUpdates queue after a kill.  If this happens the object persists as an
+        ///     ownerless phantom.
+        ///     All manipulation of this set has to occur under an m_entityUpdates.SyncRoot lock
+        /// </value>
         //protected HashSet<uint> m_killRecord = new HashSet<uint>();
 //        protected HashSet<uint> m_attachmentsSent;
         private int m_animationSequenceNumber = 1;
@@ -404,17 +402,9 @@ namespace Aurora.ClientStack
             get { return m_agentId; }
         }
 
-        public UUID ScopeID
-        {
-            get;
-            set;
-        }
+        public UUID ScopeID { get; set; }
 
-        public List<UUID> AllScopeIDs
-        {
-            get;
-            set;
-        }
+        public List<UUID> AllScopeIDs { get; set; }
 
         public UUID ActiveGroupId
         {
@@ -432,7 +422,7 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   First name of the agent/avatar represented by the client
+        ///     First name of the agent/avatar represented by the client
         /// </summary>
         public string FirstName
         {
@@ -440,7 +430,7 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Last name of the agent/avatar represented by the client
+        ///     Last name of the agent/avatar represented by the client
         /// </summary>
         public string LastName
         {
@@ -448,7 +438,7 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Full name of the client (first name and last name)
+        ///     Full name of the client (first name and last name)
         /// </summary>
         public string Name
         {
@@ -481,7 +471,7 @@ namespace Aurora.ClientStack
         #endregion Properties
 
         /// <summary>
-        ///   Constructor
+        ///     Constructor
         /// </summary>
         public LLClientView(EndPoint remoteEP, IScene scene, LLUDPServer udpServer, LLUDPClient udpClient,
                             AgentCircuitData sessionInfo,
@@ -555,7 +545,7 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Shut down the client view
+        ///     Shut down the client view
         /// </summary>
         public void Close(bool forceClose)
         {
@@ -691,9 +681,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Try to process a packet using registered packet handlers
+        ///     Try to process a packet using registered packet handlers
         /// </summary>
-        /// <param name = "packet"></param>
+        /// <param name="packet"></param>
         /// <returns>True if a handler was found which successfully processed the packet.</returns>
         private bool ProcessPacketMethod(Packet packet)
         {
@@ -769,7 +759,7 @@ namespace Aurora.ClientStack
                                            TerrainStartHeight11 = args.terrainStartHeight3,
                                            SimAccess = args.simAccess,
                                            WaterHeight = args.waterHeight,
-                                           RegionFlags = (uint)args.regionFlags,
+                                           RegionFlags = (uint) args.regionFlags,
                                            SimName = Util.StringToBytes256(args.regionName),
                                            SimOwner = args.SimOwner,
                                            TerrainBase0 = args.terrainBase0,
@@ -785,13 +775,13 @@ namespace Aurora.ClientStack
 
             //I guess this is for the client to remember an old setting?
             handshake.RegionInfo2 = new RegionHandshakePacket.RegionInfo2Block {RegionID = regionInfo.RegionID};
-            handshake.RegionInfo4 = new RegionHandshakePacket.RegionInfo4Block[1] 
-                                        { 
+            handshake.RegionInfo4 = new RegionHandshakePacket.RegionInfo4Block[1]
+                                        {
                                             new RegionHandshakePacket.RegionInfo4Block
-                                            {
-                                                RegionFlagsExtended = args.regionFlags,
-                                                RegionProtocols = (ulong)RegionProtocols.AgentAppearanceService
-                                            }
+                                                {
+                                                    RegionFlagsExtended = args.regionFlags,
+                                                    RegionProtocols = (ulong) RegionProtocols.AgentAppearanceService
+                                                }
                                         };
             handshake.RegionInfo3 = new RegionHandshakePacket.RegionInfo3Block
                                         {
@@ -806,8 +796,8 @@ namespace Aurora.ClientStack
             OutPacket(handshake, ThrottleOutPacketType.Task);
         }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public void MoveAgentIntoRegion(RegionInfo regInfo, Vector3 pos, Vector3 look)
         {
             AgentMovementCompletePacket mov =
@@ -863,7 +853,7 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Send an instant message to this client
+        ///     Send an instant message to this client
         /// </summary>
         //
         // Don't remove transaction ID! Groups and item gives need to set it!
@@ -898,10 +888,8 @@ namespace Aurora.ClientStack
 
         public void SendGenericMessage(string method, List<string> message)
         {
-            List<byte[]> convertedmessage = message.ConvertAll<byte[]>(delegate(string item)
-            {
-                return Util.StringToBytes256(item);
-            });
+            List<byte[]> convertedmessage =
+                message.ConvertAll<byte[]>(delegate(string item) { return Util.StringToBytes256(item); });
             SendGenericMessage(method, convertedmessage);
         }
 
@@ -979,19 +967,21 @@ namespace Aurora.ClientStack
                 i++;
             }
 #else
-            foreach (GroupActiveProposalItemReplyPacket.ProposalDataBlock ProposalData in Proposals.Select(Proposal => new GroupActiveProposalItemReplyPacket.ProposalDataBlock
-                                                                                        {
-                                                                                            VoteCast = Utils.StringToBytes("false"),
-                                                                                            VoteID = new UUID(Proposal.VoteID),
-                                                                                            VoteInitiator = new UUID(Proposal.VoteInitiator),
-                                                                                            Majority = Convert.ToInt32(Proposal.Majority),
-                                                                                            Quorum = Convert.ToInt32(Proposal.Quorum),
-                                                                                            TerseDateID = Utils.StringToBytes(Proposal.TerseDateID),
-                                                                                            StartDateTime = Utils.StringToBytes(Proposal.StartDateTime),
-                                                                                            EndDateTime = Utils.StringToBytes(Proposal.EndDateTime),
-                                                                                            ProposalText = Utils.StringToBytes(Proposal.ProposalText),
-                                                                                            AlreadyVoted = false
-                                                                                        }))
+            foreach (
+                GroupActiveProposalItemReplyPacket.ProposalDataBlock ProposalData in
+                    Proposals.Select(Proposal => new GroupActiveProposalItemReplyPacket.ProposalDataBlock
+                                                     {
+                                                         VoteCast = Utils.StringToBytes("false"),
+                                                         VoteID = new UUID(Proposal.VoteID),
+                                                         VoteInitiator = new UUID(Proposal.VoteInitiator),
+                                                         Majority = Convert.ToInt32(Proposal.Majority),
+                                                         Quorum = Convert.ToInt32(Proposal.Quorum),
+                                                         TerseDateID = Utils.StringToBytes(Proposal.TerseDateID),
+                                                         StartDateTime = Utils.StringToBytes(Proposal.StartDateTime),
+                                                         EndDateTime = Utils.StringToBytes(Proposal.EndDateTime),
+                                                         ProposalText = Utils.StringToBytes(Proposal.ProposalText),
+                                                         AlreadyVoted = false
+                                                     }))
             {
                 GAPIRP.ProposalData[i] = ProposalData;
                 i++;
@@ -1012,7 +1002,7 @@ namespace Aurora.ClientStack
                                                                      TotalNumItems = (uint) VoteItems.Length
                                                                  },
                                                              HistoryItemData =
-                                                             {
+                                                                 {
                                                                      VoteID = new UUID(Vote.VoteID),
                                                                      VoteInitiator = new UUID(Vote.VoteInitiator),
                                                                      Majority = Convert.ToInt32(Vote.Majority),
@@ -1046,12 +1036,14 @@ namespace Aurora.ClientStack
                 i++;
             }
 #else
-            foreach (GroupVoteHistoryItemReplyPacket.VoteItemBlock VoteItem in VoteItems.Select(item => new GroupVoteHistoryItemReplyPacket.VoteItemBlock
-            {
-                CandidateID = item.CandidateID,
-                NumVotes = item.NumVotes,
-                VoteCast = Utils.StringToBytes(item.VoteCast)
-            }))
+            foreach (
+                GroupVoteHistoryItemReplyPacket.VoteItemBlock VoteItem in
+                    VoteItems.Select(item => new GroupVoteHistoryItemReplyPacket.VoteItemBlock
+                                                 {
+                                                     CandidateID = item.CandidateID,
+                                                     NumVotes = item.NumVotes,
+                                                     VoteCast = Utils.StringToBytes(item.VoteCast)
+                                                 }))
             {
                 GVHIRP.VoteItem[i] = VoteItem;
                 i++;
@@ -1062,14 +1054,16 @@ namespace Aurora.ClientStack
         }
 
         public void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID,
-                                               int amt, int currentInterval, int interval, string startDate, GroupAccountHistory[] history)
+                                               int amt, int currentInterval, int interval, string startDate,
+                                               GroupAccountHistory[] history)
         {
             GroupAccountDetailsReplyPacket GADRP = new GroupAccountDetailsReplyPacket
                                                        {
                                                            AgentData = new GroupAccountDetailsReplyPacket.AgentDataBlock
                                                                            {AgentID = sender.AgentId, GroupID = groupID},
                                                            HistoryData =
-                                                               new GroupAccountDetailsReplyPacket.HistoryDataBlock[history.Length]
+                                                               new GroupAccountDetailsReplyPacket.HistoryDataBlock[
+                                                               history.Length]
                                                        };
             int i = 0;
             foreach (GroupAccountHistory h in history)
@@ -1092,9 +1086,12 @@ namespace Aurora.ClientStack
             OutPacket(GADRP, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTierDebit,
-                                               int totalTierCredits, string startDate, int currentInterval, int intervalLength,
-                                               string taxDate, string lastTaxDate, int parcelDirectoryFee, int landTaxFee, int groupTaxFee, int objectTaxFee)
+        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt,
+                                               int totalTierDebit,
+                                               int totalTierCredits, string startDate, int currentInterval,
+                                               int intervalLength,
+                                               string taxDate, string lastTaxDate, int parcelDirectoryFee,
+                                               int landTaxFee, int groupTaxFee, int objectTaxFee)
         {
             GroupAccountSummaryReplyPacket GASRP =
                 (GroupAccountSummaryReplyPacket) PacketPool.Instance.GetPacket(
@@ -1129,7 +1126,8 @@ namespace Aurora.ClientStack
         }
 
         public void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID,
-                                                        UUID sessionID, int currentInterval, int intervalDays, string startingDate, GroupAccountHistory[] history)
+                                                        UUID sessionID, int currentInterval, int intervalDays,
+                                                        string startingDate, GroupAccountHistory[] history)
         {
             GroupAccountTransactionsReplyPacket GATRP =
                 (GroupAccountTransactionsReplyPacket) PacketPool.Instance.GetPacket(
@@ -1152,7 +1150,7 @@ namespace Aurora.ClientStack
                     new GroupAccountTransactionsReplyPacket.HistoryDataBlock
                         {
                             Amount = h.Amount,
-                            Item =  Utils.StringToBytes(h.Description),
+                            Item = Utils.StringToBytes(h.Description),
                             Time = Utils.StringToBytes(h.TimeString),
                             Type = 0,
                             User = Utils.StringToBytes(h.UserCausingCharge)
@@ -1163,9 +1161,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Send the region heightmap to the client
+        ///     Send the region heightmap to the client
         /// </summary>
-        /// <param name = "map">heightmap</param>
+        /// <param name="map">heightmap</param>
         public void SendLayerData(short[] map)
         {
             DoSendLayerData(map);
@@ -1173,9 +1171,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Send terrain layer information to the client.
+        ///     Send terrain layer information to the client.
         /// </summary>
-        /// <param name = "o"></param>
+        /// <param name="o"></param>
         private void DoSendLayerData(object o)
         {
             short[] map = (short[]) o;
@@ -1197,11 +1195,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Sends a set of four patches (x, x+1, ..., x+3) to the client
+        ///     Sends a set of four patches (x, x+1, ..., x+3) to the client
         /// </summary>
-        /// <param name = "map">heightmap</param>
-        /// <param name = "x">X coordinate for patches 0..12</param>
-        /// <param name = "y">Y coordinate for patches 0..15</param>
+        /// <param name="map">heightmap</param>
+        /// <param name="x">X coordinate for patches 0..12</param>
+        /// <param name="y">Y coordinate for patches 0..15</param>
         public void SendLayerPacket(short[] map, int y, int x)
         {
             int[] xs = new[] {x + 0, x + 1, x + 2, x + 3};
@@ -1215,7 +1213,8 @@ namespace Aurora.ClientStack
                 {
                     type++;
                 }
-                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, xs, ys, type, m_scene.RegionInfo.RegionSizeX,
+                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, xs, ys, type,
+                                                                                     m_scene.RegionInfo.RegionSizeX,
                                                                                      m_scene.RegionInfo.RegionSizeY);
                 layerpack.Header.Zerocoded = true;
                 layerpack.Header.Reliable = true;
@@ -1255,11 +1254,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Sends a specified patch to a client
+        ///     Sends a specified patch to a client
         /// </summary>
-        /// <param name = "px">Patch coordinate (x) 0..regionSize/16</param>
-        /// <param name = "py">Patch coordinate (y) 0..regionSize/16</param>
-        /// <param name = "map">heightmap</param>
+        /// <param name="px">Patch coordinate (x) 0..regionSize/16</param>
+        /// <param name="py">Patch coordinate (y) 0..regionSize/16</param>
+        /// <param name="map">heightmap</param>
         public void SendLayerData(int px, int py, short[] map)
         {
             try
@@ -1286,11 +1285,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Sends a specified patch to a client
+        ///     Sends a specified patch to a client
         /// </summary>
-        /// <param name = "x">Patch coordinates (x) 0..regionSize/16</param>
-        /// <param name = "y">Patch coordinates (y) 0..regionSize/16</param>
-        /// <param name = "map">heightmap</param>
+        /// <param name="x">Patch coordinates (x) 0..regionSize/16</param>
+        /// <param name="y">Patch coordinates (y) 0..regionSize/16</param>
+        /// <param name="map">heightmap</param>
         /// <param name="layertype"></param>
         public void SendLayerData(int[] x, int[] y, short[] map, TerrainPatch.LayerType layertype)
         {
@@ -1362,27 +1361,27 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Send the wind matrix to the client
+        ///     Send the wind matrix to the client
         /// </summary>
-        /// <param name = "windSpeeds">16x16 array of wind speeds</param>
+        /// <param name="windSpeeds">16x16 array of wind speeds</param>
         public void SendWindData(Vector2[] windSpeeds)
         {
             m_udpServer.FireAndForget(DoSendWindData, windSpeeds);
         }
 
         /// <summary>
-        ///   Send the cloud matrix to the client
+        ///     Send the cloud matrix to the client
         /// </summary>
-        /// <param name = "cloudDensity">16x16 array of cloud densities</param>
+        /// <param name="cloudDensity">16x16 array of cloud densities</param>
         public void SendCloudData(float[] cloudDensity)
         {
             m_udpServer.FireAndForget(DoSendCloudData, cloudDensity);
         }
 
         /// <summary>
-        ///   Send wind layer information to the client.
+        ///     Send wind layer information to the client.
         /// </summary>
-        /// <param name = "o"></param>
+        /// <param name="o"></param>
         private void DoSendWindData(object o)
         {
             Vector2[] windSpeeds = (Vector2[]) o;
@@ -1413,9 +1412,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Send cloud layer information to the client.
+        ///     Send cloud layer information to the client.
         /// </summary>
-        /// <param name = "o"></param>
+        /// <param name="o"></param>
         private void DoSendCloudData(object o)
         {
             float[] cloudCover = (float[]) o;
@@ -1560,7 +1559,7 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Inform the client that a teleport attempt has failed
+        ///     Inform the client that a teleport attempt has failed
         /// </summary>
         public void SendTeleportFailed(string reason)
         {
@@ -1574,8 +1573,8 @@ namespace Aurora.ClientStack
             OutPacket(tpFailed, ThrottleOutPacketType.OutBand);
         }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public void SendTeleportStart(uint flags)
         {
             TeleportStartPacket tpStart = (TeleportStartPacket) PacketPool.Instance.GetPacket(PacketType.TeleportStart);
@@ -1790,7 +1789,9 @@ namespace Aurora.ClientStack
                 i++;
             }
 #else
-            foreach (KillObjectPacket.ObjectDataBlock block in entities.Select(entity => new KillObjectPacket.ObjectDataBlock {ID = entity}))
+            foreach (
+                KillObjectPacket.ObjectDataBlock block in
+                    entities.Select(entity => new KillObjectPacket.ObjectDataBlock {ID = entity}))
             {
                 kill.ObjectData[i] = block;
                 i++;
@@ -1802,18 +1803,17 @@ namespace Aurora.ClientStack
             OutPacket(kill, ThrottleOutPacketType.Task);
         }
 
-        ///<summary>
-        ///  Send information about the items contained in a folder to the client.
-        ///
-        ///  XXX This method needs some refactoring loving
-        ///</summary>
-        ///<param name = "ownerID">The owner of the folder</param>
-        ///<param name = "folderID">The id of the folder</param>
-        ///<param name = "items">The items contained in the folder identified by folderID</param>
-        ///<param name = "folders"></param>
-        ///<param name="version"></param>
-        ///<param name = "fetchFolders">Do we need to send folder information?</param>
-        ///<param name = "fetchItems">Do we need to send item information?</param>
+        /// <summary>
+        ///     Send information about the items contained in a folder to the client.
+        ///     XXX This method needs some refactoring loving
+        /// </summary>
+        /// <param name="ownerID">The owner of the folder</param>
+        /// <param name="folderID">The id of the folder</param>
+        /// <param name="items">The items contained in the folder identified by folderID</param>
+        /// <param name="folders"></param>
+        /// <param name="version"></param>
+        /// <param name="fetchFolders">Do we need to send folder information?</param>
+        /// <param name="fetchItems">Do we need to send item information?</param>
         public void SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items,
                                                List<InventoryFolderBase> folders, int version,
                                                bool fetchFolders, bool fetchItems)
@@ -2083,11 +2083,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Recursively construct bulk update packets to send folders and items
+        ///     Recursively construct bulk update packets to send folders and items
         /// </summary>
-        /// <param name = "folder"></param>
-        /// <param name = "folderDataBlocks"></param>
-        /// <param name = "transactionId"></param>
+        /// <param name="folder"></param>
+        /// <param name="folderDataBlocks"></param>
+        /// <param name="transactionId"></param>
         private void SendBulkUpdateInventoryFolderRecursive(
             InventoryFolderBase folder, ref List<BulkUpdateInventoryPacket.FolderDataBlock> folderDataBlocks,
             UUID transactionId)
@@ -2142,9 +2142,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Generate a bulk update inventory data block for the given folder
+        ///     Generate a bulk update inventory data block for the given folder
         /// </summary>
-        /// <param name = "folder"></param>
+        /// <param name="folder"></param>
         /// <returns></returns>
         private BulkUpdateInventoryPacket.FolderDataBlock GenerateBulkUpdateFolderDataBlock(InventoryFolderBase folder)
         {
@@ -2161,9 +2161,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Generate a bulk update inventory data block for the given item
+        ///     Generate a bulk update inventory data block for the given item
         /// </summary>
-        /// <param name = "item"></param>
+        /// <param name="item"></param>
         /// <returns></returns>
         private BulkUpdateInventoryPacket.ItemDataBlock GenerateBulkUpdateItemDataBlock(InventoryItemBase item)
         {
@@ -2407,7 +2407,7 @@ namespace Aurora.ClientStack
                                                               list.ToArray()
                                                       };
 #else
-                AvatarPickerReplyPacket replyPacket = new AvatarPickerReplyPacket
+            AvatarPickerReplyPacket replyPacket = new AvatarPickerReplyPacket
                                                       {
                                                           AgentData =
                                                               {AgentID = AgentData.AgentID, QueryID = AgentData.QueryID},
@@ -2444,10 +2444,10 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Send an alert message to the client.  On the Linden client (tested 1.19.1.4), this pops up a brief duration
-        ///   blue information box in the bottom right hand corner.
+        ///     Send an alert message to the client.  On the Linden client (tested 1.19.1.4), this pops up a brief duration
+        ///     blue information box in the bottom right hand corner.
         /// </summary>
-        /// <param name = "message"></param>
+        /// <param name="message"></param>
         public void SendAlertMessage(string message)
         {
             AlertMessagePacket alertPack = (AlertMessagePacket) PacketPool.Instance.GetPacket(PacketType.AlertMessage);
@@ -2457,12 +2457,14 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Send an agent alert message to the client.
+        ///     Send an agent alert message to the client.
         /// </summary>
-        /// <param name = "message"></param>
-        /// <param name = "modal">On the linden client, if this true then it displays a one button text box placed in the
-        ///   middle of the window.  If false, the message is displayed in a brief duration blue information box (as for
-        ///   the AlertMessage packet).</param>
+        /// <param name="message"></param>
+        /// <param name="modal">
+        ///     On the linden client, if this true then it displays a one button text box placed in the
+        ///     middle of the window.  If false, the message is displayed in a brief duration blue information box (as for
+        ///     the AlertMessage packet).
+        /// </param>
         public void SendAgentAlertMessage(string message, bool modal)
         {
             AgentAlertMessagePacket alertPack =
@@ -2610,7 +2612,9 @@ namespace Aurora.ClientStack
                 (AvatarPropertiesReplyPacket) PacketPool.Instance.GetPacket(PacketType.AvatarPropertiesReply);
             avatarReply.AgentData.AgentID = AgentId;
             avatarReply.AgentData.AvatarID = avatarID;
-            avatarReply.PropertiesData.AboutText = aboutText != null ? Util.StringToBytes1024(aboutText) : Utils.EmptyBytes;
+            avatarReply.PropertiesData.AboutText = aboutText != null
+                                                       ? Util.StringToBytes1024(aboutText)
+                                                       : Utils.EmptyBytes;
             avatarReply.PropertiesData.BornOn = Util.StringToBytes256(bornOn);
             avatarReply.PropertiesData.CharterMember = charterMember;
             avatarReply.PropertiesData.FLAboutText = flAbout != null ? Util.StringToBytes256(flAbout) : Utils.EmptyBytes;
@@ -2623,11 +2627,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Send the client an Estate message blue box pop-down with a single OK button
+        ///     Send the client an Estate message blue box pop-down with a single OK button
         /// </summary>
-        /// <param name = "FromAvatarID"></param>
-        /// <param name = "FromAvatarName"></param>
-        /// <param name = "Message"></param>
+        /// <param name="FromAvatarID"></param>
+        /// <param name="FromAvatarName"></param>
+        /// <param name="Message"></param>
         public void SendBlueBoxMessage(UUID FromAvatarID, String FromAvatarName, String Message)
         {
             if (!ChildAgentStatus())
@@ -2860,7 +2864,7 @@ namespace Aurora.ClientStack
             if (req.AssetInf.Data == null)
             {
                 MainConsole.Instance.ErrorFormat("[LLClientView]: Cannot send asset {0} ({1}), asset data is null",
-                                  req.AssetInf.ID, req.AssetInf.TypeString);
+                                                 req.AssetInf.ID, req.AssetInf.TypeString);
                 return;
             }
 
@@ -3710,10 +3714,18 @@ namespace Aurora.ClientStack
 
             for (int i = 0; i < visualParams.Length; i++)
             {
-                AvatarAppearancePacket.VisualParamBlock avblock = new AvatarAppearancePacket.VisualParamBlock {ParamValue = visualParams[i]};
+                AvatarAppearancePacket.VisualParamBlock avblock = new AvatarAppearancePacket.VisualParamBlock
+                                                                      {
+                                                                          ParamValue
+                                                                              =
+                                                                              visualParams
+                                                                              [i
+                                                                              ]
+                                                                      };
                 avp.VisualParam[i] = avblock;
             }
-            avp.AppearanceData = new AvatarAppearancePacket.AppearanceDataBlock[1] { new AvatarAppearancePacket.AppearanceDataBlock() };
+            avp.AppearanceData = new AvatarAppearancePacket.AppearanceDataBlock[1]
+                                     {new AvatarAppearancePacket.AppearanceDataBlock()};
             avp.Sender.IsTrial = false;
             avp.Sender.ID = agentID;
             //MainConsole.Instance.InfoFormat("[LLClientView]: Sending appearance for {0} to {1}", agentID.ToString(), AgentId.ToString());
@@ -3758,7 +3770,8 @@ namespace Aurora.ClientStack
             ani.HasVariableBlocks = false;
             //            OutPacket(ani, ThrottleOutPacketType.Asset);
             OutPacket(ani, ThrottleOutPacketType.AvatarInfo, true, null,
-                      delegate { m_scene.GetScenePresence(AgentId).SceneViewer.FinishedAnimationPacketSend(animations); });
+                      delegate
+                          { m_scene.GetScenePresence(AgentId).SceneViewer.FinishedAnimationPacketSend(animations); });
         }
 
         #endregion
@@ -3766,7 +3779,7 @@ namespace Aurora.ClientStack
         #region Avatar Packet/Data Sending Methods
 
         /// <summary>
-        ///   Send an ObjectUpdate packet with information about an avatar
+        ///     Send an ObjectUpdate packet with information about an avatar
         /// </summary>
         public void SendAvatarDataImmediate(IEntity avatar)
         {
@@ -3836,8 +3849,8 @@ namespace Aurora.ClientStack
         #region Primitive Packet/Data Sending Methods
 
         /// <summary>
-        ///   Generate one of the object update packets based on PrimUpdateFlags
-        ///   and broadcast the packet to clients
+        ///     Generate one of the object update packets based on PrimUpdateFlags
+        ///     and broadcast the packet to clients
         /// </summary>
         /// again  presences update preiority was lost. recovering it  fast and dirty
         public void SendAvatarUpdate(IEnumerable<EntityUpdate> updates)
@@ -4037,7 +4050,7 @@ namespace Aurora.ClientStack
                     if (canUseCached && !isTerse)
                     {
                         cachedUpdates.Add(update);
-                        cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((ISceneChildEntity)entity,
+                        cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((ISceneChildEntity) entity,
                                                                                  m_agentId));
                     }
                     else if (!canUseImproved && !canUseCompressed)
@@ -4049,7 +4062,7 @@ namespace Aurora.ClientStack
                         }
                         else
                         {
-                            objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((ISceneChildEntity)entity, m_agentId));
+                            objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((ISceneChildEntity) entity, m_agentId));
                         }
                     }
                     else if (!canUseImproved)
@@ -4057,7 +4070,7 @@ namespace Aurora.ClientStack
                         ISceneChildEntity cEntity = (ISceneChildEntity) entity;
                         compressedUpdates.Add(update);
                         //We are sending a compressed, which the client will save, add it to the cache
-                        if(module != null)
+                        if (module != null)
                             module.AddCachedObject(AgentId, entity.LocalId, cEntity.CRC);
                         CompressedFlags Flags = CompressedFlags.None;
                         if (updateFlags == PrimUpdateFlags.FullUpdate || updateFlags == PrimUpdateFlags.FindBest)
@@ -4118,7 +4131,7 @@ namespace Aurora.ClientStack
                             Flags |= CompressedFlags.HasNameValues;
 
                         compressedUpdates.Add(update);
-                        compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((ISceneChildEntity)entity, Flags,
+                        compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((ISceneChildEntity) entity, Flags,
                                                                                      updateFlags));
                     }
                     else
@@ -4469,9 +4482,21 @@ namespace Aurora.ClientStack
             m_sendingSimStatsPacket = true;
 
             SimStatsPacket pack = new SimStatsPacket
-                                      {Region = stats.RegionBlock, 
-                                          RegionInfo=new SimStatsPacket.RegionInfoBlock[1] { new SimStatsPacket.RegionInfoBlock() { RegionFlagsExtended = stats.RegionBlock.RegionFlags } },
-                                          Stat = stats.StatsBlock, Header = {Reliable = false}};
+                                      {
+                                          Region = stats.RegionBlock,
+                                          RegionInfo =
+                                              new SimStatsPacket.RegionInfoBlock[1]
+                                                  {
+                                                      new SimStatsPacket.RegionInfoBlock()
+                                                          {
+                                                              RegionFlagsExtended =
+                                                                  stats.RegionBlock
+                                                                       .RegionFlags
+                                                          }
+                                                  },
+                                          Stat = stats.StatsBlock,
+                                          Header = {Reliable = false}
+                                      };
 
 
             OutPacket(pack, ThrottleOutPacketType.Task, true, null,
@@ -4564,10 +4589,34 @@ namespace Aurora.ClientStack
             }
             proper.ObjectData = list.ToArray();
 #else
-            proper.ObjectData = parts.OfType<ISceneChildEntity>().Select(entity => entity as ISceneChildEntity).Select(part => new ObjectPropertiesPacket.ObjectDataBlock
-                                                                                                                                   {
-                                                                                                                                       ItemID = part.FromUserInventoryItemID, CreationDate = (ulong) part.CreationDate*1000000, CreatorID = part.CreatorID, FolderID = UUID.Zero, FromTaskID = UUID.Zero, GroupID = part.GroupID, InventorySerial = (short) part.InventorySerial, LastOwnerID = part.LastOwnerID, ObjectID = part.UUID, OwnerID = part.OwnerID == part.GroupID ? UUID.Zero : part.OwnerID, TouchName = Util.StringToBytes256(part.ParentEntity.RootChild.TouchName), TextureID = new byte[0], SitName = Util.StringToBytes256(part.ParentEntity.RootChild.SitName), Name = Util.StringToBytes256(part.Name), Description = Util.StringToBytes256(part.Description), OwnerMask = part.ParentEntity.RootChild.OwnerMask, NextOwnerMask = part.ParentEntity.RootChild.NextOwnerMask, GroupMask = part.ParentEntity.RootChild.GroupMask, EveryoneMask = part.ParentEntity.RootChild.EveryoneMask, BaseMask = part.ParentEntity.RootChild.BaseMask, SaleType = part.ParentEntity.RootChild.ObjectSaleType, SalePrice = part.ParentEntity.RootChild.SalePrice
-                                                                                                                                   }).ToArray();
+            proper.ObjectData =
+                parts.OfType<ISceneChildEntity>()
+                     .Select(entity => entity as ISceneChildEntity)
+                     .Select(part => new ObjectPropertiesPacket.ObjectDataBlock
+                                         {
+                                             ItemID = part.FromUserInventoryItemID,
+                                             CreationDate = (ulong) part.CreationDate*1000000,
+                                             CreatorID = part.CreatorID,
+                                             FolderID = UUID.Zero,
+                                             FromTaskID = UUID.Zero,
+                                             GroupID = part.GroupID,
+                                             InventorySerial = (short) part.InventorySerial,
+                                             LastOwnerID = part.LastOwnerID,
+                                             ObjectID = part.UUID,
+                                             OwnerID = part.OwnerID == part.GroupID ? UUID.Zero : part.OwnerID,
+                                             TouchName = Util.StringToBytes256(part.ParentEntity.RootChild.TouchName),
+                                             TextureID = new byte[0],
+                                             SitName = Util.StringToBytes256(part.ParentEntity.RootChild.SitName),
+                                             Name = Util.StringToBytes256(part.Name),
+                                             Description = Util.StringToBytes256(part.Description),
+                                             OwnerMask = part.ParentEntity.RootChild.OwnerMask,
+                                             NextOwnerMask = part.ParentEntity.RootChild.NextOwnerMask,
+                                             GroupMask = part.ParentEntity.RootChild.GroupMask,
+                                             EveryoneMask = part.ParentEntity.RootChild.EveryoneMask,
+                                             BaseMask = part.ParentEntity.RootChild.BaseMask,
+                                             SaleType = part.ParentEntity.RootChild.ObjectSaleType,
+                                             SalePrice = part.ParentEntity.RootChild.SalePrice
+                                         }).ToArray();
 #endif
 
             proper.Header.Zerocoded = true;
@@ -4578,8 +4627,8 @@ namespace Aurora.ClientStack
                                                                                    return;
                                                                                hasFinishedSending = true;
                                                                                m_scene.GetScenePresence(AgentId).
-                                                                                   SceneViewer.
-                                                                                   FinishedPropertyPacketSend(parts);
+                                                                                       SceneViewer.
+                                                                                       FinishedPropertyPacketSend(parts);
                                                                            });
         }
 
@@ -4716,7 +4765,7 @@ namespace Aurora.ClientStack
             rinfoblk.PricePerMeter = args.pricePerMeter;
             rinfoblk.RedirectGridX = args.redirectGridX;
             rinfoblk.RedirectGridY = args.redirectGridY;
-            rinfoblk.RegionFlags = (uint)args.regionFlags;
+            rinfoblk.RegionFlags = (uint) args.regionFlags;
             rinfoblk.SimAccess = args.simAccess;
             rinfoblk.SunHour = args.sunHour;
             rinfoblk.TerrainLowerLimit = args.terrainLowerLimit;
@@ -4736,9 +4785,23 @@ namespace Aurora.ClientStack
 
             rinfopack.HasVariableBlocks = true;
             rinfopack.RegionInfo = rinfoblk;
-            rinfopack.AgentData = new RegionInfoPacket.AgentDataBlock { AgentID = AgentId, SessionID = SessionId };
-            rinfopack.RegionInfo3 = new RegionInfoPacket.RegionInfo3Block[1] { new RegionInfoPacket.RegionInfo3Block() { RegionFlagsExtended = args.regionFlags } };
-            rinfopack.RegionInfo3 = new RegionInfoPacket.RegionInfo3Block[1] { new RegionInfoPacket.RegionInfo3Block() { RegionFlagsExtended = args.regionFlags } };
+            rinfopack.AgentData = new RegionInfoPacket.AgentDataBlock {AgentID = AgentId, SessionID = SessionId};
+            rinfopack.RegionInfo3 = new RegionInfoPacket.RegionInfo3Block[1]
+                                        {
+                                            new RegionInfoPacket.RegionInfo3Block()
+                                                {
+                                                    RegionFlagsExtended =
+                                                        args.regionFlags
+                                                }
+                                        };
+            rinfopack.RegionInfo3 = new RegionInfoPacket.RegionInfo3Block[1]
+                                        {
+                                            new RegionInfoPacket.RegionInfo3Block()
+                                                {
+                                                    RegionFlagsExtended =
+                                                        args.regionFlags
+                                                }
+                                        };
 
             OutPacket(rinfopack, ThrottleOutPacketType.AvatarInfo);
         }
@@ -4922,8 +4985,8 @@ namespace Aurora.ClientStack
 #else
             replyPacket.List =
                 avatars.Select(
-                    avatar => new ParcelAccessListReplyPacket.ListBlock { Flags = accessFlag, ID = avatar, Time = 0 }).
-                    ToArray();
+                    avatar => new ParcelAccessListReplyPacket.ListBlock {Flags = accessFlag, ID = avatar, Time = 0}).
+                        ToArray();
 #endif
             replyPacket.Header.Zerocoded = true;
             OutPacket(replyPacket, ThrottleOutPacketType.Land);
@@ -4947,7 +5010,10 @@ namespace Aurora.ClientStack
                     pack._Header.ResetList = false;
                 }
 
-                ForceObjectSelectPacket.DataBlock[] data = ObjectIDs.Count > MAX_OBJECTS_PER_PACKET ? new ForceObjectSelectPacket.DataBlock[MAX_OBJECTS_PER_PACKET] : new ForceObjectSelectPacket.DataBlock[ObjectIDs.Count];
+                ForceObjectSelectPacket.DataBlock[] data = ObjectIDs.Count > MAX_OBJECTS_PER_PACKET
+                                                               ? new ForceObjectSelectPacket.DataBlock[
+                                                                     MAX_OBJECTS_PER_PACKET]
+                                                               : new ForceObjectSelectPacket.DataBlock[ObjectIDs.Count];
 
                 int i;
                 for (i = 0; i < MAX_OBJECTS_PER_PACKET && ObjectIDs.Count > 0; i++)
@@ -5051,7 +5117,7 @@ namespace Aurora.ClientStack
             }
             else
             {
-                ISceneChildEntity part = (ISceneChildEntity)entity;
+                ISceneChildEntity part = (ISceneChildEntity) entity;
 
                 attachPoint = part.AttachmentPoint;
                 collisionPlane = Vector4.Zero;
@@ -5609,7 +5675,7 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   This is a utility method used by single states to not duplicate kicks and blue card of death messages.
+        ///     This is a utility method used by single states to not duplicate kicks and blue card of death messages.
         /// </summary>
         public bool ChildAgentStatus()
         {
@@ -5622,7 +5688,7 @@ namespace Aurora.ClientStack
         #endregion
 
         /// <summary>
-        ///   This is a different way of processing packets then ProcessInPacket
+        ///     This is a different way of processing packets then ProcessInPacket
         /// </summary>
         private void RegisterLocalPacketHandlers()
         {
@@ -6384,7 +6450,7 @@ namespace Aurora.ClientStack
                 if (handlerPreSendInstantMessage != null)
                 {
                     if (handlerPreSendInstantMessage.GetInvocationList().Cast<PreSendImprovedInstantMessage>().Any(
-                            d => d(this, im)))
+                        d => d(this, im)))
                     {
                         return true; //handled
                     }
@@ -6736,14 +6802,13 @@ namespace Aurora.ClientStack
             return true;
         }
 
-        ///<summary>
-        ///  Send a response back to a client when it asks the asset server (via the region server) if it has
-        ///  its appearance texture cached.
-        ///
-        ///</summary>
-        ///<param name = "simclient"></param>
-        ///<param name = "packet"></param>
-        ///<returns></returns>
+        /// <summary>
+        ///     Send a response back to a client when it asks the asset server (via the region server) if it has
+        ///     its appearance texture cached.
+        /// </summary>
+        /// <param name="simclient"></param>
+        /// <param name="packet"></param>
+        /// <returns></returns>
         private bool HandleAgentTextureCached(IClientAPI simclient, Packet packet)
         {
             //MainConsole.Instance.Debug("texture cached: " + packet.ToString());
@@ -6758,7 +6823,7 @@ namespace Aurora.ClientStack
 #else
             List<CachedAgentArgs> args =
                 cachedtex.WearableData.Select(t => new CachedAgentArgs {ID = t.ID, TextureIndex = t.TextureIndex}).
-                    ToList();
+                          ToList();
 #endif
 
             AgentCachedTextureRequest actr = OnAgentCachedTextureRequest;
@@ -6817,8 +6882,10 @@ namespace Aurora.ClientStack
                     wearingArgs.NowWearing.Add(wearable);
                 }
 #else
-                foreach (AvatarWearingArgs.Wearable wearable in nowWearing.WearableData.Select(t => new AvatarWearingArgs.Wearable(t.ItemID,
-                                                                                                                 t.WearableType)))
+                foreach (
+                    AvatarWearingArgs.Wearable wearable in
+                        nowWearing.WearableData.Select(t => new AvatarWearingArgs.Wearable(t.ItemID,
+                                                                                           t.WearableType)))
                 {
                     wearingArgs.NowWearing.Add(wearable);
                 }
@@ -7338,7 +7405,7 @@ namespace Aurora.ClientStack
             {
                 AgentPausePacket agentPausePacket = Pack as AgentPausePacket;
                 if (agentPausePacket != null && (agentPausePacket.AgentData.SessionID != SessionId ||
-                                                         agentPausePacket.AgentData.AgentID != AgentId))
+                                                 agentPausePacket.AgentData.AgentID != AgentId))
                     return true;
             }
 
@@ -7356,7 +7423,7 @@ namespace Aurora.ClientStack
             {
                 AgentResumePacket agentResumePacket = Pack as AgentResumePacket;
                 if (agentResumePacket != null && (agentResumePacket.AgentData.SessionID != SessionId ||
-                                                          agentResumePacket.AgentData.AgentID != AgentId))
+                                                  agentResumePacket.AgentData.AgentID != AgentId))
                     return true;
             }
 
@@ -8441,11 +8508,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   This is the entry point for the UDP route by which the client can retrieve asset data.  If the request
-        ///   is successful then a TransferInfo packet will be sent back, followed by one or more TransferPackets
+        ///     This is the entry point for the UDP route by which the client can retrieve asset data.  If the request
+        ///     is successful then a TransferInfo packet will be sent back, followed by one or more TransferPackets
         /// </summary>
-        /// <param name = "sender"></param>
-        /// <param name = "Pack"></param>
+        /// <param name="sender"></param>
+        /// <param name="Pack"></param>
         /// <returns>This parameter may be ignored since we appear to return true whatever happens</returns>
         private bool HandleTransferRequest(IClientAPI sender, Packet Pack)
         {
@@ -8695,7 +8762,11 @@ namespace Aurora.ClientStack
 
                 #endregion
 
-                foreach (UpdateInventoryFolderPacket.FolderDataBlock t in from t in invFolderx.FolderData let handlerUpdateInventoryFolder = OnUpdateInventoryFolder where handlerUpdateInventoryFolder != null select t)
+                foreach (UpdateInventoryFolderPacket.FolderDataBlock t in from t in invFolderx.FolderData
+                                                                          let handlerUpdateInventoryFolder =
+                                                                              OnUpdateInventoryFolder
+                                                                          where handlerUpdateInventoryFolder != null
+                                                                          select t)
                 {
                     OnUpdateInventoryFolder(this, t.FolderID,
                                             (ushort) t.Type,
@@ -8710,13 +8781,12 @@ namespace Aurora.ClientStack
         {
             if (OnMoveInventoryFolder != null)
             {
-                MoveInventoryFolderPacket invFoldery = (MoveInventoryFolderPacket)Pack;
+                MoveInventoryFolderPacket invFoldery = (MoveInventoryFolderPacket) Pack;
 
                 #region Packet Session and User Check
 
                 if (m_checkPackets)
                 {
-
                     if (invFoldery.AgentData.SessionID != SessionId ||
                         invFoldery.AgentData.AgentID != AgentId)
                         return true;
@@ -8724,7 +8794,11 @@ namespace Aurora.ClientStack
 
                 #endregion
 
-                foreach (MoveInventoryFolderPacket.InventoryDataBlock t in from t in invFoldery.InventoryData let handlerMoveInventoryFolder = OnMoveInventoryFolder where handlerMoveInventoryFolder != null select t)
+                foreach (MoveInventoryFolderPacket.InventoryDataBlock t in from t in invFoldery.InventoryData
+                                                                           let handlerMoveInventoryFolder =
+                                                                               OnMoveInventoryFolder
+                                                                           where handlerMoveInventoryFolder != null
+                                                                           select t)
                 {
                     OnMoveInventoryFolder(this, t.FolderID,
                                           t.ParentID);
@@ -8987,7 +9061,15 @@ namespace Aurora.ClientStack
             if (OnMoveInventoryItem != null)
             {
                 MoveInventoryItem handlerMoveInventoryItem = null;
-                List<InventoryItemBase> items = moveitem.InventoryData.Select(datablock => new InventoryItemBase(datablock.ItemID, AgentId) { Folder = datablock.FolderID, Name = Util.FieldToString(datablock.NewName) }).ToList();
+                List<InventoryItemBase> items =
+                    moveitem.InventoryData.Select(
+                        datablock =>
+                        new InventoryItemBase(datablock.ItemID, AgentId)
+                            {
+                                Folder = datablock.FolderID,
+                                Name = Util.FieldToString(datablock.NewName)
+                            })
+                            .ToList();
                 handlerMoveInventoryItem = OnMoveInventoryItem;
                 if (handlerMoveInventoryItem != null)
                 {
@@ -9015,7 +9097,12 @@ namespace Aurora.ClientStack
 
             if (OnChangeInventoryItemFlags != null)
             {
-                foreach (ChangeInventoryItemFlagsPacket.InventoryDataBlock t in from t in inventoryItemUpdate.InventoryData let handlerUpdateInventoryItem = OnChangeInventoryItemFlags where handlerUpdateInventoryItem != null select t)
+                foreach (
+                    ChangeInventoryItemFlagsPacket.InventoryDataBlock t in from t in inventoryItemUpdate.InventoryData
+                                                                           let handlerUpdateInventoryItem =
+                                                                               OnChangeInventoryItemFlags
+                                                                           where handlerUpdateInventoryItem != null
+                                                                           select t)
                 {
                     OnChangeInventoryItemFlags(this,
                                                t.ItemID,
@@ -9068,7 +9155,7 @@ namespace Aurora.ClientStack
             }
 
             #endregion
-            
+
             if (OnRemoveInventoryFolder != null)
             {
                 RemoveInventoryFolder handlerRemoveInventoryFolder = null;
@@ -9315,7 +9402,7 @@ namespace Aurora.ClientStack
             {
                 MapLayerRequestPacket mapLayerRequestPacket = Pack as MapLayerRequestPacket;
                 if (mapLayerRequestPacket != null && (mapLayerRequestPacket.AgentData.SessionID != SessionId ||
-                                                              mapLayerRequestPacket.AgentData.AgentID != AgentId))
+                                                      mapLayerRequestPacket.AgentData.AgentID != AgentId))
                     return true;
             }
 
@@ -9394,48 +9481,56 @@ namespace Aurora.ClientStack
             if (lmid != UUID.Zero)
             {
                 m_assetService.Get(lmid.ToString(), null, (id, s, lma) =>
-                    {
-                        if (lma == null)
-                        {
-                            // Failed to find landmark
-                            TeleportCancelPacket tpCancel =
-                                (TeleportCancelPacket)PacketPool.Instance.GetPacket(PacketType.TeleportCancel);
-                            tpCancel.Info.SessionID = tpReq.Info.SessionID;
-                            tpCancel.Info.AgentID = tpReq.Info.AgentID;
-                            OutPacket(tpCancel, ThrottleOutPacketType.Asset);
-                        }
+                                                              {
+                                                                  if (lma == null)
+                                                                  {
+                                                                      // Failed to find landmark
+                                                                      TeleportCancelPacket tpCancel =
+                                                                          (TeleportCancelPacket)
+                                                                          PacketPool.Instance.GetPacket(
+                                                                              PacketType.TeleportCancel);
+                                                                      tpCancel.Info.SessionID = tpReq.Info.SessionID;
+                                                                      tpCancel.Info.AgentID = tpReq.Info.AgentID;
+                                                                      OutPacket(tpCancel, ThrottleOutPacketType.Asset);
+                                                                  }
 
-                        try
-                        {
-                            lm = new AssetLandmark(lma);
-                        }
-                        catch (NullReferenceException)
-                        {
-                            // asset not found generates null ref inside the assetlandmark constructor.
-                            TeleportCancelPacket tpCancel =
-                                (TeleportCancelPacket)PacketPool.Instance.GetPacket(PacketType.TeleportCancel);
-                            tpCancel.Info.SessionID = tpReq.Info.SessionID;
-                            tpCancel.Info.AgentID = tpReq.Info.AgentID;
-                            OutPacket(tpCancel, ThrottleOutPacketType.Asset);
-                            return;
-                        }
-                        TeleportLandmarkRequest handlerTeleportLandmarkRequest = OnTeleportLandmarkRequest;
-                        if (handlerTeleportLandmarkRequest != null)
-                        {
-                            handlerTeleportLandmarkRequest(this, lm.RegionID, lm.Position);
-                        }
-                        else
-                        {
-                            //no event handler so cancel request
+                                                                  try
+                                                                  {
+                                                                      lm = new AssetLandmark(lma);
+                                                                  }
+                                                                  catch (NullReferenceException)
+                                                                  {
+                                                                      // asset not found generates null ref inside the assetlandmark constructor.
+                                                                      TeleportCancelPacket tpCancel =
+                                                                          (TeleportCancelPacket)
+                                                                          PacketPool.Instance.GetPacket(
+                                                                              PacketType.TeleportCancel);
+                                                                      tpCancel.Info.SessionID = tpReq.Info.SessionID;
+                                                                      tpCancel.Info.AgentID = tpReq.Info.AgentID;
+                                                                      OutPacket(tpCancel, ThrottleOutPacketType.Asset);
+                                                                      return;
+                                                                  }
+                                                                  TeleportLandmarkRequest handlerTeleportLandmarkRequest
+                                                                      = OnTeleportLandmarkRequest;
+                                                                  if (handlerTeleportLandmarkRequest != null)
+                                                                  {
+                                                                      handlerTeleportLandmarkRequest(this, lm.RegionID,
+                                                                                                     lm.Position);
+                                                                  }
+                                                                  else
+                                                                  {
+                                                                      //no event handler so cancel request
 
 
-                            TeleportCancelPacket tpCancel =
-                                (TeleportCancelPacket)PacketPool.Instance.GetPacket(PacketType.TeleportCancel);
-                            tpCancel.Info.AgentID = tpReq.Info.AgentID;
-                            tpCancel.Info.SessionID = tpReq.Info.SessionID;
-                            OutPacket(tpCancel, ThrottleOutPacketType.Asset);
-                        }
-                    });
+                                                                      TeleportCancelPacket tpCancel =
+                                                                          (TeleportCancelPacket)
+                                                                          PacketPool.Instance.GetPacket(
+                                                                              PacketType.TeleportCancel);
+                                                                      tpCancel.Info.AgentID = tpReq.Info.AgentID;
+                                                                      tpCancel.Info.SessionID = tpReq.Info.SessionID;
+                                                                      OutPacket(tpCancel, ThrottleOutPacketType.Asset);
+                                                                  }
+                                                              });
             }
             else
             {
@@ -9764,7 +9859,7 @@ namespace Aurora.ClientStack
                 returnIDs.Add(rb.ReturnID);
 #else
             List<UUID> returnIDs = selectPacket.ReturnIDs.Select(rb => rb.ReturnID).ToList();
-#endif  
+#endif
 
             ParcelSelectObjects handlerParcelSelectObjects = OnParcelSelectObjects;
 
@@ -10089,7 +10184,8 @@ namespace Aurora.ClientStack
                     {
                         if (messagePacket.ParamList.Length != 9)
                         {
-                            MainConsole.Instance.Error("EstateOwnerMessage: SetRegionTerrain method has a ParamList of invalid length");
+                            MainConsole.Instance.Error(
+                                "EstateOwnerMessage: SetRegionTerrain method has a ParamList of invalid length");
                         }
                         else
                         {
@@ -10123,8 +10219,9 @@ namespace Aurora.ClientStack
                             }
                             catch (Exception ex)
                             {
-                                MainConsole.Instance.Error("EstateOwnerMessage: Exception while setting terrain settings: \n" +
-                                            messagePacket + "\n" + ex);
+                                MainConsole.Instance.Error(
+                                    "EstateOwnerMessage: Exception while setting terrain settings: \n" +
+                                    messagePacket + "\n" + ex);
                             }
                         }
                     }
@@ -10153,7 +10250,9 @@ namespace Aurora.ClientStack
                             OnEstateChangeCovenantRequest(this, newCovenantID);
                         }
 #else
-                        foreach (UUID newCovenantID in messagePacket.ParamList.Select(block => new UUID(Utils.BytesToString(block.Parameter))))
+                        foreach (
+                            UUID newCovenantID in
+                                messagePacket.ParamList.Select(block => new UUID(Utils.BytesToString(block.Parameter))))
                         {
                             OnEstateChangeCovenantRequest(this, newCovenantID);
                         }
@@ -10316,7 +10415,7 @@ namespace Aurora.ClientStack
                     if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         IMapImageGenerator mapModule = Scene.RequestModuleInterface<IMapImageGenerator>();
-                        if(mapModule != null)
+                        if (mapModule != null)
                             mapModule.CreateTerrainTexture(true);
                     }
                     return true;
@@ -10377,7 +10476,7 @@ namespace Aurora.ClientStack
                     for (int i = 0; i < messagePacket.ParamList.Length; i++)
                     {
                         EstateOwnerMessagePacket.ParamListBlock block = messagePacket.ParamList[i];
-                        string data = (string)Utils.BytesToString(block.Parameter);
+                        string data = (string) Utils.BytesToString(block.Parameter);
                         MainConsole.Instance.DebugFormat("[LLCLIENTVIEW]: Param {0}={1}", i, data);
                     }
 
@@ -11217,8 +11316,8 @@ namespace Aurora.ClientStack
                                     dirLandQueryPacket.QueryData.QueryID,
                                     dirLandQueryPacket.QueryData.QueryFlags,
                                     dirLandQueryPacket.QueryData.SearchType,
-                                    (uint)dirLandQueryPacket.QueryData.Price,
-                                    (uint)dirLandQueryPacket.QueryData.Area,
+                                    (uint) dirLandQueryPacket.QueryData.Price,
+                                    (uint) dirLandQueryPacket.QueryData.Area,
                                     dirLandQueryPacket.QueryData.QueryStart);
             }
             return true;
@@ -12672,10 +12771,10 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Handler called when we receive a logout packet.
+        ///     Handler called when we receive a logout packet.
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "packet"></param>
+        /// <param name="client"></param>
+        /// <param name="packet"></param>
         /// <returns></returns>
         private bool HandleLogout(IClientAPI client, Packet packet)
         {
@@ -12687,10 +12786,10 @@ namespace Aurora.ClientStack
             return Logout(client);
         }
 
-        ///<summary>
-        ///</summary>
-        ///<param name = "client"></param>
-        ///<returns></returns>
+        /// <summary>
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
         private bool Logout(IClientAPI client)
         {
             //MainConsole.Instance.InfoFormat("[CLIENT]: Got a logout request for {0} in {1}", Name, Scene.RegionInfo.RegionName);
@@ -12890,8 +12989,9 @@ namespace Aurora.ClientStack
                                 }
                                 break;
                             default:
-                                MainConsole.Instance.Debug("[CLIENT] MultipleObjUpdate recieved an unknown packet type: " +
-                                            (block.Type));
+                                MainConsole.Instance.Debug(
+                                    "[CLIENT] MultipleObjUpdate recieved an unknown packet type: " +
+                                    (block.Type));
                                 break;
                         }
                     }
@@ -12901,18 +13001,18 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Sets the throttles from values supplied by the client
+        ///     Sets the throttles from values supplied by the client
         /// </summary>
-        /// <param name = "throttles"></param>
+        /// <param name="throttles"></param>
         public void SetChildAgentThrottle(byte[] throttles)
         {
             m_udpClient.SetThrottles(throttles);
         }
 
         /// <summary>
-        ///   Get the current throttles for this client as a packed byte array
+        ///     Get the current throttles for this client as a packed byte array
         /// </summary>
-        /// <param name = "multiplier">Unused</param>
+        /// <param name="multiplier">Unused</param>
         /// <returns></returns>
         public byte[] GetThrottlesPacked(float multiplier)
         {
@@ -12920,10 +13020,10 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   This is the starting point for sending a simulator packet out to the client
+        ///     This is the starting point for sending a simulator packet out to the client
         /// </summary>
-        /// <param name = "packet">Packet to send</param>
-        /// <param name = "throttlePacketType">Throttling category for the packet</param>
+        /// <param name="packet">Packet to send</param>
+        /// <param name="throttlePacketType">Throttling category for the packet</param>
         private void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType)
         {
             #region BinaryStats
@@ -12936,27 +13036,31 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   This is the starting point for sending a simulator packet out to the client
+        ///     This is the starting point for sending a simulator packet out to the client
         /// </summary>
-        /// <param name = "packet">Packet to send</param>
-        /// <param name = "throttlePacketType">Throttling category for the packet</param>
-        /// <param name = "doAutomaticSplitting">True to automatically split oversized
-        ///   packets (the default), or false to disable splitting if the calling code
-        ///   handles splitting manually</param>
+        /// <param name="packet">Packet to send</param>
+        /// <param name="throttlePacketType">Throttling category for the packet</param>
+        /// <param name="doAutomaticSplitting">
+        ///     True to automatically split oversized
+        ///     packets (the default), or false to disable splitting if the calling code
+        ///     handles splitting manually
+        /// </param>
         private void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting)
         {
             OutPacket(packet, throttlePacketType, doAutomaticSplitting, null);
         }
 
         /// <summary>
-        ///   This is the starting point for sending a simulator packet out to the client
+        ///     This is the starting point for sending a simulator packet out to the client
         /// </summary>
-        /// <param name = "packet">Packet to send</param>
-        /// <param name = "throttlePacketType">Throttling category for the packet</param>
-        /// <param name = "doAutomaticSplitting">True to automatically split oversized
-        ///   packets (the default), or false to disable splitting if the calling code
-        ///   handles splitting manually</param>
-        /// <param name = "resendMethod">Method that will be called if the packet needs resent</param>
+        /// <param name="packet">Packet to send</param>
+        /// <param name="throttlePacketType">Throttling category for the packet</param>
+        /// <param name="doAutomaticSplitting">
+        ///     True to automatically split oversized
+        ///     packets (the default), or false to disable splitting if the calling code
+        ///     handles splitting manually
+        /// </param>
+        /// <param name="resendMethod">Method that will be called if the packet needs resent</param>
         private void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting,
                                UnackedPacketMethod resendMethod)
         {
@@ -12964,15 +13068,17 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   This is the starting point for sending a simulator packet out to the client
+        ///     This is the starting point for sending a simulator packet out to the client
         /// </summary>
-        /// <param name = "packet">Packet to send</param>
-        /// <param name = "throttlePacketType">Throttling category for the packet</param>
-        /// <param name = "doAutomaticSplitting">True to automatically split oversized
-        ///   packets (the default), or false to disable splitting if the calling code
-        ///   handles splitting manually</param>
-        /// <param name = "resendMethod">Method that will be called if the packet needs resent</param>
-        /// <param name = "finishedMethod">Method that will be called when the packet is sent</param>
+        /// <param name="packet">Packet to send</param>
+        /// <param name="throttlePacketType">Throttling category for the packet</param>
+        /// <param name="doAutomaticSplitting">
+        ///     True to automatically split oversized
+        ///     packets (the default), or false to disable splitting if the calling code
+        ///     handles splitting manually
+        /// </param>
+        /// <param name="resendMethod">Method that will be called if the packet needs resent</param>
+        /// <param name="finishedMethod">Method that will be called when the packet is sent</param>
         private void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting,
                                UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
         {
@@ -12991,17 +13097,17 @@ namespace Aurora.ClientStack
                         || packet.Type == PacketType.CoarseLocationUpdate))
                     outputPacket = false;
 
-                if (m_debugPacketLevel <= 100 
-                    && (packet.Type == PacketType.AvatarAnimation 
+                if (m_debugPacketLevel <= 100
+                    && (packet.Type == PacketType.AvatarAnimation
                         || packet.Type == PacketType.ViewerEffect))
                     outputPacket = false;
 
-                if (m_debugPacketLevel <= 50 
-                    && (packet.Type == PacketType.ImprovedTerseObjectUpdate 
+                if (m_debugPacketLevel <= 50
+                    && (packet.Type == PacketType.ImprovedTerseObjectUpdate
                         || packet.Type == PacketType.ObjectUpdate))
                     outputPacket = false;
 
-                if (m_debugPacketLevel <= 25 
+                if (m_debugPacketLevel <= 25
                     && packet.Type == PacketType.ObjectPropertiesFamily)
                     outputPacket = false;
 
@@ -13014,11 +13120,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Breaks down the genericMessagePacket into specific events
+        ///     Breaks down the genericMessagePacket into specific events
         /// </summary>
-        /// <param name = "gmMethod"></param>
-        /// <param name = "gmInvoice"></param>
-        /// <param name = "gmParams"></param>
+        /// <param name="gmMethod"></param>
+        /// <param name="gmInvoice"></param>
+        /// <param name="gmParams"></param>
         public void DecipherGenericMessage(string gmMethod, UUID gmInvoice,
                                            GenericMessagePacket.ParamListBlock[] gmParams)
         {
@@ -13049,13 +13155,15 @@ namespace Aurora.ClientStack
                     {
                         handlerAutoPilotGo(0, new Vector3(locx, locy, locz), this);
                     }
-                    MainConsole.Instance.InfoFormat("[CLIENT]: Client Requests autopilot to position <{0},{1},{2}>", locx, locy, locz);
+                    MainConsole.Instance.InfoFormat("[CLIENT]: Client Requests autopilot to position <{0},{1},{2}>",
+                                                    locx, locy, locz);
 
 
                     break;
                 default:
-                    MainConsole.Instance.Debug("[CLIENT]: Unknown Generic Message, Method: " + gmMethod + ". Invoice: " + gmInvoice +
-                                ".  Dumping Params:");
+                    MainConsole.Instance.Debug("[CLIENT]: Unknown Generic Message, Method: " + gmMethod + ". Invoice: " +
+                                               gmInvoice +
+                                               ".  Dumping Params:");
                     foreach (GenericMessagePacket.ParamListBlock t in gmParams)
                     {
                         MainConsole.Instance.Debug(t.ToString());
@@ -13066,9 +13174,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Entryway from the client to the simulator.  All UDP packets from the client will end up here
+        ///     Entryway from the client to the simulator.  All UDP packets from the client will end up here
         /// </summary>
-        /// <param name = "packet">OpenMetaverse.packet</param>
+        /// <param name="packet">OpenMetaverse.packet</param>
         public void ProcessInPacket(Packet packet)
         {
             if (m_debugPacketLevel > 0)
@@ -13197,7 +13305,11 @@ namespace Aurora.ClientStack
                 camPropBlock[idx++] = block;
             }
 #else
-            foreach (SetFollowCamPropertiesPacket.CameraPropertyBlock block in parameters.Select(pair => new SetFollowCamPropertiesPacket.CameraPropertyBlock {Type = pair.Key, Value = pair.Value}))
+            foreach (
+                SetFollowCamPropertiesPacket.CameraPropertyBlock block in
+                    parameters.Select(
+                        pair =>
+                        new SetFollowCamPropertiesPacket.CameraPropertyBlock {Type = pair.Key, Value = pair.Value}))
             {
                 camPropBlock[idx++] = block;
             }
@@ -13221,10 +13333,10 @@ namespace Aurora.ClientStack
         private readonly Dictionary<Type, object> m_clientInterfaces = new Dictionary<Type, object>();
 
         /// <summary>
-        ///   Register an interface on this client, should only be called in the constructor.
+        ///     Register an interface on this client, should only be called in the constructor.
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "iface"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="iface"></param>
         private void RegisterInterface<T>(T iface)
         {
             lock (m_clientInterfaces)
@@ -13269,10 +13381,10 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Make an asset request to the asset service in response to a client request.
+        ///     Make an asset request to the asset service in response to a client request.
         /// </summary>
-        /// <param name = "transferRequest"></param>
-        /// <param name = "taskID"></param>
+        /// <param name="transferRequest"></param>
+        /// <param name="taskID"></param>
         private void MakeAssetRequest(TransferRequestPacket transferRequest, UUID taskID)
         {
             UUID requestID = UUID.Zero;
@@ -13292,11 +13404,11 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   When we get a reply back from the asset service in response to a client request, send back the data.
+        ///     When we get a reply back from the asset service in response to a client request, send back the data.
         /// </summary>
-        /// <param name = "id"></param>
-        /// <param name = "sender"></param>
-        /// <param name = "asset"></param>
+        /// <param name="id"></param>
+        /// <param name="sender"></param>
+        /// <param name="asset"></param>
         private void AssetReceived(string id, Object sender, AssetBase asset)
         {
             //MainConsole.Instance.InfoFormat("[CLIENT]: {0} found requested asset", Name);
@@ -13336,7 +13448,7 @@ namespace Aurora.ClientStack
                 SendFailedAsset(req, TransferPacketStatus.AssetUnknownSource);
                 return;
             }
-                // Scripts cannot be retrieved by direct request
+            // Scripts cannot be retrieved by direct request
             if (transferRequest.TransferInfo.SourceType == (int) SourceType.Asset && asset.Type == 10)
             {
                 SendFailedAsset(req, TransferPacketStatus.InsufficientPermissions);
@@ -13347,9 +13459,9 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///   Calculate the number of packets required to send the asset to the client.
+        ///     Calculate the number of packets required to send the asset to the client.
         /// </summary>
-        /// <param name = "data"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
         private static int CalculateNumPackets(byte[] data)
         {

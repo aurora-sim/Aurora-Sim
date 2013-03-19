@@ -34,37 +34,37 @@ using Aurora.Framework;
 namespace OpenMetaverse
 {
     /// <summary>
-    ///   Base UDP server
+    ///     Base UDP server
     /// </summary>
     public abstract class OpenSimUDPBase
     {
         /// <summary>
-        ///   Flag to process packets asynchronously or synchronously
+        ///     Flag to process packets asynchronously or synchronously
         /// </summary>
         private bool m_asyncPacketHandling;
 
         /// <summary>
-        ///   Local IP address to bind to in server mode
+        ///     Local IP address to bind to in server mode
         /// </summary>
         protected IPAddress m_localBindAddress;
 
         /// <summary>
-        ///   The all important shutdown flag
+        ///     The all important shutdown flag
         /// </summary>
         private volatile bool m_shutdownFlag = true;
 
         /// <summary>
-        ///   UDP port to bind to in server mode
+        ///     UDP port to bind to in server mode
         /// </summary>
         protected int m_udpPort;
 
         /// <summary>
-        ///   UDP socket, used in either client or server mode
+        ///     UDP socket, used in either client or server mode
         /// </summary>
         private Socket m_udpSocket;
 
         /// <summary>
-        ///   Returns true if the server is currently listening, otherwise false
+        ///     Returns true if the server is currently listening, otherwise false
         /// </summary>
         public bool IsRunning
         {
@@ -72,16 +72,16 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        ///   This method is called when an incoming packet is received
+        ///     This method is called when an incoming packet is received
         /// </summary>
-        /// <param name = "buffer">Incoming packet buffer</param>
+        /// <param name="buffer">Incoming packet buffer</param>
         protected abstract void PacketReceived(UDPPacketBuffer buffer);
 
         /// <summary>
-        ///   Default initialiser
+        ///     Default initialiser
         /// </summary>
-        /// <param name = "bindAddress">Local IP address to bind the server to</param>
-        /// <param name = "port">Port to listening for incoming UDP packets on</param>
+        /// <param name="bindAddress">Local IP address to bind the server to</param>
+        /// <param name="port">Port to listening for incoming UDP packets on</param>
         public virtual void Initialise(IPAddress bindAddress, int port)
         {
             m_localBindAddress = bindAddress;
@@ -89,22 +89,26 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        ///   Start the UDP server
+        ///     Start the UDP server
         /// </summary>
-        /// <param name = "recvBufferSize">The size of the receive buffer for 
-        ///   the UDP socket. This value is passed up to the operating system 
-        ///   and used in the system networking stack. Use zero to leave this
-        ///   value as the default</param>
-        /// <param name = "asyncPacketHandling">Set this to true to start
-        ///   receiving more packets while current packet handler callbacks are
-        ///   still running. Setting this to false will complete each packet
-        ///   callback before the next packet is processed</param>
+        /// <param name="recvBufferSize">
+        ///     The size of the receive buffer for
+        ///     the UDP socket. This value is passed up to the operating system
+        ///     and used in the system networking stack. Use zero to leave this
+        ///     value as the default
+        /// </param>
+        /// <param name="asyncPacketHandling">
+        ///     Set this to true to start
+        ///     receiving more packets while current packet handler callbacks are
+        ///     still running. Setting this to false will complete each packet
+        ///     callback before the next packet is processed
+        /// </param>
         /// <remarks>
-        ///   This method will attempt to set the SIO_UDP_CONNRESET flag
-        ///   on the socket to get newer versions of Windows to behave in a sane
-        ///   manner (not throwing an exception when the remote side resets the
-        ///   connection). This call is ignored on Mono where the flag is not
-        ///   necessary
+        ///     This method will attempt to set the SIO_UDP_CONNRESET flag
+        ///     on the socket to get newer versions of Windows to behave in a sane
+        ///     manner (not throwing an exception when the remote side resets the
+        ///     connection). This call is ignored on Mono where the flag is not
+        ///     necessary
         /// </remarks>
         public void Start(int recvBufferSize, bool asyncPacketHandling)
         {
@@ -149,7 +153,7 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        ///   Stops the UDP server
+        ///     Stops the UDP server
         /// </summary>
         public void Stop()
         {
@@ -261,7 +265,7 @@ namespace OpenMetaverse
                 catch (ObjectDisposedException)
                 {
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MainConsole.Instance.Error("[UDPBase]: Hit error: " + ex.ToString());
                 }

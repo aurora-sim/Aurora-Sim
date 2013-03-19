@@ -56,91 +56,87 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         #endregion
 
         /// <summary>
-        ///   Returns whether or not this object is still in the world.
-        ///   Eg, if you store an IObject reference, however the object
-        ///   is deleted before you use it, it will throw a NullReference 
-        ///   exception. 'Exists' allows you to check the object is still
-        ///   in play before utilizing it.
+        ///     Returns whether or not this object is still in the world.
+        ///     Eg, if you store an IObject reference, however the object
+        ///     is deleted before you use it, it will throw a NullReference
+        ///     exception. 'Exists' allows you to check the object is still
+        ///     in play before utilizing it.
         /// </summary>
         /// <example>
-        ///   IObject deleteMe = World.Objects[0];
-        /// 
-        ///   if (deleteMe.Exists) {
-        ///   deleteMe.Say("Hello, I still exist!");
-        ///   }
-        /// 
-        ///   World.Objects.Remove(deleteMe);
-        /// 
-        ///   if (!deleteMe.Exists) {
-        ///   Host.Console.Info("I was deleted");
-        ///   }
+        ///     IObject deleteMe = World.Objects[0];
+        ///     if (deleteMe.Exists) {
+        ///     deleteMe.Say("Hello, I still exist!");
+        ///     }
+        ///     World.Objects.Remove(deleteMe);
+        ///     if (!deleteMe.Exists) {
+        ///     Host.Console.Info("I was deleted");
+        ///     }
         /// </example>
         /// <remarks>
-        ///   Objects should be near-guarunteed to exist for any event which
-        ///   passes them as an argument. Storing an object for a longer period
-        ///   of time however will limit their reliability.
-        /// 
-        ///   It is a good practice to use Try/Catch blocks handling for
-        ///   NullReferenceException, when accessing remote objects.
+        ///     Objects should be near-guarunteed to exist for any event which
+        ///     passes them as an argument. Storing an object for a longer period
+        ///     of time however will limit their reliability.
+        ///     It is a good practice to use Try/Catch blocks handling for
+        ///     NullReferenceException, when accessing remote objects.
         /// </remarks>
         bool Exists { get; }
 
         /// <summary>
-        ///   The local region-unique ID for this object.
+        ///     The local region-unique ID for this object.
         /// </summary>
         uint LocalID { get; }
 
         /// <summary>
-        ///   The description assigned to this object.
+        ///     The description assigned to this object.
         /// </summary>
         String Description { get; set; }
 
         /// <summary>
-        ///   Returns the UUID of the Owner of the Object.
+        ///     Returns the UUID of the Owner of the Object.
         /// </summary>
         UUID OwnerId { get; }
 
         /// <summary>
-        ///   Returns the UUID of the Creator of the Object.
+        ///     Returns the UUID of the Creator of the Object.
         /// </summary>
         UUID CreatorId { get; }
 
         /// <summary>
-        ///   Returns the root object of a linkset. If this object is the root, it will return itself.
+        ///     Returns the root object of a linkset. If this object is the root, it will return itself.
         /// </summary>
         IObject Root { get; }
 
         /// <summary>
-        ///   Returns a collection of objects which are linked to the current object. Does not include the root object.
+        ///     Returns a collection of objects which are linked to the current object. Does not include the root object.
         /// </summary>
         IObject[] Children { get; }
 
         /// <summary>
-        ///   Returns a list of materials attached to this object. Each may contain unique texture 
-        ///   and other visual information. For primitive based objects, this correlates with 
-        ///   Object Faces. For mesh based objects, this correlates with Materials.
+        ///     Returns a list of materials attached to this object. Each may contain unique texture
+        ///     and other visual information. For primitive based objects, this correlates with
+        ///     Object Faces. For mesh based objects, this correlates with Materials.
         /// </summary>
         IObjectMaterial[] Materials { get; }
 
         /// <summary>
-        ///   The bounding box of the object. Primitive and Mesh objects alike are scaled to fit within these bounds.
+        ///     The bounding box of the object. Primitive and Mesh objects alike are scaled to fit within these bounds.
         /// </summary>
         Vector3 Scale { get; set; }
 
         /// <summary>
-        ///   The rotation of the object relative to the Scene
+        ///     The rotation of the object relative to the Scene
         /// </summary>
         Quaternion WorldRotation { get; set; }
 
         /// <summary>
-        ///   The rotation of the object relative to a parent object
-        ///   If root, works the same as WorldRotation
+        ///     The rotation of the object relative to a parent object
+        ///     If root, works the same as WorldRotation
         /// </summary>
         Quaternion OffsetRotation { get; set; }
 
         /// <summary>
-        ///   The position of the object relative to a parent object
-        ///   If root, works the same as WorldPosition
+        ///     The position of the object relative to a parent object
+        ///     If root, works the same as WorldPosition
         /// </summary>
         Vector3 OffsetPosition { get; set; }
 
@@ -150,9 +146,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         String TouchText { get; set; }
 
         /// <summary>
-        ///   Text to be associated with this object, in the 
-        ///   Second Life(r) viewer, this is shown above the
-        ///   object.
+        ///     Text to be associated with this object, in the
+        ///     Second Life(r) viewer, this is shown above the
+        ///     object.
         /// </summary>
         String Text { get; set; }
 
@@ -182,33 +178,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         IObjectSound Sound { get; }
 
         /// <value>
-        /// Grants access to the objects inventory
+        ///     Grants access to the objects inventory
         /// </value>
         IObjectInventory Inventory { get; }
 
         /// <summary>
-        ///   Causes the object to speak to its surroundings,
-        ///   equivilent to LSL/OSSL llSay
+        ///     Causes the object to speak to its surroundings,
+        ///     equivilent to LSL/OSSL llSay
         /// </summary>
-        /// <param name = "msg">The message to send to the user</param>
+        /// <param name="msg">The message to send to the user</param>
         void Say(string msg);
 
         /// <summary>
-        ///   Causes the object to speak to on a specific channel,
-        ///   equivilent to LSL/OSSL llSay
+        ///     Causes the object to speak to on a specific channel,
+        ///     equivilent to LSL/OSSL llSay
         /// </summary>
-        /// <param name = "msg">The message to send to the user</param>
-        /// <param name = "channel">The channel on which to send the message</param>
+        /// <param name="msg">The message to send to the user</param>
+        /// <param name="channel">The channel on which to send the message</param>
         void Say(string msg, int channel);
 
         /// <summary>
-        ///   Opens a Dialog Panel in the Users Viewer,
-        ///   equivilent to LSL/OSSL llDialog
+        ///     Opens a Dialog Panel in the Users Viewer,
+        ///     equivilent to LSL/OSSL llDialog
         /// </summary>
-        /// <param name = "avatar">The UUID of the Avatar to which the Dialog should be send</param>
-        /// <param name = "message">The Message to display at the top of the Dialog</param>
-        /// <param name = "buttons">The Strings that act as label/value of the Bottons in the Dialog</param>
-        /// <param name = "chat_channel">The channel on which to send the response</param>
+        /// <param name="avatar">The UUID of the Avatar to which the Dialog should be send</param>
+        /// <param name="message">The Message to display at the top of the Dialog</param>
+        /// <param name="buttons">The Strings that act as label/value of the Bottons in the Dialog</param>
+        /// <param name="chat_channel">The channel on which to send the response</param>
         void Dialog(UUID avatar, string message, string[] buttons, int chat_channel);
 
         //// <value>

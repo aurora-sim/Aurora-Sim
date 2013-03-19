@@ -9,6 +9,7 @@ namespace Aurora.Simulation.Base
     public class BinMigratorService
     {
         private const int _currentBinVersion = 8;
+
         public void MigrateBin()
         {
             int currentVersion = GetBinVersion();
@@ -65,7 +66,7 @@ namespace Aurora.Simulation.Base
             if (File.Exists("Aurora.Protection.dll"))
                 File.Delete("Aurora.Protection.dll");
 
-            foreach(string path in Directory.GetDirectories("ScriptEngines//"))
+            foreach (string path in Directory.GetDirectories("ScriptEngines//"))
             {
                 Directory.Delete(path, true);
             }
@@ -84,38 +85,46 @@ namespace Aurora.Simulation.Base
         public void RunMigration3()
         {
             IniMigrator.UpdateIniFile("Configuration/Standalone/Standalone.ini", "AuroraConnectors",
-                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "False" },
-                new[] { MigratorAction.Add, MigratorAction.Add });
+                                      new[] {"DoRemoteCalls", "AllowRemoteCalls"}, new[] {"False", "False"},
+                                      new[] {MigratorAction.Add, MigratorAction.Add});
 
             IniMigrator.UpdateIniFile("Configuration/Standalone/StandaloneIWC.ini", "AuroraConnectors",
-                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "False" },
-                new[] { MigratorAction.Add, MigratorAction.Add });
+                                      new[] {"DoRemoteCalls", "AllowRemoteCalls"}, new[] {"False", "False"},
+                                      new[] {MigratorAction.Add, MigratorAction.Add});
 
             IniMigrator.UpdateIniFile("Configuration/Grid/Grid.ini", "AuroraConnectors",
-                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "True", "False" },
-                new[] { MigratorAction.Add, MigratorAction.Add });
+                                      new[] {"DoRemoteCalls", "AllowRemoteCalls"}, new[] {"True", "False"},
+                                      new[] {MigratorAction.Add, MigratorAction.Add});
 
             IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "AuroraConnectors",
-                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "True" },
-                new[] { MigratorAction.Add, MigratorAction.Add });
+                                      new[] {"DoRemoteCalls", "AllowRemoteCalls"}, new[] {"False", "True"},
+                                      new[] {MigratorAction.Add, MigratorAction.Add});
         }
 
         public void RunMigration4()
         {
             IniMigrator.UpdateIniFile("Configuration/Grid/Grid.ini", "AuroraConnectors",
-                new[] { "EstateConnector" }, new[] { "LocalConnector" },
-                new[] { MigratorAction.Add, MigratorAction.Add });
+                                      new[] {"EstateConnector"}, new[] {"LocalConnector"},
+                                      new[] {MigratorAction.Add, MigratorAction.Add});
             IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "RegionPermissions",
-                new[] { "DefaultRegionThreatLevel" }, new[] { "High" },
-                new[] { MigratorAction.Add, MigratorAction.Add });
+                                      new[] {"DefaultRegionThreatLevel"}, new[] {"High"},
+                                      new[] {MigratorAction.Add, MigratorAction.Add});
         }
 
         public void RunMigration5()
         {
             IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "RegionPermissions",
-                new[] { "Threat_Level_None", "Threat_Level_Low", "Threat_Level_Medium", "Threat_Level_High","Threat_Level_Full" },
-                new[] { "", "", "", "", ""},
-                new[] { MigratorAction.Add, MigratorAction.Add, MigratorAction.Add, MigratorAction.Add, MigratorAction.Add });
+                                      new[]
+                                          {
+                                              "Threat_Level_None", "Threat_Level_Low", "Threat_Level_Medium",
+                                              "Threat_Level_High", "Threat_Level_Full"
+                                          },
+                                      new[] {"", "", "", "", ""},
+                                      new[]
+                                          {
+                                              MigratorAction.Add, MigratorAction.Add, MigratorAction.Add,
+                                              MigratorAction.Add, MigratorAction.Add
+                                          });
         }
 
         public void RunMigration6()
@@ -159,9 +168,10 @@ namespace Aurora.Simulation.Base
 
     public class IniMigrator
     {
-        public static void UpdateIniFile(string fileName, string handler, string[] names, string[] values, MigratorAction[] actions)
+        public static void UpdateIniFile(string fileName, string handler, string[] names, string[] values,
+                                         MigratorAction[] actions)
         {
-            if (File.Exists(fileName + ".example"))//Update the .example files too if people haven't
+            if (File.Exists(fileName + ".example")) //Update the .example files too if people haven't
                 UpdateIniFile(fileName + ".example", handler, names, values, actions);
             if (File.Exists(fileName))
             {

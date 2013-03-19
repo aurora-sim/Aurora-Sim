@@ -85,7 +85,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             if (_OnNewUser != null)
             {
-                NewUserEventArgs e = new NewUserEventArgs { Avatar = new SPAvatar(m_internalScene, presence.UUID, m_security) };
+                NewUserEventArgs e = new NewUserEventArgs
+                                         {
+                                             Avatar =
+                                                 new SPAvatar(m_internalScene, presence.UUID,
+                                                              m_security)
+                                         };
                 _OnNewUser(this, e);
             }
         }
@@ -209,7 +214,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                         m_parcels.Add(new LOParcel(m_internalScene, landObject.LandData.LocalID));
                     }
 #else
-                    m_parcels.AddRange(m_los.Select(landObject => new LOParcel(m_internalScene, landObject.LandData.LocalID)).Cast<IParcel>());
+                    m_parcels.AddRange(
+                        m_los.Select(landObject => new LOParcel(m_internalScene, landObject.LandData.LocalID))
+                             .Cast<IParcel>());
 #endif
                 }
 

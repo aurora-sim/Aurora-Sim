@@ -40,7 +40,7 @@ using System.Net;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     /// <summary>
-    ///   This manages app domains and controls what app domains are created/destroyed
+    ///     This manages app domains and controls what app domains are created/destroyed
     /// </summary>
     public class AppDomainManager
     {
@@ -100,7 +100,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     lock (m_appDomainLock)
                     {
-                        currentAD = new AppDomainStructure { CurrentAppDomain = AppDomain.CurrentDomain };
+                        currentAD = new AppDomainStructure {CurrentAppDomain = AppDomain.CurrentDomain};
                         AppDomain.CurrentDomain.AssemblyResolve += m_scriptEngine.AssemblyResolver.OnAssemblyResolve;
                         return currentAD;
                     }
@@ -113,7 +113,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (currentAD == null)
                     {
                         // Create a new current AppDomain
-                        currentAD = new AppDomainStructure { CurrentAppDomain = PrepareNewAppDomain() };
+                        currentAD = new AppDomainStructure {CurrentAppDomain = PrepareNewAppDomain()};
                     }
                 }
                 else
@@ -133,7 +133,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (currentAD == null)
                     {
                         // Create a new current AppDomain
-                        currentAD = new AppDomainStructure { CurrentAppDomain = PrepareNewAppDomain() };
+                        currentAD = new AppDomainStructure {CurrentAppDomain = PrepareNewAppDomain()};
                     }
                 }
             }
@@ -171,29 +171,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         /// From MRMModule.cs by Adam Frisby
         /// <summary>
-        ///   Create an AppDomain that contains policy restricting code to execute
-        ///   with only the permissions granted by a named permission set
+        ///     Create an AppDomain that contains policy restricting code to execute
+        ///     with only the permissions granted by a named permission set
         /// </summary>
-        /// <param name = "permissionSetName">name of the permission set to restrict to</param>
-        /// <param name = "appDomainName">'friendly' name of the appdomain to be created</param>
-        /// <param name = "ads"></param>
-        /// <exception cref = "ArgumentNullException">
-        ///   if <paramref name = "permissionSetName" /> is null
+        /// <param name="permissionSetName">name of the permission set to restrict to</param>
+        /// <param name="appDomainName">'friendly' name of the appdomain to be created</param>
+        /// <param name="ads"></param>
+        /// <exception cref="ArgumentNullException">
+        ///     if <paramref name="permissionSetName" /> is null
         /// </exception>
-        /// <exception cref = "ArgumentOutOfRangeException">
-        ///   if <paramref name = "permissionSetName" /> is empty
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     if <paramref name="permissionSetName" /> is empty
         /// </exception>
         /// <returns>AppDomain with a restricted security policy</returns>
         /// <remarks>
-        ///   Substantial portions of this function from: http://blogs.msdn.com/shawnfa/archive/2004/10/25/247379.aspx
-        ///   Valid permissionSetName values are:
-        ///   * FullTrust
-        ///   * SkipVerification
-        ///   * Execution
-        ///   * Nothing
-        ///   * LocalIntranet
-        ///   * Internet
-        ///   * Everything
+        ///     Substantial portions of this function from: http://blogs.msdn.com/shawnfa/archive/2004/10/25/247379.aspx
+        ///     Valid permissionSetName values are:
+        ///     * FullTrust
+        ///     * SkipVerification
+        ///     * Execution
+        ///     * Nothing
+        ///     * LocalIntranet
+        ///     * Internet
+        ///     * Everything
         /// </remarks>
         public AppDomain CreateRestrictedDomain(string permissionSetName, string appDomainName, AppDomainSetup ads)
         {
@@ -262,7 +262,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SecurityZone zone = SecurityZone.MyComputer;
             try
             {
-                zone = (SecurityZone)Enum.Parse(typeof(SecurityZone), permissionSetName);
+                zone = (SecurityZone) Enum.Parse(typeof (SecurityZone), permissionSetName);
             }
             catch
             {
@@ -274,7 +274,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             setIntersection = SecurityManager.GetStandardSandbox(ev);
             setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
             setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
-            setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(
+                new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
 
             // create an AppDomain where this policy will be in effect
             restrictedDomain = AppDomain.CreateDomain(appDomainName, ev, ads, setIntersection, null);
@@ -311,7 +312,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                 }
 #else
-                foreach (AppDomainStructure ads in appDomains.Where(ads => ads.ScriptsLoaded <= ads.ScriptsWaitingUnload))
+                foreach (
+                    AppDomainStructure ads in appDomains.Where(ads => ads.ScriptsLoaded <= ads.ScriptsWaitingUnload))
                 {
                     // Remove from internal list
                     appDomains.Remove(ads);
@@ -334,7 +336,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (currentAD.ScriptsLoaded <= currentAD.ScriptsWaitingUnload)
                     {
                         if (currentAD.CurrentAppDomain.Id != AppDomain.CurrentDomain.Id)
-                        //Don't kill the current app domain!
+                            //Don't kill the current app domain!
                         {
                             try
                             {
