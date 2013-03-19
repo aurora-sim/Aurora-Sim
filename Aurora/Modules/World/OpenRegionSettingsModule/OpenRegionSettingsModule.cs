@@ -235,7 +235,9 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             m_settings = scene.RegionInfo.OpenRegionSettings;
             scene.RegisterModuleInterface<IOpenRegionSettingsModule>(this);
-            ReadConfig(scene);
+            RegionInfo reg = m_scene.RegionInfo;
+            ReadOpenRegionSettings(m_scene.Config.Configs["OpenRegionSettings"], ref reg);
+            m_scene.RegionInfo = reg;
         }
 
         public void RemoveRegion(IScene scene)
@@ -331,8 +333,86 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
         #region Setup
 
-        private void ReadConfig(IScene scene)
+        private void ReadOpenRegionSettings(IConfig instanceSettings, ref RegionInfo region)
         {
+            if (instanceSettings == null)
+                return;
+            region.OpenRegionSettings.MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance",
+                                                                                  region.OpenRegionSettings
+                                                                                        .MaxDragDistance);
+            region.OpenRegionSettings.DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance",
+                                                                                      region.OpenRegionSettings
+                                                                                            .DefaultDrawDistance);
+
+
+            region.OpenRegionSettings.MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale",
+                                                                                   region.OpenRegionSettings
+                                                                                         .MaximumPrimScale);
+            region.OpenRegionSettings.MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale",
+                                                                                   region.OpenRegionSettings
+                                                                                         .MinimumPrimScale);
+            region.OpenRegionSettings.MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale",
+                                                                                       region.OpenRegionSettings
+                                                                                             .MaximumPhysPrimScale);
+
+
+            region.OpenRegionSettings.MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize",
+                                                                                    region.OpenRegionSettings
+                                                                                          .MaximumHollowSize);
+            region.OpenRegionSettings.MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize",
+                                                                                  region.OpenRegionSettings
+                                                                                        .MinimumHoleSize);
+
+
+            region.OpenRegionSettings.MaximumLinkCount = instanceSettings.GetInt("MaximumLinkCount",
+                                                                                 region.OpenRegionSettings
+                                                                                       .MaximumLinkCount);
+            region.OpenRegionSettings.MaximumLinkCountPhys = instanceSettings.GetInt("MaximumLinkCountPhys",
+                                                                                     region.OpenRegionSettings
+                                                                                           .MaximumLinkCountPhys);
+
+
+            region.OpenRegionSettings.RenderWater = instanceSettings.GetBoolean("RenderWater",
+                                                                                region.OpenRegionSettings.RenderWater);
+            region.OpenRegionSettings.MaximumInventoryItemsTransfer =
+                instanceSettings.GetInt("MaximumInventoryItemsTransfer",
+                                        region.OpenRegionSettings.MaximumInventoryItemsTransfer);
+            region.OpenRegionSettings.DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap",
+                                                                                   region.OpenRegionSettings
+                                                                                         .DisplayMinimap);
+            region.OpenRegionSettings.AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims",
+                                                                                       region.OpenRegionSettings
+                                                                                             .AllowPhysicalPrims);
+            region.OpenRegionSettings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance",
+                                                                                      region.OpenRegionSettings
+                                                                                            .ForceDrawDistance);
+
+            string offset = instanceSettings.GetString("OffsetOfUTC", region.OpenRegionSettings.OffsetOfUTC.ToString());
+            int off;
+            if (!int.TryParse(offset, out off))
+            {
+                if (offset == "SLT" || offset == "PST" || offset == "PDT")
+                    off = -8;
+                else if (offset == "UTC" || offset == "GMT")
+                    off = 0;
+            }
+            region.OpenRegionSettings.OffsetOfUTC = off;
+            region.OpenRegionSettings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST",
+                                                                                   region.OpenRegionSettings
+                                                                                         .OffsetOfUTCDST);
+            region.OpenRegionSettings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode",
+                                                                                   region.OpenRegionSettings
+                                                                                         .EnableTeenMode);
+            region.OpenRegionSettings.ShowTags = instanceSettings.GetInt("ShowTags", region.OpenRegionSettings.ShowTags);
+            region.OpenRegionSettings.MaxGroups = instanceSettings.GetInt("MaxGroups",
+                                                                          region.OpenRegionSettings.MaxGroups);
+
+            string defaultunderpants = instanceSettings.GetString("DefaultUnderpants",
+                                                                  region.OpenRegionSettings.DefaultUnderpants.ToString());
+            UUID.TryParse(defaultunderpants, out region.OpenRegionSettings.m_DefaultUnderpants);
+            string defaultundershirt = instanceSettings.GetString("DefaultUndershirt",
+                                                                  region.OpenRegionSettings.DefaultUndershirt.ToString());
+            UUID.TryParse(defaultundershirt, out region.OpenRegionSettings.m_DefaultUndershirt);
         }
 
         #endregion

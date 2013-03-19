@@ -102,101 +102,38 @@ namespace Aurora.Modules
 
             if (_regionData == null || _regionData.RegionInfo == null)
             {
-                retry:
-                info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
+            retry:
+                info = CreateRegionFromConsole(null);
                 if (info == null)
                     goto retry;
                 newRegion = true;
             }
             else
-                info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
+                info = _regionData.RegionInfo;
             return info;
-        }
-
-        private RegionInfo ReadRegionInfoFromFile(ref RegionInfo info, out bool newRegion)
-        {
-            if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini")))
-            {
-                if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini.example")))
-                    File.Create(Path.Combine("Regions", "RegionConfig.ini")).Close();
-                else
-                    File.Copy(Path.Combine("Regions", "RegionConfig.ini.example"),
-                              Path.Combine("Regions", "RegionConfig.ini"));
-                newRegion = true;
-                return info = CreateRegionFromConsole(null);
-            }
-            newRegion = false;
-            try
-            {
-                Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"),
-                                                                    Nini.Ini.IniFileType.AuroraStyle);
-                if (info == null)
-                    info = new RegionInfo();
-                Nini.Config.IniConfigSource source = new IniConfigSource(doc);
-                IConfig config = source.Configs["Region"];
-
-                info.RegionID = UUID.Parse(config.GetString("RegionID"));
-                info.RegionName = config.GetString("RegionName");
-                info.RegionLocX = config.GetInt("RegionLocX")*Constants.RegionSize;
-                info.RegionLocY = config.GetInt("RegionLocY")*Constants.RegionSize;
-                info.RegionSizeX = config.GetInt("RegionSizeX");
-                info.RegionSizeY = config.GetInt("RegionSizeY");
-
-                System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(config.GetString("InternalAddress", "0.0.0.0"));
-                int intPort = config.GetInt("InternalPort", 9000);
-                info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
-
-                info.ObjectCapacity = config.GetInt("MaxPrims", info.ObjectCapacity);
-                info.RegionType = config.GetString("RegionType", "");
-                info.AccessLevel = Util.ConvertMaturityToAccessLevel(config.GetUInt("MaturityLevel", info.AccessLevel));
-                info.InfiniteRegion = config.GetBoolean("InfiniteRegion", info.InfiniteRegion);
-                info.Startup = config.GetString("StartupType", "Normal") == "Normal"
-                                   ? StartupType.Normal
-                                   : StartupType.Medium;
-                info.ScopeID = UUID.Parse(config.GetString("ScopeID", UUID.Zero.ToString()));
-                info.SeeIntoThisSimFromNeighbor = config.GetBoolean("SeeIntoThisSimFromNeighbor",
-                                                                    info.SeeIntoThisSimFromNeighbor);
-                ReadOpenRegionSettings(config, ref info);
-                return info;
-            }
-            catch
-            {
-            }
-            return null;
         }
 
         private RegionInfo CreateRegionFromConsole(RegionInfo info)
         {
-            Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"),
-                                                                Nini.Ini.IniFileType.AuroraStyle);
-            Nini.Config.IniConfigSource source = new IniConfigSource(doc);
-            IConfig section = source.Configs["Region"] != null ? source.Configs["Region"] : source.AddConfig("Region");
-
             if (info == null)
             {
                 info = new RegionInfo();
                 info.RegionID = UUID.Random();
             }
-            section.Set("RegionID", info.RegionID.ToString());
             info.RegionName = MainConsole.Instance.Prompt("Region Name: ", info.RegionName);
-            section.Set("RegionName", info.RegionName);
-
+            
             info.RegionLocX =
                 int.Parse(MainConsole.Instance.Prompt("Region Location X: ",
-                                                      (info.RegionLocX/Constants.RegionSize).ToString()))*
+                ((info.RegionLocX == 0 ? 1000 : info.RegionLocX/Constants.RegionSize)).ToString()))*
                 Constants.RegionSize;
             info.RegionLocY =
                 int.Parse(MainConsole.Instance.Prompt("Region location Y: ",
-                                                      (info.RegionLocY/Constants.RegionSize).ToString()))*
+                                                      ((info.RegionLocY == 0 ? 1000 : info.RegionLocY/Constants.RegionSize)).ToString()))*
                 Constants.RegionSize;
-            section.Set("RegionLocX", (info.RegionLocX/Constants.RegionSize).ToString());
-            section.Set("RegionLocY", (info.RegionLocY/Constants.RegionSize).ToString());
-
+            
             info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: ", info.RegionSizeX.ToString()));
             info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: ", info.RegionSizeY.ToString()));
-            section.Set("RegionSizeX", info.RegionSizeX.ToString());
-            section.Set("RegionSizeY", info.RegionSizeY.ToString());
-
+            
             if (info.InternalEndPoint == null)
                 info.InternalEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse("0.0.0.0"), 9000);
             System.Net.IPAddress intAdd =
@@ -205,115 +142,33 @@ namespace Aurora.Modules
             int intPort =
                 int.Parse(MainConsole.Instance.Prompt("Internal port: ", info.InternalEndPoint.Port.ToString()));
             info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
-            section.Set("InternalPort", intPort.ToString());
-            section.Set("InternalAddress", intAdd.ToString());
-
+            
             info.RegionType = MainConsole.Instance.Prompt("Region Type: ",
                                                           (info.RegionType == "" ? "Mainland" : info.RegionType));
-            section.Set("RegionType", info.RegionType);
-
+            
             info.SeeIntoThisSimFromNeighbor =
                 bool.Parse(
                     MainConsole.Instance.Prompt("See into this sim from neighbors: ",
                                                 info.SeeIntoThisSimFromNeighbor.ToString().ToLower(),
                                                 new List<string>() {"true", "false"}).ToLower());
-            section.Set("SeeIntoThisSimFromNeighbor", info.SeeIntoThisSimFromNeighbor);
-
+            
             info.ObjectCapacity =
                 int.Parse(MainConsole.Instance.Prompt("Object capacity: ",
                                                       info.ObjectCapacity == 0
                                                           ? "50000"
                                                           : info.ObjectCapacity.ToString()));
-            section.Set("MaxPrims", info.ObjectCapacity);
+            
+            if (m_scene != null)
+            {
+                IGridRegisterModule gridRegister = m_scene.RequestModuleInterface<IGridRegisterModule>();
+                gridRegister.UpdateGridRegion(m_scene);
+            }
 
-            source.Save(Path.Combine("Regions", "RegionConfig.ini"));
-
-            IGridRegisterModule gridRegister = m_scene.RequestModuleInterface<IGridRegisterModule>();
-            gridRegister.UpdateGridRegion(m_scene);
+            ForceBackup();
 
             MainConsole.Instance.Info("[FileBasedSimulationData]: Save completed.");
 
             return info;
-        }
-
-        private void ReadOpenRegionSettings(IConfig instanceSettings, ref RegionInfo region)
-        {
-            region.OpenRegionSettings.MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance",
-                                                                                  region.OpenRegionSettings
-                                                                                        .MaxDragDistance);
-            region.OpenRegionSettings.DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance",
-                                                                                      region.OpenRegionSettings
-                                                                                            .DefaultDrawDistance);
-
-
-            region.OpenRegionSettings.MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale",
-                                                                                   region.OpenRegionSettings
-                                                                                         .MaximumPrimScale);
-            region.OpenRegionSettings.MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale",
-                                                                                   region.OpenRegionSettings
-                                                                                         .MinimumPrimScale);
-            region.OpenRegionSettings.MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale",
-                                                                                       region.OpenRegionSettings
-                                                                                             .MaximumPhysPrimScale);
-
-
-            region.OpenRegionSettings.MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize",
-                                                                                    region.OpenRegionSettings
-                                                                                          .MaximumHollowSize);
-            region.OpenRegionSettings.MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize",
-                                                                                  region.OpenRegionSettings
-                                                                                        .MinimumHoleSize);
-
-
-            region.OpenRegionSettings.MaximumLinkCount = instanceSettings.GetInt("MaximumLinkCount",
-                                                                                 region.OpenRegionSettings
-                                                                                       .MaximumLinkCount);
-            region.OpenRegionSettings.MaximumLinkCountPhys = instanceSettings.GetInt("MaximumLinkCountPhys",
-                                                                                     region.OpenRegionSettings
-                                                                                           .MaximumLinkCountPhys);
-
-
-            region.OpenRegionSettings.RenderWater = instanceSettings.GetBoolean("RenderWater",
-                                                                                region.OpenRegionSettings.RenderWater);
-            region.OpenRegionSettings.MaximumInventoryItemsTransfer =
-                instanceSettings.GetInt("MaximumInventoryItemsTransfer",
-                                        region.OpenRegionSettings.MaximumInventoryItemsTransfer);
-            region.OpenRegionSettings.DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap",
-                                                                                   region.OpenRegionSettings
-                                                                                         .DisplayMinimap);
-            region.OpenRegionSettings.AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims",
-                                                                                       region.OpenRegionSettings
-                                                                                             .AllowPhysicalPrims);
-            region.OpenRegionSettings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance",
-                                                                                      region.OpenRegionSettings
-                                                                                            .ForceDrawDistance);
-
-            string offset = instanceSettings.GetString("OffsetOfUTC", region.OpenRegionSettings.OffsetOfUTC.ToString());
-            int off;
-            if (!int.TryParse(offset, out off))
-            {
-                if (offset == "SLT" || offset == "PST" || offset == "PDT")
-                    off = -8;
-                else if (offset == "UTC" || offset == "GMT")
-                    off = 0;
-            }
-            region.OpenRegionSettings.OffsetOfUTC = off;
-            region.OpenRegionSettings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST",
-                                                                                   region.OpenRegionSettings
-                                                                                         .OffsetOfUTCDST);
-            region.OpenRegionSettings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode",
-                                                                                   region.OpenRegionSettings
-                                                                                         .EnableTeenMode);
-            region.OpenRegionSettings.ShowTags = instanceSettings.GetInt("ShowTags", region.OpenRegionSettings.ShowTags);
-            region.OpenRegionSettings.MaxGroups = instanceSettings.GetInt("MaxGroups",
-                                                                          region.OpenRegionSettings.MaxGroups);
-
-            string defaultunderpants = instanceSettings.GetString("DefaultUnderpants",
-                                                                  region.OpenRegionSettings.DefaultUnderpants.ToString());
-            UUID.TryParse(defaultunderpants, out region.OpenRegionSettings.m_DefaultUnderpants);
-            string defaultundershirt = instanceSettings.GetString("DefaultUndershirt",
-                                                                  region.OpenRegionSettings.DefaultUndershirt.ToString());
-            UUID.TryParse(defaultundershirt, out region.OpenRegionSettings.m_DefaultUndershirt);
         }
 
         public virtual void SetRegion(IScene scene)
