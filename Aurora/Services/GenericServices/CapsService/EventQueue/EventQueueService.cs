@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;

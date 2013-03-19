@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 

@@ -729,7 +729,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_ScriptEngine = ScriptEngine;
             m_host = host;
             ScriptProtection = module;
-            AssetConnector = DataManager.DataManager.RequestPlugin<IAssetConnector>();
+            AssetConnector = Framework.Utilities.DataManager.RequestPlugin<IAssetConnector>();
         }
 
         public string Name

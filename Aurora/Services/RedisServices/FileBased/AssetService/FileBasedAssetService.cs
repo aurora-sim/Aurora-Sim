@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -74,7 +75,7 @@ namespace Aurora.FileBasedServices.AssetService
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
             if (m_doConversion)
-                m_assetService = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+                m_assetService = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
         }
 
         public virtual void FinishedStartup()

@@ -28,7 +28,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public class PathHelpers
     {

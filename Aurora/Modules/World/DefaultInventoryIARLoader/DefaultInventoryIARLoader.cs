@@ -50,7 +50,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         {
             m_service = service;
             m_registry = registry;
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IInventoryData>();
 
             IConfig libConfig = source.Configs["InventoryIARLoader"];
             const string pLibrariesLocation = "DefaultInventory/";

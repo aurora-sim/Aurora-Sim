@@ -28,6 +28,7 @@
 using System;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;

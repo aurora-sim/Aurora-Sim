@@ -1,6 +1,6 @@
 ﻿using Aurora.Framework;
-using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

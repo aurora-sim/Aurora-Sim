@@ -29,7 +29,7 @@ using System;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public enum RepeatType
     {

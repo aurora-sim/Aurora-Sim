@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 
@@ -74,7 +75,7 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAvatarData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IAvatarData>();
             m_ArchiveService = registry.RequestModuleInterface<IAvatarAppearanceArchiver>();
             registry.RequestModuleInterface<ISimulationBase>()
                     .EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);

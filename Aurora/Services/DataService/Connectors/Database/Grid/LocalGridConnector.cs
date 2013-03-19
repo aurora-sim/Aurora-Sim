@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -60,7 +61,7 @@ namespace Aurora.Services.DataService
                     GD.ConnectToDatabase(connectionString, "GridRegions",
                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
 
                 if (MainConsole.Instance != null)
                 {
@@ -87,7 +88,7 @@ namespace Aurora.Services.DataService
             {
                 MainConsole.Instance.Debug("[LocalGridConnector] No regions found with missing owners.");
             }
-            IEstateConnector estatePlugin = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            IEstateConnector estatePlugin = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
 
             if (estatePlugin == null)
             {
@@ -299,7 +300,7 @@ namespace Aurora.Services.DataService
                                     Dictionary<string, bool> sort)
         {
             List<GridRegion> resp = new List<GridRegion>();
-            IEstateConnector estates = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            IEstateConnector estates = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
 
             if (count == 0 || estates == null)
             {
@@ -408,7 +409,7 @@ namespace Aurora.Services.DataService
 
         public uint Count(uint estateID, RegionFlags flags)
         {
-            IEstateConnector estates = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            IEstateConnector estates = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
 
             if (estates == null)
             {
@@ -439,7 +440,7 @@ namespace Aurora.Services.DataService
         {
             if (region.EstateOwner == UUID.Zero)
             {
-                IEstateConnector EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector EstateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                 EstateSettings ES = null;
                 if (EstateConnector != null)
                 {

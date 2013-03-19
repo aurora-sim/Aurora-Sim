@@ -32,6 +32,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

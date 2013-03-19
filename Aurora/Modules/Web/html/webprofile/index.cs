@@ -1,5 +1,6 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System.Collections.Generic;
 using System.IO;
@@ -70,7 +71,7 @@ namespace Aurora.Modules.Web
             vars.Add("UserBorn", Util.ToDateTime(account.Created).ToShortDateString());
             vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
-            IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().
+            IUserProfileInfo profile = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>().
                                               GetUserProfile(account.PrincipalID);
             if (profile != null)
             {
@@ -155,7 +156,7 @@ namespace Aurora.Modules.Web
             vars.Add("it", translator.GetTranslatedString("it"));
             vars.Add("es", translator.GetTranslatedString("es"));
 
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
             vars.Add("ShowLanguageTranslatorBar", !settings.HideLanguageTranslatorBar);

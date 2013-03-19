@@ -34,7 +34,7 @@ namespace Aurora.Modules.Web
         {
             response = null;
             var vars = new Dictionary<string, object>();
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector connector = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = connector.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
             if (requestParameters.ContainsKey("Submit"))

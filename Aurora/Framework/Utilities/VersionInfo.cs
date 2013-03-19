@@ -29,7 +29,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public class VersionInfo
     {

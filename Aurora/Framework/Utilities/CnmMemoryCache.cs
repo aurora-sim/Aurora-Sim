@@ -30,7 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Cenome memory based cache to store key/value pairs (elements) limited time and/or limited size.

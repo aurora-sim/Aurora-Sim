@@ -28,6 +28,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Utilities;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
@@ -6652,7 +6653,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
 
-            IAgentConnector AgentFrontend = DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector AgentFrontend = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend == null)
                 return "en-us";
             IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
@@ -6787,7 +6788,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (presence != null)
                 {
-                    IProfileConnector connector = DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                    IProfileConnector connector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
                     if (connector != null)
                         return connector.GetUserProfile(presence.UUID).DisplayName;
                 }
@@ -12656,7 +12657,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                    {
                                        string name = "";
                                        IProfileConnector connector =
-                                           DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                                           Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
                                        if (connector != null)
                                        {
                                            IUserProfileInfo info = connector.GetUserProfile(userID);

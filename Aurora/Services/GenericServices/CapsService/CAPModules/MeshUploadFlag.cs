@@ -45,7 +45,7 @@ namespace Aurora.Services
         {
             m_service = service;
             m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
-            m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            m_profileConnector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             m_service.AddStreamHandler("MeshUploadFlag",
                                        new GenericStreamHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),
                                                                 MeshUploadFlagCAP));

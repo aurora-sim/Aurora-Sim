@@ -60,7 +60,7 @@ using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Threading;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public enum LazyThreadSafetyMode
     {
@@ -69,7 +69,7 @@ namespace Aurora.Framework
         ExecutionAndPublication
     }
 
-    [SerializableAttribute]
+    [Serializable]
     [ComVisible(false)]
     [HostProtection(SecurityAction.LinkDemand, Synchronization = true, ExternalThreading = true)]
     public class Lazy<T>

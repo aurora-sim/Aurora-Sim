@@ -309,7 +309,7 @@ namespace Aurora.Modules.Groups
 
         public void AddRegion(IScene scene)
         {
-            GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            GroupsConnector = Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
             if (GroupsConnector == null)
             {
                 MainConsole.Instance.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");

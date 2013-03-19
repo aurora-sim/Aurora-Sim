@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -61,7 +62,7 @@ namespace Aurora.Services.SQLServices.AssetService
         {
             m_registry = registry;
 
-            m_database = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+            m_database = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
 
             registry.RegisterModuleInterface<IAssetService>(this);
 

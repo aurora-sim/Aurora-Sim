@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -409,7 +410,7 @@ namespace Aurora.Modules.Chat
             if (!m_enabled) return;
 
             if (m_useMuteListModule)
-                MuteListConnector = DataManager.DataManager.RequestPlugin<IMuteListConnector>();
+                MuteListConnector = Framework.Utilities.DataManager.RequestPlugin<IMuteListConnector>();
 
             m_imService = scene.RequestModuleInterface<IInstantMessagingService>();
         }

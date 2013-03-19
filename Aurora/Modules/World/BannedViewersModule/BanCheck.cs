@@ -25,6 +25,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -112,7 +113,7 @@ namespace Aurora.Modules.Ban
         private bool m_checkOnTimer = true;
         private bool m_enabled = false;
 
-        private Aurora.Framework.ListCombiningTimedSaving<PresenceInfo> _checkForSimilaritiesLater =
+        private ListCombiningTimedSaving<PresenceInfo> _checkForSimilaritiesLater =
             new ListCombiningTimedSaving<PresenceInfo>();
 
         #endregion
@@ -156,7 +157,7 @@ namespace Aurora.Modules.Ban
             GrieferAllowLevel =
                 (AllowLevel) Enum.Parse(typeof (AllowLevel), config.GetString("GrieferAllowLevel", "AllowKnown"));
 
-            presenceInfo = Aurora.DataManager.DataManager.RequestPlugin<IPresenceInfo>();
+            presenceInfo = Framework.Utilities.DataManager.RequestPlugin<IPresenceInfo>();
             m_accountService = UserAccountService;
 
             if (MainConsole.Instance != null)
@@ -280,7 +281,7 @@ namespace Aurora.Modules.Ban
                 return;
             }
 
-            var conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            var conn = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             IAgentInfo agentInfo = conn.GetAgent(AgentID);
             if (
                 MainConsole.Instance.Prompt("Do you want to have this only be a temporary ban?", "no",
@@ -322,7 +323,7 @@ namespace Aurora.Modules.Ban
             info.Flags = PresenceInfo.PresenceInfoFlags.Clean;
             presenceInfo.UpdatePresenceInfo(info);
 
-            var conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            var conn = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             IAgentInfo agentInfo = conn.GetAgent(AgentID);
 
             agentInfo.Flags &= IAgentFlags.TempBan;

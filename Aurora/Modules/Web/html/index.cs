@@ -40,7 +40,7 @@ namespace Aurora.Modules.Web
 
             List<Dictionary<string, object>> pages = new List<Dictionary<string, object>>();
 
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
             GridPage rootPage = generics.GetGeneric<GridPage>(UUID.Zero, "WebPages", "Root");
             rootPage.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));

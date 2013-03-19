@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using Aurora.Region;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -54,7 +55,7 @@ namespace Aurora.Services
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
-            m_inventoryData = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
+            m_inventoryData = Framework.Utilities.DataManager.RequestPlugin<IInventoryData>();
 
             HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                OSHttpResponse httpResponse)

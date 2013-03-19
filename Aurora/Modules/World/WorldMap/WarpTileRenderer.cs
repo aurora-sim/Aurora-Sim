@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Aurora.Modules.WorldMap.Warp3DMap;
 using Nini.Config;
 using OpenMetaverse;

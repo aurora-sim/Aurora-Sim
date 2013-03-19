@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -119,7 +120,7 @@ namespace Aurora.Services
                 m_authenticateUsers = authConfig.GetBoolean("AuthenticateUsers", m_authenticateUsers);
             }
 
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAuthenticationData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IAuthenticationData>();
             registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 

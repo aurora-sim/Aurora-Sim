@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Currently unused, but left as it is a useful enum

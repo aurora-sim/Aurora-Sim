@@ -28,7 +28,7 @@
 using System;
 using OpenMetaverse;
 
-namespace Aurora.Framework.Capabilities
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Capabilities utility methods

@@ -30,7 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Synchronized Cenome cache wrapper.

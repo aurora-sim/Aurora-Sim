@@ -1,5 +1,6 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System.Collections.Generic;
 using GridRegion = Aurora.Framework.GridRegion;
@@ -48,7 +49,7 @@ namespace Aurora.Modules.Web
                                                                                                                           .ToString
                                                                                                                           ()));
 
-                IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector estateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                 EstateSettings estate = estateConnector.GetEstateSettings(region.RegionID);
 
                 vars.Add("RegionName", region.RegionName);
@@ -90,7 +91,7 @@ namespace Aurora.Modules.Web
                     vars.Add("UsersInRegion", new List<Dictionary<string, object>>());
                 }
                 IDirectoryServiceConnector directoryConnector =
-                    Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                    Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
                 if (directoryConnector != null)
                 {
                     List<LandData> data = directoryConnector.GetParcelsByRegion(0, 10, region.RegionID, UUID.Zero,

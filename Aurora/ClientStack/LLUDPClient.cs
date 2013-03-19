@@ -28,6 +28,7 @@
 //#define Debug
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;
 using System.Collections.Concurrent;

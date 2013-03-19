@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -81,7 +82,7 @@ namespace Aurora.Modules.Profiles
         {
             if (!m_ProfileEnabled)
                 return;
-            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            ProfileFrontend = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             if (ProfileFrontend == null)
                 return;
 

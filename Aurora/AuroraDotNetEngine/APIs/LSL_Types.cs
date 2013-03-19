@@ -30,6 +30,7 @@ using System;
 using System.Collections;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

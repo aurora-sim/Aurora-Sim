@@ -27,7 +27,7 @@
 
 using System;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Undo stack.  Deletes entries beyond a certain capacity

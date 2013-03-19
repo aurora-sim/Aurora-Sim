@@ -35,7 +35,7 @@ namespace Aurora.Modules.Web
             response = null;
             var vars = new Dictionary<string, object>();
 
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector connector = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             GridWelcomeScreen welcomeInfo = connector.GetGeneric<GridWelcomeScreen>(UUID.Zero, "GridWelcomeScreen",
                                                                                     "GridWelcomeScreen");
             if (welcomeInfo == null)

@@ -38,7 +38,7 @@ namespace Aurora.Modules.Web
 
             uint amountPerQuery = 10;
             int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
-            uint count = DataManager.DataManager.RequestPlugin<IAgentInfoConnector>().RecentlyOnline(5*60, true);
+            uint count = Framework.Utilities.DataManager.RequestPlugin<IAgentInfoConnector>().RecentlyOnline(5*60, true);
             int maxPages = (int) (count/amountPerQuery) - 1;
 
             if (start == -1)
@@ -48,7 +48,7 @@ namespace Aurora.Modules.Web
             vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
             vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-            var users = DataManager.DataManager.RequestPlugin<IAgentInfoConnector>()
+            var users = Framework.Utilities.DataManager.RequestPlugin<IAgentInfoConnector>()
                                    .RecentlyOnline(5*60, true, new Dictionary<string, bool>(), (uint) start,
                                                    amountPerQuery);
             IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();

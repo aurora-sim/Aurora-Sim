@@ -30,6 +30,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Aurora.Framework.Utilities;
 using Microsoft.CSharp;
 
 //using Microsoft.JScript;
@@ -129,7 +130,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             m_scriptApis = m_compiler.ScriptEngine.GetAllFunctionNamesAPIs();
             List<string> functionKeys = new List<string>(m_scriptApis.Keys);
-            functionKeys = Aurora.Framework.StringUtils.SizeSort(functionKeys, false);
+            functionKeys = StringUtils.SizeSort(functionKeys, false);
             foreach (string function in m_scriptApis.Keys)
                 m_functionRegex += function + "|";
             m_functionRegex = m_functionRegex.Remove(m_functionRegex.Length - 1);
@@ -473,8 +474,8 @@ state testing
 
             string parameters = paramMatch.Value;
 
-            string Mname = Aurora.Framework.StringUtils.RandomString(10, true);
-            string Exname = Aurora.Framework.StringUtils.RandomString(10, true);
+            string Mname = StringUtils.RandomString(10, true);
+            string Exname = StringUtils.RandomString(10, true);
 
             string newLine = "string " + Exname + " =  \"\";" +
                              "System.Collections.IEnumerator " + Mname + " = " +

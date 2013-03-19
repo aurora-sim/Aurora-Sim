@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
@@ -129,7 +130,7 @@ namespace Aurora.Services
             OSDMap rm = OSDParser.DeserializeLLSDXml(request) as OSDMap;
             if (rm == null)
                 return MainServer.BadRequest;
-            IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector AgentFrontend = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend != null)
             {
                 IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
@@ -162,7 +163,7 @@ namespace Aurora.Services
                 OSDMap map = new OSDMap();
                 map["agent_id"] = account.PrincipalID;
                 IUserProfileInfo profileInfo =
-                    Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>()
+                    Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>()
                           .GetUserProfile(account.PrincipalID);
                 map["display_name"] = (profileInfo == null || profileInfo.DisplayName == "")
                                           ? account.Name
@@ -190,7 +191,7 @@ namespace Aurora.Services
                 maxLevel = 1;
             if (Level == "A")
                 maxLevel = 2;
-            IAgentConnector data = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector data = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (data != null)
             {
                 IAgentInfo agent = data.GetAgent(agentID);

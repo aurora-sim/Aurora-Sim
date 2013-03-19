@@ -564,7 +564,7 @@ namespace Aurora.Modules.Archivers
                                               .Normal
                                       };
                 IAssetService assetService = m_registry.RequestModuleInterface<IAssetService>();
-                IAssetDataPlugin assetData = DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+                IAssetDataPlugin assetData = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
                 if (assetData != null && ReplaceAssets)
                     assetData.Delete(asset.ID, true);
 

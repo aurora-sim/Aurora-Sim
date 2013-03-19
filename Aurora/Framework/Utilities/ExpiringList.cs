@@ -32,7 +32,7 @@ using System.Threading;
 using System.Timers;
 using Timer = System.Timers.Timer;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
 
     #region TimedCacheKey Class
@@ -479,7 +479,7 @@ namespace Aurora.Framework
                     return;
                 try
                 {
-                    Lazy<List<object>> expiredItems = new Lazy<List<object>>();
+                    Framework.Utilities.Lazy<List<object>> expiredItems = new Framework.Utilities.Lazy<List<object>>();
 #if (!ISWIN)
                     foreach (TimedCacheKey<TKey> timedKey in timedStorage)
                     {

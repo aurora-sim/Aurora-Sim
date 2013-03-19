@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -66,7 +67,7 @@ namespace Aurora.Services
 
         public virtual void FinishedStartup()
         {
-            m_agentInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
+            m_agentInfoConnector = Framework.Utilities.DataManager.RequestPlugin<IAgentInfoConnector>();
         }
 
         #endregion

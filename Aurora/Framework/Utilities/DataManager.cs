@@ -25,10 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using System.Collections.Generic;
 
-namespace Aurora.DataManager
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Plugin manager that deals with retrieving IDataPlugins

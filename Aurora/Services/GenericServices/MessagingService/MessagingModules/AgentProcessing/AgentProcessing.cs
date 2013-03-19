@@ -26,7 +26,7 @@
  */
 
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -1166,12 +1166,12 @@ namespace Aurora.Services
                                  ISimulationService SimulationService, ref int requestedUDPPort, out string reason)
         {
             CachedUserInfo info = new CachedUserInfo();
-            IAgentConnector con = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector con = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (con != null)
                 info.AgentInfo = con.GetAgent(aCircuit.AgentID);
             info.UserAccount = regionCaps.ClientCaps.AccountInfo;
 
-            IGroupsServiceConnector groupsConn = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            IGroupsServiceConnector groupsConn = Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
             if (groupsConn != null)
             {
                 info.ActiveGroup = groupsConn.GetGroupMembershipData(aCircuit.AgentID, UUID.Zero, aCircuit.AgentID);
@@ -1179,11 +1179,11 @@ namespace Aurora.Services
             }
 
             IOfflineMessagesConnector offlineMessConn =
-                Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
+                Framework.Utilities.DataManager.RequestPlugin<IOfflineMessagesConnector>();
             if (offlineMessConn != null)
                 info.OfflineMessages = offlineMessConn.GetOfflineMessages(aCircuit.AgentID);
 
-            IMuteListConnector muteConn = Aurora.DataManager.DataManager.RequestPlugin<IMuteListConnector>();
+            IMuteListConnector muteConn = Framework.Utilities.DataManager.RequestPlugin<IMuteListConnector>();
             if (muteConn != null)
                 info.MuteList = muteConn.GetMuteList(aCircuit.AgentID);
 

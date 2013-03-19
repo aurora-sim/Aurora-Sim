@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -81,7 +82,7 @@ namespace Aurora.Modules.Chat
 
             if (m_TransferModule == null)
             {
-                OfflineMessagesConnector = DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
+                OfflineMessagesConnector = Framework.Utilities.DataManager.RequestPlugin<IOfflineMessagesConnector>();
                 m_TransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
                 if (m_TransferModule == null || OfflineMessagesConnector == null)
                 {
@@ -214,7 +215,7 @@ namespace Aurora.Modules.Chat
                 if (emailModule != null && m_SendOfflineMessagesToEmail)
                 {
                     IUserProfileInfo profile =
-                        DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(im.toAgentID);
+                        Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(im.toAgentID);
                     if (profile != null && profile.IMViaEmail)
                     {
                         UserAccount account = m_Scene.UserAccountService.GetUserAccount(null, im.toAgentID.ToString());

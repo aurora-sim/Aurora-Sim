@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using Aurora.Modules.Monitoring.Alerts;
 using Aurora.Modules.Monitoring.Monitors;
 using Nini.Config;

@@ -55,7 +55,7 @@ using System.Windows.Forms;
 using System.Xml;
 using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     The method used by Util.FireAndForget for asynchronously firing events

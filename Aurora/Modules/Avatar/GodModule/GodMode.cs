@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -195,7 +196,7 @@ namespace Aurora.Modules.Gods
             //Update the estate ID
             if (client.Scene.RegionInfo.EstateSettings.EstateID != EstateID)
             {
-                bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
+                bool changed = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
                     client.Scene.RegionInfo.RegionID, (int) EstateID);
                 if (!changed)
                     client.SendAgentAlertMessage("Unable to connect to the given estate.", false);

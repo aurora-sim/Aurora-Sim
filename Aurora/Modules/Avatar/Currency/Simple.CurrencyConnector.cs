@@ -1,5 +1,6 @@
 ﻿using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

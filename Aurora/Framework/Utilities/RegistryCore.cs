@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public class RegistryCore : IRegistryCore
     {

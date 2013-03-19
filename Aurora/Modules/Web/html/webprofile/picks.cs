@@ -66,7 +66,7 @@ namespace Aurora.Modules.Web
             vars.Add("UserName", account.Name);
             vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
-            IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            IProfileConnector profileConnector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             IUserProfileInfo profile = profileConnector == null
                                            ? null
                                            : profileConnector.GetUserProfile(account.PrincipalID);

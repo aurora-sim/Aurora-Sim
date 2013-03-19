@@ -74,7 +74,7 @@ namespace Aurora.Services
             if (FunctionName == "EstateUpdated")
             {
                 EstateSettings es = (EstateSettings) parameters;
-                IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector estateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                 ISyncMessagePosterService asyncPoster =
                     m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                 IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
@@ -120,7 +120,7 @@ namespace Aurora.Services
                     if (manager.Scene.RegionInfo.EstateSettings.EstateID == estateID)
                     {
                         IEstateConnector estateConnector =
-                            Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                            Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                         if (estateConnector != null)
                         {
                             EstateSettings es = null;

@@ -39,7 +39,7 @@ using System.Text;
 using System.Web;
 using System.Xml;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public static class WebUtils
     {

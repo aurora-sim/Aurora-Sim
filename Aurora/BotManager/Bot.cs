@@ -26,8 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Games.Pathfinding.AStar2DTest;
-using Mischel.Collections;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System;

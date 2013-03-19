@@ -27,7 +27,7 @@
 
 using System;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Utility class that is used to find small prime numbers and test is number prime number.

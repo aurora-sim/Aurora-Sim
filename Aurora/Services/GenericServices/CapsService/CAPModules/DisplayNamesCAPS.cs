@@ -26,8 +26,8 @@
  */
 
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -65,7 +65,7 @@ namespace Aurora.Services
                     bannedNames = new List<string>(bannedNamesString.Split(','));
             }
             m_service = service;
-            m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            m_profileConnector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             m_eventQueue = service.Registry.RequestModuleInterface<IEventQueueService>();
             m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
 
@@ -186,7 +186,7 @@ namespace Aurora.Services
                     if (account != null)
                     {
                         IUserProfileInfo info =
-                            Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>()
+                            Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>()
                                   .GetUserProfile(account.PrincipalID);
                         if (info != null)
                             PackUserInfo(info, account, ref agents);
@@ -204,7 +204,7 @@ namespace Aurora.Services
                 if (account != null)
                 {
                     IUserProfileInfo info =
-                        Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>()
+                        Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>()
                               .GetUserProfile(account.PrincipalID);
                     if (info != null)
                         PackUserInfo(info, account, ref agents);

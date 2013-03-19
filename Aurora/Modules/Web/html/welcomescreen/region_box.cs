@@ -1,6 +1,7 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using System.Collections.Generic;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.Modules.Web
 {
@@ -44,7 +45,7 @@ namespace Aurora.Modules.Web
 
             uint amountPerQuery = 50;
             int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
-            uint count = DataManager.DataManager.RequestPlugin<IRegionData>().Count((Framework.RegionFlags) 0,
+            uint count = Framework.Utilities.DataManager.RequestPlugin<IRegionData>().Count((Framework.RegionFlags) 0,
                                                                                     Framework.RegionFlags.Hyperlink |
                                                                                     Framework.RegionFlags.Foreign |
                                                                                     Framework.RegionFlags.Hidden);
@@ -57,7 +58,7 @@ namespace Aurora.Modules.Web
             vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
             vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-            var regions = DataManager.DataManager.RequestPlugin<IRegionData>().Get((Framework.RegionFlags) 0,
+            var regions = Framework.Utilities.DataManager.RequestPlugin<IRegionData>().Get((Framework.RegionFlags) 0,
                                                                                    Framework.RegionFlags.Hyperlink |
                                                                                    Framework.RegionFlags.Foreign |
                                                                                    Framework.RegionFlags.Hidden,

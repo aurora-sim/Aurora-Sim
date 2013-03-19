@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using Aurora.DataManager.Migration;
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.DataManager
 {

@@ -26,7 +26,7 @@
  */
 
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -300,7 +300,7 @@ namespace Aurora.Services
             }
 
             IAgentInfo agent = null;
-            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector agentData = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (agentData != null)
             {
                 agent = agentData.GetAgent(account.PrincipalID);
@@ -356,7 +356,7 @@ namespace Aurora.Services
             }
 
             IAgentInfo agent = null;
-            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector agentData = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             if (agentData != null)
                 agent = agentData.GetAgent(account.PrincipalID);
             if (agent == null)
@@ -382,7 +382,7 @@ namespace Aurora.Services
             {
                 string DisplayName = account.Name;
                 AvatarAppearance avappearance = null;
-                IProfileConnector profileData = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                IProfileConnector profileData = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
 
                 //
                 // Get the user's inventory
@@ -664,7 +664,7 @@ namespace Aurora.Services
         private void BuildEventNotifications(UUID principalID, ref ArrayList eventNotifications)
         {
             IDirectoryServiceConnector dirService =
-                Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (dirService == null)
                 return;
             List<EventData> events = dirService.GetEventNotifications(principalID);

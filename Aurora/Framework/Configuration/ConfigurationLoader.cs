@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using Nini.Ini;
 
@@ -509,7 +510,7 @@ namespace Aurora.Framework
                 // Try to read it
                 try
                 {
-                    string file = Utilities.ReadExternalWebsite(iniPath);
+                    string file = Utilities.Utilities.ReadExternalWebsite(iniPath);
                     string filename = Path.GetTempFileName();
                     File.WriteAllText(filename, file);
 

@@ -33,7 +33,7 @@ namespace Aurora.Services
         public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType,
                                    string password, out object data)
         {
-            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector agentData = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             data = null;
 
             if (request == null)

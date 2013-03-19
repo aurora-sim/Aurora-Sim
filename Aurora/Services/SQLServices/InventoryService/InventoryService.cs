@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -76,7 +77,7 @@ namespace Aurora.Services.SQLServices.InventoryService
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IInventoryData>();
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_AssetService = registry.RequestModuleInterface<IAssetService>();

@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -424,7 +425,7 @@ namespace Aurora.Modules.Estate
                     Position.Y = scene.RegionInfo.RegionSizeY - Position.Y;
             }
 
-            IAgentConnector AgentConnector = DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector AgentConnector = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             IAgentInfo agentInfo = null;
             if (AgentConnector != null)
                 agentInfo = AgentConnector.GetAgent(userID);
@@ -892,7 +893,7 @@ namespace Aurora.Modules.Estate
                 return false;
             }
 
-            IAgentConnector AgentConnector = DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentConnector AgentConnector = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             IAgentInfo agentInfo = null;
             if (AgentConnector != null)
             {
@@ -1021,7 +1022,7 @@ namespace Aurora.Modules.Estate
 
             m_scenes.Add(scene);
 
-            RegionConnector = DataManager.DataManager.RequestPlugin<IRegionConnector>();
+            RegionConnector = Framework.Utilities.DataManager.RequestPlugin<IRegionConnector>();
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.Permissions.OnAllowIncomingAgent += OnAllowedIncomingAgent;

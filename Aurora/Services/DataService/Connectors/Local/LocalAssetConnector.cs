@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using System.Collections.Generic;
 
@@ -49,11 +50,11 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(defaultConnectionString, "Asset",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") == "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 

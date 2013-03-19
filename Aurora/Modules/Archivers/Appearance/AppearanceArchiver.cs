@@ -67,7 +67,7 @@ namespace Aurora.Modules.Archivers
             string archiveXML = "";
             if (FileName.EndsWith(".database"))
             {
-                IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
+                IAvatarArchiverConnector archiver = Framework.Utilities.DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 if (archiver != null)
                 {
                     AvatarArchive archive =
@@ -387,7 +387,7 @@ namespace Aurora.Modules.Archivers
             //Write the map
             if (cmdparams[5].EndsWith(".database"))
             {
-                IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
+                IAvatarArchiverConnector archiver = Framework.Utilities.DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 if (archiver != null)
                 {
                     AvatarArchive archive = new AvatarArchive();

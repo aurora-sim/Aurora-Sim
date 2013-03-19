@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public class DetectedObject
     {

@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -136,7 +137,7 @@ namespace Aurora.Services.SQLServices.GridService
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
             m_registryCore = registry;
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             m_agentInfoService = m_registryCore.RequestModuleInterface<IAgentInfoService>();
         }
 

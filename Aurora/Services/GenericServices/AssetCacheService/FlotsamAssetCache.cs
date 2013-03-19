@@ -29,6 +29,7 @@
 // #define WAIT_ON_INPROGRESS_REQUESTS
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;

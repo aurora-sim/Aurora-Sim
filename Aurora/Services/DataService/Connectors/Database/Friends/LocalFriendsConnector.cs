@@ -55,7 +55,7 @@ namespace Aurora.Services.DataService
                     GD.ConnectToDatabase(connectionString, "Friends",
                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 

@@ -28,7 +28,7 @@
 
 #define UseDictionaryForEntityUpdates
 using Aurora.Framework;
-using Mischel.Collections;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;
 using System.Collections;

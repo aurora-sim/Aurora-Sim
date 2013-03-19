@@ -25,6 +25,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -53,7 +54,7 @@ namespace Aurora.Modules.Ban
                 }
                 if (GD != null)
                     GD.ConnectToDatabase(DefaultConnectionString, "PresenceInfo", true);
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 

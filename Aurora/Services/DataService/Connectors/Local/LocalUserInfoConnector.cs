@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -66,7 +67,7 @@ namespace Aurora.Services.DataService
                     GD.ConnectToDatabase(connectionString, "UserInfo",
                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 

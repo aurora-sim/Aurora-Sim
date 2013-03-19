@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -359,7 +360,7 @@ namespace Aurora.Modules.Search
 
             if (itemtype == (uint) GridItemType.Telehub)
             {
-                IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>();
+                IRegionConnector GF = Framework.Utilities.DataManager.RequestPlugin<IRegionConnector>();
                 if (GF == null)
                     return;
 
@@ -722,8 +723,8 @@ namespace Aurora.Modules.Search
             if (!m_SearchEnabled)
                 return;
             //Pull in the services we need
-            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            directoryService = DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            ProfileFrontend = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
+            directoryService = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             GroupsModule = scene.RequestModuleInterface<IGroupsModule>();
         }
 

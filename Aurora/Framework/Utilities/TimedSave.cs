@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Timers;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public class TimedSaving<T>
     {

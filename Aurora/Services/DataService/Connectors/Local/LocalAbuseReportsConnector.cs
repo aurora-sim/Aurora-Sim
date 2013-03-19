@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
@@ -53,7 +54,7 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(defaultConnectionString, "AbuseReports",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
             if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
                 "LocalConnector")
             {
@@ -65,7 +66,7 @@ namespace Aurora.Services.DataService
                 //    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
                 //    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
                 //}
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 

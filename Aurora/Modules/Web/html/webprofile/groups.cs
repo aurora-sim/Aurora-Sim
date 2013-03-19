@@ -66,7 +66,7 @@ namespace Aurora.Modules.Web
             vars.Add("UserName", account.Name);
             vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
-            IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().
+            IUserProfileInfo profile = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>().
                                               GetUserProfile(account.PrincipalID);
             IWebHttpTextureService webhttpService =
                 webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
@@ -90,7 +90,7 @@ namespace Aurora.Modules.Web
             vars.Add("UsersGroupsText", translator.GetTranslatedString("UsersGroupsText"));
 
             IGroupsServiceConnector groupsConnector =
-                Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+                Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
             if (groupsConnector != null)
             {
                 List<Dictionary<string, object>> groups = new List<Dictionary<string, object>>();

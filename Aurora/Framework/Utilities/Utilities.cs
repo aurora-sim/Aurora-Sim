@@ -38,7 +38,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public static class Utilities
     {

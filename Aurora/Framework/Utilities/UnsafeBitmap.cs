@@ -32,7 +32,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace BitmapProcessing
+namespace Aurora.Framework.Utilities
 {
     //From http://www.vcskicks.com/fast-image-processing2.php
     public unsafe class FastBitmap

@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using System.Collections.Generic;
 
@@ -47,7 +48,7 @@ namespace Aurora.Services
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 conn.AddAbuseReport(abuse_report);
         }
@@ -59,7 +60,7 @@ namespace Aurora.Services
             if (remoteValue != null || m_doRemoteOnly)
                 return (AbuseReport)remoteValue;*/
 
-            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAbuseReportsConnector>();
             return (conn != null) ? conn.GetAbuseReport(Number, Password) : null;
         }
 
@@ -71,7 +72,7 @@ namespace Aurora.Services
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number)
         {
-            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAbuseReportsConnector>();
             return (conn != null) ? conn.GetAbuseReport(Number) : null;
         }
 
@@ -82,7 +83,7 @@ namespace Aurora.Services
             if (remoteValue != null || m_doRemoteOnly)
                 return;*/
 
-            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 conn.UpdateAbuseReport(report, Password);
         }
@@ -93,7 +94,7 @@ namespace Aurora.Services
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<AbuseReport>) remoteValue;
 
-            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 return conn.GetAbuseReports(start, count, active);
             else
@@ -102,7 +103,7 @@ namespace Aurora.Services
 
         public void UpdateAbuseReport(AbuseReport report)
         {
-            IAbuseReportsConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            IAbuseReportsConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 conn.UpdateAbuseReport(report);
         }

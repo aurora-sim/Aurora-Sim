@@ -26,6 +26,7 @@
  */
 
 using System;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
 namespace Aurora.Framework

@@ -28,7 +28,7 @@
 using System;
 using System.Threading;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     internal class SimpleAsyncResult : IAsyncResult
     {

@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System.Collections.Generic;
@@ -101,8 +102,8 @@ namespace Aurora.Services.SQLServices.UserAccountService
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
-            m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IUserAccountData>();
+            m_profileConnector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
         }
 
         public void FinishedStartup()

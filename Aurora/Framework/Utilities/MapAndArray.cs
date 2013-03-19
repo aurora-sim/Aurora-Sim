@@ -27,7 +27,7 @@
 
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Stores two synchronized collections: a mutable dictionary and an

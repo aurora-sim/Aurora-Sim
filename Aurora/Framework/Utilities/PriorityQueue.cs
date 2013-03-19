@@ -35,7 +35,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace Mischel.Collections
+namespace Aurora.Framework.Utilities
 {
     //A priority queue from http://www.devsource.com/c/a/Languages/A-Priority-Queue-Implementation-in-C/
     // Writen by Jim Mischel

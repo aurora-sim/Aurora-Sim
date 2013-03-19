@@ -32,7 +32,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     /// <summary>
     ///     Used for requests to untrusted endpoints that may potentially be

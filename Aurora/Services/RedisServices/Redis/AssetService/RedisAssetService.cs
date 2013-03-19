@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Aurora.RedisServices.ConnectionHelpers;
 using Nini.Config;
 using OpenMetaverse;
@@ -92,7 +93,7 @@ namespace Aurora.RedisServices.AssetService
             if (!m_enabled)
                 return;
             if (m_doConversion)
-                m_assetService = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+                m_assetService = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
         }
 
         public virtual void FinishedStartup()

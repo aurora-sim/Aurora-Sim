@@ -32,7 +32,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Aurora.Framework;
-using Mischel.Collections;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine

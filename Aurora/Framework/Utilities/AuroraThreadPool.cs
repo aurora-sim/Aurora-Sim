@@ -29,7 +29,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public class AuroraThreadPoolStartInfo
     {

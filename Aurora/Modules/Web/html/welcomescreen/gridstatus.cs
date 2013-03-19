@@ -37,8 +37,8 @@ namespace Aurora.Modules.Web
             response = null;
             var vars = new Dictionary<string, object>();
 
-            IAgentInfoConnector users = DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IAgentInfoConnector users = Framework.Utilities.DataManager.RequestPlugin<IAgentInfoConnector>();
+            IGenericsConnector connector = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             GridWelcomeScreen welcomeInfo = connector.GetGeneric<GridWelcomeScreen>(UUID.Zero, "GridWelcomeScreen",
                                                                                     "GridWelcomeScreen");
             if (welcomeInfo == null)
@@ -54,7 +54,7 @@ namespace Aurora.Modules.Web
             vars.Add("UserCount", webInterface.Registry.RequestModuleInterface<IUserAccountService>().
                                                NumberOfUserAccounts(null, "").ToString());
             vars.Add("TotalRegionCount", translator.GetTranslatedString("TotalRegionCount"));
-            vars.Add("RegionCount", DataManager.DataManager.RequestPlugin<IRegionData>().
+            vars.Add("RegionCount", Framework.Utilities.DataManager.RequestPlugin<IRegionData>().
                                                 Count((Framework.RegionFlags) 0, (Framework.RegionFlags) 0).ToString());
             vars.Add("UniqueVisitors", translator.GetTranslatedString("UniqueVisitors"));
             vars.Add("UniqueVisitorCount",

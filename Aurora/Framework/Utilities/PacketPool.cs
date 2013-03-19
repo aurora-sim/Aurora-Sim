@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public sealed class PacketPool
     {

@@ -90,7 +90,7 @@ namespace Aurora.Services
                 UUID agentID = message["AgentID"].AsUUID();
                 UUID roleID = message["RoleID"].AsUUID();
                 byte type = (byte) message["Type"].AsInteger();
-                IGroupsServiceConnector con = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+                IGroupsServiceConnector con = Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
                 List<GroupRoleMembersData> members = con.GetGroupRoleMembers(agentID, groupID);
                 List<GroupRolesData> roles = con.GetGroupRoles(agentID, groupID);
                 GroupRolesData everyone = null;

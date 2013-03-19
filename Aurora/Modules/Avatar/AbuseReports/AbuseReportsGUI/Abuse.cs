@@ -29,6 +29,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
 namespace Aurora.Modules.AbuseReportsGUI
@@ -47,7 +48,7 @@ namespace Aurora.Modules.AbuseReportsGUI
             InitializeComponent();
             m_decoder = j2k;
             m_assetService = assetService;
-            AbuseReportsConnector = DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            AbuseReportsConnector = Framework.Utilities.DataManager.RequestPlugin<IAbuseReportsConnector>();
             Password = "";
             Utilities.InputBox("Password Input Required", "Password for abuse reports database", ref Password);
         }

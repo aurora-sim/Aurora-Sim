@@ -32,7 +32,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Utilities
 {
     public static class MultipartForm
     {

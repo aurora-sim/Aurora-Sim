@@ -26,7 +26,7 @@
  */
 
 using Aurora.Framework;
-using BitmapProcessing;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

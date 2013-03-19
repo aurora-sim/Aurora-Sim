@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
@@ -40,7 +41,7 @@ namespace Aurora.Services
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>();
             if (syncRecievedService != null)
                 syncRecievedService.OnMessageReceived += syncRecievedService_OnMessageReceived;
-            m_groupData = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            m_groupData = Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("UserStatusChange",
                                                                                                    OnGenericEvent);
         }
