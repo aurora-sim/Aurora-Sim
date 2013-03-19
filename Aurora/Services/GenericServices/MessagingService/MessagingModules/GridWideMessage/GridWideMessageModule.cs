@@ -57,12 +57,16 @@ namespace Aurora.Services
                 if (regionClient != null)
                 {
                     //Send the message to the client
-                    m_messagePost.Post(regionClient.Region.ServerURI,
-                                     BuildRequest("KickUserMessage", message, regionClient.AgentID.ToString()));
-                    IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
-                    if (agentProcessor != null)
-                        agentProcessor.LogoutAgent(regionClient, true);
-                    MainConsole.Instance.Info("User has been kicked.");
+                    m_messagePost.Get(regionClient.Region.ServerURI,
+                                     BuildRequest("KickUserMessage", message, regionClient.AgentID.ToString()),
+                                     (resp)=>
+                    {
+                        IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
+                        if (agentProcessor != null)
+                            agentProcessor.LogoutAgent(regionClient, true);
+                        MainConsole.Instance.Info("User has been kicked.");
+                    });
+                    
                     return;
                 }
             }

@@ -17,9 +17,6 @@
     ;; Directory to load module .ini files from
     IniDirectory = "Configuration/Modules"
 
-    ;; Disables all WinForm based popups and uses the console whenever possible
-    NoGUI = false
-
     ;; Commands to be run on startup are in the given file
     startup_console_commands_file = startup_commands.txt
 
