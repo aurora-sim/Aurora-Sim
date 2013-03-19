@@ -103,8 +103,8 @@ namespace Aurora.Services
                 if (agentInfo.OtherAgentInformation.ContainsKey("TemperaryBanInfo"))
                 {
                     DateTime bannedTime = agentInfo.OtherAgentInformation["TemperaryBanInfo"].AsDate();
-                    until = string.Format(" until {0} {1}", bannedTime.ToShortDateString(),
-                                          bannedTime.ToLongTimeString());
+                    until = string.Format(" until {0} {1}", bannedTime.ToLocalTime().ToShortDateString(),
+                                          bannedTime.ToLocalTime().ToLongTimeString());
 
                     //Check to make sure the time hasn't expired
                     if (bannedTime.Ticks < DateTime.Now.ToUniversalTime().Ticks)
