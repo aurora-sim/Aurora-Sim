@@ -25,13 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using Aurora.Framework.ConsoleFramework;
+using OpenMetaverse;
 
-namespace OpenMetaverse
+namespace Aurora.ClientStack
 {
     /// <summary>
     ///     Base UDP server
