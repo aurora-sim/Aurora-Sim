@@ -71,6 +71,11 @@ namespace Aurora.Framework
             tree.AddCommand(info);
         }
 
+        public bool ContainsCommand(string command)
+        {
+            return tree.FindCommands(new string[1] { command }).Length > 0;
+        }
+
         public string[] FindNextOption(string[] cmd)
         {
             return tree.FindCommands(cmd);
