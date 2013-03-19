@@ -8,7 +8,10 @@ namespace Aurora.Modules
 {
     public class ProtobufRegionDataLoader : IRegionDataLoader
     {
-        public string FileType { get { return ".sim"; } }
+        public string FileType
+        {
+            get { return ".sim"; }
+        }
 
         public RegionData LoadBackup(string file)
         {
@@ -46,7 +49,7 @@ namespace Aurora.Modules
             catch (Exception ex)
             {
                 MainConsole.Instance.Warn("[ProtobufRegionLoader]: Failed to load backup: " + ex.ToString());
-                return null; 
+                return null;
             }
         }
 

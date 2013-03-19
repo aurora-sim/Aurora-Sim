@@ -35,7 +35,9 @@ namespace Aurora.Modules.Web
         {
             if (request.Cookies["SessionID"] != null)
             {
-                var session = _authenticatedAdminUsers.FirstOrDefault((acc) => acc.Key == UUID.Parse(request.Cookies["SessionID"].Value));
+                var session =
+                    _authenticatedAdminUsers.FirstOrDefault(
+                        (acc) => acc.Key == UUID.Parse(request.Cookies["SessionID"].Value));
                 if (session.Value != null && session.Value.UserLevel >= adminLevelRequired)
                     return true;
             }

@@ -42,36 +42,38 @@ using GridRegion = Aurora.Framework.GridRegion;
 namespace Aurora.Modules.WorldMap
 {
     public class AuroraWorldMapModule : INonSharedRegionModule, IWorldMapModule
-	{
+    {
         private const string DEFAULT_WORLD_MAP_EXPORT_PATH = "exportmap.jpg";
 
         protected IScene m_scene;
         protected bool m_Enabled;
-        private readonly ExpiringCache<ulong, List< mapItemReply>> m_mapItemCache = new ExpiringCache<ulong, List<mapItemReply>>();
+
+        private readonly ExpiringCache<ulong, List<mapItemReply>> m_mapItemCache =
+            new ExpiringCache<ulong, List<mapItemReply>>();
 
         private readonly ConcurrentQueue<MapItemRequester> m_itemsToRequest = new ConcurrentQueue<MapItemRequester>();
         private bool itemRequesterIsRunning;
         private static AuroraThreadPool threadpool;
         private static AuroraThreadPool blockthreadpool;
         private int MapViewLength = 8;
-        
-		#region INonSharedRegionModule Members
+
+        #region INonSharedRegionModule Members
 
         public virtual void Initialise(IConfigSource source)
-		{
+        {
             if (source.Configs["MapModule"] != null)
             {
                 if (source.Configs["MapModule"].GetString(
-                        "WorldMapModule", "AuroraWorldMapModule") !=
-                        "AuroraWorldMapModule")
+                    "WorldMapModule", "AuroraWorldMapModule") !=
+                    "AuroraWorldMapModule")
                     return;
                 m_Enabled = true;
                 MapViewLength = source.Configs["MapModule"].GetInt("MapViewLength", MapViewLength);
             }
-		}
+        }
 
-        public virtual void AddRegion (IScene scene)
-		{
+        public virtual void AddRegion(IScene scene)
+        {
             if (!m_Enabled)
                 return;
 
@@ -83,7 +85,7 @@ namespace Aurora.Modules.WorldMap
 
                 if (MainConsole.Instance != null)
                 {
-                    MainConsole.Instance.Commands.AddCommand (
+                    MainConsole.Instance.Commands.AddCommand(
                         "export-map",
                         "export-map [<path>]",
                         "Save an image of the world map", HandleExportWorldMapConsoleCommand);
@@ -91,23 +93,23 @@ namespace Aurora.Modules.WorldMap
 
                 AddHandlers();
             }
-		}
+        }
 
-        public virtual void RemoveRegion (IScene scene)
-		{
-			if (!m_Enabled)
-				return;
+        public virtual void RemoveRegion(IScene scene)
+        {
+            if (!m_Enabled)
+                return;
 
-			lock (m_scene)
-			{
-				m_Enabled = false;
-				RemoveHandlers();
-				m_scene = null;
-			}
-		}
+            lock (m_scene)
+            {
+                m_Enabled = false;
+                RemoveHandlers();
+                m_scene = null;
+            }
+        }
 
-        public virtual void RegionLoaded (IScene scene)
-		{
+        public virtual void RegionLoaded(IScene scene)
+        {
             if (!m_Enabled)
                 return;
 
@@ -117,54 +119,56 @@ namespace Aurora.Modules.WorldMap
             blockthreadpool = new AuroraThreadPool(info);
         }
 
-		public virtual void Close()
-		{
-		}
+        public virtual void Close()
+        {
+        }
 
-		public Type ReplaceableInterface
-		{
-			get { return null; }
-		}
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
 
-		public virtual string Name
-		{
+        public virtual string Name
+        {
             get { return "AuroraWorldMapModule"; }
-		}
+        }
 
-		#endregion
-		// this has to be called with a lock on m_scene
-		protected virtual void AddHandlers()
-		{
+        #endregion
+
+        // this has to be called with a lock on m_scene
+        protected virtual void AddHandlers()
+        {
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            MainConsole.Instance.Debug("[WORLD MAP]: JPEG Map location: " + MainServer.Instance.ServerURI + "/index.php?method=" + regionimage);
+            MainConsole.Instance.Debug("[WORLD MAP]: JPEG Map location: " + MainServer.Instance.ServerURI +
+                                       "/index.php?method=" + regionimage);
 
             MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET", regionimage, OnHTTPGetMapImage));
 
             m_scene.EventManager.OnNewClient += OnNewClient;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
-		}
+        }
 
-		// this has to be called with a lock on m_scene
-		protected virtual void RemoveHandlers()
-		{
+        // this has to be called with a lock on m_scene
+        protected virtual void RemoveHandlers()
+        {
             m_scene.EventManager.OnNewClient -= OnNewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
             MainServer.Instance.RemoveHTTPHandler("", regionimage);
-		}
+        }
 
-		#region EventHandlers
+        #region EventHandlers
 
-		/// <summary>
-		/// Registered for event
-		/// </summary>
-		/// <param name="client"></param>
-		private void OnNewClient(IClientAPI client)
-		{
-			client.OnRequestMapBlocks += RequestMapBlocks;
+        /// <summary>
+        ///     Registered for event
+        /// </summary>
+        /// <param name="client"></param>
+        private void OnNewClient(IClientAPI client)
+        {
+            client.OnRequestMapBlocks += RequestMapBlocks;
             client.OnMapItemRequest += HandleMapItemRequest;
             client.OnMapNameRequest += OnMapNameRequest;
         }
@@ -176,22 +180,22 @@ namespace Aurora.Modules.WorldMap
             client.OnMapNameRequest -= OnMapNameRequest;
         }
 
-		#endregion
+        #endregion
 
         public virtual void HandleMapItemRequest(IClientAPI remoteClient, uint flags,
-            uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
+                                                 uint EstateID, bool godlike, uint itemtype, ulong regionhandle)
         {
             IScenePresence presence = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
             if (presence == null || presence.IsChildAgent)
-                return;//No child agent requests
+                return; //No child agent requests
 
             uint xstart;
             uint ystart;
             Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
-            
+
             List<mapItemReply> mapitems = new List<mapItemReply>();
             int tc = Environment.TickCount;
-            if (itemtype == (int)GridItemType.AgentLocations)
+            if (itemtype == (int) GridItemType.AgentLocations)
             {
                 //If its local, just let it do it on its own.
                 if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)
@@ -215,22 +219,29 @@ namespace Aurora.Modules.WorldMap
                         return;
                     }
                     m_scene.ForEachScenePresence(delegate(IScenePresence sp)
-                    {
-                        // Don't send a green dot for yourself
-                        if (!sp.IsChildAgent && sp.UUID != remoteClient.AgentId)
-                        {
-                            mapitem = new mapItemReply
-                                          {
-                                              x = (uint) (xstart + sp.AbsolutePosition.X),
-                                              y = (uint) (ystart + sp.AbsolutePosition.Y),
-                                              id = UUID.Zero,
-                                              name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString()),
-                                              Extra = 1,
-                                              Extra2 = 0
-                                          };
-                            mapitems.Add(mapitem);
-                        }
-                    });
+                                                     {
+                                                         // Don't send a green dot for yourself
+                                                         if (!sp.IsChildAgent && sp.UUID != remoteClient.AgentId)
+                                                         {
+                                                             mapitem = new mapItemReply
+                                                                           {
+                                                                               x =
+                                                                                   (uint)
+                                                                                   (xstart + sp.AbsolutePosition.X),
+                                                                               y =
+                                                                                   (uint)
+                                                                                   (ystart + sp.AbsolutePosition.Y),
+                                                                               id = UUID.Zero,
+                                                                               name =
+                                                                                   Util.Md5Hash(
+                                                                                       m_scene.RegionInfo.RegionName +
+                                                                                       tc.ToString()),
+                                                                               Extra = 1,
+                                                                               Extra2 = 0
+                                                                           };
+                                                             mapitems.Add(mapitem);
+                                                         }
+                                                     });
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                 }
                 else
@@ -240,13 +251,13 @@ namespace Aurora.Modules.WorldMap
                     {
                         m_itemsToRequest.Enqueue(new MapItemRequester
                                                      {
-                            flags = flags,
-                            itemtype = itemtype,
-                            regionhandle = regionhandle,
-                            remoteClient = remoteClient
-                        });
+                                                         flags = flags,
+                                                         itemtype = itemtype,
+                                                         regionhandle = regionhandle,
+                                                         remoteClient = remoteClient
+                                                     });
 
-                        if(!itemRequesterIsRunning)
+                        if (!itemRequesterIsRunning)
                             threadpool.QueueEvent(GetMapItems, 3);
                     }
                     else
@@ -260,17 +271,19 @@ namespace Aurora.Modules.WorldMap
         private void GetMapItems()
         {
             itemRequesterIsRunning = true;
-            while(true)
+            while (true)
             {
                 MapItemRequester item = null;
-                if(!m_itemsToRequest.TryDequeue(out item))
+                if (!m_itemsToRequest.TryDequeue(out item))
                     break; //Nothing in the queue
 
                 List<mapItemReply> mapitems;
-                if (!m_mapItemCache.TryGetValue(item.regionhandle, out mapitems)) //try again, might have gotten picked up by this already
+                if (!m_mapItemCache.TryGetValue(item.regionhandle, out mapitems))
+                    //try again, might have gotten picked up by this already
                 {
-                    multipleMapItemReply allmapitems = m_scene.GridService.GetMapItems(item.remoteClient.AllScopeIDs, 
-                        item.regionhandle, (GridItemType)item.itemtype);
+                    multipleMapItemReply allmapitems = m_scene.GridService.GetMapItems(item.remoteClient.AllScopeIDs,
+                                                                                       item.regionhandle,
+                                                                                       (GridItemType) item.itemtype);
 
                     if (allmapitems == null)
                         continue;
@@ -282,20 +295,20 @@ namespace Aurora.Modules.WorldMap
                         //Update the cache
                         foreach (KeyValuePair<ulong, List<mapItemReply>> kvp in allmapitems.items)
                         {
-                            m_mapItemCache.AddOrUpdate(kvp.Key, kvp.Value, 3 * 60); //3 mins
+                            m_mapItemCache.AddOrUpdate(kvp.Key, kvp.Value, 3*60); //3 mins
                         }
                     }
                 }
 
-                if(mapitems != null)
-                    item.remoteClient.SendMapItemReply (mapitems.ToArray (), item.itemtype, item.flags);
-                Thread.Sleep (5);
+                if (mapitems != null)
+                    item.remoteClient.SendMapItemReply(mapitems.ToArray(), item.itemtype, item.flags);
+                Thread.Sleep(5);
             }
             itemRequesterIsRunning = false;
         }
 
         /// <summary>
-        /// Requests map blocks in area of minX, maxX, minY, MaxY in world cordinates
+        ///     Requests map blocks in area of minX, maxX, minY, MaxY in world cordinates
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="minX"></param>
@@ -304,8 +317,8 @@ namespace Aurora.Modules.WorldMap
         /// <param name="maxY"></param>
         /// <param name="flag"></param>
         public virtual void RequestMapBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
-		{
-            if ((flag & 0x10000) != 0)  // user clicked on the map a tile that isn't visible
+        {
+            if ((flag & 0x10000) != 0) // user clicked on the map a tile that isn't visible
             {
                 ClickedOnTile(remoteClient, minX, minY, maxX, maxY, flag);
             }
@@ -324,55 +337,59 @@ namespace Aurora.Modules.WorldMap
                 if (flag != 2) //Land sales
                     MainConsole.Instance.Warn("[World Map] : Got new flag, " + flag + " RequestMapBlocks()");
             }
-		}
+        }
 
         protected virtual void ClickedOnTile(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
         {
-            m_blockitemsToRequest.Enqueue (new MapBlockRequester
-                                               {
-                maxX = maxX,
-                maxY = maxY,
-                minX = minX,
-                minY = minY,
-                mapBlocks = (uint)(flag & ~0x10000),
-                remoteClient = remoteClient
-            });
+            m_blockitemsToRequest.Enqueue(new MapBlockRequester
+                                              {
+                                                  maxX = maxX,
+                                                  maxY = maxY,
+                                                  minX = minX,
+                                                  minY = minY,
+                                                  mapBlocks = (uint) (flag & ~0x10000),
+                                                  remoteClient = remoteClient
+                                              });
             if (!blockRequesterIsRunning)
                 blockthreadpool.QueueEvent(GetMapBlocks, 3);
         }
 
-        protected virtual void GetAndSendMapBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
+        protected virtual void GetAndSendMapBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY,
+                                                   uint flag)
         {
             m_blockitemsToRequest.Enqueue(new MapBlockRequester
                                               {
-                maxX = maxX,
-                maxY = maxY,
-                minX = minX,
-                minY = minY,
-                mapBlocks = 0,//Map
-                remoteClient = remoteClient
-            });
+                                                  maxX = maxX,
+                                                  maxY = maxY,
+                                                  minX = minX,
+                                                  minY = minY,
+                                                  mapBlocks = 0, //Map
+                                                  remoteClient = remoteClient
+                                              });
             if (!blockRequesterIsRunning)
                 blockthreadpool.QueueEvent(GetMapBlocks, 3);
         }
 
-        protected virtual void GetAndSendTerrainBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
+        protected virtual void GetAndSendTerrainBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY,
+                                                       uint flag)
         {
-            m_blockitemsToRequest.Enqueue (new MapBlockRequester
-                                               {
-                maxX = maxX,
-                maxY = maxY,
-                minX = minX,
-                minY = minY,
-                mapBlocks = 1,//Terrain
-                remoteClient = remoteClient
-            });
+            m_blockitemsToRequest.Enqueue(new MapBlockRequester
+                                              {
+                                                  maxX = maxX,
+                                                  maxY = maxY,
+                                                  minX = minX,
+                                                  minY = minY,
+                                                  mapBlocks = 1, //Terrain
+                                                  remoteClient = remoteClient
+                                              });
             if (!blockRequesterIsRunning)
                 blockthreadpool.QueueEvent(GetMapBlocks, 3);
         }
 
         private bool blockRequesterIsRunning;
-        private readonly ConcurrentQueue<MapBlockRequester> m_blockitemsToRequest = new ConcurrentQueue<MapBlockRequester>();
+
+        private readonly ConcurrentQueue<MapBlockRequester> m_blockitemsToRequest =
+            new ConcurrentQueue<MapBlockRequester>();
 
         private class MapBlockRequester
         {
@@ -389,20 +406,20 @@ namespace Aurora.Modules.WorldMap
             try
             {
                 blockRequesterIsRunning = true;
-                while(true)
+                while (true)
                 {
                     MapBlockRequester item = null;
-                    if(!m_blockitemsToRequest.TryDequeue(out item))
+                    if (!m_blockitemsToRequest.TryDequeue(out item))
                         break;
                     List<MapBlockData> mapBlocks = new List<MapBlockData>();
 
                     if (item.minX == item.maxX && item.minY == item.maxY)
                     {
                         List<GridRegion> regions = m_scene.GridService.GetRegionRange(item.remoteClient.AllScopeIDs,
-                                (item.minX) * Constants.RegionSize,
-                                (item.maxX) * Constants.RegionSize,
-                                (item.minY) * Constants.RegionSize,
-                                (item.maxY) * Constants.RegionSize);
+                                                                                      (item.minX)*Constants.RegionSize,
+                                                                                      (item.maxX)*Constants.RegionSize,
+                                                                                      (item.minY)*Constants.RegionSize,
+                                                                                      (item.maxY)*Constants.RegionSize);
 
                         foreach (GridRegion region in regions)
                         {
@@ -424,10 +441,14 @@ namespace Aurora.Modules.WorldMap
                     else
                     {
                         List<GridRegion> regions = m_scene.GridService.GetRegionRange(item.remoteClient.AllScopeIDs,
-                                (item.minX - 4) * Constants.RegionSize,
-                                (item.maxX + 4) * Constants.RegionSize,
-                                (item.minY - 4) * Constants.RegionSize,
-                                (item.maxY + 4) * Constants.RegionSize);
+                                                                                      (item.minX - 4)*
+                                                                                      Constants.RegionSize,
+                                                                                      (item.maxX + 4)*
+                                                                                      Constants.RegionSize,
+                                                                                      (item.minY - 4)*
+                                                                                      Constants.RegionSize,
+                                                                                      (item.maxY + 4)*
+                                                                                      Constants.RegionSize);
 
                         foreach (GridRegion region in regions)
                         {
@@ -455,53 +476,55 @@ namespace Aurora.Modules.WorldMap
             MapBlockData block = new MapBlockData();
             if (r == null)
             {
-                block.Access = (byte)SimAccess.NonExistent;
-                block.X = (ushort)x;
-                block.Y = (ushort)y;
+                block.Access = (byte) SimAccess.NonExistent;
+                block.X = (ushort) x;
+                block.Y = (ushort) y;
                 block.MapImageID = UUID.Zero;
                 return block;
             }
-            if ((r.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == (int)Aurora.Framework.RegionFlags.RegionOnline)
+            if ((r.Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) ==
+                (int) Aurora.Framework.RegionFlags.RegionOnline)
                 block.Access = r.Access;
             else
-                block.Access = (byte)OpenMetaverse.SimAccess.Down;
+                block.Access = (byte) OpenMetaverse.SimAccess.Down;
             block.MapImageID = r.TerrainImage;
             block.Name = r.RegionName;
-            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
-            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)r.RegionSizeX;
-            block.SizeY = (ushort)r.RegionSizeY;
+            block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
+            block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
+            block.SizeX = (ushort) r.RegionSizeX;
+            block.SizeY = (ushort) r.RegionSizeY;
 
             return block;
         }
 
-        protected List<MapBlockData> Map2BlockFromGridRegion (GridRegion r)
+        protected List<MapBlockData> Map2BlockFromGridRegion(GridRegion r)
         {
-            List<MapBlockData> blocks = new List<MapBlockData> ();
-            MapBlockData block = new MapBlockData ();
+            List<MapBlockData> blocks = new List<MapBlockData>();
+            MapBlockData block = new MapBlockData();
             if (r == null)
             {
-                block.Access = (byte)SimAccess.Down;
+                block.Access = (byte) SimAccess.Down;
                 block.MapImageID = UUID.Zero;
-                blocks.Add (block);
+                blocks.Add(block);
                 return blocks;
             }
-            if ((r.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == (int)Aurora.Framework.RegionFlags.RegionOnline)
+            if ((r.Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) ==
+                (int) Aurora.Framework.RegionFlags.RegionOnline)
                 block.Access = r.Access;
             else
-                block.Access = (byte)OpenMetaverse.SimAccess.Down;
+                block.Access = (byte) OpenMetaverse.SimAccess.Down;
             block.MapImageID = r.TerrainImage;
             block.Name = r.RegionName;
-            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
-            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)r.RegionSizeX;
-            block.SizeY = (ushort)r.RegionSizeY;
+            block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
+            block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
+            block.SizeX = (ushort) r.RegionSizeX;
+            block.SizeY = (ushort) r.RegionSizeY;
             blocks.Add(block);
             if (r.RegionSizeX > Constants.RegionSize || r.RegionSizeY > Constants.RegionSize)
             {
-                for (int x = 0; x < r.RegionSizeX / Constants.RegionSize; x++)
+                for (int x = 0; x < r.RegionSizeX/Constants.RegionSize; x++)
                 {
-                    for (int y = 0; y < r.RegionSizeY / Constants.RegionSize; y++)
+                    for (int y = 0; y < r.RegionSizeY/Constants.RegionSize; y++)
                     {
                         if (x == 0 && y == 0)
                             continue;
@@ -516,14 +539,14 @@ namespace Aurora.Modules.WorldMap
                                         SizeY = (ushort) r.RegionSizeY
                                     };
                         //Child piece, so ignore it
-                        blocks.Add (block);
+                        blocks.Add(block);
                     }
                 }
             }
             return blocks;
         }
 
-        private void OnMapNameRequest (IClientAPI remoteClient, string mapName, uint flags)
+        private void OnMapNameRequest(IClientAPI remoteClient, string mapName, uint flags)
         {
             if (mapName.Length < 1)
             {
@@ -538,8 +561,8 @@ namespace Aurora.Modules.WorldMap
             string[] splitSearch = mapName.Split(',');
             if (splitSearch.Length != 1)
             {
-                if (splitSearch[1].StartsWith (" "))
-                    splitSearch[1] = splitSearch[1].Remove (0, 1);
+                if (splitSearch[1].StartsWith(" "))
+                    splitSearch[1] = splitSearch[1].Remove(0, 1);
                 if (int.TryParse(splitSearch[0], out XCoord) && int.TryParse(splitSearch[1], out YCoord))
                     TryCoordsSearch = true;
             }
@@ -549,14 +572,16 @@ namespace Aurora.Modules.WorldMap
             List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(remoteClient.AllScopeIDs, mapName, 0, 20);
             if (TryCoordsSearch)
             {
-                GridRegion region = m_scene.GridService.GetRegionByPosition(remoteClient.AllScopeIDs, XCoord * Constants.RegionSize, YCoord * Constants.RegionSize);
+                GridRegion region = m_scene.GridService.GetRegionByPosition(remoteClient.AllScopeIDs,
+                                                                            XCoord*Constants.RegionSize,
+                                                                            YCoord*Constants.RegionSize);
                 if (region != null)
                 {
                     region.RegionName = mapName + " - " + region.RegionName;
-                    regionInfos.Add (region);
+                    regionInfos.Add(region);
                 }
             }
-            List<GridRegion> allRegions = new List<GridRegion> ();
+            List<GridRegion> allRegions = new List<GridRegion>();
             if (regionInfos != null)
             {
                 foreach (GridRegion region in regionInfos)
@@ -569,10 +594,14 @@ namespace Aurora.Modules.WorldMap
                     }
                     //Then send surrounding regions
                     List<GridRegion> regions = m_scene.GridService.GetRegionRange(remoteClient.AllScopeIDs,
-                        (region.RegionLocX - (4 * Constants.RegionSize)),
-                        (region.RegionLocX + (4 * Constants.RegionSize)),
-                        (region.RegionLocY - (4 * Constants.RegionSize)),
-                        (region.RegionLocY + (4 * Constants.RegionSize)));
+                                                                                  (region.RegionLocX -
+                                                                                   (4*Constants.RegionSize)),
+                                                                                  (region.RegionLocX +
+                                                                                   (4*Constants.RegionSize)),
+                                                                                  (region.RegionLocY -
+                                                                                   (4*Constants.RegionSize)),
+                                                                                  (region.RegionLocY +
+                                                                                   (4*Constants.RegionSize)));
                     if (regions != null)
                     {
                         foreach (GridRegion r in regions)
@@ -604,29 +633,29 @@ namespace Aurora.Modules.WorldMap
             // not used
             blocks.Add(data);
 
-            remoteClient.SendMapBlock (blocks, flags);
+            remoteClient.SendMapBlock(blocks, flags);
         }
 
         protected MapBlockData SearchMapBlockFromGridRegion(GridRegion r)
         {
-            MapBlockData block = new MapBlockData ();
+            MapBlockData block = new MapBlockData();
             if (r == null)
             {
-                block.Access = (byte)SimAccess.Down;
+                block.Access = (byte) SimAccess.Down;
                 block.MapImageID = UUID.Zero;
                 return block;
             }
             block.Access = r.Access;
-            if ((r.Access & (byte)SimAccess.Down) == (byte)SimAccess.Down)
+            if ((r.Access & (byte) SimAccess.Down) == (byte) SimAccess.Down)
                 block.Name = r.RegionName + " (offline)";
             else
                 block.Name = r.RegionName;
             block.MapImageID = r.TerrainImage;
             block.Name = r.RegionName;
-            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
-            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)r.RegionSizeX;
-            block.SizeY = (ushort)r.RegionSizeY;
+            block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
+            block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
+            block.SizeX = (ushort) r.RegionSizeX;
+            block.SizeY = (ushort) r.RegionSizeY;
             return block;
         }
 
@@ -635,31 +664,32 @@ namespace Aurora.Modules.WorldMap
             MapBlockData block = new MapBlockData();
             if (r == null)
             {
-                block.Access = (byte)SimAccess.Down;
+                block.Access = (byte) SimAccess.Down;
                 block.MapImageID = UUID.Zero;
                 return block;
             }
             block.Access = r.Access;
             block.MapImageID = r.TerrainMapImage;
-            if ((r.Access & (byte)SimAccess.Down) == (byte)SimAccess.Down)
+            if ((r.Access & (byte) SimAccess.Down) == (byte) SimAccess.Down)
                 block.Name = r.RegionName + " (offline)";
             else
                 block.Name = r.RegionName;
-            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
-            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)r.RegionSizeX;
-            block.SizeY = (ushort)r.RegionSizeY;
+            block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
+            block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
+            block.SizeX = (ushort) r.RegionSizeX;
+            block.SizeY = (ushort) r.RegionSizeY;
             return block;
         }
 
-        public byte[] OnHTTPGetMapImage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] OnHTTPGetMapImage(string path, Stream request, OSHttpRequest httpRequest,
+                                        OSHttpResponse httpResponse)
         {
             MainConsole.Instance.Debug("[WORLD MAP]: Sending map image jpeg");
             byte[] jpeg = new byte[0];
 
             MemoryStream imgstream = new MemoryStream();
             Bitmap mapTexture = new Bitmap(1, 1);
-            Image image = (Image)mapTexture;
+            Image image = (Image) mapTexture;
 
             try
             {
@@ -668,7 +698,8 @@ namespace Aurora.Modules.WorldMap
                 imgstream = new MemoryStream();
 
                 // non-async because we know we have the asset immediately.
-                byte[] mapasset = m_scene.AssetService.GetData(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
+                byte[] mapasset =
+                    m_scene.AssetService.GetData(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
                 if (mapasset != null)
                 {
                     image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(mapasset);
@@ -727,7 +758,7 @@ namespace Aurora.Modules.WorldMap
         }
 
         /// <summary>
-        /// Export the world map
+        ///     Export the world map
         /// </summary>
         /// <param name="cmdparams"></param>
         public void HandleExportWorldMapConsoleCommand(string[] cmdparams)
@@ -746,39 +777,48 @@ namespace Aurora.Modules.WorldMap
                 "[WORLD MAP]: Exporting world map for {0} to {1}", m_scene.RegionInfo.RegionName, exportPath);
 
             List<GridRegion> regions = m_scene.GridService.GetRegionRange(null,
-                    m_scene.RegionInfo.RegionLocX - (9 * Constants.RegionSize),
-                    m_scene.RegionInfo.RegionLocX + (9 * Constants.RegionSize),
-                    m_scene.RegionInfo.RegionLocY - (9 * Constants.RegionSize),
-                    m_scene.RegionInfo.RegionLocY + (9 * Constants.RegionSize));
+                                                                          m_scene.RegionInfo.RegionLocX -
+                                                                          (9*Constants.RegionSize),
+                                                                          m_scene.RegionInfo.RegionLocX +
+                                                                          (9*Constants.RegionSize),
+                                                                          m_scene.RegionInfo.RegionLocY -
+                                                                          (9*Constants.RegionSize),
+                                                                          m_scene.RegionInfo.RegionLocY +
+                                                                          (9*Constants.RegionSize));
             List<Image> bitImages = new List<Image>();
 
-            List<byte[]> textures = regions.Select(r => m_scene.AssetService.GetData(r.TerrainImage.ToString())).Where(texAsset => texAsset != null).ToList();
+            List<byte[]> textures =
+                regions.Select(r => m_scene.AssetService.GetData(r.TerrainImage.ToString()))
+                       .Where(texAsset => texAsset != null)
+                       .ToList();
 
             foreach (byte[] asset in textures)
             {
                 Image image;
 
-                if ((image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage(asset)) != null)
+                if ((image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(asset)) != null)
                     bitImages.Add(image);
             }
 
             const int size = 2560;
-            const int offsetSize = size / 10 / 2;
+            const int offsetSize = size/10/2;
             Bitmap mapTexture = new Bitmap(size, size);
             Graphics g = Graphics.FromImage(mapTexture);
             SolidBrush sea = new SolidBrush(Color.DarkBlue);
             g.FillRectangle(sea, 0, 0, size, size);
 
-            int regionXOffset = (m_scene.RegionInfo.RegionSizeX / 2 - 128) * -1;//Neg because the image is upside down
+            int regionXOffset = (m_scene.RegionInfo.RegionSizeX/2 - 128)*-1; //Neg because the image is upside down
             const int regionYOffset = 0; // (m_scene.RegionInfo.RegionSizeY / 2 - 128) * -1;
 
             for (int i = 0; i < regions.Count; i++)
             {
-                int regionSizeOffset = regions[i].RegionSizeX / 2 - 128;
-                int x = ((regions[i].RegionLocX - m_scene.RegionInfo.RegionLocX) / Constants.RegionSize) + 10;
-                int y = ((regions[i].RegionLocY - m_scene.RegionInfo.RegionLocY) / Constants.RegionSize) + 10;
-                if(i < bitImages.Count)
-                    g.DrawImage(bitImages[i], (x * offsetSize) + regionXOffset, size - (y * offsetSize + regionSizeOffset) + regionYOffset, regions[i].RegionSizeX / 2, regions[i].RegionSizeY / 2); // y origin is top
+                int regionSizeOffset = regions[i].RegionSizeX/2 - 128;
+                int x = ((regions[i].RegionLocX - m_scene.RegionInfo.RegionLocX)/Constants.RegionSize) + 10;
+                int y = ((regions[i].RegionLocY - m_scene.RegionInfo.RegionLocY)/Constants.RegionSize) + 10;
+                if (i < bitImages.Count)
+                    g.DrawImage(bitImages[i], (x*offsetSize) + regionXOffset,
+                                size - (y*offsetSize + regionSizeOffset) + regionYOffset, regions[i].RegionSizeX/2,
+                                regions[i].RegionSizeY/2); // y origin is top
             }
 
             mapTexture.Save(exportPath, ImageFormat.Jpeg);

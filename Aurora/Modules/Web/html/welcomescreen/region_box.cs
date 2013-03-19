@@ -11,18 +11,26 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/welcomescreen/region_box.html",
-                           "html/region_list.html"
-                       };
+                           {
+                               "html/welcomescreen/region_box.html",
+                               "html/region_list.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -36,24 +44,33 @@ namespace Aurora.Modules.Web
 
             uint amountPerQuery = 50;
             int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
-            uint count = DataManager.DataManager.RequestPlugin<IRegionData>().Count((Framework.RegionFlags)0,
-                    Framework.RegionFlags.Hyperlink | Framework.RegionFlags.Foreign | Framework.RegionFlags.Hidden);
-            int maxPages = (int)(count / amountPerQuery) - 1;
+            uint count = DataManager.DataManager.RequestPlugin<IRegionData>().Count((Framework.RegionFlags) 0,
+                                                                                    Framework.RegionFlags.Hyperlink |
+                                                                                    Framework.RegionFlags.Foreign |
+                                                                                    Framework.RegionFlags.Hidden);
+            int maxPages = (int) (count/amountPerQuery) - 1;
 
             if (start == -1)
-                start = (int)(maxPages < 0 ? 0 : maxPages);
+                start = (int) (maxPages < 0 ? 0 : maxPages);
 
             vars.Add("CurrentPage", start);
             vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
             vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-            var regions = DataManager.DataManager.RequestPlugin<IRegionData>().Get((Framework.RegionFlags)0,
-                Framework.RegionFlags.Hyperlink | Framework.RegionFlags.Foreign | Framework.RegionFlags.Hidden,
-                (uint)(start * amountPerQuery), amountPerQuery, sortBy);
+            var regions = DataManager.DataManager.RequestPlugin<IRegionData>().Get((Framework.RegionFlags) 0,
+                                                                                   Framework.RegionFlags.Hyperlink |
+                                                                                   Framework.RegionFlags.Foreign |
+                                                                                   Framework.RegionFlags.Hidden,
+                                                                                   (uint) (start*amountPerQuery),
+                                                                                   amountPerQuery, sortBy);
             foreach (var region in regions)
-                RegionListVars.Add(new Dictionary<string, object> { { "RegionLocX", region.RegionLocX / Constants.RegionSize }, 
-                    { "RegionLocY", region.RegionLocY / Constants.RegionSize }, { "RegionName", region.RegionName },
-                    { "RegionID", region.RegionID } });
+                RegionListVars.Add(new Dictionary<string, object>
+                                       {
+                                           {"RegionLocX", region.RegionLocX/Constants.RegionSize},
+                                           {"RegionLocY", region.RegionLocY/Constants.RegionSize},
+                                           {"RegionName", region.RegionName},
+                                           {"RegionID", region.RegionID}
+                                       });
 
             vars.Add("RegionList", RegionListVars);
             vars.Add("RegionText", translator.GetTranslatedString("Region"));
@@ -72,8 +89,8 @@ namespace Aurora.Modules.Web
             vars.Add("LastText", translator.GetTranslatedString("LastText"));
             vars.Add("CurrentPageText", translator.GetTranslatedString("CurrentPageText"));
             vars.Add("MoreInfoText", translator.GetTranslatedString("MoreInfoText"));
-			vars.Add("RegionMoreInfo", translator.GetTranslatedString("RegionMoreInfo"));
-			
+            vars.Add("RegionMoreInfo", translator.GetTranslatedString("RegionMoreInfo"));
+
             return vars;
         }
 

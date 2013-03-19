@@ -95,22 +95,22 @@ namespace Aurora.Modules.Search
         #endregion
 
         /// <summary>
-        ///   Parcel request
+        ///     Parcel request
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "queryID"></param>
-        /// <param name = "queryText">The thing to search for</param>
-        /// <param name = "queryFlags"></param>
-        /// <param name = "category"></param>
-        /// <param name = "simName"></param>
-        /// <param name = "queryStart"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID"></param>
+        /// <param name="queryText">The thing to search for</param>
+        /// <param name="queryFlags"></param>
+        /// <param name="category"></param>
+        /// <param name="simName"></param>
+        /// <param name="queryStart"></param>
         protected void DirPlacesQuery(IClientAPI remoteClient, UUID queryID,
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
         {
             List<DirPlacesReplyData> ReturnValues =
                 directoryService.FindLand(queryText, category.ToString(), queryStart,
-                                                                       (uint) queryFlags, remoteClient.ScopeID);
+                                          (uint) queryFlags, remoteClient.ScopeID);
 
 #if (!ISWIN)
             SplitPackets<DirPlacesReplyData>(ReturnValues, delegate(DirPlacesReplyData[] data)
@@ -132,18 +132,21 @@ namespace Aurora.Modules.Search
         }
 
         /// <summary>
-        ///   Land for sale request
+        ///     Land for sale request
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "queryID"></param>
-        /// <param name = "queryFlags"></param>
-        /// <param name = "searchType"></param>
-        /// <param name = "price"></param>
-        /// <param name = "area"></param>
-        /// <param name = "queryStart"></param>
-        public void DirLandQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart)
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID"></param>
+        /// <param name="queryFlags"></param>
+        /// <param name="searchType"></param>
+        /// <param name="price"></param>
+        /// <param name="area"></param>
+        /// <param name="queryStart"></param>
+        public void DirLandQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price,
+                                 uint area, int queryStart)
         {
-            List<DirLandReplyData> ReturnValues = new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area, queryStart, queryFlags, remoteClient.ScopeID));
+            List<DirLandReplyData> ReturnValues =
+                new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area,
+                                                                            queryStart, queryFlags, remoteClient.ScopeID));
 
 #if (!ISWIN)
             SplitPackets<DirLandReplyData>(ReturnValues, delegate(DirLandReplyData[] data)
@@ -157,13 +160,13 @@ namespace Aurora.Modules.Search
         }
 
         /// <summary>
-        ///   Finds either people or events
+        ///     Finds either people or events
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "queryID">Just a UUID to send back to the client</param>
-        /// <param name = "queryText">The term to search for</param>
-        /// <param name = "queryFlags">Flags like maturity, etc</param>
-        /// <param name = "queryStart">Where in the search should we start? 0, 10, 20, etc</param>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID">Just a UUID to send back to the client</param>
+        /// <param name="queryText">The term to search for</param>
+        /// <param name="queryFlags">Flags like maturity, etc</param>
+        /// <param name="queryStart">Where in the search should we start? 0, 10, 20, etc</param>
         public void DirFindQuery(IClientAPI remoteClient, UUID queryID,
                                  string queryText, uint queryFlags, int queryStart)
         {
@@ -187,7 +190,7 @@ namespace Aurora.Modules.Search
         {
             //Find the user accounts
             List<UserAccount> accounts = m_Scene.UserAccountService.GetUserAccounts(remoteClient.AllScopeIDs,
-                                                                                        queryText);
+                                                                                    queryText);
             List<DirPeopleReplyData> ReturnValues =
                 new List<DirPeopleReplyData>();
 
@@ -263,9 +266,12 @@ namespace Aurora.Modules.Search
 #endif
         }
 
-        public void DirEventsQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, int queryStart)
+        public void DirEventsQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags,
+                                   int queryStart)
         {
-            List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart, remoteClient.ScopeID));
+            List<DirEventsReplyData> ReturnValues =
+                new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart,
+                                                                         remoteClient.ScopeID));
 
 #if (!ISWIN)
             SplitPackets<DirEventsReplyData>(ReturnValues, delegate(DirEventsReplyData[] data)
@@ -277,9 +283,13 @@ namespace Aurora.Modules.Search
 #endif
         }
 
-        public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, uint category, int queryStart)
+        public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags,
+                                       uint category, int queryStart)
         {
-            List<DirClassifiedReplyData> ReturnValues = new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(), queryFlags, queryStart, remoteClient.ScopeID));
+            List<DirClassifiedReplyData> ReturnValues =
+                new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(),
+                                                                                  queryFlags, queryStart,
+                                                                                  remoteClient.ScopeID));
 
 #if (!ISWIN)
             SplitPackets<DirClassifiedReplyData>(ReturnValues, delegate(DirClassifiedReplyData[] data)
@@ -312,10 +322,10 @@ namespace Aurora.Modules.Search
         }
 
         /// <summary>
-        ///   Tell the client about X event
+        ///     Tell the client about X event
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "queryEventID">ID of the event</param>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryEventID">ID of the event</param>
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
         {
             //Find the event
@@ -338,7 +348,9 @@ namespace Aurora.Modules.Search
             Utils.LongToUInts(remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
             GridRegion GR = null;
 
-            GR = regionhandle == 0 ? new GridRegion(remoteClient.Scene.RegionInfo) : m_Scene.GridService.GetRegionByPosition(remoteClient.AllScopeIDs, (int)xstart, (int)ystart);
+            GR = regionhandle == 0
+                     ? new GridRegion(remoteClient.Scene.RegionInfo)
+                     : m_Scene.GridService.GetRegionByPosition(remoteClient.AllScopeIDs, (int) xstart, (int) ystart);
             if (GR == null)
             {
                 //No region???
@@ -387,7 +399,8 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                List<DirLandReplyData> Landdata = directoryService.FindLandForSaleInRegion("0", uint.MaxValue, 0, 0, 0, GR.RegionID);
+                List<DirLandReplyData> Landdata = directoryService.FindLandForSaleInRegion("0", uint.MaxValue, 0, 0, 0,
+                                                                                           GR.RegionID);
 
                 int locX = 0;
                 int locY = 0;
@@ -443,7 +456,8 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0, remoteClient.ScopeID);
+                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0,
+                                                                                   remoteClient.ScopeID);
 
                 int locX = 0;
                 int locY = 0;
@@ -453,7 +467,7 @@ namespace Aurora.Modules.Search
                     if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
 
-                    if(m_Scene.RegionInfo.RegionID == landdata.RegionID)
+                    if (m_Scene.RegionInfo.RegionID == landdata.RegionID)
                     {
                         locX = m_Scene.RegionInfo.RegionLocX;
                         locY = m_Scene.RegionInfo.RegionLocY;
@@ -592,7 +606,8 @@ namespace Aurora.Modules.Search
             if (QueryFlags == 64) //Agent Owned
             {
                 //Get all the parcels
-                client.SendPlacesQuery(directoryService.GetParcelByOwner(client.AgentId).ToArray(), QueryID, TransactionID);
+                client.SendPlacesQuery(directoryService.GetParcelByOwner(client.AgentId).ToArray(), QueryID,
+                                       TransactionID);
             }
             if (QueryFlags == 256) //Group Owned
             {
@@ -662,12 +677,12 @@ namespace Aurora.Modules.Search
             client.SendAvatarPickerReply(agent_data, data_args);
         }
 
-        void client_OnEventNotificationRemoveRequest(uint EventID, IClientAPI client)
+        private void client_OnEventNotificationRemoveRequest(uint EventID, IClientAPI client)
         {
             directoryService.RemoveEventNofication(client.AgentId, EventID);
         }
 
-        void client_OnEventNotificationAddRequest(uint EventID, IClientAPI client)
+        private void client_OnEventNotificationAddRequest(uint EventID, IClientAPI client)
         {
             directoryService.AddEventNofication(client.AgentId, EventID);
         }

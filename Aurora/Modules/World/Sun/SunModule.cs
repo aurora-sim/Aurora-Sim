@@ -71,7 +71,7 @@ namespace Aurora.Modules.Sun
         private double d_day_length = 4; // A VW day is 4 RW hours long
 
         private double d_day_night = 0.5;
-                       // axis offset: Default Hoizon shift to try and closely match the sun model in LL Viewer
+        // axis offset: Default Hoizon shift to try and closely match the sun model in LL Viewer
 
         private int d_frame_mod = 25; // Every 2 seconds (actually less)
         private string d_mode = "SL";
@@ -366,10 +366,10 @@ namespace Aurora.Modules.Sun
         }
 
         /// <summary>
-        ///   When an avatar enters the region, it's probably a good idea to send them the current sun info
+        ///     When an avatar enters the region, it's probably a good idea to send them the current sun info
         /// </summary>
-        /// <param name = "avatar"></param>
-        /// <param name = "oldParcel"></param>
+        /// <param name="avatar"></param>
+        /// <param name="oldParcel"></param>
         private void AvatarEnteringParcel(IScenePresence avatar, ILandObject oldParcel)
         {
             SunToClient(avatar.ControllingClient);
@@ -377,10 +377,10 @@ namespace Aurora.Modules.Sun
 
         /// <summary>
         /// </summary>
-        /// <param name = "regionHandle"></param>
-        /// <param name = "fixedSun">Is the sun's position fixed?</param>
-        /// <param name = "useEstateTime">Use the Region or Estate Sun hour?</param>
-        /// <param name = "fixedSunHour">What hour of the day is the Sun Fixed at?</param>
+        /// <param name="regionHandle"></param>
+        /// <param name="fixedSun">Is the sun's position fixed?</param>
+        /// <param name="useEstateTime">Use the Region or Estate Sun hour?</param>
+        /// <param name="fixedSunHour">What hour of the day is the Sun Fixed at?</param>
         public void EstateToolsSunUpdate(ulong regionHandle, bool fixedSun, bool useEstateTime, float fixedSunHour)
         {
             if (m_scene.RegionInfo.RegionHandle == regionHandle)
@@ -413,7 +413,7 @@ namespace Aurora.Modules.Sun
         #endregion
 
         /// <summary>
-        ///   Calculate the sun's orbital position and its velocity.
+        ///     Calculate the sun's orbital position and its velocity.
         /// </summary>
         private void GenSunPos()
         {
@@ -475,9 +475,9 @@ namespace Aurora.Modules.Sun
             // OrbitalPosition         = (float) (TotalDistanceTravelled%SunCycle);
 
             SeasonalOffset = SeasonSpeed*PosTime;
-                // Present season determined as total radians travelled around season cycle
+            // Present season determined as total radians travelled around season cycle
             Tilt.W = (float) (m_AverageTilt + (m_SeasonalTilt*Math.Sin(SeasonalOffset)));
-                // Calculate seasonal orbital N/S tilt
+            // Calculate seasonal orbital N/S tilt
 
             // MainConsole.Instance.Debug("[SUN] Total distance travelled = "+TotalDistanceTravelled+", present position = "+OrbitalPosition+".");
             // MainConsole.Instance.Debug("[SUN] Total seasonal progress = "+SeasonalOffset+", present tilt = "+Tilt.W+".");
@@ -561,11 +561,11 @@ namespace Aurora.Modules.Sun
                                                         {
                                                             "update_interval",
                                                             "how often to update the sun's position in frames"
-                                                            },
+                                                        },
                                                         {
                                                             "day_time_sun_hour_scale",
                                                             "scales day light vs nite hours to change day/night ratio"
-                                                            }
+                                                        }
                                                     };
 
             return Params;

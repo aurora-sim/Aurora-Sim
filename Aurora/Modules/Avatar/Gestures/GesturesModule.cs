@@ -95,7 +95,7 @@ namespace Aurora.Modules.Gestures
             InventoryItemBase item = invService.GetItem(client.AgentId, gestureId);
             if (item != null)
             {
-                item.Flags |= (uint)1;
+                item.Flags |= (uint) 1;
                 invService.UpdateItem(item);
             }
             else
@@ -110,7 +110,7 @@ namespace Aurora.Modules.Gestures
             InventoryItemBase item = invService.GetItem(client.AgentId, gestureId);
             if (item != null)
             {
-                item.Flags &= ~(uint)1;
+                item.Flags &= ~(uint) 1;
                 invService.UpdateItem(item);
             }
             else

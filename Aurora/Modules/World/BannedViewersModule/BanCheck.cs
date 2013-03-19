@@ -34,13 +34,14 @@ using System.Net;
 
 namespace Aurora.Modules.Ban
 {
+
     #region Grid BanCheck
 
     public class LoginBanCheck : ILoginModule
     {
         #region Declares
 
-        BanCheck m_module;
+        private BanCheck m_module;
 
         public string Name
         {
@@ -56,7 +57,8 @@ namespace Aurora.Modules.Ban
             m_module = new BanCheck(source, registry.RequestModuleInterface<IUserAccountService>());
         }
 
-        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
+        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType,
+                                   string password, out object data)
         {
             data = null;
 
@@ -68,19 +70,19 @@ namespace Aurora.Modules.Ban
 
             if (request != null)
             {
-                ip = request.ContainsKey("ip") ? (string)request["ip"] : "";
-                version = request.ContainsKey("version") ? (string)request["version"] : "";
-                platform = request.ContainsKey("platform") ? (string)request["platform"] : "";
-                mac = request.ContainsKey("mac") ? (string)request["mac"] : "";
-                id0 = request.ContainsKey("id0") ? (string)request["id0"] : "";
+                ip = request.ContainsKey("ip") ? (string) request["ip"] : "";
+                version = request.ContainsKey("version") ? (string) request["version"] : "";
+                platform = request.ContainsKey("platform") ? (string) request["platform"] : "";
+                mac = request.ContainsKey("mac") ? (string) request["mac"] : "";
+                id0 = request.ContainsKey("id0") ? (string) request["id0"] : "";
             }
 
             string message;
-            if(!m_module.CheckUser(account.PrincipalID, ip,
-                version,
-                platform,
-                mac,
-                id0, out message))
+            if (!m_module.CheckUser(account.PrincipalID, ip,
+                                    version,
+                                    platform,
+                                    mac,
+                                    id0, out message))
             {
                 return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, message, false);
             }
@@ -110,7 +112,8 @@ namespace Aurora.Modules.Ban
         private bool m_checkOnTimer = true;
         private bool m_enabled = false;
 
-        private Aurora.Framework.ListCombiningTimedSaving<PresenceInfo> _checkForSimilaritiesLater = new ListCombiningTimedSaving<PresenceInfo>();
+        private Aurora.Framework.ListCombiningTimedSaving<PresenceInfo> _checkForSimilaritiesLater =
+            new ListCombiningTimedSaving<PresenceInfo>();
 
         #endregion
 
@@ -127,13 +130,13 @@ namespace Aurora.Modules.Ban
 
         #region Constructor
 
-        public BanCheck (IConfigSource source, IUserAccountService UserAccountService)
+        public BanCheck(IConfigSource source, IUserAccountService UserAccountService)
         {
             IConfig config = source.Configs["GrieferProtection"];
             if (config == null)
                 return;
 
-            m_enabled = config.GetBoolean ("Enabled", true);
+            m_enabled = config.GetBoolean("Enabled", true);
 
             if (!m_enabled)
                 return;
@@ -144,15 +147,16 @@ namespace Aurora.Modules.Ban
             m_allowedViewers = Util.ConvertToList(allowedViewers);
             m_useIncludeList = config.GetBoolean("UseAllowListInsteadOfBanList", false);
 
-            m_checkOnLogin = config.GetBoolean ("CheckForSimilaritiesOnLogin", m_checkOnLogin);
-            m_checkOnTimer = config.GetBoolean ("CheckForSimilaritiesOnTimer", m_checkOnTimer);
+            m_checkOnLogin = config.GetBoolean("CheckForSimilaritiesOnLogin", m_checkOnLogin);
+            m_checkOnTimer = config.GetBoolean("CheckForSimilaritiesOnTimer", m_checkOnTimer);
 
             if (m_checkOnTimer)
                 _checkForSimilaritiesLater.Start(5, CheckForSimilaritiesMultiple);
 
-            GrieferAllowLevel = (AllowLevel)Enum.Parse (typeof (AllowLevel), config.GetString ("GrieferAllowLevel", "AllowKnown"));
+            GrieferAllowLevel =
+                (AllowLevel) Enum.Parse(typeof (AllowLevel), config.GetString("GrieferAllowLevel", "AllowKnown"));
 
-            presenceInfo = Aurora.DataManager.DataManager.RequestPlugin<IPresenceInfo> ();
+            presenceInfo = Aurora.DataManager.DataManager.RequestPlugin<IPresenceInfo>();
             m_accountService = UserAccountService;
 
             if (MainConsole.Instance != null)
@@ -178,7 +182,7 @@ namespace Aurora.Modules.Ban
 
         private void CheckForSimilaritiesMultiple(UUID agentID, List<PresenceInfo> info)
         {
-            foreach(PresenceInfo i in info)
+            foreach (PresenceInfo i in info)
                 presenceInfo.Check(i, m_useIncludeList ? m_allowedViewers : m_bannedViewers, m_useIncludeList);
         }
 
@@ -187,11 +191,12 @@ namespace Aurora.Modules.Ban
             presenceInfo.Check(info, m_useIncludeList ? m_allowedViewers : m_bannedViewers, m_useIncludeList);
         }
 
-        private PresenceInfo UpdatePresenceInfo(UUID AgentID, PresenceInfo oldInfo, string ip, string version, string platform, string mac, string id0)
+        private PresenceInfo UpdatePresenceInfo(UUID AgentID, PresenceInfo oldInfo, string ip, string version,
+                                                string platform, string mac, string id0)
         {
             PresenceInfo info = new PresenceInfo();
             info.AgentID = AgentID;
-            if(!string.IsNullOrEmpty(ip))
+            if (!string.IsNullOrEmpty(ip))
                 info.LastKnownIP = ip;
             if (!string.IsNullOrEmpty(version))
                 info.LastKnownViewer = version;
@@ -277,7 +282,9 @@ namespace Aurora.Modules.Ban
 
             var conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
             IAgentInfo agentInfo = conn.GetAgent(AgentID);
-            if (MainConsole.Instance.Prompt("Do you want to have this only be a temporary ban?", "no", new List<string>() { "yes", "no" }).ToLower() == "yes")
+            if (
+                MainConsole.Instance.Prompt("Do you want to have this only be a temporary ban?", "no",
+                                            new List<string>() {"yes", "no"}).ToLower() == "yes")
             {
                 float days = float.Parse(MainConsole.Instance.Prompt("How long (in days) should this ban last?", "5.0"));
 
@@ -345,7 +352,10 @@ namespace Aurora.Modules.Ban
             }
             try
             {
-                info.Flags = (PresenceInfo.PresenceInfoFlags)Enum.Parse(typeof(PresenceInfo.PresenceInfoFlags), MainConsole.Instance.Prompt("Flags (Clean, Suspected, Known, Banned): ", "Clean"));
+                info.Flags =
+                    (PresenceInfo.PresenceInfoFlags)
+                    Enum.Parse(typeof (PresenceInfo.PresenceInfoFlags),
+                               MainConsole.Instance.Prompt("Flags (Clean, Suspected, Known, Banned): ", "Clean"));
             }
             catch
             {
@@ -440,12 +450,14 @@ namespace Aurora.Modules.Ban
             if (GrieferAllowLevel == AllowLevel.AllowKnown)
                 return true; //Allow all
             else if (GrieferAllowLevel == AllowLevel.AllowCleanOnly)
-            { 
+            {
                 //Allow people with only clean flag or suspected alt
                 if ((info.Flags & PresenceInfo.PresenceInfoFlags.Suspected) == PresenceInfo.PresenceInfoFlags.Suspected ||
                     (info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known ||
-                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
-                    (info.Flags & PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) ==
+                    PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown) ==
+                    PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown ||
                     (info.Flags & PresenceInfo.PresenceInfoFlags.Banned) == PresenceInfo.PresenceInfoFlags.Banned)
                 {
                     message = "Not a Clean agent and have been denied access.";
@@ -456,8 +468,10 @@ namespace Aurora.Modules.Ban
             {
                 //Block all alts of knowns, and suspected alts of knowns
                 if ((info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known ||
-                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
-                    (info.Flags & PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) ==
+                    PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown) ==
+                    PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown ||
                     (info.Flags & PresenceInfo.PresenceInfoFlags.Banned) == PresenceInfo.PresenceInfoFlags.Banned)
                 {
                     message = "Not a Clean agent and have been denied access.";
@@ -472,7 +486,8 @@ namespace Aurora.Modules.Ban
 
         #region Public members
 
-        public bool CheckUser(UUID AgentID, string ip, string version, string platform, string mac, string id0, out string message)
+        public bool CheckUser(UUID AgentID, string ip, string version, string platform, string mac, string id0,
+                              out string message)
         {
             message = "";
             if (!m_enabled)
@@ -530,21 +545,23 @@ namespace Aurora.Modules.Ban
                 foreach (string ip in iPBans)
                 {
                     IPAddress ipa;
-                    if(IPAddress.TryParse(ip, out ipa))
+                    if (IPAddress.TryParse(ip, out ipa))
                         IPBans.Add(ipa);
                 }
                 IPRangeBans = Util.ConvertToList(config.GetString("IPRangeBans", ""));
             }
         }
 
-        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
+        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType,
+                                   string password, out object data)
         {
             data = null;
-            string ip = request != null && request.ContainsKey("ip") ? (string)request["ip"] : "127.0.0.1";
-            ip = ip.Split(':')[0];//Remove the port
+            string ip = request != null && request.ContainsKey("ip") ? (string) request["ip"] : "127.0.0.1";
+            ip = ip.Split(':')[0]; //Remove the port
             IPAddress userIP = IPAddress.Parse(ip);
             if (IPBans.Contains(userIP))
-                return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, "Your account cannot be accessed on this computer.", false);
+                return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant,
+                                                 "Your account cannot be accessed on this computer.", false);
             foreach (string ipRange in IPRangeBans)
             {
                 string[] split = ipRange.Split('-');
@@ -554,7 +571,8 @@ namespace Aurora.Modules.Ban
                 IPAddress high = IPAddress.Parse(ip);
                 NetworkUtils.IPAddressRange range = new NetworkUtils.IPAddressRange(low, high);
                 if (range.IsInRange(userIP))
-                    return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, "Your account cannot be accessed on this computer.", false);
+                    return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant,
+                                                     "Your account cannot be accessed on this computer.", false);
             }
             return null;
         }

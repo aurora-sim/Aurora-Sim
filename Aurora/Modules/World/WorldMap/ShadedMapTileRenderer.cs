@@ -112,7 +112,7 @@ namespace Aurora.Modules.WorldMap
                                 if ((x + 1 < m_scene.RegionInfo.RegionSizeX) && (y + 1 < m_scene.RegionInfo.RegionSizeY))
                                 {
                                     hfvaluecompare = heightmap[x + 1, y + 1];
-                                        // light from north-east => look at land height there
+                                    // light from north-east => look at land height there
                                 }
                                 if (Single.IsInfinity(hfvalue) || Single.IsNaN(hfvalue))
                                     hfvalue = 0f;
@@ -121,7 +121,7 @@ namespace Aurora.Modules.WorldMap
                                     hfvaluecompare = 0f;
 
                                 float hfdiff = hfvalue - hfvaluecompare;
-                                    // => positive if NE is lower, negative if here is lower
+                                // => positive if NE is lower, negative if here is lower
 
                                 int hfdiffi = 0;
                                 int hfdiffihighlight = 0;

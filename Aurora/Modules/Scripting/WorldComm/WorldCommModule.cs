@@ -173,17 +173,17 @@ namespace Aurora.Modules.Scripting
         }
 
         /// <summary>
-        ///   Create a listen event callback with the specified filters.
-        ///   The parameters localID,itemID are needed to uniquely identify
-        ///   the script during 'peek' time. Parameter hostID is needed to
-        ///   determine the position of the script.
+        ///     Create a listen event callback with the specified filters.
+        ///     The parameters localID,itemID are needed to uniquely identify
+        ///     the script during 'peek' time. Parameter hostID is needed to
+        ///     determine the position of the script.
         /// </summary>
-        /// <param name = "itemID">UUID of the script engine</param>
-        /// <param name = "hostID">UUID of the SceneObjectPart</param>
-        /// <param name = "channel">channel to listen on</param>
-        /// <param name = "name">name to filter on</param>
-        /// <param name = "id">key to filter on (user given, could be totally faked)</param>
-        /// <param name = "msg">msg to filter on</param>
+        /// <param name="itemID">UUID of the script engine</param>
+        /// <param name="hostID">UUID of the SceneObjectPart</param>
+        /// <param name="channel">channel to listen on</param>
+        /// <param name="name">name to filter on</param>
+        /// <param name="id">key to filter on (user given, could be totally faked)</param>
+        /// <param name="msg">msg to filter on</param>
         /// <returns>number of the scripts handle</returns>
         public int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
         {
@@ -193,12 +193,12 @@ namespace Aurora.Modules.Scripting
         }
 
         /// <summary>
-        ///   Sets the listen event with handle as active (active = TRUE) or inactive (active = FALSE).
-        ///   The handle used is returned from Listen()
+        ///     Sets the listen event with handle as active (active = TRUE) or inactive (active = FALSE).
+        ///     The handle used is returned from Listen()
         /// </summary>
-        /// <param name = "itemID">UUID of the script engine</param>
-        /// <param name = "handle">handle returned by Listen()</param>
-        /// <param name = "active">temp. activate or deactivate the Listen()</param>
+        /// <param name="itemID">UUID of the script engine</param>
+        /// <param name="handle">handle returned by Listen()</param>
+        /// <param name="active">temp. activate or deactivate the Listen()</param>
         public void ListenControl(UUID itemID, int handle, int active)
         {
             //Make sure that the cmd handler thread is running
@@ -210,10 +210,10 @@ namespace Aurora.Modules.Scripting
         }
 
         /// <summary>
-        ///   Removes the listen event callback with handle
+        ///     Removes the listen event callback with handle
         /// </summary>
-        /// <param name = "itemID">UUID of the script engine</param>
-        /// <param name = "handle">handle returned by Listen()</param>
+        /// <param name="itemID">UUID of the script engine</param>
+        /// <param name="handle">handle returned by Listen()</param>
         public void ListenRemove(UUID itemID, int handle)
         {
             //Make sure that the cmd handler thread is running
@@ -222,10 +222,10 @@ namespace Aurora.Modules.Scripting
         }
 
         /// <summary>
-        ///   Removes all listen event callbacks for the given itemID
-        ///   (script engine)
+        ///     Removes all listen event callbacks for the given itemID
+        ///     (script engine)
         /// </summary>
-        /// <param name = "itemID">UUID of the script engine</param>
+        /// <param name="itemID">UUID of the script engine</param>
         public void DeleteListener(UUID itemID)
         {
             //Make sure that the cmd handler thread is running
@@ -289,7 +289,7 @@ namespace Aurora.Modules.Scripting
         }
 
         /// <summary>
-        ///   Are there any listen events ready to be dispatched?
+        ///     Are there any listen events ready to be dispatched?
         /// </summary>
         /// <returns>boolean indication</returns>
         public bool HasMessages()
@@ -303,7 +303,7 @@ namespace Aurora.Modules.Scripting
         }
 
         /// <summary>
-        ///   Pop the first availlable listen event from the queue
+        ///     Pop the first availlable listen event from the queue
         /// </summary>
         /// <returns>ListenerInfo with filter filled in</returns>
         public IWorldCommListenerInfo GetNextMessage()
@@ -342,22 +342,23 @@ namespace Aurora.Modules.Scripting
         #endregion
 
         /// <summary>
-        ///   This method scans over the objects which registered an interest in listen callbacks.
-        ///   For everyone it finds, it checks if it fits the given filter. If it does,  then
-        ///   enqueue the message for delivery to the objects listen event handler.
-        ///   The enqueued ListenerInfo no longer has filter values, but the actually trigged values.
-        ///   Objects that do an llSay have their messages delivered here and for nearby avatars,
-        ///   the OnChatFromClient event is used.
+        ///     This method scans over the objects which registered an interest in listen callbacks.
+        ///     For everyone it finds, it checks if it fits the given filter. If it does,  then
+        ///     enqueue the message for delivery to the objects listen event handler.
+        ///     The enqueued ListenerInfo no longer has filter values, but the actually trigged values.
+        ///     Objects that do an llSay have their messages delivered here and for nearby avatars,
+        ///     the OnChatFromClient event is used.
         /// </summary>
-        /// <param name = "type">type of delvery (whisper,say,shout or regionwide)</param>
-        /// <param name = "channel">channel to sent on</param>
-        /// <param name = "name">name of sender (object or avatar)</param>
-        /// <param name = "fromID">key of sender (object or avatar)</param>
-        /// <param name = "msg">msg to sent</param>
-        /// <param name = "position"></param>
-        /// <param name = "range"></param>
-        /// <param name = "toID"></param>
-        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID fromID, string msg, Vector3 position,
+        /// <param name="type">type of delvery (whisper,say,shout or regionwide)</param>
+        /// <param name="channel">channel to sent on</param>
+        /// <param name="name">name of sender (object or avatar)</param>
+        /// <param name="fromID">key of sender (object or avatar)</param>
+        /// <param name="msg">msg to sent</param>
+        /// <param name="position"></param>
+        /// <param name="range"></param>
+        /// <param name="toID"></param>
+        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID fromID, string msg,
+                                   Vector3 position,
                                    float range, UUID toID)
         {
             //Make sure that the cmd handler thread is running
@@ -384,7 +385,7 @@ namespace Aurora.Modules.Scripting
                     if (sPart.UUID != toID &&
                         sPart.AttachedAvatar != toID)
                         continue;
-                            //Only allow the message to go on if it is an attachment with the given avatars ID or the part ID is right
+                //Only allow the message to go on if it is an attachment with the given avatars ID or the part ID is right
 
                 double dis = Util.GetDistanceTo(sPart.AbsolutePosition, position);
                 switch (type)
@@ -514,7 +515,9 @@ namespace Aurora.Modules.Scripting
                         }
                     }
 #else
-                    foreach (ListenerInfo li in lis.Value.Where(li => li.GetItemID().Equals(itemID) && li.GetHandle().Equals(handle)))
+                    foreach (
+                        ListenerInfo li in
+                            lis.Value.Where(li => li.GetItemID().Equals(itemID) && li.GetHandle().Equals(handle)))
                     {
                         lis.Value.Remove(li);
                         if (lis.Value.Count == 0)
@@ -573,7 +576,12 @@ namespace Aurora.Modules.Scripting
         {
             lock (m_listeners)
             {
-                foreach (ListenerInfo li in from lis in m_listeners from li in lis.Value where li.GetItemID().Equals(itemID) && li.GetHandle() == handle select li)
+                foreach (
+                    ListenerInfo li in
+                        from lis in m_listeners
+                        from li in lis.Value
+                        where li.GetItemID().Equals(itemID) && li.GetHandle() == handle
+                        select li)
                 {
                     li.Activate();
                     // only one, bail out
@@ -586,7 +594,12 @@ namespace Aurora.Modules.Scripting
         {
             lock (m_listeners)
             {
-                foreach (ListenerInfo li in from lis in m_listeners from li in lis.Value where li.GetItemID().Equals(itemID) && li.GetHandle() == handle select li)
+                foreach (
+                    ListenerInfo li in
+                        from lis in m_listeners
+                        from li in lis.Value
+                        where li.GetItemID().Equals(itemID) && li.GetHandle() == handle
+                        select li)
                 {
                     li.Deactivate();
                     // only one, bail out
@@ -598,7 +611,9 @@ namespace Aurora.Modules.Scripting
         // non-locked access, since its always called in the context of the lock
         private int GetNewHandle(UUID itemID)
         {
-            List<int> handles = (from lis in m_listeners from li in lis.Value where li.GetItemID().Equals(itemID) select li.GetHandle()).ToList();
+            List<int> handles =
+                (from lis in m_listeners from li in lis.Value where li.GetItemID().Equals(itemID) select li.GetHandle())
+                    .ToList();
 
             // build a list of used keys for this specific itemID...
 
@@ -649,7 +664,9 @@ namespace Aurora.Modules.Scripting
 
             lock (m_listeners)
             {
-                foreach (ListenerInfo l in from list in m_listeners.Values from l in list where l.GetItemID() == itemID select l)
+                foreach (
+                    ListenerInfo l in
+                        from list in m_listeners.Values from l in list where l.GetItemID() == itemID select l)
                 {
                     data[itemID.ToString()] = l.GetSerializationData();
                 }

@@ -85,10 +85,10 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   Send the message from the prim to the avatars in the regions
+        ///     Send the message from the prim to the avatars in the regions
         /// </summary>
-        /// <param name = "sender"></param>
-        /// <param name = "c"></param>
+        /// <param name="sender"></param>
+        /// <param name="c"></param>
         public virtual void OnChatFromWorld(Object sender, OSChatMessage c)
         {
             // early return if not on public or debug channel
@@ -149,17 +149,17 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   Say this message directly to a single person
+        ///     Say this message directly to a single person
         /// </summary>
-        /// <param name = "message"></param>
-        /// <param name = "type"></param>
-        /// <param name = "channel"></param>
-        /// <param name = "fromPos"></param>
-        /// <param name = "fromName"></param>
-        /// <param name = "fromAgentID"></param>
-        /// <param name = "fromAgent"></param>
-        /// <param name = "toAgentID"></param>
-        /// <param name = "scene"></param>
+        /// <param name="message"></param>
+        /// <param name="type"></param>
+        /// <param name="channel"></param>
+        /// <param name="fromPos"></param>
+        /// <param name="fromName"></param>
+        /// <param name="fromAgentID"></param>
+        /// <param name="fromAgent"></param>
+        /// <param name="toAgentID"></param>
+        /// <param name="scene"></param>
         public void SimChatBroadcast(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
                                      UUID fromAgentID, bool fromAgent, UUID toAgentID, IScene scene)
         {
@@ -222,9 +222,18 @@ namespace Aurora.Modules.Chat
                                                 let toRegionPos = presence.AbsolutePosition +
                                                                   new Vector3(presence.Scene.RegionInfo.RegionLocX,
                                                                               presence.Scene.RegionInfo.RegionLocY, 0)
-                                                let dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos)
-                                                where (c.Type != ChatTypeEnum.Whisper || dis <= m_whisperdistance) && (c.Type != ChatTypeEnum.Say || dis <= m_saydistance) && (c.Type != ChatTypeEnum.Shout || dis <= m_shoutdistance) && (c.Type != ChatTypeEnum.Custom || dis <= c.Range)
-                                                where sourceType != ChatSourceType.Agent || avatar == null || avatar.CurrentParcel == null || (avatar.CurrentParcelUUID == presence.CurrentParcelUUID || (!avatar.CurrentParcel.LandData.Private && !presence.CurrentParcel.LandData.Private))
+                                                let dis = (int) Util.GetDistanceTo(toRegionPos, fromRegionPos)
+                                                where
+                                                    (c.Type != ChatTypeEnum.Whisper || dis <= m_whisperdistance) &&
+                                                    (c.Type != ChatTypeEnum.Say || dis <= m_saydistance) &&
+                                                    (c.Type != ChatTypeEnum.Shout || dis <= m_shoutdistance) &&
+                                                    (c.Type != ChatTypeEnum.Custom || dis <= c.Range)
+                                                where
+                                                    sourceType != ChatSourceType.Agent || avatar == null ||
+                                                    avatar.CurrentParcel == null ||
+                                                    (avatar.CurrentParcelUUID == presence.CurrentParcelUUID ||
+                                                     (!avatar.CurrentParcel.LandData.Private &&
+                                                      !presence.CurrentParcel.LandData.Private))
                                                 select presence)
             {
                 //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
@@ -277,10 +286,10 @@ namespace Aurora.Modules.Chat
         #region IMuteListModule Members
 
         /// <summary>
-        ///   Get all the mutes from the database
+        ///     Get all the mutes from the database
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "Cached"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="Cached"></param>
         /// <returns></returns>
         public MuteList[] GetMutes(UUID AgentID, out bool Cached)
         {
@@ -302,19 +311,19 @@ namespace Aurora.Modules.Chat
             return List;
         }
 
-        void UpdateCachedInfo(UUID agentID, CachedUserInfo info)
+        private void UpdateCachedInfo(UUID agentID, CachedUserInfo info)
         {
             lock (MuteListCache)
                 MuteListCache[agentID] = info.MuteList.ToArray();
         }
 
         /// <summary>
-        ///   Update the mute in the database
+        ///     Update the mute in the database
         /// </summary>
-        /// <param name = "MuteID"></param>
-        /// <param name = "Name"></param>
-        /// <param name = "Flags"></param>
-        /// <param name = "AgentID"></param>
+        /// <param name="MuteID"></param>
+        /// <param name="Name"></param>
+        /// <param name="Flags"></param>
+        /// <param name="AgentID"></param>
         public void UpdateMuteList(UUID MuteID, string Name, int Flags, UUID AgentID)
         {
             if (MuteID == UUID.Zero)
@@ -331,11 +340,11 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   Remove the given mute from the user's mute list in the database
+        ///     Remove the given mute from the user's mute list in the database
         /// </summary>
-        /// <param name = "MuteID"></param>
-        /// <param name = "Name"></param>
-        /// <param name = "AgentID"></param>
+        /// <param name="MuteID"></param>
+        /// <param name="Name"></param>
+        /// <param name="AgentID"></param>
         public void RemoveMute(UUID MuteID, string Name, UUID AgentID)
         {
             //Gets sent if a mute is not selected.
@@ -474,9 +483,9 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   Set the correct position for the chat message
+        ///     Set the correct position for the chat message
         /// </summary>
-        /// <param name = "c"></param>
+        /// <param name="c"></param>
         /// <returns></returns>
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
         {
@@ -488,16 +497,16 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   New chat message from the client
+        ///     New chat message from the client
         /// </summary>
-        /// <param name = "sender"></param>
-        /// <param name = "c"></param>
+        /// <param name="sender"></param>
+        /// <param name="c"></param>
         protected virtual void OnChatFromClient(IClientAPI sender, OSChatMessage c)
         {
             c = FixPositionOfChatMessage(c);
 
             // redistribute to interested subscribers
-            if(c.Message != "")
+            if (c.Message != "")
                 c.Scene.EventManager.TriggerOnChatFromClient(sender, c);
 
             // early return if not on public or debug channel
@@ -526,7 +535,10 @@ namespace Aurora.Modules.Chat
                     }
                 }
 #else
-                foreach (string pluginMain in ChatPlugins.Keys.Where(pluginMain => pluginMain == "all" || c.Message.StartsWith(pluginMain + ".")))
+                foreach (
+                    string pluginMain in
+                        ChatPlugins.Keys.Where(
+                            pluginMain => pluginMain == "all" || c.Message.StartsWith(pluginMain + ".")))
                 {
                     IChatPlugin plugin;
                     ChatPlugins.TryGetValue(pluginMain, out plugin);
@@ -535,7 +547,6 @@ namespace Aurora.Modules.Chat
                         return;
                 }
 #endif
-
             }
             string Name2 = "";
             if (sender is IClientAPI)
@@ -608,7 +619,7 @@ namespace Aurora.Modules.Chat
                             return;
                         bool cached = false;
                         MuteList[] mutes = GetMutes(client.AgentId, out cached);
-                        foreach(MuteList m in mutes)
+                        foreach (MuteList m in mutes)
                             if (m.MuteID == c.SenderUUID ||
                                 (c.SenderObject != null && m.MuteID == c.SenderObject.ParentEntity.UUID))
                                 return;
@@ -622,10 +633,10 @@ namespace Aurora.Modules.Chat
 
 
         /// <summary>
-        ///   Get all the mutes the client has set
+        ///     Get all the mutes the client has set
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "crc"></param>
+        /// <param name="client"></param>
+        /// <param name="crc"></param>
         private void OnMuteListRequest(IClientAPI client, uint crc)
         {
             if (!m_useMuteListModule)
@@ -666,13 +677,13 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   Update the mute (from the client)
+        ///     Update the mute (from the client)
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "MuteID"></param>
-        /// <param name = "Name"></param>
-        /// <param name = "Flags"></param>
-        /// <param name = "AgentID"></param>
+        /// <param name="client"></param>
+        /// <param name="MuteID"></param>
+        /// <param name="Name"></param>
+        /// <param name="Flags"></param>
+        /// <param name="AgentID"></param>
         private void OnMuteListUpdate(IClientAPI client, UUID MuteID, string Name, int Flags, UUID AgentID)
         {
             if (!m_useMuteListModule)
@@ -682,12 +693,12 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   Remove the mute (from the client)
+        ///     Remove the mute (from the client)
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "MuteID"></param>
-        /// <param name = "Name"></param>
-        /// <param name = "AgentID"></param>
+        /// <param name="client"></param>
+        /// <param name="MuteID"></param>
+        /// <param name="Name"></param>
+        /// <param name="AgentID"></param>
         private void OnMuteListRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID)
         {
             if (!m_useMuteListModule)
@@ -697,9 +708,9 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   Find the presence from all the known sims
+        ///     Find the presence from all the known sims
         /// </summary>
-        /// <param name = "avID"></param>
+        /// <param name="avID"></param>
         /// <returns></returns>
         public IScenePresence findScenePresence(UUID avID)
         {
@@ -707,22 +718,22 @@ namespace Aurora.Modules.Chat
         }
 
         /// <summary>
-        ///   If its a message we deal with, pull it from the client here
+        ///     If its a message we deal with, pull it from the client here
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "im"></param>
+        /// <param name="client"></param>
+        /// <param name="im"></param>
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             byte dialog = im.dialog;
             switch (dialog)
             {
-                case (byte)InstantMessageDialog.SessionGroupStart:
+                case (byte) InstantMessageDialog.SessionGroupStart:
                     m_imService.CreateGroupChat(client.AgentId, im);
                     break;
-                case (byte)InstantMessageDialog.SessionSend:
+                case (byte) InstantMessageDialog.SessionSend:
                     m_imService.SendChatToSession(client.AgentId, im);
                     break;
-                case (byte)InstantMessageDialog.SessionDrop:
+                case (byte) InstantMessageDialog.SessionDrop:
                     m_imService.DropMemberFromSession(client.AgentId, im);
                     break;
             }

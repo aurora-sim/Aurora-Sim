@@ -95,7 +95,9 @@ namespace Aurora.Modules
                 }
             }
 #else
-            foreach (IScene scene in m_scenes.Where(scene => scene.RegionInfo.RegionName == RegionNameSelector.SelectedItem.ToString()))
+            foreach (
+                IScene scene in
+                    m_scenes.Where(scene => scene.RegionInfo.RegionName == RegionNameSelector.SelectedItem.ToString()))
             {
                 SceneSelected = scene.RegionInfo.RegionID;
                 break;

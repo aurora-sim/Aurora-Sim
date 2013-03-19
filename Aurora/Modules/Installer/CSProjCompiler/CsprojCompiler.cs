@@ -14,18 +14,18 @@ using Microsoft.CSharp;
 namespace RunTimeCompiler
 {
     /// <summary>
-    ///   Compiles a csproj.
-    ///   I should probably define an interface and access the functionality available here 
-    ///   via ProjectReader or a similair class.
+    ///     Compiles a csproj.
+    ///     I should probably define an interface and access the functionality available here
+    ///     via ProjectReader or a similair class.
     /// </summary>
     internal class CsprojCompiler
     {
         /// <summary>
-        ///   This method compiles the poroject specified as parameter.
-        ///   It can only be used for CSharp projects, but can be modified to support
-        ///   some other .Net project types.
+        ///     This method compiles the poroject specified as parameter.
+        ///     It can only be used for CSharp projects, but can be modified to support
+        ///     some other .Net project types.
         /// </summary>
-        /// <param name = "project"></param>
+        /// <param name="project"></param>
         public void Compile(BasicProject project)
         {
             CodeDomProvider codeProvider;
@@ -57,7 +57,12 @@ namespace RunTimeCompiler
                 foreach (CompilerError error in results.Errors)
                     buildMessage = buildMessage + "Line number " + error.Line + ", Error Number: " + error.ErrorNumber + ", '" + error.ErrorText + ";" + Environment.NewLine + Environment.NewLine;
 #else
-                buildMessage = results.Errors.Cast<CompilerError>().Aggregate(string.Empty, (current, CompErr) => current + "Line number " + CompErr.Line + ", Error Number: " + CompErr.ErrorNumber + ", '" + CompErr.ErrorText + ";" + Environment.NewLine + Environment.NewLine);
+                buildMessage = results.Errors.Cast<CompilerError>()
+                                      .Aggregate(string.Empty,
+                                                 (current, CompErr) =>
+                                                 current + "Line number " + CompErr.Line + ", Error Number: " +
+                                                 CompErr.ErrorNumber + ", '" + CompErr.ErrorText + ";" +
+                                                 Environment.NewLine + Environment.NewLine);
 #endif
                 project.BuildOutput = buildMessage;
                 MessageBox.Show(buildMessage);
@@ -71,19 +76,18 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   This method is used to get the list of references to be specified in the 
-        ///   CompilerParameters for a CodeDomProvider.
-        ///   It should get the fully qualified names of each reference, but a simple
-        ///   name (with the .dll extension)  may be enough in most cases.
-        ///   The current implementation appears to "work ok" with
-        ///   very simple applications but it has two problems:
-        ///   1) It returns the name of the file and not the fully qualified name.
-        ///   2) It assumes the name of the file is the assembly title plus the
-        ///   ".dll" extension. 
-        /// 
-        ///   A better implementation is needed.
+        ///     This method is used to get the list of references to be specified in the
+        ///     CompilerParameters for a CodeDomProvider.
+        ///     It should get the fully qualified names of each reference, but a simple
+        ///     name (with the .dll extension)  may be enough in most cases.
+        ///     The current implementation appears to "work ok" with
+        ///     very simple applications but it has two problems:
+        ///     1) It returns the name of the file and not the fully qualified name.
+        ///     2) It assumes the name of the file is the assembly title plus the
+        ///     ".dll" extension.
+        ///     A better implementation is needed.
         /// </summary>
-        /// <param name = "project"></param>
+        /// <param name="project"></param>
         /// <returns></returns>
         private string[] GetReferences(BasicProject project)
         {
@@ -97,10 +101,10 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   The method is used to provide the source code for the CodeDomProvider.
-        ///   It reads the content of the source files and returns it.
+        ///     The method is used to provide the source code for the CodeDomProvider.
+        ///     It reads the content of the source files and returns it.
         /// </summary>
-        /// <param name = "project"></param>
+        /// <param name="project"></param>
         /// <returns></returns>
         private string[] ReadSourceFiles(BasicProject project)
         {
@@ -116,11 +120,11 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   This method is used to get the compiler oprions to be specified 
-        ///   in the CompilerParameters for a CodeDomProvider.
-        ///   It determines the compiler options based on the settings from the csproj file.
+        ///     This method is used to get the compiler oprions to be specified
+        ///     in the CompilerParameters for a CodeDomProvider.
+        ///     It determines the compiler options based on the settings from the csproj file.
         /// </summary>
-        /// <param name = "project"></param>
+        /// <param name="project"></param>
         /// <returns></returns>
         private string GetCompilerOptions(BasicProject project)
         {
@@ -131,11 +135,11 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   This method is used to get GenerateExecutable settings to be specified 
-        ///   in the CompilerParameters for a CodeDomProvider.
-        ///   It returns true if the OutputType specified in the csproj file is winexe or exe.
+        ///     This method is used to get GenerateExecutable settings to be specified
+        ///     in the CompilerParameters for a CodeDomProvider.
+        ///     It returns true if the OutputType specified in the csproj file is winexe or exe.
         /// </summary>
-        /// <param name = "project"></param>
+        /// <param name="project"></param>
         /// <returns></returns>
         private bool IsExe(BasicProject project)
         {
@@ -144,9 +148,9 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   It gets the absolute path to the output folder.
+        ///     It gets the absolute path to the output folder.
         /// </summary>
-        /// <param name = "project"></param>
+        /// <param name="project"></param>
         /// <returns></returns>
         private string GetOutputPath(BasicProject project)
         {
@@ -154,11 +158,11 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   This method is used to get OutputAssembly settings to be specified 
-        ///   in the CompilerParameters for a CodeDomProvider.
-        ///   It returns the absolute path where to place the compiled assembly.
+        ///     This method is used to get OutputAssembly settings to be specified
+        ///     in the CompilerParameters for a CodeDomProvider.
+        ///     It returns the absolute path where to place the compiled assembly.
         /// </summary>
-        /// <param name = "project"></param>
+        /// <param name="project"></param>
         /// <returns></returns>
         private string GetOutputFilename(BasicProject project)
         {

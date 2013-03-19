@@ -127,18 +127,16 @@ namespace Aurora.Modules.Voice
             OSDMap retVal = new OSDMap();
             retVal["ProvisionVoiceAccountRequest"] = CapsUtil.CreateCAPS("ProvisionVoiceAccountRequest", "");
             caps.AddStreamHandler(new GenericStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
-                                                       delegate(string path, Stream request,
-                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProvisionVoiceAccountRequest(scene, agentID);
-                                                       }));
+                                                           delegate(string path, Stream request,
+                                                                    OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
+                                                               { return ProvisionVoiceAccountRequest(scene, agentID); }));
             retVal["ParcelVoiceInfoRequest"] = CapsUtil.CreateCAPS("ParcelVoiceInfoRequest", "");
             caps.AddStreamHandler(new GenericStreamHandler("POST", retVal["ParcelVoiceInfoRequest"],
-                                                       delegate(string path, Stream request,
-                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ParcelVoiceInfoRequest(scene, agentID);
-                                                       }));
+                                                           delegate(string path, Stream request,
+                                                                    OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
+                                                               { return ParcelVoiceInfoRequest(scene, agentID); }));
 
             return retVal;
         }

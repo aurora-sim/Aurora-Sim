@@ -52,10 +52,7 @@ namespace Aurora.Modules.Friends
 
         protected IGridService GridService
         {
-            get
-            {
-                return m_scene.GridService;
-            }
+            get { return m_scene.GridService; }
         }
 
         public IUserAccountService UserAccountService
@@ -140,6 +137,7 @@ namespace Aurora.Modules.Friends
 
             return new FriendInfo[0];
         }
+
         #endregion
 
         #region INonSharedRegionModule Members
@@ -258,7 +256,7 @@ namespace Aurora.Modules.Friends
         }
 
         /// <summary>
-        ///   Find the client for a ID
+        ///     Find the client for a ID
         /// </summary>
         public IClientAPI LocateClientObject(UUID agentID)
         {
@@ -277,9 +275,11 @@ namespace Aurora.Modules.Friends
                 UUID friendID = im.toAgentID;
 
                 //Can't trust the incoming name for friend offers, so we have to find it ourselves.
-                UserAccount sender = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, principalID);
+                UserAccount sender = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
+                                                                               principalID);
                 im.fromAgentName = sender.Name;
-                UserAccount reciever = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, friendID);
+                UserAccount reciever = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
+                                                                                 friendID);
 
                 MainConsole.Instance.DebugFormat("[FRIENDS]: {0} offered friendship to {1}", sender.Name, reciever.Name);
                 // This user wants to be friends with the other user.
@@ -305,7 +305,8 @@ namespace Aurora.Modules.Friends
                 return;
 
             // The prospective friend is not here [as root]. Let's4 forward.
-            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendshipOffered(agentID, friendID, im, m_scene.RegionInfo.RegionID));
+            SyncMessagePosterService.PostToServer(SyncMessageHelper.FriendshipOffered(agentID, friendID, im,
+                                                                                      m_scene.RegionInfo.RegionID));
             // If the prospective friend is not online, he'll get the message upon login.
         }
 
@@ -334,7 +335,7 @@ namespace Aurora.Modules.Friends
                 UserAccount account = client.Scene.UserAccountService.GetUserAccount(client.AllScopeIDs, friendID);
                 UUID folderID =
                     client.Scene.InventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CallingCard)
-                        .ID;
+                          .ID;
                 if (account != null)
                     ccmodule.CreateCallingCard(client, friendID, folderID, account.Name);
             }
@@ -359,7 +360,7 @@ namespace Aurora.Modules.Friends
                     UUID fromAgentID;
                     if (!UUID.TryParse(fi.Friend, out fromAgentID))
                         continue;
-                    if (fromAgentID == friendID)//Get those pesky HG travelers as well
+                    if (fromAgentID == friendID) //Get those pesky HG travelers as well
                         FriendsService.Delete(agentID, fi.Friend);
                 }
             }
@@ -404,8 +405,9 @@ namespace Aurora.Modules.Friends
             if (friends.Length == 0)
                 return;
 
-            MainConsole.Instance.DebugFormat("[FRIENDS MODULE]: User {0} changing rights to {1} for friend {2}", requester, rights,
-                              target);
+            MainConsole.Instance.DebugFormat("[FRIENDS MODULE]: User {0} changing rights to {1} for friend {2}",
+                                             requester, rights,
+                                             target);
             // Let's find the friend in this user's friend list
             FriendInfo friend = null;
             foreach (FriendInfo fi in friends.Where(fi => fi.Friend == target.ToString()))
@@ -445,17 +447,18 @@ namespace Aurora.Modules.Friends
             UUID agentID = client.AgentId;
             FriendInfo[] friends = FriendsService.GetFriendsRequest(agentID).ToArray();
             GridInstantMessage im = new GridInstantMessage(client.Scene, UUID.Zero, String.Empty, agentID,
-                                                       (byte)InstantMessageDialog.FriendshipOffered,
-                                                       "Will you be my friend?", true, Vector3.Zero);
+                                                           (byte) InstantMessageDialog.FriendshipOffered,
+                                                           "Will you be my friend?", true, Vector3.Zero);
             foreach (FriendInfo fi in friends)
             {
-                if(fi.MyFlags == 0)
+                if (fi.MyFlags == 0)
                 {
                     UUID fromAgentID;
                     if (!UUID.TryParse(fi.Friend, out fromAgentID))
                         continue;
 
-                    UserAccount account = m_scene.UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs, fromAgentID);
+                    UserAccount account = m_scene.UserAccountService.GetUserAccount(
+                        client.Scene.RegionInfo.AllScopeIDs, fromAgentID);
                     im.fromAgentID = fromAgentID;
                     if (account != null)
                         im.fromAgentName = account.Name;
@@ -521,8 +524,8 @@ namespace Aurora.Modules.Friends
                 ICallingCardModule ccmodule = friendClient.Scene.RequestModuleInterface<ICallingCardModule>();
                 if (ccmodule != null)
                 {
-                    UserAccount account = friendClient.Scene.UserAccountService.GetUserAccount(friendClient.AllScopeIDs, 
-                        userID);
+                    UserAccount account = friendClient.Scene.UserAccountService.GetUserAccount(friendClient.AllScopeIDs,
+                                                                                               userID);
                     UUID folderID =
                         friendClient.Scene.InventoryService.GetFolderForType(friendID, InventoryType.Unknown,
                                                                              AssetType.CallingCard).ID;
@@ -601,7 +604,9 @@ namespace Aurora.Modules.Friends
                 }
                 //Add primFlag updates for all the prims in the sim with the owner, so that the new permissions are set up correctly
                 IScenePresence friendSP = friendClient.Scene.GetScenePresence(friendClient.AgentId);
-                foreach (ISceneEntity entity in friendClient.Scene.Entities.GetEntities().Where(entity => entity.OwnerID == userID))
+                foreach (
+                    ISceneEntity entity in
+                        friendClient.Scene.Entities.GetEntities().Where(entity => entity.OwnerID == userID))
                 {
                     entity.ScheduleGroupUpdateToAvatar(friendSP, PrimUpdateFlags.PrimFlags);
                 }

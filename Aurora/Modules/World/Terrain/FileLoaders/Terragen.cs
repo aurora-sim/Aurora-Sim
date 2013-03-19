@@ -33,9 +33,9 @@ using Aurora.Framework;
 namespace Aurora.Modules.Terrain.FileLoaders
 {
     /// <summary>
-    ///   Terragen File Format Loader
-    ///   Built from specification at
-    ///   http://www.planetside.co.uk/terragen/dev/tgterrain.html
+    ///     Terragen File Format Loader
+    ///     Built from specification at
+    ///     http://www.planetside.co.uk/terragen/dev/tgterrain.html
     /// </summary>
     internal class Terragen : ITerrainLoader
     {
@@ -280,7 +280,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 for (int x = 0; x < map.Width; x++)
                 {
                     float elevation = (float) ((map[x, y] - baseHeight)*65536)/(float) horizontalScale;
-                        // see LoadStream for inverse
+                    // see LoadStream for inverse
 
                     // clamp rounding issues
                     if (elevation > Int16.MaxValue)
@@ -311,10 +311,10 @@ namespace Aurora.Modules.Terrain.FileLoaders
         }
 
         /// <summary>
-        ///   terragen SCAL floats need to be written intel ordered regardless of
-        ///   big or little endian system
+        ///     terragen SCAL floats need to be written intel ordered regardless of
+        ///     big or little endian system
         /// </summary>
-        /// <param name = "number"></param>
+        /// <param name="number"></param>
         /// <returns></returns>
         private byte[] ToLittleEndian(float number)
         {

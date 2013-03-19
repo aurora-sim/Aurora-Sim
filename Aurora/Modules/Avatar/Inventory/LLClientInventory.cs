@@ -45,11 +45,12 @@ namespace Aurora.Modules.Inventory
     {
         #region Declares
 
-        protected string m_DefaultLSLScript = "default\n{\n    state_entry()\n    {\n        llSay(0, \"Script running.\");\n    }\n    touch_start(integer number)\n    {\n        llSay(0,\"Touched.\");\n    }\n}\n";
+        protected string m_DefaultLSLScript =
+            "default\n{\n    state_entry()\n    {\n        llSay(0, \"Script running.\");\n    }\n    touch_start(integer number)\n    {\n        llSay(0,\"Touched.\");\n    }\n}\n";
 
         /// <summary>
-        /// The default LSL script that will be added when a client creates
-        /// a new script in inventory or in the task object inventory
+        ///     The default LSL script that will be added when a client creates
+        ///     a new script in inventory or in the task object inventory
         /// </summary>
         public string DefaultLSLScript
         {
@@ -59,7 +60,6 @@ namespace Aurora.Modules.Inventory
 
         protected IScene m_scene;
 
-        
         #endregion
 
         #region INonSharedRegionModule members
@@ -68,7 +68,7 @@ namespace Aurora.Modules.Inventory
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
 
@@ -79,11 +79,11 @@ namespace Aurora.Modules.Inventory
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             scene.UnregisterModuleInterface<ILLClientInventory>(this);
 
@@ -112,7 +112,7 @@ namespace Aurora.Modules.Inventory
         #region Client events
 
         /// <summary>
-        /// Hook up to the client inventory events
+        ///     Hook up to the client inventory events
         /// </summary>
         /// <param name="client"></param>
         protected void EventManager_OnNewClient(IClientAPI client)
@@ -142,7 +142,7 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Remove ourselves from the inventory events
+        ///     Remove ourselves from the inventory events
         /// </summary>
         /// <param name="client"></param>
         protected void EventManager_OnClosingClient(IClientAPI client)
@@ -171,12 +171,12 @@ namespace Aurora.Modules.Inventory
 
 #if UDP_INVENTORY
         
-        /// <summary>
-        /// Handle a fetch inventory request from the client
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="itemID"></param>
-        /// <param name="ownerID"></param>
+    /// <summary>
+    /// Handle a fetch inventory request from the client
+    /// </summary>
+    /// <param name="remoteClient"></param>
+    /// <param name="itemID"></param>
+    /// <param name="ownerID"></param>
         protected void HandleFetchInventory(IClientAPI remoteClient, UUID itemID, UUID ownerID)
         {
             //MainConsole.Instance.Warn("[Scene.PacketHandler]: Depriated UDP Inventory request!");
@@ -230,7 +230,7 @@ namespace Aurora.Modules.Inventory
 #endif
 
         /// <summary>
-        /// Handle an inventory folder creation request from the client.
+        ///     Handle an inventory folder creation request from the client.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="folderID"></param>
@@ -238,32 +238,31 @@ namespace Aurora.Modules.Inventory
         /// <param name="folderName"></param>
         /// <param name="parentID"></param>
         protected void HandleCreateInventoryFolder(IClientAPI remoteClient, UUID folderID, ushort folderType,
-                                                string folderName, UUID parentID)
+                                                   string folderName, UUID parentID)
         {
-            InventoryFolderBase folder = new InventoryFolderBase(folderID, folderName, remoteClient.AgentId, (short)folderType, parentID, 1);
+            InventoryFolderBase folder = new InventoryFolderBase(folderID, folderName, remoteClient.AgentId,
+                                                                 (short) folderType, parentID, 1);
             if (!m_scene.InventoryService.AddFolder(folder))
             {
                 MainConsole.Instance.WarnFormat(
-                     "[AGENT INVENTORY]: Failed to create folder for user {0} {1}",
-                     remoteClient.Name, remoteClient.AgentId);
+                    "[AGENT INVENTORY]: Failed to create folder for user {0} {1}",
+                    remoteClient.Name, remoteClient.AgentId);
             }
         }
 
         /// <summary>
-        /// Handle a client request to update the inventory folder
+        ///     Handle a client request to update the inventory folder
         /// </summary>
-        ///
         /// FIXME: We call add new inventory folder because in the data layer, we happen to use an SQL REPLACE
         /// so this will work to rename an existing folder.  Needless to say, to rely on this is very confusing,
         /// and needs to be changed.
-        ///
         /// <param name="remoteClient"></param>
         /// <param name="folderID"></param>
         /// <param name="type"></param>
         /// <param name="name"></param>
         /// <param name="parentID"></param>
         protected void HandleUpdateInventoryFolder(IClientAPI remoteClient, UUID folderID, ushort type, string name,
-                                                UUID parentID)
+                                                   UUID parentID)
         {
             //            MainConsole.Instance.DebugFormat(
             //                "[AGENT INVENTORY]: Updating inventory folder {0} {1} for {2} {3}", folderID, name, remoteClient.Name, remoteClient.AgentId);
@@ -273,19 +272,19 @@ namespace Aurora.Modules.Inventory
             if (folder != null)
             {
                 folder.Name = name;
-                folder.Type = (short)type;
+                folder.Type = (short) type;
                 folder.ParentID = parentID;
                 if (!m_scene.InventoryService.UpdateFolder(folder))
                 {
                     MainConsole.Instance.ErrorFormat(
-                         "[AGENT INVENTORY]: Failed to update folder for user {0} {1}",
-                         remoteClient.Name, remoteClient.AgentId);
+                        "[AGENT INVENTORY]: Failed to update folder for user {0} {1}",
+                        remoteClient.Name, remoteClient.AgentId);
                 }
             }
         }
 
         /// <summary>
-        /// Move the inventory folder to another place in the user's inventory
+        ///     Move the inventory folder to another place in the user's inventory
         /// </summary>
         /// <param name="remoteClient">The client that requested the change</param>
         /// <param name="folderID">The folder UUID to move</param>
@@ -300,16 +299,18 @@ namespace Aurora.Modules.Inventory
                 if (!m_scene.InventoryService.MoveFolder(folder))
                     MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: could not move folder {0}", folderID);
                 else
-                    MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: folder {0} moved to parent {1}", folderID, parentID);
+                    MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: folder {0} moved to parent {1}", folderID,
+                                                     parentID);
             }
             else
             {
-                MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: request to move folder {0} but folder not found", folderID);
+                MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: request to move folder {0} but folder not found",
+                                                folderID);
             }
         }
 
         /// <summary>
-        /// This should delete all the items and folders in the given directory.
+        ///     This should delete all the items and folders in the given directory.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="folderID"></param>
@@ -318,11 +319,12 @@ namespace Aurora.Modules.Inventory
             if (m_scene.InventoryService.PurgeFolder(new InventoryFolderBase(folderID, remoteClient.AgentId)))
                 MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: folder {0} purged successfully", folderID);
             else
-                MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: could not purge folder {0} for client {1}", folderID, remoteClient.AgentId);
+                MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: could not purge folder {0} for client {1}", folderID,
+                                                remoteClient.AgentId);
         }
 
         /// <summary>
-        /// Delete the given objects from the Scene and move them into the client's inventory
+        ///     Delete the given objects from the Scene and move them into the client's inventory
         /// </summary>
         /// <param name="remoteClient">The client requesting the change (can be null if returning objects)</param>
         /// <param name="localIDs">A list of all the localIDs of the groups to delete</param>
@@ -330,12 +332,12 @@ namespace Aurora.Modules.Inventory
         /// <param name="action">What type of action is causing this</param>
         /// <param name="destinationID">The folder ID to put the inventory items in</param>
         protected void DeRezObjects(IClientAPI remoteClient, List<uint> localIDs,
-                UUID groupID, DeRezAction action, UUID destinationID)
+                                    UUID groupID, DeRezAction action, UUID destinationID)
         {
             // First, see of we can perform the requested action and
             // build a list of eligible objects
             List<uint> deleteIDs = new List<uint>();
-            List<ISceneEntity> deleteGroups = new List<ISceneEntity> ();
+            List<ISceneEntity> deleteGroups = new List<ISceneEntity>();
 
             #region Permission Check
 
@@ -348,7 +350,7 @@ namespace Aurora.Modules.Inventory
             foreach (uint localID in localIDs)
             {
                 // Invalid id
-                ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart(localID);
                 if (part == null)
                     continue;
 
@@ -365,7 +367,7 @@ namespace Aurora.Modules.Inventory
                 deleteIDs.Add(localID);
                 deleteGroups.Add(grp);
 
-                IScenePresence SP = remoteClient == null ? null : m_scene.GetScenePresence (remoteClient.AgentId);
+                IScenePresence SP = remoteClient == null ? null : m_scene.GetScenePresence(remoteClient.AgentId);
 
                 if (SP == null)
                 {
@@ -421,9 +423,9 @@ namespace Aurora.Modules.Inventory
             if (action == DeRezAction.Return)
             {
                 if (remoteClient != null && m_scene.Permissions.CanReturnObjects(
-                                    null,
-                                    remoteClient.AgentId,
-                                    deleteGroups))
+                    null,
+                    remoteClient.AgentId,
+                    deleteGroups))
                 {
                     permissionToTake = true;
                     permissionToDelete = true;
@@ -431,7 +433,9 @@ namespace Aurora.Modules.Inventory
                     IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
                     if (parcelManagement != null)
                     {
-                        parcelManagement.AddReturns(deleteGroups[0].OwnerID, deleteGroups[0].Name, deleteGroups[0].AbsolutePosition, "Parcel Owner Return", deleteGroups);
+                        parcelManagement.AddReturns(deleteGroups[0].OwnerID, deleteGroups[0].Name,
+                                                    deleteGroups[0].AbsolutePosition, "Parcel Owner Return",
+                                                    deleteGroups);
                     }
                     return;
                 }
@@ -446,13 +450,13 @@ namespace Aurora.Modules.Inventory
             if (asyncDelete != null)
             {
                 asyncDelete.DeleteToInventory(
-                       action, destinationID, deleteGroups, remoteClient == null ? UUID.Zero : remoteClient.AgentId,
-                           permissionToDelete, permissionToTake);
+                    action, destinationID, deleteGroups, remoteClient == null ? UUID.Zero : remoteClient.AgentId,
+                    permissionToDelete, permissionToTake);
             }
         }
 
         /// <summary>
-        /// Remove an inventory item for the client's inventory
+        ///     Remove an inventory item for the client's inventory
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="itemIDs"></param>
@@ -463,8 +467,8 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Removes an inventory folder.  This packet is sent when the user
-        /// right-clicks a folder that's already in trash and chooses "purge"
+        ///     Removes an inventory folder.  This packet is sent when the user
+        ///     right-clicks a folder that's already in trash and chooses "purge"
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="folderIDs"></param>
@@ -475,7 +479,7 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Create a new Inventory Item
+        ///     Create a new Inventory Item
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="creatorData"></param>
@@ -493,7 +497,8 @@ namespace Aurora.Modules.Inventory
         /// <param name="baseMask"></param>
         /// <param name="currentMask"></param>
         protected void CreateNewInventoryItem(
-            IClientAPI remoteClient, string creatorID, string creatorData, UUID folderID, string name, uint flags, uint callbackID, AssetBase asset, sbyte invType,
+            IClientAPI remoteClient, string creatorID, string creatorData, UUID folderID, string name, uint flags,
+            uint callbackID, AssetBase asset, sbyte invType,
             uint baseMask, uint currentMask, uint everyoneMask, uint nextOwnerMask, uint groupMask, int creationDate)
         {
             InventoryItemBase item = new InventoryItemBase
@@ -516,15 +521,14 @@ namespace Aurora.Modules.Inventory
                                              BasePermissions = baseMask,
                                              CreationDate = creationDate
                                          };
-            m_scene.InventoryService.AddItemAsync(item, (itm) =>
-            {
-                remoteClient.SendInventoryItemCreateUpdate(itm, callbackID);
-            });
+            m_scene.InventoryService.AddItemAsync(item,
+                                                  (itm) =>
+                                                      { remoteClient.SendInventoryItemCreateUpdate(itm, callbackID); });
         }
 
         /// <summary>
-        /// Create a new inventory item.  Called when the client creates a new item directly within their
-        /// inventory (e.g. by selecting a context inventory menu option).
+        ///     Create a new inventory item.  Called when the client creates a new item directly within their
+        ///     inventory (e.g. by selecting a context inventory menu option).
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="transactionID"></param>
@@ -538,9 +542,9 @@ namespace Aurora.Modules.Inventory
         /// <param name="nextOwnerMask"></param>
         /// <param name="creationDate"></param>
         protected void CreateNewInventoryItem(IClientAPI remoteClient, UUID transactionID, UUID folderID,
-                                           uint callbackID, string description, string name, sbyte invType,
-                                           sbyte assetType,
-                                           byte wearableType, uint nextOwnerMask, int creationDate)
+                                              uint callbackID, string description, string name, sbyte invType,
+                                              sbyte assetType,
+                                              byte wearableType, uint nextOwnerMask, int creationDate)
         {
             //MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item {0} in folder {1}", name, folderID);
 
@@ -554,41 +558,42 @@ namespace Aurora.Modules.Inventory
                 {
                     byte[] data = null;
 
-                    if (invType == (sbyte)InventoryType.Landmark && presence != null)
+                    if (invType == (sbyte) InventoryType.Landmark && presence != null)
                     {
                         if (m_scene.Permissions.CanTakeLandmark(remoteClient.AgentId))
                         {
-                            data = BuildLandmark (presence);
+                            data = BuildLandmark(presence);
                         }
                         else
                         {
                             remoteClient.SendAlertMessage("You cannot create a landmark here.");
                         }
                     }
-                    if(invType == (sbyte)InventoryType.LSL)
+                    if (invType == (sbyte) InventoryType.LSL)
                     {
                         data = Encoding.ASCII.GetBytes(DefaultLSLScript);
                     }
-                    if(invType == (sbyte)InventoryType.CallingCard)
+                    if (invType == (sbyte) InventoryType.CallingCard)
                     {
                         return;
                     }
-                    if (invType == (sbyte)InventoryType.Notecard)
+                    if (invType == (sbyte) InventoryType.Notecard)
                     {
                         data = Encoding.ASCII.GetBytes(" ");
                     }
-                    if (invType == (sbyte)InventoryType.Gesture)
+                    if (invType == (sbyte) InventoryType.Gesture)
                     {
-                        data = /*Default empty gesture*/ new byte[13] { 50, 10, 50, 53, 53, 10, 48, 10, 10, 10, 48, 10, 0 };
+                        data = /*Default empty gesture*/ new byte[13]
+                                                             {50, 10, 50, 53, 53, 10, 48, 10, 10, 10, 48, 10, 0};
                     }
 
-                    AssetBase asset = new AssetBase(UUID.Random(), name, (AssetType)assetType,
+                    AssetBase asset = new AssetBase(UUID.Random(), name, (AssetType) assetType,
                                                     remoteClient.AgentId) {Data = data, Description = description};
                     asset.ID = m_scene.AssetService.Store(asset);
 
                     CreateNewInventoryItem(
                         remoteClient, remoteClient.AgentId.ToString(), "", folderID, name, 0, callbackID, asset, invType,
-                        (uint)PermissionMask.All, (uint)PermissionMask.All, 0, nextOwnerMask, 0, creationDate);
+                        (uint) PermissionMask.All, (uint) PermissionMask.All, 0, nextOwnerMask, 0, creationDate);
                 }
                 else
                 {
@@ -609,21 +614,22 @@ namespace Aurora.Modules.Inventory
             }
         }
 
-        private byte[] BuildLandmark (IScenePresence presence)
+        private byte[] BuildLandmark(IScenePresence presence)
         {
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, presence.UUID);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
+                                                                            presence.UUID);
             Vector3 pos = presence.AbsolutePosition;
-            string strdata = String.Format (
+            string strdata = String.Format(
                 "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}",
                 presence.Scene.RegionInfo.RegionID,
                 pos.X, pos.Y, pos.Z,
                 presence.Scene.RegionInfo.RegionHandle);
-            return Encoding.ASCII.GetBytes (strdata);
+            return Encoding.ASCII.GetBytes(strdata);
         }
 
         /// <summary>
-        /// Create a new 'link' to another inventory item
-        /// Used in Viewer 2 for appearance.
+        ///     Create a new 'link' to another inventory item
+        ///     Used in Viewer 2 for appearance.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="transActionID"></param>
@@ -635,8 +641,8 @@ namespace Aurora.Modules.Inventory
         /// <param name="type"></param>
         /// <param name="olditemID"></param>
         protected void HandleLinkInventoryItem(IClientAPI remoteClient, UUID transActionID, UUID folderID,
-                                             uint callbackID, string description, string name,
-                                             sbyte invType, sbyte type, UUID olditemID)
+                                               uint callbackID, string description, string name,
+                                               sbyte invType, sbyte type, UUID olditemID)
         {
             //MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item link {0} in folder {1} pointing to {2}", name, folderID, olditemID);
 
@@ -647,11 +653,11 @@ namespace Aurora.Modules.Inventory
             if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
             {
                 if (olditemID == AvatarWearable.DEFAULT_EYES_ITEM ||
-                            olditemID == AvatarWearable.DEFAULT_BODY_ITEM ||
-                            olditemID == AvatarWearable.DEFAULT_HAIR_ITEM ||
-                            olditemID == AvatarWearable.DEFAULT_PANTS_ITEM ||
-                            olditemID == AvatarWearable.DEFAULT_SHIRT_ITEM ||
-                            olditemID == AvatarWearable.DEFAULT_SKIN_ITEM)
+                    olditemID == AvatarWearable.DEFAULT_BODY_ITEM ||
+                    olditemID == AvatarWearable.DEFAULT_HAIR_ITEM ||
+                    olditemID == AvatarWearable.DEFAULT_PANTS_ITEM ||
+                    olditemID == AvatarWearable.DEFAULT_SHIRT_ITEM ||
+                    olditemID == AvatarWearable.DEFAULT_SKIN_ITEM)
                 {
                     return;
                 }
@@ -659,8 +665,8 @@ namespace Aurora.Modules.Inventory
 
                 CreateNewInventoryItem(
                     remoteClient, remoteClient.AgentId.ToString(), "", folderID, name, 0, callbackID, asset, invType,
-                    (uint)PermissionMask.All, (uint)PermissionMask.All, (uint)PermissionMask.All,
-                    (uint)PermissionMask.All, (uint)PermissionMask.All, Util.UnixTimeSinceEpoch());
+                    (uint) PermissionMask.All, (uint) PermissionMask.All, (uint) PermissionMask.All,
+                    (uint) PermissionMask.All, (uint) PermissionMask.All, Util.UnixTimeSinceEpoch());
             }
             else
             {
@@ -671,7 +677,7 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Move an item within the agent's inventory.
+        ///     Move an item within the agent's inventory.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="items"></param>
@@ -682,9 +688,9 @@ namespace Aurora.Modules.Inventory
 
             m_scene.InventoryService.MoveItemsAsync(remoteClient.AgentId, items, null);
         }
-        
+
         /// <summary>
-        /// Copy an inventory item in the user's inventory
+        ///     Copy an inventory item in the user's inventory
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="callbackID"></param>
@@ -693,7 +699,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="newFolderID"></param>
         /// <param name="newName"></param>
         protected void CopyInventoryItem(IClientAPI remoteClient, uint callbackID, UUID oldAgentID, UUID oldItemID,
-                                      UUID newFolderID, string newName)
+                                         UUID newFolderID, string newName)
         {
             MainConsole.Instance.DebugFormat(
                 "[AGENT INVENTORY]: CopyInventoryItem received by {0} with oldAgentID {1}, oldItemID {2}, new FolderID {3}, newName {4}",
@@ -707,59 +713,87 @@ namespace Aurora.Modules.Inventory
                 return;
             }
 
-            if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+            if ((item.CurrentPermissions & (uint) PermissionMask.Copy) == 0)
                 return;
 
             m_scene.AssetService.Get(item.AssetID.ToString(), null, (id, sender, asset) =>
-                {
-                    if (asset != null)
-                    {
-                        if (newName != String.Empty)
-                        {
-                            asset.Name = newName;
-                        }
-                        else
-                        {
-                            newName = item.Name;
-                        }
+                                                                        {
+                                                                            if (asset != null)
+                                                                            {
+                                                                                if (newName != String.Empty)
+                                                                                {
+                                                                                    asset.Name = newName;
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    newName = item.Name;
+                                                                                }
 
-                        if (remoteClient.AgentId == oldAgentID)
-                        {
-                            CreateNewInventoryItem(
-                                remoteClient, item.CreatorId, item.CreatorData, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
-                                item.BasePermissions, item.CurrentPermissions, item.EveryOnePermissions, item.NextPermissions, item.GroupPermissions, Util.UnixTimeSinceEpoch());
-                        }
-                        else
-                        {
-                            // If item is transfer or permissions are off or calling agent is allowed to copy item owner's inventory item.
-                            if (((item.CurrentPermissions & (uint)PermissionMask.Transfer) != 0) && (m_scene.Permissions.BypassPermissions() || m_scene.Permissions.CanCopyUserInventory(remoteClient.AgentId, oldItemID)))
-                            {
-                                CreateNewInventoryItem(
-                                    remoteClient, item.CreatorId, item.CreatorData, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
-                                    item.NextPermissions, item.NextPermissions, item.EveryOnePermissions & item.NextPermissions, item.NextPermissions, item.GroupPermissions, Util.UnixTimeSinceEpoch());
-                            }
-                        }
-                    }
-                    else
-                    {
-                        MainConsole.Instance.ErrorFormat(
-                            "[AGENT INVENTORY]: Could not copy item {0} since asset {1} could not be found",
-                            item.Name, item.AssetID);
-                    }
-                });
+                                                                                if (remoteClient.AgentId == oldAgentID)
+                                                                                {
+                                                                                    CreateNewInventoryItem(
+                                                                                        remoteClient, item.CreatorId,
+                                                                                        item.CreatorData, newFolderID,
+                                                                                        newName, item.Flags, callbackID,
+                                                                                        asset, (sbyte) item.InvType,
+                                                                                        item.BasePermissions,
+                                                                                        item.CurrentPermissions,
+                                                                                        item.EveryOnePermissions,
+                                                                                        item.NextPermissions,
+                                                                                        item.GroupPermissions,
+                                                                                        Util.UnixTimeSinceEpoch());
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    // If item is transfer or permissions are off or calling agent is allowed to copy item owner's inventory item.
+                                                                                    if (((item.CurrentPermissions &
+                                                                                          (uint) PermissionMask.Transfer) !=
+                                                                                         0) &&
+                                                                                        (m_scene.Permissions
+                                                                                                .BypassPermissions() ||
+                                                                                         m_scene.Permissions
+                                                                                                .CanCopyUserInventory(
+                                                                                                    remoteClient.AgentId,
+                                                                                                    oldItemID)))
+                                                                                    {
+                                                                                        CreateNewInventoryItem(
+                                                                                            remoteClient, item.CreatorId,
+                                                                                            item.CreatorData,
+                                                                                            newFolderID, newName,
+                                                                                            item.Flags, callbackID,
+                                                                                            asset, (sbyte) item.InvType,
+                                                                                            item.NextPermissions,
+                                                                                            item.NextPermissions,
+                                                                                            item.EveryOnePermissions &
+                                                                                            item.NextPermissions,
+                                                                                            item.NextPermissions,
+                                                                                            item.GroupPermissions,
+                                                                                            Util.UnixTimeSinceEpoch());
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                MainConsole.Instance.ErrorFormat(
+                                                                                    "[AGENT INVENTORY]: Could not copy item {0} since asset {1} could not be found",
+                                                                                    item.Name, item.AssetID);
+                                                                            }
+                                                                        });
         }
 
         /// <summary>
-        /// Update an item which is either already in the client's inventory or is within
-        /// a transaction
+        ///     Update an item which is either already in the client's inventory or is within
+        ///     a transaction
         /// </summary>
         /// <param name="remoteClient"></param>
-        /// <param name="transactionID">The transaction ID.  If this is UUID.Zero we will
-        /// assume that we are not in a transaction</param>
+        /// <param name="transactionID">
+        ///     The transaction ID.  If this is UUID.Zero we will
+        ///     assume that we are not in a transaction
+        /// </param>
         /// <param name="itemID">The ID of the updated item</param>
         /// <param name="itemUpd"></param>
         protected void UpdateInventoryItemAsset(IClientAPI remoteClient, UUID transactionID,
-                                             UUID itemID, InventoryItemBase itemUpd)
+                                                UUID itemID, InventoryItemBase itemUpd)
         {
             // This one will let people set next perms on items in agent
             // inventory. Rut-Roh. Whatever. Make this secure. Yeah.
@@ -772,7 +806,8 @@ namespace Aurora.Modules.Inventory
                 if (UUID.Zero == transactionID)
                 {
                     uint oldnextperms = item.NextPermissions;
-                    bool hasPermissionsChanged = item.NextPermissions != (itemUpd.NextPermissions & item.BasePermissions);
+                    bool hasPermissionsChanged = item.NextPermissions !=
+                                                 (itemUpd.NextPermissions & item.BasePermissions);
                     item.Name = itemUpd.Name;
                     item.Description = itemUpd.Description;
                     item.NextPermissions = itemUpd.NextPermissions & item.BasePermissions;
@@ -792,74 +827,83 @@ namespace Aurora.Modules.Inventory
                     item.SaleType = itemUpd.SaleType;
                     item.Flags = itemUpd.Flags;
 
-                    if ((hasPermissionsChanged) && (item.AssetType == (int)InventoryType.Object))
+                    if ((hasPermissionsChanged) && (item.AssetType == (int) InventoryType.Object))
                     {
-						AssetBase asset = m_scene.AssetService.Get(item.AssetID.ToString());
-						if (asset != null)
-						{
+                        AssetBase asset = m_scene.AssetService.Get(item.AssetID.ToString());
+                        if (asset != null)
+                        {
                             ISceneEntity group =
-								SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(Utils.BytesToString(asset.Data), m_scene);
+                                SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(
+                                    Utils.BytesToString(asset.Data), m_scene);
 
-							bool didchange = false;
-							//copy
-							if ((((PermissionMask)oldnextperms & PermissionMask.Copy) == PermissionMask.Copy) &&
-								(((PermissionMask)item.NextPermissions & PermissionMask.Copy) != PermissionMask.Copy))
-							{
-								didchange = true;
-								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Copy, 0);
-							}
-							else if ((((PermissionMask)oldnextperms & PermissionMask.Copy) != PermissionMask.Copy) &&
-								(((PermissionMask)item.NextPermissions & PermissionMask.Copy) == PermissionMask.Copy))
-							{
-								didchange = true;
-								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Copy, 1);
-							}
+                            bool didchange = false;
+                            //copy
+                            if ((((PermissionMask) oldnextperms & PermissionMask.Copy) == PermissionMask.Copy) &&
+                                (((PermissionMask) item.NextPermissions & PermissionMask.Copy) != PermissionMask.Copy))
+                            {
+                                didchange = true;
+                                group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint) PermissionMask.Copy, 0);
+                            }
+                            else if ((((PermissionMask) oldnextperms & PermissionMask.Copy) != PermissionMask.Copy) &&
+                                     (((PermissionMask) item.NextPermissions & PermissionMask.Copy) ==
+                                      PermissionMask.Copy))
+                            {
+                                didchange = true;
+                                group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint) PermissionMask.Copy, 1);
+                            }
 
-							//mod
-							if ((((PermissionMask)oldnextperms & PermissionMask.Modify) == PermissionMask.Modify) &&
-								(((PermissionMask)item.NextPermissions & PermissionMask.Modify) != PermissionMask.Modify))
-							{
-								didchange = true;
-								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Modify, 0);
-							}
-							else if ((((PermissionMask)oldnextperms & PermissionMask.Modify) != PermissionMask.Modify) &&
-								(((PermissionMask)item.NextPermissions & PermissionMask.Modify) == PermissionMask.Modify))
-							{
-								didchange = true;
-								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Modify, 1);
-							}
+                            //mod
+                            if ((((PermissionMask) oldnextperms & PermissionMask.Modify) == PermissionMask.Modify) &&
+                                (((PermissionMask) item.NextPermissions & PermissionMask.Modify) !=
+                                 PermissionMask.Modify))
+                            {
+                                didchange = true;
+                                group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint) PermissionMask.Modify, 0);
+                            }
+                            else if ((((PermissionMask) oldnextperms & PermissionMask.Modify) != PermissionMask.Modify) &&
+                                     (((PermissionMask) item.NextPermissions & PermissionMask.Modify) ==
+                                      PermissionMask.Modify))
+                            {
+                                didchange = true;
+                                group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint) PermissionMask.Modify, 1);
+                            }
 
-							//trans
-							if ((((PermissionMask)oldnextperms & PermissionMask.Transfer) == PermissionMask.Transfer) &&
-								(((PermissionMask)item.NextPermissions & PermissionMask.Transfer) != PermissionMask.Transfer))
-							{
-								didchange = true;
-								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Transfer, 0);
-							}
-							else if ((((PermissionMask)oldnextperms & PermissionMask.Transfer) != PermissionMask.Transfer) &&
-								(((PermissionMask)item.NextPermissions & PermissionMask.Transfer) == PermissionMask.Transfer))
-							{
-								didchange = true;
-								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Transfer, 1);
-							}
+                            //trans
+                            if ((((PermissionMask) oldnextperms & PermissionMask.Transfer) == PermissionMask.Transfer) &&
+                                (((PermissionMask) item.NextPermissions & PermissionMask.Transfer) !=
+                                 PermissionMask.Transfer))
+                            {
+                                didchange = true;
+                                group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint) PermissionMask.Transfer, 0);
+                            }
+                            else if ((((PermissionMask) oldnextperms & PermissionMask.Transfer) !=
+                                      PermissionMask.Transfer) &&
+                                     (((PermissionMask) item.NextPermissions & PermissionMask.Transfer) ==
+                                      PermissionMask.Transfer))
+                            {
+                                didchange = true;
+                                group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint) PermissionMask.Transfer,
+                                                        1);
+                            }
 
-							if (didchange)
-							{
-								asset.Data = Encoding.ASCII.GetBytes(group.ToXml2());
-								asset.ID = m_scene.AssetService.Store(asset);
-								item.AssetID = asset.ID;
-							}
-						}
+                            if (didchange)
+                            {
+                                asset.Data = Encoding.ASCII.GetBytes(group.ToXml2());
+                                asset.ID = m_scene.AssetService.Store(asset);
+                                item.AssetID = asset.ID;
+                            }
+                        }
                     }
                     m_scene.InventoryService.UpdateItem(item);
                 }
                 else
                 {
-                    IAgentAssetTransactions agentTransactions = m_scene.RequestModuleInterface<IAgentAssetTransactions>();
+                    IAgentAssetTransactions agentTransactions =
+                        m_scene.RequestModuleInterface<IAgentAssetTransactions>();
                     if (agentTransactions != null)
                     {
                         agentTransactions.HandleItemUpdateFromTransaction(
-                                     remoteClient, transactionID, item);
+                            remoteClient, transactionID, item);
                     }
                 }
             }
@@ -871,7 +915,7 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Change an inventory items flags
+        ///     Change an inventory items flags
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="itemID"></param>
@@ -895,20 +939,20 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Send the details of a prim's inventory to the client.
+        ///     Send the details of a prim's inventory to the client.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="primLocalID"></param>
         protected void RequestTaskInventory(IClientAPI remoteClient, uint primLocalID)
         {
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(primLocalID);
             if (part != null)
             {
-                part.Inventory.RequestInventoryFile (remoteClient);
+                part.Inventory.RequestInventoryFile(remoteClient);
             }
             else
             {
-                MainConsole.Instance.ErrorFormat (
+                MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: " +
                     "Couldn't find part {0} to request inventory data",
                     primLocalID);
@@ -916,15 +960,17 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Remove an item from a prim (task) inventory
+        ///     Remove an item from a prim (task) inventory
         /// </summary>
-        /// <param name="remoteClient">Unused at the moment but retained since the avatar ID might
-        /// be necessary for a permissions check at some stage.</param>
+        /// <param name="remoteClient">
+        ///     Unused at the moment but retained since the avatar ID might
+        ///     be necessary for a permissions check at some stage.
+        /// </param>
         /// <param name="itemID"></param>
         /// <param name="localID"></param>
         protected void RemoveTaskInventory(IClientAPI remoteClient, UUID itemID, uint localID)
         {
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(localID);
             if (m_scene.Permissions.CanDeleteObjectInventory(itemID, part.UUID, remoteClient.AgentId))
             {
                 ISceneEntity group = part.ParentEntity;
@@ -951,15 +997,16 @@ namespace Aurora.Modules.Inventory
         #region Move
 
         /// <summary>
-        /// Move the inventory folder to another place in the user's inventory
+        ///     Move the inventory folder to another place in the user's inventory
         /// </summary>
         /// <param name="remoteClient">The client that requested the change</param>
         /// <param name="folderId">The folderID that the task (object) item will be moved into</param>
         /// <param name="primLocalId">The localID of the prim the item is in</param>
         /// <param name="itemId">The UUID of the item to move</param>
-        protected void ClientMoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId, uint primLocalId, UUID itemId)
+        protected void ClientMoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId,
+                                                                  uint primLocalId, UUID itemId)
         {
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalId);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(primLocalId);
 
             if (null == part)
             {
@@ -975,14 +1022,15 @@ namespace Aurora.Modules.Inventory
 
             if (null == taskItem)
             {
-                MainConsole.Instance.WarnFormat("[PRIM INVENTORY]: Move of inventory item {0} from prim with local id {1} failed"
+                MainConsole.Instance.WarnFormat(
+                    "[PRIM INVENTORY]: Move of inventory item {0} from prim with local id {1} failed"
                     + " because the inventory item could not be found",
                     itemId, primLocalId);
 
                 return;
             }
 
-            if ((taskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+            if ((taskItem.CurrentPermissions & (uint) PermissionMask.Copy) == 0)
             {
                 // If the item to be moved is no copy, we need to be able to
                 // edit the prim.
@@ -1001,14 +1049,16 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Move the given item in the given prim to a folder in the client's inventory
+        ///     Move the given item in the given prim to a folder in the client's inventory
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="folderId"></param>
         /// <param name="part"></param>
         /// <param name="itemId"></param>
         /// <param name="checkPermissions"></param>
-        protected InventoryItemBase MoveTaskInventoryItemToUserInventory (IClientAPI remoteClient, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
+        protected InventoryItemBase MoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId,
+                                                                         ISceneChildEntity part, UUID itemId,
+                                                                         bool checkPermissions)
         {
             InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(remoteClient.AgentId, part, itemId);
             if (!checkPermissions || m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
@@ -1026,13 +1076,14 @@ namespace Aurora.Modules.Inventory
         #endregion
 
         /// <summary>
-        /// Send an update to the client about the given folder
+        ///     Send an update to the client about the given folder
         /// </summary>
         /// <param name="client">The client to send the update to</param>
         /// <param name="folder">The folder that we need to send</param>
         /// <param name="fetchFolders">Should we fetch folders inside of this folder</param>
         /// <param name="fetchItems">Should we fetch items inside of this folder</param>
-        protected void SendInventoryUpdate(IClientAPI client, InventoryFolderBase folder, bool fetchFolders, bool fetchItems)
+        protected void SendInventoryUpdate(IClientAPI client, InventoryFolderBase folder, bool fetchFolders,
+                                           bool fetchItems)
         {
             if (folder == null)
                 return;
@@ -1048,30 +1099,31 @@ namespace Aurora.Modules.Inventory
             //    contents.Folders.Count + contents.Items.Count, containingFolder.Name, client.FirstName, client.LastName);
 
             if (containingFolder != null)
-                client.SendInventoryFolderDetails(client.AgentId, folder.ID, contents.Items, contents.Folders, containingFolder.Version, fetchFolders, fetchItems);
+                client.SendInventoryFolderDetails(client.AgentId, folder.ID, contents.Items, contents.Folders,
+                                                  containingFolder.Version, fetchFolders, fetchItems);
         }
 
         /// <summary>
-        /// Update an item in a prim (task) inventory.
-        /// This method does not handle scripts, <see>RezScript(IClientAPI, UUID, unit)</see>
+        ///     Update an item in a prim (task) inventory.
+        ///     This method does not handle scripts, <see>RezScript(IClientAPI, UUID, unit)</see>
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="transactionID"></param>
         /// <param name="itemInfo"></param>
         /// <param name="primLocalID"></param>
         protected void UpdateTaskInventory(IClientAPI remoteClient, UUID transactionID, TaskInventoryItem itemInfo,
-                                        uint primLocalID)
+                                           uint primLocalID)
         {
             UUID itemID = itemInfo.ItemID;
 
             // Find the prim we're dealing with
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(primLocalID);
 
             if (part != null)
             {
                 TaskInventoryItem currentItem = part.Inventory.GetInventoryItem(itemID);
                 bool allowInventoryDrop = (part.GetEffectiveObjectFlags()
-                                           & (uint)PrimFlags.AllowInventoryDrop) != 0;
+                                           & (uint) PrimFlags.AllowInventoryDrop) != 0;
 
                 // Explicity allow anyone to add to the inventory if the
                 // AllowInventoryDrop flag has been set. Don't however let
@@ -1091,14 +1143,14 @@ namespace Aurora.Modules.Inventory
                         // If we've found the item in the user's inventory or in the library
                         if (item != null)
                         {
-                            part.ParentEntity.AddInventoryItem (remoteClient, primLocalID, item, copyID);
+                            part.ParentEntity.AddInventoryItem(remoteClient, primLocalID, item, copyID);
                             MainConsole.Instance.InfoFormat(
                                 "[PRIM INVENTORY]: Update with item {0} requested of prim {1} for {2}",
                                 item.Name, primLocalID, remoteClient.Name);
                             part.GetProperties(remoteClient);
                             if (!m_scene.Permissions.BypassPermissions())
                             {
-                                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                                if ((item.CurrentPermissions & (uint) PermissionMask.Copy) == 0)
                                 {
                                     List<UUID> uuids = new List<UUID> {itemID};
                                     RemoveInventoryItem(remoteClient, uuids);
@@ -1116,7 +1168,7 @@ namespace Aurora.Modules.Inventory
                 else // Updating existing item with new perms etc
                 {
                     // Base ALWAYS has move
-                    currentItem.BasePermissions |= (uint)PermissionMask.Move;
+                    currentItem.BasePermissions |= (uint) PermissionMask.Move;
 
                     // Check if we're allowed to mess with permissions
                     if (!m_scene.Permissions.IsGod(remoteClient.AgentId)) // Not a god
@@ -1140,11 +1192,10 @@ namespace Aurora.Modules.Inventory
                             itemInfo.CurrentPermissions &= currentItem.BasePermissions;
                             itemInfo.NextPermissions &= currentItem.BasePermissions;
                         }
-
                     }
 
                     // Next ALWAYS has move
-                    itemInfo.NextPermissions |= (uint)PermissionMask.Move;
+                    itemInfo.NextPermissions |= (uint) PermissionMask.Move;
 
                     if (part.Inventory.UpdateInventoryItem(itemInfo))
                     {
@@ -1162,7 +1213,7 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Rez a script into a prim's inventory, either ex nihilo or from an existing avatar inventory
+        ///     Rez a script into a prim's inventory, either ex nihilo or from an existing avatar inventory
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="transactionID"></param>
@@ -1173,20 +1224,20 @@ namespace Aurora.Modules.Inventory
             UUID itemID = itemBase.ID;
             UUID copyID = UUID.Random();
 
-            if (itemID != UUID.Zero)  // transferred from an avatar inventory to the prim's inventory
+            if (itemID != UUID.Zero) // transferred from an avatar inventory to the prim's inventory
             {
                 //Might be a library item, use UUID.Zero
                 InventoryItemBase item = m_scene.InventoryService.GetItem(UUID.Zero, itemID);
 
                 if (item != null)
                 {
-                    ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
+                    ISceneChildEntity part = m_scene.GetSceneObjectPart(localID);
                     if (part != null)
                     {
                         if (!m_scene.Permissions.CanEditObjectInventory(part.UUID, remoteClient.AgentId))
                             return;
 
-                        part.ParentEntity.AddInventoryItem (remoteClient, localID, item, copyID);
+                        part.ParentEntity.AddInventoryItem(remoteClient, localID, item, copyID);
                         part.Inventory.CreateScriptInstance(copyID, 0, false, 0);
 
                         //                        MainConsole.Instance.InfoFormat("[PRIMINVENTORY]: " +
@@ -1210,9 +1261,9 @@ namespace Aurora.Modules.Inventory
                         itemID, remoteClient.Name);
                 }
             }
-            else  // script has been rezzed directly into a prim's inventory
+            else // script has been rezzed directly into a prim's inventory
             {
-                ISceneChildEntity part = m_scene.GetSceneObjectPart (itemBase.Folder);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart(itemBase.Folder);
                 if (part == null)
                     return;
 
@@ -1220,7 +1271,7 @@ namespace Aurora.Modules.Inventory
                     itemBase.InvType, part.UUID, remoteClient.AgentId))
                     return;
 
-                AssetBase asset = new AssetBase(UUID.Random(), itemBase.Name, (AssetType)itemBase.AssetType,
+                AssetBase asset = new AssetBase(UUID.Random(), itemBase.Name, (AssetType) itemBase.AssetType,
                                                 remoteClient.AgentId)
                                       {
                                           Description = itemBase.Description,
@@ -1232,7 +1283,7 @@ namespace Aurora.Modules.Inventory
 
                 taskItem.ResetIDs(itemBase.Folder);
                 taskItem.ParentID = itemBase.Folder;
-                taskItem.CreationDate = (uint)itemBase.CreationDate;
+                taskItem.CreationDate = (uint) itemBase.CreationDate;
                 taskItem.Name = itemBase.Name;
                 taskItem.Description = itemBase.Description;
                 taskItem.Type = itemBase.AssetType;
@@ -1266,13 +1317,13 @@ namespace Aurora.Modules.Inventory
         #region Private members
 
         /// <summary>
-        /// Change a task inventory item to a user inventory item
+        ///     Change a task inventory item to a user inventory item
         /// </summary>
         /// <param name="destAgent">The agent who will own the inventory item</param>
         /// <param name="part">The object that the item is in</param>
         /// <param name="itemId">The item to convert</param>
         /// <returns></returns>
-        private InventoryItemBase CreateAgentInventoryItemFromTask (UUID destAgent, ISceneChildEntity part, UUID itemId)
+        private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, ISceneChildEntity part, UUID itemId)
         {
             TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
 
@@ -1280,14 +1331,14 @@ namespace Aurora.Modules.Inventory
             {
                 MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for creating an avatar"
-                        + " inventory item from a prim's inventory item "
-                        + " but the required item does not exist in the prim's inventory",
+                    + " inventory item from a prim's inventory item "
+                    + " but the required item does not exist in the prim's inventory",
                     itemId, part.Name, part.UUID);
 
                 return null;
             }
 
-            if ((destAgent != taskItem.OwnerID) && ((taskItem.CurrentPermissions & (uint)PermissionMask.Transfer) == 0))
+            if ((destAgent != taskItem.OwnerID) && ((taskItem.CurrentPermissions & (uint) PermissionMask.Transfer) == 0))
             {
                 return null;
             }
@@ -1311,15 +1362,19 @@ namespace Aurora.Modules.Inventory
 
             if ((part.OwnerID != destAgent) && m_scene.Permissions.PropagatePermissions())
             {
-                agentItem.BasePermissions = taskItem.BasePermissions & (taskItem.NextPermissions | (uint)PermissionMask.Move);
-                if (taskItem.InvType == (int)InventoryType.Object)
-                    agentItem.CurrentPermissions = agentItem.BasePermissions & (((taskItem.CurrentPermissions & 7) << 13) | (taskItem.CurrentPermissions & (uint)PermissionMask.Move));
+                agentItem.BasePermissions = taskItem.BasePermissions &
+                                            (taskItem.NextPermissions | (uint) PermissionMask.Move);
+                if (taskItem.InvType == (int) InventoryType.Object)
+                    agentItem.CurrentPermissions = agentItem.BasePermissions &
+                                                   (((taskItem.CurrentPermissions & 7) << 13) |
+                                                    (taskItem.CurrentPermissions & (uint) PermissionMask.Move));
                 else
                     agentItem.CurrentPermissions = agentItem.BasePermissions & taskItem.CurrentPermissions;
-                
+
                 agentItem.CurrentPermissions |= 16; // Slam
                 agentItem.NextPermissions = taskItem.NextPermissions;
-                agentItem.EveryOnePermissions = taskItem.EveryonePermissions & (taskItem.NextPermissions | (uint)PermissionMask.Move);
+                agentItem.EveryOnePermissions = taskItem.EveryonePermissions &
+                                                (taskItem.NextPermissions | (uint) PermissionMask.Move);
                 agentItem.GroupPermissions = taskItem.GroupPermissions & taskItem.NextPermissions;
             }
             else
@@ -1333,7 +1388,7 @@ namespace Aurora.Modules.Inventory
 
             if (!m_scene.Permissions.BypassPermissions())
             {
-                if ((taskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                if ((taskItem.CurrentPermissions & (uint) PermissionMask.Copy) == 0)
                     part.Inventory.RemoveInventoryItem(itemId);
             }
 
@@ -1345,7 +1400,7 @@ namespace Aurora.Modules.Inventory
         #region ILLCLientInventory Members
 
         /// <summary>
-        /// Add the given inventory item to a user's inventory.
+        ///     Add the given inventory item to a user's inventory.
         /// </summary>
         /// <param name="item">The item to add</param>
         public void AddInventoryItemAsync(InventoryItemBase item)
@@ -1354,7 +1409,7 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Add the given inventory item to a user's inventory.
+        ///     Add the given inventory item to a user's inventory.
         /// </summary>
         /// <param name="item">The item to add</param>
         public void AddInventoryItem(InventoryItemBase item)
@@ -1363,20 +1418,22 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Add an inventory item to an avatar's inventory.
+        ///     Add an inventory item to an avatar's inventory.
         /// </summary>
         /// <param name="remoteClient">The remote client controlling the avatar</param>
-        /// <param name="item">The item.  This structure contains all the item metadata, including the folder
-        /// in which the item is to be placed.</param>
+        /// <param name="item">
+        ///     The item.  This structure contains all the item metadata, including the folder
+        ///     in which the item is to be placed.
+        /// </param>
         public void AddInventoryItemAsync(IClientAPI remoteClient, InventoryItemBase item)
         {
             m_scene.InventoryService.AddItemAsync(item,
-                (itm) => remoteClient.SendInventoryItemCreateUpdate(itm, 0));
+                                                  (itm) => remoteClient.SendInventoryItemCreateUpdate(itm, 0));
         }
 
         /// <summary>
-        /// Rez a script into a prim's inventory from another prim
-        /// This is used for the LSL function llRemoteLoadScriptPin and requires a valid pin to be used
+        ///     Rez a script into a prim's inventory from another prim
+        ///     This is used for the LSL function llRemoteLoadScriptPin and requires a valid pin to be used
         /// </summary>
         /// <param name="srcId">The UUID of the script that is going to be copied</param>
         /// <param name="srcPart">The prim that the script that is going to be copied from</param>
@@ -1384,7 +1441,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="pin">The ScriptAccessPin of the prim</param>
         /// <param name="running">Whether the script should be running when it is started</param>
         /// <param name="start_param">The start param to pass to the script</param>
-        public void RezScript (UUID srcId, ISceneChildEntity srcPart, UUID destId, int pin, int running, int start_param)
+        public void RezScript(UUID srcId, ISceneChildEntity srcPart, UUID destId, int pin, int running, int start_param)
         {
             TaskInventoryItem srcTaskItem = srcPart.Inventory.GetInventoryItem(srcId);
 
@@ -1392,19 +1449,19 @@ namespace Aurora.Modules.Inventory
             {
                 MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for rezzing a script but the "
-                        + " item does not exist in this inventory",
+                    + " item does not exist in this inventory",
                     srcId, srcPart.Name, srcPart.UUID);
                 return;
             }
 
-            ISceneChildEntity destPart = m_scene.GetSceneObjectPart (destId);
+            ISceneChildEntity destPart = m_scene.GetSceneObjectPart(destId);
 
             if (destPart == null)
             {
                 MainConsole.Instance.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Could not find script for ID {0}",
-                        destId);
+                    "[PRIM INVENTORY]: " +
+                    "Could not find script for ID {0}",
+                    destId);
                 return;
             }
 
@@ -1413,21 +1470,21 @@ namespace Aurora.Modules.Inventory
             {
                 // Group permissions
                 if ((destPart.GroupID == UUID.Zero) || (destPart.GroupID != srcPart.GroupID) ||
-                    ((destPart.GroupMask & (uint)PermissionMask.Modify) == 0))
+                    ((destPart.GroupMask & (uint) PermissionMask.Modify) == 0))
                     return;
             }
             else
             {
-                if ((destPart.OwnerMask & (uint)PermissionMask.Modify) == 0)
+                if ((destPart.OwnerMask & (uint) PermissionMask.Modify) == 0)
                     return;
             }
 
             if (destPart.ScriptAccessPin != pin)
             {
                 MainConsole.Instance.WarnFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Script in object {0} : {1}, attempted to load script {2} : {3} into object {4} : {5} with invalid pin {6}",
-                        srcPart.Name, srcId, srcTaskItem.Name, srcTaskItem.ItemID, destPart.Name, destId, pin);
+                    "[PRIM INVENTORY]: " +
+                    "Script in object {0} : {1}, attempted to load script {2} : {3} into object {4} : {5} with invalid pin {6}",
+                    srcPart.Name, srcId, srcTaskItem.Name, srcTaskItem.ItemID, destPart.Name, destId, pin);
                 // the LSL Wiki says we are supposed to shout on the DEBUG_CHANNEL -
                 //   "Object: Task Object trying to illegally load script onto task Other_Object!"
                 // How do we shout from in here?
@@ -1455,19 +1512,18 @@ namespace Aurora.Modules.Inventory
                                                  };
 
 
-
             if (destPart.OwnerID != srcPart.OwnerID)
             {
                 if (m_scene.Permissions.PropagatePermissions())
                 {
                     destTaskItem.CurrentPermissions = srcTaskItem.CurrentPermissions &
-                            srcTaskItem.NextPermissions;
+                                                      srcTaskItem.NextPermissions;
                     destTaskItem.GroupPermissions = srcTaskItem.GroupPermissions &
-                            srcTaskItem.NextPermissions;
+                                                    srcTaskItem.NextPermissions;
                     destTaskItem.EveryonePermissions = srcTaskItem.EveryonePermissions &
-                            srcTaskItem.NextPermissions;
+                                                       srcTaskItem.NextPermissions;
                     destTaskItem.BasePermissions = srcTaskItem.BasePermissions &
-                            srcTaskItem.NextPermissions;
+                                                   srcTaskItem.NextPermissions;
                     destTaskItem.CurrentPermissions |= 16; // Slam!
                 }
             }
@@ -1488,13 +1544,13 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Return the given objects to the agent given
+        ///     Return the given objects to the agent given
         /// </summary>
         /// <param name="returnobjects">The objects to return</param>
         /// <param name="AgentId">The agent UUID that will get the inventory items for these objects</param>
         /// <returns></returns>
         public bool ReturnObjects(ISceneEntity[] returnobjects,
-                UUID AgentId)
+                                  UUID AgentId)
         {
             if (returnobjects.Length == 0)
                 return true;
@@ -1507,12 +1563,12 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Copy a task (prim) inventory item to another task (prim)
+        ///     Copy a task (prim) inventory item to another task (prim)
         /// </summary>
         /// <param name="destId"></param>
         /// <param name="part"></param>
         /// <param name="itemId"></param>
-        public void MoveTaskInventoryItemToObject (UUID destId, ISceneChildEntity part, UUID itemId)
+        public void MoveTaskInventoryItemToObject(UUID destId, ISceneChildEntity part, UUID itemId)
         {
             TaskInventoryItem srcTaskItem = part.Inventory.GetInventoryItem(itemId);
 
@@ -1520,38 +1576,40 @@ namespace Aurora.Modules.Inventory
             {
                 MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for moving"
-                        + " but the item does not exist in this inventory",
+                    + " but the item does not exist in this inventory",
                     itemId, part.Name, part.UUID);
 
                 return;
             }
 
-            ISceneChildEntity destPart = m_scene.GetSceneObjectPart (destId);
+            ISceneChildEntity destPart = m_scene.GetSceneObjectPart(destId);
 
             if (destPart == null)
             {
                 MainConsole.Instance.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Could not find prim for ID {0}",
-                        destId);
+                    "[PRIM INVENTORY]: " +
+                    "Could not find prim for ID {0}",
+                    destId);
                 return;
             }
 
             // Can't transfer this
             //
-            if ((part.OwnerID != destPart.OwnerID) && ((srcTaskItem.CurrentPermissions & (uint)PermissionMask.Transfer) == 0))
+            if ((part.OwnerID != destPart.OwnerID) &&
+                ((srcTaskItem.CurrentPermissions & (uint) PermissionMask.Transfer) == 0))
                 return;
 
-            if (part.OwnerID != destPart.OwnerID && (destPart.GetEffectiveObjectFlags() & (uint)PrimFlags.AllowInventoryDrop) == 0)
+            if (part.OwnerID != destPart.OwnerID &&
+                (destPart.GetEffectiveObjectFlags() & (uint) PrimFlags.AllowInventoryDrop) == 0)
             {
                 // object cannot copy items to an object owned by a different owner
                 // unless llAllowInventoryDrop has been called
-                
+
                 return;
             }
 
             // must have both move and modify permission to put an item in an object
-            if ((part.OwnerMask & ((uint)PermissionMask.Move | (uint)PermissionMask.Modify)) == 0)
+            if ((part.OwnerMask & ((uint) PermissionMask.Move | (uint) PermissionMask.Modify)) == 0)
             {
                 return;
             }
@@ -1577,19 +1635,18 @@ namespace Aurora.Modules.Inventory
                                                  };
 
 
-
             if (destPart.OwnerID != part.OwnerID)
             {
                 if (m_scene.Permissions.PropagatePermissions())
                 {
                     destTaskItem.CurrentPermissions = srcTaskItem.CurrentPermissions &
-                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
+                                                      (srcTaskItem.NextPermissions | (uint) PermissionMask.Move);
                     destTaskItem.GroupPermissions = srcTaskItem.GroupPermissions &
-                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
+                                                    (srcTaskItem.NextPermissions | (uint) PermissionMask.Move);
                     destTaskItem.EveryonePermissions = srcTaskItem.EveryonePermissions &
-                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
+                                                       (srcTaskItem.NextPermissions | (uint) PermissionMask.Move);
                     destTaskItem.BasePermissions = srcTaskItem.BasePermissions &
-                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
+                                                   (srcTaskItem.NextPermissions | (uint) PermissionMask.Move);
                     destTaskItem.CurrentPermissions |= 16; // Slam!
                 }
             }
@@ -1601,7 +1658,7 @@ namespace Aurora.Modules.Inventory
 
             destPart.Inventory.AddInventoryItem(destTaskItem, part.OwnerID != destPart.OwnerID);
 
-            if ((srcTaskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+            if ((srcTaskItem.CurrentPermissions & (uint) PermissionMask.Copy) == 0)
                 part.Inventory.RemoveInventoryItem(itemId);
 
             IScenePresence avatar;
@@ -1611,24 +1668,27 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Move the given item from the object task inventory to the agent's inventory
+        ///     Move the given item from the object task inventory to the agent's inventory
         /// </summary>
         /// <param name="avatarId"></param>
         /// <param name="folderId">
-        /// The user inventory folder to move (or copy) the item to.  If null, then the most
-        /// suitable system folder is used (e.g. the Objects folder for objects).  If there is no suitable folder, then
-        /// the item is placed in the user's root inventory folder
+        ///     The user inventory folder to move (or copy) the item to.  If null, then the most
+        ///     suitable system folder is used (e.g. the Objects folder for objects).  If there is no suitable folder, then
+        ///     the item is placed in the user's root inventory folder
         /// </param>
         /// <param name="part"></param>
         /// <param name="itemId"></param>
         /// <param name="checkPermissions"></param>
-        public InventoryItemBase MoveTaskInventoryItemToUserInventory (UUID avatarId, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
+        public InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID avatarId, UUID folderId,
+                                                                      ISceneChildEntity part, UUID itemId,
+                                                                      bool checkPermissions)
         {
             IScenePresence avatar;
 
             if (m_scene.TryGetScenePresence(avatarId, out avatar))
             {
-                return MoveTaskInventoryItemToUserInventory (avatar.ControllingClient, folderId, part, itemId, checkPermissions);
+                return MoveTaskInventoryItemToUserInventory(avatar.ControllingClient, folderId, part, itemId,
+                                                            checkPermissions);
             }
             InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(avatarId, part, itemId);
 
@@ -1643,43 +1703,47 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Move the given items from the object task inventory to the agent's inventory
+        ///     Move the given items from the object task inventory to the agent's inventory
         /// </summary>
         /// <param name="destID"></param>
         /// <param name="name"></param>
         /// <param name="host"></param>
         /// <param name="items"></param>
         /// <returns></returns>
-        public UUID MoveTaskInventoryItemsToUserInventory (UUID destID, string name, ISceneChildEntity host, List<UUID> items)
+        public UUID MoveTaskInventoryItemsToUserInventory(UUID destID, string name, ISceneChildEntity host,
+                                                          List<UUID> items)
         {
             UUID newFolderID = UUID.Random();
 
             Util.FireAndForget((o) =>
-            {
-                InventoryFolderBase rootFolder = m_scene.InventoryService.GetRootFolder(destID);
+                                   {
+                                       InventoryFolderBase rootFolder = m_scene.InventoryService.GetRootFolder(destID);
 
-                InventoryFolderBase newFolder = new InventoryFolderBase(newFolderID, name, destID, -1, rootFolder.ID, rootFolder.Version);
-                m_scene.InventoryService.AddFolder(newFolder);
+                                       InventoryFolderBase newFolder = new InventoryFolderBase(newFolderID, name, destID,
+                                                                                               -1, rootFolder.ID,
+                                                                                               rootFolder.Version);
+                                       m_scene.InventoryService.AddFolder(newFolder);
 
-                foreach (UUID itemID in items)
-                {
-                    InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(destID, host, itemID);
+                                       foreach (UUID itemID in items)
+                                       {
+                                           InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(destID, host,
+                                                                                                          itemID);
 
-                    if (agentItem != null)
-                    {
-                        agentItem.Folder = newFolderID;
+                                           if (agentItem != null)
+                                           {
+                                               agentItem.Folder = newFolderID;
 
-                        m_scene.InventoryService.AddItem(agentItem);
-                    }
-                }
+                                               m_scene.InventoryService.AddItem(agentItem);
+                                           }
+                                       }
 
-                IScenePresence avatar;
-                if (m_scene.TryGetScenePresence(destID, out avatar))
-                {
-                    SendInventoryUpdate(avatar.ControllingClient, rootFolder, true, false);
-                    SendInventoryUpdate(avatar.ControllingClient, newFolder, false, true);
-                }
-            });
+                                       IScenePresence avatar;
+                                       if (m_scene.TryGetScenePresence(destID, out avatar))
+                                       {
+                                           SendInventoryUpdate(avatar.ControllingClient, rootFolder, true, false);
+                                           SendInventoryUpdate(avatar.ControllingClient, newFolder, false, true);
+                                       }
+                                   });
 
             return newFolderID;
         }
@@ -1689,7 +1753,7 @@ namespace Aurora.Modules.Inventory
         #region Caps
 
         /// <summary>
-        /// Register the Caps for inventory
+        ///     Register the Caps for inventory
         /// </summary>
         /// <param name="agentID"></param>
         /// <param name="server"></param>
@@ -1701,20 +1765,29 @@ namespace Aurora.Modules.Inventory
 
             //Region Server bound
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UpdateScriptTask"],
-                delegate(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                {
-                    return ScriptTaskInventory(agentID, path, request, httpRequest, httpResponse);
-                }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 {
+                                                                     return ScriptTaskInventory(agentID, path, request,
+                                                                                                httpRequest,
+                                                                                                httpResponse);
+                                                                 }));
 
             retVal["UpdateGestureTaskInventory"] = CapsUtil.CreateCAPS("UpdateGestureTaskInventory", "");
             retVal["UpdateNotecardTaskInventory"] = retVal["UpdateGestureTaskInventory"];
 
             //Region Server bound
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UpdateGestureTaskInventory"],
-                delegate(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                {
-                    return TaskInventoryUpdaterHandle(agentID, path, request, httpRequest, httpResponse);
-                }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 {
+                                                                     return TaskInventoryUpdaterHandle(agentID, path,
+                                                                                                       request,
+                                                                                                       httpRequest,
+                                                                                                       httpResponse);
+                                                                 }));
 
             retVal["UpdateScriptAgentInventory"] = CapsUtil.CreateCAPS("UpdateScriptAgentInventory", "");
             retVal["UpdateNotecardAgentInventory"] = retVal["UpdateScriptAgentInventory"];
@@ -1723,14 +1796,20 @@ namespace Aurora.Modules.Inventory
             //Unless the script engine goes, region server bound
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UpdateScriptAgentInventory"], delegate(
                 string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return NoteCardAgentInventory(agentID, path, request, httpRequest, httpResponse);
-            }));
+                                                                                                               {
+                                                                                                                   return
+                                                                                                                       NoteCardAgentInventory
+                                                                                                                           (agentID,
+                                                                                                                            path,
+                                                                                                                            request,
+                                                                                                                            httpRequest,
+                                                                                                                            httpResponse);
+                                                                                                               }));
             return retVal;
         }
 
         /// <summary>
-        /// Called by the script task update handler.  Provides a URL to which the client can upload a new asset.
+        ///     Called by the script task update handler.  Provides a URL to which the client can upload a new asset.
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="request"></param>
@@ -1739,13 +1818,14 @@ namespace Aurora.Modules.Inventory
         /// <param name="httpResponse">HTTP response header object</param>
         /// <returns></returns>
         public byte[] ScriptTaskInventory(UUID AgentID, string path, Stream request, OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
+                                          OSHttpResponse httpResponse)
         {
             try
             {
-                MainConsole.Instance.Debug("[Scene]: ScriptTaskInventory Request in region: " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Debug("[Scene]: ScriptTaskInventory Request in region: " +
+                                           m_scene.RegionInfo.RegionName);
                 //MainConsole.Instance.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
-                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
                 UUID item_id = map["item_id"].AsUUID();
                 UUID task_id = map["task_id"].AsUUID();
                 int is_script_running = map["is_script_running"].AsInteger();
@@ -1782,7 +1862,7 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Called by the script task update handler.  Provides a URL to which the client can upload a new asset.
+        ///     Called by the script task update handler.  Provides a URL to which the client can upload a new asset.
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="request"></param>
@@ -1791,11 +1871,11 @@ namespace Aurora.Modules.Inventory
         /// <param name="httpResponse">HTTP response header object</param>
         /// <returns></returns>
         public byte[] TaskInventoryUpdaterHandle(UUID AgentID, string path, Stream request, OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
+                                                 OSHttpResponse httpResponse)
         {
             try
             {
-                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
                 UUID item_id = map["item_id"].AsUUID();
                 UUID task_id = map["task_id"].AsUUID();
                 string capsBase = "/CAPS/" + UUID.Random();
@@ -1830,7 +1910,7 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// Called by the notecard update handler.  Provides a URL to which the client can upload a new asset.
+        ///     Called by the notecard update handler.  Provides a URL to which the client can upload a new asset.
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="request"></param>
@@ -1839,12 +1919,12 @@ namespace Aurora.Modules.Inventory
         /// <param name="httpResponse"></param>
         /// <returns></returns>
         public byte[] NoteCardAgentInventory(UUID AgentID, string path, Stream request, OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
+                                             OSHttpResponse httpResponse)
         {
             //MainConsole.Instance.Debug("[CAPS]: NoteCardAgentInventory Request in region: " + m_regionName + "\n" + request);
             //MainConsole.Instance.Debug("[CAPS]: NoteCardAgentInventory Request is: " + request);
 
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
             string capsBase = "/CAPS/" + UUID.Random();
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
@@ -1865,8 +1945,8 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// This class is a callback invoked when a client sends asset data to
-        /// an agent inventory notecard update url
+        ///     This class is a callback invoked when a client sends asset data to
+        ///     an agent inventory notecard update url
         /// </summary>
         public class ItemUpdater
         {
@@ -1876,7 +1956,7 @@ namespace Aurora.Modules.Inventory
             private readonly UUID agentID;
             private readonly IScene m_scene;
 
-            public ItemUpdater (UUID AgentID, IScene scene, UUID inventoryItem, string path, IHttpServer httpServer)
+            public ItemUpdater(UUID AgentID, IScene scene, UUID inventoryItem, string path, IHttpServer httpServer)
             {
                 inventoryItemID = inventoryItem;
                 uploaderPath = path;
@@ -1892,7 +1972,7 @@ namespace Aurora.Modules.Inventory
             /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
-                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 byte[] data = HttpServerHandlerHelpers.ReadFully(request);
                 UUID inv = inventoryItemID;
@@ -1912,8 +1992,8 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// This class is a callback invoked when a client sends asset data to
-        /// a task inventory script update url
+        ///     This class is a callback invoked when a client sends asset data to
+        ///     a task inventory script update url
         /// </summary>
         public class TaskInventoryScriptUpdater
         {
@@ -1928,7 +2008,6 @@ namespace Aurora.Modules.Inventory
             public TaskInventoryScriptUpdater(IScene scene, UUID inventoryItemID, UUID primID, int isScriptRunning2,
                                               string path, IHttpServer httpServer, UUID agentID)
             {
-
                 this.inventoryItemID = inventoryItemID;
                 this.primID = primID;
                 AgentID = agentID;
@@ -1948,7 +2027,7 @@ namespace Aurora.Modules.Inventory
             /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 try
                 {
@@ -1960,7 +2039,8 @@ namespace Aurora.Modules.Inventory
                     m_scene.ClientManager.TryGetValue(AgentID, out client);
                     UUID newAssetID = UUID.Zero;
                     byte[] data = HttpServerHandlerHelpers.ReadFully(request);
-                    ArrayList errors = CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID, isScriptRunning, data, out newAssetID);
+                    ArrayList errors = CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID,
+                                                                          isScriptRunning, data, out newAssetID);
 
                     OSDMap map = new OSDMap();
                     map["new_asset"] = newAssetID;
@@ -1984,7 +2064,7 @@ namespace Aurora.Modules.Inventory
             }
 
             /// <summary>
-            /// Capability originating call to update the asset of a script in a prim's (task's) inventory
+            ///     Capability originating call to update the asset of a script in a prim's (task's) inventory
             /// </summary>
             /// <param name="remoteClient"></param>
             /// <param name="itemId"></param>
@@ -1993,7 +2073,8 @@ namespace Aurora.Modules.Inventory
             /// <param name="data"></param>
             /// <param name="newID"></param>
             public ArrayList CapsUpdateTaskInventoryScriptAsset(IClientAPI remoteClient, UUID itemId,
-                                                           UUID primId, bool isScriptRunning2, byte[] data, out UUID newID)
+                                                                UUID primId, bool isScriptRunning2, byte[] data,
+                                                                out UUID newID)
             {
                 ArrayList errors = new ArrayList();
                 if (!m_scene.Permissions.CanEditScript(itemId, primId, remoteClient.AgentId))
@@ -2004,8 +2085,8 @@ namespace Aurora.Modules.Inventory
                 }
 
                 // Retrieve group
-                ISceneChildEntity part = m_scene.GetSceneObjectPart (primId);
-                if(null == part || null == part.ParentEntity)
+                ISceneChildEntity part = m_scene.GetSceneObjectPart(primId);
+                if (null == part || null == part.ParentEntity)
                 {
                     MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: " +
@@ -2024,7 +2105,7 @@ namespace Aurora.Modules.Inventory
                 {
                     MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for caps script update "
-                            + " but the item does not exist in this inventory",
+                        + " but the item does not exist in this inventory",
                         itemId, part.Name, part.UUID);
 
                     newID = UUID.Zero;
@@ -2044,7 +2125,7 @@ namespace Aurora.Modules.Inventory
                     item.AssetID = newID;
 
                     part.Inventory.UpdateInventoryItem(item);
-                    
+
                     if (isScriptRunning2)
                     {
                         // Needs to determine which engine was running it and use that
@@ -2062,8 +2143,8 @@ namespace Aurora.Modules.Inventory
         }
 
         /// <summary>
-        /// This class is a callback invoked when a client sends asset data to
-        /// a task inventory script update url
+        ///     This class is a callback invoked when a client sends asset data to
+        ///     a task inventory script update url
         /// </summary>
         public class TaskInventoryUpdater
         {
@@ -2075,9 +2156,8 @@ namespace Aurora.Modules.Inventory
             private readonly UUID AgentID;
 
             public TaskInventoryUpdater(IScene scene, UUID inventoryItemID, UUID primID,
-                                              string path, IHttpServer httpServer, UUID agentID)
+                                        string path, IHttpServer httpServer, UUID agentID)
             {
-
                 this.inventoryItemID = inventoryItemID;
                 this.primID = primID;
                 AgentID = agentID;
@@ -2088,7 +2168,6 @@ namespace Aurora.Modules.Inventory
             }
 
             /// <summary>
-            /// 
             /// </summary>
             /// <param name="path"></param>
             /// <param name="request"></param>
@@ -2096,7 +2175,7 @@ namespace Aurora.Modules.Inventory
             /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] uploaderCaps(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 try
                 {
@@ -2112,7 +2191,8 @@ namespace Aurora.Modules.Inventory
 
                         if (item != null)
                         {
-                            if ((item.Type == (int)InventoryType.Notecard || item.Type == (int)InventoryType.Gesture || item.Type == 21 /* Gesture... again*/)
+                            if ((item.Type == (int) InventoryType.Notecard || item.Type == (int) InventoryType.Gesture ||
+                                 item.Type == 21 /* Gesture... again*/)
                                 && m_scene.Permissions.CanViewNotecard(inventoryItemID, primID, AgentID))
                             {
                                 if ((newAssetID = m_scene.AssetService.UpdateContent(item.AssetID, data)) != UUID.Zero)

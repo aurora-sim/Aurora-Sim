@@ -284,11 +284,11 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
             //Sets the OpenRegionSettings
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["DispatchOpenRegionSettings"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return DispatchOpenRegionSettings(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return DispatchOpenRegionSettings(request, agentID);
+                                                                 }));
             return retVal;
         }
 
@@ -365,7 +365,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
             if (sp.Scene.Permissions.CanIssueEstateCommand(sp.UUID, false))
                 body.Add("EditURL", OSD.FromString(AddOpenRegionSettingsHTMLPage(sp.Scene)));
-            
+
             if (m_settings.MaxDragDistance != -1)
                 body.Add("MaxDragDistance", OSD.FromReal(m_settings.MaxDragDistance));
 
@@ -460,10 +460,13 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             if (System.IO.File.Exists(path))
                 HTMLPage = System.IO.File.ReadAllText(path);
             return CSHTMLCreator.AddHTMLPage(HTMLPage, "", "OpenRegionSettings", vars, (newVars) =>
-            {
-                ParseUpdatedList(scene, newVars);
-                return AddOpenRegionSettingsHTMLPage(scene);
-            });
+                                                                                           {
+                                                                                               ParseUpdatedList(scene,
+                                                                                                                newVars);
+                                                                                               return
+                                                                                                   AddOpenRegionSettingsHTMLPage
+                                                                                                       (scene);
+                                                                                           });
         }
 
         private void ParseUpdatedList(IScene scene, Dictionary<string, string> vars)
@@ -477,11 +480,11 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             settings.MaximumPhysPrimScale = floatParse(vars["Max Physical Prim Scale"]);
             settings.MaximumHollowSize = floatParse(vars["Max Hollow Size"]);
             settings.MinimumHoleSize = floatParse(vars["Min Hole Size"]);
-            settings.MaximumLinkCount = (int)floatParse(vars["Max Link Count"]);
-            settings.MaximumLinkCountPhys = (int)floatParse(vars["Max Link Count Phys"]);
-            settings.MaximumInventoryItemsTransfer = (int)floatParse(vars["Max Inventory Items To Transfer"]);
+            settings.MaximumLinkCount = (int) floatParse(vars["Max Link Count"]);
+            settings.MaximumLinkCountPhys = (int) floatParse(vars["Max Link Count Phys"]);
+            settings.MaximumInventoryItemsTransfer = (int) floatParse(vars["Max Inventory Items To Transfer"]);
             settings.TerrainDetailScale = floatParse(vars["Terrain Scale"]);
-            settings.ShowTags = (int)floatParse(vars["Show Tags"]);
+            settings.ShowTags = (int) floatParse(vars["Show Tags"]);
             settings.RenderWater = vars["Render Water"] != null;
             settings.DisplayMinimap = vars["Allow Minimap"] != null;
             settings.AllowPhysicalPrims = vars["Allow Physical Prims"] != null;

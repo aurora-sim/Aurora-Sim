@@ -33,13 +33,13 @@ using OpenMetaverse;
 namespace Aurora.Modules.Chat
 {
     /// <summary>
-    ///   This allows you to use a calculator inworld via chat
-    ///   Example would be to type: 
-    ///   calc.Add 1 1 
-    ///   which would return 2
-    ///   or 
-    ///   calc.Divide 4 2
-    ///   which returns 2
+    ///     This allows you to use a calculator inworld via chat
+    ///     Example would be to type:
+    ///     calc.Add 1 1
+    ///     which would return 2
+    ///     or
+    ///     calc.Divide 4 2
+    ///     which returns 2
     /// </summary>
     public class CalcChatPlugin : IChatPlugin
     {
@@ -114,11 +114,11 @@ namespace Aurora.Modules.Chat
         #endregion
 
         /// <summary>
-        ///   Tell the client what the result is
+        ///     Tell the client what the result is
         /// </summary>
-        /// <param name = "result"></param>
-        /// <param name = "scene"></param>
-        /// <param name = "position"></param>
+        /// <param name="result"></param>
+        /// <param name="scene"></param>
+        /// <param name="position"></param>
         private void BuildAndSendResult(float result, IScene scene, Vector3 position)
         {
             OSChatMessage message = new OSChatMessage
@@ -141,7 +141,7 @@ namespace Aurora.Modules.Chat
     }
 
     /// <summary>
-    ///   Set some default settings for users entering the sim
+    ///     Set some default settings for users entering the sim
     /// </summary>
     public class AdminChatPlugin : IChatPlugin
     {

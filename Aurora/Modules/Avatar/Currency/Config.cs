@@ -11,6 +11,7 @@ namespace Simple.Currency
     public class SimpleCurrencyConfig : IDataTransferable
     {
         #region declarations
+
         private uint m_priceUpload = 0;
         private uint m_priceGroupCreate = 0;
         private int m_stipend = 0;
@@ -26,27 +27,47 @@ namespace Simple.Currency
         private uint m_clientPort = 8002;
 
         #endregion
+
         #region functions
+
         public SimpleCurrencyConfig(IConfig economyConfig)
         {
             foreach (PropertyInfo propertyInfo in GetType().GetProperties())
             {
                 try
                 {
-                    if (propertyInfo.PropertyType.IsAssignableFrom (typeof (float)))
-                        propertyInfo.SetValue (this, economyConfig.GetFloat (propertyInfo.Name, float.Parse (propertyInfo.GetValue (this, new object[0]).ToString ())), new object[0]);
-                    else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (int)))
-                        propertyInfo.SetValue (this, economyConfig.GetInt (propertyInfo.Name, int.Parse (propertyInfo.GetValue (this, new object[0]).ToString ())), new object[0]);
-                    else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (bool)))
-                        propertyInfo.SetValue (this, economyConfig.GetBoolean (propertyInfo.Name, bool.Parse (propertyInfo.GetValue (this, new object[0]).ToString ())), new object[0]);
-                    else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (string)))
-                        propertyInfo.SetValue (this, economyConfig.GetString (propertyInfo.Name, propertyInfo.GetValue (this, new object[0]).ToString ()), new object[0]);
-                    else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (UUID)))
-                        propertyInfo.SetValue (this, new UUID (economyConfig.GetString (propertyInfo.Name, propertyInfo.GetValue (this, new object[0]).ToString ())), new object[0]);
+                    if (propertyInfo.PropertyType.IsAssignableFrom(typeof (float)))
+                        propertyInfo.SetValue(this,
+                                              economyConfig.GetFloat(propertyInfo.Name,
+                                                                     float.Parse(
+                                                                         propertyInfo.GetValue(this, new object[0])
+                                                                                     .ToString())), new object[0]);
+                    else if (propertyInfo.PropertyType.IsAssignableFrom(typeof (int)))
+                        propertyInfo.SetValue(this,
+                                              economyConfig.GetInt(propertyInfo.Name,
+                                                                   int.Parse(
+                                                                       propertyInfo.GetValue(this, new object[0])
+                                                                                   .ToString())), new object[0]);
+                    else if (propertyInfo.PropertyType.IsAssignableFrom(typeof (bool)))
+                        propertyInfo.SetValue(this,
+                                              economyConfig.GetBoolean(propertyInfo.Name,
+                                                                       bool.Parse(
+                                                                           propertyInfo.GetValue(this, new object[0])
+                                                                                       .ToString())), new object[0]);
+                    else if (propertyInfo.PropertyType.IsAssignableFrom(typeof (string)))
+                        propertyInfo.SetValue(this,
+                                              economyConfig.GetString(propertyInfo.Name,
+                                                                      propertyInfo.GetValue(this, new object[0])
+                                                                                  .ToString()), new object[0]);
+                    else if (propertyInfo.PropertyType.IsAssignableFrom(typeof (UUID)))
+                        propertyInfo.SetValue(this,
+                                              new UUID(economyConfig.GetString(propertyInfo.Name,
+                                                                               propertyInfo.GetValue(this, new object[0])
+                                                                                           .ToString())), new object[0]);
                 }
-                catch(Exception)
+                catch (Exception)
                 {
-                    MainConsole.Instance.Warn ("[SimpleCurrency]: Exception reading economy config: " + propertyInfo.Name);
+                    MainConsole.Instance.Warn("[SimpleCurrency]: Exception reading economy config: " + propertyInfo.Name);
                 }
             }
         }
@@ -67,16 +88,16 @@ namespace Simple.Currency
             {
                 try
                 {
-                    if (propertyInfo.PropertyType.IsAssignableFrom (typeof (float)))
-                        returnvalue.Add (propertyInfo.Name, (float)propertyInfo.GetValue (this, new object[0]));
-                    else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (int)))
-                        returnvalue.Add (propertyInfo.Name, (int)propertyInfo.GetValue (this, new object[0]));
-                    else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (bool)))
-                        returnvalue.Add (propertyInfo.Name, (bool)propertyInfo.GetValue (this, new object[0]));
-                    else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (string)))
-                        returnvalue.Add (propertyInfo.Name, (string)propertyInfo.GetValue (this, new object[0]));
-                    else if (propertyInfo.PropertyType.IsAssignableFrom (typeof (UUID)))
-                        returnvalue.Add (propertyInfo.Name, (UUID)propertyInfo.GetValue (this, new object[0]));
+                    if (propertyInfo.PropertyType.IsAssignableFrom(typeof (float)))
+                        returnvalue.Add(propertyInfo.Name, (float) propertyInfo.GetValue(this, new object[0]));
+                    else if (propertyInfo.PropertyType.IsAssignableFrom(typeof (int)))
+                        returnvalue.Add(propertyInfo.Name, (int) propertyInfo.GetValue(this, new object[0]));
+                    else if (propertyInfo.PropertyType.IsAssignableFrom(typeof (bool)))
+                        returnvalue.Add(propertyInfo.Name, (bool) propertyInfo.GetValue(this, new object[0]));
+                    else if (propertyInfo.PropertyType.IsAssignableFrom(typeof (string)))
+                        returnvalue.Add(propertyInfo.Name, (string) propertyInfo.GetValue(this, new object[0]));
+                    else if (propertyInfo.PropertyType.IsAssignableFrom(typeof (UUID)))
+                        returnvalue.Add(propertyInfo.Name, (UUID) propertyInfo.GetValue(this, new object[0]));
                 }
                 catch (Exception ex)
                 {
@@ -107,13 +128,15 @@ namespace Simple.Currency
                     }
                     catch (Exception ex)
                     {
-                        MainConsole.Instance.Warn("[SimpleCurrency]: Exception reading fromOSD() config: " + ex.ToString());
+                        MainConsole.Instance.Warn("[SimpleCurrency]: Exception reading fromOSD() config: " +
+                                                  ex.ToString());
                     }
                 }
             }
         }
 
         #endregion
+
         #region properties
 
         public string ErrorURI
@@ -154,30 +177,26 @@ namespace Simple.Currency
 
         public int PriceGroupCreate
         {
-            get { return (int)m_priceGroupCreate; }
-            set { m_priceGroupCreate = (uint)value; }
+            get { return (int) m_priceGroupCreate; }
+            set { m_priceGroupCreate = (uint) value; }
         }
 
         public int PriceUpload
         {
-            get { return (int)m_priceUpload; }
-            set { m_priceUpload = (uint)value; }
+            get { return (int) m_priceUpload; }
+            set { m_priceUpload = (uint) value; }
         }
 
         public bool StipendsPremiumOnly
         {
-            get {
-                return m_stipendsPremiumOnly;
-            }
-            set {
-                m_stipendsPremiumOnly = value;
-            }
+            get { return m_stipendsPremiumOnly; }
+            set { m_stipendsPremiumOnly = value; }
         }
 
         public int ClientPort
         {
-            get { return (int)m_clientPort; }
-            set { m_clientPort = (uint)value; }
+            get { return (int) m_clientPort; }
+            set { m_clientPort = (uint) value; }
         }
 
         public bool CanBuyCurrencyInworld
@@ -199,7 +218,6 @@ namespace Simple.Currency
         public uint StipendsBalance;
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="osdMap"></param>
         public UserCurrency(OSDMap osdMap)
@@ -208,7 +226,9 @@ namespace Simple.Currency
                 FromOSD(osdMap);
         }
 
-        public UserCurrency() { }
+        public UserCurrency()
+        {
+        }
 
         /// <summary></summary>
         /// <param name="osdMap"></param>

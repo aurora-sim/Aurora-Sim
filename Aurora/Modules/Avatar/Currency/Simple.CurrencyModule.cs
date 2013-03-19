@@ -22,7 +22,8 @@ namespace Simple.Currency
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            if (config.Configs["Currency"] == null || config.Configs["Currency"].GetString("Module", "") != "SimpleCurrency")
+            if (config.Configs["Currency"] == null ||
+                config.Configs["Currency"].GetString("Module", "") != "SimpleCurrency")
                 return;
 
             m_registry = registry;
@@ -36,7 +37,8 @@ namespace Simple.Currency
         {
             if (m_registry == null)
                 return;
-            ISyncMessageRecievedService syncRecievedService = registry.RequestModuleInterface<ISyncMessageRecievedService>();
+            ISyncMessageRecievedService syncRecievedService =
+                registry.RequestModuleInterface<ISyncMessageRecievedService>();
             if (syncRecievedService != null)
                 syncRecievedService.OnMessageReceived += syncRecievedService_OnMessageReceived;
         }
@@ -49,27 +51,27 @@ namespace Simple.Currency
             if (manager != null)
             {
                 manager.OnAddedScene += (scene) =>
-                {
-                    m_scene = scene;
-                    scene.EventManager.OnNewClient += OnNewClient;
-                    scene.EventManager.OnClosingClient += OnClosingClient;
-                    scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
-                    scene.EventManager.OnValidateBuyLand += EventManager_OnValidateBuyLand;
-                    scene.RegisterModuleInterface<IMoneyModule>(this);
-                };
+                                            {
+                                                m_scene = scene;
+                                                scene.EventManager.OnNewClient += OnNewClient;
+                                                scene.EventManager.OnClosingClient += OnClosingClient;
+                                                scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
+                                                scene.EventManager.OnValidateBuyLand += EventManager_OnValidateBuyLand;
+                                                scene.RegisterModuleInterface<IMoneyModule>(this);
+                                            };
                 manager.OnCloseScene += (scene) =>
-                {
-                    m_scene.EventManager.OnNewClient -= OnNewClient;
-                    m_scene.EventManager.OnClosingClient -= OnClosingClient;
-                    m_scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
-                    scene.EventManager.OnValidateBuyLand -= EventManager_OnValidateBuyLand;
-                    m_scene.RegisterModuleInterface<IMoneyModule>(this);
-                    m_scene = null;
-                };
+                                            {
+                                                m_scene.EventManager.OnNewClient -= OnNewClient;
+                                                m_scene.EventManager.OnClosingClient -= OnClosingClient;
+                                                m_scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
+                                                scene.EventManager.OnValidateBuyLand -= EventManager_OnValidateBuyLand;
+                                                m_scene.RegisterModuleInterface<IMoneyModule>(this);
+                                                m_scene = null;
+                                            };
             }
         }
 
-        bool EventManager_OnValidateBuyLand(EventManager.LandBuyArgs e)
+        private bool EventManager_OnValidateBuyLand(EventManager.LandBuyArgs e)
         {
             IParcelManagementModule parcelMangaement = m_scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelMangaement == null)
@@ -89,7 +91,9 @@ namespace Simple.Currency
                 if ((AuthorizedID == UUID.Zero || AuthorizedID == e.agentId) && e.parcelPrice >= saleprice &&
                     landforsale)
                 {
-                    if (m_connector.UserCurrencyTransfer(lob.LandData.OwnerID, e.agentId, UUID.Zero, UUID.Zero, (uint)saleprice, "Land Buy", TransactionType.LandSale, UUID.Zero))
+                    if (m_connector.UserCurrencyTransfer(lob.LandData.OwnerID, e.agentId, UUID.Zero, UUID.Zero,
+                                                         (uint) saleprice, "Land Buy", TransactionType.LandSale,
+                                                         UUID.Zero))
                     {
                         e.parcelOwnerID = pOwnerID;
                         e.landValidated = true;
@@ -125,22 +129,25 @@ namespace Simple.Currency
 
         public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)
         {
-            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, objectID, (uint)amount, "Object payment", TransactionType.ObjectPaysAvatar, UUID.Zero); 
+            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, objectID, (uint) amount, "Object payment",
+                                                    TransactionType.ObjectPaysAvatar, UUID.Zero);
         }
 
         public int Balance(UUID agentID)
         {
-            return (int)m_connector.GetUserCurrency(agentID).Amount;
+            return (int) m_connector.GetUserCurrency(agentID).Amount;
         }
 
         public bool Charge(IClientAPI client, int amount)
         {
-            return m_connector.UserCurrencyTransfer(UUID.Zero, client.AgentId, UUID.Zero, UUID.Zero, (uint)amount, "Charge", TransactionType.SystemGenerated, UUID.Zero); 
+            return m_connector.UserCurrencyTransfer(UUID.Zero, client.AgentId, UUID.Zero, UUID.Zero, (uint) amount,
+                                                    "Charge", TransactionType.SystemGenerated, UUID.Zero);
         }
 
         public bool Charge(UUID agentID, int amount, string text)
         {
-            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint)amount, text, TransactionType.SystemGenerated, UUID.Zero); 
+            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint) amount, text,
+                                                    TransactionType.SystemGenerated, UUID.Zero);
         }
 
 #pragma warning disable 67
@@ -150,20 +157,25 @@ namespace Simple.Currency
 
         public bool Transfer(UUID toID, UUID fromID, int amount, string description)
         {
-            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint)amount, description, TransactionType.Gift, UUID.Zero); 
+            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint) amount, description,
+                                                    TransactionType.Gift, UUID.Zero);
         }
 
         public bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type)
         {
-            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint)amount, description, type, UUID.Zero); 
+            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint) amount, description, type,
+                                                    UUID.Zero);
         }
 
-        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description, TransactionType type)
+        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
+                             TransactionType type)
         {
-            return m_connector.UserCurrencyTransfer(toID, fromID, toObjectID, fromObjectID, (uint)amount, description, type, UUID.Zero); 
+            return m_connector.UserCurrencyTransfer(toID, fromID, toObjectID, fromObjectID, (uint) amount, description,
+                                                    type, UUID.Zero);
         }
 
-        public List<GroupAccountHistory> GetTransactions(UUID groupID, UUID agentID, int currentInterval, int intervalDays)
+        public List<GroupAccountHistory> GetTransactions(UUID groupID, UUID agentID, int currentInterval,
+                                                         int intervalDays)
         {
             return new List<GroupAccountHistory>();
         }
@@ -187,7 +199,8 @@ namespace Simple.Currency
 
         private void OnMakeRootAgent(IScenePresence presence)
         {
-            presence.ControllingClient.SendMoneyBalance(UUID.Zero, true, new byte[0], (int)m_connector.GetUserCurrency(presence.UUID).Amount);
+            presence.ControllingClient.SendMoneyBalance(UUID.Zero, true, new byte[0],
+                                                        (int) m_connector.GetUserCurrency(presence.UUID).Amount);
         }
 
         protected void OnClosingClient(IClientAPI client)
@@ -200,19 +213,23 @@ namespace Simple.Currency
 
         private void ProcessMoneyTransferRequest(UUID fromID, UUID toID, int amount, int type, string description)
         {
-            m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint)amount, description, (TransactionType)type, UUID.Random());
+            m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint) amount, description,
+                                             (TransactionType) type, UUID.Random());
         }
 
         private bool ValidateLandBuy(EventManager.LandBuyArgs e)
         {
-            return m_connector.UserCurrencyTransfer(e.parcelOwnerID, e.agentId, UUID.Zero, UUID.Zero, (uint)e.parcelPrice, "Land Purchase", TransactionType.LandSale, UUID.Random());
+            return m_connector.UserCurrencyTransfer(e.parcelOwnerID, e.agentId, UUID.Zero, UUID.Zero,
+                                                    (uint) e.parcelPrice, "Land Purchase", TransactionType.LandSale,
+                                                    UUID.Random());
         }
 
         private void EconomyDataRequestHandler(IClientAPI remoteClient)
         {
             if (m_config == null)
             {
-                remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity, remoteClient.Scene.RegionInfo.ObjectCapacity,
+                remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity,
+                                             remoteClient.Scene.RegionInfo.ObjectCapacity,
                                              0, 0,
                                              0, 0,
                                              0, 0,
@@ -223,7 +240,8 @@ namespace Simple.Currency
                                              0, 0);
             }
             else
-                remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity, remoteClient.Scene.RegionInfo.ObjectCapacity,
+                remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity,
+                                             remoteClient.Scene.RegionInfo.ObjectCapacity,
                                              0, m_config.PriceGroupCreate,
                                              0, 0,
                                              0, 0,
@@ -237,13 +255,14 @@ namespace Simple.Currency
         private void SendMoneyBalance(IClientAPI client, UUID agentId, UUID sessionId, UUID transactionId)
         {
             if (client.AgentId == agentId && client.SessionId == sessionId)
-                client.SendMoneyBalance(transactionId, true, new byte[0], (int)m_connector.GetUserCurrency(client.AgentId).Amount);
+                client.SendMoneyBalance(transactionId, true, new byte[0],
+                                        (int) m_connector.GetUserCurrency(client.AgentId).Amount);
             else
                 client.SendAlertMessage("Unable to send your money balance to you!");
         }
 
         /// <summary>
-        /// The client wants to buy a pass for a parcel
+        ///     The client wants to buy a pass for a parcel
         /// </summary>
         /// <param name="client"></param>
         /// <param name="fromID"></param>
@@ -263,18 +282,19 @@ namespace Simple.Currency
             }
             if (landParcel != null)
             {
-                bool giveResult = m_connector.UserCurrencyTransfer(landParcel.LandData.OwnerID, fromID, UUID.Zero, UUID.Zero,
-                                                       (uint)landParcel.LandData.PassPrice, "Parcel Pass",
-                                                       TransactionType.LandPassFee, UUID.Random());
+                bool giveResult = m_connector.UserCurrencyTransfer(landParcel.LandData.OwnerID, fromID, UUID.Zero,
+                                                                   UUID.Zero,
+                                                                   (uint) landParcel.LandData.PassPrice, "Parcel Pass",
+                                                                   TransactionType.LandPassFee, UUID.Random());
                 if (giveResult)
                 {
                     ParcelManager.ParcelAccessEntry entry
                         = new ParcelManager.ParcelAccessEntry
-                        {
-                            AgentID = fromID,
-                            Flags = AccessList.Access,
-                            Time = DateTime.Now.AddHours(landParcel.LandData.PassHours)
-                        };
+                              {
+                                  AgentID = fromID,
+                                  Flags = AccessList.Access,
+                                  Time = DateTime.Now.AddHours(landParcel.LandData.PassHours)
+                              };
                     landParcel.LandData.ParcelAccessList.Add(entry);
                     agentSp.ControllingClient.SendAgentAlertMessage("You have been added to the parcel access list.",
                                                                     false);
@@ -320,23 +340,23 @@ namespace Simple.Currency
                     if (sp != null)
                     {
                         ILandObject lo = sp.CurrentParcel;
-                        if ((lo.LandData.Flags & (uint)ParcelFlags.ForSale) == (uint)ParcelFlags.ForSale)
+                        if ((lo.LandData.Flags & (uint) ParcelFlags.ForSale) == (uint) ParcelFlags.ForSale)
                         {
                             if (lo.LandData.AuthBuyerID != UUID.Zero && lo.LandData.AuthBuyerID != agentID)
-                                return new OSDMap() { new KeyValuePair<string, OSD>("Success", false) };
+                                return new OSDMap() {new KeyValuePair<string, OSD>("Success", false)};
                             OSDMap map = lo.LandData.ToOSD();
                             map["Success"] = true;
                             return map;
                         }
                     }
                 }
-                return new OSDMap() { new KeyValuePair<string, OSD>("Success", false) };
+                return new OSDMap() {new KeyValuePair<string, OSD>("Success", false)};
             }
             return null;
         }
 
         /// <summary>
-        /// All message for money actually go through this function. Which also update the balance
+        ///     All message for money actually go through this function. Which also update the balance
         /// </summary>
         /// <param name="toId"></param>
         /// <param name="message"></param>
@@ -350,7 +370,8 @@ namespace Simple.Currency
                 IScenePresence icapiTo = m_scene.GetScenePresence(toId);
                 if (icapiTo != null)
                 {
-                    icapiTo.ControllingClient.SendMoneyBalance(transactionId, true, Utils.StringToBytes(message), (int)m_connector.GetUserCurrency(icapiTo.UUID).Amount);
+                    icapiTo.ControllingClient.SendMoneyBalance(transactionId, true, Utils.StringToBytes(message),
+                                                               (int) m_connector.GetUserCurrency(icapiTo.UUID).Amount);
                     dialogModule.SendAlertToUser(toId, message);
                 }
 

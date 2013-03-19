@@ -11,17 +11,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/region_search.html"
-                       };
+                           {
+                               "html/region_search.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -33,24 +41,29 @@ namespace Aurora.Modules.Web
             {
                 IGridService gridService = webInterface.Registry.RequestModuleInterface<IGridService>();
                 string regionname = requestParameters["regionname"].ToString();
-                int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
+                int start = httpRequest.Query.ContainsKey("Start")
+                                ? int.Parse(httpRequest.Query["Start"].ToString())
+                                : 0;
                 uint count = gridService.GetRegionsByNameCount(null, regionname);
-                int maxPages = (int)(count / amountPerQuery) - 1;
+                int maxPages = (int) (count/amountPerQuery) - 1;
 
                 if (start == -1)
-                    start = (int)(maxPages < 0 ? 0 : maxPages);
+                    start = (int) (maxPages < 0 ? 0 : maxPages);
 
                 vars.Add("CurrentPage", start);
                 vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
                 vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-                var regions = gridService.GetRegionsByName(null, regionname, (uint)start, amountPerQuery);
+                var regions = gridService.GetRegionsByName(null, regionname, (uint) start, amountPerQuery);
                 if (regions != null)
                 {
                     foreach (var region in regions)
                     {
-                        regionslist.Add(new Dictionary<string, object> { { "RegionName", region.RegionName }, 
-                        { "RegionID", region.RegionID } });
+                        regionslist.Add(new Dictionary<string, object>
+                                            {
+                                                {"RegionName", region.RegionName},
+                                                {"RegionID", region.RegionID}
+                                            });
                     }
                 }
             }
@@ -60,7 +73,7 @@ namespace Aurora.Modules.Web
                 vars.Add("NextOne", 0);
                 vars.Add("BackOne", 0);
             }
-					
+
             vars.Add("RegionsList", regionslist);
             vars.Add("RegionSearchText", translator.GetTranslatedString("RegionSearchText"));
             vars.Add("SearchForRegionText", translator.GetTranslatedString("SearchForRegionText"));
@@ -75,8 +88,8 @@ namespace Aurora.Modules.Web
 
             vars.Add("SearchResultForRegionText", translator.GetTranslatedString("SearchResultForRegionText"));
             vars.Add("RegionMoreInfo", translator.GetTranslatedString("RegionMoreInfo"));
-			vars.Add("MoreInfoText", translator.GetTranslatedString("MoreInfoText"));
-			
+            vars.Add("MoreInfoText", translator.GetTranslatedString("MoreInfoText"));
+
             return vars;
         }
 

@@ -37,7 +37,7 @@ using System.Linq;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Prepare to write out an archive.
+    ///     Prepare to write out an archive.
     /// </summary>
     public class ArchiveWriteRequestPreparation
     {
@@ -47,14 +47,14 @@ namespace Aurora.Modules.Archivers
         protected IScene m_scene;
 
         /// <summary>
-        ///   Constructor
+        ///     Constructor
         /// </summary>
-        /// <param name = "scene"></param>
-        /// <param name = "savePath">The path to which to save data.</param>
-        /// <param name = "requestId">The id associated with this request</param>
-        /// <param name = "checkPermissions"></param>
-        /// <exception cref = "System.IO.IOException">
-        ///   If there was a problem opening a stream for the file specified by the savePath
+        /// <param name="scene"></param>
+        /// <param name="savePath">The path to which to save data.</param>
+        /// <param name="requestId">The id associated with this request</param>
+        /// <param name="checkPermissions"></param>
+        /// <exception cref="System.IO.IOException">
+        ///     If there was a problem opening a stream for the file specified by the savePath
         /// </exception>
         public ArchiveWriteRequestPreparation(IScene scene, string savePath, Guid requestId, string checkPermissions)
         {
@@ -77,11 +77,11 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Constructor.
+        ///     Constructor.
         /// </summary>
-        /// <param name = "scene"></param>
-        /// <param name = "saveStream">The stream to which to save data.</param>
-        /// <param name = "requestId">The id associated with this request</param>
+        /// <param name="scene"></param>
+        /// <param name="saveStream">The stream to which to save data.</param>
+        /// <param name="requestId">The id associated with this request</param>
         public ArchiveWriteRequestPreparation(IScene scene, Stream saveStream, Guid requestId)
         {
             m_scene = scene;
@@ -90,9 +90,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Archive the region requested.
+        ///     Archive the region requested.
         /// </summary>
-        /// <exception cref = "System.IO.IOException">if there was an io problem with creating the file</exception>
+        /// <exception cref="System.IO.IOException">if there was an io problem with creating the file</exception>
         public void ArchiveRegion()
         {
             Dictionary<UUID, AssetType> assetUuids = new Dictionary<UUID, AssetType>();
@@ -164,11 +164,11 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Checks whether the user has permission to export an object group to an OAR.
+        ///     Checks whether the user has permission to export an object group to an OAR.
         /// </summary>
-        /// <param name = "user">The user</param>
-        /// <param name = "objGroup">The object group</param>
-        /// <param name = "checkPermissions">Which permissions to check: "C" = Copy, "T" = Transfer</param>
+        /// <param name="user">The user</param>
+        /// <param name="objGroup">The object group</param>
+        /// <param name="checkPermissions">Which permissions to check: "C" = Copy, "T" = Transfer</param>
         /// <returns>Whether the user is allowed to export the object to an OAR</returns>
         private bool CanUserArchiveObject(UUID user, ISceneEntity objGroup, string checkPermissions)
         {

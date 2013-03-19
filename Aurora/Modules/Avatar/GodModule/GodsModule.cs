@@ -39,7 +39,7 @@ namespace Aurora.Modules.Gods
     public class GodsModule : INonSharedRegionModule, IGodsModule
     {
         /// <summary>
-        ///   Special UUID for actions that apply to all agents
+        ///     Special UUID for actions that apply to all agents
         /// </summary>
         private static readonly UUID ALL_AGENTS = new UUID("44e87126-e794-4ded-05b3-7c42da3d5cdb");
 
@@ -70,7 +70,8 @@ namespace Aurora.Modules.Gods
                     if (sp.GodLevel == 0)
                         sp.GodLevel = 250;
 
-                    MainConsole.Instance.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
+                    MainConsole.Instance.Info("[GODS]: God level set for " + sp.Name + ", level " +
+                                              sp.GodLevel.ToString());
                     sp.ControllingClient.SendAdminResponse(token, (uint) sp.GodLevel);
                 }
                 else
@@ -78,7 +79,8 @@ namespace Aurora.Modules.Gods
                     if (m_dialogModule != null)
                         m_dialogModule.SendAlertToUser(agentID,
                                                        "Request for god powers denied. This request has been logged.");
-                    MainConsole.Instance.Info("[GODS]: God powers requested by " + sp.Name + ", user is not allowed to have god powers");
+                    MainConsole.Instance.Info("[GODS]: God powers requested by " + sp.Name +
+                                              ", user is not allowed to have god powers");
                 }
             }
         }
@@ -209,11 +211,10 @@ namespace Aurora.Modules.Gods
             retVal["UntrustedSimulatorMessage"] = CapsUtil.CreateCAPS("UntrustedSimulatorMessage", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UntrustedSimulatorMessage"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return UntrustedSimulatorMessage(agentID, request);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return UntrustedSimulatorMessage(agentID, request); }));
             return retVal;
         }
 
@@ -234,16 +235,16 @@ namespace Aurora.Modules.Gods
         }
 
         /// <summary>
-        ///   Kicks User specified from the simulator. This logs them off of the grid
-        ///   If the client gets the UUID: 44e87126e7944ded05b37c42da3d5cdb it assumes
-        ///   that you're kicking it even if the avatar's UUID isn't the UUID that the
-        ///   agent is assigned
+        ///     Kicks User specified from the simulator. This logs them off of the grid
+        ///     If the client gets the UUID: 44e87126e7944ded05b37c42da3d5cdb it assumes
+        ///     that you're kicking it even if the avatar's UUID isn't the UUID that the
+        ///     agent is assigned
         /// </summary>
-        /// <param name = "godID">The person doing the kicking</param>
-        /// <param name = "sessionID">The session of the person doing the kicking</param>
-        /// <param name = "agentID">the person that is being kicked</param>
-        /// <param name = "kickflags">Tells what to do to the user</param>
-        /// <param name = "reason">The message to send to the user after it's been turned into a field</param>
+        /// <param name="godID">The person doing the kicking</param>
+        /// <param name="sessionID">The session of the person doing the kicking</param>
+        /// <param name="agentID">the person that is being kicked</param>
+        /// <param name="kickflags">Tells what to do to the user</param>
+        /// <param name="reason">The message to send to the user after it's been turned into a field</param>
         public void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, byte[] reason)
         {
             KickUser(godID, sessionID, agentID, kickflags, Utils.BytesToString(reason));

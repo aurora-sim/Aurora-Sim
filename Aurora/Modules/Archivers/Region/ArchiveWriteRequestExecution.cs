@@ -37,13 +37,13 @@ using System.Xml;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Method called when all the necessary assets for an archive request have been received.
+    ///     Method called when all the necessary assets for an archive request have been received.
     /// </summary>
     public delegate void AssetsRequestCallback(
         ICollection<UUID> assetsFoundUuids, ICollection<UUID> assetsNotFoundUuids);
 
     /// <summary>
-    ///   Execute the write of an archive once we have received all the necessary data
+    ///     Execute the write of an archive once we have received all the necessary data
     /// </summary>
     public class ArchiveWriteRequestExecution
     {
@@ -82,7 +82,8 @@ namespace Aurora.Modules.Archivers
                 m_archiveWriter.Close();
             }
 
-            MainConsole.Instance.InfoFormat("[ARCHIVER]: Finished writing out OAR for {0}", m_scene.RegionInfo.RegionName);
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Finished writing out OAR for {0}",
+                                            m_scene.RegionInfo.RegionName);
 
             m_scene.EventManager.TriggerOarFileSaved(m_requestId, String.Empty);
         }
@@ -151,7 +152,7 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Create the control file for a 0.2 version archive
+        ///     Create the control file for a 0.2 version archive
         /// </summary>
         /// <returns></returns>
         public static string Create0p2ControlFile()

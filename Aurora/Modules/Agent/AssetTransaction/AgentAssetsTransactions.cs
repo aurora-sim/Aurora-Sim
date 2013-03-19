@@ -32,7 +32,7 @@ using System.Collections.Generic;
 namespace Aurora.Modules.Agent.AssetTransaction
 {
     /// <summary>
-    ///   Manage asset transactions for a single agent.
+    ///     Manage asset transactions for a single agent.
     /// </summary>
     public class AgentAssetTransactions
     {
@@ -43,18 +43,18 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
         // Methods
         public AgentAssetTransactions(UUID agentID, IScene scene,
-                bool dumpAssetsToFile)
+                                      bool dumpAssetsToFile)
         {
             m_Scene = scene;
             m_dumpAssetsToFile = dumpAssetsToFile;
         }
 
         /// <summary>
-        /// Return the xfer uploader for the given transaction.
+        ///     Return the xfer uploader for the given transaction.
         /// </summary>
         /// <remarks>
-        /// If an uploader does not already exist for this transaction then it is created, otherwise the existing
-        /// uploader is returned.
+        ///     If an uploader does not already exist for this transaction then it is created, otherwise the existing
+        ///     uploader is returned.
         /// </remarks>
         /// <param name="transactionID"></param>
         /// <returns>The asset xfer uploader</returns>
@@ -140,9 +140,9 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         public void RequestCreateInventoryItem(IClientAPI remoteClient,
-                UUID transactionID, UUID folderID, uint callbackID,
-                string description, string name, sbyte invType,
-               sbyte type, byte wearableType, uint nextOwnerMask)
+                                               UUID transactionID, UUID folderID, uint callbackID,
+                                               string description, string name, sbyte invType,
+                                               sbyte type, byte wearableType, uint nextOwnerMask)
         {
             AssetXferUploader uploader = RequestXferUploader(transactionID);
 
@@ -152,8 +152,8 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         public void RequestUpdateTaskInventoryItem(IClientAPI remoteClient,
-                ISceneChildEntity part, UUID transactionID,
-                TaskInventoryItem item)
+                                                   ISceneChildEntity part, UUID transactionID,
+                                                   TaskInventoryItem item)
         {
             AssetXferUploader uploader = RequestXferUploader(transactionID);
 
@@ -161,7 +161,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         public void RequestUpdateInventoryItem(IClientAPI remoteClient,
-                UUID transactionID, InventoryItemBase item)
+                                               UUID transactionID, InventoryItemBase item)
         {
             AssetXferUploader uploader = RequestXferUploader(transactionID);
 

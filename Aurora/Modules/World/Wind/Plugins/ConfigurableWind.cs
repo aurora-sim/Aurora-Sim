@@ -146,7 +146,7 @@ namespace Aurora.Modules.Wind.Plugins
                                                         {
                                                             "varDirection",
                                                             "allowable variance in wind direction in +/- degrees"
-                                                            },
+                                                        },
                                                         {"rateChange", "rate of change"}
                                                     };
 

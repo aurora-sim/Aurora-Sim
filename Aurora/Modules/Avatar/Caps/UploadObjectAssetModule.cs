@@ -88,20 +88,19 @@ namespace Aurora.Modules.Caps
             retVal["UploadObjectAsset"] = CapsUtil.CreateCAPS("UploadObjectAsset", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UploadObjectAsset"],
-                                                       delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProcessAdd(request, httpResponse, agentID);
-                                                       }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return ProcessAdd(request, httpResponse, agentID); }));
             return retVal;
         }
 
         /// <summary>
-        ///   Parses ad request
+        ///     Parses ad request
         /// </summary>
-        /// <param name = "request"></param>
-        /// <param name = "response"></param>
-        /// <param name = "AgentId"></param>
+        /// <param name="request"></param>
+        /// <param name="response"></param>
+        /// <param name="AgentId"></param>
         /// <returns></returns>
         public byte[] ProcessAdd(Stream request, OSHttpResponse response, UUID AgentId)
         {
@@ -125,7 +124,9 @@ namespace Aurora.Modules.Caps
             if (message == null)
             {
                 response.StatusCode = 400; //501; //410; //404;
-                return Encoding.UTF8.GetBytes("<llsd><map><key>error</key><string>Error parsing Object</string></map></llsd>");
+                return
+                    Encoding.UTF8.GetBytes(
+                        "<llsd><map><key>error</key><string>Error parsing Object</string></map></llsd>");
             }
 
             Vector3 pos = avatar.AbsolutePosition + (Vector3.UnitX*avatar.Rotation);

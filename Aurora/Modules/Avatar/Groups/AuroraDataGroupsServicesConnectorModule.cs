@@ -44,7 +44,7 @@ namespace Aurora.Modules.Groups
         #region IGroupsServicesConnector Members
 
         /// <summary>
-        ///   Create a Group, including Everyone and Owners Role, place FounderID in both groups, select Owner as selected role, and newly created group as agent's active role.
+        ///     Create a Group, including Everyone and Owners Role, place FounderID in both groups, select Owner as selected role, and newly created group as agent's active role.
         /// </summary>
         public UUID CreateGroup(UUID requestingAgentID, string name, string charter, bool showInList, UUID insigniaID,
                                 int membershipFee, bool openEnrollment, bool allowPublish,
@@ -54,7 +54,7 @@ namespace Aurora.Modules.Groups
             UUID OwnerRoleID = UUID.Random();
 
             GroupsConnector.CreateGroup(GroupID, name, charter, showInList,
-                                        insigniaID, 0, openEnrollment, allowPublish, maturePublish, founderID, 
+                                        insigniaID, 0, openEnrollment, allowPublish, maturePublish, founderID,
                                         OwnerRoleID);
 
             return GroupID;
@@ -165,7 +165,7 @@ namespace Aurora.Modules.Groups
         public GroupMembershipData GetAgentActiveMembership(UUID requestingAgentID, UUID AgentID)
         {
             return GroupsConnector.GetGroupMembershipData(requestingAgentID,
-                                                          UUID.Zero, 
+                                                          UUID.Zero,
                                                           AgentID);
         }
 

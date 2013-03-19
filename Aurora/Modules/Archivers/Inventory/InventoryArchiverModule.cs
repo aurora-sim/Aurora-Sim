@@ -35,22 +35,22 @@ using System.IO;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   This module loads and saves OpenSimulator inventory archives
+    ///     This module loads and saves OpenSimulator inventory archives
     /// </summary>
     public class InventoryArchiverModule : IService, IInventoryArchiverModule
     {
         /// <summary>
-        ///   The file to load and save inventory if no filename has been specified
+        ///     The file to load and save inventory if no filename has been specified
         /// </summary>
         protected const string DEFAULT_INV_BACKUP_FILENAME = "user-inventory.iar";
 
         /// <value>
-        ///   All scenes that this module knows about
+        ///     All scenes that this module knows about
         /// </value>
         private readonly Dictionary<UUID, IScene> m_scenes = new Dictionary<UUID, IScene>();
 
         /// <value>
-        ///   Pending save completions initiated from the console
+        ///     Pending save completions initiated from the console
         /// </value>
         protected List<Guid> m_pendingConsoleSaves = new List<Guid>();
 
@@ -75,7 +75,8 @@ namespace Aurora.Modules.Archivers
             Guid id, string firstName, string lastName, string invPath, Stream saveStream,
             Dictionary<string, object> options)
         {
-            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, firstName, lastName);
+            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>()
+                                             .GetUserAccount(null, firstName, lastName);
 
             if (userInfo != null)
             {
@@ -179,7 +180,7 @@ namespace Aurora.Modules.Archivers
         #endregion
 
         /// <summary>
-        ///   Trigger the inventory archive saved event.
+        ///     Trigger the inventory archive saved event.
         /// </summary>
         protected internal void TriggerInventoryArchiveSaved(
             Guid id, bool succeeded, UserAccount userInfo, string invPath, Stream saveStream,
@@ -194,7 +195,8 @@ namespace Aurora.Modules.Archivers
             Guid id, string firstName, string lastName, string invPath, string savePath,
             Dictionary<string, object> options)
         {
-            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, firstName, lastName);
+            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>()
+                                             .GetUserAccount(null, firstName, lastName);
 
             if (userInfo != null)
             {
@@ -230,12 +232,13 @@ namespace Aurora.Modules.Archivers
             string firstName, string lastName, string invPath, string loadPath,
             Dictionary<string, object> options)
         {
-            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, firstName, lastName);
+            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>()
+                                             .GetUserAccount(null, firstName, lastName);
 
             if (userInfo != null)
             {
                 InventoryArchiveReadRequest request;
-                bool merge = (options.ContainsKey("merge") && (bool)options["merge"]);
+                bool merge = (options.ContainsKey("merge") && (bool) options["merge"]);
 
                 try
                 {
@@ -260,14 +263,15 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Load inventory from an inventory file archive
+        ///     Load inventory from an inventory file archive
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         protected void HandleLoadInvConsoleCommand(string[] cmdparams)
         {
             try
             {
-                MainConsole.Instance.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
+                MainConsole.Instance.Info(
+                    "[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 
                 Dictionary<string, object> options = new Dictionary<string, object>();
                 List<string> newParams = new List<string>(cmdparams);
@@ -313,9 +317,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Save inventory to a file archive
+        ///     Save inventory to a file archive
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         protected void HandleSaveInvWOAssetsConsoleCommand(string[] cmdparams)
         {
             if (cmdparams.Length < 7)
@@ -325,7 +329,8 @@ namespace Aurora.Modules.Archivers
                 return;
             }
 
-            MainConsole.Instance.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
+            MainConsole.Instance.Info(
+                "[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 
             string firstName = cmdparams[3];
             string lastName = cmdparams[4];
@@ -337,7 +342,7 @@ namespace Aurora.Modules.Archivers
                 savePath, invPath, firstName, lastName);
 
             Guid id = Guid.NewGuid();
-            Dictionary<string, object> options = new Dictionary<string, object> { { "Assets", false } };
+            Dictionary<string, object> options = new Dictionary<string, object> {{"Assets", false}};
             ArchiveInventory(id, firstName, lastName, invPath, savePath, options);
 
             lock (m_pendingConsoleSaves)
@@ -345,14 +350,15 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Save inventory to a file archive
+        ///     Save inventory to a file archive
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         protected void HandleSaveInvConsoleCommand(string[] cmdparams)
         {
             try
             {
-                MainConsole.Instance.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
+                MainConsole.Instance.Info(
+                    "[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 
                 string firstName = cmdparams[2];
                 string lastName = cmdparams[3];
@@ -365,7 +371,7 @@ namespace Aurora.Modules.Archivers
 
                 Guid id = Guid.NewGuid();
 
-                Dictionary<string, object> options = new Dictionary<string, object> { { "Assets", true } };
+                Dictionary<string, object> options = new Dictionary<string, object> {{"Assets", true}};
                 ArchiveInventory(id, firstName, lastName, invPath, savePath, options);
 
                 lock (m_pendingConsoleSaves)
@@ -392,7 +398,7 @@ namespace Aurora.Modules.Archivers
             if (succeeded)
             {
                 MainConsole.Instance.InfoFormat("[INVENTORY ARCHIVER]: Saved archive for {0} {1}", userInfo.FirstName,
-                                 userInfo.LastName);
+                                                userInfo.LastName);
             }
             else
             {

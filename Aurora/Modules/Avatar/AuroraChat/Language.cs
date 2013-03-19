@@ -58,467 +58,467 @@ using System.Linq;
 namespace Aurora.GoogleAPIs
 {
     /// <summary>
-    ///   Languanges for translate API.
+    ///     Languanges for translate API.
     /// </summary>
     public sealed class Language
     {
         /// <summary>
-        ///   The Unknown. Default value.
+        ///     The Unknown. Default value.
         /// </summary>
         public static readonly Language Unknown = new Language("Unknown", string.Empty, true);
 
         /// <summary>
-        ///   The Afrikaans.
+        ///     The Afrikaans.
         /// </summary>
         public static readonly Language Afrikaans = new Language("Afrikaans", "af");
 
         /// <summary>
-        ///   The Albanian.
+        ///     The Albanian.
         /// </summary>
         public static readonly Language Albanian = new Language("Albanian", "sq");
 
         /// <summary>
-        ///   The Amharic.
+        ///     The Amharic.
         /// </summary>
         public static readonly Language Amharic = new Language("Amharic", "am");
 
         /// <summary>
-        ///   The Arabic.
+        ///     The Arabic.
         /// </summary>
         public static readonly Language Arabic = new Language("Arabic", "ar");
 
         /// <summary>
-        ///   The Armenian.
+        ///     The Armenian.
         /// </summary>
         public static readonly Language Armenian = new Language("Armenian", "hy");
 
         /// <summary>
-        ///   The Azerbaijani.
+        ///     The Azerbaijani.
         /// </summary>
         public static readonly Language Azerbaijani = new Language("Azerbaijani", "az");
 
         /// <summary>
-        ///   The Basque.
+        ///     The Basque.
         /// </summary>
         public static readonly Language Basque = new Language("Basque", "eu");
 
         /// <summary>
-        ///   The Belarusian.
+        ///     The Belarusian.
         /// </summary>
         public static readonly Language Belarusian = new Language("Belarusian", "be");
 
         /// <summary>
-        ///   The Bengali.
+        ///     The Bengali.
         /// </summary>
         public static readonly Language Bengali = new Language("Bengali", "bn");
 
         /// <summary>
-        ///   The Bihari.
+        ///     The Bihari.
         /// </summary>
         public static readonly Language Bihari = new Language("Bihari", "bh");
 
         /// <summary>
-        ///   The Bulgarian.
+        ///     The Bulgarian.
         /// </summary>
         public static readonly Language Bulgarian = new Language("Bulgarian", "bg");
 
         /// <summary>
-        ///   The Burmese.
+        ///     The Burmese.
         /// </summary>
         public static readonly Language Burmese = new Language("Burmese", "my");
 
         /// <summary>
-        ///   The Catalan.
+        ///     The Catalan.
         /// </summary>
         public static readonly Language Catalan = new Language("Catalan", "ca");
 
         /// <summary>
-        ///   The Cherokee.
+        ///     The Cherokee.
         /// </summary>
         public static readonly Language Cherokee = new Language("Cherokee", "chr");
 
         /// <summary>
-        ///   The Chinese.
+        ///     The Chinese.
         /// </summary>
         public static readonly Language Chinese = new Language("Chinese", "zh");
 
         /// <summary>
-        ///   The Simplified Chinese.
+        ///     The Simplified Chinese.
         /// </summary>
         public static readonly Language ChineseSimplified = new Language("Simplified Chinese", "zh-CN");
 
         /// <summary>
-        ///   The Traditional Chinese.
+        ///     The Traditional Chinese.
         /// </summary>
         public static readonly Language ChineseTraditional = new Language("Traditional Chinese", "zh-TW");
 
         /// <summary>
-        ///   The Croatian.
+        ///     The Croatian.
         /// </summary>
         public static readonly Language Croatian = new Language("Croatian", "hr");
 
         /// <summary>
-        ///   The Czech.
+        ///     The Czech.
         /// </summary>
         public static readonly Language Czech = new Language("Czech", "cs");
 
         /// <summary>
-        ///   The Danish.
+        ///     The Danish.
         /// </summary>
         public static readonly Language Danish = new Language("Danish", "da");
 
         /// <summary>
-        ///   The Dhivehi.
+        ///     The Dhivehi.
         /// </summary>
         public static readonly Language Dhivehi = new Language("Dhivehi", "dv");
 
         /// <summary>
-        ///   The Dutch.
+        ///     The Dutch.
         /// </summary>
         public static readonly Language Dutch = new Language("Dutch", "nl");
 
         /// <summary>
-        ///   The English.
+        ///     The English.
         /// </summary>
         public static readonly Language English = new Language("English", "en");
 
         /// <summary>
-        ///   The Esperanto.
+        ///     The Esperanto.
         /// </summary>
         public static readonly Language Esperanto = new Language("Esperanto", "eo");
 
         /// <summary>
-        ///   The Estonian.
+        ///     The Estonian.
         /// </summary>
         public static readonly Language Estonian = new Language("Estonian", "et");
 
         /// <summary>
-        ///   The Filipino.
+        ///     The Filipino.
         /// </summary>
         public static readonly Language Filipino = new Language("Filipino", "tl");
 
         /// <summary>
-        ///   The Finnish.
+        ///     The Finnish.
         /// </summary>
         public static readonly Language Finnish = new Language("Finnish", "fi");
 
         /// <summary>
-        ///   The French.
+        ///     The French.
         /// </summary>
         public static readonly Language French = new Language("French", "fr");
 
         /// <summary>
-        ///   The Galician.
+        ///     The Galician.
         /// </summary>
         public static readonly Language Galician = new Language("Galician", "gl");
 
         /// <summary>
-        ///   The Georgian.
+        ///     The Georgian.
         /// </summary>
         public static readonly Language Georgian = new Language("Georgian", "ka");
 
         /// <summary>
-        ///   The German.
+        ///     The German.
         /// </summary>
         public static readonly Language German = new Language("German", "de");
 
         /// <summary>
-        ///   The Greek.
+        ///     The Greek.
         /// </summary>
         public static readonly Language Greek = new Language("Greek", "el");
 
         /// <summary>
-        ///   The Guarani.
+        ///     The Guarani.
         /// </summary>
         public static readonly Language Guarani = new Language("Guarani", "gn");
 
         /// <summary>
-        ///   The Gujarati.
+        ///     The Gujarati.
         /// </summary>
         public static readonly Language Gujarati = new Language("Gujarati", "gu");
 
         /// <summary>
-        ///   The Hebrew.
+        ///     The Hebrew.
         /// </summary>
         public static readonly Language Hebrew = new Language("Hebrew", "iw");
 
         /// <summary>
-        ///   The Hindi.
+        ///     The Hindi.
         /// </summary>
         public static readonly Language Hindi = new Language("Hindi", "hi");
 
         /// <summary>
-        ///   The Hungarian.
+        ///     The Hungarian.
         /// </summary>
         public static readonly Language Hungarian = new Language("Hungarian", "hu");
 
         /// <summary>
-        ///   The Icelandic.
+        ///     The Icelandic.
         /// </summary>
         public static readonly Language Icelandic = new Language("Icelandic", "is");
 
         /// <summary>
-        ///   The Indonesian.
+        ///     The Indonesian.
         /// </summary>
         public static readonly Language Indonesian = new Language("Indonesian", "id");
 
         /// <summary>
-        ///   The Inuktitut.
+        ///     The Inuktitut.
         /// </summary>
         public static readonly Language Inuktitut = new Language("Inuktitut", "iu");
 
         /// <summary>
-        ///   The Irish.
+        ///     The Irish.
         /// </summary>
         public static readonly Language Irish = new Language("Irish", "ga");
 
         /// <summary>
-        ///   The Italian.
+        ///     The Italian.
         /// </summary>
         public static readonly Language Italian = new Language("Italian", "it");
 
         /// <summary>
-        ///   The Japanese.
+        ///     The Japanese.
         /// </summary>
         public static readonly Language Japanese = new Language("Japanese", "ja");
 
         /// <summary>
-        ///   The Kannada.
+        ///     The Kannada.
         /// </summary>
         public static readonly Language Kannada = new Language("Kannada", "kn");
 
         /// <summary>
-        ///   The Kazakh.
+        ///     The Kazakh.
         /// </summary>
         public static readonly Language Kazakh = new Language("Kazakh", "kk");
 
         /// <summary>
-        ///   The Khmer.
+        ///     The Khmer.
         /// </summary>
         public static readonly Language Khmer = new Language("Khmer", "km");
 
         /// <summary>
-        ///   The Korean.
+        ///     The Korean.
         /// </summary>
         public static readonly Language Korean = new Language("Korean", "ko");
 
         /// <summary>
-        ///   The Kurdish.
+        ///     The Kurdish.
         /// </summary>
         public static readonly Language Kurdish = new Language("Kurdish", "ku");
 
         /// <summary>
-        ///   The Kyrgyz.
+        ///     The Kyrgyz.
         /// </summary>
         public static readonly Language Kyrgyz = new Language("Kyrgyz", "ky");
 
         /// <summary>
-        ///   The Laothian.
+        ///     The Laothian.
         /// </summary>
         public static readonly Language Laothian = new Language("Laothian", "lo");
 
         /// <summary>
-        ///   The Latvian.
+        ///     The Latvian.
         /// </summary>
         public static readonly Language Latvian = new Language("Latvian", "lv");
 
         /// <summary>
-        ///   The Lithuanian.
+        ///     The Lithuanian.
         /// </summary>
         public static readonly Language Lithuanian = new Language("Lithuanian", "lt");
 
         /// <summary>
-        ///   The Macedonian.
+        ///     The Macedonian.
         /// </summary>
         public static readonly Language Macedonian = new Language("Macedonian", "mk");
 
         /// <summary>
-        ///   The Malay.
+        ///     The Malay.
         /// </summary>
         public static readonly Language Malay = new Language("Malay", "ms");
 
         /// <summary>
-        ///   The Malayalam.
+        ///     The Malayalam.
         /// </summary>
         public static readonly Language Malayalam = new Language("Malayalam", "ml");
 
         /// <summary>
-        ///   The Maltese.
+        ///     The Maltese.
         /// </summary>
         public static readonly Language Maltese = new Language("Maltese", "mt");
 
         /// <summary>
-        ///   The Marathi.
+        ///     The Marathi.
         /// </summary>
         public static readonly Language Marathi = new Language("Marathi", "mr");
 
         /// <summary>
-        ///   The Mongolian.
+        ///     The Mongolian.
         /// </summary>
         public static readonly Language Mongolian = new Language("Mongolian", "mn");
 
         /// <summary>
-        ///   The Nepali.
+        ///     The Nepali.
         /// </summary>
         public static readonly Language Nepali = new Language("Nepali", "ne");
 
         /// <summary>
-        ///   The Norwegian.
+        ///     The Norwegian.
         /// </summary>
         public static readonly Language Norwegian = new Language("Norwegian", "no");
 
         /// <summary>
-        ///   The Oriya.
+        ///     The Oriya.
         /// </summary>
         public static readonly Language Oriya = new Language("Oriya", "or");
 
         /// <summary>
-        ///   The Pashto.
+        ///     The Pashto.
         /// </summary>
         public static readonly Language Pashto = new Language("Pashto", "ps");
 
         /// <summary>
-        ///   The Persian.
+        ///     The Persian.
         /// </summary>
         public static readonly Language Persian = new Language("Persian", "fa");
 
         /// <summary>
-        ///   The Polish.
+        ///     The Polish.
         /// </summary>
         public static readonly Language Polish = new Language("Polish", "pl");
 
         /// <summary>
-        ///   The Portuguese.
+        ///     The Portuguese.
         /// </summary>
         public static readonly Language Portuguese = new Language("Portuguese", "pt-PT");
 
         /// <summary>
-        ///   The Punjabi.
+        ///     The Punjabi.
         /// </summary>
         public static readonly Language Punjabi = new Language("Punjabi", "pa");
 
         /// <summary>
-        ///   The Romanian.
+        ///     The Romanian.
         /// </summary>
         public static readonly Language Romanian = new Language("Romanian", "ro");
 
         /// <summary>
-        ///   The Russian.
+        ///     The Russian.
         /// </summary>
         public static readonly Language Russian = new Language("Russian", "ru");
 
         /// <summary>
-        ///   The Sanskrit.
+        ///     The Sanskrit.
         /// </summary>
         public static readonly Language Sanskrit = new Language("Sanskrit", "sa");
 
         /// <summary>
-        ///   The Serbian.
+        ///     The Serbian.
         /// </summary>
         public static readonly Language Serbian = new Language("Serbian", "sr");
 
         /// <summary>
-        ///   The Sindhi.
+        ///     The Sindhi.
         /// </summary>
         public static readonly Language Sindhi = new Language("Sindhi", "sd");
 
         /// <summary>
-        ///   The Sinhalese.
+        ///     The Sinhalese.
         /// </summary>
         public static readonly Language Sinhalese = new Language("Sinhalese", "si");
 
         /// <summary>
-        ///   The Slovak.
+        ///     The Slovak.
         /// </summary>
         public static readonly Language Slovak = new Language("Slovak", "sk");
 
         /// <summary>
-        ///   The Slovenian.
+        ///     The Slovenian.
         /// </summary>
         public static readonly Language Slovenian = new Language("Slovenian", "sl");
 
         /// <summary>
-        ///   The Spanish.
+        ///     The Spanish.
         /// </summary>
         public static readonly Language Spanish = new Language("Spanish", "es");
 
         /// <summary>
-        ///   The Swahili.
+        ///     The Swahili.
         /// </summary>
         public static readonly Language Swahili = new Language("Swahili", "sw");
 
         /// <summary>
-        ///   The Swedish.
+        ///     The Swedish.
         /// </summary>
         public static readonly Language Swedish = new Language("Swedish", "sv");
 
         /// <summary>
-        ///   The Tajik.
+        ///     The Tajik.
         /// </summary>
         public static readonly Language Tajik = new Language("Tajik", "tg");
 
         /// <summary>
-        ///   The Tamil.
+        ///     The Tamil.
         /// </summary>
         public static readonly Language Tamil = new Language("Tamil", "ta");
 
         /// <summary>
-        ///   The Tagalog.
+        ///     The Tagalog.
         /// </summary>
         public static readonly Language Tagalog = new Language("Tagalog", "tl");
 
         /// <summary>
-        ///   The Telugu.
+        ///     The Telugu.
         /// </summary>
         public static readonly Language Telugu = new Language("Telugu", "te");
 
         /// <summary>
-        ///   The Thai.
+        ///     The Thai.
         /// </summary>
         public static readonly Language Thai = new Language("Thai", "th");
 
         /// <summary>
-        ///   The Tibetan.
+        ///     The Tibetan.
         /// </summary>
         public static readonly Language Tibetan = new Language("Tibetan", "bo");
 
         /// <summary>
-        ///   The Turkish.
+        ///     The Turkish.
         /// </summary>
         public static readonly Language Turkish = new Language("Turkish", "tr");
 
         /// <summary>
-        ///   The Ukrainian.
+        ///     The Ukrainian.
         /// </summary>
         public static readonly Language Ukrainian = new Language("Ukrainian", "uk");
 
         /// <summary>
-        ///   The Urdu.
+        ///     The Urdu.
         /// </summary>
         public static readonly Language Urdu = new Language("Urdu", "ur");
 
         /// <summary>
-        ///   The Uzbek.
+        ///     The Uzbek.
         /// </summary>
         public static readonly Language Uzbek = new Language("Uzbek", "uz");
 
         /// <summary>
-        ///   The Uighur.
+        ///     The Uighur.
         /// </summary>
         public static readonly Language Uighur = new Language("Uighur", "ug");
 
         /// <summary>
-        ///   The Vietnamese.
+        ///     The Vietnamese.
         /// </summary>
         public static readonly Language Vietnamese = new Language("Vietnamese", "vi");
 
         /// <summary>
-        ///   The Welsh.
+        ///     The Welsh.
         /// </summary>
         public static readonly Language Welsh = new Language("Welsh", "cy");
 
         /// <summary>
-        ///   The Yiddish.
+        ///     The Yiddish.
         /// </summary>
         public static readonly Language Yiddish = new Language("Yiddish", "yi");
 
@@ -606,8 +606,11 @@ namespace Aurora.GoogleAPIs
                 }
             }
 #else
-            foreach (Language lang in TranslatableList.Where(lang => lang.Name.StartsWith(p, StringComparison.CurrentCultureIgnoreCase)
-                                                                     || lang.Value.StartsWith(p, StringComparison.CurrentCultureIgnoreCase)))
+            foreach (
+                Language lang in
+                    TranslatableList.Where(lang => lang.Name.StartsWith(p, StringComparison.CurrentCultureIgnoreCase)
+                                                   ||
+                                                   lang.Value.StartsWith(p, StringComparison.CurrentCultureIgnoreCase)))
             {
                 return lang;
             }

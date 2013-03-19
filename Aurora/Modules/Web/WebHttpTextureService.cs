@@ -34,8 +34,9 @@ namespace Aurora.Modules.Web
                 _registry.RegisterModuleInterface<IWebHttpTextureService>(this);
             }
             IGridInfo gridInfo = _registry.RequestModuleInterface<IGridInfo>();
-            _gridNick = gridInfo != null ? gridInfo.GridName :
-                "No Grid Name Available, please set this";
+            _gridNick = gridInfo != null
+                            ? gridInfo.GridName
+                            : "No Grid Name Available, please set this";
         }
 
         public string GetTextureURL(UUID textureID)
@@ -43,7 +44,8 @@ namespace Aurora.Modules.Web
             return _server.ServerURI + "/index.php?method=GridTexture&uuid=" + textureID.ToString();
         }
 
-        public byte[] OnHTTPGetTextureImage (string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] OnHTTPGetTextureImage(string path, Stream request, OSHttpRequest httpRequest,
+                                            OSHttpResponse httpResponse)
         {
             byte[] jpeg = new byte[0];
             IAssetService m_AssetService = _registry.RequestModuleInterface<IAssetService>();
@@ -66,7 +68,8 @@ namespace Aurora.Modules.Web
                         using (Bitmap texture = ResizeBitmap(image, 256, 256))
                         {
                             EncoderParameters myEncoderParameters = new EncoderParameters();
-                            myEncoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 75L);
+                            myEncoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality,
+                                                                                75L);
 
                             // Save bitmap to stream
                             texture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
@@ -91,7 +94,7 @@ namespace Aurora.Modules.Web
             temp.DrawImage(b, 0, 0, nWidth, nHeight);
             temp.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             temp.DrawString(_gridNick, new Font("Arial", 8, FontStyle.Regular),
-                new SolidBrush(Color.FromArgb(90, 255, 255, 50)), new Point(2, nHeight - 13));
+                            new SolidBrush(Color.FromArgb(90, 255, 255, 50)), new Point(2, nHeight - 13));
 
             return newsize;
         }

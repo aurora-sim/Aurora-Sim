@@ -56,7 +56,9 @@ namespace Aurora.Modules.Estate
 
                 if (account == null)
                 {
-                    string createNewUser = MainConsole.Instance.Prompt("Could not find user " + name + ". Would you like to create this user?", "yes");
+                    string createNewUser =
+                        MainConsole.Instance.Prompt(
+                            "Could not find user " + name + ". Would you like to create this user?", "yes");
 
                     if (createNewUser == "yes")
                     {
@@ -69,7 +71,8 @@ namespace Aurora.Modules.Estate
 
                         if (account == null)
                         {
-                            MainConsole.Instance.ErrorFormat("[EstateService]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first at the grid level.");
+                            MainConsole.Instance.ErrorFormat(
+                                "[EstateService]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first at the grid level.");
                             continue;
                         }
                     }
@@ -79,21 +82,26 @@ namespace Aurora.Modules.Estate
 
                 LastEstateOwner = account.Name;
 
-                List<EstateSettings> ownerEstates = EstateConnector.GetEstates (account.PrincipalID);
+                List<EstateSettings> ownerEstates = EstateConnector.GetEstates(account.PrincipalID);
                 string response = (ownerEstates != null && ownerEstates.Count > 0) ? "yes" : "no";
                 if (ownerEstates != null && ownerEstates.Count > 0)
                 {
-                    MainConsole.Instance.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name, ownerEstates.Count,
-                        "These estates are the following:");
+                    MainConsole.Instance.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name,
+                                                    ownerEstates.Count,
+                                                    "These estates are the following:");
                     foreach (EstateSettings t in ownerEstates)
                     {
                         MainConsole.Instance.Warn(t.EstateName);
                     }
-                    response = MainConsole.Instance.Prompt ("Do you wish to join one of these existing estates? (Options are {yes, no, cancel})", response, new List<string> { "yes", "no", "cancel" });
+                    response =
+                        MainConsole.Instance.Prompt(
+                            "Do you wish to join one of these existing estates? (Options are {yes, no, cancel})",
+                            response, new List<string> {"yes", "no", "cancel"});
                 }
                 else
                 {
-                    MainConsole.Instance.WarnFormat("Found user. {0} has no estates currently. Creating a new estate.", account.Name);
+                    MainConsole.Instance.WarnFormat("Found user. {0} has no estates currently. Creating a new estate.",
+                                                    account.Name);
                 }
                 if (response == "no")
                 {
@@ -106,10 +114,11 @@ namespace Aurora.Modules.Estate
                     LastEstateName = ES.EstateName;
                     ES.EstateOwner = account.PrincipalID;
 
-                    ES.EstateID = (uint)EstateConnector.CreateNewEstate(ES, scene.RegionInfo.RegionID);
+                    ES.EstateID = (uint) EstateConnector.CreateNewEstate(ES, scene.RegionInfo.RegionID);
                     if (ES.EstateID == 0)
                     {
-                        MainConsole.Instance.Warn("There was an error in creating this estate: " + ES.EstateName); //EstateName holds the error. See LocalEstateConnector for more info.
+                        MainConsole.Instance.Warn("There was an error in creating this estate: " + ES.EstateName);
+                            //EstateName holds the error. See LocalEstateConnector for more info.
                         continue;
                     }
                     break;
@@ -128,8 +137,8 @@ namespace Aurora.Modules.Estate
 #else
                         List<string> responses = ownerEstates.Select(settings => settings.EstateName).ToList();
 #endif
-                        responses.Add ("None");
-                        responses.Add ("Cancel");
+                        responses.Add("None");
+                        responses.Add("Cancel");
                         response = MainConsole.Instance.Prompt("Estate name to join", LastEstateName, responses);
                         if (response == "None" || response == "Cancel")
                             continue;
@@ -147,7 +156,9 @@ namespace Aurora.Modules.Estate
                     //We save the Password because we have to reset it after we tell the EstateService about it, as it clears it for security reasons
                     if (EstateConnector.LinkRegion(scene.RegionInfo.RegionID, estateID))
                     {
-                        if ((ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID)) == null || ES.EstateID == 0) //We could do by EstateID now, but we need to completely make sure that it fully is set up
+                        if ((ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID)) == null ||
+                            ES.EstateID == 0)
+                            //We could do by EstateID now, but we need to completely make sure that it fully is set up
                         {
                             MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
                             continue;
@@ -179,11 +190,13 @@ namespace Aurora.Modules.Estate
                 if (ES == null)
                 {
                     //It could not find the estate service, wait until it can find it
-                    MainConsole.Instance.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
+                    MainConsole.Instance.Warn(
+                        "We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
                     while (true)
                     {
                         MainConsole.Instance.Prompt("Press enter to try again.");
-                        if ((ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID)) == null || ES.EstateID == 0)
+                        if ((ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID)) == null ||
+                            ES.EstateID == 0)
                         {
                             ES = CreateEstateInfo(scene);
                             break;
@@ -195,7 +208,8 @@ namespace Aurora.Modules.Estate
                 else if (ES.EstateID == 0)
                 {
                     //It found the estate service, but found no estates for this region, make a new one
-                    MainConsole.Instance.Warn("[EstateInitializer]: Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
+                    MainConsole.Instance.Warn("[EstateInitializer]: Your region " + scene.RegionInfo.RegionName +
+                                              " is not part of an estate.");
 
                     ES = CreateEstateInfo(scene);
                 }
@@ -210,8 +224,9 @@ namespace Aurora.Modules.Estate
         public void StartupComplete()
         {
             if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand ("change estate", "change estate",
-                    "change info about the estate for the given region", ChangeEstate); 
+                MainConsole.Instance.Commands.AddCommand("change estate", "change estate",
+                                                         "change info about the estate for the given region",
+                                                         ChangeEstate);
         }
 
         public void Close(IScene scene)
@@ -233,7 +248,10 @@ namespace Aurora.Modules.Estate
                     return;
                 }
                 IScene scene = MainConsole.Instance.ConsoleScene;
-                string removeFromEstate = MainConsole.Instance.Prompt("Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?", "yes");
+                string removeFromEstate =
+                    MainConsole.Instance.Prompt(
+                        "Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?",
+                        "yes");
                 if (removeFromEstate == "yes")
                 {
                     if (!EstateConnector.DelinkRegion(scene.RegionInfo.RegionID))
@@ -261,7 +279,8 @@ namespace Aurora.Modules.Estate
             if (settings == null)
                 return;
             writer.WriteDir("estatesettings");
-            writer.WriteFile("estatesettings/" + scene.RegionInfo.RegionName, OSDParser.SerializeLLSDBinary(settings.ToOSD()));
+            writer.WriteFile("estatesettings/" + scene.RegionInfo.RegionName,
+                             OSDParser.SerializeLLSDBinary(settings.ToOSD()));
 
             MainConsole.Instance.Debug("[Archive]: Finished writing estates to archive");
             MainConsole.Instance.Debug("[Archive]: Writing region info to archive");
@@ -269,7 +288,8 @@ namespace Aurora.Modules.Estate
             writer.WriteDir("regioninfo");
             RegionInfo regionInfo = scene.RegionInfo;
 
-            writer.WriteFile("regioninfo/" + scene.RegionInfo.RegionName, OSDParser.SerializeLLSDBinary(regionInfo.PackRegionInfoData()));
+            writer.WriteFile("regioninfo/" + scene.RegionInfo.RegionName,
+                             OSDParser.SerializeLLSDBinary(regionInfo.PackRegionInfoData()));
 
             MainConsole.Instance.Debug("[Archive]: Finished writing region info to archive");
         }
@@ -279,14 +299,17 @@ namespace Aurora.Modules.Estate
             if (filePath.StartsWith("estatesettings/"))
             {
                 EstateSettings settings = new EstateSettings();
-                settings.FromOSD((OSDMap)OSDParser.DeserializeLLSDBinary(data));
+                settings.FromOSD((OSDMap) OSDParser.DeserializeLLSDBinary(data));
                 scene.RegionInfo.EstateSettings = settings;
             }
             else if (filePath.StartsWith("regioninfo/"))
             {
-                string m_merge = MainConsole.Instance.Prompt("Should we load the region information from the archive (region name, region position, etc)?", "false");
+                string m_merge =
+                    MainConsole.Instance.Prompt(
+                        "Should we load the region information from the archive (region name, region position, etc)?",
+                        "false");
                 RegionInfo settings = new RegionInfo();
-                settings.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeLLSDBinary(data));
+                settings.UnpackRegionInfoData((OSDMap) OSDParser.DeserializeLLSDBinary(data));
                 if (m_merge == "false")
                 {
                     //Still load the region settings though

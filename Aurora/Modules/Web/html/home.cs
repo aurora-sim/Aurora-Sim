@@ -12,17 +12,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-				{
-				    "html/home.html"
-				};
+                           {
+                               "html/home.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -40,12 +48,18 @@ namespace Aurora.Modules.Web
 
             IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
-            if (PagesMigrator.RequiresUpdate() && PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored))
-                vars.Add("PagesUpdateRequired", translator.GetTranslatedString("Pages") + " " + translator.GetTranslatedString("DefaultsUpdated"));
+            if (PagesMigrator.RequiresUpdate() &&
+                PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored))
+                vars.Add("PagesUpdateRequired",
+                         translator.GetTranslatedString("Pages") + " " +
+                         translator.GetTranslatedString("DefaultsUpdated"));
             else
                 vars.Add("PagesUpdateRequired", "");
-            if (SettingsMigrator.RequiresUpdate() && SettingsMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastSettingsVersionUpdateIgnored))
-                vars.Add("SettingsUpdateRequired", translator.GetTranslatedString("Settings") + " " + translator.GetTranslatedString("DefaultsUpdated"));
+            if (SettingsMigrator.RequiresUpdate() &&
+                SettingsMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastSettingsVersionUpdateIgnored))
+                vars.Add("SettingsUpdateRequired",
+                         translator.GetTranslatedString("Settings") + " " +
+                         translator.GetTranslatedString("DefaultsUpdated"));
             else
                 vars.Add("SettingsUpdateRequired", "");
             return vars;

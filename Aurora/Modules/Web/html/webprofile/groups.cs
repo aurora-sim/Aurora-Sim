@@ -14,17 +14,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/webprofile/groups.html"
-                       };
+                           {
+                               "html/webprofile/groups.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -36,20 +44,20 @@ namespace Aurora.Modules.Web
                 string userid = httpRequest.Query["userid"].ToString();
 
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, UUID.Parse(userid));
+                                       GetUserAccount(null, UUID.Parse(userid));
             }
             else if (httpRequest.Query.ContainsKey("name") || username.Contains('.'))
             {
                 string name = httpRequest.Query.ContainsKey("name") ? httpRequest.Query["name"].ToString() : username;
                 name = name.Replace('.', ' ');
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, name);
+                                       GetUserAccount(null, name);
             }
             else
             {
                 username = username.Replace("%20", " ");
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, username);
+                                       GetUserAccount(null, username);
             }
 
             if (account == null)
@@ -59,14 +67,15 @@ namespace Aurora.Modules.Web
             vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
             IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().
-                GetUserProfile(account.PrincipalID);
-            IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
+                                              GetUserProfile(account.PrincipalID);
+            IWebHttpTextureService webhttpService =
+                webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
             if (profile != null)
             {
                 if (profile.Partner != UUID.Zero)
                 {
                     account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                        GetUserAccount(null, profile.Partner);
+                                           GetUserAccount(null, profile.Partner);
                     vars.Add("UserPartner", account.Name);
                 }
                 else
@@ -80,7 +89,8 @@ namespace Aurora.Modules.Web
 
             vars.Add("UsersGroupsText", translator.GetTranslatedString("UsersGroupsText"));
 
-            IGroupsServiceConnector groupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            IGroupsServiceConnector groupsConnector =
+                Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
             if (groupsConnector != null)
             {
                 List<Dictionary<string, object>> groups = new List<Dictionary<string, object>>();
@@ -91,10 +101,10 @@ namespace Aurora.Modules.Web
                     if (webhttpService != null && grpData.InsigniaID != UUID.Zero)
                         url = webhttpService.GetTextureURL(grpData.InsigniaID);
                     groups.Add(new Dictionary<string, object>
-                    {
-                        { "GroupPictureURL", url },
-                        { "GroupName", grp.GroupName }
-                    });
+                                   {
+                                       {"GroupPictureURL", url},
+                                       {"GroupName", grp.GroupName}
+                                   });
                 }
                 vars.Add("Groups", groups);
                 vars.Add("GroupsJoined", groups.Count);

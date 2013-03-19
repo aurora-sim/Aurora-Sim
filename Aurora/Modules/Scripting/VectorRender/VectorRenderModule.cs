@@ -288,7 +288,9 @@ namespace Aurora.Modules.Scripting
 
             Bitmap bitmap;
 
-            bitmap = alpha == 256 ? new Bitmap(width, height, PixelFormat.Format32bppRgb) : new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            bitmap = alpha == 256
+                         ? new Bitmap(width, height, PixelFormat.Format32bppRgb)
+                         : new Bitmap(width, height, PixelFormat.Format32bppArgb);
 
             Graphics graph = Graphics.FromImage(bitmap);
             // this is really just to save people filling the 
@@ -613,7 +615,9 @@ namespace Aurora.Modules.Scripting
                     int hex = 0;
 
                     Color newColour;
-                    newColour = Int32.TryParse(nextLine, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out hex) ? Color.FromArgb(hex) : Color.FromName(nextLine);
+                    newColour = Int32.TryParse(nextLine, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out hex)
+                                    ? Color.FromArgb(hex)
+                                    : Color.FromName(nextLine);
 
                     myBrush.Color = newColour;
                     drawPen.Color = newColour;

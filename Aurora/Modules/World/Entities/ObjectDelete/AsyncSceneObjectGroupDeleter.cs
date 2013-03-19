@@ -46,16 +46,18 @@ namespace Aurora.Modules.Entities.ObjectDelete
     }
 
     /// <summary>
-    ///   Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
-    ///   up the main client thread.
+    ///     Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
+    ///     up the main client thread.
     /// </summary>
     public class AsyncSceneObjectGroupDeleter : INonSharedRegionModule, IAsyncSceneObjectGroupDeleter
     {
-        private readonly ConcurrentQueue<DeleteToInventoryHolder> m_removeFromSimQueue = new ConcurrentQueue<DeleteToInventoryHolder>();
+        private readonly ConcurrentQueue<DeleteToInventoryHolder> m_removeFromSimQueue =
+            new ConcurrentQueue<DeleteToInventoryHolder>();
+
         private bool DeleteLoopInUse;
 
         /// <value>
-        ///   Is the deleter currently enabled?
+        ///     Is the deleter currently enabled?
         /// </value>
         public bool Enabled;
 
@@ -101,7 +103,7 @@ namespace Aurora.Modules.Entities.ObjectDelete
         #region Delete To Inventory
 
         /// <summary>
-        ///   Delete the given object from the scene
+        ///     Delete the given object from the scene
         /// </summary>
         public void DeleteToInventory(DeRezAction action, UUID folderID,
                                       List<ISceneEntity> objectGroups, UUID AgentId,
@@ -137,15 +139,15 @@ namespace Aurora.Modules.Entities.ObjectDelete
             lock (objectGroups)
             {
                 m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
-                {
-                    foreach (ISceneEntity grp in objectGroups)
-                    {
-                        if (avatar != null && avatar.ControllingClient != null)
-                            avatar.ControllingClient.SendKillObject(
-                                m_scene.RegionInfo.RegionHandle,
-                                grp.ChildrenEntities().ToArray());
-                    }
-                });
+                                                 {
+                                                     foreach (ISceneEntity grp in objectGroups)
+                                                     {
+                                                         if (avatar != null && avatar.ControllingClient != null)
+                                                             avatar.ControllingClient.SendKillObject(
+                                                                 m_scene.RegionInfo.RegionHandle,
+                                                                 grp.ChildrenEntities().ToArray());
+                                                     }
+                                                 });
             }
         }
 
@@ -179,7 +181,8 @@ namespace Aurora.Modules.Entities.ObjectDelete
                             backup.DeleteSceneObjects(x.objectGroups.ToArray(), true, true);
                     }
                     MainConsole.Instance.DebugFormat(
-                        "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", m_removeFromSimQueue.Count);
+                        "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.",
+                        m_removeFromSimQueue.Count);
 
                     if (x.permissionToTake)
                     {

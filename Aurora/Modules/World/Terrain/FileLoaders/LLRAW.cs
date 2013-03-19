@@ -34,7 +34,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
     public class LLRAW : ITerrainLoader
     {
         /// <summary>
-        ///   Lookup table to speed up terrain exports
+        ///     Lookup table to speed up terrain exports
         /// </summary>
         private HeightmapLookupValue[] LookupHeightTable;
 

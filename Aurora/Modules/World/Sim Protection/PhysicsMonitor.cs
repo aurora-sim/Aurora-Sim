@@ -254,7 +254,7 @@ namespace Aurora.Modules.SimProtection
             }
 
             Thread thread = new Thread(StartThread);
-            thread.Start(new List<IScene>(){m_Scene});
+            thread.Start(new List<IScene>() {m_Scene});
         }
 
         private void StartThread(object scenes)

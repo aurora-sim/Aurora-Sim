@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Aurora.DataManager.Migration;
-
 using Aurora.Framework;
 
 namespace Simple.Currency
@@ -22,19 +21,19 @@ namespace Simple.Currency
                 ColDef("Tier", ColumnTypes.Integer30),
                 ColDef("IsGroup", ColumnTypes.TinyInt1),
                 new ColumnDefinition
-                {
-                    Name = "StipendsBalance",
-                    Type = new ColumnTypeDef
                     {
-                        Type = ColumnType.Integer,
-                        Size = 11,
-                        defaultValue = "0"
+                        Name = "StipendsBalance",
+                        Type = new ColumnTypeDef
+                                   {
+                                       Type = ColumnType.Integer,
+                                       Size = 11,
+                                       defaultValue = "0"
+                                   }
                     }
-                }
-                ),
-                IndexDefs(
-                    IndexDef(new string[1] { "PrincipalID" }, IndexType.Primary)
-                ));
+                                             ),
+                      IndexDefs(
+                          IndexDef(new string[1] {"PrincipalID"}, IndexType.Primary)
+                          ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

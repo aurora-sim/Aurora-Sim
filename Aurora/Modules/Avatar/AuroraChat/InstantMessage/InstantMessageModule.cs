@@ -39,7 +39,7 @@ namespace Aurora.Modules.Chat
         private IMessageTransferModule m_TransferModule;
 
         /// <value>
-        ///   Is this module enabled?
+        ///     Is this module enabled?
         /// </value>
         private bool m_enabled;
 
@@ -144,7 +144,7 @@ namespace Aurora.Modules.Chat
                 if (client == null)
                 {
                     UserAccount account = m_Scene.UserAccountService.GetUserAccount(m_Scene.RegionInfo.AllScopeIDs,
-                                                                                        im.fromAgentID);
+                                                                                    im.fromAgentID);
                     if (account != null)
                         im.fromAgentName = account.Name;
                     else
@@ -157,9 +157,9 @@ namespace Aurora.Modules.Chat
             }
         }
 
-        ///<summary>
-        ///</summary>
-        ///<param name = "msg"></param>
+        /// <summary>
+        /// </summary>
+        /// <param name="msg"></param>
         private void OnGridInstantMessage(GridInstantMessage msg)
         {
             byte dialog = msg.dialog;
@@ -175,7 +175,7 @@ namespace Aurora.Modules.Chat
             if (m_TransferModule != null)
             {
                 UserAccount account = m_Scene.UserAccountService.GetUserAccount(m_Scene.RegionInfo.AllScopeIDs,
-                                                                                    msg.fromAgentID);
+                                                                                msg.fromAgentID);
                 if (account != null)
                     msg.fromAgentName = account.Name;
                 else

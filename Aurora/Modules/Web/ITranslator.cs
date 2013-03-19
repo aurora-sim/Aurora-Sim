@@ -1,5 +1,4 @@
-﻿
-namespace Aurora.Modules.Web
+﻿namespace Aurora.Modules.Web
 {
     public interface ITranslator
     {

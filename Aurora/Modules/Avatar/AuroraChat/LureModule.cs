@@ -33,7 +33,7 @@ using System;
 namespace Aurora.Modules.Chat
 {
     /// <summary>
-    /// This just supports god TP's and thats about it
+    ///     This just supports god TP's and thats about it
     /// </summary>
     public class LureModule : INonSharedRegionModule
     {
@@ -41,7 +41,7 @@ namespace Aurora.Modules.Chat
 
         private IScene m_scene;
 
-		private IMessageTransferModule m_TransferModule;
+        private IMessageTransferModule m_TransferModule;
         private bool m_Enabled = true;
         private bool m_allowGodTeleports = true;
 
@@ -50,16 +50,16 @@ namespace Aurora.Modules.Chat
         #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
-		{
+        {
             IConfig ccmModuleConfig = source.Configs["Messaging"];
             if (ccmModuleConfig != null)
             {
-                m_Enabled = ccmModuleConfig.GetString ("LureModule", Name) == Name;
-                m_allowGodTeleports = ccmModuleConfig.GetBoolean ("AllowGodTeleports", m_allowGodTeleports);
+                m_Enabled = ccmModuleConfig.GetString("LureModule", Name) == Name;
+                m_allowGodTeleports = ccmModuleConfig.GetBoolean("AllowGodTeleports", m_allowGodTeleports);
             }
-		}
+        }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -71,7 +71,7 @@ namespace Aurora.Modules.Chat
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -83,7 +83,7 @@ namespace Aurora.Modules.Chat
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -91,7 +91,7 @@ namespace Aurora.Modules.Chat
 
             if (m_TransferModule == null)
                 MainConsole.Instance.Error("[INSTANT MESSAGE]: No message transfer module, " +
-                            "lures will not work!");
+                                           "lures will not work!");
         }
 
         public Type ReplaceableInterface
@@ -99,14 +99,14 @@ namespace Aurora.Modules.Chat
             get { return null; }
         }
 
-		public void Close()
-		{
-		}
+        public void Close()
+        {
+        }
 
-		public string Name
-		{
+        public string Name
+        {
             get { return "AuroraLureModule"; }
-		}
+        }
 
         #endregion
 
@@ -124,24 +124,25 @@ namespace Aurora.Modules.Chat
             client.OnTeleportLureRequest -= OnTeleportLureRequest;
         }
 
-		public void OnStartLure(byte lureType, string message, UUID targetid, IClientAPI client)
-		{
-            IScenePresence presence = client.Scene.GetScenePresence (client.AgentId);
-            Vector3 position = presence.AbsolutePosition + new Vector3(2, 0, 0) * presence.Rotation;
+        public void OnStartLure(byte lureType, string message, UUID targetid, IClientAPI client)
+        {
+            IScenePresence presence = client.Scene.GetScenePresence(client.AgentId);
+            Vector3 position = presence.AbsolutePosition + new Vector3(2, 0, 0)*presence.Rotation;
             UUID dest = Util.BuildFakeParcelID(
                 client.Scene.RegionInfo.RegionHandle,
-                (uint)position.X,
-                (uint)position.Y,
-                (uint)position.Z);
+                (uint) position.X,
+                (uint) position.Y,
+                (uint) position.Z);
 
-			GridInstantMessage m;
+            GridInstantMessage m;
 
-            if (m_allowGodTeleports && client.Scene.Permissions.CanGodTeleport(client.AgentId, targetid))//if we are an admin and are in god mode
+            if (m_allowGodTeleports && client.Scene.Permissions.CanGodTeleport(client.AgentId, targetid))
+                //if we are an admin and are in god mode
             {
                 //God tp them
                 m = new GridInstantMessage(client.Scene, client.AgentId,
                                            client.FirstName + " " + client.LastName, targetid,
-                                           (byte)InstantMessageDialog.GodLikeRequestTeleport, false,
+                                           (byte) InstantMessageDialog.GodLikeRequestTeleport, false,
                                            "", dest, false, presence.AbsolutePosition,
                                            new Byte[0]);
             }
@@ -150,14 +151,14 @@ namespace Aurora.Modules.Chat
                 //Not a god, so no god tp
                 m = new GridInstantMessage(client.Scene, client.AgentId,
                                            client.FirstName + " " + client.LastName, targetid,
-                                           (byte)InstantMessageDialog.RequestTeleport, false,
+                                           (byte) InstantMessageDialog.RequestTeleport, false,
                                            message, dest, false, presence.AbsolutePosition,
                                            new Byte[0]);
             }
 
-			if (m_TransferModule != null)
-				m_TransferModule.SendInstantMessage(m);
-		}
+            if (m_TransferModule != null)
+                m_TransferModule.SendInstantMessage(m);
+        }
 
         public void OnTeleportLureRequest(UUID lureID, uint teleportFlags, IClientAPI client)
         {
@@ -169,25 +170,27 @@ namespace Aurora.Modules.Chat
             Util.ParseFakeParcelID(lureID, out handle, out x, out y, out z);
 
             Vector3 position = new Vector3 {X = x, Y = y, Z = z};
-            IEntityTransferModule entityTransfer = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
+            IEntityTransferModule entityTransfer = client.Scene.RequestModuleInterface<IEntityTransferModule>();
             if (entityTransfer != null)
             {
                 entityTransfer.RequestTeleportLocation(client, handle, position,
-                                      Vector3.Zero, teleportFlags);
+                                                       Vector3.Zero, teleportFlags);
             }
         }
 
-        void OnGridInstantMessage (GridInstantMessage im)
+        private void OnGridInstantMessage(GridInstantMessage im)
         {
-            if (im.dialog == (byte)InstantMessageDialog.RequestTeleport)
+            if (im.dialog == (byte) InstantMessageDialog.RequestTeleport)
             {
-                UUID sessionID = new UUID (im.imSessionID);
-                MainConsole.Instance.DebugFormat ("[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.imSessionID, im.RegionID, im.message);
-                
+                UUID sessionID = new UUID(im.imSessionID);
+                MainConsole.Instance.DebugFormat(
+                    "[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.imSessionID,
+                    im.RegionID, im.message);
+
                 // Forward. We do this, because the IM module explicitly rejects
                 // IMs of this type
                 if (m_TransferModule != null)
-                    m_TransferModule.SendInstantMessage (im);
+                    m_TransferModule.SendInstantMessage(im);
             }
         }
 

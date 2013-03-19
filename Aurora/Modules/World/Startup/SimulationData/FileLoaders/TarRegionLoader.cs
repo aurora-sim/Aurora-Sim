@@ -12,7 +12,10 @@ namespace Aurora.Modules
 {
     public class TarRegionDataLoader : IRegionDataLoader
     {
-        public string FileType { get { return ".abackup"; } }
+        public string FileType
+        {
+            get { return ".abackup"; }
+        }
 
         public RegionData LoadBackup(string file)
         {
@@ -28,11 +31,12 @@ namespace Aurora.Modules
             List<uint> foundLocalIDs = new List<uint>();
             RegionData regiondata = new RegionData();
             regiondata.Init();
-            
+
             byte[] data;
             string filePath;
             TarArchiveReader.TarEntryType entryType;
-            System.Collections.Concurrent.ConcurrentQueue<byte[]> groups = new System.Collections.Concurrent.ConcurrentQueue<byte[]>();
+            System.Collections.Concurrent.ConcurrentQueue<byte[]> groups =
+                new System.Collections.Concurrent.ConcurrentQueue<byte[]>();
             //Load the archive data that we need
             while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
             {
@@ -44,8 +48,9 @@ namespace Aurora.Modules
                     //Only use if we are not merging
                     LandData parcel = new LandData();
                     OSD parcelData = OSDParser.DeserializeLLSDBinary(data);
-                    parcel.FromOSD((OSDMap)parcelData);
-                    if (parcel.OwnerID != UUID.Parse("05948863-b678-433e-87a4-e44d17678d1d"))//The default owner of the 'default' region
+                    parcel.FromOSD((OSDMap) parcelData);
+                    if (parcel.OwnerID != UUID.Parse("05948863-b678-433e-87a4-e44d17678d1d"))
+                        //The default owner of the 'default' region
                         regiondata.Parcels.Add(parcel);
                 }
                 else if (filePath.StartsWith("newstyleterrain/"))
@@ -71,7 +76,7 @@ namespace Aurora.Modules
                 else if (filePath.StartsWith("regioninfo/"))
                 {
                     RegionInfo info = new RegionInfo();
-                    info.FromOSD((OSDMap)OSDParser.DeserializeLLSDBinary(data));
+                    info.FromOSD((OSDMap) OSDParser.DeserializeLLSDBinary(data));
                     regiondata.RegionInfo = info;
                 }
                 data = null;
@@ -84,31 +89,40 @@ namespace Aurora.Modules
             for (int i = 0; i < threadCount; i++)
             {
                 threads[i] = new System.Threading.Thread(() =>
-                {
-                    byte[] groupData;
-                    while (groups.TryDequeue(out groupData))
-                    {
-                        MemoryStream ms = new MemoryStream(groupData);
-                        ISceneEntity sceneObject = SceneEntitySerializer.SceneObjectSerializer.FromXml2Format(ref ms, null);
-                        ms.Close();
-                        ms = null;
-                        data = null;
-                        if (sceneObject != null)
-                        {
-                            foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
-                            {
-                                lock (foundLocalIDs)
-                                {
-                                    if (!foundLocalIDs.Contains(part.LocalId))
-                                        foundLocalIDs.Add(part.LocalId);
-                                    else
-                                        part.LocalId = 0; //Reset it! Only use it once!
-                                }
-                            }
-                            regiondata.Groups.Add(sceneObject as SceneObjectGroup);
-                        }
-                    }
-                });
+                                                             {
+                                                                 byte[] groupData;
+                                                                 while (groups.TryDequeue(out groupData))
+                                                                 {
+                                                                     MemoryStream ms = new MemoryStream(groupData);
+                                                                     ISceneEntity sceneObject =
+                                                                         SceneEntitySerializer.SceneObjectSerializer
+                                                                                              .FromXml2Format(ref ms,
+                                                                                                              null);
+                                                                     ms.Close();
+                                                                     ms = null;
+                                                                     data = null;
+                                                                     if (sceneObject != null)
+                                                                     {
+                                                                         foreach (
+                                                                             ISceneChildEntity part in
+                                                                                 sceneObject.ChildrenEntities())
+                                                                         {
+                                                                             lock (foundLocalIDs)
+                                                                             {
+                                                                                 if (
+                                                                                     !foundLocalIDs.Contains(
+                                                                                         part.LocalId))
+                                                                                     foundLocalIDs.Add(part.LocalId);
+                                                                                 else
+                                                                                     part.LocalId = 0;
+                                                                                         //Reset it! Only use it once!
+                                                                             }
+                                                                         }
+                                                                         regiondata.Groups.Add(
+                                                                             sceneObject as SceneObjectGroup);
+                                                                     }
+                                                                 }
+                                                             });
                 threads[i].Start();
             }
             for (int i = 0; i < threadCount; i++)
@@ -157,7 +171,7 @@ namespace Aurora.Modules
                 try
                 {
                     writer.WriteFile("newstyleterrain/" + regiondata.RegionInfo.RegionID.ToString() + ".terrain",
-                        regiondata.Terrain);
+                                     regiondata.Terrain);
 
                     writer.WriteFile(
                         "newstylerevertterrain/" + regiondata.RegionInfo.RegionID.ToString() + ".terrain",
@@ -236,7 +250,8 @@ namespace Aurora.Modules
 
                     if (entitiesToSave.Count > 0)
                     {
-                        MainConsole.Instance.Fatal(entitiesToSave.Count + " PRIMS WERE NOT GOING TO BE SAVED! FORCE SAVING NOW! ");
+                        MainConsole.Instance.Fatal(entitiesToSave.Count +
+                                                   " PRIMS WERE NOT GOING TO BE SAVED! FORCE SAVING NOW! ");
                         foreach (ISceneEntity entity in regiondata.Groups)
                         {
                             if (entitiesToSave.Contains(entity.UUID))

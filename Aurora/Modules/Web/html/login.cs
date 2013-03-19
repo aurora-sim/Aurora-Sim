@@ -13,17 +13,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/login.html"
-                       };
+                           {
+                               "html/login.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
-        
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
+
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -38,16 +46,24 @@ namespace Aurora.Modules.Web
                 if (loginService.VerifyClient(UUID.Zero, username, "UserAccount", password))
                 {
                     UUID sessionID = UUID.Random();
-                    UserAccount account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, username);
+                    UserAccount account =
+                        webInterface.Registry.RequestModuleInterface<IUserAccountService>()
+                                    .GetUserAccount(null, username);
                     Authenticator.AddAuthentication(sessionID, account);
                     if (account.UserLevel > 0)
                         Authenticator.AddAdminAuthentication(sessionID, account);
-                    httpResponse.AddCookie(new System.Web.HttpCookie("SessionID", sessionID.ToString()) { Expires = DateTime.MinValue, Path = "" });
+                    httpResponse.AddCookie(new System.Web.HttpCookie("SessionID", sessionID.ToString())
+                                               {
+                                                   Expires =
+                                                       DateTime
+                                                       .MinValue,
+                                                   Path = ""
+                                               });
 
                     response = "<h3>Successfully logged in, redirecting to main page</h3>" +
-                        "<script language=\"javascript\">" +
-                        "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
-                        "</script>";
+                               "<script language=\"javascript\">" +
+                               "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
+                               "</script>";
                 }
                 else
                     response = "<h3>Failed to verify user name and password</h3>";

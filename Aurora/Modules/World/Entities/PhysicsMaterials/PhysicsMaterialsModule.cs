@@ -86,11 +86,10 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
             retVal["GetObjectPhysicsData"] = CapsUtil.CreateCAPS("GetObjectPhysicsData", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["GetObjectPhysicsData"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return GetObjectPhysicsData(agentID, request);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return GetObjectPhysicsData(agentID, request); }));
             return retVal;
         }
 
@@ -103,7 +102,8 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
             IEventQueueService eqs = m_scene.RequestModuleInterface<IEventQueueService>();
             if (eqs != null)
             {
-                eqs.ObjectPhysicsProperties(keys.Select(key => m_scene.GetSceneObjectPart(key.AsUUID())).ToArray(), agentID, m_scene.RegionInfo.RegionID);
+                eqs.ObjectPhysicsProperties(keys.Select(key => m_scene.GetSceneObjectPart(key.AsUUID())).ToArray(),
+                                            agentID, m_scene.RegionInfo.RegionID);
             }
             //Send back data
             return new byte[0];

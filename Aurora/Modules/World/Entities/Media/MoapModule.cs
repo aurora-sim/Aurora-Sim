@@ -41,32 +41,32 @@ namespace Aurora.Modules.Entities.Media
     public class MoapModule : INonSharedRegionModule, IMoapModule
     {
         /// <summary>
-        ///   Is this module enabled?
+        ///     Is this module enabled?
         /// </summary>
         protected bool m_isEnabled = true;
 
         /// <summary>
-        ///   Track the ObjectMedia capabilities given to users keyed by agent.  Lock m_omCapUsers to manipulate.
+        ///     Track the ObjectMedia capabilities given to users keyed by agent.  Lock m_omCapUsers to manipulate.
         /// </summary>
         protected Dictionary<UUID, string> m_omCapUrls = new Dictionary<UUID, string>();
 
         /// <summary>
-        ///   Track the ObjectMedia capabilities given to users keyed by path
+        ///     Track the ObjectMedia capabilities given to users keyed by path
         /// </summary>
         protected Dictionary<string, UUID> m_omCapUsers = new Dictionary<string, UUID>();
 
         /// <summary>
-        ///   Track the ObjectMediaUpdate capabilities given to users keyed by agent.  Lock m_omuCapUsers to manipulate
+        ///     Track the ObjectMediaUpdate capabilities given to users keyed by agent.  Lock m_omuCapUsers to manipulate
         /// </summary>
         protected Dictionary<UUID, string> m_omuCapUrls = new Dictionary<UUID, string>();
 
         /// <summary>
-        ///   Track the ObjectMediaUpdate capabilities given to users keyed by path
+        ///     Track the ObjectMediaUpdate capabilities given to users keyed by path
         /// </summary>
         protected Dictionary<string, UUID> m_omuCapUsers = new Dictionary<string, UUID>();
 
         /// <summary>
-        ///   The scene to which this module is attached
+        ///     The scene to which this module is attached
         /// </summary>
         protected IScene m_scene;
 
@@ -214,7 +214,7 @@ namespace Aurora.Modules.Entities.Media
 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
                 server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ObjectMediaNavigate"],
-                                                              HandleObjectMediaNavigateMessage));
+                                                                 HandleObjectMediaNavigateMessage));
             }
             return retVal;
         }
@@ -237,14 +237,14 @@ namespace Aurora.Modules.Entities.Media
         }
 
         /// <summary>
-        ///   Set the media flags on the texture face of the given part.
+        ///     Set the media flags on the texture face of the given part.
         /// </summary>
         /// <remarks>
-        ///   The fact that we need a separate function to do what should be a simple one line operation is BUTT UGLY.
+        ///     The fact that we need a separate function to do what should be a simple one line operation is BUTT UGLY.
         /// </remarks>
-        /// <param name = "part"></param>
-        /// <param name = "face"></param>
-        /// <param name = "flag"></param>
+        /// <param name="part"></param>
+        /// <param name="face"></param>
+        /// <param name="flag"></param>
         protected void SetPartMediaFlags(ISceneChildEntity part, int face, bool flag)
         {
             Primitive.TextureEntry te = part.Shape.Textures;
@@ -254,15 +254,15 @@ namespace Aurora.Modules.Entities.Media
         }
 
         /// <summary>
-        ///   Sets or gets per face media textures.
+        ///     Sets or gets per face media textures.
         /// </summary>
-        /// <param name = "request"></param>
-        /// <param name = "path"></param>
-        /// <param name = "httpRequest"></param>
-        /// <param name = "httpResponse"></param>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         protected byte[] HandleObjectMediaMessage(string path, Stream request, OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
+                                                  OSHttpResponse httpResponse)
         {
 //            MainConsole.Instance.DebugFormat("[MOAP]: Got ObjectMedia path [{0}], raw request [{1}]", path, request);
 
@@ -282,9 +282,9 @@ namespace Aurora.Modules.Entities.Media
         }
 
         /// <summary>
-        ///   Handle a fetch request for media textures
+        ///     Handle a fetch request for media textures
         /// </summary>
-        /// <param name = "omr"></param>
+        /// <param name="omr"></param>
         /// <returns></returns>
         protected byte[] HandleObjectMediaRequest(ObjectMediaRequest omr)
         {
@@ -319,11 +319,11 @@ namespace Aurora.Modules.Entities.Media
         }
 
         /// <summary>
-        ///   Handle an update of media textures.
+        ///     Handle an update of media textures.
         /// </summary>
-        /// <param name = "path">Path on which this request was made</param>
-        /// <param name = "omu"></param>
-        ///   <returns></returns>
+        /// <param name="path">Path on which this request was made</param>
+        /// <param name="omu"></param>
+        /// <returns></returns>
         protected byte[] HandleObjectMediaUpdate(string path, ObjectMediaUpdate omu)
         {
             UUID primId = omu.PrimID;
@@ -431,15 +431,15 @@ namespace Aurora.Modules.Entities.Media
         }
 
         /// <summary>
-        ///   Received from the viewer if a user has changed the url of a media texture.
+        ///     Received from the viewer if a user has changed the url of a media texture.
         /// </summary>
-        /// <param name = "request"></param>
-        /// <param name = "path"></param>
-        /// <param name = "httpRequest"></param>
-        /// <param name = "httpResponse"></param>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <param name="httpRequest"></param>
+        /// <param name="httpResponse"></param>
         /// <returns></returns>
         protected byte[] HandleObjectMediaNavigateMessage(string path, Stream request, OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
+                                                          OSHttpResponse httpResponse)
         {
 //            MainConsole.Instance.DebugFormat("[MOAP]: Got ObjectMediaNavigate request [{0}]", request);
 
@@ -508,10 +508,10 @@ namespace Aurora.Modules.Entities.Media
         }
 
         /// <summary>
-        ///   Check that the face number is valid for the given prim.
+        ///     Check that the face number is valid for the given prim.
         /// </summary>
-        /// <param name = "part"></param>
-        /// <param name = "face"></param>
+        /// <param name="part"></param>
+        /// <param name="face"></param>
         protected void CheckFaceParam(ISceneChildEntity part, int face)
         {
             if (face < 0)
@@ -524,12 +524,12 @@ namespace Aurora.Modules.Entities.Media
         }
 
         /// <summary>
-        ///   Update the media url of the given part
+        ///     Update the media url of the given part
         /// </summary>
-        /// <param name = "part"></param>
-        /// <param name = "updateId">
-        ///   The id to attach to this update.  Normally, this is the user that changed the
-        ///   texture
+        /// <param name="part"></param>
+        /// <param name="updateId">
+        ///     The id to attach to this update.  Normally, this is the user that changed the
+        ///     texture
         /// </param>
         protected void UpdateMediaUrl(ISceneChildEntity part, UUID updateId)
         {
@@ -549,10 +549,10 @@ namespace Aurora.Modules.Entities.Media
         }
 
         /// <summary>
-        ///   Check the given url against the given whitelist.
+        ///     Check the given url against the given whitelist.
         /// </summary>
-        /// <param name = "rawUrl"></param>
-        /// <param name = "whitelist"></param>
+        /// <param name="rawUrl"></param>
+        /// <param name="whitelist"></param>
         /// <returns>true if the url matches an entry on the whitelist, false otherwise</returns>
         protected bool CheckUrlAgainstWhitelist(string rawUrl, string[] whitelist)
         {

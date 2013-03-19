@@ -7,19 +7,30 @@ namespace Aurora.Modules.Web
 {
     public class WelcomeScreenManagerPage : IWebInterfacePage
     {
-        public string[] FilePath { get
+        public string[] FilePath
         {
-            return new[]
-                       {
-                           "html/admin/welcomescreen_manager.html"
-                       };
-        } }
+            get
+            {
+                return new[]
+                           {
+                               "html/admin/welcomescreen_manager.html"
+                           };
+            }
+        }
 
-        public bool RequiresAuthentication { get { return true; } }
-        public bool RequiresAdminAuthentication { get { return true; } }
+        public bool RequiresAuthentication
+        {
+            get { return true; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return true; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -40,7 +51,8 @@ namespace Aurora.Modules.Web
                 return null;
             }
 
-            GridWelcomeScreen welcomeInfo = connector.GetGeneric<GridWelcomeScreen>(UUID.Zero, "GridWelcomeScreen", "GridWelcomeScreen");
+            GridWelcomeScreen welcomeInfo = connector.GetGeneric<GridWelcomeScreen>(UUID.Zero, "GridWelcomeScreen",
+                                                                                    "GridWelcomeScreen");
             if (welcomeInfo == null)
                 welcomeInfo = GridWelcomeScreen.Default;
             vars.Add("OpenNewsManager", translator.GetTranslatedString("OpenNewsManager"));

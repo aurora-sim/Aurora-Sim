@@ -40,7 +40,7 @@ using Timer = System.Timers.Timer;
 namespace Aurora.Modules
 {
     /// <summary>
-    ///   FileBased DataStore, do not store anything in any databases, instead save .abackup files for it
+    ///     FileBased DataStore, do not store anything in any databases, instead save .abackup files for it
     /// </summary>
     public class FileBasedSimulationData : ISimulationDataStore
     {
@@ -68,11 +68,7 @@ namespace Aurora.Modules
 
         #region ISimulationDataStore Members
 
-        public bool MapTileNeedsGenerated
-        {
-            get;
-            set;
-        }
+        public bool MapTileNeedsGenerated { get; set; }
 
         public virtual string Name
         {
@@ -106,7 +102,7 @@ namespace Aurora.Modules
 
             if (_regionData == null || _regionData.RegionInfo == null)
             {
-            retry:
+                retry:
                 info = ReadRegionInfoFromFile(ref _regionData.RegionInfo, out newRegion);
                 if (info == null)
                     goto retry;
@@ -124,23 +120,25 @@ namespace Aurora.Modules
                 if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini.example")))
                     File.Create(Path.Combine("Regions", "RegionConfig.ini")).Close();
                 else
-                    File.Copy(Path.Combine("Regions", "RegionConfig.ini.example"), Path.Combine("Regions", "RegionConfig.ini"));
+                    File.Copy(Path.Combine("Regions", "RegionConfig.ini.example"),
+                              Path.Combine("Regions", "RegionConfig.ini"));
                 newRegion = true;
                 return info = CreateRegionFromConsole(null);
             }
             newRegion = false;
             try
             {
-                Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"), Nini.Ini.IniFileType.AuroraStyle);
-                if(info == null)
+                Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"),
+                                                                    Nini.Ini.IniFileType.AuroraStyle);
+                if (info == null)
                     info = new RegionInfo();
                 Nini.Config.IniConfigSource source = new IniConfigSource(doc);
                 IConfig config = source.Configs["Region"];
 
                 info.RegionID = UUID.Parse(config.GetString("RegionID"));
                 info.RegionName = config.GetString("RegionName");
-                info.RegionLocX = config.GetInt("RegionLocX") * Constants.RegionSize;
-                info.RegionLocY = config.GetInt("RegionLocY") * Constants.RegionSize;
+                info.RegionLocX = config.GetInt("RegionLocX")*Constants.RegionSize;
+                info.RegionLocY = config.GetInt("RegionLocY")*Constants.RegionSize;
                 info.RegionSizeX = config.GetInt("RegionSizeX");
                 info.RegionSizeY = config.GetInt("RegionSizeY");
 
@@ -152,19 +150,25 @@ namespace Aurora.Modules
                 info.RegionType = config.GetString("RegionType", "");
                 info.AccessLevel = Util.ConvertMaturityToAccessLevel(config.GetUInt("MaturityLevel", info.AccessLevel));
                 info.InfiniteRegion = config.GetBoolean("InfiniteRegion", info.InfiniteRegion);
-                info.Startup = config.GetString("StartupType", "Normal") == "Normal" ? StartupType.Normal : StartupType.Medium;
+                info.Startup = config.GetString("StartupType", "Normal") == "Normal"
+                                   ? StartupType.Normal
+                                   : StartupType.Medium;
                 info.ScopeID = UUID.Parse(config.GetString("ScopeID", UUID.Zero.ToString()));
-                info.SeeIntoThisSimFromNeighbor = config.GetBoolean("SeeIntoThisSimFromNeighbor", info.SeeIntoThisSimFromNeighbor);
+                info.SeeIntoThisSimFromNeighbor = config.GetBoolean("SeeIntoThisSimFromNeighbor",
+                                                                    info.SeeIntoThisSimFromNeighbor);
                 ReadOpenRegionSettings(config, ref info);
                 return info;
             }
-            catch {  }
+            catch
+            {
+            }
             return null;
         }
 
         private RegionInfo CreateRegionFromConsole(RegionInfo info)
         {
-            Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"), Nini.Ini.IniFileType.AuroraStyle);
+            Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"),
+                                                                Nini.Ini.IniFileType.AuroraStyle);
             Nini.Config.IniConfigSource source = new IniConfigSource(doc);
             IConfig section = source.Configs["Region"] != null ? source.Configs["Region"] : source.AddConfig("Region");
 
@@ -177,10 +181,16 @@ namespace Aurora.Modules
             info.RegionName = MainConsole.Instance.Prompt("Region Name: ", info.RegionName);
             section.Set("RegionName", info.RegionName);
 
-            info.RegionLocX = int.Parse(MainConsole.Instance.Prompt("Region Location X: ", (info.RegionLocX / Constants.RegionSize).ToString())) * Constants.RegionSize;
-            info.RegionLocY = int.Parse(MainConsole.Instance.Prompt("Region location Y: ", (info.RegionLocY / Constants.RegionSize).ToString())) * Constants.RegionSize;
-            section.Set("RegionLocX", (info.RegionLocX / Constants.RegionSize).ToString());
-            section.Set("RegionLocY", (info.RegionLocY / Constants.RegionSize).ToString());
+            info.RegionLocX =
+                int.Parse(MainConsole.Instance.Prompt("Region Location X: ",
+                                                      (info.RegionLocX/Constants.RegionSize).ToString()))*
+                Constants.RegionSize;
+            info.RegionLocY =
+                int.Parse(MainConsole.Instance.Prompt("Region location Y: ",
+                                                      (info.RegionLocY/Constants.RegionSize).ToString()))*
+                Constants.RegionSize;
+            section.Set("RegionLocX", (info.RegionLocX/Constants.RegionSize).ToString());
+            section.Set("RegionLocY", (info.RegionLocY/Constants.RegionSize).ToString());
 
             info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: ", info.RegionSizeX.ToString()));
             info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: ", info.RegionSizeY.ToString()));
@@ -189,19 +199,31 @@ namespace Aurora.Modules
 
             if (info.InternalEndPoint == null)
                 info.InternalEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse("0.0.0.0"), 9000);
-            System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: ", info.InternalEndPoint.Address.ToString()));
-            int intPort = int.Parse(MainConsole.Instance.Prompt("Internal port: ", info.InternalEndPoint.Port.ToString()));
+            System.Net.IPAddress intAdd =
+                System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: ",
+                                                                       info.InternalEndPoint.Address.ToString()));
+            int intPort =
+                int.Parse(MainConsole.Instance.Prompt("Internal port: ", info.InternalEndPoint.Port.ToString()));
             info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
             section.Set("InternalPort", intPort.ToString());
             section.Set("InternalAddress", intAdd.ToString());
 
-            info.RegionType = MainConsole.Instance.Prompt("Region Type: ", (info.RegionType == "" ? "Mainland" : info.RegionType));
+            info.RegionType = MainConsole.Instance.Prompt("Region Type: ",
+                                                          (info.RegionType == "" ? "Mainland" : info.RegionType));
             section.Set("RegionType", info.RegionType);
 
-            info.SeeIntoThisSimFromNeighbor = bool.Parse(MainConsole.Instance.Prompt("See into this sim from neighbors: ", info.SeeIntoThisSimFromNeighbor.ToString().ToLower(), new List<string>() { "true", "false" }).ToLower());
+            info.SeeIntoThisSimFromNeighbor =
+                bool.Parse(
+                    MainConsole.Instance.Prompt("See into this sim from neighbors: ",
+                                                info.SeeIntoThisSimFromNeighbor.ToString().ToLower(),
+                                                new List<string>() {"true", "false"}).ToLower());
             section.Set("SeeIntoThisSimFromNeighbor", info.SeeIntoThisSimFromNeighbor);
 
-            info.ObjectCapacity = int.Parse(MainConsole.Instance.Prompt("Object capacity: ", info.ObjectCapacity == 0 ? "50000" : info.ObjectCapacity.ToString()));
+            info.ObjectCapacity =
+                int.Parse(MainConsole.Instance.Prompt("Object capacity: ",
+                                                      info.ObjectCapacity == 0
+                                                          ? "50000"
+                                                          : info.ObjectCapacity.ToString()));
             section.Set("MaxPrims", info.ObjectCapacity);
 
             source.Save(Path.Combine("Regions", "RegionConfig.ini"));
@@ -216,29 +238,55 @@ namespace Aurora.Modules
 
         private void ReadOpenRegionSettings(IConfig instanceSettings, ref RegionInfo region)
         {
-            region.OpenRegionSettings.MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance", region.OpenRegionSettings.MaxDragDistance);
-            region.OpenRegionSettings.DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance", region.OpenRegionSettings.DefaultDrawDistance);
+            region.OpenRegionSettings.MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance",
+                                                                                  region.OpenRegionSettings
+                                                                                        .MaxDragDistance);
+            region.OpenRegionSettings.DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance",
+                                                                                      region.OpenRegionSettings
+                                                                                            .DefaultDrawDistance);
 
 
-            region.OpenRegionSettings.MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale", region.OpenRegionSettings.MaximumPrimScale);
-            region.OpenRegionSettings.MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale", region.OpenRegionSettings.MinimumPrimScale);
-            region.OpenRegionSettings.MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale", region.OpenRegionSettings.MaximumPhysPrimScale);
+            region.OpenRegionSettings.MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale",
+                                                                                   region.OpenRegionSettings
+                                                                                         .MaximumPrimScale);
+            region.OpenRegionSettings.MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale",
+                                                                                   region.OpenRegionSettings
+                                                                                         .MinimumPrimScale);
+            region.OpenRegionSettings.MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale",
+                                                                                       region.OpenRegionSettings
+                                                                                             .MaximumPhysPrimScale);
 
 
-            region.OpenRegionSettings.MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize", region.OpenRegionSettings.MaximumHollowSize);
-            region.OpenRegionSettings.MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize", region.OpenRegionSettings.MinimumHoleSize);
+            region.OpenRegionSettings.MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize",
+                                                                                    region.OpenRegionSettings
+                                                                                          .MaximumHollowSize);
+            region.OpenRegionSettings.MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize",
+                                                                                  region.OpenRegionSettings
+                                                                                        .MinimumHoleSize);
 
 
-            region.OpenRegionSettings.MaximumLinkCount = instanceSettings.GetInt("MaximumLinkCount", region.OpenRegionSettings.MaximumLinkCount);
-            region.OpenRegionSettings.MaximumLinkCountPhys = instanceSettings.GetInt("MaximumLinkCountPhys", region.OpenRegionSettings.MaximumLinkCountPhys);
+            region.OpenRegionSettings.MaximumLinkCount = instanceSettings.GetInt("MaximumLinkCount",
+                                                                                 region.OpenRegionSettings
+                                                                                       .MaximumLinkCount);
+            region.OpenRegionSettings.MaximumLinkCountPhys = instanceSettings.GetInt("MaximumLinkCountPhys",
+                                                                                     region.OpenRegionSettings
+                                                                                           .MaximumLinkCountPhys);
 
 
-            region.OpenRegionSettings.RenderWater = instanceSettings.GetBoolean("RenderWater", region.OpenRegionSettings.RenderWater);
-            region.OpenRegionSettings.MaximumInventoryItemsTransfer = instanceSettings.GetInt("MaximumInventoryItemsTransfer",
-                                                                               region.OpenRegionSettings.MaximumInventoryItemsTransfer);
-            region.OpenRegionSettings.DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap", region.OpenRegionSettings.DisplayMinimap);
-            region.OpenRegionSettings.AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims", region.OpenRegionSettings.AllowPhysicalPrims);
-            region.OpenRegionSettings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance", region.OpenRegionSettings.ForceDrawDistance);
+            region.OpenRegionSettings.RenderWater = instanceSettings.GetBoolean("RenderWater",
+                                                                                region.OpenRegionSettings.RenderWater);
+            region.OpenRegionSettings.MaximumInventoryItemsTransfer =
+                instanceSettings.GetInt("MaximumInventoryItemsTransfer",
+                                        region.OpenRegionSettings.MaximumInventoryItemsTransfer);
+            region.OpenRegionSettings.DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap",
+                                                                                   region.OpenRegionSettings
+                                                                                         .DisplayMinimap);
+            region.OpenRegionSettings.AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims",
+                                                                                       region.OpenRegionSettings
+                                                                                             .AllowPhysicalPrims);
+            region.OpenRegionSettings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance",
+                                                                                      region.OpenRegionSettings
+                                                                                            .ForceDrawDistance);
 
             string offset = instanceSettings.GetString("OffsetOfUTC", region.OpenRegionSettings.OffsetOfUTC.ToString());
             int off;
@@ -250,10 +298,15 @@ namespace Aurora.Modules
                     off = 0;
             }
             region.OpenRegionSettings.OffsetOfUTC = off;
-            region.OpenRegionSettings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST", region.OpenRegionSettings.OffsetOfUTCDST);
-            region.OpenRegionSettings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode", region.OpenRegionSettings.EnableTeenMode);
+            region.OpenRegionSettings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST",
+                                                                                   region.OpenRegionSettings
+                                                                                         .OffsetOfUTCDST);
+            region.OpenRegionSettings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode",
+                                                                                   region.OpenRegionSettings
+                                                                                         .EnableTeenMode);
             region.OpenRegionSettings.ShowTags = instanceSettings.GetInt("ShowTags", region.OpenRegionSettings.ShowTags);
-            region.OpenRegionSettings.MaxGroups = instanceSettings.GetInt("MaxGroups", region.OpenRegionSettings.MaxGroups);
+            region.OpenRegionSettings.MaxGroups = instanceSettings.GetInt("MaxGroups",
+                                                                          region.OpenRegionSettings.MaxGroups);
 
             string defaultunderpants = instanceSettings.GetString("DefaultUnderpants",
                                                                   region.OpenRegionSettings.DefaultUnderpants.ToString());
@@ -268,8 +321,10 @@ namespace Aurora.Modules
             scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
             m_scene = scene;
 
-            if(!MainConsole.Instance.Commands.ContainsCommand("update region info"))
-                MainConsole.Instance.Commands.AddCommand("update region info", "update region info", "Updates a region's info (and the resulting .ini file)", UpdateRegionInfo);
+            if (!MainConsole.Instance.Commands.ContainsCommand("update region info"))
+                MainConsole.Instance.Commands.AddCommand("update region info", "update region info",
+                                                         "Updates a region's info (and the resulting .ini file)",
+                                                         UpdateRegionInfo);
         }
 
         public void UpdateRegionInfo(string[] info)
@@ -279,7 +334,7 @@ namespace Aurora.Modules
 
         public virtual List<ISceneEntity> LoadObjects()
         {
-            return _regionData.Groups.ConvertAll<ISceneEntity>(o=>o);
+            return _regionData.Groups.ConvertAll<ISceneEntity>(o => o);
         }
 
         public virtual void LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY)
@@ -374,7 +429,7 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        ///   Around for legacy things
+        ///     Around for legacy things
         /// </summary>
         /// <returns></returns>
         public virtual List<LandData> LoadLandObjects()
@@ -385,9 +440,9 @@ namespace Aurora.Modules
         #endregion
 
         /// <summary>
-        ///   Read the config for the data loader
+        ///     Read the config for the data loader
         /// </summary>
-        /// <param name = "simBase"></param>
+        /// <param name="simBase"></param>
         protected virtual void ReadConfig(ISimulationBase simBase)
         {
             IConfig config = simBase.ConfigSource.Configs["FileBasedSimulationData"];
@@ -396,8 +451,10 @@ namespace Aurora.Modules
                 m_saveChanges = config.GetBoolean("SaveChanges", m_saveChanges);
                 m_timeBetweenSaves = config.GetInt("TimeBetweenSaves", m_timeBetweenSaves);
                 m_keepOldSave = config.GetBoolean("SavePreviousBackup", m_keepOldSave);
-                m_oldSaveDirectory = PathHelpers.ComputeFullPath(config.GetString("PreviousBackupDirectory", m_oldSaveDirectory));
-                m_storeDirectory = PathHelpers.ComputeFullPath(config.GetString("StoreBackupDirectory", m_storeDirectory));
+                m_oldSaveDirectory =
+                    PathHelpers.ComputeFullPath(config.GetString("PreviousBackupDirectory", m_oldSaveDirectory));
+                m_storeDirectory =
+                    PathHelpers.ComputeFullPath(config.GetString("StoreBackupDirectory", m_storeDirectory));
                 m_saveBackupChanges = config.GetBoolean("SaveTimedPreviousBackup", m_keepOldSave);
                 m_timeBetweenBackupSaves = config.GetInt("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
             }
@@ -420,10 +477,10 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        ///   Look for the backup event, and if it is there, trigger the backup of the sim
+        ///     Look for the backup event, and if it is there, trigger the backup of the sim
         /// </summary>
-        /// <param name = "FunctionName"></param>
-        /// <param name = "parameters"></param>
+        /// <param name="FunctionName"></param>
+        /// <param name="parameters"></param>
         /// <returns></returns>
         private object AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
         {
@@ -435,10 +492,10 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        ///   Save a backup on the timer event
+        ///     Save a backup on the timer event
         /// </summary>
-        /// <param name = "sender"></param>
-        /// <param name = "e"></param>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void m_saveTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (m_requiresSave)
@@ -448,7 +505,7 @@ namespace Aurora.Modules
                 m_saveTimer.Stop();
                 try
                 {
-                    lock(m_saveLock)
+                    lock (m_saveLock)
                     {
                         if (m_saveChanges && m_saveBackups && !m_shutdown)
                         {
@@ -458,7 +515,8 @@ namespace Aurora.Modules
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
+                    MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " +
+                                               ex);
                 }
                 m_saveTimer.Start(); //Restart it as we just did a backup
             }
@@ -470,17 +528,17 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        ///   Save a backup into the oldSaveDirectory on the timer event
+        ///     Save a backup into the oldSaveDirectory on the timer event
         /// </summary>
-        /// <param name = "sender"></param>
-        /// <param name = "e"></param>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void m_backupSaveTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             try
             {
-                lock(m_saveLock)
+                lock (m_saveLock)
                 {
-                    if(!m_shutdown)
+                    if (!m_shutdown)
                     {
                         SaveBackup(true);
                     }
@@ -493,7 +551,7 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        ///   Save a backup of the sim
+        ///     Save a backup of the sim
         /// </summary>
         /// <param name="isOldSave"></param>
         protected virtual void SaveBackup(bool isOldSave)
@@ -524,8 +582,9 @@ namespace Aurora.Modules
                 MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
             }
 
-            MainConsole.Instance.Info("[FileBasedSimulationData]: Saving backup for region " + m_scene.RegionInfo.RegionName);
-            
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Saving backup for region " +
+                                      m_scene.RegionInfo.RegionName);
+
             RegionData regiondata = new RegionData();
             regiondata.Init();
 
@@ -559,12 +618,27 @@ namespace Aurora.Modules
             }
 
             ISceneEntity[] entities = m_scene.Entities.GetEntities();
-            regiondata.Groups = new List<SceneObjectGroup>(entities.Cast<SceneObjectGroup>().Where((entity)=>
-                {
-                    return !(entity.IsAttachment ||
-                            ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
-                            || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez));
-                }));
+            regiondata.Groups = new List<SceneObjectGroup>(entities.Cast<SceneObjectGroup>().Where((entity) =>
+                                                                                                       {
+                                                                                                           return
+                                                                                                               !(entity
+                                                                                                                     .IsAttachment ||
+                                                                                                                 ((entity
+                                                                                                                       .RootChild
+                                                                                                                       .Flags &
+                                                                                                                   PrimFlags
+                                                                                                                       .Temporary) ==
+                                                                                                                  PrimFlags
+                                                                                                                      .Temporary)
+                                                                                                                 ||
+                                                                                                                 ((entity
+                                                                                                                       .RootChild
+                                                                                                                       .Flags &
+                                                                                                                   PrimFlags
+                                                                                                                       .TemporaryOnRez) ==
+                                                                                                                  PrimFlags
+                                                                                                                      .TemporaryOnRez));
+                                                                                                       }));
             try
             {
                 foreach (ISceneEntity entity in regiondata.Groups.Where(ent => ent.HasGroupChanged))
@@ -577,17 +651,18 @@ namespace Aurora.Modules
             string filename = isOldSave ? BuildOldSaveFileName() : BuildSaveFileName();
 
             if (File.Exists(filename + (isOldSave ? "" : ".tmp")))
-                File.Delete(filename + (isOldSave ? "" : ".tmp"));//Remove old tmp files
+                File.Delete(filename + (isOldSave ? "" : ".tmp")); //Remove old tmp files
             if (!_regionLoader.SaveBackup(filename + (isOldSave ? "" : ".tmp"), regiondata))
             {
                 if (File.Exists(filename + (isOldSave ? "" : ".tmp")))
-                    File.Delete(filename + (isOldSave ? "" : ".tmp"));//Remove old tmp files
-                MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup for region " + m_scene.RegionInfo.RegionName + "!");
+                    File.Delete(filename + (isOldSave ? "" : ".tmp")); //Remove old tmp files
+                MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup for region " +
+                                           m_scene.RegionInfo.RegionName + "!");
                 return;
             }
 
             //RegionData data = _regionLoader.LoadBackup(filename + ".tmp");
-            if(!isOldSave)
+            if (!isOldSave)
             {
                 if (File.Exists(filename))
                     File.Delete(filename);
@@ -605,21 +680,22 @@ namespace Aurora.Modules
             regiondata.Dispose();
             //Now make it the full file again
             MapTileNeedsGenerated = true;
-            MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " +
+                                      m_scene.RegionInfo.RegionName);
         }
 
         private string BuildOldSaveFileName()
         {
             return Path.Combine(m_oldSaveDirectory,
-                                           m_scene.RegionInfo.RegionName + SerializeDateTime() +
-                                           _regionLoader.FileType);
+                                m_scene.RegionInfo.RegionName + SerializeDateTime() +
+                                _regionLoader.FileType);
         }
 
         private string BuildSaveFileName()
         {
             return (m_storeDirectory == "" || m_storeDirectory == "/")
-                                                      ? m_fileName + _regionLoader.FileType
-                                                      : Path.Combine(m_storeDirectory, m_fileName + _regionLoader.FileType);
+                       ? m_fileName + _regionLoader.FileType
+                       : Path.Combine(m_storeDirectory, m_fileName + _regionLoader.FileType);
         }
 
         private byte[] WriteTerrainToStream(ITerrainChannel tModule)
@@ -641,7 +717,8 @@ namespace Aurora.Modules
             MainConsole.Instance.Info("[FileBasedSimulationData]: Restoring sim backup...");
             _regionData = _regionLoader.LoadBackup(BuildSaveFileName());
             if (_regionData == null)
-                _regionData = _oldRegionLoader.LoadBackup(Path.ChangeExtension(BuildSaveFileName(), _oldRegionLoader.FileType));
+                _regionData =
+                    _oldRegionLoader.LoadBackup(Path.ChangeExtension(BuildSaveFileName(), _oldRegionLoader.FileType));
             if (_regionData == null)
             {
                 _regionData = new RegionData();
@@ -671,20 +748,13 @@ namespace Aurora.Modules
     [Serializable, ProtoBuf.ProtoContract()]
     public class RegionData
     {
-        [ProtoMember(1)]
-        public List<SceneObjectGroup> Groups;
-        [ProtoMember(2)]
-        public RegionInfo RegionInfo;
-        [ProtoMember(3)]
-        public byte[] Terrain;
-        [ProtoMember(4)]
-        public byte[] RevertTerrain;
-        [ProtoMember(5)]
-        public byte[] Water;
-        [ProtoMember(6)]
-        public byte[] RevertWater;
-        [ProtoMember(7)]
-        public List<LandData> Parcels;
+        [ProtoMember(1)] public List<SceneObjectGroup> Groups;
+        [ProtoMember(2)] public RegionInfo RegionInfo;
+        [ProtoMember(3)] public byte[] Terrain;
+        [ProtoMember(4)] public byte[] RevertTerrain;
+        [ProtoMember(5)] public byte[] Water;
+        [ProtoMember(6)] public byte[] RevertWater;
+        [ProtoMember(7)] public List<LandData> Parcels;
 
         public void Init()
         {

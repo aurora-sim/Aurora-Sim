@@ -139,15 +139,17 @@ namespace Aurora.Modules.Sound
 
                                                  if (part.IsAttachment)
                                                  {
-                                                    if (part.ParentEntity.GetAttachmentPoint() >= (uint)OpenMetaverse.AttachmentPoint.HUDCenter2 &&
-                                                        part.ParentEntity.GetAttachmentPoint() <= (uint)OpenMetaverse.AttachmentPoint.HUDBottomRight) // HUD
-                                                    {
-                                                        if (sp.ControllingClient.AgentId != part.OwnerID)
-                                                            return;
-                                                    }
+                                                     if (part.ParentEntity.GetAttachmentPoint() >=
+                                                         (uint) OpenMetaverse.AttachmentPoint.HUDCenter2 &&
+                                                         part.ParentEntity.GetAttachmentPoint() <=
+                                                         (uint) OpenMetaverse.AttachmentPoint.HUDBottomRight) // HUD
+                                                     {
+                                                         if (sp.ControllingClient.AgentId != part.OwnerID)
+                                                             return;
+                                                     }
 
-                                                    if (sp.ControllingClient.AgentId == part.OwnerID)
-                                                        dis = 0;
+                                                     if (sp.ControllingClient.AgentId == part.OwnerID)
+                                                         dis = 0;
                                                  }
 
                                                  //Check to see if the person is local and the av is in the same parcel
@@ -157,15 +159,15 @@ namespace Aurora.Modules.Sound
                                                  if ((sp.CurrentParcelUUID != ILO.LandData.GlobalID &&
                                                       (sp.CurrentParcel.LandData.Private || ILO.LandData.Private)))
                                                      return;
-                                                         //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
+                                                 //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
 
                                                  float thisSpGain;
 
                                                  // Scale by distance
                                                  if (radius == 0)
-                                                     thisSpGain = (float)((double)gain * ((100.0 - dis) / 100.0));
+                                                     thisSpGain = (float) ((double) gain*((100.0 - dis)/100.0));
                                                  else
-                                                     thisSpGain = (float)((double)gain * ((radius - dis) / radius));
+                                                     thisSpGain = (float) ((double) gain*((radius - dis)/radius));
 
                                                  if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
                                                      flags += (int) SoundFlags.Queue;

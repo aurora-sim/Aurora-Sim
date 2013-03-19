@@ -147,7 +147,7 @@ namespace Aurora.Modules.Archivers
             }
 
             string fileName = MainConsole.Instance.Prompt("What file name should we load?",
-                                                             scene.RegionInfo.RegionName + ".abackup");
+                                                          scene.RegionInfo.RegionName + ".abackup");
 
 
             var stream = ArchiveHelpers.GetStream(fileName);
@@ -173,7 +173,7 @@ namespace Aurora.Modules.Archivers
             }
 
             string fileName = MainConsole.Instance.Prompt("What file name will this be saved as?",
-                                                             scene.RegionInfo.RegionName + ".abackup");
+                                                          scene.RegionInfo.RegionName + ".abackup");
 
             GZipStream m_saveStream = new GZipStream(new FileStream(fileName, FileMode.Create), CompressionMode.Compress);
             TarArchiveWriter writer = new TarArchiveWriter(m_saveStream);

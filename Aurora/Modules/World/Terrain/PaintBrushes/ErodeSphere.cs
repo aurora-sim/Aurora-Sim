@@ -33,7 +33,7 @@ using Aurora.Framework;
 namespace Aurora.Modules.Terrain.PaintBrushes
 {
     /// <summary>
-    ///   Hydraulic Erosion Brush
+    ///     Hydraulic Erosion Brush
     /// </summary>
     public class ErodeSphere : ITerrainPaintableEffect
     {

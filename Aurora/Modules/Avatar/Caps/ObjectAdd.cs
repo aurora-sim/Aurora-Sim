@@ -82,11 +82,10 @@ namespace Aurora.Modules.Caps
             OSDMap retVal = new OSDMap();
             retVal["ObjectAdd"] = CapsUtil.CreateCAPS("ObjectAdd", "");
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ObjectAdd"],
-                                                       delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProcessAdd(request, agentID);
-                                                       }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return ProcessAdd(request, agentID); }));
             return retVal;
         }
 

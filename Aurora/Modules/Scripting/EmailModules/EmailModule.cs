@@ -47,7 +47,7 @@ namespace Aurora.Modules.Scripting
         private readonly Dictionary<UUID, List<Email>> m_MailQueues = new Dictionary<UUID, List<Email>>();
 
         private readonly TimeSpan m_QueueTimeout = new TimeSpan(2, 0, 0);
-                                  // 2 hours without llGetNextEmail drops the queue
+        // 2 hours without llGetNextEmail drops the queue
 
         // Scenes by Region Handle
 
@@ -63,17 +63,17 @@ namespace Aurora.Modules.Scripting
         private string m_InterObjectHostname = "lsl.opensim.local";
         private const int m_MaxQueueSize = 50; // maximum size of an object mail queue
         private bool m_localOnly = true;
-        private int m_MaxEmailSize = 4096;  // largest email allowed by default, as per lsl docs.
+        private int m_MaxEmailSize = 4096; // largest email allowed by default, as per lsl docs.
 
         #region IEmailModule Members
 
         /// <summary>
-        ///   SendMail function utilized by llEMail
+        ///     SendMail function utilized by llEMail
         /// </summary>
-        /// <param name = "objectID"></param>
-        /// <param name = "address"></param>
-        /// <param name = "subject"></param>
-        /// <param name = "body"></param>
+        /// <param name="objectID"></param>
+        /// <param name="address"></param>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
         /// <param name="scene">Can be null</param>
         public void SendEmail(UUID objectID, string address, string subject, string body, IScene scene)
         {
@@ -106,7 +106,8 @@ namespace Aurora.Modules.Scripting
             string LastObjectRegionName = string.Empty;
 
             if (scene != null)
-                resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName, scene);
+                resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition,
+                                              out LastObjectRegionName, scene);
 
             if (!address.EndsWith(m_InterObjectHostname))
             {
@@ -124,11 +125,11 @@ namespace Aurora.Modules.Scripting
                         else
                             fromEmailAddress = "noreply@" + m_HostName;
                         EmailMessage emailMessage = new EmailMessage
-                                               {
-                                                   FromAddress =
-                                                       new EmailAddress(fromEmailAddress), 
-                                                       Subject = subject
-                                               };
+                                                        {
+                                                            FromAddress =
+                                                                new EmailAddress(fromEmailAddress),
+                                                            Subject = subject
+                                                        };
 
                         //To - Only One
                         emailMessage.AddToAddress(new EmailAddress(address));
@@ -136,8 +137,8 @@ namespace Aurora.Modules.Scripting
                         emailMessage.BodyText = body;
                         if (scene != null)
                             emailMessage.BodyText = "Object-Name: " + LastObjectName +
-                                                "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
-                                                LastObjectPosition + "\n\n" + emailMessage.BodyText;
+                                                    "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
+                                                    LastObjectPosition + "\n\n" + emailMessage.BodyText;
 
                         //Config SMTP Server
                         //Set SMTP SERVER config
@@ -152,7 +153,8 @@ namespace Aurora.Modules.Scripting
 
                         //Log
                         if (!didError)
-                            MainConsole.Instance.Info("[EMAIL] EMail sent to: " + address + " from object: " + fromEmailAddress);
+                            MainConsole.Instance.Info("[EMAIL] EMail sent to: " + address + " from object: " +
+                                                      fromEmailAddress);
                     }
                     catch (Exception e)
                     {
@@ -169,7 +171,8 @@ namespace Aurora.Modules.Scripting
                         IScenePresence sp = scene.GetScenePresence(part.OwnerID);
                         if ((sp != null) && (!sp.IsChildAgent))
                         {
-                            sp.ControllingClient.SendAlertMessage("llEmail: email module not configured for outgoing emails");
+                            sp.ControllingClient.SendAlertMessage(
+                                "llEmail: email module not configured for outgoing emails");
                         }
                     }
                 }
@@ -184,60 +187,63 @@ namespace Aurora.Modules.Scripting
                 {
                     // object in this region
                     InsertEmail(toID, new Email
-                                  {
-                                      time =
-                                          ((int) ((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
-                                          ToString(CultureInfo.InvariantCulture),
-                                      subject = subject,
-                                      sender = objectID.ToString() + "@" + m_InterObjectHostname,
-                                      message = "Object-Name: " + LastObjectName +
-                                                "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
-                                                LastObjectPosition + "\n\n" + body,
-                                      toPrimID = toID
-                                  });
+                                          {
+                                              time =
+                                                  ((int)
+                                                   ((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds))
+                                                  .
+                                                  ToString(CultureInfo.InvariantCulture),
+                                              subject = subject,
+                                              sender = objectID.ToString() + "@" + m_InterObjectHostname,
+                                              message = "Object-Name: " + LastObjectName +
+                                                        "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
+                                                        LastObjectPosition + "\n\n" + body,
+                                              toPrimID = toID
+                                          });
                 }
                 else
                 {
                     // object on another region
 
                     Email email = new Email
-                    {
-                        time =
-                            ((int)((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
-                            ToString(CultureInfo.InvariantCulture),
-                        subject = subject,
-                        sender = objectID.ToString() + "@" + m_InterObjectHostname,
-                        message = body,
-                        toPrimID = toID
-                    };
+                                      {
+                                          time =
+                                              ((int)
+                                               ((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
+                                              ToString(CultureInfo.InvariantCulture),
+                                          subject = subject,
+                                          sender = objectID.ToString() + "@" + m_InterObjectHostname,
+                                          message = body,
+                                          toPrimID = toID
+                                      };
                     IEmailConnector conn = DataManager.DataManager.RequestPlugin<IEmailConnector>();
                     conn.InsertEmail(email);
                 }
             }
         }
 
-        ///<summary>
-        ///   Gets any emails that a prim may have asyncronously
-        ///</summary>
-        ///<param name = "objectID"></param>
-        ///<param name = "sender"></param>
-        ///<param name = "subject"></param>
-        ///<param name="handler"> </param>
-        ///<param name="scene"> </param>
-        ///<returns></returns>
+        /// <summary>
+        ///     Gets any emails that a prim may have asyncronously
+        /// </summary>
+        /// <param name="objectID"></param>
+        /// <param name="sender"></param>
+        /// <param name="subject"></param>
+        /// <param name="handler"> </param>
+        /// <param name="scene"> </param>
+        /// <returns></returns>
         public void GetNextEmailAsync(UUID objectID, string sender, string subject, NextEmail handler, IScene scene)
         {
             Util.FireAndForget(state => handler(GetNextEmail(objectID, sender, subject, scene)));
         }
 
-        ///<summary>
-        ///   Gets any emails that a prim may have
-        ///</summary>
-        ///<param name = "objectID"></param>
-        ///<param name = "sender"></param>
-        ///<param name = "subject"></param>
-        ///<param name="scene"> </param>
-        ///<returns></returns>
+        /// <summary>
+        ///     Gets any emails that a prim may have
+        /// </summary>
+        /// <param name="objectID"></param>
+        /// <param name="sender"></param>
+        /// <param name="subject"></param>
+        /// <param name="scene"> </param>
+        /// <returns></returns>
         public Email GetNextEmail(UUID objectID, string sender, string subject, IScene scene)
         {
             List<Email> queue = null;
@@ -260,7 +266,8 @@ namespace Aurora.Modules.Scripting
                     if ((now - m_LastGetEmailCall[uuid]) > m_QueueTimeout) removal.Add(uuid);
                 }
 #else
-                List<UUID> removal = m_LastGetEmailCall.Keys.Where(uuid => (now - m_LastGetEmailCall[uuid]) > m_QueueTimeout).ToList();
+                List<UUID> removal =
+                    m_LastGetEmailCall.Keys.Where(uuid => (now - m_LastGetEmailCall[uuid]) > m_QueueTimeout).ToList();
 #endif
 
                 foreach (UUID remove in removal)
@@ -334,11 +341,12 @@ namespace Aurora.Modules.Scripting
                     string LastObjectPosition = string.Empty;
                     string LastObjectRegionName = string.Empty;
 
-                    resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName, scene);
+                    resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition,
+                                                  out LastObjectRegionName, scene);
 
                     email.message = "Object-Name: " + LastObjectName +
-                                  "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
-                                  LastObjectPosition + "\n\n" + email.message;
+                                    "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
+                                    LastObjectPosition + "\n\n" + email.message;
                     InsertEmail(objectID, email);
                 }
             }
@@ -393,7 +401,8 @@ namespace Aurora.Modules.Scripting
         }
 
         private void resolveNamePositionRegionName(UUID objectID, out string ObjectName,
-                                                   out string ObjectAbsolutePosition, out string ObjectRegionName, IScene scene)
+                                                   out string ObjectAbsolutePosition, out string ObjectRegionName,
+                                                   IScene scene)
         {
             string m_ObjectRegionName;
             ISceneChildEntity part = findPrim(objectID, out m_ObjectRegionName, scene);

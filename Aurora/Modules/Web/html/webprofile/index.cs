@@ -14,19 +14,27 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/webprofile/index.html",
-                           "html/webprofile/base.html",
-                           "html/webprofile/"
-                       };
+                           {
+                               "html/webprofile/index.html",
+                               "html/webprofile/base.html",
+                               "html/webprofile/"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -38,7 +46,7 @@ namespace Aurora.Modules.Web
                 string userid = httpRequest.Query["userid"].ToString();
 
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, UUID.Parse(userid));
+                                       GetUserAccount(null, UUID.Parse(userid));
             }
             else if (httpRequest.Query.ContainsKey("name"))
             {
@@ -46,7 +54,7 @@ namespace Aurora.Modules.Web
                 name = name.Replace('.', ' ');
                 name = name.Replace("%20", " ");
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, name);
+                                       GetUserAccount(null, name);
             }
             else
             {
@@ -63,20 +71,21 @@ namespace Aurora.Modules.Web
             vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
             IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().
-                GetUserProfile(account.PrincipalID);
+                                              GetUserProfile(account.PrincipalID);
             if (profile != null)
             {
                 if (profile.Partner != UUID.Zero)
                 {
                     account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                        GetUserAccount(null, profile.Partner);
+                                           GetUserAccount(null, profile.Partner);
                     vars.Add("UserPartner", account.Name);
                 }
                 else
                     vars.Add("UserPartner", "No partner");
                 vars.Add("UserAboutMe", profile.AboutText == "" ? "Nothing here" : profile.AboutText);
                 string url = "../images/icons/no_picture.jpg";
-                IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
+                IWebHttpTextureService webhttpService =
+                    webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
                 if (webhttpService != null && profile.Image != UUID.Zero)
                     url = webhttpService.GetTextureURL(profile.Image);
                 vars.Add("UserPictureURL", url);
@@ -89,13 +98,17 @@ namespace Aurora.Modules.Web
                 UUID friendID = UUID.Zero;
                 if (friends.Any(f => UUID.TryParse(f.Friend, out friendID) && friendID == ourAccount.PrincipalID))
                 {
-                    IAgentInfoService agentInfoService = webInterface.Registry.RequestModuleInterface<IAgentInfoService>();
+                    IAgentInfoService agentInfoService =
+                        webInterface.Registry.RequestModuleInterface<IAgentInfoService>();
                     IGridService gridService = webInterface.Registry.RequestModuleInterface<IGridService>();
                     UserInfo ourInfo = agentInfoService.GetUserInfo(account.PrincipalID.ToString());
                     if (ourInfo != null && ourInfo.IsOnline)
                         vars.Add("OnlineLocation", gridService.GetRegionByUUID(null, ourInfo.CurrentRegionID).RegionName);
                     vars.Add("UserIsOnline", ourInfo != null && ourInfo.IsOnline);
-                    vars.Add("IsOnline", ourInfo != null && ourInfo.IsOnline ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
+                    vars.Add("IsOnline",
+                             ourInfo != null && ourInfo.IsOnline
+                                 ? translator.GetTranslatedString("Online")
+                                 : translator.GetTranslatedString("Offline"));
                 }
                 else
                 {
@@ -131,10 +144,10 @@ namespace Aurora.Modules.Web
             vars.Add("styles4", translator.GetTranslatedString("styles4"));
             vars.Add("styles5", translator.GetTranslatedString("styles5"));
 
-			vars.Add("StyleSwitcherStylesText", translator.GetTranslatedString("StyleSwitcherStylesText"));
-			vars.Add("StyleSwitcherLanguagesText", translator.GetTranslatedString("StyleSwitcherLanguagesText"));
-			vars.Add("StyleSwitcherChoiceText", translator.GetTranslatedString("StyleSwitcherChoiceText"));
-			
+            vars.Add("StyleSwitcherStylesText", translator.GetTranslatedString("StyleSwitcherStylesText"));
+            vars.Add("StyleSwitcherLanguagesText", translator.GetTranslatedString("StyleSwitcherLanguagesText"));
+            vars.Add("StyleSwitcherChoiceText", translator.GetTranslatedString("StyleSwitcherChoiceText"));
+
             // Language Switcher
             vars.Add("en", translator.GetTranslatedString("en"));
             vars.Add("fr", translator.GetTranslatedString("fr"));

@@ -187,7 +187,8 @@ namespace Aurora.Modules.Estate
                         scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(2);
                         break;
                     default:
-                        MainConsole.Instance.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
+                        MainConsole.Instance.Warn(
+                            "Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
                         return;
                 }
                 //Tell the grid about the changes
@@ -254,7 +255,7 @@ namespace Aurora.Modules.Estate
         {
             client.OnGodlikeMessage += GodlikeMessage;
             client.OnEstateTelehubRequest += GodlikeMessage;
-                //This is ok, we do estate checks and check to make sure that only telehubs are dealt with here
+            //This is ok, we do estate checks and check to make sure that only telehubs are dealt with here
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -518,10 +519,11 @@ namespace Aurora.Modules.Estate
 
             EstateSettings ES = scene.RegionInfo.EstateSettings;
             TeleportFlags tpflags = (TeleportFlags) TeleportFlags;
-            const TeleportFlags allowableFlags = OpenMetaverse.TeleportFlags.ViaLandmark | OpenMetaverse.TeleportFlags.ViaHome |
-                                                 OpenMetaverse.TeleportFlags.ViaLure |
-                                                 OpenMetaverse.TeleportFlags.ForceRedirect |
-                                                 OpenMetaverse.TeleportFlags.Godlike | OpenMetaverse.TeleportFlags.NineOneOne;
+            const TeleportFlags allowableFlags =
+                OpenMetaverse.TeleportFlags.ViaLandmark | OpenMetaverse.TeleportFlags.ViaHome |
+                OpenMetaverse.TeleportFlags.ViaLure |
+                OpenMetaverse.TeleportFlags.ForceRedirect |
+                OpenMetaverse.TeleportFlags.Godlike | OpenMetaverse.TeleportFlags.NineOneOne;
 
             //If the user wants to force landing points on crossing, we act like they are not crossing, otherwise, check the child property and that the ViaRegionID is set
             bool isCrossing = !ForceLandingPointsOnCrossing && (Sp != null && Sp.IsChildAgent &&
@@ -627,7 +629,8 @@ namespace Aurora.Modules.Estate
             if (agentInfo != null)
             {
                 //Can only enter prelude regions once!
-                if (scene.RegionInfo.RegionFlags != -1 && ((scene.RegionInfo.RegionFlags & (int)RegionFlags.Prelude) == (int)RegionFlags.Prelude) &&
+                if (scene.RegionInfo.RegionFlags != -1 &&
+                    ((scene.RegionInfo.RegionFlags & (int) RegionFlags.Prelude) == (int) RegionFlags.Prelude) &&
                     agentInfo != null)
                 {
                     if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + scene.RegionInfo.RegionID))
@@ -769,7 +772,8 @@ namespace Aurora.Modules.Estate
 
             IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
             if (entityCountModule != null && scene.RegionInfo.RegionSettings.AgentLimit
-                < entityCountModule.RootAgents + 1 && scene.RegionInfo.RegionSettings.AgentLimit > 0)
+                                             < entityCountModule.RootAgents + 1 &&
+                scene.RegionInfo.RegionSettings.AgentLimit > 0)
             {
                 reason = "Too many agents at this time. Please come back later.";
                 return false;
@@ -976,7 +980,9 @@ namespace Aurora.Modules.Estate
                     if (!FoundParcel)
                     {
                         //Dump them in the region corner as they are banned from all nearby parcels
-                        newPosition = Sp == null ? new Vector3(0, 0, 0) : parcelManagement.GetNearestRegionEdgePosition(Sp);
+                        newPosition = Sp == null
+                                          ? new Vector3(0, 0, 0)
+                                          : parcelManagement.GetNearestRegionEdgePosition(Sp);
                         reason = "";
                         ILO = null;
                         return false;

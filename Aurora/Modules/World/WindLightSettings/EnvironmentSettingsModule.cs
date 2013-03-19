@@ -57,18 +57,16 @@ namespace Aurora.Modules
             retVal["EnvironmentSettings"] = CapsUtil.CreateCAPS("EnvironmentSettings", "");
             //Sets the windlight settings
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["EnvironmentSettings"],
-                                                      delegate(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return SetEnvironment(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return SetEnvironment(request, agentID); }));
             //Sets the windlight settings
             server.AddStreamHandler(new GenericStreamHandler("GET", retVal["EnvironmentSettings"],
-                                                      delegate(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return EnvironmentSettings(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return EnvironmentSettings(request, agentID); }));
             return retVal;
         }
 
@@ -94,10 +92,10 @@ namespace Aurora.Modules
                     "You don't have the correct permissions to set the Windlight Settings");
             }
             OSDMap result = new OSDMap()
-            {
-                new KeyValuePair<string, OSD>("success", success),
-                new KeyValuePair<string, OSD>("regionID", SP.Scene.RegionInfo.RegionID)
-            };
+                                {
+                                    new KeyValuePair<string, OSD>("success", success),
+                                    new KeyValuePair<string, OSD>("regionID", SP.Scene.RegionInfo.RegionID)
+                                };
             if (fail_reason != "")
                 result["fail_reason"] = fail_reason;
 

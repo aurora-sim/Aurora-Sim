@@ -159,7 +159,7 @@ namespace Aurora.Modules.Entities.BuySell
                     item.CreationDate = Util.UnixTimeSinceEpoch();
 
                     m_scene.InventoryService.AddItemAsync(item,
-                        (itm) => remoteClient.SendInventoryItemCreateUpdate(itm, 0));
+                                                          (itm) => remoteClient.SendInventoryItemCreateUpdate(itm, 0));
                     break;
 
                 case 3: // Sell contents
@@ -177,7 +177,9 @@ namespace Aurora.Modules.Entities.BuySell
                         }
                     }
 #else
-                    bool okToSell = invList.Select(invID => part.Inventory.GetInventoryItem(invID)).All(item1 => (item1.CurrentPermissions & (uint) PermissionMask.Transfer) != 0);
+                    bool okToSell =
+                        invList.Select(invID => part.Inventory.GetInventoryItem(invID))
+                               .All(item1 => (item1.CurrentPermissions & (uint) PermissionMask.Transfer) != 0);
 #endif
 
                     if (!okToSell)

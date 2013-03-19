@@ -334,7 +334,7 @@ namespace Aurora.Modules.Combat
                 */
                 if (e == null)
                     return;
-                
+
                 /*CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
                 Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
@@ -623,7 +623,7 @@ namespace Aurora.Modules.Combat
                     {
                         if (deadAvatarMessage != "")
                             m_SP.ControllingClient.SendAgentAlertMessage(deadAvatarMessage, true);
-                                //Send it as a blue box at the bottom of the screen rather than as a full popup
+                        //Send it as a blue box at the bottom of the screen rather than as a full popup
                         if (killingAvatar != null && killingAvatarMessage != "")
                             killingAvatar.ControllingClient.SendAlertMessage(killingAvatarMessage);
                     }

@@ -30,7 +30,7 @@ using System;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Signals an inventory archiving problem
+    ///     Signals an inventory archiving problem
     /// </summary>
     public class InventoryArchiverException : Exception
     {

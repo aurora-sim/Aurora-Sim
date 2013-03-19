@@ -153,7 +153,7 @@ namespace Aurora.Modules.Restart
         }
 
         /// <summary>
-        ///   This causes the region to restart immediatley.
+        ///     This causes the region to restart immediatley.
         /// </summary>
         public void RestartScene()
         {

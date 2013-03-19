@@ -33,7 +33,7 @@ using System.Timers;
 namespace Aurora.Modules.SimProtection
 {
     /// <summary>
-    ///   This module helps keep the sim running when it begins to slow down, or if it freezes, restarts it
+    ///     This module helps keep the sim running when it begins to slow down, or if it freezes, restarts it
     /// </summary>
     public class SimProtection : INonSharedRegionModule
     {
@@ -141,7 +141,7 @@ namespace Aurora.Modules.SimProtection
                 if (mod != null)
                     mod.SetSceneCoreDebug(false, m_scene.RegionInfo.RegionSettings.DisableCollisions,
                                           m_scene.RegionInfo.RegionSettings.DisablePhysics);
-                        //These are opposite of what you want the value to be... go figure
+                //These are opposite of what you want the value to be... go figure
                 DisabledScriptStartTime = DateTime.Now;
             }
             if (m_scene.RegionInfo.RegionSettings.DisableScripts &&
@@ -154,7 +154,7 @@ namespace Aurora.Modules.SimProtection
                 if (mod != null)
                     mod.SetSceneCoreDebug(true, m_scene.RegionInfo.RegionSettings.DisableCollisions,
                                           m_scene.RegionInfo.RegionSettings.DisablePhysics);
-                        //These are opposite of what you want the value to be... go figure
+                //These are opposite of what you want the value to be... go figure
             }
 
             if (m_statsReporter.LastReportedSimFPS == 0 && KillSimOnZeroFPS)
@@ -179,7 +179,7 @@ namespace Aurora.Modules.SimProtection
                 if (mod != null)
                     mod.SetSceneCoreDebug(m_scene.RegionInfo.RegionSettings.DisableScripts,
                                           m_scene.RegionInfo.RegionSettings.DisableCollisions, false);
-                        //These are opposite of what you want the value to be... go figure
+                //These are opposite of what you want the value to be... go figure
             }
 
             if (m_scene.RegionInfo.RegionSettings.DisablePhysics &&
@@ -192,7 +192,7 @@ namespace Aurora.Modules.SimProtection
                 if (mod != null)
                     mod.SetSceneCoreDebug(m_scene.RegionInfo.RegionSettings.DisableScripts,
                                           m_scene.RegionInfo.RegionSettings.DisableCollisions, true);
-                        //These are opposite of what you want the value to be... go figure
+                //These are opposite of what you want the value to be... go figure
             }
         }
 

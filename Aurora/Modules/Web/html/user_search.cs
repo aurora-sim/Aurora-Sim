@@ -11,17 +11,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/user_search.html"
-                       };
+                           {
+                               "html/user_search.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -33,23 +41,28 @@ namespace Aurora.Modules.Web
             {
                 IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                 string username = requestParameters["username"].ToString();
-                int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
+                int start = httpRequest.Query.ContainsKey("Start")
+                                ? int.Parse(httpRequest.Query["Start"].ToString())
+                                : 0;
                 uint count = accountService.NumberOfUserAccounts(null, username);
-                int maxPages = (int)(count / amountPerQuery) - 1;
+                int maxPages = (int) (count/amountPerQuery) - 1;
 
                 if (start == -1)
-                    start = (int)(maxPages < 0 ? 0 : maxPages);
+                    start = (int) (maxPages < 0 ? 0 : maxPages);
 
                 vars.Add("CurrentPage", start);
                 vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
                 vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-                var users = accountService.GetUserAccounts(null, username, (uint)start, amountPerQuery);
+                var users = accountService.GetUserAccounts(null, username, (uint) start, amountPerQuery);
                 foreach (var user in users)
                 {
-                    usersList.Add(new Dictionary<string, object> { { "UserName", user.Name }, 
-                        { "UserID", user.PrincipalID },
-                        { "CanEdit", Authenticator.CheckAdminAuthentication(httpRequest) } });
+                    usersList.Add(new Dictionary<string, object>
+                                      {
+                                          {"UserName", user.Name},
+                                          {"UserID", user.PrincipalID},
+                                          {"CanEdit", Authenticator.CheckAdminAuthentication(httpRequest)}
+                                      });
                 }
             }
             else
@@ -64,7 +77,7 @@ namespace Aurora.Modules.Web
             vars.Add("SearchForUserText", translator.GetTranslatedString("SearchForUserText"));
             vars.Add("UserNameText", translator.GetTranslatedString("UserNameText"));
             vars.Add("Search", translator.GetTranslatedString("Search"));
-			vars.Add("SearchResultForUserText", translator.GetTranslatedString("SearchResultForUserText"));
+            vars.Add("SearchResultForUserText", translator.GetTranslatedString("SearchResultForUserText"));
             vars.Add("EditText", translator.GetTranslatedString("EditText"));
             vars.Add("EditUserAccountText", translator.GetTranslatedString("EditUserAccountText"));
 

@@ -32,7 +32,7 @@ using Aurora.DataManager.Migration;
 namespace Aurora.Modules.Ban
 {
     /// <summary>
-    /// This update just clears the table out
+    ///     This update just clears the table out
     /// </summary>
     public class PresenceInfoMigrator_3 : Migrator
     {
@@ -56,9 +56,9 @@ namespace Aurora.Modules.Ban
                 ColDef("LastKnownMac", /*"LastKnownMac"*/ ColumnTypes.String50),
                 ColDef("LastKnownViewer", /*"LastKnownViewer"*/ ColumnTypes.String255),
                 ColDef("Platform", /*"Platform"*/ ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "AgentID" } , IndexType.Primary)
-            ));
+                                     ), IndexDefs(
+                                         IndexDef(new string[1] {"AgentID"}, IndexType.Primary)
+                                            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

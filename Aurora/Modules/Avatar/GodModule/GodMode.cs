@@ -122,12 +122,12 @@ namespace Aurora.Modules.Gods
         }
 
         /// <summary>
-        ///   The user requested something from god tools
+        ///     The user requested something from god tools
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "requester"></param>
-        /// <param name = "Method"></param>
-        /// <param name = "Parameter"></param>
+        /// <param name="client"></param>
+        /// <param name="requester"></param>
+        /// <param name="Method"></param>
+        /// <param name="Parameter"></param>
         private void onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
         {
             //Just rebuild the map
@@ -137,17 +137,17 @@ namespace Aurora.Modules.Gods
                 {
                     //Rebuild the map tile
                     IMapImageGenerator mapModule = client.Scene.RequestModuleInterface<IMapImageGenerator>();
-                    if(mapModule != null)
+                    if (mapModule != null)
                         mapModule.CreateTerrainTexture();
                 }
             }
         }
 
         /// <summary>
-        ///   Save the state of the region
+        ///     Save the state of the region
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "agentID"></param>
+        /// <param name="client"></param>
+        /// <param name="agentID"></param>
         public void GodSaveState(IClientAPI client, UUID agentID)
         {
             //Check for god perms
@@ -165,16 +165,16 @@ namespace Aurora.Modules.Gods
         }
 
         /// <summary>
-        ///   The god has requested that we update something in the region configs
+        ///     The god has requested that we update something in the region configs
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "BillableFactor"></param>
-        /// <param name = "PricePerMeter"></param>
-        /// <param name = "EstateID"></param>
-        /// <param name = "RegionFlags"></param>
-        /// <param name = "SimName"></param>
-        /// <param name = "RedirectX"></param>
-        /// <param name = "RedirectY"></param>
+        /// <param name="client"></param>
+        /// <param name="BillableFactor"></param>
+        /// <param name="PricePerMeter"></param>
+        /// <param name="EstateID"></param>
+        /// <param name="RegionFlags"></param>
+        /// <param name="SimName"></param>
+        /// <param name="RedirectX"></param>
+        /// <param name="RedirectY"></param>
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID,
                                               ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
@@ -196,12 +196,12 @@ namespace Aurora.Modules.Gods
             if (client.Scene.RegionInfo.EstateSettings.EstateID != EstateID)
             {
                 bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
-                            client.Scene.RegionInfo.RegionID, (int)EstateID);
+                    client.Scene.RegionInfo.RegionID, (int) EstateID);
                 if (!changed)
                     client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                 else
                 {
-                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint) EstateID;
                     client.Scene.RegionInfo.EstateSettings.Save();
                 }
             }
@@ -253,10 +253,10 @@ namespace Aurora.Modules.Gods
         #region Helpers
 
         /// <summary>
-        ///   Tell the client about the changes
+        ///     Tell the client about the changes
         /// </summary>
-        /// <param name = "remote_client"></param>
-        /// <param name = "m_scene"></param>
+        /// <param name="remote_client"></param>
+        /// <param name="m_scene"></param>
         private void HandleRegionInfoRequest(IClientAPI remote_client, IScene m_scene)
         {
             RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs

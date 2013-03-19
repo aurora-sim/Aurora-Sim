@@ -208,7 +208,8 @@ namespace Aurora.Modules.Scripting
                         }
                         catch (Exception)
                         {
-                            MainConsole.Instance.Error("[LOADIMAGEURLMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
+                            MainConsole.Instance.Error(
+                                "[LOADIMAGEURLMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
                         }
                     }
                     else
@@ -231,7 +232,7 @@ namespace Aurora.Modules.Scripting
                 }
             }
             MainConsole.Instance.DebugFormat("[LOADIMAGEURLMODULE] Returning {0} bytes of image data for request {1}",
-                              imageJ2000.Length, state.RequestID);
+                                             imageJ2000.Length, state.RequestID);
             m_textureManager.ReturnData(state.RequestID, imageJ2000);
         }
 

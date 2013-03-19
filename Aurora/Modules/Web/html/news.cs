@@ -12,22 +12,31 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/news.html"
-                       };
+                           {
+                               "html/news.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            GridNewsItem news = connector.GetGeneric<GridNewsItem>(UUID.Zero, "WebGridNews", httpRequest.Query["newsid"].ToString());
+            GridNewsItem news = connector.GetGeneric<GridNewsItem>(UUID.Zero, "WebGridNews",
+                                                                   httpRequest.Query["newsid"].ToString());
             if (news != null)
             {
                 vars.Add("NewsTitle", news.Title);

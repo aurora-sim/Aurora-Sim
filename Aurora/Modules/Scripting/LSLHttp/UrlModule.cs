@@ -62,10 +62,10 @@ namespace Aurora.Modules.Scripting
     public class UrlModule : INonSharedRegionModule, IUrlModule
     {
         private readonly Dictionary<UUID, UrlData> m_RequestMap =
-                new Dictionary<UUID, UrlData>();
+            new Dictionary<UUID, UrlData>();
 
         private readonly Dictionary<string, UrlData> m_UrlMap =
-                new Dictionary<string, UrlData>();
+            new Dictionary<string, UrlData>();
 
 
         private const int m_TotalUrls = 100;
@@ -75,7 +75,7 @@ namespace Aurora.Modules.Scripting
             get { return MainServer.Instance.HostName; }
         }
 
-        public Type ReplaceableInterface 
+        public Type ReplaceableInterface
         {
             get { return null; }
         }
@@ -94,23 +94,24 @@ namespace Aurora.Modules.Scripting
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             scene.RegisterModuleInterface<IUrlModule>(this);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
         public void Close()
         {
         }
-        public UUID RequestURL (IScriptModule engine, ISceneChildEntity host, UUID itemID)
+
+        public UUID RequestURL(IScriptModule engine, ISceneChildEntity host, UUID itemID)
         {
             UUID urlcode = UUID.Random();
 
@@ -118,7 +119,8 @@ namespace Aurora.Modules.Scripting
             {
                 if (m_UrlMap.Count >= m_TotalUrls)
                 {
-                    engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
+                    engine.PostScriptEvent(itemID, host.UUID, "http_request",
+                                           new Object[] {urlcode.ToString(), "URL_REQUEST_DENIED", ""});
                     return urlcode;
                 }
                 string url = MainServer.Instance.ServerURI + "/lslhttp/" + urlcode.ToString() + "/";
@@ -135,13 +137,15 @@ namespace Aurora.Modules.Scripting
 
 
                 m_UrlMap[url] = urlData;
-                
+
                 string uri = "/lslhttp/" + urlcode.ToString() + "/";
                 MainServer.Instance.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
-                        new PollServiceEventArgs(HttpRequestHandler,HasEvents, GetEvents, NoEvents, Valid,
-                            urlcode));
+                                                              new PollServiceEventArgs(HttpRequestHandler, HasEvents,
+                                                                                       GetEvents, NoEvents, Valid,
+                                                                                       urlcode));
 
-                engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_GRANTED", url });
+                engine.PostScriptEvent(itemID, host.UUID, "http_request",
+                                       new Object[] {urlcode.ToString(), "URL_REQUEST_GRANTED", url});
             }
 
             return urlcode;
@@ -152,11 +156,12 @@ namespace Aurora.Modules.Scripting
             return true;
         }
 
-        public UUID RequestSecureURL (IScriptModule engine, ISceneChildEntity host, UUID itemID)
+        public UUID RequestSecureURL(IScriptModule engine, ISceneChildEntity host, UUID itemID)
         {
             UUID urlcode = UUID.Random();
 
-            engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
+            engine.PostScriptEvent(itemID, host.UUID, "http_request",
+                                   new Object[] {urlcode.ToString(), "URL_REQUEST_DENIED", ""});
 
             return urlcode;
         }
@@ -180,15 +185,15 @@ namespace Aurora.Modules.Scripting
             }
         }
 
-        public void SetContentType (UUID request, string content_type)
+        public void SetContentType(UUID request, string content_type)
         {
-            if(m_RequestMap.ContainsKey(request))
+            if (m_RequestMap.ContainsKey(request))
             {
                 UrlData urlData = m_RequestMap[request];
                 urlData.requests[request].contentType = content_type;
             }
         }
-        
+
         public void HttpResponse(UUID request, int status, string body)
         {
             if (m_RequestMap.ContainsKey(request))
@@ -197,11 +202,12 @@ namespace Aurora.Modules.Scripting
                 urlData.requests[request].responseCode = status;
                 urlData.requests[request].responseBody = body;
                 //urlData.requests[request].ev.Set();
-                urlData.requests[request].requestDone =true;
+                urlData.requests[request].requestDone = true;
             }
             else
             {
-                MainConsole.Instance.Info("[HttpRequestHandler] There is no http-in request with id " + request.ToString());
+                MainConsole.Instance.Info("[HttpRequestHandler] There is no http-in request with id " +
+                                          request.ToString());
             }
         }
 
@@ -209,9 +215,9 @@ namespace Aurora.Modules.Scripting
         {
             if (m_RequestMap.ContainsKey(requestId))
             {
-                UrlData urlData=m_RequestMap[requestId];
+                UrlData urlData = m_RequestMap[requestId];
                 string value;
-                if (urlData.requests[requestId].headers.TryGetValue(header,out value))
+                if (urlData.requests[requestId].headers.TryGetValue(header, out value))
                     return value;
             }
             else
@@ -273,7 +279,7 @@ namespace Aurora.Modules.Scripting
 
         private void RemoveUrl(UrlData data)
         {
-            MainServer.Instance.RemovePollServiceHTTPHandler("", "/lslhttp/"+data.urlcode.ToString()+"/");
+            MainServer.Instance.RemovePollServiceHTTPHandler("", "/lslhttp/" + data.urlcode.ToString() + "/");
         }
 
         private Hashtable NoEvents(UUID requestID, UUID sessionID)
@@ -305,14 +311,14 @@ namespace Aurora.Modules.Scripting
                 return response;
             }
 
-            
+
             return response;
         }
 
         private bool HasEvents(UUID requestID, UUID sessionID)
         {
-            UrlData url=null;
-            
+            UrlData url = null;
+
             lock (m_RequestMap)
             {
                 if (!m_RequestMap.ContainsKey(requestID))
@@ -326,7 +332,7 @@ namespace Aurora.Modules.Scripting
                 }
             }
 
-            if (Environment.TickCount-url.requests[requestID].startTime>25000)
+            if (Environment.TickCount - url.requests[requestID].startTime > 25000)
             {
                 return true;
             }
@@ -335,6 +341,7 @@ namespace Aurora.Modules.Scripting
                 return true;
             return false;
         }
+
         private Hashtable GetEvents(UUID requestID, UUID sessionID, string request)
         {
             UrlData url = null;
@@ -343,14 +350,14 @@ namespace Aurora.Modules.Scripting
             lock (m_RequestMap)
             {
                 if (!m_RequestMap.ContainsKey(requestID))
-                    return NoEvents(requestID,sessionID);
+                    return NoEvents(requestID, sessionID);
                 url = m_RequestMap[requestID];
                 requestData = url.requests[requestID];
             }
 
             if (!requestData.requestDone)
-                return NoEvents(requestID,sessionID);
-            
+                return NoEvents(requestID, sessionID);
+
             Hashtable response = new Hashtable();
 
             if (Environment.TickCount - requestData.startTime > 25000)
@@ -368,7 +375,7 @@ namespace Aurora.Modules.Scripting
             response["content_type"] = requestData.contentType;
             response["keepalive"] = false;
             response["reusecontext"] = false;
-            
+
             //remove from map
             lock (url)
             {
@@ -378,19 +385,20 @@ namespace Aurora.Modules.Scripting
 
             return response;
         }
+
         public void HttpRequestHandler(UUID requestID, Hashtable request)
         {
             lock (request)
             {
                 string uri = request["uri"].ToString();
-                
+
                 try
                 {
-                    Hashtable headers = (Hashtable)request["headers"];
-                    
-                    int pos1 = uri.IndexOf("/");// /lslhttp
-                    int pos2 = uri.IndexOf("/", pos1 + 1);// /lslhttp/
-                    int pos3 = uri.IndexOf("/", pos2 + 1);// /lslhttp/<UUID>/
+                    Hashtable headers = (Hashtable) request["headers"];
+
+                    int pos1 = uri.IndexOf("/"); // /lslhttp
+                    int pos2 = uri.IndexOf("/", pos1 + 1); // /lslhttp/
+                    int pos3 = uri.IndexOf("/", pos2 + 1); // /lslhttp/<UUID>/
                     string uri_tmp = uri.Substring(0, pos3 + 1);
                     //HTTP server code doesn't provide us with QueryStrings
                     string queryString = "";
@@ -415,28 +423,26 @@ namespace Aurora.Modules.Scripting
 
                     foreach (DictionaryEntry header in headers)
                     {
-                        string key = (string)header.Key;
-                        string value = (string)header.Value;
+                        string key = (string) header.Key;
+                        string value = (string) header.Value;
                         requestData.headers.Add(key, value);
                     }
                     foreach (DictionaryEntry de in request)
                     {
                         if (de.Key.ToString() == "querystringkeys")
                         {
-                            String[] keys = (String[])de.Value;
+                            String[] keys = (String[]) de.Value;
                             foreach (String key in keys)
                             {
                                 if (request.ContainsKey(key))
                                 {
-                                    string val = (String)request[key];
+                                    string val = (String) request[key];
                                     queryString = queryString + key + "=" + val + "&";
                                 }
                             }
                             if (queryString.Length > 1)
                                 queryString = queryString.Substring(0, queryString.Length - 1);
-
                         }
-
                     }
 
                     //if this machine is behind DNAT/port forwarding, currently this is being
@@ -457,13 +463,17 @@ namespace Aurora.Modules.Scripting
                         m_RequestMap.Add(requestID, url);
                     }
 
-                    url.engine.PostScriptEvent(url.itemID, url.hostID, "http_request", new Object[] { requestID.ToString(), request["http-method"].ToString(), request["body"].ToString() });
+                    url.engine.PostScriptEvent(url.itemID, url.hostID, "http_request",
+                                               new Object[]
+                                                   {
+                                                       requestID.ToString(), request["http-method"].ToString(),
+                                                       request["body"].ToString()
+                                                   });
 
                     //send initial response?
 //                    Hashtable response = new Hashtable();
 
                     return;
-
                 }
                 catch (Exception we)
                 {

@@ -40,8 +40,8 @@ using GridRegion = Aurora.Framework.GridRegion;
 namespace Aurora.Modules.SimConsole
 {
     /// <summary>
-    ///   This module allows for the console to be accessed in V2 viewers that support SimConsole
-    ///   This will eventually be extended in Imprudence so that full console support can be added into the viewer (this module already supports the eventual extension)
+    ///     This module allows for the console to be accessed in V2 viewers that support SimConsole
+    ///     This will eventually be extended in Imprudence so that full console support can be added into the viewer (this module already supports the eventual extension)
     /// </summary>
     public class SimConsole : INonSharedRegionModule
     {
@@ -140,11 +140,10 @@ namespace Aurora.Modules.SimConsole
             retVal["SimConsoleAsync"] = CapsUtil.CreateCAPS("SimConsoleAsync", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["SimConsoleAsync"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return SimConsoleAsyncResponder(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return SimConsoleAsyncResponder(request, agentID); }));
             return retVal;
         }
 
@@ -286,7 +285,13 @@ namespace Aurora.Modules.SimConsole
                 }
             }
 #else
-            foreach (KeyValuePair<UUID, Access> kvp in m_authorizedParticipants.Where(kvp => kvp.Value == Access.ReadWrite || kvp.Value == Access.Read).Where(kvp => m_userLogLevel.ContainsKey(kvp.Key) && MainConsole.Instance.CompareLogLevels(m_userLogLevel[kvp.Key], level)))
+            foreach (
+                KeyValuePair<UUID, Access> kvp in
+                    m_authorizedParticipants.Where(kvp => kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
+                                            .Where(
+                                                kvp =>
+                                                m_userLogLevel.ContainsKey(kvp.Key) &&
+                                                MainConsole.Instance.CompareLogLevels(m_userLogLevel[kvp.Key], level)))
             {
                 //Send the EQM with the message to all people who have read access
                 SendConsoleEventEQM(kvp.Key, text);
@@ -295,10 +300,10 @@ namespace Aurora.Modules.SimConsole
         }
 
         /// <summary>
-        ///   Send a console message to the viewer
+        ///     Send a console message to the viewer
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "text"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="text"></param>
         private void SendConsoleEventEQM(UUID AgentID, string text)
         {
             OSDMap item = new OSDMap {{"body", text}, {"message", OSD.FromString("SimConsoleResponse")}};

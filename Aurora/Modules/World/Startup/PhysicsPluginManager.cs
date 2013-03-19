@@ -34,7 +34,7 @@ using System.Collections.Generic;
 namespace Aurora.Modules.Startup
 {
     /// <summary>
-    ///   Description of MyClass.
+    ///     Description of MyClass.
     /// </summary>
     public class PhysicsPluginManager
     {
@@ -42,15 +42,16 @@ namespace Aurora.Modules.Startup
         private readonly Dictionary<string, IPhysicsPlugin> _PhysPlugins = new Dictionary<string, IPhysicsPlugin>();
 
         /// <summary>
-        ///   Get a physics scene for the given physics engine and mesher.
+        ///     Get a physics scene for the given physics engine and mesher.
         /// </summary>
-        /// <param name = "physEngineName"></param>
-        /// <param name = "meshEngineName"></param>
-        /// <param name = "config"></param>
-        /// <param name = "region"></param>
-        /// <param name = "registry"></param>
+        /// <param name="physEngineName"></param>
+        /// <param name="meshEngineName"></param>
+        /// <param name="config"></param>
+        /// <param name="region"></param>
+        /// <param name="registry"></param>
         /// <returns></returns>
-        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config, IScene scene)
+        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config,
+                                            IScene scene)
         {
             if (String.IsNullOrEmpty(physEngineName))
             {
@@ -89,13 +90,15 @@ namespace Aurora.Modules.Startup
         }
 
         /// <summary>
-        ///   Load all plugins in assemblies at the given path
+        ///     Load all plugins in assemblies at the given path
         /// </summary>
-        /// <param name = "assembliesPath"></param>
+        /// <param name="assembliesPath"></param>
         public void LoadPluginsFromAssemblies(string assembliesPath)
         {
-            List<IPhysicsPlugin> physicsPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
-            List<IMeshingPlugin> meshingPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
+            List<IPhysicsPlugin> physicsPlugins =
+                Aurora.Framework.AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
+            List<IMeshingPlugin> meshingPlugins =
+                Aurora.Framework.AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
             meshingPlugins.AddRange(AuroraModuleLoader.LoadModules<IMeshingPlugin>(""));
 
             foreach (IPhysicsPlugin plug in physicsPlugins)
@@ -104,7 +107,9 @@ namespace Aurora.Modules.Startup
                 {
                     _PhysPlugins.Add(plug.GetName(), plug);
                 }
-                catch { }
+                catch
+                {
+                }
             }
             foreach (IMeshingPlugin plug in meshingPlugins)
             {
@@ -112,7 +117,9 @@ namespace Aurora.Modules.Startup
                 {
                     _MeshPlugins.Add(plug.GetName(), plug);
                 }
-                catch { }
+                catch
+                {
+                }
             }
         }
     }

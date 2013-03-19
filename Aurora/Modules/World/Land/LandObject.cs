@@ -34,7 +34,7 @@ using System.Linq;
 namespace Aurora.Modules.Land
 {
     /// <summary>
-    ///   Keeps track of a specific piece of land's information
+    ///     Keeps track of a specific piece of land's information
     /// </summary>
     public class LandObject : ILandObject
     {
@@ -68,9 +68,9 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Set the media url for this land parcel
+        ///     Set the media url for this land parcel
         /// </summary>
-        /// <param name = "url"></param>
+        /// <param name="url"></param>
         public void SetMediaUrl(string url)
         {
             LandData.MediaURL = url;
@@ -78,9 +78,9 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Set the music url for this land parcel
+        ///     Set the music url for this land parcel
         /// </summary>
-        /// <param name = "url"></param>
+        /// <param name="url"></param>
         public void SetMusicUrl(string url)
         {
             LandData.MusicURL = url;
@@ -160,10 +160,10 @@ namespace Aurora.Modules.Land
         #region General Functions
 
         /// <summary>
-        ///   Checks to see if this land object contains a point
+        ///     Checks to see if this land object contains a point
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         /// <returns>Returns true if the piece of land contains the specified point</returns>
         public bool ContainsPoint(int x, int y)
         {
@@ -198,7 +198,9 @@ namespace Aurora.Modules.Land
                                        IClientAPI remote_client)
         {
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
-            ulong regionFlags = 336723974 & ~((uint) (OpenMetaverse.RegionFlags.AllowLandmark | OpenMetaverse.RegionFlags.AllowSetHome));
+            ulong regionFlags = 336723974 &
+                                ~((uint)
+                                  (OpenMetaverse.RegionFlags.AllowLandmark | OpenMetaverse.RegionFlags.AllowSetHome));
             if (estateModule != null)
                 regionFlags = estateModule.GetRegionFlags();
 
@@ -222,7 +224,7 @@ namespace Aurora.Modules.Land
                                              snap_selection, request_result, LandData,
                                              (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                              MaxPrimCounts,
-                                             m_scene.RegionInfo.ObjectCapacity, (uint)regionFlags);
+                                             m_scene.RegionInfo.ObjectCapacity, (uint) regionFlags);
         }
 
         public void UpdateLandProperties(LandUpdateArgs args, IClientAPI remote_client)
@@ -331,16 +333,23 @@ namespace Aurora.Modules.Land
                         IScheduledMoneyModule moneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
                         if (moneyModule != null)
                         {
-                            if (!moneyModule.Charge(remote_client.AgentId, 30, "Parcel Show in Search Fee - " + LandData.GlobalID, 7))
+                            if (
+                                !moneyModule.Charge(remote_client.AgentId, 30,
+                                                    "Parcel Show in Search Fee - " + LandData.GlobalID, 7))
                             {
-                                remote_client.SendAlertMessage("You don't have enough money to set this parcel in search.");
-                                args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
+                                remote_client.SendAlertMessage(
+                                    "You don't have enough money to set this parcel in search.");
+                                args.ParcelFlags &= (uint) ParcelFlags.ShowDirectory;
                             }
                         }
                     }
                     LandData.Flags = args.ParcelFlags;
 
-                    LandData.Status = LandData.OwnerID == m_parcelManagementModule.GodParcelOwner ? ParcelStatus.Abandoned : LandData.AuthBuyerID != UUID.Zero ? ParcelStatus.LeasePending : ParcelStatus.Leased;
+                    LandData.Status = LandData.OwnerID == m_parcelManagementModule.GodParcelOwner
+                                          ? ParcelStatus.Abandoned
+                                          : LandData.AuthBuyerID != UUID.Zero
+                                                ? ParcelStatus.LeasePending
+                                                : ParcelStatus.Leased;
 
                     m_parcelManagementModule.UpdateLandObject(this);
 
@@ -349,7 +358,7 @@ namespace Aurora.Modules.Land
                 catch (Exception ex)
                 {
                     MainConsole.Instance.Warn("[LAND]: Error updating land object " + this.LandData.Name + " in region " +
-                               this.m_scene.RegionInfo.RegionName + " : " + ex);
+                                              this.m_scene.RegionInfo.RegionName + " : " + ex);
                 }
             }
         }
@@ -465,14 +474,17 @@ namespace Aurora.Modules.Land
             if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong) 1))
                 return false;
 
-            if ((LandData.Flags & (uint)ParcelFlags.UsePassList) > 0 ||
-                (LandData.Flags & (uint)ParcelFlags.UseAccessList) > 0)
+            if ((LandData.Flags & (uint) ParcelFlags.UsePassList) > 0 ||
+                (LandData.Flags & (uint) ParcelFlags.UseAccessList) > 0)
             {
                 if (LandData.ParcelAccessList.Count > 0)
                 {
                     ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
                     bool found = false;
-                    foreach (ParcelManager.ParcelAccessEntry pae in LandData.ParcelAccessList.Where(pae => avatar == pae.AgentID && AccessList.Access == pae.Flags))
+                    foreach (
+                        ParcelManager.ParcelAccessEntry pae in
+                            LandData.ParcelAccessList.Where(
+                                pae => avatar == pae.AgentID && AccessList.Access == pae.Flags))
                     {
                         found = true;
                         entry = pae;
@@ -482,7 +494,7 @@ namespace Aurora.Modules.Land
                     //If they are not on the access list and are not the owner
                     if (!found)
                     {
-                        if ((LandData.Flags & (uint)ParcelFlags.UseAccessGroup) != 0)
+                        if ((LandData.Flags & (uint) ParcelFlags.UseAccessGroup) != 0)
                         {
                             IScenePresence SP = m_scene.GetScenePresence(avatar);
                             if (SP != null && LandData.GroupID == SP.ControllingClient.ActiveGroupId)
@@ -513,7 +525,7 @@ namespace Aurora.Modules.Land
                         }
                     }
                 }
-                else if ((LandData.Flags & (uint)ParcelFlags.UseAccessGroup) > 0)
+                else if ((LandData.Flags & (uint) ParcelFlags.UseAccessGroup) > 0)
                 {
                     IScenePresence SP = m_scene.GetScenePresence(avatar);
                     if (SP != null && LandData.GroupID == SP.ControllingClient.ActiveGroupId)
@@ -556,7 +568,8 @@ namespace Aurora.Modules.Land
 
                                                  if (avatar.CurrentParcel.LandData.LocalID == LandData.LocalID)
                                                  {
-                                                     if (((avatar.CurrentParcel.LandData.Flags & (uint)ParcelFlags.AllowDamage) !=
+                                                     if (((avatar.CurrentParcel.LandData.Flags &
+                                                           (uint) ParcelFlags.AllowDamage) !=
                                                           0) ||
                                                          m_scene.RegionInfo.RegionSettings.AllowDamage)
                                                          avatar.Invulnerable = false;
@@ -591,7 +604,8 @@ namespace Aurora.Modules.Land
                 }
             }
 #else
-            foreach (ParcelManager.ParcelAccessEntry entry in LandData.ParcelAccessList.Where(entry => entry.Flags == flag))
+            foreach (
+                ParcelManager.ParcelAccessEntry entry in LandData.ParcelAccessList.Where(entry => entry.Flags == flag))
             {
                 if (list[num].Count > ParcelManagementModule.LAND_MAX_ENTRIES_PER_PACKET)
                 {
@@ -667,11 +681,14 @@ namespace Aurora.Modules.Land
             }
 #else
             foreach (ParcelManager.ParcelAccessEntry temp in entries.Select(entry => new ParcelManager.ParcelAccessEntry
-                                                                           {
-                                                                               AgentID = entry.AgentID,
-                                                                               Time = DateTime.MaxValue,
-                                                                               Flags = (AccessList) flags
-                                                                           }).Where(temp => !LandData.ParcelAccessList.Contains(temp)))
+                                                                                         {
+                                                                                             AgentID = entry.AgentID,
+                                                                                             Time = DateTime.MaxValue,
+                                                                                             Flags = (AccessList) flags
+                                                                                         })
+                                                                    .Where(
+                                                                        temp =>
+                                                                        !LandData.ParcelAccessList.Contains(temp)))
             {
                 LandData.ParcelAccessList.Add(temp);
             }
@@ -685,7 +702,7 @@ namespace Aurora.Modules.Land
         #region Update Functions
 
         /// <summary>
-        ///   Update all settings in land such as area, bitmap byte array, etc
+        ///     Update all settings in land such as area, bitmap byte array, etc
         /// </summary>
         public void ForceUpdateLandInfo()
         {
@@ -693,7 +710,7 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Updates the AABBMin and AABBMax values after area/shape modification of the land object
+        ///     Updates the AABBMin and AABBMax values after area/shape modification of the land object
         /// </summary>
         private void UpdateAABBAndAreaValues()
         {
@@ -822,13 +839,13 @@ namespace Aurora.Modules.Land
             }
         }
 
-        ///<summary>
-        ///  Notify the parcel owner each avatar that owns prims situated on their land.  This notification includes
-        ///  aggreagete details such as the number of prims.
-        ///</summary>
-        ///<param name = "remote_client">
-        ///  <see cref = "IClientAPI" />
-        ///</param>
+        /// <summary>
+        ///     Notify the parcel owner each avatar that owns prims situated on their land.  This notification includes
+        ///     aggreagete details such as the number of prims.
+        /// </summary>
+        /// <param name="remote_client">
+        ///     <see cref="IClientAPI" />
+        /// </param>
         public void SendLandObjectOwners(IClientAPI remote_client)
         {
             if (m_scene.Permissions.CanViewObjectOwners(remote_client.AgentId, this))
@@ -1070,7 +1087,9 @@ namespace Aurora.Modules.Land
                 }
             }
 #else
-            foreach (List<ISceneEntity> ol in returns.Values.Where(ol => m_scene.Permissions.CanReturnObjects(this, remote_client.AgentId, ol)))
+            foreach (
+                List<ISceneEntity> ol in
+                    returns.Values.Where(ol => m_scene.Permissions.CanReturnObjects(this, remote_client.AgentId, ol)))
             {
                 //The return system will take care of the returned objects
                 m_parcelManagementModule.AddReturns(ol[0].OwnerID, ol[0].Name, ol[0].AbsolutePosition,

@@ -34,7 +34,7 @@ using System.Linq;
 namespace Aurora.Modules.Chat
 {
     /// <summary>
-    ///   This dialog module has support for mute lists
+    ///     This dialog module has support for mute lists
     /// </summary>
     public class AuroraDialogModule : INonSharedRegionModule, IDialogModule
     {
@@ -283,9 +283,9 @@ namespace Aurora.Modules.Chat
         #endregion
 
         /// <summary>
-        ///   Handle an alert command from the console.
+        ///     Handle an alert command from the console.
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         public void HandleAlertConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene == null)

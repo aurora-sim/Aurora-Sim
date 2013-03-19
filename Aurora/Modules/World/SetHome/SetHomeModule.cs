@@ -101,20 +101,18 @@ namespace Aurora.Modules.SetHome
             retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ServerReleaseNotes"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return ProcessServerReleaseNotes(agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return ProcessServerReleaseNotes(agentID); }));
 
             retVal["CopyInventoryFromNotecard"] = CapsUtil.CreateCAPS("CopyInventoryFromNotecard", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["CopyInventoryFromNotecard"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return CopyInventoryFromNotecard(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return CopyInventoryFromNotecard(request, agentID); }));
             return retVal;
         }
 
@@ -153,7 +151,9 @@ namespace Aurora.Modules.SetHome
                     noteCardAsset.Decode();
                     bool found = false;
                     UUID lastOwnerID = UUID.Zero;
-                    foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems.Where(notecardObjectItem => notecardObjectItem.UUID == ItemID))
+                    foreach (
+                        InventoryItem notecardObjectItem in
+                            noteCardAsset.EmbeddedItems.Where(notecardObjectItem => notecardObjectItem.UUID == ItemID))
                     {
                         //Make sure that it exists
                         found = true;
@@ -163,15 +163,17 @@ namespace Aurora.Modules.SetHome
                     if (found)
                     {
                         m_scene.InventoryService.GiveInventoryItemAsync(agentID, lastOwnerID, ItemID, FolderID, false,
-                            (item) =>
-                        {
-                            IClientAPI client;
-                            m_scene.ClientManager.TryGetValue(agentID, out client);
-                            if (item != null)
-                                client.SendBulkUpdateInventory(item);
-                            else
-                                client.SendAlertMessage("Failed to retrieve item");
-                        });
+                                                                        (item) =>
+                                                                            {
+                                                                                IClientAPI client;
+                                                                                m_scene.ClientManager.TryGetValue(
+                                                                                    agentID, out client);
+                                                                                if (item != null)
+                                                                                    client.SendBulkUpdateInventory(item);
+                                                                                else
+                                                                                    client.SendAlertMessage(
+                                                                                        "Failed to retrieve item");
+                                                                            });
                     }
                 }
             }
@@ -180,13 +182,13 @@ namespace Aurora.Modules.SetHome
         }
 
         /// <summary>
-        ///   Sets the Home Point. The LoginService uses this to know where to put a user when they log-in
+        ///     Sets the Home Point. The LoginService uses this to know where to put a user when they log-in
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "regionHandle"></param>
-        /// <param name = "position"></param>
-        /// <param name = "lookAt"></param>
-        /// <param name = "flags"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="position"></param>
+        /// <param name="lookAt"></param>
+        /// <param name="flags"></param>
         public void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt,
                                     uint flags)
         {

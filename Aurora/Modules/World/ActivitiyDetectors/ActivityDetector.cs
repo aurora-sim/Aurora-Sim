@@ -135,8 +135,9 @@ namespace Aurora.Modules.ActivityDetectors
             client.Scene.TryGetScenePresence(client.AgentId, out sp);
             if (client.IsLoggingOut && sp != null & !sp.IsChildAgent)
             {
-                MainConsole.Instance.InfoFormat("[ActivityDetector]: Detected logout of user {0} in region {1}", client.Name,
-                                 client.Scene.RegionInfo.RegionName);
+                MainConsole.Instance.InfoFormat("[ActivityDetector]: Detected logout of user {0} in region {1}",
+                                                client.Name,
+                                                client.Scene.RegionInfo.RegionName);
 
                 //Inform the grid service about it
 
@@ -175,7 +176,8 @@ namespace Aurora.Modules.ActivityDetectors
                 //Send the child agent data update
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
-                    syncPoster.PostToServer(SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionID, agentpos));
+                    syncPoster.PostToServer(SyncMessageHelper.AgentLoggedOut(client.AgentId,
+                                                                             client.Scene.RegionInfo.RegionID, agentpos));
             }
         }
     }

@@ -35,57 +35,57 @@ using System.Timers;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Encapsulate the asynchronous requests for the assets required for an archive operation
+    ///     Encapsulate the asynchronous requests for the assets required for an archive operation
     /// </summary>
     internal class AssetsRequest
     {
         /// <value>
-        ///   Timeout threshold if we still need assets or missing asset notifications but have stopped receiving them
-        ///   from the asset service
+        ///     Timeout threshold if we still need assets or missing asset notifications but have stopped receiving them
+        ///     from the asset service
         /// </value>
         protected const int TIMEOUT = 60*1000;
 
         /// <value>
-        ///   If a timeout does occur, limit the amount of UUID information put to the console.
+        ///     If a timeout does occur, limit the amount of UUID information put to the console.
         /// </value>
         protected const int MAX_UUID_DISPLAY_ON_TIMEOUT = 3;
 
         /// <value>
-        ///   Record the number of asset replies required so we know when we've finished
+        ///     Record the number of asset replies required so we know when we've finished
         /// </value>
         private readonly int m_repliesRequired;
 
         /// <value>
-        ///   Asset service used to request the assets
+        ///     Asset service used to request the assets
         /// </value>
         protected IAssetService m_assetService;
 
         protected AssetsArchiver m_assetsArchiver;
 
         /// <value>
-        ///   Callback used when all the assets requested have been received.
+        ///     Callback used when all the assets requested have been received.
         /// </value>
         protected AssetsRequestCallback m_assetsRequestCallback;
 
         /// <value>
-        ///   List of assets that were found.  This will be passed back to the requester.
+        ///     List of assets that were found.  This will be passed back to the requester.
         /// </value>
         protected List<UUID> m_foundAssetUuids = new List<UUID>();
 
         /// <value>
-        ///   Maintain a list of assets that could not be found.  This will be passed back to the requester.
+        ///     Maintain a list of assets that could not be found.  This will be passed back to the requester.
         /// </value>
         protected List<UUID> m_notFoundAssetUuids = new List<UUID>();
 
         protected Timer m_requestCallbackTimer;
 
         /// <value>
-        ///   State of this request
+        ///     State of this request
         /// </value>
         private RequestState m_requestState = RequestState.Initial;
 
         /// <value>
-        ///   uuids to request
+        ///     uuids to request
         /// </value>
         protected IDictionary<UUID, AssetType> m_uuids;
 
@@ -107,7 +107,8 @@ namespace Aurora.Modules.Archivers
         {
             m_requestState = RequestState.Running;
 
-            MainConsole.Instance.DebugFormat("[ARCHIVER]: AssetsRequest executed looking for {0} assets", m_repliesRequired);
+            MainConsole.Instance.DebugFormat("[ARCHIVER]: AssetsRequest executed looking for {0} assets",
+                                             m_repliesRequired);
 
             // We can stop here if there are no assets to fetch
             if (m_repliesRequired == 0)
@@ -187,7 +188,8 @@ namespace Aurora.Modules.Archivers
             if (fetchedAsset != null && fetchedAsset.Type == (sbyte) AssetType.Unknown)
             {
                 AssetType type = (AssetType) assetType;
-                MainConsole.Instance.InfoFormat("[ARCHIVER]: Rewriting broken asset type for {0} to {1}", fetchedAsset.ID, type);
+                MainConsole.Instance.InfoFormat("[ARCHIVER]: Rewriting broken asset type for {0} to {1}",
+                                                fetchedAsset.ID, type);
                 fetchedAsset.Type = (sbyte) type;
             }
 
@@ -195,11 +197,11 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Called back by the asset cache when it has the asset
+        ///     Called back by the asset cache when it has the asset
         /// </summary>
-        /// <param name = "assetID"></param>
-        /// <param name = "sender"></param>
-        /// <param name = "asset"></param>
+        /// <param name="assetID"></param>
+        /// <param name="sender"></param>
+        /// <param name="asset"></param>
         public void AssetRequestCallback(string assetID, object sender, AssetBase asset)
         {
             try
@@ -254,7 +256,7 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Perform the callback on the original requester of the assets
+        ///     Perform the callback on the original requester of the assets
         /// </summary>
         protected void PerformAssetsRequestCallback(object o)
         {

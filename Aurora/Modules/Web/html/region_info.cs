@@ -13,24 +13,40 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/region_info.html"
-                       };
+                           {
+                               "html/region_info.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
             if (httpRequest.Query.ContainsKey("regionid"))
             {
                 GridRegion region = webInterface.Registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null,
-                    UUID.Parse(httpRequest.Query["regionid"].ToString()));
+                                                                                                                 UUID
+                                                                                                                     .Parse
+                                                                                                                     (httpRequest
+                                                                                                                          .Query
+                                                                                                                          [
+                                                                                                                              "regionid"
+                                                                                                                          ]
+                                                                                                                          .ToString
+                                                                                                                          ()));
 
                 IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
                 EstateSettings estate = estateConnector.GetEstateSettings(region.RegionID);
@@ -38,15 +54,18 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionName", region.RegionName);
                 vars.Add("OwnerUUID", estate.EstateOwner);
                 var estateOwnerAccount = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, estate.EstateOwner);
+                                                      GetUserAccount(null, estate.EstateOwner);
                 vars.Add("OwnerName", estateOwnerAccount == null ? "No account found" : estateOwnerAccount.Name);
-                vars.Add("RegionLocX", region.RegionLocX / Constants.RegionSize);
-                vars.Add("RegionLocY", region.RegionLocY / Constants.RegionSize);
+                vars.Add("RegionLocX", region.RegionLocX/Constants.RegionSize);
+                vars.Add("RegionLocY", region.RegionLocY/Constants.RegionSize);
                 vars.Add("RegionSizeX", region.RegionSizeX);
                 vars.Add("RegionSizeY", region.RegionSizeY);
                 vars.Add("RegionType", region.RegionType);
-                vars.Add("RegionOnline", (region.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == (int)Aurora.Framework.RegionFlags.RegionOnline ?
-                    translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
+                vars.Add("RegionOnline",
+                         (region.Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) ==
+                         (int) Aurora.Framework.RegionFlags.RegionOnline
+                             ? translator.GetTranslatedString("Online")
+                             : translator.GetTranslatedString("Offline"));
 
                 IAgentInfoService agentInfoService = webInterface.Registry.RequestModuleInterface<IAgentInfoService>();
                 IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
@@ -70,10 +89,12 @@ namespace Aurora.Modules.Web
                     vars.Add("NumberOfUsersInRegion", 0);
                     vars.Add("UsersInRegion", new List<Dictionary<string, object>>());
                 }
-                IDirectoryServiceConnector directoryConnector = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                IDirectoryServiceConnector directoryConnector =
+                    Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
                 if (directoryConnector != null)
                 {
-                    List<LandData> data = directoryConnector.GetParcelsByRegion(0, 10, region.RegionID, UUID.Zero, ParcelFlags.None, ParcelCategory.Any);
+                    List<LandData> data = directoryConnector.GetParcelsByRegion(0, 10, region.RegionID, UUID.Zero,
+                                                                                ParcelFlags.None, ParcelCategory.Any);
                     List<Dictionary<string, object>> parcels = new List<Dictionary<string, object>>();
                     foreach (var p in data)
                     {
@@ -83,7 +104,8 @@ namespace Aurora.Modules.Web
                         parcel.Add("ParcelUUID", p.InfoUUID);
                         parcel.Add("ParcelName", p.Name);
                         parcel.Add("ParcelOwnerUUID", p.OwnerID);
-                        IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
+                        IUserAccountService accountService =
+                            webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                         if (accountService != null)
                         {
                             var account = accountService.GetUserAccount(null, p.OwnerID);
@@ -98,7 +120,7 @@ namespace Aurora.Modules.Web
                     vars.Add("NumberOfParcelsInRegion", parcels.Count);
                 }
                 IWebHttpTextureService webTextureService = webInterface.Registry.
-                    RequestModuleInterface<IWebHttpTextureService>();
+                                                                        RequestModuleInterface<IWebHttpTextureService>();
                 if (webTextureService != null && region.TerrainMapImage != UUID.Zero)
                     vars.Add("RegionImageURL", webTextureService.GetTextureURL(region.TerrainMapImage));
                 else
@@ -107,8 +129,8 @@ namespace Aurora.Modules.Web
                 // Menu Region
                 vars.Add("MenuRegionTitle", translator.GetTranslatedString("MenuRegionTitle"));
                 vars.Add("MenuParcelTitle", translator.GetTranslatedString("MenuParcelTitle"));
-                vars.Add("MenuOwnerTitle", translator.GetTranslatedString("MenuOwnerTitle"));				
-				
+                vars.Add("MenuOwnerTitle", translator.GetTranslatedString("MenuOwnerTitle"));
+
                 vars.Add("RegionInformationText", translator.GetTranslatedString("RegionInformationText"));
                 vars.Add("OwnerNameText", translator.GetTranslatedString("OwnerNameText"));
                 vars.Add("RegionLocationText", translator.GetTranslatedString("RegionLocationText"));
@@ -130,17 +152,16 @@ namespace Aurora.Modules.Web
                 vars.Add("StyleSwitcherStylesText", translator.GetTranslatedString("StyleSwitcherStylesText"));
                 vars.Add("StyleSwitcherLanguagesText", translator.GetTranslatedString("StyleSwitcherLanguagesText"));
                 vars.Add("StyleSwitcherChoiceText", translator.GetTranslatedString("StyleSwitcherChoiceText"));
-			
+
                 // Language Switcher
                 vars.Add("en", translator.GetTranslatedString("en"));
                 vars.Add("fr", translator.GetTranslatedString("fr"));
                 vars.Add("de", translator.GetTranslatedString("de"));
                 vars.Add("it", translator.GetTranslatedString("it"));
                 vars.Add("es", translator.GetTranslatedString("es"));
-
             }
 
-			return vars;
+            return vars;
         }
 
         public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)

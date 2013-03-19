@@ -205,7 +205,7 @@ namespace Aurora.Modules.Cloud
 
 
         /// <summary>
-        ///   Calculate the cloud cover over the region.
+        ///     Calculate the cloud cover over the region.
         /// </summary>
         private void GenerateCloudCover()
         {

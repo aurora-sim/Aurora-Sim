@@ -127,9 +127,9 @@ namespace Aurora.Modules.ObjectCache
         }
 
         /// <summary>
-        ///   Load the file for the client async so that we don't lock up the system for too long
+        ///     Load the file for the client async so that we don't lock up the system for too long
         /// </summary>
-        /// <param name = "o"></param>
+        /// <param name="o"></param>
         public void LoadFileOnNewClient(object o)
         {
             UUID agentID = (UUID) o;
@@ -248,11 +248,11 @@ namespace Aurora.Modules.ObjectCache
         #region IObjectCache
 
         /// <summary>
-        ///   Check whether we can send a CachedObjectUpdate to the client
+        ///     Check whether we can send a CachedObjectUpdate to the client
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "localID"></param>
-        /// <param name = "CurrentEntityCRC"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="localID"></param>
+        /// <param name="CurrentEntityCRC"></param>
         /// <returns></returns>
         public bool UseCachedObject(UUID AgentID, uint localID, uint CurrentEntityCRC)
         {

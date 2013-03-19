@@ -74,20 +74,20 @@ namespace Aurora.Modules.Permissions
         private UserSet m_allowedJSScriptCompilers = UserSet.All;
 
         /// <value>
-        ///   The set of users that are allowed to compile certain scripts.  This is only active if 
-        ///   permissions are not being bypassed.  This overrides normal permissions.
+        ///     The set of users that are allowed to compile certain scripts.  This is only active if
+        ///     permissions are not being bypassed.  This overrides normal permissions.
         /// </value>
         private UserSet m_allowedLSLScriptCompilers = UserSet.All;
 
         /// <value>
-        ///   The set of users that are allowed to create scripts.  This is only active if permissions are not being
-        ///   bypassed.  This overrides normal permissions.
+        ///     The set of users that are allowed to create scripts.  This is only active if permissions are not being
+        ///     bypassed.  This overrides normal permissions.
         /// </value>
         private UserSet m_allowedScriptCreators = UserSet.All;
 
         /// <value>
-        ///   The set of users that are allowed to edit (save) scripts.  This is only active if 
-        ///   permissions are not being bypassed.  This overrides normal permissions.-
+        ///     The set of users that are allowed to edit (save) scripts.  This is only active if
+        ///     permissions are not being bypassed.  This overrides normal permissions.-
         /// </value>
         private UserSet m_allowedScriptEditors = UserSet.All;
 
@@ -114,7 +114,8 @@ namespace Aurora.Modules.Permissions
         protected void DebugPermissionInformation(string permissionCalled)
         {
             if (m_debugPermissions)
-                MainConsole.Instance.Debug("[PERMISSIONS]: " + permissionCalled + " was called from " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Debug("[PERMISSIONS]: " + permissionCalled + " was called from " +
+                                           m_scene.RegionInfo.RegionName);
         }
 
         public bool IsInGroup(UUID user, UUID groupID)
@@ -133,9 +134,9 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Is the given user an administrator (in other words, a god)?
+        ///     Is the given user an administrator (in other words, a god)?
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         protected bool IsAdministrator(UUID user)
         {
@@ -143,10 +144,10 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Is the given user an administrator (in other words, a god)?
+        ///     Is the given user an administrator (in other words, a god)?
         /// </summary>
-        /// <param name = "user"></param>
-        /// <param name = "checkGodStatus"></param>
+        /// <param name="user"></param>
+        /// <param name="checkGodStatus"></param>
         /// <returns></returns>
         private bool InternalIsAdministrator(UUID user, bool checkGodStatus)
         {
@@ -574,7 +575,8 @@ namespace Aurora.Modules.Permissions
 
                 m_bypassPermissions = val;
 
-                if (MainConsole.Instance.ConsoleScene != null || (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                if (MainConsole.Instance.ConsoleScene != null ||
+                    (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
                 {
                     MainConsole.Instance.HasProcessedCurrentCommand = true;
                     MainConsole.Instance.InfoFormat(
@@ -604,11 +606,13 @@ namespace Aurora.Modules.Permissions
 
                 m_bypassPermissionsValue = val;
 
-                if (MainConsole.Instance.ConsoleScene != null || (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                if (MainConsole.Instance.ConsoleScene != null ||
+                    (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
                 {
                     MainConsole.Instance.HasProcessedCurrentCommand = true;
-                    MainConsole.Instance.InfoFormat("[PERMISSIONS] Forced permissions to {0} in {1}", m_bypassPermissionsValue,
-                                 m_scene.RegionInfo.RegionName);
+                    MainConsole.Instance.InfoFormat("[PERMISSIONS] Forced permissions to {0} in {1}",
+                                                    m_bypassPermissionsValue,
+                                                    m_scene.RegionInfo.RegionName);
                 }
             }
         }
@@ -728,11 +732,13 @@ namespace Aurora.Modules.Permissions
 
                 m_debugPermissions = val;
 
-                if (MainConsole.Instance.ConsoleScene != null || (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                if (MainConsole.Instance.ConsoleScene != null ||
+                    (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
                 {
                     MainConsole.Instance.HasProcessedCurrentCommand = true;
-                    MainConsole.Instance.InfoFormat("[PERMISSIONS] Set permissions debugging to {0} in {1}", m_debugPermissions,
-                                 m_scene.RegionInfo.RegionName);
+                    MainConsole.Instance.InfoFormat("[PERMISSIONS] Set permissions debugging to {0} in {1}",
+                                                    m_debugPermissions,
+                                                    m_scene.RegionInfo.RegionName);
                 }
             }
         }
@@ -796,12 +802,12 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to directly create the given inventory type in a prim's
-        ///   inventory (e.g. the New Script button in the 1.21 Linden Lab client).
+        ///     Check whether the specified user is allowed to directly create the given inventory type in a prim's
+        ///     inventory (e.g. the New Script button in the 1.21 Linden Lab client).
         /// </summary>
-        /// <param name = "invType"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="invType"></param>
+        /// <param name="objectID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         private bool CanCreateObjectInventory(int invType, UUID objectID, UUID userID)
         {
@@ -828,10 +834,10 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to create the given inventory type in their inventory.
+        ///     Check whether the specified user is allowed to create the given inventory type in their inventory.
         /// </summary>
-        /// <param name = "invType"></param>
-        /// <param name = "userID"></param>
+        /// <param name="invType"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         private bool CanCreateUserInventory(int invType, UUID userID)
         {
@@ -863,10 +869,10 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to copy the given inventory type in their inventory.
+        ///     Check whether the specified user is allowed to copy the given inventory type in their inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         private bool CanCopyUserInventory(UUID itemID, UUID userID)
         {
@@ -877,10 +883,10 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to edit the given inventory item within their own inventory.
+        ///     Check whether the specified user is allowed to edit the given inventory item within their own inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         private bool CanEditUserInventory(UUID itemID, UUID userID)
         {
@@ -891,10 +897,10 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to delete the given inventory item from their own inventory.
+        ///     Check whether the specified user is allowed to delete the given inventory item from their own inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         private bool CanDeleteUserInventory(UUID itemID, UUID userID)
         {
@@ -1234,12 +1240,12 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   General permissions checks for any operation involving an object.  These supplement more specific checks
-        ///   implemented by callers.
+        ///     General permissions checks for any operation involving an object.  These supplement more specific checks
+        ///     implemented by callers.
         /// </summary>
-        /// <param name = "currentUser"></param>
-        /// <param name = "objId"></param>
-        /// <param name = "denyOnLocked"></param>
+        /// <param name="currentUser"></param>
+        /// <param name="objId"></param>
+        /// <param name="denyOnLocked"></param>
         /// <returns></returns>
         protected bool GenericObjectPermission(UUID currentUser, UUID objId, bool denyOnLocked)
         {
@@ -1253,7 +1259,7 @@ namespace Aurora.Modules.Permissions
                 if (!m_scene.Entities.TryGetChildPrimParent(objId, out entity))
                     return false;
 
-                group = (ISceneEntity)entity;
+                group = (ISceneEntity) entity;
             }
             else
             {
@@ -1261,7 +1267,7 @@ namespace Aurora.Modules.Permissions
                 if (!(entity is ISceneEntity))
                     return false;
 
-                group = (ISceneEntity)entity;
+                group = (ISceneEntity) entity;
             }
 
             UUID objectOwner = group.OwnerID;
@@ -1276,7 +1282,7 @@ namespace Aurora.Modules.Permissions
 
             if (locked && (!IsAdministrator(currentUser)) && denyOnLocked)
                 return false;
-                
+
             // Object owners should be able to edit their own content
             if (currentUser == objectOwner)
                 return true;
@@ -1311,7 +1317,7 @@ namespace Aurora.Modules.Permissions
             if (IsAdministrator(objectOwner))
             {
                 bool permission = (IsFriendWithPerms(currentUser, objectOwner) && m_allowAdminFriendEditRights);
-                if(permission)
+                if (permission)
                     return true;
             }
 
@@ -1557,7 +1563,8 @@ namespace Aurora.Modules.Permissions
                 m_scene.Entities.TryGetValue(objectID, out group);
                 if (group == null)
                 {
-                    MainConsole.Instance.Warn("[PERMISSIONS]: COULD NOT FIND PRIM FOR CanEditObjectInventory! " + objectID);
+                    MainConsole.Instance.Warn("[PERMISSIONS]: COULD NOT FIND PRIM FOR CanEditObjectInventory! " +
+                                              objectID);
                     return false;
                 }
                 objectID = group.UUID;
@@ -1592,12 +1599,12 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user can edit the given script
+        ///     Check whether the specified user can edit the given script
         /// </summary>
-        /// <param name = "script"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "user"></param>
-        /// <param name = "scene"></param>
+        /// <param name="script"></param>
+        /// <param name="objectID"></param>
+        /// <param name="user"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         private bool CanEditScript(UUID script, UUID objectID, UUID user, IScene scene)
         {
@@ -1617,12 +1624,12 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user can edit the given notecard
+        ///     Check whether the specified user can edit the given notecard
         /// </summary>
-        /// <param name = "notecard"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "user"></param>
-        /// <param name = "scene"></param>
+        /// <param name="notecard"></param>
+        /// <param name="objectID"></param>
+        /// <param name="user"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         private bool CanEditNotecard(UUID notecard, UUID objectID, UUID user, IScene scene)
         {
@@ -1648,7 +1655,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            if(IsGod(user, m_scene))
+            if (IsGod(user, m_scene))
             {
                 if (IsGod(target, m_scene)) //if they are an admin
                     return false;
@@ -1793,7 +1800,7 @@ namespace Aurora.Modules.Permissions
             }
 
             if (oldland.LandData.GlobalID == land.LandData.GlobalID)
-                return true;//Same parcel
+                return true; //Same parcel
 
             if ((land.LandData.Flags & ((int) ParcelFlags.AllowAPrimitiveEntry)) != 0)
             {
@@ -1922,7 +1929,9 @@ namespace Aurora.Modules.Permissions
                 }
             }
 #else
-            foreach (ISceneEntity g in new List<ISceneEntity>(objects).Where(g => !GenericObjectPermission(user, g.UUID, false)))
+            foreach (
+                ISceneEntity g in
+                    new List<ISceneEntity>(objects).Where(g => !GenericObjectPermission(user, g.UUID, false)))
             {
                 // This is a short cut for efficiency. If land is non-null,
                 // then all objects are on that parcel and we can save
@@ -2131,7 +2140,7 @@ namespace Aurora.Modules.Permissions
                     return false;
                 }
 
-                ISceneEntity task = (ISceneEntity)ent;
+                ISceneEntity task = (ISceneEntity) ent;
                 // UUID taskOwner = null;
                 // Added this because at this point in time it wouldn't be wise for
                 // the administrator object permissions to take effect.
@@ -2156,7 +2165,7 @@ namespace Aurora.Modules.Permissions
                 IEntity ent;
                 if (m_scene.Entities.TryGetValue(objectID, out ent) && ent is ISceneEntity)
                 {
-                    ISceneEntity task = (ISceneEntity)ent;
+                    ISceneEntity task = (ISceneEntity) ent;
 
                     if ((task.GetEffectivePermissions() & (PERM_COPY | PERM_TRANS)) != (PERM_COPY | PERM_TRANS))
                         permission = false;
@@ -2208,12 +2217,12 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user can view the given script
+        ///     Check whether the specified user can view the given script
         /// </summary>
-        /// <param name = "script"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "user"></param>
-        /// <param name = "scene"></param>
+        /// <param name="script"></param>
+        /// <param name="objectID"></param>
+        /// <param name="user"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         private bool CanViewScript(UUID script, UUID objectID, UUID user, IScene scene)
         {
@@ -2308,12 +2317,12 @@ namespace Aurora.Modules.Permissions
         }
 
         /// <summary>
-        ///   Check whether the specified user can view the given notecard
+        ///     Check whether the specified user can view the given notecard
         /// </summary>
-        /// <param name = "notecard"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "user"></param>
-        /// <param name = "scene"></param>
+        /// <param name="notecard"></param>
+        /// <param name="objectID"></param>
+        /// <param name="user"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         private bool CanViewNotecard(UUID notecard, UUID objectID, UUID user, IScene scene)
         {

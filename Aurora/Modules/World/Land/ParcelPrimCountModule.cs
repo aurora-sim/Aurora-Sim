@@ -96,20 +96,21 @@ namespace Aurora.Modules.Land
             m_Scene.EventManager.OnSceneGroupMove += EventManager_OnSceneGroupMove;
         }
 
-        bool EventManager_OnSceneGroupMove(UUID groupID, Vector3 pos)
+        private bool EventManager_OnSceneGroupMove(UUID groupID, Vector3 pos)
         {
             IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
-            ILandObject landObject = parcelManagment.GetLandObject(pos.X, pos.Y) ?? parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
+            ILandObject landObject = parcelManagment.GetLandObject(pos.X, pos.Y) ??
+                                     parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
             if (landObject == null) return true;
             ParcelCounts parcelCounts;
-            if ((m_ParcelCounts.TryGetValue(landObject.LandData.GlobalID, out parcelCounts)) && (!parcelCounts.Objects.ContainsKey(groupID)))
+            if ((m_ParcelCounts.TryGetValue(landObject.LandData.GlobalID, out parcelCounts)) &&
+                (!parcelCounts.Objects.ContainsKey(groupID)))
                 m_Tainted = true;
             return true;
         }
 
         public void RegionLoaded(IScene scene)
         {
-
         }
 
         public void RemoveRegion(IScene scene)
@@ -294,7 +295,8 @@ namespace Aurora.Modules.Land
 
             IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
             Vector3 pos = obj.AbsolutePosition;
-            ILandObject landObject = parcelManagment.GetLandObject(pos.X,pos.Y) ?? parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
+            ILandObject landObject = parcelManagment.GetLandObject(pos.X, pos.Y) ??
+                                     parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
             if (landObject == null) return;
             LandData landData = landObject.LandData;
             ParcelCounts parcelCounts;
@@ -523,7 +525,8 @@ namespace Aurora.Modules.Land
                 catch (Exception e)
                 {
                     // Catch it and move on. This includes situations where splist has inconsistent info
-                    MainConsole.Instance.WarnFormat("[ParcelPrimCountModule]: Problem processing action in Recount: {0}", e);
+                    MainConsole.Instance.WarnFormat(
+                        "[ParcelPrimCountModule]: Problem processing action in Recount: {0}", e);
                 }
             }
 
@@ -567,8 +570,8 @@ namespace Aurora.Modules.Land
             //}
             if (FunctionName == "ObjectChangedOwner")
             {
-                TaintPrimCount((int)((ISceneEntity)parameters).AbsolutePosition.X,
-                               (int)((ISceneEntity)parameters).AbsolutePosition.Y);
+                TaintPrimCount((int) ((ISceneEntity) parameters).AbsolutePosition.X,
+                               (int) ((ISceneEntity) parameters).AbsolutePosition.Y);
             }
             else if (FunctionName == "ObjectEnteringNewParcel")
             {

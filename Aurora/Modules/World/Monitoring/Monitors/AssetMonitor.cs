@@ -44,7 +44,7 @@ namespace Aurora.Modules.Monitoring.Monitors
         private long texturesInCache;
 
         /// <value>
-        ///   Currently misleading since we can't currently subtract removed asset memory usage without a performance hit
+        ///     Currently misleading since we can't currently subtract removed asset memory usage without a performance hit
         /// </value>
         public long AssetCacheMemoryUsage
         {
@@ -52,7 +52,7 @@ namespace Aurora.Modules.Monitoring.Monitors
         }
 
         /// <value>
-        ///   Currently unused
+        ///     Currently unused
         /// </value>
         public long TextureCacheMemoryUsage
         {
@@ -60,9 +60,9 @@ namespace Aurora.Modules.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   These statistics are being collected by push rather than pull.  Pull would be simpler, but I had the
-        ///   notion of providing some flow statistics (which pull wouldn't give us).  Though admittedly these
-        ///   haven't yet been implemented...
+        ///     These statistics are being collected by push rather than pull.  Pull would be simpler, but I had the
+        ///     notion of providing some flow statistics (which pull wouldn't give us).  Though admittedly these
+        ///     haven't yet been implemented...
         /// </summary>
         public long AssetsInCache
         {
@@ -70,7 +70,7 @@ namespace Aurora.Modules.Monitoring.Monitors
         }
 
         /// <value>
-        ///   Currently unused
+        ///     Currently unused
         /// </value>
         public long TexturesInCache
         {
@@ -78,7 +78,7 @@ namespace Aurora.Modules.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   This is the time it took for the last asset request made in response to a cache miss.
+        ///     This is the time it took for the last asset request made in response to a cache miss.
         /// </summary>
         public TimeSpan AssetRequestTimeAfterCacheMiss
         {
@@ -86,10 +86,10 @@ namespace Aurora.Modules.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   Number of persistent requests for missing textures we have started blocking from clients.  To some extent
-        ///   this is just a temporary statistic to keep this problem in view - the root cause of this lies either
-        ///   in a mishandling of the reply protocol, related to avatar appearance or may even originate in graphics
-        ///   driver bugs on clients (though this seems less likely).
+        ///     Number of persistent requests for missing textures we have started blocking from clients.  To some extent
+        ///     this is just a temporary statistic to keep this problem in view - the root cause of this lies either
+        ///     in a mishandling of the reply protocol, related to avatar appearance or may even originate in graphics
+        ///     driver bugs on clients (though this seems less likely).
         /// </summary>
         public long BlockedMissingTextureRequests
         {
@@ -97,9 +97,9 @@ namespace Aurora.Modules.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   Record the number of times that an asset request has failed.  Failures are effectively exceptions, such as
-        ///   request timeouts.  If an asset service replies that a particular asset cannot be found, this is not counted
-        ///   as a failure
+        ///     Record the number of times that an asset request has failed.  Failures are effectively exceptions, such as
+        ///     request timeouts.  If an asset service replies that a particular asset cannot be found, this is not counted
+        ///     as a failure
         /// </summary>
         public long AssetServiceRequestFailures
         {
@@ -148,7 +148,7 @@ namespace Aurora.Modules.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   Signal that the asset cache has been cleared.
+        ///     Signal that the asset cache has been cleared.
         /// </summary>
         public void ClearAssetCacheStatistics()
         {

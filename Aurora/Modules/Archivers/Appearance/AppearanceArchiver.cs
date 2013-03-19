@@ -38,7 +38,7 @@ using System.Linq;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   This module loads/saves the avatar's appearance from/down into an "Avatar Archive", also known as an AA.
+    ///     This module loads/saves the avatar's appearance from/down into an "Avatar Archive", also known as an AA.
     /// </summary>
     public class AuroraAvatarAppearanceArchiver : IService, IAvatarAppearanceArchiver
     {
@@ -70,7 +70,8 @@ namespace Aurora.Modules.Archivers
                 IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 if (archiver != null)
                 {
-                    AvatarArchive archive = archiver.GetAvatarArchive(FileName.Substring(0, FileName.LastIndexOf(".database")));
+                    AvatarArchive archive =
+                        archiver.GetAvatarArchive(FileName.Substring(0, FileName.LastIndexOf(".database")));
                     archiveXML = archive.ArchiveXML;
                 }
                 else
@@ -81,7 +82,7 @@ namespace Aurora.Modules.Archivers
             }
             else
             {
-                if(!File.Exists(FileName))
+                if (!File.Exists(FileName))
                 {
                     MainConsole.Instance.Error("[AvatarArchive] Unable to load from file: file does not exist!");
                     return null;
@@ -102,11 +103,11 @@ namespace Aurora.Modules.Archivers
 
             string FolderNameToLoadInto = "";
 
-            OSDMap map = ((OSDMap)OSDParser.DeserializeLLSDXml(archiveXML));
+            OSDMap map = ((OSDMap) OSDParser.DeserializeLLSDXml(archiveXML));
 
-            OSDMap assetsMap = ((OSDMap)map["Assets"]);
+            OSDMap assetsMap = ((OSDMap) map["Assets"]);
             //OSDMap itemsMap = ((OSDMap)map["Items"]);
-            OSDMap bodyMap = ((OSDMap)map["Body"]);
+            OSDMap bodyMap = ((OSDMap) map["Body"]);
 
             AvatarAppearance appearance = ConvertXMLToAvatarAppearance(bodyMap, out FolderNameToLoadInto);
 
@@ -130,7 +131,8 @@ namespace Aurora.Modules.Archivers
             try
             {
                 LoadAssets(assetsMap);
-                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance, account.PrincipalID, out items);
+                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance,
+                                                         account.PrincipalID, out items);
             }
             catch (Exception ex)
             {
@@ -145,7 +147,10 @@ namespace Aurora.Modules.Archivers
             return appearance;
         }
 
-        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance, InventoryFolderBase destinationFolder, UUID agentid, out List<InventoryItemBase> items)
+        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source,
+                                                             AvatarAppearance avatarAppearance,
+                                                             InventoryFolderBase destinationFolder, UUID agentid,
+                                                             out List<InventoryItemBase> items)
         {
             if (destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
@@ -166,11 +171,12 @@ namespace Aurora.Modules.Archivers
 
                         if (item != null)
                         {
-
                             InventoryItemBase destinationItem = InventoryService.InnerGiveInventoryItem(destination,
-                                                                                                    destination, item,
-                                                                                                    destinationFolder.ID,
-                                                                                                    false);
+                                                                                                        destination,
+                                                                                                        item,
+                                                                                                        destinationFolder
+                                                                                                            .ID,
+                                                                                                        false);
                             items.Add(destinationItem);
                             MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}",
                                                              destinationItem.ID, destinationFolder.ID);
@@ -209,7 +215,8 @@ namespace Aurora.Modules.Archivers
                                                                                                     destinationFolder.ID,
                                                                                                     false);
                         items.Add(destinationItem);
-                        MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
+                        MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID,
+                                                         destinationFolder.ID);
 
                         // Attach item
                         avatarAppearance.SetAttachment(attachpoint, destinationItem.ID, destinationItem.AssetID);
@@ -217,7 +224,8 @@ namespace Aurora.Modules.Archivers
                     }
                     else
                     {
-                        MainConsole.Instance.WarnFormat("[RADMIN]: Error transferring {0} to folder {1}", itemID, destinationFolder.ID);
+                        MainConsole.Instance.WarnFormat("[RADMIN]: Error transferring {0} to folder {1}", itemID,
+                                                        destinationFolder.ID);
                     }
                 }
             }
@@ -237,36 +245,37 @@ namespace Aurora.Modules.Archivers
             }
             var avappearance = LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
             if (avappearance != null)
-                AvatarService.SetAppearance(UserAccountService.GetUserAccount(null, cmdparams[3] + " " + cmdparams[4]).PrincipalID, avappearance);
+                AvatarService.SetAppearance(
+                    UserAccountService.GetUserAccount(null, cmdparams[3] + " " + cmdparams[4]).PrincipalID, avappearance);
         }
 
         private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item,
                                                     InventoryFolderBase parentFolder)
         {
             InventoryItemBase itemCopy = new InventoryItemBase
-            {
-                Owner = recipient,
-                CreatorId = item.CreatorId,
-                CreatorData = item.CreatorData,
-                ID = UUID.Random(),
-                AssetID = item.AssetID,
-                Description = item.Description,
-                Name = item.Name,
-                AssetType = item.AssetType,
-                InvType = item.InvType,
-                Folder = UUID.Zero,
-                NextPermissions = (uint)PermissionMask.All,
-                GroupPermissions = (uint)PermissionMask.All,
-                EveryOnePermissions = (uint)PermissionMask.All,
-                CurrentPermissions = (uint)PermissionMask.All
-            };
+                                             {
+                                                 Owner = recipient,
+                                                 CreatorId = item.CreatorId,
+                                                 CreatorData = item.CreatorData,
+                                                 ID = UUID.Random(),
+                                                 AssetID = item.AssetID,
+                                                 Description = item.Description,
+                                                 Name = item.Name,
+                                                 AssetType = item.AssetType,
+                                                 InvType = item.InvType,
+                                                 Folder = UUID.Zero,
+                                                 NextPermissions = (uint) PermissionMask.All,
+                                                 GroupPermissions = (uint) PermissionMask.All,
+                                                 EveryOnePermissions = (uint) PermissionMask.All,
+                                                 CurrentPermissions = (uint) PermissionMask.All
+                                             };
 
             //Give full permissions for them
 
             if (parentFolder == null)
             {
                 InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, InventoryType.Unknown,
-                                                                               (AssetType)itemCopy.AssetType);
+                                                                               (AssetType) itemCopy.AssetType);
 
                 if (folder != null)
                     itemCopy.Folder = folder.ID;
@@ -392,15 +401,15 @@ namespace Aurora.Modules.Archivers
                         {
                             UUID snapshot;
                             int index = 0;
-                            for(; index < cmdparams.Length; index++)
+                            for (; index < cmdparams.Length; index++)
                             {
-                                if(cmdparams[index] == "--snapshot")
+                                if (cmdparams[index] == "--snapshot")
                                 {
                                     index++;
                                     break;
                                 }
                             }
-                            if(index < cmdparams.Length && UUID.TryParse(cmdparams[index], out snapshot))
+                            if (index < cmdparams.Length && UUID.TryParse(cmdparams[index], out snapshot))
                             {
                                 archive.Snapshot = snapshot.ToString();
                             }
@@ -479,16 +488,16 @@ namespace Aurora.Modules.Archivers
         private AssetBase LoadAssetBase(OSDMap map)
         {
             AssetBase asset = new AssetBase
-            {
-                Data = map["AssetData"].AsBinary(),
-                TypeString = map["ContentType"].AsString(),
-                CreationDate = map["CreationDate"].AsDate(),
-                CreatorID = map["CreatorID"].AsUUID(),
-                Description = map["Description"].AsString(),
-                ID = map["ID"].AsUUID(),
-                Name = map["Name"].AsString(),
-                Type = (sbyte)map["Type"].AsInteger()
-            };
+                                  {
+                                      Data = map["AssetData"].AsBinary(),
+                                      TypeString = map["ContentType"].AsString(),
+                                      CreationDate = map["CreationDate"].AsDate(),
+                                      CreatorID = map["CreatorID"].AsUUID(),
+                                      Description = map["Description"].AsString(),
+                                      ID = map["ID"].AsUUID(),
+                                      Name = map["Name"].AsString(),
+                                      Type = (sbyte) map["Type"].AsInteger()
+                                  };
             return asset;
         }
 
@@ -510,7 +519,7 @@ namespace Aurora.Modules.Archivers
             foreach (KeyValuePair<string, OSD> kvp in assets)
             {
                 UUID AssetID = UUID.Parse(kvp.Key);
-                OSDMap assetMap = (OSDMap)kvp.Value;
+                OSDMap assetMap = (OSDMap) kvp.Value;
                 AssetBase asset = AssetService.Get(AssetID.ToString());
                 MainConsole.Instance.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
                 if (asset == null) //Don't overwrite

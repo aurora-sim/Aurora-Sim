@@ -42,7 +42,11 @@ namespace Aurora.Modules.Archivers
         {
             XmlDocument doc = new XmlDocument();
 
-            XmlTextReader reader = new XmlTextReader(new StringReader(xmlString)) { WhitespaceHandling = WhitespaceHandling.None };
+            XmlTextReader reader = new XmlTextReader(new StringReader(xmlString))
+                                       {
+                                           WhitespaceHandling =
+                                               WhitespaceHandling.None
+                                       };
             doc.Load(reader);
             reader.Close();
             XmlNode rootNode = doc.FirstChild;
@@ -55,7 +59,7 @@ namespace Aurora.Modules.Archivers
             XmlDocument doc = new XmlDocument();
 
             MemoryStream stream = new MemoryStream(xml);
-            XmlTextReader reader = new XmlTextReader(stream) { WhitespaceHandling = WhitespaceHandling.None };
+            XmlTextReader reader = new XmlTextReader(stream) {WhitespaceHandling = WhitespaceHandling.None};
             doc.Load(reader);
             reader.Close();
             stream.Close();

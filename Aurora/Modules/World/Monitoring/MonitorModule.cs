@@ -116,7 +116,7 @@ namespace Aurora.Modules.Monitoring
             private int statsUpdatesEveryMS = 2000;
 
             /// <summary>
-            ///   The last reported stats for this region
+            ///     The last reported stats for this region
             /// </summary>
             public float[] LastReportedSimStats
             {
@@ -128,9 +128,9 @@ namespace Aurora.Modules.Monitoring
             #region Constructor
 
             /// <summary>
-            ///   Constructor, set the MonitorModule ref up
+            ///     Constructor, set the MonitorModule ref up
             /// </summary>
-            /// <param name = "module"></param>
+            /// <param name="module"></param>
             public MonitorRegistry(MonitorModule module)
             {
                 m_module = module;
@@ -145,17 +145,20 @@ namespace Aurora.Modules.Monitoring
             #region Add Region
 
             /// <summary>
-            ///   Set the scene for this instance, add the HTTP handler for the monitor stats,
-            ///   add all the given monitors and alerts, and start the stats heartbeat.
+            ///     Set the scene for this instance, add the HTTP handler for the monitor stats,
+            ///     add all the given monitors and alerts, and start the stats heartbeat.
             /// </summary>
-            /// <param name = "scene"></param>
+            /// <param name="scene"></param>
             public void AddScene(IScene scene)
             {
                 if (scene != null)
                 {
                     m_currentScene = scene;
                     //Add the HTTP handler
-                    MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET", "/monitorstats/" + scene.RegionInfo.RegionID + "/", StatsPage));
+                    MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET",
+                                                                                "/monitorstats/" +
+                                                                                scene.RegionInfo.RegionID + "/",
+                                                                                StatsPage));
                     //Add all of the region monitors
                     AddRegionMonitors(scene);
 
@@ -191,7 +194,7 @@ namespace Aurora.Modules.Monitoring
             #region Default
 
             /// <summary>
-            ///   Add the monitors that are for the entire instance
+            ///     Add the monitors that are for the entire instance
             /// </summary>
             protected void AddDefaultMonitors()
             {
@@ -203,9 +206,9 @@ namespace Aurora.Modules.Monitoring
             }
 
             /// <summary>
-            ///   Add the monitors that are for each scene
+            ///     Add the monitors that are for each scene
             /// </summary>
-            /// <param name = "scene"></param>
+            /// <param name="scene"></param>
             protected void AddRegionMonitors(IScene scene)
             {
                 AddMonitor(new AgentCountMonitor(scene));
@@ -235,18 +238,18 @@ namespace Aurora.Modules.Monitoring
             #region Add/Remove/Get Monitor and Alerts
 
             /// <summary>
-            ///   Add a new monitor to the monitor list
+            ///     Add a new monitor to the monitor list
             /// </summary>
-            /// <param name = "monitor"></param>
+            /// <param name="monitor"></param>
             public void AddMonitor(IMonitor monitor)
             {
                 m_monitors.Add(monitor.GetName(), monitor);
             }
 
             /// <summary>
-            ///   Add a new alert
+            ///     Add a new alert
             /// </summary>
-            /// <param name = "alert"></param>
+            /// <param name="alert"></param>
             public void AddAlert(IAlert alert)
             {
                 alert.OnTriggerAlert += OnTriggerAlert;
@@ -254,27 +257,27 @@ namespace Aurora.Modules.Monitoring
             }
 
             /// <summary>
-            ///   Remove a known monitor from the list
+            ///     Remove a known monitor from the list
             /// </summary>
-            /// <param name = "Name"></param>
+            /// <param name="Name"></param>
             public void RemoveMonitor(string Name)
             {
                 m_monitors.Remove(Name);
             }
 
             /// <summary>
-            ///   Remove a known alert from the list
+            ///     Remove a known alert from the list
             /// </summary>
-            /// <param name = "Name"></param>
+            /// <param name="Name"></param>
             public void RemoveAlert(string Name)
             {
                 m_alerts.Remove(Name);
             }
 
             /// <summary>
-            ///   Get a known monitor from the list, if not known, it will return null
+            ///     Get a known monitor from the list, if not known, it will return null
             /// </summary>
-            /// <param name = "Name"></param>
+            /// <param name="Name"></param>
             /// <returns></returns>
             public IMonitor GetMonitor(string Name)
             {
@@ -285,9 +288,9 @@ namespace Aurora.Modules.Monitoring
             }
 
             /// <summary>
-            ///   Gets a known alert from the list, if not known, it will return null
+            ///     Gets a known alert from the list, if not known, it will return null
             /// </summary>
-            /// <param name = "Name"></param>
+            /// <param name="Name"></param>
             /// <returns></returns>
             public IAlert GetAlert(string Name)
             {
@@ -301,15 +304,16 @@ namespace Aurora.Modules.Monitoring
             #region Trigger Alert
 
             /// <summary>
-            ///   This occurs when the alert has been triggered and it alerts the console about it
+            ///     This occurs when the alert has been triggered and it alerts the console about it
             /// </summary>
-            /// <param name = "reporter"></param>
-            /// <param name = "reason"></param>
-            /// <param name = "fatal"></param>
+            /// <param name="reporter"></param>
+            /// <param name="reason"></param>
+            /// <param name="fatal"></param>
             private void OnTriggerAlert(Type reporter, string reason, bool fatal)
             {
                 string regionName = m_currentScene != null ? " for " + m_currentScene.RegionInfo.RegionName : "";
-                MainConsole.Instance.Error("[Monitor] " + reporter.Name + regionName + " reports " + reason + " (Fatal: " + fatal + ")");
+                MainConsole.Instance.Error("[Monitor] " + reporter.Name + regionName + " reports " + reason +
+                                           " (Fatal: " + fatal + ")");
             }
 
             #endregion
@@ -317,7 +321,7 @@ namespace Aurora.Modules.Monitoring
             #region Report
 
             /// <summary>
-            ///   Create a string that has the info from all monitors that we know of
+            ///     Create a string that has the info from all monitors that we know of
             /// </summary>
             /// <returns></returns>
             public string Report()
@@ -336,12 +340,12 @@ namespace Aurora.Modules.Monitoring
             #region HTTP Stats page
 
             /// <summary>
-            ///   Return a hashable of the monitors, or just the ones requested
+            ///     Return a hashable of the monitors, or just the ones requested
             /// </summary>
-            /// <param name = "path"></param>
-            /// <param name = "request"></param>
-            /// <param name = "httpRequest"></param>
-            /// <param name = "httpResponse"></param>
+            /// <param name="path"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
             /// <returns></returns>
             public byte[] StatsPage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
@@ -399,7 +403,7 @@ namespace Aurora.Modules.Monitoring
                 {
                     if (m_estateModule == null)
                         m_estateModule = m_currentScene.RequestModuleInterface<IEstateModule>();
-                    regionFlags = m_estateModule != null ? (uint)m_estateModule.GetRegionFlags() : 0;
+                    regionFlags = m_estateModule != null ? (uint) m_estateModule.GetRegionFlags() : 0;
                 }
                 catch (Exception)
                 {
@@ -412,12 +416,12 @@ namespace Aurora.Modules.Monitoring
             }
 
             /// <summary>
-            ///   This is called by a timer and makes a SimStats class of the current stats that we have in this simulator.
-            ///   It then sends the packet to the client and triggers the events to tell followers about the updated stats
-            ///   and updates the LastSet* values for monitors.
+            ///     This is called by a timer and makes a SimStats class of the current stats that we have in this simulator.
+            ///     It then sends the packet to the client and triggers the events to tell followers about the updated stats
+            ///     and updates the LastSet* values for monitors.
             /// </summary>
-            /// <param name = "sender"></param>
-            /// <param name = "e"></param>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
             protected void statsHeartBeat(object sender, EventArgs e)
             {
                 lock (m_report)
@@ -544,11 +548,11 @@ namespace Aurora.Modules.Monitoring
                     //21 and 22 are forced to the GC memory as they WILL make memory usage go up rapidly otherwise!
                     sb[21].StatID = (uint) Stats.VirtualSizeKB;
                     sb[21].StatValue = GC.GetTotalMemory(false)/1024;
-                        // System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
+                    // System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
 
                     sb[22].StatID = (uint) Stats.ResidentSizeKB;
                     sb[22].StatValue = GC.GetTotalMemory(false)/1024;
-                        //(float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
+                    //(float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
 
                     sb[23].StatID = (uint) Stats.PendingLocalUploads;
                     sb[23].StatValue = (networkMonitor.PendingUploads/statsUpdateFactor);
@@ -620,7 +624,8 @@ namespace Aurora.Modules.Monitoring
                         }
                     }
 #else
-                    foreach (IScenePresence agent in m_currentScene.GetScenePresences().Where(agent => !agent.IsChildAgent))
+                    foreach (
+                        IScenePresence agent in m_currentScene.GetScenePresences().Where(agent => !agent.IsChildAgent))
                     {
                         agent.ControllingClient.SendSimStats(simStats);
                     }
@@ -633,7 +638,7 @@ namespace Aurora.Modules.Monitoring
             }
 
             /// <summary>
-            ///   Reset the values of the stats that require resetting (ones that use += and not =)
+            ///     Reset the values of the stats that require resetting (ones that use += and not =)
             /// </summary>
             public void ResetValues()
             {
@@ -644,9 +649,9 @@ namespace Aurora.Modules.Monitoring
             }
 
             /// <summary>
-            ///   Set the correct update time for the timer
+            ///     Set the correct update time for the timer
             /// </summary>
-            /// <param name = "ms"></param>
+            /// <param name="ms"></param>
             public void SetUpdateMS(int ms)
             {
                 statsUpdatesEveryMS = ms;
@@ -662,10 +667,10 @@ namespace Aurora.Modules.Monitoring
         #region Get
 
         /// <summary>
-        ///   Get a monitor from the given Key (RegionID or "" for the base instance) by Name
+        ///     Get a monitor from the given Key (RegionID or "" for the base instance) by Name
         /// </summary>
-        /// <param name = "Key"></param>
-        /// <param name = "Name"></param>
+        /// <param name="Key"></param>
+        /// <param name="Name"></param>
         /// <returns></returns>
         public IMonitor GetMonitor(string Key, string Name)
         {
@@ -677,9 +682,9 @@ namespace Aurora.Modules.Monitoring
         }
 
         /// <summary>
-        ///   Get the latest region stats for the given regionID
+        ///     Get the latest region stats for the given regionID
         /// </summary>
-        /// <param name = "Key"></param>
+        /// <param name="Key"></param>
         /// <returns></returns>
         public float[] GetRegionStats(string Key)
         {
@@ -695,9 +700,9 @@ namespace Aurora.Modules.Monitoring
         #region Console
 
         /// <summary>
-        ///   This shows stats for ALL regions in the instance
+        ///     This shows stats for ALL regions in the instance
         /// </summary>
-        /// <param name = "args"></param>
+        /// <param name="args"></param>
         protected void DebugMonitors(string[] args)
         {
             //Dump all monitors to the console
@@ -709,9 +714,9 @@ namespace Aurora.Modules.Monitoring
         }
 
         /// <summary>
-        ///   This shows the stats for the given region
+        ///     This shows the stats for the given region
         /// </summary>
-        /// <param name = "args"></param>
+        /// <param name="args"></param>
         protected void DebugMonitorsInCurrentRegion(string[] args)
         {
             ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
@@ -755,7 +760,7 @@ namespace Aurora.Modules.Monitoring
         }
 
         /// <summary>
-        ///   Print UDP Queue data for each client
+        ///     Print UDP Queue data for each client
         /// </summary>
         /// <returns></returns>
         protected string GetQueuesReport(string[] showParams)
@@ -811,7 +816,7 @@ namespace Aurora.Modules.Monitoring
             if (manager != null)
             {
                 manager.Scene.ForEachClient(
-                        delegate(IClientAPI client)
+                    delegate(IClientAPI client)
                         {
                             if (client is IStatsCollector)
                             {
@@ -835,7 +840,7 @@ namespace Aurora.Modules.Monitoring
                                     "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
                                     SP.IsChildAgent ? "Child" : "Root", "");
 
-                                IStatsCollector stats = (IStatsCollector)client;
+                                IStatsCollector stats = (IStatsCollector) client;
 
                                 report.AppendLine(stats.Report());
                             }
@@ -850,7 +855,7 @@ namespace Aurora.Modules.Monitoring
         #region Diagonistics
 
         /// <summary>
-        ///   Print statistics to the logfile, if they are active
+        ///     Print statistics to the logfile, if they are active
         /// </summary>
         private void LogDiagnostics(object source, ElapsedEventArgs e)
         {
@@ -880,7 +885,7 @@ namespace Aurora.Modules.Monitoring
         }
 
         /// <summary>
-        ///   Get a report about the registered threads in this server.
+        ///     Get a report about the registered threads in this server.
         /// </summary>
         public string GetThreadsReport()
         {
@@ -916,7 +921,7 @@ namespace Aurora.Modules.Monitoring
         }
 
         /// <summary>
-        ///   Return a report about the uptime of this server
+        ///     Return a report about the uptime of this server
         /// </summary>
         /// <returns></returns>
         public string GetUptimeReport()

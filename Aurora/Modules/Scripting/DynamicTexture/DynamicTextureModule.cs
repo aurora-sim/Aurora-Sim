@@ -64,10 +64,10 @@ namespace Aurora.Modules.Scripting
         }
 
         /// <summary>
-        ///   Called by code which actually renders the dynamic texture to supply texture data.
+        ///     Called by code which actually renders the dynamic texture to supply texture data.
         /// </summary>
-        /// <param name = "id"></param>
-        /// <param name = "data"></param>
+        /// <param name="id"></param>
+        /// <param name="data"></param>
         public void ReturnData(UUID id, byte[] data)
         {
             DynamicTextureUpdater updater = null;
@@ -282,7 +282,7 @@ namespace Aurora.Modules.Scripting
             }
 
             /// <summary>
-            ///   Called once new texture data has been received for this updater.
+            ///     Called once new texture data has been received for this updater.
             /// </summary>
             public void DataReceived(byte[] data, IScene scene)
             {
@@ -432,7 +432,8 @@ namespace Aurora.Modules.Scripting
                         }
                         catch (Exception)
                         {
-                            MainConsole.Instance.Error("[DYNAMICTEXTUREMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
+                            MainConsole.Instance.Error(
+                                "[DYNAMICTEXTUREMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
                         }
 
                         return result;

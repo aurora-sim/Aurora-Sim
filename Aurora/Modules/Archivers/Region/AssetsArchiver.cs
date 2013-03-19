@@ -31,19 +31,19 @@ using Aurora.Framework.Serialization;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Archives assets
+    ///     Archives assets
     /// </summary>
     public class AssetsArchiver
     {
         /// <value>
-        ///   Post a message to the log every x assets as a progress bar
+        ///     Post a message to the log every x assets as a progress bar
         /// </value>
         protected static int LOG_ASSET_LOAD_NOTIFICATION_INTERVAL = 50;
 
         protected TarArchiveWriter m_archiveWriter;
 
         /// <value>
-        ///   Keep a count of the number of assets written so that we can provide status updates
+        ///     Keep a count of the number of assets written so that we can provide status updates
         /// </value>
         protected int m_assetsWritten;
 
@@ -53,9 +53,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Archive the assets given to this archiver to the given archive.
+        ///     Archive the assets given to this archiver to the given archive.
         /// </summary>
-        /// <param name = "asset"></param>
+        /// <param name="asset"></param>
         public void WriteAsset(AssetBase asset)
         {
             //WriteMetadata(archive);
@@ -105,9 +105,9 @@ namespace Aurora.Modules.Archivers
 //        }
 
         /// <summary>
-        ///   Write asset data files to the given archive
+        ///     Write asset data files to the given archive
         /// </summary>
-        /// <param name = "asset"></param>
+        /// <param name="asset"></param>
         protected void WriteData(AssetBase asset)
         {
             // It appears that gtar, at least, doesn't need the intermediate directory entries in the tar
@@ -139,7 +139,7 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Only call this if you need to force a close on the underlying writer.
+        ///     Only call this if you need to force a close on the underlying writer.
         /// </summary>
         public void ForceClose()
         {

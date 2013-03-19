@@ -127,9 +127,10 @@ namespace Aurora.Modules.Scripting
                 // Start http server
                 // Attach xmlrpc handlers
                 MainConsole.Instance.Info("[XMLRPC MODULE]: " +
-                           "Starting up XMLRPC Server on port " + m_remoteDataPort + " for llRemoteData commands.");
-                IHttpServer httpServer = new BaseHttpServer((uint)m_remoteDataPort, MainServer.Instance.HostName,
-                                                               false);
+                                          "Starting up XMLRPC Server on port " + m_remoteDataPort +
+                                          " for llRemoteData commands.");
+                IHttpServer httpServer = new BaseHttpServer((uint) m_remoteDataPort, MainServer.Instance.HostName,
+                                                            false);
                 httpServer.AddXmlRPCHandler("llRemoteData", XmlRpcRemoteData);
                 httpServer.Start();
             }
@@ -286,7 +287,9 @@ namespace Aurora.Modules.Scripting
                     if (oneRpcInfo.GetChannelKey() == channel_key) rpcInfo = oneRpcInfo;
                 }
 #else
-                foreach (RPCRequestInfo oneRpcInfo in m_rpcPendingResponses.Values.Where(oneRpcInfo => oneRpcInfo.GetChannelKey() == channel_key))
+                foreach (
+                    RPCRequestInfo oneRpcInfo in
+                        m_rpcPendingResponses.Values.Where(oneRpcInfo => oneRpcInfo.GetChannelKey() == channel_key))
                     rpcInfo = oneRpcInfo;
 #endif
             }
@@ -450,7 +453,8 @@ namespace Aurora.Modules.Scripting
                         }
                     }
 #else
-                    foreach (SendRemoteDataRequest li in m_pendingSRDResponses.Values.Where(li => li.ItemID.Equals(itemID)))
+                    foreach (
+                        SendRemoteDataRequest li in m_pendingSRDResponses.Values.Where(li => li.ItemID.Equals(itemID)))
                     {
                         m_pendingSRDResponses.Remove(li.GetReqID());
                     }

@@ -12,17 +12,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/admin/edit_news.html"
-                       };
+                           {
+                               "html/admin/edit_news.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return true; } }
-        public bool RequiresAdminAuthentication { get { return true; } }
+        public bool RequiresAuthentication
+        {
+            get { return true; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return true; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -35,12 +43,12 @@ namespace Aurora.Modules.Web
                 string id = requestParameters["NewsID"].ToString();
                 news = connector.GetGeneric<GridNewsItem>(UUID.Zero, "WebGridNews", id);
                 connector.RemoveGeneric(UUID.Zero, "WebGridNews", id);
-                GridNewsItem item = new GridNewsItem { Text = text, Time = news.Time, Title = title, ID = int.Parse(id) };
+                GridNewsItem item = new GridNewsItem {Text = text, Time = news.Time, Title = title, ID = int.Parse(id)};
                 connector.AddGeneric(UUID.Zero, "WebGridNews", id, item.ToOSD());
                 response = "<h3>News item editted successfully, redirecting to main page</h3>" +
-                    "<script language=\"javascript\">" +
-                    "setTimeout(function() {window.location.href = \"index.html?page=news_manager\";}, 0);" +
-                    "</script>";
+                           "<script language=\"javascript\">" +
+                           "setTimeout(function() {window.location.href = \"index.html?page=news_manager\";}, 0);" +
+                           "</script>";
                 return null;
             }
 

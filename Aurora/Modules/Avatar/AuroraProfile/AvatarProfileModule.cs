@@ -42,7 +42,7 @@ namespace Aurora.Modules.Profiles
         #region Declares
 
         /// <summary>
-        ///   Avatar profile flags
+        ///     Avatar profile flags
         /// </summary>
         [Flags]
         public enum ProfileFlags : uint
@@ -318,7 +318,8 @@ namespace Aurora.Modules.Profiles
             IClientAPI remoteClient = (IClientAPI) sender;
             UUID requestedUUID = new UUID(args[0]);
 
-            Dictionary<UUID, string> picks = ProfileFrontend.GetPicks(requestedUUID).ToDictionary(Pick => Pick.PickUUID, Pick => Pick.Name);
+            Dictionary<UUID, string> picks = ProfileFrontend.GetPicks(requestedUUID)
+                                                            .ToDictionary(Pick => Pick.PickUUID, Pick => Pick.Name);
             remoteClient.SendAvatarPicksReply(requestedUUID, picks);
         }
 
@@ -360,8 +361,8 @@ namespace Aurora.Modules.Profiles
                 {
                     UserAccount parcelOwner =
                         remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs,
-                                                                                                  targetlandObj.LandData
-                                                                                                      .OwnerID);
+                                                                             targetlandObj.LandData
+                                                                                          .OwnerID);
                     if (parcelOwner != null)
                         user = parcelOwner.Name;
 
@@ -479,9 +480,9 @@ namespace Aurora.Modules.Profiles
             if (UPI == null || TargetAccount == null)
             {
                 remoteClient.SendAvatarProperties(target, "",
-                                                       Util.ToDateTime(0).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                       new Byte[1], "", 0,
-                                                       UUID.Zero, UUID.Zero, "", UUID.Zero);
+                                                  Util.ToDateTime(0).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                  new Byte[1], "", 0,
+                                                  UUID.Zero, UUID.Zero, "", UUID.Zero);
                 return;
             }
             UserInfo TargetPI =
@@ -501,7 +502,7 @@ namespace Aurora.Modules.Profiles
                 if (UPI.MembershipGroup == "")
                 {
                     charterMember = new Byte[1];
-                    if(TargetAccount != null)
+                    if (TargetAccount != null)
                         charterMember[0] = (Byte) ((TargetAccount.UserFlags & 0xf00) >> 8);
                 }
                 else
@@ -512,7 +513,8 @@ namespace Aurora.Modules.Profiles
                                                   Util.ToDateTime(UPI.Created).ToString("M/d/yyyy",
                                                                                         CultureInfo.InvariantCulture),
                                                   charterMember, UPI.FirstLifeAboutText,
-                                                  (uint)(TargetAccount == null ? 0 : TargetAccount.UserFlags & agentOnline),
+                                                  (uint)
+                                                  (TargetAccount == null ? 0 : TargetAccount.UserFlags & agentOnline),
                                                   UPI.FirstLifeImage, UPI.Image, UPI.WebURL, UPI.Partner);
             }
         }
@@ -542,17 +544,20 @@ namespace Aurora.Modules.Profiles
                 UPI.MaturePublish = maturepublish;
                 ProfileFrontend.UpdateUserProfile(UPI);
             }
-            SendProfile(remoteClient, UPI, remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs, remoteClient.AgentId), 16);
+            SendProfile(remoteClient, UPI,
+                        remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs,
+                                                                             remoteClient.AgentId), 16);
         }
 
-        private void SendProfile(IClientAPI remoteClient, IUserProfileInfo Profile, UserAccount account, uint agentOnline)
+        private void SendProfile(IClientAPI remoteClient, IUserProfileInfo Profile, UserAccount account,
+                                 uint agentOnline)
         {
             Byte[] charterMember;
             if (Profile.MembershipGroup == "")
             {
                 charterMember = new Byte[1];
                 if (account != null)
-                    charterMember[0] = (Byte)((account.UserFlags & 0xf00) >> 8);
+                    charterMember[0] = (Byte) ((account.UserFlags & 0xf00) >> 8);
             }
             else
                 charterMember = Utils.StringToBytes(Profile.MembershipGroup);
@@ -562,7 +567,7 @@ namespace Aurora.Modules.Profiles
                 membershipGroupINT = 4;
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) +
-                membershipGroupINT + agentOnline + (uint) (account != null ? account.UserFlags : 0);
+                         membershipGroupINT + agentOnline + (uint) (account != null ? account.UserFlags : 0);
             remoteClient.SendAvatarInterestsReply(Profile.PrincipalID, Convert.ToUInt32(Profile.Interests.WantToMask),
                                                   Profile.Interests.WantToText,
                                                   Convert.ToUInt32(Profile.Interests.CanDoMask),
@@ -585,8 +590,8 @@ namespace Aurora.Modules.Profiles
             if (UPI == null)
                 return;
             UserAccount account = remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs,
-                                                                                                            remoteClient
-                                                                                                                .AgentId);
+                                                                                       remoteClient
+                                                                                           .AgentId);
             remoteClient.SendUserInfoReply(UPI.Visible, UPI.IMViaEmail, account.Email);
         }
 

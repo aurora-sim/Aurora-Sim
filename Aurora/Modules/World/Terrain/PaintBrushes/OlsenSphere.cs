@@ -31,12 +31,11 @@ using Aurora.Framework;
 
 namespace Aurora.Modules.Terrain.PaintBrushes
 {
-    ///<summary>
-    ///  Speed-Optimised Hybrid Erosion Brush
-    ///
-    ///  As per Jacob Olsen's Paper
-    ///  http://www.oddlabs.com/download/terrain_generation.pdf
-    ///</summary>
+    /// <summary>
+    ///     Speed-Optimised Hybrid Erosion Brush
+    ///     As per Jacob Olsen's Paper
+    ///     http://www.oddlabs.com/download/terrain_generation.pdf
+    /// </summary>
     public class OlsenSphere : ITerrainPaintableEffect
     {
         private const float nConst = 1024;

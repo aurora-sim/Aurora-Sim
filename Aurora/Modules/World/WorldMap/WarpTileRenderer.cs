@@ -170,7 +170,7 @@ namespace Aurora.Modules.WorldMap
             bitmap = ImageUtils.ResizeImage(bitmap, Constants.RegionSize, Constants.RegionSize);
             foreach (var o in renderer.Scene.objectData.Values)
             {
-                warp_Object obj = (warp_Object)o;
+                warp_Object obj = (warp_Object) o;
                 obj.vertexData = null;
                 obj.triangleData = null;
             }
@@ -213,18 +213,18 @@ namespace Aurora.Modules.WorldMap
         {
             ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel>();
 
-            float diff = (float)m_scene.RegionInfo.RegionSizeY / (float)Constants.RegionSize;
+            float diff = (float) m_scene.RegionInfo.RegionSizeY/(float) Constants.RegionSize;
             warp_Object obj =
-                new warp_Object(Constants.RegionSize * Constants.RegionSize,
-                                ((Constants.RegionSize - 1) * (Constants.RegionSize - 1) *2));
+                new warp_Object(Constants.RegionSize*Constants.RegionSize,
+                                ((Constants.RegionSize - 1)*(Constants.RegionSize - 1)*2));
 
             for (float y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
             {
                 for (float x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
                 {
-                    warp_Vector pos = ConvertVector(x, y, terrain[(int)x, (int)y]);
-                    obj.addVertex(new warp_Vertex(pos, x / (float)(m_scene.RegionInfo.RegionSizeX),
-                                                  (((float)m_scene.RegionInfo.RegionSizeX) - y) /
+                    warp_Vector pos = ConvertVector(x, y, terrain[(int) x, (int) y]);
+                    obj.addVertex(new warp_Vertex(pos, x/(float) (m_scene.RegionInfo.RegionSizeX),
+                                                  (((float) m_scene.RegionInfo.RegionSizeX) - y)/
                                                   (m_scene.RegionInfo.RegionSizeX)));
                 }
             }
@@ -233,16 +233,18 @@ namespace Aurora.Modules.WorldMap
             {
                 for (float x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
                 {
-                    float newX = x / diff;
-                    float newY = y / diff;
+                    float newX = x/diff;
+                    float newY = y/diff;
                     if (newX < Constants.RegionSize - 1 && newY < Constants.RegionSize - 1)
                     {
-                        int v = (int)(newY*Constants.RegionSize + newX);
+                        int v = (int) (newY*Constants.RegionSize + newX);
 
                         // Normal
-                        Vector3 v1 = new Vector3(newX, newY, (terrain[(int)x, (int)y]) / Constants.TerrainCompression);
-                        Vector3 v2 = new Vector3(newX + 1, newY, (terrain[(int)x + 1, (int)y]) / Constants.TerrainCompression);
-                        Vector3 v3 = new Vector3(newX, newY + 1, (terrain[(int)x, (int)(y + 1)]) / Constants.TerrainCompression);
+                        Vector3 v1 = new Vector3(newX, newY, (terrain[(int) x, (int) y])/Constants.TerrainCompression);
+                        Vector3 v2 = new Vector3(newX + 1, newY,
+                                                 (terrain[(int) x + 1, (int) y])/Constants.TerrainCompression);
+                        Vector3 v3 = new Vector3(newX, newY + 1,
+                                                 (terrain[(int) x, (int) (y + 1)])/Constants.TerrainCompression);
                         warp_Vector norm = ConvertVector(SurfaceNormal(v1, v2, v3));
                         norm = norm.reverse();
                         obj.vertex(v).n = norm;
@@ -522,7 +524,7 @@ namespace Aurora.Modules.WorldMap
             FileStream stream =
                 new FileStream(
                     System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
-                                 m_scene.RegionInfo.RegionName + ".tc"), FileMode.OpenOrCreate);
+                                           m_scene.RegionInfo.RegionName + ".tc"), FileMode.OpenOrCreate);
             StreamReader m_streamReader = new StreamReader(stream);
             string file = m_streamReader.ReadToEnd();
             m_streamReader.Close();
@@ -536,7 +538,7 @@ namespace Aurora.Modules.WorldMap
                     try
                     {
                         File.Delete(System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
-                                                 m_scene.RegionInfo.RegionName + ".tc"));
+                                                           m_scene.RegionInfo.RegionName + ".tc"));
                     }
                     catch
                     {
@@ -568,7 +570,7 @@ namespace Aurora.Modules.WorldMap
             FileStream stream =
                 new FileStream(
                     System.IO.Path.Combine(System.IO.Path.Combine("assetcache", "mapTileTextureCache"),
-                                 m_scene.RegionInfo.RegionName + ".tc"), FileMode.Create);
+                                           m_scene.RegionInfo.RegionName + ".tc"), FileMode.Create);
             StreamWriter writer = new StreamWriter(stream);
             writer.WriteLine(OSDParser.SerializeJsonString(map));
             writer.Close();
@@ -686,8 +688,9 @@ namespace Aurora.Modules.WorldMap
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.WarnFormat("[MAPTILE]: Error decoding JPEG2000 texture {0} ({1} bytes): {2}", textureID,
-                                 j2kData.Length, ex.Message);
+                MainConsole.Instance.WarnFormat("[MAPTILE]: Error decoding JPEG2000 texture {0} ({1} bytes): {2}",
+                                                textureID,
+                                                j2kData.Length, ex.Message);
                 width = 0;
                 height = 0;
                 return new Color4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -706,14 +709,14 @@ namespace Aurora.Modules.WorldMap
     public static class ImageUtils
     {
         /// <summary>
-        ///   Performs bilinear interpolation between four values
+        ///     Performs bilinear interpolation between four values
         /// </summary>
-        /// <param name = "v00">First, or top left value</param>
-        /// <param name = "v01">Second, or top right value</param>
-        /// <param name = "v10">Third, or bottom left value</param>
-        /// <param name = "v11">Fourth, or bottom right value</param>
-        /// <param name = "xPercent">Interpolation value on the X axis, between 0.0 and 1.0</param>
-        /// <param name = "yPercent">Interpolation value on fht Y axis, between 0.0 and 1.0</param>
+        /// <param name="v00">First, or top left value</param>
+        /// <param name="v01">Second, or top right value</param>
+        /// <param name="v10">Third, or bottom left value</param>
+        /// <param name="v11">Fourth, or bottom right value</param>
+        /// <param name="xPercent">Interpolation value on the X axis, between 0.0 and 1.0</param>
+        /// <param name="yPercent">Interpolation value on fht Y axis, between 0.0 and 1.0</param>
         /// <returns>The bilinearly interpolated result</returns>
         public static float Bilinear(float v00, float v01, float v10, float v11, float xPercent, float yPercent)
         {
@@ -721,11 +724,11 @@ namespace Aurora.Modules.WorldMap
         }
 
         /// <summary>
-        ///   Performs a high quality image resize
+        ///     Performs a high quality image resize
         /// </summary>
-        /// <param name = "image">Image to resize</param>
-        /// <param name = "width">New width</param>
-        /// <param name = "height">New height</param>
+        /// <param name="image">Image to resize</param>
+        /// <param name="width">New width</param>
+        /// <param name="height">New height</param>
         /// <returns>Resized image</returns>
         public static Bitmap ResizeImage(Image image, int width, int height)
         {

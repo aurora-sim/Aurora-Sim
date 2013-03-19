@@ -11,27 +11,27 @@ using System.Xml;
 namespace RunTimeCompiler
 {
     /// <summary>
-    ///   This class should be able to process all (almost) kinds of .csproj files 
-    ///   and retrieve the data needed for UI and compilation.
-    ///   It should succesfully process .csproj files comming from Visual Studio 
-    ///   2005+. 
-    ///   It proccesses ok files from Visual Studio 2010 (this is the most recent 
-    ///   version), but the structure of the .csproj may change in future versions
-    ///   of Visual Studio, and therefore the class may not be able to process that 
-    ///   .csproj files.
-    ///   It is also unknown if .csproj files created with Visual Studio 2001 or 2003 
-    ///   can be processed.
+    ///     This class should be able to process all (almost) kinds of .csproj files
+    ///     and retrieve the data needed for UI and compilation.
+    ///     It should succesfully process .csproj files comming from Visual Studio
+    ///     2005+.
+    ///     It proccesses ok files from Visual Studio 2010 (this is the most recent
+    ///     version), but the structure of the .csproj may change in future versions
+    ///     of Visual Studio, and therefore the class may not be able to process that
+    ///     .csproj files.
+    ///     It is also unknown if .csproj files created with Visual Studio 2001 or 2003
+    ///     can be processed.
     /// </summary>
     public class AllCsprojReader
     {
         /// <summary>
-        ///   It is used to retrieve the value of a property from the 
-        ///   generic properties section (as opposite to 
-        ///   configuration-specific section).
+        ///     It is used to retrieve the value of a property from the
+        ///     generic properties section (as opposite to
+        ///     configuration-specific section).
         /// </summary>
-        /// <param name = "doc">Generic section (xml node)</param>
-        /// <param name = "mgr"></param>
-        /// <param name = "property">The name of the property/setting</param>
+        /// <param name="doc">Generic section (xml node)</param>
+        /// <param name="mgr"></param>
+        /// <param name="property">The name of the property/setting</param>
         /// <returns></returns>
         private string GetPropertyValue(XmlDocument doc, XmlNamespaceManager mgr, string property)
         {
@@ -50,19 +50,19 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   It is used to get the node that contains the configuraiton-specific settings 
-        ///   for the Configuration and Platform specified.
-        ///   Currently it looks for the section with the "Condition" attribute like:
-        ///   '$(Configuration)|$(Platform)' == '[Configuration]|[Platform]'
-        ///   The node should look like:
-        ///   &lt; PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " &gt;
-        ///   ...
-        ///   &lt; PropertyGroup /&gt;
+        ///     It is used to get the node that contains the configuraiton-specific settings
+        ///     for the Configuration and Platform specified.
+        ///     Currently it looks for the section with the "Condition" attribute like:
+        ///     '$(Configuration)|$(Platform)' == '[Configuration]|[Platform]'
+        ///     The node should look like:
+        ///     &lt; PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " &gt;
+        ///     ...
+        ///     &lt; PropertyGroup /&gt;
         /// </summary>
-        /// <param name = "doc"></param>
-        /// <param name = "mgr"></param>
-        /// <param name = "configuration"></param>
-        /// <param name = "platform"></param>
+        /// <param name="doc"></param>
+        /// <param name="mgr"></param>
+        /// <param name="configuration"></param>
+        /// <param name="platform"></param>
         /// <returns></returns>
         private XmlNode GetCrtConfigurationNode(XmlDocument doc, XmlNamespaceManager mgr, string configuration,
                                                 string platform)
@@ -74,16 +74,21 @@ namespace RunTimeCompiler
             string lookForValue;
             lookForValue = string.Format("'$(Configuration)|$(Platform)' == '{0}|{1}'", configuration, platform);
             nodes = doc.SelectNodes("/x:Project/x:PropertyGroup", mgr);
-            return (from XmlNode node in nodes where node.Attributes != null let attribute = node.Attributes["Condition"] where attribute != null && !string.IsNullOrEmpty(attribute.Value) where attribute.Value.Trim() == lookForValue select node).FirstOrDefault();
+            return (from XmlNode node in nodes
+                    where node.Attributes != null
+                    let attribute = node.Attributes["Condition"]
+                    where attribute != null && !string.IsNullOrEmpty(attribute.Value)
+                    where attribute.Value.Trim() == lookForValue
+                    select node).FirstOrDefault();
         }
 
         /// <summary>
-        ///   It is used to retrieve the value of a property from the 
-        ///   configuration-specific section.
+        ///     It is used to retrieve the value of a property from the
+        ///     configuration-specific section.
         /// </summary>
-        /// <param name = "crtConfigurationNode">Configuration-specific section (xml node)</param>
-        /// <param name = "mgr"></param>
-        /// <param name = "property">The name of the property/setting</param>
+        /// <param name="crtConfigurationNode">Configuration-specific section (xml node)</param>
+        /// <param name="mgr"></param>
+        /// <param name="property">The name of the property/setting</param>
         /// <returns></returns>
         private string GetCrtConfigurationValue(XmlNode crtConfigurationNode, XmlNamespaceManager mgr, string property)
         {
@@ -95,12 +100,12 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   Gets the list of referenced assemblies.
-        ///   Referenced assemblies are found in:
-        ///   &lt; project &gt; &lt; ItemGroup &gt; &lt; Reference &gt;
+        ///     Gets the list of referenced assemblies.
+        ///     Referenced assemblies are found in:
+        ///     &lt; project &gt; &lt; ItemGroup &gt; &lt; Reference &gt;
         /// </summary>
-        /// <param name = "doc"></param>
-        /// <param name = "mgr"></param>
+        /// <param name="doc"></param>
+        /// <param name="mgr"></param>
         /// <returns></returns>
         private List<string> GetReferences(XmlDocument doc, XmlNamespaceManager mgr)
         {
@@ -110,15 +115,15 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   Gets the content files.
-        ///   Content files are found in:
-        ///   &lt; project &gt; &lt; ItemGroup &gt; &lt; Content &gt;
-        ///   Then:
-        ///   get name from the atribute "Include", 
-        ///   get CopyToOutputDirectory from child element "CopyToOutputDirectory"
+        ///     Gets the content files.
+        ///     Content files are found in:
+        ///     &lt; project &gt; &lt; ItemGroup &gt; &lt; Content &gt;
+        ///     Then:
+        ///     get name from the atribute "Include",
+        ///     get CopyToOutputDirectory from child element "CopyToOutputDirectory"
         /// </summary>
-        /// <param name = "doc"></param>
-        /// <param name = "mgr"></param>
+        /// <param name="doc"></param>
+        /// <param name="mgr"></param>
         /// <returns></returns>
         private List<ProjectContentFile> GetContent(XmlDocument doc, XmlNamespaceManager mgr)
         {
@@ -152,16 +157,16 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   Gets the source files.
-        ///   Source files are found in:
-        ///   &lt; project &gt; &lt; ItemGroup &gt; &lt; Compile &gt;
-        ///   Then:
-        ///   get name from the atribute "Include", 
-        ///   get DependentUpon from child element "DependentUpon",
-        ///   get CopyToOutputDirectory from child element "CopyToOutputDirectory"
+        ///     Gets the source files.
+        ///     Source files are found in:
+        ///     &lt; project &gt; &lt; ItemGroup &gt; &lt; Compile &gt;
+        ///     Then:
+        ///     get name from the atribute "Include",
+        ///     get DependentUpon from child element "DependentUpon",
+        ///     get CopyToOutputDirectory from child element "CopyToOutputDirectory"
         /// </summary>
-        /// <param name = "doc"></param>
-        /// <param name = "mgr"></param>
+        /// <param name="doc"></param>
+        /// <param name="mgr"></param>
         /// <returns></returns>
         private List<ProjectSourceFile> GetSources(XmlDocument doc, XmlNamespaceManager mgr)
         {
@@ -200,16 +205,16 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   Gets the resource files.
-        ///   Resource files are found in:
-        ///   &lt; project &gt; &lt; ItemGroup &gt; &lt; EmbeddedResource &gt;
-        ///   Then:
-        ///   get name from the atribute "Include", 
-        ///   get DependentUpon from child element "DependentUpon",
-        ///   get CopyToOutputDirectory from child element "CopyToOutputDirectory"
+        ///     Gets the resource files.
+        ///     Resource files are found in:
+        ///     &lt; project &gt; &lt; ItemGroup &gt; &lt; EmbeddedResource &gt;
+        ///     Then:
+        ///     get name from the atribute "Include",
+        ///     get DependentUpon from child element "DependentUpon",
+        ///     get CopyToOutputDirectory from child element "CopyToOutputDirectory"
         /// </summary>
-        /// <param name = "doc"></param>
-        /// <param name = "mgr"></param>
+        /// <param name="doc"></param>
+        /// <param name="mgr"></param>
         /// <returns></returns>
         private List<ProjectResourceFile> GetResources(XmlDocument doc, XmlNamespaceManager mgr)
         {
@@ -248,15 +253,15 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   Gets the config files.
-        ///   Config files are found in:
-        ///   &lt; project &gt; &lt; ItemGroup &gt; &lt; None &gt;
-        ///   Then:
-        ///   get name from the atribute "Include", 
-        ///   get CopyToOutputDirectory from child element "CopyToOutputDirectory"
+        ///     Gets the config files.
+        ///     Config files are found in:
+        ///     &lt; project &gt; &lt; ItemGroup &gt; &lt; None &gt;
+        ///     Then:
+        ///     get name from the atribute "Include",
+        ///     get CopyToOutputDirectory from child element "CopyToOutputDirectory"
         /// </summary>
-        /// <param name = "doc"></param>
-        /// <param name = "mgr"></param>
+        /// <param name="doc"></param>
+        /// <param name="mgr"></param>
         /// <returns></returns>
         private List<ProjectConfigFile> GetConfigs(XmlDocument doc, XmlNamespaceManager mgr)
         {
@@ -290,23 +295,23 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   It is used to read the project settings. 
-        ///   It reads general settings (framework version, proect type 
-        ///   winexe/dll/console...,assembly name etc) and the settings
-        ///   for the active configuration (debug/release...) (output folder, 
-        ///   warning level etc).
-        ///   Notes!
-        ///   1. Form the genereal section it gets the Configuration and Platform
-        ///   (aka Debug/Relese, AnyCPU) and the searches for the section having the 
-        ///   condition:
-        ///   '$(Configuration)|$(Platform)' == '[Configuration]|[Platform]'
-        ///   That section is used to get configuraiton-specific settings.
-        ///   2. Some important settings like .Net framework version and file alignment 
-        ///   were added after .Net 2.0. So when these nodes are missing the values "v2.0" 
-        ///   and "512" are used.
+        ///     It is used to read the project settings.
+        ///     It reads general settings (framework version, proect type
+        ///     winexe/dll/console...,assembly name etc) and the settings
+        ///     for the active configuration (debug/release...) (output folder,
+        ///     warning level etc).
+        ///     Notes!
+        ///     1. Form the genereal section it gets the Configuration and Platform
+        ///     (aka Debug/Relese, AnyCPU) and the searches for the section having the
+        ///     condition:
+        ///     '$(Configuration)|$(Platform)' == '[Configuration]|[Platform]'
+        ///     That section is used to get configuraiton-specific settings.
+        ///     2. Some important settings like .Net framework version and file alignment
+        ///     were added after .Net 2.0. So when these nodes are missing the values "v2.0"
+        ///     and "512" are used.
         /// </summary>
-        /// <param name = "doc"></param>
-        /// <param name = "mgr"></param>
+        /// <param name="doc"></param>
+        /// <param name="mgr"></param>
         /// <returns></returns>
         private ProjectSettings GetSettings(XmlDocument doc, XmlNamespaceManager mgr)
         {
@@ -347,20 +352,20 @@ namespace RunTimeCompiler
         }
 
         /// <summary>
-        ///   This method is called to read the specified .csproj file and retrieve all 
-        ///   the data needed for UI or compilation.
-        ///   It loads the project file as an XML and then get the value of the 
-        ///   relevant nodes.
-        ///   Note!
-        ///   It does not get every information availbale in .csproj. It only retrieves 
-        ///   the information considered relevant for UI and compilation.
-        ///   Attention!
-        ///   There may be information in .csproj that are important for the compilation 
-        ///   and I may be unaware of these or I may deliberately choose to ignore them.
-        ///   For example, I decided not to support projects that contain references to 
-        ///   other projects.
+        ///     This method is called to read the specified .csproj file and retrieve all
+        ///     the data needed for UI or compilation.
+        ///     It loads the project file as an XML and then get the value of the
+        ///     relevant nodes.
+        ///     Note!
+        ///     It does not get every information availbale in .csproj. It only retrieves
+        ///     the information considered relevant for UI and compilation.
+        ///     Attention!
+        ///     There may be information in .csproj that are important for the compilation
+        ///     and I may be unaware of these or I may deliberately choose to ignore them.
+        ///     For example, I decided not to support projects that contain references to
+        ///     other projects.
         /// </summary>
-        /// <param name = "filename">The name (and path) of the .csproj file.</param>
+        /// <param name="filename">The name (and path) of the .csproj file.</param>
         /// <returns>The data needed for UI and compilation.</returns>
         public BasicProject ReadProject(string filename)
         {

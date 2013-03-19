@@ -42,10 +42,10 @@ namespace Aurora.Modules.Terrain.FileLoaders
         }
 
         /// <summary>
-        ///   Exports a stream using a System.Drawing exporter.
+        ///     Exports a stream using a System.Drawing exporter.
         /// </summary>
-        /// <param name = "stream">The target stream</param>
-        /// <param name = "map">The terrain channel being saved</param>
+        /// <param name="stream">The target stream</param>
+        /// <param name="map">The terrain channel being saved</param>
         public override void SaveStream(Stream stream, ITerrainChannel map)
         {
             Bitmap colours = CreateGrayscaleBitmapFromMap(map);

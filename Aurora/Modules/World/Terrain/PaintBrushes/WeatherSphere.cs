@@ -32,7 +32,7 @@ using Aurora.Framework;
 namespace Aurora.Modules.Terrain.PaintBrushes
 {
     /// <summary>
-    ///   Thermal Weathering Paint Brush
+    ///     Thermal Weathering Paint Brush
     /// </summary>
     public class WeatherSphere : ITerrainPaintableEffect
     {

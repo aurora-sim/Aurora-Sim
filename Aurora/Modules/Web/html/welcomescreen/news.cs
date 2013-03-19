@@ -12,18 +12,26 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/welcomescreen/news.html",
-                           "html/news_list.html"
-                       };
+                           {
+                               "html/welcomescreen/news.html",
+                               "html/news_list.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
@@ -41,11 +49,11 @@ namespace Aurora.Modules.Web
 
             uint amountPerQuery = 10;
             int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
-            uint count = (uint)connector.GetGenericCount(UUID.Zero, "WebGridNews");
-            int maxPages = (int)(count / amountPerQuery) - 1;
+            uint count = (uint) connector.GetGenericCount(UUID.Zero, "WebGridNews");
+            int maxPages = (int) (count/amountPerQuery) - 1;
 
             if (start == -1)
-                start = (int)(maxPages < 0 ? 0 : maxPages);
+                start = (int) (maxPages < 0 ? 0 : maxPages);
 
             vars.Add("CurrentPage", start);
             vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);

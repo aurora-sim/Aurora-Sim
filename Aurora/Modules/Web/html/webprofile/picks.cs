@@ -14,17 +14,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/webprofile/picks.html"
-                       };
+                           {
+                               "html/webprofile/picks.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -36,20 +44,20 @@ namespace Aurora.Modules.Web
                 string userid = httpRequest.Query["userid"].ToString();
 
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, UUID.Parse(userid));
+                                       GetUserAccount(null, UUID.Parse(userid));
             }
             else if (httpRequest.Query.ContainsKey("name") || username.Contains('.'))
             {
                 string name = httpRequest.Query.ContainsKey("name") ? httpRequest.Query["name"].ToString() : username;
                 name = name.Replace('.', ' ');
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, name);
+                                       GetUserAccount(null, name);
             }
             else
             {
                 username = username.Replace("%20", " ");
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, username);
+                                       GetUserAccount(null, username);
             }
 
             if (account == null)
@@ -59,14 +67,17 @@ namespace Aurora.Modules.Web
             vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
             IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            IUserProfileInfo profile = profileConnector == null ? null : profileConnector.GetUserProfile(account.PrincipalID);
-            IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
+            IUserProfileInfo profile = profileConnector == null
+                                           ? null
+                                           : profileConnector.GetUserProfile(account.PrincipalID);
+            IWebHttpTextureService webhttpService =
+                webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
             if (profile != null)
             {
                 if (profile.Partner != UUID.Zero)
                 {
                     account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                        GetUserAccount(null, profile.Partner);
+                                           GetUserAccount(null, profile.Partner);
                     vars.Add("UserPartner", account.Name);
                 }
                 else
@@ -84,12 +95,12 @@ namespace Aurora.Modules.Web
                     if (webhttpService != null && pick.SnapshotUUID != UUID.Zero)
                         url = webhttpService.GetTextureURL(pick.SnapshotUUID);
                     picks.Add(new Dictionary<string, object>
-                    {
-                        { "PickSnapshotURL", url },
-                        { "PickName", pick.OriginalName },
-                        { "PickSim", pick.SimName },
-                        { "PickLocation", pick.GlobalPos }
-                    });
+                                  {
+                                      {"PickSnapshotURL", url},
+                                      {"PickName", pick.OriginalName},
+                                      {"PickSim", pick.SimName},
+                                      {"PickLocation", pick.GlobalPos}
+                                  });
                 }
                 vars.Add("Picks", picks);
             }

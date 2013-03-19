@@ -273,9 +273,16 @@ namespace Aurora.Modules.Scripting
                     foreach (ScriptControllers sc in controllerData.Select(c => new ScriptControllers
                                                                                     {
                                                                                         itemID = c.ItemID,
-                                                                                        part = m_sp.Scene.GetSceneObjectPart(c.ObjectID),
-                                                                                        ignoreControls = (ScriptControlled) c.IgnoreControls,
-                                                                                        eventControls = (ScriptControlled) c.EventControls
+                                                                                        part =
+                                                                                            m_sp.Scene
+                                                                                                .GetSceneObjectPart(
+                                                                                                    c.ObjectID),
+                                                                                        ignoreControls =
+                                                                                            (ScriptControlled)
+                                                                                            c.IgnoreControls,
+                                                                                        eventControls =
+                                                                                            (ScriptControlled)
+                                                                                            c.EventControls
                                                                                     }).Where(sc => sc.part != null))
                     {
                         scriptedcontrols[sc.itemID] = sc;
@@ -387,9 +394,9 @@ namespace Aurora.Modules.Scripting
                             ScriptControllers scriptControlData = kvp.Value;
 
                             ScriptControlled localHeld = allflags & scriptControlData.eventControls;
-                                // the flags interesting for us
+                            // the flags interesting for us
                             ScriptControlled localLast = LastCommands & scriptControlData.eventControls;
-                                // the activated controls in the last cycle
+                            // the activated controls in the last cycle
                             ScriptControlled localChange = localHeld ^ localLast; // the changed bits
                             if (localHeld != ScriptControlled.CONTROL_ZERO ||
                                 localChange != ScriptControlled.CONTROL_ZERO)

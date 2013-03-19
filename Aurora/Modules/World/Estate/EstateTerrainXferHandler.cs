@@ -68,12 +68,12 @@ namespace Aurora.Modules.Estate
         }
 
         /// <summary>
-        ///   Process transfer data received from the client.
+        ///     Process transfer data received from the client.
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "xferID"></param>
-        /// <param name = "packetID"></param>
-        /// <param name = "data"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="xferID"></param>
+        /// <param name="packetID"></param>
+        /// <param name="data"></param>
         public void XferReceive(IClientAPI remoteClient, ulong xferID, uint packetID, byte[] data)
         {
             if (mXferID == xferID)

@@ -44,7 +44,7 @@ namespace Aurora.Modules.Monitoring.Monitors
         private int successfulLoginsYesterday;
 
         /// <summary>
-        ///   Number of times that a client thread terminated because of an exception
+        ///     Number of times that a client thread terminated because of an exception
         /// </summary>
         public long AbnormalClientThreadTerminations
         {

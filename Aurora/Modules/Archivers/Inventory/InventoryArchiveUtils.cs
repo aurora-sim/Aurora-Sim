@@ -34,7 +34,7 @@ using System.Text;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Utility methods for inventory archiving
+    ///     Utility methods for inventory archiving
     /// </summary>
     public static class InventoryArchiveUtils
     {
@@ -46,25 +46,25 @@ namespace Aurora.Modules.Archivers
         // The character used to separate inventory path components (different folders and items)
         public static readonly char PATH_DELIMITER = '/';
 
-        ///<summary>
-        ///  Find a folder given a PATH_DELIMITER delimited path starting from a user's root folder
-        ///</summary>
-        ///This method does not handle paths that contain multiple delimitors
-        ///
-        ///FIXME: We have no way of distinguishing folders with the same path
-        ///
-        ///FIXME: Delimitors which occur in names themselves are not currently escapable.
-        ///<param name = "inventoryService">
-        ///  Inventory service to query
-        ///</param>
-        ///<param name = "userId">
-        ///  User id to search
-        ///</param>
-        ///<param name = "path">
-        ///  The path to the required folder.
-        ///  It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
-        ///</param>
-        ///<returns>An empty list if the folder is not found, otherwise a list of all folders that match the name</returns>
+        /// <summary>
+        ///     Find a folder given a PATH_DELIMITER delimited path starting from a user's root folder
+        /// </summary>
+        /// This method does not handle paths that contain multiple delimitors
+        /// 
+        /// FIXME: We have no way of distinguishing folders with the same path
+        /// 
+        /// FIXME: Delimitors which occur in names themselves are not currently escapable.
+        /// <param name="inventoryService">
+        ///     Inventory service to query
+        /// </param>
+        /// <param name="userId">
+        ///     User id to search
+        /// </param>
+        /// <param name="path">
+        ///     The path to the required folder.
+        ///     It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
+        /// </param>
+        /// <returns>An empty list if the folder is not found, otherwise a list of all folders that match the name</returns>
         public static List<InventoryFolderBase> FindFolderByPath(
             IInventoryService inventoryService, UUID userId, string path)
         {
@@ -76,25 +76,25 @@ namespace Aurora.Modules.Archivers
             return FindFolderByPath(inventoryService, rootFolder, path);
         }
 
-        ///<summary>
-        ///  Find a folder given a PATH_DELIMITER delimited path starting from this folder
-        ///</summary>
-        ///This method does not handle paths that contain multiple delimitors
-        ///
-        ///FIXME: We have no way of distinguishing folders with the same path.
-        ///
-        ///FIXME: Delimitors which occur in names themselves are not currently escapable.
-        ///<param name = "inventoryService">
-        ///  Inventory service to query
-        ///</param>
-        ///<param name = "startFolder">
-        ///  The folder from which the path starts
-        ///</param>
-        ///<param name = "path">
-        ///  The path to the required folder.
-        ///  It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
-        ///</param>
-        ///<returns>An empty list if the folder is not found, otherwise a list of all folders that match the name</returns>
+        /// <summary>
+        ///     Find a folder given a PATH_DELIMITER delimited path starting from this folder
+        /// </summary>
+        /// This method does not handle paths that contain multiple delimitors
+        /// 
+        /// FIXME: We have no way of distinguishing folders with the same path.
+        /// 
+        /// FIXME: Delimitors which occur in names themselves are not currently escapable.
+        /// <param name="inventoryService">
+        ///     Inventory service to query
+        /// </param>
+        /// <param name="startFolder">
+        ///     The folder from which the path starts
+        /// </param>
+        /// <param name="path">
+        ///     The path to the required folder.
+        ///     It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
+        /// </param>
+        /// <returns>An empty list if the folder is not found, otherwise a list of all folders that match the name</returns>
         public static List<InventoryFolderBase> FindFolderByPath(
             IInventoryService inventoryService, InventoryFolderBase startFolder, string path)
         {
@@ -150,26 +150,23 @@ namespace Aurora.Modules.Archivers
             return foundFolders;
         }
 
-        ///<summary>
-        ///  Find an item given a PATH_DELIMITOR delimited path starting from the user's root folder.
-        ///
-        ///  This method does not handle paths that contain multiple delimitors
-        ///
-        ///  FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
-        ///  XPath like expression
-        ///
-        ///  FIXME: Delimitors which occur in names themselves are not currently escapable.
-        ///</summary>
-        ///<param name = "inventoryService">
-        ///  Inventory service to query
-        ///</param>
-        ///<param name = "userId">
-        ///  The user to search
-        ///</param>
-        ///<param name = "path">
-        ///  The path to the required item.
-        ///</param>
-        ///<returns>null if the item is not found</returns>
+        /// <summary>
+        ///     Find an item given a PATH_DELIMITOR delimited path starting from the user's root folder.
+        ///     This method does not handle paths that contain multiple delimitors
+        ///     FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
+        ///     XPath like expression
+        ///     FIXME: Delimitors which occur in names themselves are not currently escapable.
+        /// </summary>
+        /// <param name="inventoryService">
+        ///     Inventory service to query
+        /// </param>
+        /// <param name="userId">
+        ///     The user to search
+        /// </param>
+        /// <param name="path">
+        ///     The path to the required item.
+        /// </param>
+        /// <returns>null if the item is not found</returns>
         public static InventoryItemBase FindItemByPath(
             IInventoryService inventoryService, UUID userId, string path)
         {
@@ -182,23 +179,20 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///  Find an item given a PATH_DELIMITOR delimited path starting from this folder.
-        ///
-        ///  This method does not handle paths that contain multiple delimitors
-        ///
-        ///  FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
-        ///  XPath like expression
-        ///
-        ///  FIXME: Delimitors which occur in names themselves are not currently escapable.
+        ///     Find an item given a PATH_DELIMITOR delimited path starting from this folder.
+        ///     This method does not handle paths that contain multiple delimitors
+        ///     FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
+        ///     XPath like expression
+        ///     FIXME: Delimitors which occur in names themselves are not currently escapable.
         /// </summary>
-        /// <param name = "inventoryService">
-        ///  Inventory service to query
+        /// <param name="inventoryService">
+        ///     Inventory service to query
         /// </param>
-        /// <param name = "startFolder">
-        ///  The folder from which the path starts
+        /// <param name="startFolder">
+        ///     The folder from which the path starts
         /// </param>
-        /// <param name = "path">
-        ///    The path to the required item.
+        /// <param name="path">
+        ///     The path to the required item.
         /// </param>
         /// <returns>null if the item is not found</returns>
         public static InventoryItemBase FindItemByPath(
@@ -245,13 +239,13 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Split a human escaped path into two components if it contains an unescaped path delimiter, or one component
-        ///   if no delimiter is present
+        ///     Split a human escaped path into two components if it contains an unescaped path delimiter, or one component
+        ///     if no delimiter is present
         /// </summary>
-        /// <param name = "path"></param>
+        /// <param name="path"></param>
         /// <returns>
-        ///   The split path.  We leave the components in their originally unescaped state (though we remove the delimiter
-        ///   which originally split them if applicable).
+        ///     The split path.  We leave the components in their originally unescaped state (though we remove the delimiter
+        ///     which originally split them if applicable).
         /// </returns>
         public static string[] SplitEscapedPath(string path)
         {
@@ -279,9 +273,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Unescapes a human escaped path.  This means that "\\" goes to "\", and "\/" goes to "/"
+        ///     Unescapes a human escaped path.  This means that "\\" goes to "\", and "\/" goes to "/"
         /// </summary>
-        /// <param name = "path"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
         public static string UnescapePath(string path)
         {
@@ -314,11 +308,11 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Escape an archive path.
+        ///     Escape an archive path.
         /// </summary>
         /// This has to be done differently from human paths because we can't leave in any "/" characters (due to
         /// problems if the archive is built from or extracted to a filesystem
-        /// <param name = "path"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
         public static string EscapeArchivePath(string path)
         {
@@ -327,9 +321,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Unescape an archive path.
+        ///     Unescape an archive path.
         /// </summary>
-        /// <param name = "path"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
         public static string UnescapeArchivePath(string path)
         {

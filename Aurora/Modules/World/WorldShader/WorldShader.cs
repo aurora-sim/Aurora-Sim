@@ -206,7 +206,8 @@ namespace Aurora.Modules.WorldShader
 
         private UUID[] GetTextures(Primitive.TextureEntry textureEntry)
         {
-            List<UUID> textures = (from face in textureEntry.FaceTextures where face != null select face.TextureID).ToList();
+            List<UUID> textures =
+                (from face in textureEntry.FaceTextures where face != null select face.TextureID).ToList();
             textures.Add(textureEntry.DefaultTexture.TextureID);
             return textures.ToArray();
         }

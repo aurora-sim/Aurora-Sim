@@ -41,8 +41,10 @@ namespace Aurora.Modules.EntityTransfer
 
         protected bool m_Enabled = false;
         protected IScene m_scene;
-        private readonly Dictionary<IScene, Dictionary<UUID, AgentData>> m_incomingChildAgentData = new Dictionary<IScene, Dictionary<UUID, AgentData>> ();
-        
+
+        private readonly Dictionary<IScene, Dictionary<UUID, AgentData>> m_incomingChildAgentData =
+            new Dictionary<IScene, Dictionary<UUID, AgentData>>();
+
         #endregion
 
         #region INonSharedRegionModule
@@ -71,7 +73,7 @@ namespace Aurora.Modules.EntityTransfer
             }
         }
 
-        public virtual void AddRegion (IScene scene)
+        public virtual void AddRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -84,29 +86,29 @@ namespace Aurora.Modules.EntityTransfer
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        void EventManager_OnNewPresence (IScenePresence sp)
+        private void EventManager_OnNewPresence(IScenePresence sp)
         {
             lock (m_incomingChildAgentData)
             {
                 Dictionary<UUID, AgentData> childAgentUpdates;
-                if (m_incomingChildAgentData.TryGetValue (sp.Scene, out childAgentUpdates))
+                if (m_incomingChildAgentData.TryGetValue(sp.Scene, out childAgentUpdates))
                 {
-                    if (childAgentUpdates.ContainsKey (sp.UUID))
+                    if (childAgentUpdates.ContainsKey(sp.UUID))
                     {
                         //Found info, update the agent then remove it
-                        sp.ChildAgentDataUpdate (childAgentUpdates[sp.UUID]);
-                        childAgentUpdates.Remove (sp.UUID);
+                        sp.ChildAgentDataUpdate(childAgentUpdates[sp.UUID]);
+                        childAgentUpdates.Remove(sp.UUID);
                         m_incomingChildAgentData[sp.Scene] = childAgentUpdates;
                     }
                 }
-            }   
+            }
         }
 
         public virtual void Close()
         {
         }
 
-        public virtual void RemoveRegion (IScene scene)
+        public virtual void RemoveRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -118,28 +120,37 @@ namespace Aurora.Modules.EntityTransfer
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public virtual void RegionLoaded (IScene scene)
+        public virtual void RegionLoaded(IScene scene)
         {
         }
-
 
         #endregion
 
         #region Agent Teleports
 
-        public virtual void Teleport(IScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void Teleport(IScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt,
+                                     uint teleportFlags)
         {
             int x = 0, y = 0;
             Util.UlongToInts(regionHandle, out x, out y);
 
-            GridRegion reg = sp.Scene.GridService.GetRegionByPosition (sp.ControllingClient.AllScopeIDs, x, y);
-            
+            GridRegion reg = sp.Scene.GridService.GetRegionByPosition(sp.ControllingClient.AllScopeIDs, x, y);
+
             if (reg == null)
             {
-                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange(sp.ControllingClient.AllScopeIDs, x - (sp.Scene.GridService.GetRegionViewSize() * sp.Scene.RegionInfo.RegionSizeX),
-                    x + (sp.Scene.GridService.GetRegionViewSize() * sp.Scene.RegionInfo.RegionSizeX),
-                    y - (sp.Scene.GridService.GetRegionViewSize() * sp.Scene.RegionInfo.RegionSizeY),
-                    y + (sp.Scene.GridService.GetRegionViewSize() * sp.Scene.RegionInfo.RegionSizeY));
+                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange(sp.ControllingClient.AllScopeIDs,
+                                                                               x -
+                                                                               (sp.Scene.GridService.GetRegionViewSize()*
+                                                                                sp.Scene.RegionInfo.RegionSizeX),
+                                                                               x +
+                                                                               (sp.Scene.GridService.GetRegionViewSize()*
+                                                                                sp.Scene.RegionInfo.RegionSizeX),
+                                                                               y -
+                                                                               (sp.Scene.GridService.GetRegionViewSize()*
+                                                                                sp.Scene.RegionInfo.RegionSizeY),
+                                                                               y +
+                                                                               (sp.Scene.GridService.GetRegionViewSize()*
+                                                                                sp.Scene.RegionInfo.RegionSizeY));
                 foreach (GridRegion r in regions)
                 {
                     if (r.RegionLocX <= x && r.RegionLocX + r.RegionSizeX > x &&
@@ -155,11 +166,11 @@ namespace Aurora.Modules.EntityTransfer
                 {
                     // TP to a place that doesn't exist (anymore)
                     // Inform the viewer about that
-                    sp.ControllingClient.SendTeleportFailed ("The region you tried to teleport to doesn't exist anymore");
+                    sp.ControllingClient.SendTeleportFailed("The region you tried to teleport to doesn't exist anymore");
 
                     // and set the map-tile to '(Offline)'
                     int regX, regY;
-                    Util.UlongToInts (regionHandle, out regX, out regY);
+                    Util.UlongToInts(regionHandle, out regX, out regY);
 
                     MapBlockData block = new MapBlockData
                                              {
@@ -170,20 +181,21 @@ namespace Aurora.Modules.EntityTransfer
                     // == not there
 
                     List<MapBlockData> blocks = new List<MapBlockData> {block};
-                    sp.ControllingClient.SendMapBlock (blocks, 0);
+                    sp.ControllingClient.SendMapBlock(blocks, 0);
                     return;
                 }
             }
             Teleport(sp, reg, position, lookAt, teleportFlags);
         }
 
-        public virtual void Teleport(IScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void Teleport(IScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt,
+                                     uint teleportFlags)
         {
             sp.ControllingClient.SendTeleportStart(teleportFlags);
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "requesting");
 
             // Reset animations; the viewer does that in teleports.
-            if(sp.Animator != null)
+            if (sp.Animator != null)
                 sp.Animator.ResetAnimations();
 
             try
@@ -198,7 +210,9 @@ namespace Aurora.Modules.EntityTransfer
                         return;
                     }
                     //Now respect things like parcel bans with this
-                    if (!sp.Scene.Permissions.AllowedIncomingTeleport(sp.UUID, position, teleportFlags, out position, out reason))
+                    if (
+                        !sp.Scene.Permissions.AllowedIncomingTeleport(sp.UUID, position, teleportFlags, out position,
+                                                                      out reason))
                     {
                         sp.ControllingClient.SendTeleportFailed(reason);
                         return;
@@ -208,7 +222,8 @@ namespace Aurora.Modules.EntityTransfer
                         position, sp.Scene.RegionInfo.RegionName);
 
                     sp.ControllingClient.SendLocalTeleport(position, lookAt, teleportFlags);
-                    sp.RequestModuleInterface<IScriptControllerModule>().HandleForceReleaseControls(sp.ControllingClient, sp.UUID);
+                    sp.RequestModuleInterface<IScriptControllerModule>()
+                      .HandleForceReleaseControls(sp.ControllingClient, sp.UUID);
                     sp.Teleport(position);
                 }
                 else // Another region possibly in another simulator
@@ -225,12 +240,14 @@ namespace Aurora.Modules.EntityTransfer
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat("[ENTITY TRANSFER MODULE]: Exception on teleport: {0}\n{1}", e.Message, e.StackTrace);
+                MainConsole.Instance.ErrorFormat("[ENTITY TRANSFER MODULE]: Exception on teleport: {0}\n{1}", e.Message,
+                                                 e.StackTrace);
                 sp.ControllingClient.SendTeleportFailed("Internal error");
             }
         }
 
-        public virtual void DoTeleport(IScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void DoTeleport(IScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt,
+                                       uint teleportFlags)
         {
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "sending_dest");
             if (finalDestination == null)
@@ -263,8 +280,9 @@ namespace Aurora.Modules.EntityTransfer
             {
                 //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                 //  messages if they need to be called and deals with the callback
-                syncPoster.PostToServer(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
-                    agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionID));
+                syncPoster.PostToServer(SyncMessageHelper.TeleportAgent((int) sp.DrawDistance,
+                                                                        agentCircuit, agent, teleportFlags,
+                                                                        finalDestination, sp.Scene.RegionInfo.RegionID));
             }
         }
 
@@ -293,7 +311,9 @@ namespace Aurora.Modules.EntityTransfer
             if (appearance != null && appearance.Appearance != null)
                 agentCircuit.Appearance = appearance.Appearance;
             else
-                MainConsole.Instance.Error("[EntityTransferModule]: No appearance is being packed as we could not find the appearance ? " + appearance == null);
+                MainConsole.Instance.Error(
+                    "[EntityTransferModule]: No appearance is being packed as we could not find the appearance ? " +
+                    appearance == null);
             AgentCircuitData oldCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID);
             agentCircuit.ServiceURLs = oldCircuit.ServiceURLs;
             agentCircuit.firstname = oldCircuit.firstname;
@@ -304,7 +324,7 @@ namespace Aurora.Modules.EntityTransfer
 
         public void MakeChildAgent(IScenePresence sp, GridRegion finalDestination, bool isCrossing)
         {
-            if(sp == null)
+            if (sp == null)
                 return;
 
             sp.SetAgentLeaving(finalDestination);
@@ -323,22 +343,23 @@ namespace Aurora.Modules.EntityTransfer
                 sp.SuccessfulCrossingTransit(finalDestination);
         }
 
-        protected void KillEntity (IScene scene, IEntity entity)
+        protected void KillEntity(IScene scene, IEntity entity)
         {
             scene.ForEachClient(delegate(IClientAPI client)
-            {
-                if(client.AgentId != entity.UUID)
-                    client.SendKillObject (scene.RegionInfo.RegionHandle, new[] { entity });
-            });
+                                    {
+                                        if (client.AgentId != entity.UUID)
+                                            client.SendKillObject(scene.RegionInfo.RegionHandle, new[] {entity});
+                                    });
         }
 
-        protected void KillEntities (IScenePresence sp, IEntity[] grp)
+        protected void KillEntities(IScenePresence sp, IEntity[] grp)
         {
             sp.Scene.ForEachClient(delegate(IClientAPI client)
-            {
-                if(sp.UUID != client.AgentId)//Don't send kill requests to us, it'll just look jerky
-                    client.SendKillObject(sp.Scene.RegionInfo.RegionHandle, grp);
-            });
+                                       {
+                                           if (sp.UUID != client.AgentId)
+                                               //Don't send kill requests to us, it'll just look jerky
+                                               client.SendKillObject(sp.Scene.RegionInfo.RegionHandle, grp);
+                                       });
         }
 
         #endregion
@@ -367,7 +388,7 @@ namespace Aurora.Modules.EntityTransfer
         }
 
         /// <summary>
-        /// Tries to teleport agent to other region.
+        ///     Tries to teleport agent to other region.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="regionName"></param>
@@ -377,7 +398,9 @@ namespace Aurora.Modules.EntityTransfer
         public void RequestTeleportLocation(IClientAPI remoteClient, string regionName, Vector3 position,
                                             Vector3 lookat, uint teleportFlags)
         {
-            GridRegion regionInfo = remoteClient.Scene.RequestModuleInterface<IGridService>().GetRegionByName(remoteClient.AllScopeIDs, regionName);
+            GridRegion regionInfo =
+                remoteClient.Scene.RequestModuleInterface<IGridService>()
+                            .GetRegionByName(remoteClient.AllScopeIDs, regionName);
             if (regionInfo == null)
             {
                 // can't find the region: Tell viewer and abort
@@ -389,7 +412,7 @@ namespace Aurora.Modules.EntityTransfer
         }
 
         /// <summary>
-        /// Tries to teleport agent to other region.
+        ///     Tries to teleport agent to other region.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="regionHandle"></param>
@@ -407,7 +430,7 @@ namespace Aurora.Modules.EntityTransfer
         }
 
         /// <summary>
-        /// Tries to teleport agent to other region.
+        ///     Tries to teleport agent to other region.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="reg"></param>
@@ -425,21 +448,24 @@ namespace Aurora.Modules.EntityTransfer
         }
 
         /// <summary>
-        /// Tries to teleport agent to landmark.
+        ///     Tries to teleport agent to landmark.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="position"></param>
         /// <param name="regionID"></param>
-        public void RequestTeleportLandmark (IClientAPI remoteClient, UUID regionID, Vector3 position)
+        public void RequestTeleportLandmark(IClientAPI remoteClient, UUID regionID, Vector3 position)
         {
             GridRegion info = null;
             try
             {
-                info = remoteClient.Scene.RequestModuleInterface<IGridService>().GetRegionByUUID(remoteClient.AllScopeIDs, regionID);
+                info =
+                    remoteClient.Scene.RequestModuleInterface<IGridService>()
+                                .GetRegionByUUID(remoteClient.AllScopeIDs, regionID);
             }
-            catch( Exception ex)
+            catch (Exception ex)
             {
-                MainConsole.Instance.Warn("[EntityTransferModule]: Error finding landmark's region for user " + remoteClient.Name + ", " + ex);
+                MainConsole.Instance.Warn("[EntityTransferModule]: Error finding landmark's region for user " +
+                                          remoteClient.Name + ", " + ex);
             }
             if (info == null)
             {
@@ -448,14 +474,15 @@ namespace Aurora.Modules.EntityTransfer
                 return;
             }
 
-            RequestTeleportLocation(remoteClient, info, position, Vector3.Zero, (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaLandmark));
+            RequestTeleportLocation(remoteClient, info, position, Vector3.Zero,
+                                    (uint) (TeleportFlags.SetLastToTarget | TeleportFlags.ViaLandmark));
         }
 
         #endregion
 
         #region Teleport Home
 
-        public void ClientTeleportHome (UUID id, IClientAPI client)
+        public void ClientTeleportHome(UUID id, IClientAPI client)
         {
             TeleportHome(id, client);
         }
@@ -464,9 +491,10 @@ namespace Aurora.Modules.EntityTransfer
         {
             //MainConsole.Instance.DebugFormat("[ENTITY TRANSFER MODULE]: Request to teleport {0} {1} home", client.FirstName, client.LastName);
 
-            UserInfo uinfo = client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(client.AgentId.ToString());
-            IUserAgentService uas = client.Scene.RequestModuleInterface<IUserAgentService> ();
-                
+            UserInfo uinfo =
+                client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(client.AgentId.ToString());
+            IUserAgentService uas = client.Scene.RequestModuleInterface<IUserAgentService>();
+
             if (uinfo != null)
             {
                 GridRegion regionInfo = client.Scene.GridService.GetRegionByUUID(client.AllScopeIDs, uinfo.HomeRegionID);
@@ -474,33 +502,39 @@ namespace Aurora.Modules.EntityTransfer
                 {
                     Vector3 position = Vector3.Zero, lookAt = Vector3.Zero;
                     if (uas != null)
-                        regionInfo = uas.GetHomeRegion(client.Scene.AuthenticateHandler.GetAgentCircuitData(client.AgentId), out position, out lookAt);
+                        regionInfo =
+                            uas.GetHomeRegion(client.Scene.AuthenticateHandler.GetAgentCircuitData(client.AgentId),
+                                              out position, out lookAt);
                     if (regionInfo == null)
                     {
                         //can't find the Home region: Tell viewer and abort
-                        client.SendTeleportFailed ("Your home region could not be found.");
+                        client.SendTeleportFailed("Your home region could not be found.");
                         return false;
                     }
                 }
                 MainConsole.Instance.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region is {0} {1} ({2}-{3})",
-                    regionInfo.RegionName, regionInfo.RegionID, regionInfo.RegionLocX / Constants.RegionSize, regionInfo.RegionLocY / Constants.RegionSize);
+                                                 regionInfo.RegionName, regionInfo.RegionID,
+                                                 regionInfo.RegionLocX/Constants.RegionSize,
+                                                 regionInfo.RegionLocY/Constants.RegionSize);
 
                 RequestTeleportLocation(
                     client, regionInfo, uinfo.HomePosition, uinfo.HomeLookAt,
-                    (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaHome));
+                    (uint) (TeleportFlags.SetLastToTarget | TeleportFlags.ViaHome));
             }
             else
             {
                 //Default region time...
                 List<GridRegion> Regions = client.Scene.GridService.GetDefaultRegions(client.AllScopeIDs);
-                if(Regions.Count != 0)
+                if (Regions.Count != 0)
                 {
-                    MainConsole.Instance.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region was not found, using {0} {1} ({2}-{3})",
-                        Regions[0].RegionName, Regions[0].RegionID, Regions[0].RegionLocX / Constants.RegionSize, Regions[0].RegionLocY / Constants.RegionSize);
+                    MainConsole.Instance.DebugFormat(
+                        "[ENTITY TRANSFER MODULE]: User's home region was not found, using {0} {1} ({2}-{3})",
+                        Regions[0].RegionName, Regions[0].RegionID, Regions[0].RegionLocX/Constants.RegionSize,
+                        Regions[0].RegionLocY/Constants.RegionSize);
 
                     RequestTeleportLocation(
                         client, Regions[0], new Vector3(128, 128, 25), new Vector3(128, 128, 128),
-                        (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaHome));
+                        (uint) (TeleportFlags.SetLastToTarget | TeleportFlags.ViaHome));
                 }
                 else
                     return false;
@@ -531,9 +565,11 @@ namespace Aurora.Modules.EntityTransfer
             InternalCross(agent, pos, isFlying, crossingRegion);
         }
 
-        public virtual void InternalCross(IScenePresence agent, Vector3 attemptedPos, bool isFlying, GridRegion crossingRegion)
+        public virtual void InternalCross(IScenePresence agent, Vector3 attemptedPos, bool isFlying,
+                                          GridRegion crossingRegion)
         {
-            MainConsole.Instance.DebugFormat("[EntityTransferModule]: Crossing agent {0} to region {1}", agent.Name, crossingRegion.RegionName);
+            MainConsole.Instance.DebugFormat("[EntityTransferModule]: Crossing agent {0} to region {1}", agent.Name,
+                                             crossingRegion.RegionName);
 
             try
             {
@@ -543,10 +579,10 @@ namespace Aurora.Modules.EntityTransfer
                 agent.CopyTo(cAgent);
                 cAgent.Position = attemptedPos;
                 if (isFlying)
-                    cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+                    cAgent.ControlFlags |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
                 AgentCircuitData agentCircuit = BuildCircuitDataForPresence(agent, attemptedPos);
-                agentCircuit.teleportFlags = (uint)TeleportFlags.ViaRegionID;
+                agentCircuit.teleportFlags = (uint) TeleportFlags.ViaRegionID;
 
                 //This does UpdateAgent and closing of child agents
                 //  messages if they need to be called
@@ -555,8 +591,8 @@ namespace Aurora.Modules.EntityTransfer
                 if (syncPoster != null)
                 {
                     syncPoster.PostToServer(SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
-                        agent.Velocity, agentCircuit, cAgent,
-                        agent.Scene.RegionInfo.RegionID));
+                                                                         agent.Velocity, agentCircuit, cAgent,
+                                                                         agent.Scene.RegionInfo.RegionID));
                 }
             }
             catch (Exception ex)
@@ -570,7 +606,7 @@ namespace Aurora.Modules.EntityTransfer
             IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attModule != null)
             {
-                ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (agent.UUID);
+                ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar(agent.UUID);
                 foreach (ISceneEntity grp in attachments)
                 {
                     //Kill in all clients as it will be readded in the other region
@@ -586,14 +622,13 @@ namespace Aurora.Modules.EntityTransfer
         #region Object Transfers
 
         /// <summary>
-        /// Move the given scene object into a new region depending on which region its absolute position has moved
-        /// into.
-        ///
-        /// This method locates the new region handle and offsets the prim position for the new region
+        ///     Move the given scene object into a new region depending on which region its absolute position has moved
+        ///     into.
+        ///     This method locates the new region handle and offsets the prim position for the new region
         /// </summary>
         /// <param name="attemptedPosition">the attempted out of region position of the scene object</param>
         /// <param name="grp">the scene object that we're crossing</param>
-        ///<param name="destination"></param>
+        /// <param name="destination"></param>
         public bool CrossGroupToNewRegion(ISceneEntity grp, Vector3 attemptedPosition, GridRegion destination)
         {
             if (grp == null)
@@ -610,11 +645,12 @@ namespace Aurora.Modules.EntityTransfer
                 {
                     IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                     if (backup != null)
-                        return backup.DeleteSceneObjects(new[] { grp }, true, true);
+                        return backup.DeleteSceneObjects(new[] {grp}, true, true);
                 }
                 catch (Exception)
                 {
-                    MainConsole.Instance.Warn("[DATABASE]: exception when trying to remove the prim that crossed the border.");
+                    MainConsole.Instance.Warn(
+                        "[DATABASE]: exception when trying to remove the prim that crossed the border.");
                 }
                 return false;
             }
@@ -624,14 +660,15 @@ namespace Aurora.Modules.EntityTransfer
                 // We remove the object here
                 try
                 {
-                    List<ISceneEntity> objects = new List<ISceneEntity> { grp };
+                    List<ISceneEntity> objects = new List<ISceneEntity> {grp};
                     ILLClientInventory inventoryModule = grp.Scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventoryModule != null)
                         return inventoryModule.ReturnObjects(objects.ToArray(), UUID.Zero);
                 }
                 catch (Exception)
                 {
-                    MainConsole.Instance.Warn("[SCENE]: exception when trying to return the prim that crossed the border.");
+                    MainConsole.Instance.Warn(
+                        "[SCENE]: exception when trying to return the prim that crossed the border.");
                 }
                 return false;
             }
@@ -641,27 +678,27 @@ namespace Aurora.Modules.EntityTransfer
             if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp, attemptedPosition))
             {
                 grp.OffsetForNewRegion(oldGroupPosition);
-                grp.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                grp.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 return false;
             }
             return true;
         }
 
         /// <summary>
-        /// Move the given scene object into a new region
+        ///     Move the given scene object into a new region
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="grp">Scene Object Group that we're crossing</param>
         /// <param name="attemptedPos"></param>
         /// <returns>
-        /// true if the crossing itself was successful, false on failure
+        ///     true if the crossing itself was successful, false on failure
         /// </returns>
         protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, ISceneEntity grp, Vector3 attemptedPos)
         {
             bool successYN = false;
             if (destination != null)
             {
-                if(grp.SitTargetAvatar.Count != 0)
+                if (grp.SitTargetAvatar.Count != 0)
                 {
                     foreach (UUID avID in grp.SitTargetAvatar)
                     {
@@ -673,15 +710,16 @@ namespace Aurora.Modules.EntityTransfer
                         part.SitTargetAvatar = new List<UUID>();
 
                     IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
-                    if(backup != null)
-                        return backup.DeleteSceneObjects(new[] { grp }, false, false);
-                    return true;//They do all the work adding the prim in the other region
+                    if (backup != null)
+                        return backup.DeleteSceneObjects(new[] {grp}, false, false);
+                    return true; //They do all the work adding the prim in the other region
                 }
 
                 ISceneEntity copiedGroup = grp.Copy(false);
                 copiedGroup.SetAbsolutePosition(true, attemptedPos);
                 if (grp.Scene != null)
-                    successYN = grp.Scene.RequestModuleInterface<ISimulationService>().CreateObject(destination, copiedGroup);
+                    successYN = grp.Scene.RequestModuleInterface<ISimulationService>()
+                                   .CreateObject(destination, copiedGroup);
 
                 if (successYN)
                 {
@@ -690,7 +728,7 @@ namespace Aurora.Modules.EntityTransfer
                     {
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
-                            return backup.DeleteSceneObjects(new[] { grp }, false, true);
+                            return backup.DeleteSceneObjects(new[] {grp}, false, true);
                     }
                     catch (Exception e)
                     {
@@ -714,7 +752,8 @@ namespace Aurora.Modules.EntityTransfer
             }
             else
             {
-                MainConsole.Instance.Error("[ENTITY TRANSFER MODULE]: destination was unexpectedly null in Scene.CrossPrimGroupIntoNewRegion()");
+                MainConsole.Instance.Error(
+                    "[ENTITY TRANSFER MODULE]: destination was unexpectedly null in Scene.CrossPrimGroupIntoNewRegion()");
             }
 
             return successYN;
@@ -725,7 +764,7 @@ namespace Aurora.Modules.EntityTransfer
         #region Incoming Object Transfers
 
         /// <summary>
-        /// Attachment rezzing
+        ///     Attachment rezzing
         /// </summary>
         /// <param name="regionID"></param>
         /// <param name="userID">Agent Unique ID</param>
@@ -752,7 +791,7 @@ namespace Aurora.Modules.EntityTransfer
         }
 
         /// <summary>
-        /// Called when objects or attachments cross the border, or teleport, between regions.
+        ///     Called when objects or attachments cross the border, or teleport, between regions.
         /// </summary>
         /// <param name="regionID"></param>
         /// <param name="sog"></param>
@@ -763,9 +802,9 @@ namespace Aurora.Modules.EntityTransfer
         }
 
         /// <summary>
-        /// Adds a Scene Object group to the Scene.
-        /// Verifies that the creator of the object is not banned from the simulator.
-        /// Checks if the item is an Attachment
+        ///     Adds a Scene Object group to the Scene.
+        ///     Verifies that the creator of the object is not banned from the simulator.
+        ///     Checks if the item is an Attachment
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="sceneObject"></param>
@@ -785,26 +824,26 @@ namespace Aurora.Modules.EntityTransfer
             //if (!sceneObject.IsAttachmentCheckFull()) // Not Attachment
             {
                 if (!scene.Permissions.CanObjectEntry(sceneObject.UUID,
-                        true, sceneObject.AbsolutePosition, sceneObject.OwnerID))
+                                                      true, sceneObject.AbsolutePosition, sceneObject.OwnerID))
                 {
                     // Deny non attachments based on parcel settings
                     //
                     MainConsole.Instance.Info("[EntityTransferModule]: Denied prim crossing " +
-                            "because of parcel settings");
+                                              "because of parcel settings");
 
                     IBackupModule backup = scene.RequestModuleInterface<IBackupModule>();
                     if (backup != null)
-                        backup.DeleteSceneObjects(new[] { sceneObject }, true, true);
+                        backup.DeleteSceneObjects(new[] {sceneObject}, true, true);
 
                     return false;
                 }
 
-                sceneObject.IsInTransit = false;//Reset this now that it's entering here
+                sceneObject.IsInTransit = false; //Reset this now that it's entering here
                 if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
-                    if(sceneObject.RootChild.IsSelected)
+                    if (sceneObject.RootChild.IsSelected)
                         sceneObject.RootChild.CreateSelected = true;
-                    sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                    sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                     return true;
                 }
             }
@@ -827,39 +866,44 @@ namespace Aurora.Modules.EntityTransfer
         #region RegionComms
 
         /// <summary>
-        /// Do the work necessary to initiate a new user connection for a particular scene.
-        /// At the moment, this consists of setting up the caps infrastructure
-        /// The return bool should allow for connections to be refused, but as not all calling paths
-        /// take proper notice of it let, we allowed banned users in still.
+        ///     Do the work necessary to initiate a new user connection for a particular scene.
+        ///     At the moment, this consists of setting up the caps infrastructure
+        ///     The return bool should allow for connections to be refused, but as not all calling paths
+        ///     take proper notice of it let, we allowed banned users in still.
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="agent">CircuitData of the agent who is connecting</param>
         /// <param name="UDPPort"></param>
-        /// <param name="reason">Outputs the reason for the false response on this string,
-        /// If the agent was accepted, this will be the Caps SEED for the region</param>
+        /// <param name="reason">
+        ///     Outputs the reason for the false response on this string,
+        ///     If the agent was accepted, this will be the Caps SEED for the region
+        /// </param>
         /// <param name="teleportFlags"></param>
-        /// <returns>True if the region accepts this agent.  False if it does not.  False will 
-        /// also return a reason.</returns>
-        public bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out int UDPPort, out string reason)
+        /// <returns>
+        ///     True if the region accepts this agent.  False if it does not.  False will
+        ///     also return a reason.
+        /// </returns>
+        public bool NewUserConnection(IScene scene, AgentCircuitData agent, uint teleportFlags, out int UDPPort,
+                                      out string reason)
         {
             reason = String.Empty;
             UDPPort = scene.RegionInfo.InternalEndPoint.Port;
             IScenePresence sp = scene.GetScenePresence(agent.AgentID);
 
             // Don't disable this log message - it's too helpful
-            MainConsole.Instance.TraceFormat (
+            MainConsole.Instance.TraceFormat(
                 "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
                 scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                 agent.circuitcode, teleportFlags);
 
             CacheUserInfo(scene, agent.OtherInformation);
 
-            if (!AuthorizeUser (scene, agent, out reason))
+            if (!AuthorizeUser(scene, agent, out reason))
             {
-                OSDMap map = new OSDMap ();
+                OSDMap map = new OSDMap();
                 map["Reason"] = reason;
                 map["success"] = false;
-                reason = OSDParser.SerializeJsonString (map);
+                reason = OSDParser.SerializeJsonString(map);
                 return false;
             }
 
@@ -868,79 +912,84 @@ namespace Aurora.Modules.EntityTransfer
                 // We have a zombie from a crashed session. 
                 // Or the same user is trying to be root twice here, won't work.
                 // Kill it.
-                MainConsole.Instance.InfoFormat ("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID, scene.RegionInfo.RegionName);
+                MainConsole.Instance.InfoFormat("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID,
+                                                scene.RegionInfo.RegionName);
                 //Tell everyone about it
-                scene.AuroraEventManager.FireGenericEventHandler ("AgentIsAZombie", sp.UUID);
+                scene.AuroraEventManager.FireGenericEventHandler("AgentIsAZombie", sp.UUID);
                 //Send the killing message (DisableSimulator)
-                scene.RemoveAgent (sp, true);
+                scene.RemoveAgent(sp, true);
                 sp = null;
             }
 
-            OSDMap responseMap = new OSDMap ();
-            responseMap["CapsUrls"] = scene.EventManager.TriggerOnRegisterCaps (agent.AgentID);
+            OSDMap responseMap = new OSDMap();
+            responseMap["CapsUrls"] = scene.EventManager.TriggerOnRegisterCaps(agent.AgentID);
             responseMap["OurIPForClient"] = MainServer.Instance.HostName;
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;
 
-            responseMap["Agent"] = agent.PackAgentCircuitData ();
+            responseMap["Agent"] = agent.PackAgentCircuitData();
 
             object[] obj = new object[2];
             obj[0] = responseMap;
             obj[1] = agent;
-            scene.AuroraEventManager.FireGenericEventHandler ("NewUserConnection", obj);
+            scene.AuroraEventManager.FireGenericEventHandler("NewUserConnection", obj);
 
             //Add the circuit at the end
-            scene.AuthenticateHandler.AddNewCircuit (agent.circuitcode, agent);
+            scene.AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
 
-            MainConsole.Instance.InfoFormat (
+            MainConsole.Instance.InfoFormat(
                 "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",
                 scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                 agent.circuitcode);
 
             responseMap["success"] = true;
-            reason = OSDParser.SerializeJsonString (responseMap);
+            reason = OSDParser.SerializeJsonString(responseMap);
             return true;
         }
 
         private void CacheUserInfo(IScene scene, OSDMap map)
         {
-			if(map.ContainsKey("CachedUserInfo"))
-			{
-				//OpenSim does not contain this, only check if it is there
-				// We do this caching so that we don't pull down all of this info as the user is trying to login, which causes major lag, and slows down the sim for people already in the sim
-	            CachedUserInfo cache = new CachedUserInfo();
-	            cache.FromOSD((OSDMap)map["CachedUserInfo"]);
-	            IAgentConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
-	            if (conn != null)
-	                conn.CacheAgent(cache.AgentInfo);
-	            scene.UserAccountService.CacheAccount(cache.UserAccount);
-	
+            if (map.ContainsKey("CachedUserInfo"))
+            {
+                //OpenSim does not contain this, only check if it is there
+                // We do this caching so that we don't pull down all of this info as the user is trying to login, which causes major lag, and slows down the sim for people already in the sim
+                CachedUserInfo cache = new CachedUserInfo();
+                cache.FromOSD((OSDMap) map["CachedUserInfo"]);
+                IAgentConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+                if (conn != null)
+                    conn.CacheAgent(cache.AgentInfo);
+                scene.UserAccountService.CacheAccount(cache.UserAccount);
+
                 scene.EventManager.TriggerOnUserCachedData(cache.UserAccount.PrincipalID, cache);
-			}
+            }
         }
 
         /// <summary>
-        /// Verify if the user can connect to this region.  Checks the banlist and ensures that the region is set for public access
+        ///     Verify if the user can connect to this region.  Checks the banlist and ensures that the region is set for public access
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="agent">The circuit data for the agent</param>
         /// <param name="reason">outputs the reason to this string</param>
-        /// <returns>True if the region accepts this agent.  False if it does not.  False will 
-        /// also return a reason.</returns>
-        protected bool AuthorizeUser (IScene scene, AgentCircuitData agent, out string reason)
+        /// <returns>
+        ///     True if the region accepts this agent.  False if it does not.  False will
+        ///     also return a reason.
+        /// </returns>
+        protected bool AuthorizeUser(IScene scene, AgentCircuitData agent, out string reason)
         {
             reason = String.Empty;
 
-            IAuthorizationService AuthorizationService = scene.RequestModuleInterface<IAuthorizationService> ();
+            IAuthorizationService AuthorizationService = scene.RequestModuleInterface<IAuthorizationService>();
             if (AuthorizationService != null)
             {
                 GridRegion ourRegion = new GridRegion(scene.RegionInfo);
-                if (!AuthorizationService.IsAuthorizedForRegion (ourRegion, agent, !agent.child, out reason))
+                if (!AuthorizationService.IsAuthorizedForRegion(ourRegion, agent, !agent.child, out reason))
                 {
-                    MainConsole.Instance.WarnFormat ("[ConnectionBegin]: Denied access to {0} at {1} because the user does not have access to the region, reason: {2}",
-                                     agent.AgentID, scene.RegionInfo.RegionName, reason);
-                    reason = String.Format ("You do not have access to the region {0}, reason: {1}", scene.RegionInfo.RegionName, reason);
+                    MainConsole.Instance.WarnFormat(
+                        "[ConnectionBegin]: Denied access to {0} at {1} because the user does not have access to the region, reason: {2}",
+                        agent.AgentID, scene.RegionInfo.RegionName, reason);
+                    reason = String.Format("You do not have access to the region {0}, reason: {1}",
+                                           scene.RegionInfo.RegionName, reason);
                     return false;
                 }
             }
@@ -949,14 +998,16 @@ namespace Aurora.Modules.EntityTransfer
         }
 
         /// <summary>
-        /// We've got an update about an agent that sees into this region, 
-        /// send it to ScenePresence for processing  It's the full data.
+        ///     We've got an update about an agent that sees into this region,
+        ///     send it to ScenePresence for processing  It's the full data.
         /// </summary>
         /// <param name="scene"></param>
-        /// <param name="cAgentData">Agent that contains all of the relevant things about an agent.
-        /// Appearance, animations, position, etc.</param>
+        /// <param name="cAgentData">
+        ///     Agent that contains all of the relevant things about an agent.
+        ///     Appearance, animations, position, etc.
+        /// </param>
         /// <returns>true if we handled it.</returns>
-        public virtual bool IncomingChildAgentDataUpdate (IScene scene, AgentData cAgentData)
+        public virtual bool IncomingChildAgentDataUpdate(IScene scene, AgentData cAgentData)
         {
             MainConsole.Instance.DebugFormat(
                 "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, scene.RegionInfo.RegionName);
@@ -968,31 +1019,31 @@ namespace Aurora.Modules.EntityTransfer
             // We have to wait until the viewer contacts this region after receiving EAC.
             // That calls AddNewClient, which finally creates the ScenePresence and then this gets set up
             // So if the client isn't here yet, save the update for them when they get into the region fully
-            IScenePresence SP = scene.GetScenePresence (cAgentData.AgentID);
+            IScenePresence SP = scene.GetScenePresence(cAgentData.AgentID);
             if (SP != null)
-                SP.ChildAgentDataUpdate (cAgentData);
+                SP.ChildAgentDataUpdate(cAgentData);
             else
                 lock (m_incomingChildAgentData)
                 {
-                    if (!m_incomingChildAgentData.ContainsKey (scene))
-                        m_incomingChildAgentData.Add (scene, new Dictionary<UUID, AgentData> ());
+                    if (!m_incomingChildAgentData.ContainsKey(scene))
+                        m_incomingChildAgentData.Add(scene, new Dictionary<UUID, AgentData>());
                     m_incomingChildAgentData[scene][cAgentData.AgentID] = cAgentData;
-                    return false;//The agent doesn't exist
+                    return false; //The agent doesn't exist
                 }
             return true;
         }
 
         /// <summary>
-        /// We've got an update about an agent that sees into this region, 
-        /// send it to ScenePresence for processing  It's only positional data
+        ///     We've got an update about an agent that sees into this region,
+        ///     send it to ScenePresence for processing  It's only positional data
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="cAgentData">AgentPosition that contains agent positional data so we can know what to send</param>
         /// <returns>true if we handled it.</returns>
-        public virtual bool IncomingChildAgentDataUpdate (IScene scene, AgentPosition cAgentData)
+        public virtual bool IncomingChildAgentDataUpdate(IScene scene, AgentPosition cAgentData)
         {
             //MainConsole.Instance.Debug(" XXX Scene IncomingChildAgentDataUpdate POSITION in " + RegionInfo.RegionName);
-            IScenePresence presence = scene.GetScenePresence (cAgentData.AgentID);
+            IScenePresence presence = scene.GetScenePresence(cAgentData.AgentID);
             if (presence != null)
             {
                 // I can't imagine *yet* why we would get an update if the agent is a root agent..
@@ -1002,12 +1053,12 @@ namespace Aurora.Modules.EntityTransfer
                     uint rRegionX = 0;
                     uint rRegionY = 0;
                     //In meters
-                    Utils.LongToUInts (cAgentData.RegionHandle, out rRegionX, out rRegionY);
+                    Utils.LongToUInts(cAgentData.RegionHandle, out rRegionX, out rRegionY);
                     //In meters
                     int tRegionX = scene.RegionInfo.RegionLocX;
                     int tRegionY = scene.RegionInfo.RegionLocY;
                     //Send Data to ScenePresence
-                    presence.ChildAgentDataUpdate (cAgentData, tRegionX, tRegionY, (int)rRegionX, (int)rRegionY);
+                    presence.ChildAgentDataUpdate(cAgentData, tRegionX, tRegionY, (int) rRegionX, (int) rRegionY);
                 }
 
                 return true;
@@ -1016,15 +1067,16 @@ namespace Aurora.Modules.EntityTransfer
             return false;
         }
 
-        public virtual bool IncomingRetrieveRootAgent(IScene scene, UUID id, bool agentIsLeaving, out AgentData agent, out AgentCircuitData circuitData)
+        public virtual bool IncomingRetrieveRootAgent(IScene scene, UUID id, bool agentIsLeaving, out AgentData agent,
+                                                      out AgentCircuitData circuitData)
         {
             agent = null;
             circuitData = null;
-            IScenePresence sp = scene.GetScenePresence (id);
+            IScenePresence sp = scene.GetScenePresence(id);
             if ((sp != null) && (!sp.IsChildAgent))
             {
-                AgentData data = new AgentData ();
-                sp.CopyTo (data);
+                AgentData data = new AgentData();
+                sp.CopyTo(data);
                 agent = data;
                 circuitData = BuildCircuitDataForPresence(sp, sp.AbsolutePosition);
                 //if (agentIsLeaving)
@@ -1036,17 +1088,17 @@ namespace Aurora.Modules.EntityTransfer
         }
 
         /// <summary>
-        /// Tell a single agent to disconnect from the region.
+        ///     Tell a single agent to disconnect from the region.
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="agentID"></param>
-        public bool IncomingCloseAgent (IScene scene, UUID agentID)
+        public bool IncomingCloseAgent(IScene scene, UUID agentID)
         {
             //MainConsole.Instance.DebugFormat("[SCENE]: Processing incoming close agent for {0}", agentID);
 
-            IScenePresence presence = scene.GetScenePresence (agentID);
+            IScenePresence presence = scene.GetScenePresence(agentID);
             if (presence != null)
-                return scene.RemoveAgent (presence, true);
+                return scene.RemoveAgent(presence, true);
             return false;
         }
 

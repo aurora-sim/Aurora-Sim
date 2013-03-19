@@ -32,8 +32,8 @@ using System.Text;
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Resolves OpenSim Profile Anchors (OSPA).  An OSPA is a string used to provide information for 
-    ///   identifying user profiles or supplying a simple name if no profile is available.
+    ///     Resolves OpenSim Profile Anchors (OSPA).  An OSPA is a string used to provide information for
+    ///     identifying user profiles or supplying a simple name if no profile is available.
     /// </summary>
     public class OspResolver
     {
@@ -45,10 +45,10 @@ namespace Aurora.Modules.Archivers
         public static readonly char[] OSPA_TUPLE_SEPARATOR_ARRAY = OSPA_TUPLE_SEPARATOR.ToCharArray();
 
         /// <summary>
-        ///   Make an OSPA given a user UUID
+        ///     Make an OSPA given a user UUID
         /// </summary>
-        /// <param name = "userId"></param>
-        /// <param name = "userService"></param>
+        /// <param name="userId"></param>
+        /// <param name="userService"></param>
         /// <returns>The OSPA.  Null if a user with the given UUID could not be found.</returns>
         public static string MakeOspa(UUID userId, IUserAccountService userService)
         {
@@ -60,10 +60,10 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Make an OSPA given a user name
+        ///     Make an OSPA given a user name
         /// </summary>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
         /// <returns></returns>
         public static string MakeOspa(string firstName, string lastName)
         {
@@ -72,15 +72,15 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Resolve an osp string into the most suitable internal OpenSim identifier.
+        ///     Resolve an osp string into the most suitable internal OpenSim identifier.
         /// </summary>
         /// In some cases this will be a UUID if a suitable profile exists on the system.  In other cases, this may
         /// just return the same identifier after creating a temporary profile.
-        /// <param name = "ospa"></param>
-        /// <param name = "userService"></param>
+        /// <param name="ospa"></param>
+        /// <param name="userService"></param>
         /// <returns>
-        ///   A suitable UUID for use in Second Life client communication.  If the string was not a valid ospa, then UUID.Zero
-        ///   is returned.
+        ///     A suitable UUID for use in Second Life client communication.  If the string was not a valid ospa, then UUID.Zero
+        ///     is returned.
         /// </returns>
         public static UUID ResolveOspa(string ospa, IUserAccountService userService)
         {
@@ -98,7 +98,8 @@ namespace Aurora.Modules.Archivers
 
                 if (tupleSeparatorIndex < 0)
                 {
-                    MainConsole.Instance.WarnFormat("[OSP RESOLVER]: Ignoring non-tuple component {0} in OSPA {1}", tuple, ospa);
+                    MainConsole.Instance.WarnFormat("[OSP RESOLVER]: Ignoring non-tuple component {0} in OSPA {1}",
+                                                    tuple, ospa);
                     continue;
                 }
 
@@ -113,9 +114,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Hash a profile name into a UUID
+        ///     Hash a profile name into a UUID
         /// </summary>
-        /// <param name = "name"></param>
+        /// <param name="name"></param>
         /// <returns></returns>
         public static UUID HashName(string name)
         {
@@ -123,13 +124,13 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Resolve an OSPI name by querying existing persistent user profiles.  If there is no persistent user profile
-        ///   then a temporary user profile is inserted in the cache.
+        ///     Resolve an OSPI name by querying existing persistent user profiles.  If there is no persistent user profile
+        ///     then a temporary user profile is inserted in the cache.
         /// </summary>
-        /// <param name = "name"></param>
-        /// <param name = "userService"></param>
+        /// <param name="name"></param>
+        /// <param name="userService"></param>
         /// <returns>
-        ///   An OpenSim internal identifier for the name given.  Returns null if the name was not valid
+        ///     An OpenSim internal identifier for the name given.  Returns null if the name was not valid
         /// </returns>
         protected static UUID ResolveOspaName(string name, IUserAccountService userService)
         {

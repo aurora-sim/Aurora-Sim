@@ -34,10 +34,10 @@ using System.IO;
 namespace Aurora.Modules.Terrain.FileLoaders
 {
     /// <summary>
-    ///   A virtual class designed to have methods overloaded,
-    ///   this class provides an interface for a generic image
-    ///   saving and loading mechanism, but does not specify the
-    ///   format. It should not be insubstantiated directly.
+    ///     A virtual class designed to have methods overloaded,
+    ///     this class provides an interface for a generic image
+    ///     saving and loading mechanism, but does not specify the
+    ///     format. It should not be insubstantiated directly.
     /// </summary>
     public class GenericSystemDrawing : ITerrainLoader
     {
@@ -49,13 +49,13 @@ namespace Aurora.Modules.Terrain.FileLoaders
         }
 
         /// <summary>
-        ///   Loads a file from a specified filename on the disk,
-        ///   parses the image using the System.Drawing parsers
-        ///   then returns a terrain channel. Values are
-        ///   returned based on HSL brightness between 0m and 128m
+        ///     Loads a file from a specified filename on the disk,
+        ///     parses the image using the System.Drawing parsers
+        ///     then returns a terrain channel. Values are
+        ///     returned based on HSL brightness between 0m and 128m
         /// </summary>
-        /// <param name = "filename">The target image to load</param>
-        /// <param name = "scene"></param>
+        /// <param name="filename">The target image to load</param>
+        /// <param name="scene"></param>
         /// <returns>A terrain channel generated from the image.</returns>
         public virtual ITerrainChannel LoadFile(string filename, IScene scene)
         {
@@ -108,10 +108,10 @@ namespace Aurora.Modules.Terrain.FileLoaders
         }
 
         /// <summary>
-        ///   Exports a file to a image on the disk using a System.Drawing exporter.
+        ///     Exports a file to a image on the disk using a System.Drawing exporter.
         /// </summary>
-        /// <param name = "filename">The target filename</param>
-        /// <param name = "map">The terrain channel being saved</param>
+        /// <param name="filename">The target filename</param>
+        /// <param name="map">The terrain channel being saved</param>
         public virtual void SaveFile(string filename, ITerrainChannel map)
         {
             Bitmap colours = CreateGrayscaleBitmapFromMap(map);
@@ -120,10 +120,10 @@ namespace Aurora.Modules.Terrain.FileLoaders
         }
 
         /// <summary>
-        ///   Exports a stream using a System.Drawing exporter.
+        ///     Exports a stream using a System.Drawing exporter.
         /// </summary>
-        /// <param name = "stream">The target stream</param>
-        /// <param name = "map">The terrain channel being saved</param>
+        /// <param name="stream">The target stream</param>
+        /// <param name="map">The terrain channel being saved</param>
         public virtual void SaveStream(Stream stream, ITerrainChannel map)
         {
             Bitmap colours = CreateGrayscaleBitmapFromMap(map);
@@ -156,10 +156,10 @@ namespace Aurora.Modules.Terrain.FileLoaders
         }
 
         /// <summary>
-        ///   Protected method, generates a grayscale bitmap
-        ///   image from a specified terrain channel.
+        ///     Protected method, generates a grayscale bitmap
+        ///     image from a specified terrain channel.
         /// </summary>
-        /// <param name = "map">The terrain channel to export to bitmap</param>
+        /// <param name="map">The terrain channel to export to bitmap</param>
         /// <returns>A System.Drawing.Bitmap containing a grayscale image</returns>
         protected static Bitmap CreateGrayscaleBitmapFromMap(ITerrainChannel map)
         {
@@ -191,10 +191,10 @@ namespace Aurora.Modules.Terrain.FileLoaders
         }
 
         /// <summary>
-        ///   Protected method, generates a coloured bitmap
-        ///   image from a specified terrain channel.
+        ///     Protected method, generates a coloured bitmap
+        ///     image from a specified terrain channel.
         /// </summary>
-        /// <param name = "map">The terrain channel to export to bitmap</param>
+        /// <param name="map">The terrain channel to export to bitmap</param>
         /// <returns>A System.Drawing.Bitmap containing a coloured image</returns>
         protected static Bitmap CreateBitmapFromMap(ITerrainChannel map)
         {

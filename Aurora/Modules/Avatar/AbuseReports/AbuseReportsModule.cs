@@ -71,13 +71,15 @@ namespace Aurora.Modules.AbuseReports
         public void ThreadProcARGUI()
         {
             Culture.SetCurrentCulture();
-            Application.Run(new Abuse(m_registry.RequestModuleInterface<IAssetService>(), m_registry.RequestModuleInterface<IJ2KDecoder>()));
+            Application.Run(new Abuse(m_registry.RequestModuleInterface<IAssetService>(),
+                                      m_registry.RequestModuleInterface<IJ2KDecoder>()));
         }
 
         #endregion
     }
+
     /// <summary>
-    ///   Enables the saving of abuse reports to the database
+    ///     Enables the saving of abuse reports to the database
     /// </summary>
     public class AbuseReportsModule : INonSharedRegionModule
     {
@@ -153,20 +155,20 @@ namespace Aurora.Modules.AbuseReports
         }
 
         /// <summary>
-        ///   This deals with saving the report into the database.
+        ///     This deals with saving the report into the database.
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "regionName"></param>
-        /// <param name = "abuserID"></param>
-        /// <param name = "catagory"></param>
-        /// <param name = "checkflags"></param>
-        /// <param name = "details"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "position"></param>
-        /// <param name = "reportType"></param>
-        /// <param name = "screenshotID"></param>
-        /// <param name = "summery"></param>
-        /// <param name = "reporter"></param>
+        /// <param name="client"></param>
+        /// <param name="regionName"></param>
+        /// <param name="abuserID"></param>
+        /// <param name="catagory"></param>
+        /// <param name="checkflags"></param>
+        /// <param name="details"></param>
+        /// <param name="objectID"></param>
+        /// <param name="position"></param>
+        /// <param name="reportType"></param>
+        /// <param name="screenshotID"></param>
+        /// <param name="summery"></param>
+        /// <param name="reporter"></param>
         private void UserReport(IClientAPI client, string regionName, UUID abuserID, byte catagory, byte checkflags,
                                 string details, UUID objectID, Vector3 position, byte reportType, UUID screenshotID,
                                 string summery, UUID reporter)
@@ -238,7 +240,8 @@ namespace Aurora.Modules.AbuseReports
                                                                               report.AbuseLocation + " in your region " +
                                                                               report.RegionName +
                                                                               ". Summary: " + report.AbuseSummary +
-                                                                              ". Details: " + report.AbuseDetails + ".", client.Scene);
+                                                                              ". Details: " + report.AbuseDetails + ".",
+                                    client.Scene);
             }
             //Tell the DB about it
             IAbuseReports conn = m_Scene.RequestModuleInterface<IAbuseReports>();

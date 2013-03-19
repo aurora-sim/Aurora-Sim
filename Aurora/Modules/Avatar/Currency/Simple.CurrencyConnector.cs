@@ -15,7 +15,8 @@ namespace Simple.Currency
         bool UserCurrencyUpdate(UserCurrency agent);
         GroupBalance GetGroupBalance(UUID groupID);
 
-        bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount, string description, TransactionType type, UUID transactionID);
+        bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount,
+                                  string description, TransactionType type, UUID transactionID);
     }
 
     public class SimpleCurrencyConnector : ConnectorBase, ISimpleCurrencyConnector
@@ -37,7 +38,8 @@ namespace Simple.Currency
             get { return "ISimpleCurrencyConnector"; }
         }
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry,
+                               string defaultConnectionString)
         {
             m_gd = GenericData;
             m_registry = registry;
@@ -49,7 +51,7 @@ namespace Simple.Currency
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            if(GenericData != null)
+            if (GenericData != null)
                 GenericData.ConnectToDatabase(defaultConnectionString, "SimpleCurrency", true);
             DataManager.RegisterPlugin(Name, this);
 
@@ -60,11 +62,13 @@ namespace Simple.Currency
             if (!m_doRemoteCalls)
             {
                 MainConsole.Instance.Commands.AddCommand("money add", "money add", "Adds money to a user's account.",
-                    AddMoney);
-                MainConsole.Instance.Commands.AddCommand("money set", "money set", "Sets the amount of money a user has.",
-                    SetMoney);
-                MainConsole.Instance.Commands.AddCommand("money get", "money get", "Gets the amount of money a user has.",
-                    GetMoney);
+                                                         AddMoney);
+                MainConsole.Instance.Commands.AddCommand("money set", "money set",
+                                                         "Sets the amount of money a user has.",
+                                                         SetMoney);
+                MainConsole.Instance.Commands.AddCommand("money get", "money get",
+                                                         "Gets the amount of money a user has.",
+                                                         GetMoney);
             }
         }
 
@@ -77,7 +81,7 @@ namespace Simple.Currency
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI");
             if (remoteValue != null || m_doRemoteOnly)
-                return (SimpleCurrencyConfig)remoteValue;
+                return (SimpleCurrencyConfig) remoteValue;
 
             return m_config;
         }
@@ -87,14 +91,14 @@ namespace Simple.Currency
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", agentId);
             if (remoteValue != null || m_doRemoteOnly)
-                return (UserCurrency)remoteValue;
+                return (UserCurrency) remoteValue;
 
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["PrincipalID"] = agentId;
-            List<string> query = m_gd.Query(new string[] { "*" }, _REALM, new QueryFilter()
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> query = m_gd.Query(new string[] {"*"}, _REALM, new QueryFilter()
+                                                                            {
+                                                                                andFilters = where
+                                                                            }, null, null, null);
 
             UserCurrency currency = new UserCurrency();
             if (query.Count == 0)
@@ -111,7 +115,7 @@ namespace Simple.Currency
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", agent);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return (bool) remoteValue;
 
             UserCurrencyUpdate(agent, false);
             return true;
@@ -122,24 +126,24 @@ namespace Simple.Currency
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", groupID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (GroupBalance)remoteValue;
+                return (GroupBalance) remoteValue;
 
             GroupBalance gb = new GroupBalance()
-            {
-                GroupFee = 0,
-                LandFee = 0,
-                ObjectFee = 0,
-                ParcelDirectoryFee = 0,
-                TotalTierCredits = 0,
-                TotalTierDebit = 0,
-                StartingDate = DateTime.UtcNow
-            };
+                                  {
+                                      GroupFee = 0,
+                                      LandFee = 0,
+                                      ObjectFee = 0,
+                                      ParcelDirectoryFee = 0,
+                                      TotalTierCredits = 0,
+                                      TotalTierDebit = 0,
+                                      StartingDate = DateTime.UtcNow
+                                  };
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["PrincipalID"] = groupID;
-            List<string> queryResults = m_gd.Query(new string[] { "*" }, _REALM, new QueryFilter()
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> queryResults = m_gd.Query(new string[] {"*"}, _REALM, new QueryFilter()
+                                                                                   {
+                                                                                       andFilters = where
+                                                                                   }, null, null, null);
 
             if (queryResults.Count == 0)
             {
@@ -152,11 +156,13 @@ namespace Simple.Currency
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount, string description, TransactionType type, UUID transactionID)
+        public bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount,
+                                         string description, TransactionType type, UUID transactionID)
         {
-            object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, fromObjectID, amount, description, type, transactionID);
+            object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, fromObjectID, amount,
+                                               description, type, transactionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return (bool) remoteValue;
 
             UserCurrency toCurrency = GetUserCurrency(toID);
             UserCurrency fromCurrency = fromID == UUID.Zero ? null : GetUserCurrency(fromID);
@@ -165,8 +171,8 @@ namespace Simple.Currency
             if (fromCurrency != null)
             {
                 //Check to see whether they have enough money
-                if ((int)fromCurrency.Amount - (int)amount < 0)
-                    return false;//Not enough money
+                if ((int) fromCurrency.Amount - (int) amount < 0)
+                    return false; //Not enough money
                 fromCurrency.Amount -= amount;
 
                 UserCurrencyUpdate(fromCurrency, true);
@@ -186,8 +192,10 @@ namespace Simple.Currency
             {
                 UserInfo toUserInfo = m_userInfoService.GetUserInfo(toID.ToString());
                 UserInfo fromUserInfo = fromID == UUID.Zero ? null : m_userInfoService.GetUserInfo(fromID.ToString());
-                UserAccount toAccount = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, toID);
-                UserAccount fromAccount = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, fromID);
+                UserAccount toAccount = m_registry.RequestModuleInterface<IUserAccountService>()
+                                                  .GetUserAccount(null, toID);
+                UserAccount fromAccount = m_registry.RequestModuleInterface<IUserAccountService>()
+                                                    .GetUserAccount(null, fromID);
                 if (toUserInfo != null && toUserInfo.IsOnline)
                 {
                     OSDMap map = new OSDMap();
@@ -195,7 +203,8 @@ namespace Simple.Currency
                     map["AgentID"] = toID;
                     map["Amount"] = toCurrency.Amount;
                     if (fromAccount != null)
-                        map["Message"] = fromAccount.Name + " paid you $" + amount + (description == "" ? "" : ": " + description);
+                        map["Message"] = fromAccount.Name + " paid you $" + amount +
+                                         (description == "" ? "" : ": " + description);
                     else
                         map["Message"] = "";
                     map["TransactionID"] = transactionID;
@@ -224,35 +233,49 @@ namespace Simple.Currency
             if (full)
                 m_gd.Update(_REALM,
                             new Dictionary<string, object>
-                            {
-                                {"LandInUse", agent.LandInUse}, 
-                                {"Tier", agent.Tier},
-                                {"IsGroup", agent.IsGroup},
-                                {"Amount", agent.Amount},
-                                {"StipendsBalance", agent.StipendsBalance}
-                            }, null,
-                            new QueryFilter() { andFilters = new Dictionary<string, object> { { "PrincipalID", agent.PrincipalID } } }
+                                {
+                                    {"LandInUse", agent.LandInUse},
+                                    {"Tier", agent.Tier},
+                                    {"IsGroup", agent.IsGroup},
+                                    {"Amount", agent.Amount},
+                                    {"StipendsBalance", agent.StipendsBalance}
+                                }, null,
+                            new QueryFilter()
+                                {
+                                    andFilters =
+                                        new Dictionary<string, object>
+                                            {
+                                                {"PrincipalID", agent.PrincipalID}
+                                            }
+                                }
                             , null, null);
             else
                 m_gd.Update(_REALM,
                             new Dictionary<string, object>
-                            {
-                                {"LandInUse", agent.LandInUse}, 
-                                {"Tier", agent.Tier},
-                                {"IsGroup", agent.IsGroup}
-                            }, null,
-                            new QueryFilter() { andFilters = new Dictionary<string, object> { { "PrincipalID", agent.PrincipalID } } }
+                                {
+                                    {"LandInUse", agent.LandInUse},
+                                    {"Tier", agent.Tier},
+                                    {"IsGroup", agent.IsGroup}
+                                }, null,
+                            new QueryFilter()
+                                {
+                                    andFilters =
+                                        new Dictionary<string, object>
+                                            {
+                                                {"PrincipalID", agent.PrincipalID}
+                                            }
+                                }
                             , null, null);
         }
 
         private void UserCurrencyCreate(UUID agentId)
         {
-            m_gd.Insert(_REALM, new object[] { agentId.ToString(), 0, 0, 0, 0, 0 });
+            m_gd.Insert(_REALM, new object[] {agentId.ToString(), 0, 0, 0, 0, 0});
         }
 
         private void GroupCurrencyCreate(UUID groupID)
         {
-            m_gd.Insert(_REALM, new object[] { groupID.ToString(), 0, 0, 0, 1, 0 });
+            m_gd.Insert(_REALM, new object[] {groupID.ToString(), 0, 0, 0, 1, 0});
         }
 
         #endregion
@@ -266,7 +289,9 @@ namespace Simple.Currency
             while (!uint.TryParse(MainConsole.Instance.Prompt("Amount: ", "0"), out amount))
                 MainConsole.Instance.Info("Bad input, must be a number > 0");
 
-            UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(new List<UUID> { UUID.Zero }, name);
+            UserAccount account =
+                m_registry.RequestModuleInterface<IUserAccountService>()
+                          .GetUserAccount(new List<UUID> {UUID.Zero}, name);
             if (account == null)
             {
                 MainConsole.Instance.Info("No account found");
@@ -274,13 +299,16 @@ namespace Simple.Currency
             }
             var currency = GetUserCurrency(account.PrincipalID);
             m_gd.Update(_REALM,
-                        new Dictionary<string, object> { 
-                        {
-                            "Amount", currency.Amount + amount }
-                        }, null, new QueryFilter()
-                        {
-                            andFilters = new Dictionary<string, object> { { "PrincipalID", account.PrincipalID } }
-                        }, null, null);
+                        new Dictionary<string, object>
+                            {
+                                {
+                                    "Amount", currency.Amount + amount
+                                }
+                            }, null, new QueryFilter()
+                                         {
+                                             andFilters =
+                                                 new Dictionary<string, object> {{"PrincipalID", account.PrincipalID}}
+                                         }, null, null);
             MainConsole.Instance.Info(account.Name + " now has $" + (currency.Amount + amount));
         }
 
@@ -291,7 +319,9 @@ namespace Simple.Currency
             while (!uint.TryParse(MainConsole.Instance.Prompt("Set User's Money Amount: ", "0"), out amount))
                 MainConsole.Instance.Info("Bad input, must be a number > 0");
 
-            UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(new List<UUID> { UUID.Zero }, name);
+            UserAccount account =
+                m_registry.RequestModuleInterface<IUserAccountService>()
+                          .GetUserAccount(new List<UUID> {UUID.Zero}, name);
             if (account == null)
             {
                 MainConsole.Instance.Info("No account found");
@@ -299,13 +329,16 @@ namespace Simple.Currency
             }
             var currency = GetUserCurrency(account.PrincipalID);
             m_gd.Update(_REALM,
-                        new Dictionary<string, object> { 
-                        {
-                            "Amount", amount }
-                        }, null, new QueryFilter()
-                        {
-                            andFilters = new Dictionary<string, object> { { "PrincipalID", account.PrincipalID } }
-                        }, null, null);
+                        new Dictionary<string, object>
+                            {
+                                {
+                                    "Amount", amount
+                                }
+                            }, null, new QueryFilter()
+                                         {
+                                             andFilters =
+                                                 new Dictionary<string, object> {{"PrincipalID", account.PrincipalID}}
+                                         }, null, null);
             MainConsole.Instance.Info(account.Name + " now has $" + amount);
         }
 
@@ -316,7 +349,9 @@ namespace Simple.Currency
             while (!uint.TryParse(MainConsole.Instance.Prompt("Set User's Money Amount: ", "0"), out amount))
                 MainConsole.Instance.Info("Bad input, must be a number > 0");
 
-            UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(new List<UUID> { UUID.Zero }, name);
+            UserAccount account =
+                m_registry.RequestModuleInterface<IUserAccountService>()
+                          .GetUserAccount(new List<UUID> {UUID.Zero}, name);
             if (account == null)
             {
                 MainConsole.Instance.Info("No account found");
