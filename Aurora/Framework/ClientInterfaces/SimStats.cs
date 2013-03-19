@@ -28,7 +28,7 @@
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     /// <summary>
     ///     Enapsulate statistics for a simulator/scene.

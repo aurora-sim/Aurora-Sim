@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;

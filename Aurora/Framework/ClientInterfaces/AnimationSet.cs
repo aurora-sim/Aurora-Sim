@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     [Serializable]
     public class AnimationSet

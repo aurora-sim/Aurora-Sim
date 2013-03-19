@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Physics;
 using Aurora.Framework.SceneInfo;

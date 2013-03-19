@@ -26,6 +26,7 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.ClientInterfaces;
 using OpenMetaverse;
 
 namespace Aurora.Framework.Modules

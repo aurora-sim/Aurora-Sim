@@ -1,4 +1,5 @@
-﻿using OpenMetaverse;
+﻿using Aurora.Framework.ClientInterfaces;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework.Services

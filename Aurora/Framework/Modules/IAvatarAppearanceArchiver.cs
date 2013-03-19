@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.ClientInterfaces;
+
 namespace Aurora.Framework.Modules
 {
     public interface IAvatarAppearanceArchiver

@@ -32,7 +32,7 @@ using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     [Serializable]
     public class GridInstantMessage : IDataTransferable

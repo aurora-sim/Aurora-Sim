@@ -1,4 +1,5 @@
-﻿using Aurora.Framework.Physics;
+﻿using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Physics;
 using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 

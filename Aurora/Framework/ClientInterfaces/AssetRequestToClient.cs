@@ -28,7 +28,7 @@
 using Aurora.Framework.Services.ClassHelpers.Assets;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     /// <summary>
     ///     This class was created to refactor OutPacket out of AssetCache

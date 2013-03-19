@@ -28,7 +28,7 @@
 using System;
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     /// <value>
     ///     Different user set names that come in from the configuration file.

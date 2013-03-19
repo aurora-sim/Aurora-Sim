@@ -30,7 +30,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class EstateBan

@@ -1,4 +1,5 @@
-﻿using Aurora.Framework.PresenceInfo;
+﻿using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.PresenceInfo;
 
 namespace Aurora.Framework.Modules
 {
