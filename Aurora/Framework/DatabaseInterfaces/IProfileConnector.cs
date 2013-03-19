@@ -26,6 +26,8 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using OpenMetaverse;
 
 namespace Aurora.Framework

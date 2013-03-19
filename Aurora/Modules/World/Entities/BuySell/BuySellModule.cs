@@ -28,6 +28,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;

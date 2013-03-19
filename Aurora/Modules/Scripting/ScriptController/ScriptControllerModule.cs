@@ -31,7 +31,7 @@ using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Scripting
 {

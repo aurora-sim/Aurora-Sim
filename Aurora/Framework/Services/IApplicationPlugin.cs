@@ -30,7 +30,7 @@ using System.Data;
 using System.Linq;
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     Aurora-Sim Application Plugin framework interface
@@ -81,10 +81,7 @@ namespace Aurora.Framework
         /// <param name="m_config"></param>
         void ReloadConfiguration(IConfigSource m_config);
     }
-}
 
-namespace Aurora.Framework
-{
     public interface IGenericData
     {
         #region UPDATE

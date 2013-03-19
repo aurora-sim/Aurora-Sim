@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Services.ClassHelpers.Assets;
+
 namespace Aurora.Framework
 {
     public interface IImprovedAssetCache

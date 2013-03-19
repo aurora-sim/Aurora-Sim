@@ -32,7 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public interface IGridService
     {
@@ -396,13 +396,13 @@ namespace Aurora.Framework
 
         public bool IsOnline
         {
-            get { return (Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) == 1; }
+            get { return (Flags & (int) RegionFlags.RegionOnline) == 1; }
             set
             {
                 if (value)
-                    Flags |= (int) Aurora.Framework.RegionFlags.RegionOnline;
+                    Flags |= (int) RegionFlags.RegionOnline;
                 else
-                    Flags &= (int) Aurora.Framework.RegionFlags.RegionOnline;
+                    Flags &= (int) RegionFlags.RegionOnline;
             }
         }
 
@@ -438,7 +438,7 @@ namespace Aurora.Framework
             ScopeID = ConvertFrom.ScopeID;
             AllScopeIDs = ConvertFrom.AllScopeIDs;
             SessionID = ConvertFrom.GridSecureSessionID;
-            Flags |= (int) Aurora.Framework.RegionFlags.RegionOnline;
+            Flags |= (int) RegionFlags.RegionOnline;
         }
 
         #region Definition of equality

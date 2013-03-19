@@ -1,9 +1,11 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.Modules.Web
 {
@@ -55,7 +57,7 @@ namespace Aurora.Modules.Web
                                                NumberOfUserAccounts(null, "").ToString());
             vars.Add("TotalRegionCount", translator.GetTranslatedString("TotalRegionCount"));
             vars.Add("RegionCount", Framework.Utilities.DataManager.RequestPlugin<IRegionData>().
-                                                Count((Framework.RegionFlags) 0, (Framework.RegionFlags) 0).ToString());
+                                                Count((RegionFlags) 0, (RegionFlags) 0).ToString());
             vars.Add("UniqueVisitors", translator.GetTranslatedString("UniqueVisitors"));
             vars.Add("UniqueVisitorCount",
                      users.RecentlyOnline((uint) TimeSpan.FromDays(30).TotalSeconds, false).ToString());

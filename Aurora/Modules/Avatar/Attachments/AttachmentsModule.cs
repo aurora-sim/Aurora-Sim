@@ -27,12 +27,15 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Attachments
 {
@@ -102,7 +105,7 @@ namespace Aurora.Modules.Attachments
             RemoveRegion(m_scene);
         }
 
-        protected void AgentIsLeaving(IScenePresence presence, Aurora.Framework.GridRegion destination)
+        protected void AgentIsLeaving(IScenePresence presence, GridRegion destination)
         {
             //If its a root agent, we need to save all attachments as well
             if (!presence.IsChildAgent)
@@ -190,7 +193,7 @@ namespace Aurora.Modules.Attachments
             }
         }
 
-        public void SuspendAvatar(IScenePresence presence, Aurora.Framework.GridRegion destination)
+        public void SuspendAvatar(IScenePresence presence, GridRegion destination)
         {
             IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
             Util.FireAndForget((o0) =>
@@ -238,7 +241,7 @@ namespace Aurora.Modules.Attachments
                                            bool sendUpdates = destination == null;
                                            if (!sendUpdates)
                                            {
-                                               List<Aurora.Framework.GridRegion> regions =
+                                               List<GridRegion> regions =
                                                    presence.Scene.RequestModuleInterface<IGridRegisterModule>()
                                                            .GetNeighbors(presence.Scene);
                                                regions.RemoveAll((r) => r.RegionID != destination.RegionID);

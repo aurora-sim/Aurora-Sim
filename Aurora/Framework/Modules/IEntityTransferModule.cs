@@ -26,6 +26,7 @@
  */
 
 using OpenMetaverse;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Framework
 {

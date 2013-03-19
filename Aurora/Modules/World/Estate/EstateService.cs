@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
@@ -35,7 +37,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using RegionFlags = Aurora.Framework.RegionFlags;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.Modules.Estate
 {

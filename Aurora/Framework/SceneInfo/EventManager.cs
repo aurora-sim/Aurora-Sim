@@ -1,9 +1,11 @@
 ﻿using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Framework
 {
@@ -291,7 +293,7 @@ namespace Aurora.Framework
         public event RegionUp OnRegionUp;
         public event RegionUp OnRegionDown;
 
-        public delegate void CachedUserInfo(UUID agentID, Aurora.Framework.CachedUserInfo info);
+        public delegate void CachedUserInfo(UUID agentID, Services.CachedUserInfo info);
 
         public event CachedUserInfo OnCachedUserInfo;
 
@@ -1738,7 +1740,7 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerOnUserCachedData(UUID agentID, Framework.CachedUserInfo cache)
+        public void TriggerOnUserCachedData(UUID agentID, Services.CachedUserInfo cache)
         {
             CachedUserInfo handlerOnCachedUserInfo = OnCachedUserInfo;
             if (handlerOnCachedUserInfo != null)

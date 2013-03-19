@@ -27,7 +27,7 @@
 
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public class RegionRegistrationURLs : IDataTransferable
     {

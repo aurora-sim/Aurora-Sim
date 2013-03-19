@@ -26,11 +26,12 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using System.Collections.Generic;
-using FriendInfo = Aurora.Framework.FriendInfo;
+using FriendInfo = Aurora.Framework.Services.FriendInfo;
 
 namespace Aurora.Services
 {

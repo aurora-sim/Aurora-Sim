@@ -27,13 +27,15 @@
 
 using Aurora.Framework;
 using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Aurora.Framework.Utilities;
 using Aurora.Region.Animation;
 using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 using PrimType = Aurora.Framework.PrimType;
 
 namespace Aurora.Region

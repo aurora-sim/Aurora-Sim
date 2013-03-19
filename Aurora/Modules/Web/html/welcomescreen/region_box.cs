@@ -1,6 +1,7 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using System.Collections.Generic;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 
 namespace Aurora.Modules.Web
@@ -45,10 +46,10 @@ namespace Aurora.Modules.Web
 
             uint amountPerQuery = 50;
             int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
-            uint count = Framework.Utilities.DataManager.RequestPlugin<IRegionData>().Count((Framework.RegionFlags) 0,
-                                                                                    Framework.RegionFlags.Hyperlink |
-                                                                                    Framework.RegionFlags.Foreign |
-                                                                                    Framework.RegionFlags.Hidden);
+            uint count = Framework.Utilities.DataManager.RequestPlugin<IRegionData>().Count((RegionFlags) 0,
+                                                                                    RegionFlags.Hyperlink |
+                                                                                    RegionFlags.Foreign |
+                                                                                    RegionFlags.Hidden);
             int maxPages = (int) (count/amountPerQuery) - 1;
 
             if (start == -1)
@@ -58,10 +59,10 @@ namespace Aurora.Modules.Web
             vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
             vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-            var regions = Framework.Utilities.DataManager.RequestPlugin<IRegionData>().Get((Framework.RegionFlags) 0,
-                                                                                   Framework.RegionFlags.Hyperlink |
-                                                                                   Framework.RegionFlags.Foreign |
-                                                                                   Framework.RegionFlags.Hidden,
+            var regions = Framework.Utilities.DataManager.RequestPlugin<IRegionData>().Get((RegionFlags) 0,
+                                                                                   RegionFlags.Hyperlink |
+                                                                                   RegionFlags.Foreign |
+                                                                                   RegionFlags.Hidden,
                                                                                    (uint) (start*amountPerQuery),
                                                                                    amountPerQuery, sortBy);
             foreach (var region in regions)

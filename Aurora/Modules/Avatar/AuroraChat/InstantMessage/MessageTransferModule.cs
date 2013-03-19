@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
@@ -35,7 +36,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Chat
 {

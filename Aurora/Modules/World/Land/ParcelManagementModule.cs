@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
@@ -37,7 +38,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Timers;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Land
 {

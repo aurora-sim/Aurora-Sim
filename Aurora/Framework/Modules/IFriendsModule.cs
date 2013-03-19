@@ -26,6 +26,7 @@
  */
 
 using OpenMetaverse;
+using FriendInfo = Aurora.Framework.Services.FriendInfo;
 
 namespace Aurora.Framework
 {

@@ -33,7 +33,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Assets
 {
     [Flags]
     public enum AssetFlags

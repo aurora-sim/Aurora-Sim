@@ -26,9 +26,10 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public interface ISchedulerDataPlugin : IAuroraDataPlugin
     {

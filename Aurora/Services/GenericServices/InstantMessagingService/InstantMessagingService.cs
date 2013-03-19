@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
@@ -6,7 +7,7 @@ using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
 using System.Linq;
-using ChatSessionMember = Aurora.Framework.ChatSessionMember;
+using ChatSessionMember = Aurora.Framework.Services.ChatSessionMember;
 
 namespace Aurora.Services
 {

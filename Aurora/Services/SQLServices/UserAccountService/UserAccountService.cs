@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
@@ -435,7 +437,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             account.UserTitle = title;
             if (m_profileConnector != null)
             {
-                Aurora.Framework.IUserProfileInfo profile = m_profileConnector.GetUserProfile(account.PrincipalID);
+                IUserProfileInfo profile = m_profileConnector.GetUserProfile(account.PrincipalID);
                 profile.MembershipGroup = title;
                 profile.CustomType = title;
                 m_profileConnector.UpdateUserProfile(profile);

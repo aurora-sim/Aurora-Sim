@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 using System.Collections.Generic;
 

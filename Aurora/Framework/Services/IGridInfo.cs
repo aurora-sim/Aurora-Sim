@@ -1,4 +1,4 @@
-﻿namespace Aurora.Framework
+﻿namespace Aurora.Framework.Services
 {
     public interface IGridInfo
     {

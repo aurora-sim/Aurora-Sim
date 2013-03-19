@@ -27,10 +27,11 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     Callback used when a user's inventory is received from the inventory service

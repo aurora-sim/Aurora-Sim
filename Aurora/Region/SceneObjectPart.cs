@@ -28,6 +28,7 @@
 using Aurora.Framework;
 using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;

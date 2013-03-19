@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 
 namespace Aurora.Region

@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Nini.Config;
 using System;
 

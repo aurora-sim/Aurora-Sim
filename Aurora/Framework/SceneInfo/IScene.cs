@@ -27,6 +27,8 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Nini.Config;
 using OpenMetaverse;
 

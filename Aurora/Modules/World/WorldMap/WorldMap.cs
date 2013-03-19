@@ -38,7 +38,8 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.Modules.WorldMap
 {
@@ -483,8 +484,8 @@ namespace Aurora.Modules.WorldMap
                 block.MapImageID = UUID.Zero;
                 return block;
             }
-            if ((r.Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) ==
-                (int) Aurora.Framework.RegionFlags.RegionOnline)
+            if ((r.Flags & (int) RegionFlags.RegionOnline) ==
+                (int) RegionFlags.RegionOnline)
                 block.Access = r.Access;
             else
                 block.Access = (byte) OpenMetaverse.SimAccess.Down;
@@ -509,8 +510,8 @@ namespace Aurora.Modules.WorldMap
                 blocks.Add(block);
                 return blocks;
             }
-            if ((r.Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) ==
-                (int) Aurora.Framework.RegionFlags.RegionOnline)
+            if ((r.Flags & (int) RegionFlags.RegionOnline) ==
+                (int) RegionFlags.RegionOnline)
                 block.Access = r.Access;
             else
                 block.Access = (byte) OpenMetaverse.SimAccess.Down;

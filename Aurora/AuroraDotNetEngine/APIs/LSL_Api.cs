@@ -28,6 +28,10 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
@@ -43,7 +47,7 @@ using System.Runtime.Remoting.Lifetime;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
@@ -52,6 +56,7 @@ using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 using PrimType = Aurora.Framework.PrimType;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
@@ -10522,7 +10527,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case 6: // DATA_SIM_STATUS
                         if (info != null)
                         {
-                            reply = (info.Flags & (int) Framework.RegionFlags.RegionOnline) != 0 ? "up" : "down";
+                            reply = (info.Flags & (int) RegionFlags.RegionOnline) != 0 ? "up" : "down";
                         }
                             //if() starting
                             //if() stopping

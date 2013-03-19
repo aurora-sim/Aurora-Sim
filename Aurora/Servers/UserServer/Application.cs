@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
 using Aurora.Simulation.Base;
 using System;
 using System.Collections.Generic;

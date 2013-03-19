@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Aurora.Framework.Utilities;
 using Games.Pathfinding.AStar2DTest;
 using OpenMetaverse;

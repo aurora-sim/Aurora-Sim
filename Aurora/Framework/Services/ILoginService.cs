@@ -27,11 +27,12 @@
 
 using System.Collections;
 using System.Net;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public abstract class LoginResponse
     {

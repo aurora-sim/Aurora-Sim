@@ -30,7 +30,7 @@ using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Other
 {
     public class SyncMessageHelper
     {

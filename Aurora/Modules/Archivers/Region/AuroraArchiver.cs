@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
+using Aurora.Framework.Services;
 using Microsoft.Win32;
 using Nini.Config;
 using System;

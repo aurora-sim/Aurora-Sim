@@ -26,6 +26,9 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
@@ -35,8 +38,8 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Xml;
-using FriendInfo = Aurora.Framework.FriendInfo;
-using GridRegion = Aurora.Framework.GridRegion;
+using FriendInfo = Aurora.Framework.Services.FriendInfo;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {

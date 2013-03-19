@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Aurora.Modules.Archivers;
 using Aurora.Region;
 using Nini.Config;

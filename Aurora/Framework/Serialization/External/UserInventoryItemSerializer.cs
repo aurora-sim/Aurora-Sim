@@ -29,6 +29,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Xml;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 
 namespace Aurora.Framework.Serialization.External

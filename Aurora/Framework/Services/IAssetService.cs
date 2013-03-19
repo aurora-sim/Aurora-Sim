@@ -27,10 +27,11 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using Nini.Config;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public delegate void AssetRetrieved(string id, Object sender, AssetBase asset);
 

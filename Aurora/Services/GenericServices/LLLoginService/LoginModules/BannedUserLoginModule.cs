@@ -1,4 +1,6 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using Nini.Config;
 using System;
 using System.Collections;

@@ -2,7 +2,7 @@
 using System.Net;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     HG1.5 only

@@ -33,6 +33,7 @@ using System.Linq;
 using System.Reflection;
 using Aurora.DataManager.Migration;
 using Aurora.Framework;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Community.CsharpSqlite.SQLiteClient;
 using OpenMetaverse;

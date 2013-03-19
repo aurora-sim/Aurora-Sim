@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using Nwc.XmlRpc;
@@ -35,7 +36,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ChatSessionMember = Aurora.Framework.ChatSessionMember;
+using ChatSessionMember = Aurora.Framework.Services.ChatSessionMember;
 
 namespace Aurora.Modules.Groups
 {

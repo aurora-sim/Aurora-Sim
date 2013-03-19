@@ -27,7 +27,7 @@
 
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     IService is a module that loads up by default and is loaded on every startup by either OpenSim.exe or Aurora.Server.exe

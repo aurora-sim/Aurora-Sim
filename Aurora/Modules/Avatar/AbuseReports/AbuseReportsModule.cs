@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Aurora.Modules.AbuseReportsGUI;
 using Nini.Config;

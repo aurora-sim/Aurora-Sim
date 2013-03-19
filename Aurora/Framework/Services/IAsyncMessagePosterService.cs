@@ -28,7 +28,7 @@
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public delegate void GetResponse(OSDMap response);
 

@@ -1,9 +1,11 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System.Collections.Generic;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.Modules.Web
 {
@@ -63,8 +65,8 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionSizeY", region.RegionSizeY);
                 vars.Add("RegionType", region.RegionType);
                 vars.Add("RegionOnline",
-                         (region.Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) ==
-                         (int) Aurora.Framework.RegionFlags.RegionOnline
+                         (region.Flags & (int) RegionFlags.RegionOnline) ==
+                         (int) RegionFlags.RegionOnline
                              ? translator.GetTranslatedString("Online")
                              : translator.GetTranslatedString("Offline"));
 

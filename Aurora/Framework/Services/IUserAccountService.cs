@@ -30,7 +30,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public class UserAccount : AllScopeIDImpl, BaseCacheAccount
     {

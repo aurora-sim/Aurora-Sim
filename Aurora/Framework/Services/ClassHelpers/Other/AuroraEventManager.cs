@@ -28,7 +28,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Other
 {
     /// <summary>
     ///     Delegate to fire when a generic event comes in

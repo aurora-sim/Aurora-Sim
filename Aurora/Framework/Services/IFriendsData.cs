@@ -27,7 +27,7 @@
 
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
     ///     An interface for connecting to the friends datastore

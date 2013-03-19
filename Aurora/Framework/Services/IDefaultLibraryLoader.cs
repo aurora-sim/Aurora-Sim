@@ -27,7 +27,7 @@
 
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public interface IDefaultLibraryLoader
     {

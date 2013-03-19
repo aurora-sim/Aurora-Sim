@@ -27,7 +27,7 @@
 
 using System.Collections;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public interface IFreeswitchService
     {

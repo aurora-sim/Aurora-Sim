@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
@@ -35,7 +37,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using EventFlags = OpenMetaverse.DirectoryManager.EventFlags;
-using GridRegion = Aurora.Framework.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services.DataService
 {

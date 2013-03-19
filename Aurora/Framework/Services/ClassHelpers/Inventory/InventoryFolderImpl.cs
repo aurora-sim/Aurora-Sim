@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Inventory
 {
     public sealed class InventoryFolderImpl : InventoryFolderBase
     {
