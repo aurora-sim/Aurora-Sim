@@ -285,8 +285,7 @@
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Management"/>
-
+      
       <Reference name="DotNetOpenMail" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
@@ -791,57 +790,6 @@
       </Files>
     </Project>
 	
-	<Project frameworkVersion="v3_5" name="Aurora.Management" path="Aurora/Management" type="Exe">
-      <Configuration name="Debug" platform="x86">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x86">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="x64">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x64">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="System"/>
-	  <Reference name="System.Core"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      <Reference name="System.Web"/>
-
-      <Reference name="Aurora.Framework"/>
-	  
-      <Reference name="Nini" path="../../bin/"/>
-      <Reference name="OpenMetaverse" path="../../bin/"/>
-      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
     <Project frameworkVersion="v3_5" name="Aurora.Server" path="Aurora/Server" type="Exe" appmanifest="app.manifest">
       <Configuration name="Debug" platform="x86">
         <Options>
@@ -1282,7 +1230,6 @@
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Management"/>
       <Reference name="Aurora.Services.DataService"/>
 
       <Reference name="Nini" path="../../bin/"/>
@@ -1340,7 +1287,6 @@
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Management"/>
       <Reference name="Aurora.Region"/>
 	  <Reference name="Aurora.Services.DataService"/>
       
