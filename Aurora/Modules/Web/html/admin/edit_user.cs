@@ -163,7 +163,7 @@ namespace Aurora.Modules.Web
             if (userBanned)
             {
                 if ((agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan &&
-                    agent.OtherAgentInformation["TemperaryBanInfo"].AsDate() < DateTime.Now)
+                    agent.OtherAgentInformation["TemperaryBanInfo"].AsDate() < DateTime.Now.ToUniversalTime())
                 {
                     userBanned = false;
                     agent.Flags &= ~IAgentFlags.TempBan;

@@ -296,7 +296,7 @@ namespace Aurora.Modules.Ban
 
                 agentInfo.Flags |= IAgentFlags.TempBan;
 
-                agentInfo.OtherAgentInformation["TemperaryBanInfo"] = DateTime.Now.AddDays(days);
+                agentInfo.OtherAgentInformation["TemperaryBanInfo"] = DateTime.Now.ToUniversalTime().AddDays(days);
             }
             else
             {
