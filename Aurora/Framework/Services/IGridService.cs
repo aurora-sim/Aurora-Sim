@@ -55,7 +55,8 @@ namespace Aurora.Framework
         /// <param name="password"> </param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region registration failed</exception>
-        RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password);
+        RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password, 
+            int majorProtocolVersion, int minorProtocolVersion);
 
         /// <summary>
         /// Deregister a region with the grid service.

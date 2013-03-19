@@ -26,7 +26,6 @@
  */
 
 using Aurora.Framework;
-using Aurora.Simulation.Base;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;

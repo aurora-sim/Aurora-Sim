@@ -1844,17 +1844,21 @@ namespace OdeAPI
 
         #region Setup
 
-        public static void SetODEFile()
+        static d()
         {
             try
             {
-                lock (m_odeSetupLock)
-                {
-                    if (System.IO.File.Exists("ode.dll"))
-                        System.IO.File.Delete("ode.dll");
-                    string fileName = System.IntPtr.Size == 4 ? "odex86.dll" : "odex64.dll";
-                    System.IO.File.Copy(fileName, "ode.dll");
-                }
+                if (System.IO.File.Exists("ode.dll"))
+                    System.IO.File.Delete("ode.dll");
+            }
+            catch (Exception ex)
+            {
+                Aurora.Framework.MainConsole.Instance.Output("[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString());
+            }
+            try
+            {
+                string fileName = System.IntPtr.Size == 4 ? "odex86.dll" : "odex64.dll";
+                System.IO.File.Copy(fileName, "ode.dll");
             }
             catch (Exception ex)
             {

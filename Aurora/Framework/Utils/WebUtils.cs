@@ -40,7 +40,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using log4net.Core;
 
-namespace Aurora.Simulation.Base
+namespace Aurora.Framework
 {
     public static class WebUtils
     {

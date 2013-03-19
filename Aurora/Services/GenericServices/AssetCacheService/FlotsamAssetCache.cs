@@ -28,6 +28,10 @@
 // Uncomment to make asset Get requests for existing 
 // #define WAIT_ON_INPROGRESS_REQUESTS
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,11 +40,6 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Timers;
-using Aurora.Simulation.Base;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
-using ProtoBuf;
 
 namespace Aurora.Services
 {

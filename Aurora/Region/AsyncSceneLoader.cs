@@ -77,12 +77,8 @@ namespace Aurora.Region
             List<IClientNetworkServer> allClientServers = new List<IClientNetworkServer>();
             foreach (IClientNetworkServer clientServer in clientServers)
             {
-                foreach (int port in regionInfo.UDPPorts)
-                {
-                    IClientNetworkServer copy = clientServer.Copy();
-                    copy.Initialise(port, m_configSource, circuitManager);
-                    allClientServers.Add(copy);
-                }
+                clientServer.Initialise(regionInfo.InternalEndPoint.Port, m_configSource, circuitManager);
+                allClientServers.Add(clientServer);
             }
 
             AsyncScene scene = new AsyncScene();

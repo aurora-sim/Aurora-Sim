@@ -843,7 +843,7 @@ namespace Aurora.Modules.EntityTransfer
         public bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out int UDPPort, out string reason)
         {
             reason = String.Empty;
-            UDPPort = GetUDPPort(scene);
+            UDPPort = scene.RegionInfo.InternalEndPoint.Port;
             IScenePresence sp = scene.GetScenePresence(agent.AgentID);
 
             // Don't disable this log message - it's too helpful
@@ -918,29 +918,6 @@ namespace Aurora.Modules.EntityTransfer
 	
                 scene.EventManager.TriggerOnUserCachedData(cache.UserAccount.PrincipalID, cache);
 			}
-        }
-
-        private readonly Dictionary<IScene, int> m_lastUsedPort = new Dictionary<IScene, int> ();
-        /// <summary>
-        /// This method provides ports for the region to accept requests from clients on as given by the region info
-        ///   and goes through them one by one
-        /// </summary>
-        /// <param name="scene"></param>
-        /// <returns></returns>
-        private int GetUDPPort (IScene scene)
-        {
-            if (scene.RegionInfo.UDPPorts.Count == 0)
-                return scene.RegionInfo.InternalEndPoint.Port;
-            lock (m_lastUsedPort)
-            {
-                if (!m_lastUsedPort.ContainsKey (scene))
-                    m_lastUsedPort.Add (scene, 0);
-                int port = scene.RegionInfo.UDPPorts[m_lastUsedPort[scene]];
-                m_lastUsedPort[scene]++;
-                if (m_lastUsedPort[scene] == scene.RegionInfo.UDPPorts.Count)
-                    m_lastUsedPort[scene] = 0;
-                return port;
-            }
         }
 
         /// <summary>

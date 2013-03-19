@@ -37,9 +37,7 @@ namespace Aurora.Framework
         public int Created;
         public string Email;
         public string Name { get; set;}
-        public OSDMap GenericData = new OSDMap();
         public UUID PrincipalID { get; set; }
-        public Dictionary<string, object> ServiceURLs;
         public int UserFlags;
         public int UserLevel;
         public string UserTitle;
@@ -59,7 +57,6 @@ namespace Aurora.Framework
             ScopeID = scopeID;
             Name = name;
             Email = email;
-            ServiceURLs = new Dictionary<string, object>();
             Created = Util.UnixTimeSinceEpoch();
         }
 
@@ -69,7 +66,6 @@ namespace Aurora.Framework
             ScopeID = scopeID;
             Name = name;
             Email = email;
-            ServiceURLs = new Dictionary<string, object>();
             Created = Util.UnixTimeSinceEpoch();
         }
 
@@ -104,9 +100,6 @@ namespace Aurora.Framework
             result["UserFlags"] = UserFlags;
             result["UserTitle"] = UserTitle;
 
-            string str = ServiceURLs.Aggregate(string.Empty, (current, kvp) => current + (kvp.Key + "*" + (kvp.Value ?? "") + ";"));
-            result["ServiceURLs"] = str;
-
             return result;
         }
 
@@ -131,19 +124,6 @@ namespace Aurora.Framework
 
             if (map.ContainsKey("Created"))
                 Created = map["Created"];
-            ServiceURLs = new Dictionary<string, object>();
-            if (map.ContainsKey("ServiceURLs") && map["ServiceURLs"] != null)
-            {
-                string str = map["ServiceURLs"].ToString();
-                if (str != string.Empty)
-                {
-                    string[] parts = str.Split(new[] { ';' });
-                    foreach (string[] parts2 in parts.Select(s => s.Split(new[] {'*'})).Where(parts2 => parts2.Length == 2))
-                    {
-                        ServiceURLs[parts2[0]] = parts2[1];
-                    }
-                }
-            }
         }
     }
 

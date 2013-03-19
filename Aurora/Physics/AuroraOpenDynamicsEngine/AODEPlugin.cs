@@ -67,7 +67,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         // Initializing ODE only when a scene is created allows alternative ODE plugins to co-habit (according to
                         // http://opensimulator.org/mantis/view.php?id=2750).
-                        d.SetODEFile();
                         d.InitODE();
                         m_initialized = true;
                     }

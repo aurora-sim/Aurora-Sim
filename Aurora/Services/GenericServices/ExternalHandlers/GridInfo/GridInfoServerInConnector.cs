@@ -25,10 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Simulation.Base;
-using Nini.Config;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Nini.Config;
 
 namespace Aurora.Services
 {

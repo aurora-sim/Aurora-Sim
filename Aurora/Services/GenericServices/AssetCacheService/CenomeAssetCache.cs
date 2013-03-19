@@ -25,12 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Reflection;
-using Aurora.Simulation.Base;
-using Nini.Config;
-using Aurora.Framework;
-using OpenMetaverse;
 
 namespace Aurora.Services
 {

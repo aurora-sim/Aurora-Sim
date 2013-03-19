@@ -1,7 +1,6 @@
 ﻿﻿using System;
 using System.Reflection;
 using Aurora.DataManager;
-using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
