@@ -106,7 +106,7 @@ namespace Aurora.Services
                                           bannedTime.ToLongTimeString());
 
                     //Check to make sure the time hasn't expired
-                    if (bannedTime.Ticks < DateTime.Now.Ticks)
+                    if (bannedTime.Ticks < DateTime.Now.ToUniversalTime().Ticks)
                     {
                         //The banned time is less than now, let the user in.
                         IsBanned = false;
