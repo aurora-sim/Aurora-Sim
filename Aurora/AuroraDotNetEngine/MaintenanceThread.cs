@@ -154,7 +154,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Started) //Break early
                 return;
 
-            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || !m_ScriptEngine.Scene.ShouldRunHeartbeat)
                 return;
 
             ScriptChangeIsRunning = true;
@@ -215,6 +215,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<LUStruct> NeedsFired = new List<LUStruct>();
             foreach (LUStruct item in items)
             {
+                if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || m_ScriptEngine.Scene == null || !m_ScriptEngine.Scene.ShouldRunHeartbeat)
+                    break;
+
                 if (item.Action == LUType.Unload)
                 {
                     //Close
@@ -256,7 +259,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!Started) //Break early
                 return;
 
-            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || !m_ScriptEngine.Scene.ShouldRunHeartbeat)
                 return;
 
             //Check timers, etc
@@ -319,6 +322,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scriptThreadpool.Restart();
             scriptChangeThreadpool.Restart();
             cmdThreadpool.Restart();
+            LUQueue.Clear();
+            QueueItemStruct itm;
+            while (ScriptEvents.TryDequeue(out itm)) ;
+            SleepingScriptEvents.Clear();
         }
 
         public void Stats()
@@ -501,7 +508,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void eventLoop()
         {
             int numberOfEmptyWork = 0;
-            while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)
+            while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled && m_ScriptEngine.Scene.ShouldRunHeartbeat)
             {
                 //int numScriptsProcessed = 0;
                 int numSleepScriptsProcessed = 0;

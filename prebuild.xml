@@ -139,7 +139,7 @@
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="protobuf-net.dll" path="../../bin/"/>
-      <Reference name="SmartThreadPool"/>
+      <Reference name="SmartThreadPool.dll" path="../../bin/"/>
       <Reference name="XMLRPC" path="../../bin/"/>
       
       <Files>
@@ -293,7 +293,7 @@
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="protobuf-net.dll" path="../../bin/"/>
-      <Reference name="SmartThreadPool"/>
+      <Reference name="SmartThreadPool.dll" path="../../bin/"/>
       <Reference name="XMLRPC" path="../../bin/"/>
 
       <Files>
@@ -738,7 +738,7 @@
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
-      <Reference name="SmartThreadPool"/>
+      <Reference name="SmartThreadPool.dll" path="../../bin/"/>
       <Reference name="XMLRPC" path="../../bin/"/>
 
       <Files>
@@ -1457,7 +1457,7 @@
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
-      <Reference name="SmartThreadPool"/>
+      <Reference name="SmartThreadPool.dll" path="../../bin/"/>
       <Reference name="Tools" path="../../bin/"/>
 
       <Files>
@@ -1516,50 +1516,6 @@
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-	
-	<Project frameworkVersion="v3_5" name="SmartThreadPool" path="Aurora/Tools/SmartThreadPool" type="Library">
-      <Configuration name="Debug" platform="x86">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x86">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="x64">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x64">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-	  <Reference name="System.Core"/>
-      <Reference name="System.Web"/>
-      <Reference name="System.Xml"/>
-      
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
       </Files>
     </Project>
 	

@@ -136,7 +136,7 @@ namespace Aurora.Framework
             protected set;
         }
 
-        public abstract void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry);
+        public abstract void Initialise(IMesher meshmerizer, IScene scene);
         public abstract void PostInitialise(IConfigSource config);
 
         public abstract PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
@@ -242,7 +242,7 @@ namespace Aurora.Framework
             get { return false; }
         }
 
-        public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
+        public override void Initialise(IMesher meshmerizer, IScene scene)
         {
             // Does nothing right now
         }

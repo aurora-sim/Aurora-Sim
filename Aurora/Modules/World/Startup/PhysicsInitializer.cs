@@ -66,8 +66,7 @@ namespace Aurora.Modules.Startup
             PhysicsPluginManager physicsPluginManager = new PhysicsPluginManager();
             physicsPluginManager.LoadPluginsFromAssemblies(Util.BasePathCombine(Path));
 
-            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo,
-                                                                       scene);
+            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene);
             scene.PhysicsScene = pScene;
         }
 

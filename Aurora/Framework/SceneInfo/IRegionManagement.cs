@@ -13,16 +13,10 @@ namespace Aurora.Framework
         bool GetWhetherRegionIsOnline(UUID regionID);
 
         /// <summary>
-        /// Starts a region that has not previously started before
-        /// </summary>
-        /// <param name="region"></param>
-        void StartNewRegion(RegionInfo region);
-
-        /// <summary>
         /// Starts an existing region
         /// </summary>
         /// <param name="region"></param>
-        void StartRegion(RegionInfo region);
+        void StartRegion();
 
         /// <summary>
         /// Attempts to stop the currently running region

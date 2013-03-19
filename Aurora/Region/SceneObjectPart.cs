@@ -2403,15 +2403,8 @@ namespace Aurora.Region
         /// <param name = "UpdateFlags"></param>
         public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
-#if (!ISWIN)
-            m_parentGroup.Scene.ForEachScenePresence(delegate(IScenePresence avatar)
-            {
-                avatar.AddUpdateToAvatar(this, UpdateFlags);
-            });
-#else
-            if(m_parentGroup != null)
+            if (m_parentGroup != null && m_parentGroup.Scene != null)
                 m_parentGroup.Scene.ForEachScenePresence(avatar => avatar.AddUpdateToAvatar(this, UpdateFlags));
-#endif
         }
 
         public void ScriptSetPhantomStatus(bool Phantom)

@@ -343,7 +343,7 @@ namespace Aurora.ClientStack
             if (m_ThreadPool == null)
                 InitThreadPool(15);
             if (m_threadPoolRunning) //Check if the thread pool should be running
-                m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new[] { callback, obj });
+                m_ThreadPool.QueueWorkItem((WorkItemCallback)SmartThreadPoolCallback, new[] { callback, obj });
         }
 
         private static object SmartThreadPoolCallback(object o)

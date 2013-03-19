@@ -59,8 +59,6 @@ namespace Aurora.Region
 
         protected RegionInfo m_regInfo;
         protected List<IClientNetworkServer> m_clientServers;
-
-        protected ThreadMonitor monitor = new ThreadMonitor();
             
         protected AuroraEventManager m_AuroraEventManager = null;
         protected EventManager m_eventManager;
@@ -373,8 +371,6 @@ namespace Aurora.Region
                 }
             }
             m_ShouldRunHeartbeat = false; //Stop the heartbeat
-            //Now close the tracker
-            monitor.Stop();
 
             if (m_sceneGraph.PhysicsScene != null)
                 m_sceneGraph.PhysicsScene.Dispose ();
@@ -406,11 +402,8 @@ namespace Aurora.Region
                 clientServer.Start ();
             }
 
-            //Give it the heartbeat delegate with an infinite timeout
-            monitor.StartTrackingThread(0, Update);
-            //Then start the thread for it with an infinite loop time and no 
-            //  sleep overall as the Update delete does it on it's own
-            monitor.StartMonitor(0, 0);
+            Thread t = new Thread(Heartbeat);
+            t.Start();
         }
 
         #endregion
@@ -418,7 +411,7 @@ namespace Aurora.Region
         #region Scene Heartbeat Methods
 
         private bool m_lastPhysicsChange = false;
-        private bool Update()
+        private void Heartbeat()
         {
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
             ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule> ().GetMonitor (RegionInfo.RegionID.ToString (), MonitorModuleHelper.TotalFrameTime);
@@ -432,7 +425,7 @@ namespace Aurora.Region
             while (true)
             {
                 if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
-                    return false;
+                    return;
 
                 int maintc = Util.EnvironmentTickCount();
                 int BeginningFrameTime = maintc;
@@ -529,7 +522,7 @@ namespace Aurora.Region
                 catch (Exception e)
                 {
                     MainConsole.Instance.Error("[REGION]: Failed with exception " + e + " in region: " + RegionInfo.RegionName);
-                    return true;
+                    return;
                 }
 
                 //Get the time between beginning and end

@@ -47,7 +47,6 @@ namespace Aurora.Modules
         protected Timer m_backupSaveTimer;
 
         protected string m_fileName = "";
-        protected bool m_loaded = false;
         protected bool m_keepOldSave = true;
         protected string m_oldSaveDirectory = "Backups";
         protected bool m_oldSaveHasBeenSaved;
@@ -284,12 +283,8 @@ namespace Aurora.Modules
 
         public virtual void SetRegion(IScene scene)
         {
-            if (!m_loaded)
-            {
-                m_loaded = true;
-                scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
-                m_scene = scene;
-            }
+            scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
+            m_scene = scene;
         }
 
         public virtual List<ISceneEntity> LoadObjects()
@@ -593,7 +588,13 @@ namespace Aurora.Modules
 
             if (File.Exists(filename + (isOldSave ? "" : ".tmp")))
                 File.Delete(filename + (isOldSave ? "" : ".tmp"));//Remove old tmp files
-            _regionLoader.SaveBackup(filename + (isOldSave ? "" : ".tmp"), regiondata);
+            if (!_regionLoader.SaveBackup(filename + (isOldSave ? "" : ".tmp"), regiondata))
+            {
+                if (File.Exists(filename + (isOldSave ? "" : ".tmp")))
+                    File.Delete(filename + (isOldSave ? "" : ".tmp"));//Remove old tmp files
+                MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup for region " + m_scene.RegionInfo.RegionName + "!");
+                return;
+            }
 
             //RegionData data = _regionLoader.LoadBackup(filename + ".tmp");
             if(!isOldSave)

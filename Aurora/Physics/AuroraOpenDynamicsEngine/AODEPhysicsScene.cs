@@ -149,7 +149,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected readonly PhysicsActor PANull = new NullObjectPhysicsActor();
         protected float step_time;
         protected RegionInfo m_region;
-        protected IRegistryCore m_registry;
+        protected IScene m_scene;
         protected IWindModule m_windModule;
         protected bool DoPhyWind;
 
@@ -288,12 +288,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         // Initialize the mesh plugin
-        public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
+        public override void Initialise(IMesher meshmerizer, IScene scene)
         {
             mesher = meshmerizer;
-            m_region = region;
-            m_registry = registry;
-            WorldExtents = new Vector2(region.RegionSizeX, region.RegionSizeY);
+            m_region = scene.RegionInfo;
+            m_scene = scene;
+            WorldExtents = new Vector2(m_region.RegionSizeX, m_region.RegionSizeY);
         }
 
         public override void PostInitialise(IConfigSource config)
@@ -1481,7 +1481,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 try
                 {
                     NoParam del;
-                    while (SimulationChangesQueue.TryDequeue(out del))
+                    while (SimulationChangesQueue.TryDequeue(out del) && m_scene.ShouldRunHeartbeat)
                         try { del(); }
                         catch { }
 
@@ -1920,7 +1920,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!DoPhyWind)
                 return;
             if (m_windModule == null)
-                m_windModule = m_registry.RequestModuleInterface<IWindModule>();
+                m_windModule = m_scene.RequestModuleInterface<IWindModule>();
 
             if (m_windModule == null)
                 return;

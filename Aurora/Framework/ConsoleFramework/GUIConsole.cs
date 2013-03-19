@@ -345,71 +345,14 @@ namespace Aurora.Framework
         {
         }
 
-
-        public void EndConsoleProcessing()
-        {
-            Processing = false;
-        }
-
-        public bool Processing = true;
-        private delegate void PromptEvent();
-
-        private IAsyncResult result;
-        private PromptEvent action;
-        private readonly Object m_consoleLock = new Object();
-        private bool m_calledEndInvoke;
-
         /// <summary>
         ///   Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
         public void ReadConsole()
         {
-            WaitHandle[] wHandles = new WaitHandle[1];
-            if (result != null)
-            {
-                wHandles[0] = result.AsyncWaitHandle;
-            }
-            Timer t = new Timer {Interval = 0.5};
-            t.Elapsed += t_Elapsed;
-            t.Start();
             while (true)
             {
-                if (!Processing)
-                {
-                    throw new Exception("Restart");
-                }
-                lock (m_consoleLock)
-                {
-                    if (action == null)
-                    {
-                        action = Prompt;
-                        result = action.BeginInvoke(null, null);
-                        m_calledEndInvoke = false;
-                    }
-                    try
-                    {
-                        if ((!result.IsCompleted) &&
-                            (!result.AsyncWaitHandle.WaitOne(5000, false) || !result.IsCompleted))
-                        {
-                        }
-                        else if (action != null &&
-                                 !result.CompletedSynchronously &&
-                                 !m_calledEndInvoke)
-                        {
-                            m_calledEndInvoke = true;
-                            action.EndInvoke(result);
-                            action = null;
-                            result = null;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        //Eat the exception and go on
-                        Output("[Console]: Failed to execute command: " + ex);
-                        action = null;
-                        result = null;
-                    }
-                }
+                Prompt();
             }
         }
 

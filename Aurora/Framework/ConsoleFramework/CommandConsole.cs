@@ -700,21 +700,13 @@ namespace Aurora.Framework
 
         private string InternalPrompt(string prompt, string defaultresponse, List<string> options)
         {
-            string ret;
-            m_reading = Thread.CurrentThread != m_consoleReadingThread;
-            lock (m_readingLock)
-            {
-                ret = ReadLine(String.Format("{0}{2} [{1}]: ",
-                    prompt,
-                    defaultresponse,
-                    options.Count == 0 ? "" : ", Options are [" + string.Join(", ", options.ToArray()) + "]"
-                ), false, true);
-            }
-            m_reading = Thread.CurrentThread != m_consoleReadingThread ? false : m_reading;
+            string ret = ReadLine(String.Format("{0}{2} [{1}]: ",
+                prompt,
+                defaultresponse,
+                options.Count == 0 ? "" : ", Options are [" + string.Join(", ", options.ToArray()) + "]"
+            ), false, true);
             if (ret == String.Empty)
-            {
                 ret = defaultresponse;
-            }
 
             return ret;
         }
@@ -837,28 +829,6 @@ namespace Aurora.Framework
         {
         }
 
-
-        public void EndConsoleProcessing()
-        {
-            Processing = false;
-        }
-
-        public bool Processing = true;
-        private delegate void PromptEvent();
-        protected static bool m_reading;
-        private Thread m_consoleReadingThread;
-        protected readonly Object m_readingLock = new Object();
-        private Thread StartReadingThread()
-        {
-            Thread t = new Thread(delegate()
-            {
-                lock(m_readingLock)
-                    Prompt();
-            });
-            t.Start();
-            return t;
-        }
-
         /// <summary>
         ///   Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
@@ -866,36 +836,7 @@ namespace Aurora.Framework
         {
             while (true)
             {
-                if (!Processing)
-                {
-                    throw new Exception("Restart");
-                }
-                if (m_consoleReadingThread == null)
-                    m_consoleReadingThread = StartReadingThread();
-                try
-                {
-                    if (m_reading)
-                    {
-                        if (m_consoleReadingThread.ThreadState == ThreadState.Running)
-                            m_consoleReadingThread.Abort();
-                        continue;
-                    }
-                    else if (m_consoleReadingThread.ThreadState == ThreadState.Stopped ||
-                        m_consoleReadingThread.ThreadState == ThreadState.Aborted)
-                    {
-                        m_consoleReadingThread = null;
-                        continue;
-                    }
-                    if (m_consoleReadingThread.Join(1000))
-                    {
-                        continue;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    //Eat the exception and go on
-                    Output("[Console]: Failed to execute command: " + ex);
-                }
+                Prompt();
             }
         }
     }

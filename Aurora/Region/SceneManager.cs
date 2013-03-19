@@ -157,8 +157,7 @@ namespace Aurora.Region
                 return;
 
             bool newRegion = false;
-            RegionInfo info = m_simulationDataService.LoadRegionInfo(m_OpenSimBase, out newRegion);
-            IScene scene = StartNewRegion(info);
+            StartRegion(out newRegion);
             MainConsole.Instance.DefaultPrompt = "Region ";
             if (newRegion)//Save the new info
                 m_simulationDataService.ForceBackup();
@@ -206,8 +205,9 @@ namespace Aurora.Region
 
         #region Add a region
 
-        public IScene StartNewRegion (RegionInfo regionInfo)
+        public void StartRegion (out bool newRegion)
         {
+            RegionInfo regionInfo = m_simulationDataService.LoadRegionInfo(m_OpenSimBase, out newRegion);
             MainConsole.Instance.InfoFormat("[SceneManager]: Starting region \"{0}\" at @ {1},{2}", regionInfo.RegionName,
                 regionInfo.RegionLocX / 256, regionInfo.RegionLocY / 256);
             ISceneLoader sceneLoader = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<ISceneLoader> ();
@@ -215,33 +215,21 @@ namespace Aurora.Region
                 throw new Exception ("No Scene Loader Interface!");
 
             //Get the new scene from the interface
-            IScene scene = sceneLoader.CreateScene (regionInfo);
-            StartNewRegion (scene);
-            return scene;
-        }
+            m_scene = sceneLoader.CreateScene(regionInfo);
 
-        /// <summary>
-        /// Execute the region creation process.  This includes setting up scene infrastructure.
-        /// </summary>
-        /// <param name="scene"></param>
-        /// <returns></returns>
-        public void StartNewRegion(IScene scene)
-        {
-            //Do this here so that we don't have issues later when startup complete messages start coming in
-            m_scene = scene;
-            MainConsole.Instance.ConsoleScene = scene;
-            m_simulationDataService.SetRegion(scene);
+            MainConsole.Instance.ConsoleScene = m_scene;
+            m_simulationDataService.SetRegion(m_scene);
 
             if (OnAddedScene != null)
-                OnAddedScene(scene);
+                OnAddedScene(m_scene);
 
-            StartModules (scene);
+            StartModules(m_scene);
 
             //Start the heartbeats
-            scene.StartHeartbeat();
+            m_scene.StartHeartbeat();
             //Tell the scene that the startup is complete 
             // Note: this event is added in the scene constructor
-            scene.FinishedStartup("Startup", new List<string>());
+            m_scene.FinishedStartup("Startup", new List<string>());
         }
 
         /// <summary>
@@ -280,7 +268,8 @@ namespace Aurora.Region
         public void RestartRegion ()
         {
             CloseRegion (ShutdownType.Immediate, 0);
-            StartNewRegion(m_scene.RegionInfo);
+            bool newRegion;
+            StartRegion(out newRegion);
         }
 
         #endregion

@@ -50,8 +50,7 @@ namespace Aurora.Modules.Startup
         /// <param name = "region"></param>
         /// <param name = "registry"></param>
         /// <returns></returns>
-        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config,
-                                            RegionInfo region, IRegistryCore registry)
+        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config, IScene scene)
         {
             if (String.IsNullOrEmpty(physEngineName))
             {
@@ -78,7 +77,7 @@ namespace Aurora.Modules.Startup
             {
                 MainConsole.Instance.Debug("[Physics]: Loading physics engine: " + physEngineName);
                 PhysicsScene result = _PhysPlugins[physEngineName].GetScene();
-                result.Initialise(meshEngine, region, registry);
+                result.Initialise(meshEngine, scene);
                 result.PostInitialise(config);
                 return result;
             }
