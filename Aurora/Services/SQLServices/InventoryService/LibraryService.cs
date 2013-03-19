@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Inventory;

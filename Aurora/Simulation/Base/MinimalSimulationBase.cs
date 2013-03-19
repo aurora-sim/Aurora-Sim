@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
@@ -291,7 +292,7 @@ namespace Aurora.Simulation.Base
             List<dynamic> modules = new List<dynamic>();
             foreach (Type t in m_servicePlugins)
             {
-                var mods = Aurora.Framework.AuroraModuleLoader.PickupModules(t);
+                var mods = AuroraModuleLoader.PickupModules(t);
                 modules.AddRange(mods);
             }
 

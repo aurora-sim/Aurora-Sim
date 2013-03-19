@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Aurora.Framework;
+using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Utilities;
 
 namespace Aurora.DataManager.Migration

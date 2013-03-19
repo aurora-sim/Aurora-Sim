@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
@@ -62,7 +63,7 @@ namespace Aurora.Modules.Web
         {
             Registry = registry;
 
-            var webPages = Aurora.Framework.AuroraModuleLoader.PickupModules<IWebInterfacePage>();
+            var webPages = AuroraModuleLoader.PickupModules<IWebInterfacePage>();
             foreach (var pages in webPages)
             {
                 foreach (var page in pages.FilePath)

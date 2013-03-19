@@ -32,7 +32,7 @@ using System.Linq;
 using System.Reflection;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ModuleLoader
 {
     public static class AuroraModuleLoader
     {

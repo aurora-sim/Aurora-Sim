@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ModuleLoader;
 using OpenMetaverse;
 using System;
 using System.CodeDom.Compiler;
