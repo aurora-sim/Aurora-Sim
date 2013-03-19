@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.Physics;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;

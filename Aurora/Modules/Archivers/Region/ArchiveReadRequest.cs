@@ -26,8 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Serialization.External;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;

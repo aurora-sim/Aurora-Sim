@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Physics
 {
     public interface IMesher
     {

@@ -30,7 +30,7 @@ using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Physics
 {
     public delegate void RaycastCallback(
         bool hitYN, Vector3 collisionPoint, uint localid, float distance, Vector3 normal);
