@@ -168,9 +168,11 @@ namespace Aurora.Modules
             Nini.Config.IniConfigSource source = new IniConfigSource(doc);
             IConfig section = source.Configs["Region"] != null ? source.Configs["Region"] : source.AddConfig("Region");
 
-            if(info == null)
+            if (info == null)
+            {
                 info = new RegionInfo();
-            info.RegionID = UUID.Random();
+                info.RegionID = UUID.Random();
+            }
             section.Set("RegionID", info.RegionID.ToString());
             info.RegionName = MainConsole.Instance.Prompt("Region Name: ", info.RegionName);
             section.Set("RegionName", info.RegionName);
