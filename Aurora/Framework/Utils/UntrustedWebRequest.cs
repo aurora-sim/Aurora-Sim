@@ -35,43 +35,43 @@ using System.Text;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Used for requests to untrusted endpoints that may potentially be
-    ///   malicious
+    ///     Used for requests to untrusted endpoints that may potentially be
+    ///     malicious
     /// </summary>
     public static class UntrustedHttpWebRequest
     {
         /// <summary>
-        ///   Setting this to true will allow HTTP connections to localhost
+        ///     Setting this to true will allow HTTP connections to localhost
         /// </summary>
         private const bool DEBUG = true;
 
         private static readonly ICollection<string> allowableSchemes = new List<string> {"http", "https"};
 
         /// <summary>
-        ///   Creates an HttpWebRequest that is hardened against malicious
-        ///   endpoints after ensuring the given Uri is safe to retrieve
+        ///     Creates an HttpWebRequest that is hardened against malicious
+        ///     endpoints after ensuring the given Uri is safe to retrieve
         /// </summary>
-        /// <param name = "uri">Web location to request</param>
+        /// <param name="uri">Web location to request</param>
         /// <returns>A hardened HttpWebRequest if the uri was determined to be safe</returns>
-        /// <exception cref = "ArgumentNullException">If uri is null</exception>
-        /// <exception cref = "ArgumentException">If uri is unsafe</exception>
+        /// <exception cref="ArgumentNullException">If uri is null</exception>
+        /// <exception cref="ArgumentException">If uri is unsafe</exception>
         public static HttpWebRequest Create(Uri uri)
         {
             return Create(uri, DEBUG, 1000*5, 1000*20, 10);
         }
 
         /// <summary>
-        ///   Creates an HttpWebRequest that is hardened against malicious
-        ///   endpoints after ensuring the given Uri is safe to retrieve
+        ///     Creates an HttpWebRequest that is hardened against malicious
+        ///     endpoints after ensuring the given Uri is safe to retrieve
         /// </summary>
-        /// <param name = "uri">Web location to request</param>
-        /// <param name = "allowLoopback">True to allow connections to localhost, otherwise false</param>
-        /// <param name = "readWriteTimeoutMS">Read write timeout, in milliseconds</param>
-        /// <param name = "timeoutMS">Connection timeout, in milliseconds</param>
-        /// <param name = "maximumRedirects">Maximum number of allowed redirects</param>
+        /// <param name="uri">Web location to request</param>
+        /// <param name="allowLoopback">True to allow connections to localhost, otherwise false</param>
+        /// <param name="readWriteTimeoutMS">Read write timeout, in milliseconds</param>
+        /// <param name="timeoutMS">Connection timeout, in milliseconds</param>
+        /// <param name="maximumRedirects">Maximum number of allowed redirects</param>
         /// <returns>A hardened HttpWebRequest if the uri was determined to be safe</returns>
-        /// <exception cref = "ArgumentNullException">If uri is null</exception>
-        /// <exception cref = "ArgumentException">If uri is unsafe</exception>
+        /// <exception cref="ArgumentNullException">If uri is null</exception>
+        /// <exception cref="ArgumentException">If uri is unsafe</exception>
         public static HttpWebRequest Create(Uri uri, bool allowLoopback, int readWriteTimeoutMS, int timeoutMS,
                                             int maximumRedirects)
         {
@@ -137,13 +137,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Determines whether a URI is allowed based on scheme and host name.
-        ///   No requireSSL check is done here
+        ///     Determines whether a URI is allowed based on scheme and host name.
+        ///     No requireSSL check is done here
         /// </summary>
-        /// <param name = "allowLoopback">True to allow loopback addresses to be used</param>
-        /// <param name = "uri">The URI to test for whether it should be allowed.</param>
+        /// <param name="allowLoopback">True to allow loopback addresses to be used</param>
+        /// <param name="uri">The URI to test for whether it should be allowed.</param>
         /// <returns>
-        ///   <c>true</c> if [is URI allowable] [the specified URI]; otherwise, <c>false</c>.
+        ///     <c>true</c> if [is URI allowable] [the specified URI]; otherwise, <c>false</c>.
         /// </returns>
         private static bool IsUriAllowable(Uri uri, bool allowLoopback)
         {
@@ -182,7 +182,8 @@ namespace Aurora.Framework
                         }
                         break;
                     default:
-                        MainConsole.Instance.WarnFormat("Rejecting URL {0} because it does not use an IPv4 or IPv6 address.", uri);
+                        MainConsole.Instance.WarnFormat(
+                            "Rejecting URL {0} because it does not use an IPv4 or IPv6 address.", uri);
                         return false;
                 }
             }
@@ -192,7 +193,8 @@ namespace Aurora.Framework
                 // help make sure it's not an internal address.
                 if (!allowLoopback && !uri.Host.Contains("."))
                 {
-                    MainConsole.Instance.WarnFormat("Rejecting URL {0} because it does not contain a period in the host name.", uri);
+                    MainConsole.Instance.WarnFormat(
+                        "Rejecting URL {0} because it does not contain a period in the host name.", uri);
                     return false;
                 }
             }
@@ -201,11 +203,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Determines whether an IP address is the IPv6 equivalent of "localhost/127.0.0.1".
+        ///     Determines whether an IP address is the IPv6 equivalent of "localhost/127.0.0.1".
         /// </summary>
-        /// <param name = "ip">The ip address to check.</param>
+        /// <param name="ip">The ip address to check.</param>
         /// <returns>
-        ///   <c>true</c> if this is a loopback IP address; <c>false</c> otherwise.
+        ///     <c>true</c> if this is a loopback IP address; <c>false</c> otherwise.
         /// </returns>
         private static bool IsIPv6Loopback(IPAddress ip)
         {

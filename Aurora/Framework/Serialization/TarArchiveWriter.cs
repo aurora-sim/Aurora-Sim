@@ -33,7 +33,7 @@ using System.Text;
 namespace Aurora.Framework.Serialization
 {
     /// <summary>
-    ///   Temporary code to produce a tar archive in tar v7 format
+    ///     Temporary code to produce a tar archive in tar v7 format
     /// </summary>
     public class TarArchiveWriter
     {
@@ -43,7 +43,7 @@ namespace Aurora.Framework.Serialization
         protected static UTF8Encoding m_utf8Encoding = new UTF8Encoding();
 
         /// <summary>
-        ///   Binary writer for the underlying stream
+        ///     Binary writer for the underlying stream
         /// </summary>
         protected BinaryWriter m_bw;
 
@@ -56,9 +56,9 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Write a directory entry to the tar archive.  We can only handle one path level right now!
+        ///     Write a directory entry to the tar archive.  We can only handle one path level right now!
         /// </summary>
-        /// <param name = "dirName"></param>
+        /// <param name="dirName"></param>
         public void WriteDir(string dirName)
         {
             // Directories are signalled by a final /
@@ -69,20 +69,20 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Write a file to the tar archive
+        ///     Write a file to the tar archive
         /// </summary>
-        /// <param name = "filePath"></param>
-        /// <param name = "data"></param>
+        /// <param name="filePath"></param>
+        /// <param name="data"></param>
         public void WriteFile(string filePath, string data)
         {
             WriteFile(filePath, m_utf8Encoding.GetBytes(data));
         }
 
         /// <summary>
-        ///   Write a file to the tar archive
+        ///     Write a file to the tar archive
         /// </summary>
-        /// <param name = "filePath"></param>
-        /// <param name = "data"></param>
+        /// <param name="filePath"></param>
+        /// <param name="data"></param>
         public void WriteFile(string filePath, byte[] data)
         {
             if (filePath.Length > 100)
@@ -97,9 +97,9 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Finish writing the raw tar archive data to a stream.  The stream will be closed on completion.
+        ///     Finish writing the raw tar archive data to a stream.  The stream will be closed on completion.
         /// </summary>
-        /// <param name = "s">Stream to which to write the data</param>
+        /// <param name="s">Stream to which to write the data</param>
         /// <returns></returns>
         public void Close()
         {
@@ -142,11 +142,11 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Write a particular entry
+        ///     Write a particular entry
         /// </summary>
-        /// <param name = "filePath"></param>
-        /// <param name = "data"></param>
-        /// <param name = "fileType"></param>
+        /// <param name="filePath"></param>
+        /// <param name="data"></param>
+        /// <param name="fileType"></param>
         protected void WriteEntry(string filePath, byte[] data, char fileType)
         {
 //            MainConsole.Instance.DebugFormat(

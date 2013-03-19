@@ -37,7 +37,7 @@ namespace Aurora.Framework
         event NewGroupNotice OnNewGroupNotice;
 
         /// <summary>
-        /// Sends a new notice out to all users in the sim
+        ///     Sends a new notice out to all users in the sim
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="notice"></param>
@@ -45,33 +45,33 @@ namespace Aurora.Framework
         void SendGroupNoticeToUsers(IClientAPI remoteClient, GroupNoticeInfo notice, bool localOnly);
 
         /// <summary>
-        ///   Create a group
+        ///     Create a group
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "name"></param>
-        /// <param name = "charter"></param>
-        /// <param name = "showInList"></param>
-        /// <param name = "insigniaID"></param>
-        /// <param name = "membershipFee"></param>
-        /// <param name = "openEnrollment"></param>
-        /// <param name = "allowPublish"></param>
-        /// <param name = "maturePublish"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="name"></param>
+        /// <param name="charter"></param>
+        /// <param name="showInList"></param>
+        /// <param name="insigniaID"></param>
+        /// <param name="membershipFee"></param>
+        /// <param name="openEnrollment"></param>
+        /// <param name="allowPublish"></param>
+        /// <param name="maturePublish"></param>
         /// <returns>The UUID of the created group</returns>
         UUID CreateGroup(
             IClientAPI remoteClient, string name, string charter, bool showInList, UUID insigniaID, int membershipFee,
             bool openEnrollment, bool allowPublish, bool maturePublish);
 
         /// <summary>
-        ///   Get a group
+        ///     Get a group
         /// </summary>
-        /// <param name = "name">Name of the group</param>
+        /// <param name="name">Name of the group</param>
         /// <returns>The group's data.  Null if there is no such group.</returns>
         GroupRecord GetGroupRecord(string name);
 
         /// <summary>
-        ///   Get a group
+        ///     Get a group
         /// </summary>
-        /// <param name = "GroupID">ID of the group</param>
+        /// <param name="GroupID">ID of the group</param>
         /// <returns>The group's data.  Null if there is no such group.</returns>
         GroupRecord GetGroupRecord(UUID GroupID);
 

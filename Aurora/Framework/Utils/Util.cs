@@ -58,7 +58,7 @@ using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   The method used by Util.FireAndForget for asynchronously firing events
+    ///     The method used by Util.FireAndForget for asynchronously firing events
     /// </summary>
     public enum FireAndForgetMethod
     {
@@ -77,7 +77,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   Miscellaneous utility functions
+    ///     Miscellaneous utility functions
     /// </summary>
     public class Util
     {
@@ -89,16 +89,17 @@ namespace Aurora.Framework
         private static readonly object XferLock = new object();
 
         /// <summary>
-        ///   Thread pool used for Util.FireAndForget if
-        ///   FireAndForgetMethod.SmartThreadPool is used
+        ///     Thread pool used for Util.FireAndForget if
+        ///     FireAndForgetMethod.SmartThreadPool is used
         /// </summary>
         private static SmartThreadPool m_ThreadPool;
+
         private static volatile bool m_threadPoolRunning;
 
         // Unix-epoch starts at January 1st 1970, 00:00:00 UTC. And all our times in the server are (or at least should be) in UTC.
         public static readonly DateTime UnixEpoch =
             DateTime.ParseExact("1970-01-01 00:00:00 +0", "yyyy-MM-dd hh:mm:ss z", DateTimeFormatInfo.InvariantInfo).
-                ToUniversalTime();
+                     ToUniversalTime();
 
         public static readonly Regex UUIDPattern
             = new Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -107,227 +108,232 @@ namespace Aurora.Framework
 
         static Util()
         {
-            RuntimeTypeModel.Default.Add(typeof(UUID), false)
-                            .SetSurrogate(typeof(UUIDSurrogate));
-            RuntimeTypeModel.Default.Add(typeof(IPEndPoint), false)
-                            .SetSurrogate(typeof(IPEndPointSurrogate));
-            RuntimeTypeModel.Default.Add(typeof(OSD), false)
-                            .SetSurrogate(typeof(OSDSurrogate));
-            RuntimeTypeModel.Default.Add(typeof(OSDMap), false)
-                            .SetSurrogate(typeof(OSDMapSurrogate));
-            RuntimeTypeModel.Default.Add(typeof(Vector3), false)
-                            .SetSurrogate(typeof(Vector3Surrogate));
-            RuntimeTypeModel.Default.Add(typeof(Quaternion), false)
-                            .SetSurrogate(typeof(QuaternionSurrogate));
-            RuntimeTypeModel.Default.Add(typeof(ParcelManager.ParcelAccessEntry), false)
-                            .SetSurrogate(typeof(ParcelAccessEntrySurrogate));
-            RuntimeTypeModel.Default.Add(typeof(MediaEntry), false)
-                            .SetSurrogate(typeof(MediaEntrySurrogate));
-            RuntimeTypeModel.Default.Add(typeof(System.Drawing.Color), false)
-                            .SetSurrogate(typeof(ColorSurrogate));
+            RuntimeTypeModel.Default.Add(typeof (UUID), false)
+                            .SetSurrogate(typeof (UUIDSurrogate));
+            RuntimeTypeModel.Default.Add(typeof (IPEndPoint), false)
+                            .SetSurrogate(typeof (IPEndPointSurrogate));
+            RuntimeTypeModel.Default.Add(typeof (OSD), false)
+                            .SetSurrogate(typeof (OSDSurrogate));
+            RuntimeTypeModel.Default.Add(typeof (OSDMap), false)
+                            .SetSurrogate(typeof (OSDMapSurrogate));
+            RuntimeTypeModel.Default.Add(typeof (Vector3), false)
+                            .SetSurrogate(typeof (Vector3Surrogate));
+            RuntimeTypeModel.Default.Add(typeof (Quaternion), false)
+                            .SetSurrogate(typeof (QuaternionSurrogate));
+            RuntimeTypeModel.Default.Add(typeof (ParcelManager.ParcelAccessEntry), false)
+                            .SetSurrogate(typeof (ParcelAccessEntrySurrogate));
+            RuntimeTypeModel.Default.Add(typeof (MediaEntry), false)
+                            .SetSurrogate(typeof (MediaEntrySurrogate));
+            RuntimeTypeModel.Default.Add(typeof (System.Drawing.Color), false)
+                            .SetSurrogate(typeof (ColorSurrogate));
         }
 
         #region Protobuf helpers
 
         [ProtoContract]
-        class UUIDSurrogate
+        private class UUIDSurrogate
         {
-            [ProtoMember(1)]
-            public string ID;
+            [ProtoMember(1)] public string ID;
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator UUID(UUIDSurrogate value)
             {
                 return UUID.Parse(value.ID);
             }
+
             public static implicit operator UUIDSurrogate(UUID value)
             {
                 return new UUIDSurrogate
-                {
-                    ID = value.ToString()
-                };
+                           {
+                               ID = value.ToString()
+                           };
             }
         }
+
         [ProtoContract]
-        class Vector3Surrogate
+        private class Vector3Surrogate
         {
-            [ProtoMember(1)]
-            public float X;
-            [ProtoMember(2)]
-            public float Y;
-            [ProtoMember(3)]
-            public float Z;
+            [ProtoMember(1)] public float X;
+            [ProtoMember(2)] public float Y;
+            [ProtoMember(3)] public float Z;
 
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator Vector3(Vector3Surrogate value)
             {
                 return new Vector3(value.X, value.Y, value.Z);
             }
+
             public static implicit operator Vector3Surrogate(Vector3 value)
             {
                 return new Vector3Surrogate()
-                {
-                    X = value.X,
-                    Y = value.Y,
-                    Z = value.Z
-                };
+                           {
+                               X = value.X,
+                               Y = value.Y,
+                               Z = value.Z
+                           };
             }
         }
+
         [ProtoContract]
-        class QuaternionSurrogate
+        private class QuaternionSurrogate
         {
-            [ProtoMember(1)]
-            public float X;
-            [ProtoMember(2)]
-            public float Y;
-            [ProtoMember(3)]
-            public float Z;
-            [ProtoMember(4)]
-            public float W;
+            [ProtoMember(1)] public float X;
+            [ProtoMember(2)] public float Y;
+            [ProtoMember(3)] public float Z;
+            [ProtoMember(4)] public float W;
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator Quaternion(QuaternionSurrogate value)
             {
                 return new Quaternion(value.X, value.Y, value.Z, value.W);
             }
+
             public static implicit operator QuaternionSurrogate(Quaternion value)
             {
                 return new QuaternionSurrogate()
-                {
-                    X = value.X,
-                    Y = value.Y,
-                    Z = value.Z,
-                    W = value.W
-                };
+                           {
+                               X = value.X,
+                               Y = value.Y,
+                               Z = value.Z,
+                               W = value.W
+                           };
             }
         }
+
         [ProtoContract]
-        class IPEndPointSurrogate
+        private class IPEndPointSurrogate
         {
-            [ProtoMember(1)]
-            public string IPAddr;
-            [ProtoMember(2)]
-            public int Port;
+            [ProtoMember(1)] public string IPAddr;
+            [ProtoMember(2)] public int Port;
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator IPEndPoint(IPEndPointSurrogate value)
             {
                 return value == null ? null : new IPEndPoint(IPAddress.Parse(value.IPAddr), value.Port);
             }
+
             public static implicit operator IPEndPointSurrogate(IPEndPoint value)
             {
-                return value == null ? null : new IPEndPointSurrogate
-                {
-                    IPAddr = value.Address.ToString(),
-                    Port = value.Port
-                };
+                return value == null
+                           ? null
+                           : new IPEndPointSurrogate
+                                 {
+                                     IPAddr = value.Address.ToString(),
+                                     Port = value.Port
+                                 };
             }
         }
+
         [ProtoContract]
-        class OSDSurrogate
+        private class OSDSurrogate
         {
-            [ProtoMember(1)]
-            public string str;
+            [ProtoMember(1)] public string str;
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator OSD(OSDSurrogate value)
             {
                 return value.str == "" ? null : OSDParser.DeserializeJson(value.str);
             }
+
             public static implicit operator OSDSurrogate(OSD value)
             {
                 return new OSDSurrogate
-                {
-                    str = value == null ? "" : OSDParser.SerializeJsonString(value)
-                };
+                           {
+                               str = value == null ? "" : OSDParser.SerializeJsonString(value)
+                           };
             }
         }
+
         [ProtoContract]
-        class OSDMapSurrogate
+        private class OSDMapSurrogate
         {
-            [ProtoMember(1)]
-            public string str;
+            [ProtoMember(1)] public string str;
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator OSDMap(OSDMapSurrogate value)
             {
-                return value.str == "" ? null : (OSDMap)OSDParser.DeserializeJson(value.str);
+                return value.str == "" ? null : (OSDMap) OSDParser.DeserializeJson(value.str);
             }
+
             public static implicit operator OSDMapSurrogate(OSDMap value)
             {
                 return new OSDMapSurrogate
-                {
-                    str = value == null ? "" : OSDParser.SerializeJsonString(value)
-                };
+                           {
+                               str = value == null ? "" : OSDParser.SerializeJsonString(value)
+                           };
             }
         }
+
         [ProtoContract]
-        class ParcelAccessEntrySurrogate
+        private class ParcelAccessEntrySurrogate
         {
-            [ProtoMember(1)]
-            public UUID AgentID;
-            [ProtoMember(2)]
-            public AccessList Flags;
-            [ProtoMember(3)]
-            public DateTime Time;
+            [ProtoMember(1)] public UUID AgentID;
+            [ProtoMember(2)] public AccessList Flags;
+            [ProtoMember(3)] public DateTime Time;
 
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator ParcelManager.ParcelAccessEntry(ParcelAccessEntrySurrogate value)
             {
-                return new ParcelManager.ParcelAccessEntry() { AgentID = value.AgentID, Flags = value.Flags, Time = value.Time };
+                return new ParcelManager.ParcelAccessEntry()
+                           {
+                               AgentID = value.AgentID,
+                               Flags = value.Flags,
+                               Time = value.Time
+                           };
             }
+
             public static implicit operator ParcelAccessEntrySurrogate(ParcelManager.ParcelAccessEntry value)
             {
                 return new ParcelAccessEntrySurrogate
-                {
-                    AgentID = value.AgentID,
-                    Flags = value.Flags,
-                    Time = value.Time
-                };
+                           {
+                               AgentID = value.AgentID,
+                               Flags = value.Flags,
+                               Time = value.Time
+                           };
             }
         }
+
         [ProtoContract]
-        class MediaEntrySurrogate
+        private class MediaEntrySurrogate
         {
-            [ProtoMember(1)]
-            public OSD info;
+            [ProtoMember(1)] public OSD info;
 
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator MediaEntry(MediaEntrySurrogate value)
             {
                 return value.info == null ? null : MediaEntry.FromOSD(value.info);
             }
+
             public static implicit operator MediaEntrySurrogate(MediaEntry value)
             {
                 return new MediaEntrySurrogate
-                {
-                    info = value == null ? null : value.GetOSD()
-                };
+                           {
+                               info = value == null ? null : value.GetOSD()
+                           };
             }
         }
+
         [ProtoContract]
-        class ColorSurrogate
+        private class ColorSurrogate
         {
-            [ProtoMember(1)]
-            public int A;
-            [ProtoMember(2)]
-            public int R;
-            [ProtoMember(3)]
-            public int G;
-            [ProtoMember(4)]
-            public int B;
+            [ProtoMember(1)] public int A;
+            [ProtoMember(2)] public int R;
+            [ProtoMember(3)] public int G;
+            [ProtoMember(4)] public int B;
 
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator System.Drawing.Color(ColorSurrogate value)
             {
                 return System.Drawing.Color.FromArgb(value.A, value.R, value.G, value.B);
             }
+
             public static implicit operator ColorSurrogate(System.Drawing.Color value)
             {
                 return new ColorSurrogate
-                {
-                    A = value.A,
-                    R = value.R,
-                    G = value.G,
-                    B = value.B
-                };
+                           {
+                               A = value.A,
+                               R = value.R,
+                               G = value.G,
+                               B = value.B
+                           };
             }
         }
+
         #endregion
 
         public static string ConvertToString(List<string> list)
@@ -354,17 +360,18 @@ namespace Aurora.Framework
         public static string ConvertToString(OSDMap values, string lineStart)
         {
             if (string.IsNullOrEmpty(lineStart)) lineStart = "\t";
-            StringBuilder builder = new StringBuilder ();
+            StringBuilder builder = new StringBuilder();
             String[] keys = new String[values.Count];
-            values.Keys.CopyTo (keys, 0);
-            foreach (String key in keys) {
-                 Object val = values [key];
-                 if (val == null)
-                     builder.AppendFormat("{0}{1}=null\n", lineStart, key);
-                 else if (val is OSDMap)
-                     builder.AppendFormat("{0}{1}=...\n{2}", lineStart, key, ConvertToString((OSDMap)val, "\t\t"));
-                 else
-                     builder.AppendFormat("{0}{1}={2}\n", lineStart, key, val.ToString());
+            values.Keys.CopyTo(keys, 0);
+            foreach (String key in keys)
+            {
+                Object val = values[key];
+                if (val == null)
+                    builder.AppendFormat("{0}{1}=null\n", lineStart, key);
+                else if (val is OSDMap)
+                    builder.AppendFormat("{0}{1}=...\n{2}", lineStart, key, ConvertToString((OSDMap) val, "\t\t"));
+                else
+                    builder.AppendFormat("{0}{1}={2}\n", lineStart, key, val.ToString());
             }
             return builder.ToString();
         }
@@ -373,7 +380,7 @@ namespace Aurora.Framework
         {
             //Do both , and " " so that it removes any annoying spaces in the string added by users
             List<string> value =
-                new List<string>(listAsString.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries));
+                new List<string>(listAsString.Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries));
             return value;
         }
 
@@ -381,7 +388,7 @@ namespace Aurora.Framework
         {
             //Do both , and " " so that it removes any annoying spaces in the string added by users
             List<string> value =
-                new List<string>(listAsString.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries));
+                new List<string>(listAsString.Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries));
             Dictionary<string, string> dict = new Dictionary<string, string>();
             foreach (var v in value)
             {
@@ -397,24 +404,26 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Gets the name of the directory where the current running executable
-        ///   is located
+        ///     Gets the name of the directory where the current running executable
+        ///     is located
         /// </summary>
-        /// <returns>Filesystem path to the directory containing the current
-        ///   executable</returns>
+        /// <returns>
+        ///     Filesystem path to the directory containing the current
+        ///     executable
+        /// </returns>
         public static string ExecutingDirectory()
         {
             return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
 
         /// <summary>
-        /// Copy data from one stream to another, leaving the read position of both streams at the beginning.
+        ///     Copy data from one stream to another, leaving the read position of both streams at the beginning.
         /// </summary>
         /// <param name='inputStream'>
-        /// Input stream.  Must be seekable.
+        ///     Input stream.  Must be seekable.
         /// </param>
         /// <exception cref='ArgumentException'>
-        /// Thrown if the input stream is not seekable.
+        ///     Thrown if the input stream is not seekable.
         /// </exception>
         public static Stream Copy(Stream inputStream)
         {
@@ -440,31 +449,31 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Linear interpolates B<->C using percent A
+        ///     Linear interpolates B<->C using percent A
         /// </summary>
-        /// <param name = "a"></param>
-        /// <param name = "b"></param>
-        /// <param name = "c"></param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
         /// <returns></returns>
         public static double lerp(double a, double b, double c)
         {
-            return (b * a) + (c * (1 - a));
+            return (b*a) + (c*(1 - a));
         }
 
         /// <summary>
-        ///   Bilinear Interpolate, see Lerp but for 2D using 'percents' X & Y.
-        ///   Layout:
-        ///   A B
-        ///   C D
-        ///   A<->C = Y
-        ///   C<->D = X
+        ///     Bilinear Interpolate, see Lerp but for 2D using 'percents' X & Y.
+        ///     Layout:
+        ///     A B
+        ///     C D
+        ///     A<->C = Y
+        ///     C<->D = X
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
-        /// <param name = "a"></param>
-        /// <param name = "b"></param>
-        /// <param name = "c"></param>
-        /// <param name = "d"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <param name="d"></param>
         /// <returns></returns>
         public static double lerp2D(double x, double y, double a, double b, double c, double d)
         {
@@ -475,81 +484,81 @@ namespace Aurora.Framework
         public static Encoding UTF8 = Encoding.UTF8;
 
         /// <value>
-        ///   Well known UUID for the blank texture used in the Linden SL viewer version 1.20 (and hopefully onwards) 
+        ///     Well known UUID for the blank texture used in the Linden SL viewer version 1.20 (and hopefully onwards)
         /// </value>
         public static UUID BLANK_TEXTURE_UUID = new UUID("5748decc-f629-461c-9a36-a35a221fe21f");
 
         #region Vector Equations
 
         /// <summary>
-        ///   Get the distance between two 3d vectors
+        ///     Get the distance between two 3d vectors
         /// </summary>
-        /// <param name = "a">A 3d vector</param>
-        /// <param name = "b">A 3d vector</param>
+        /// <param name="a">A 3d vector</param>
+        /// <param name="b">A 3d vector</param>
         /// <returns>The distance between the two vectors</returns>
         public static double GetDistanceTo(Vector3 a, Vector3 b)
         {
             float dx = a.X - b.X;
             float dy = a.Y - b.Y;
             float dz = a.Z - b.Z;
-            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+            return Math.Sqrt(dx*dx + dy*dy + dz*dz);
         }
 
         /// <summary>
-        ///   Get the distance between two 3d vectors (excluding Z)
+        ///     Get the distance between two 3d vectors (excluding Z)
         /// </summary>
-        /// <param name = "a">A 3d vector</param>
-        /// <param name = "b">A 3d vector</param>
+        /// <param name="a">A 3d vector</param>
+        /// <param name="b">A 3d vector</param>
         /// <returns>The distance between the two vectors</returns>
         public static double GetFlatDistanceTo(Vector3 a, Vector3 b)
         {
             float dx = a.X - b.X;
             float dy = a.Y - b.Y;
-            return Math.Sqrt(dx * dx + dy * dy);
+            return Math.Sqrt(dx*dx + dy*dy);
         }
 
         /// <summary>
-        ///   Returns true if the distance beween A and B is less than amount. Significantly faster than GetDistanceTo since it eliminates the Sqrt.
+        ///     Returns true if the distance beween A and B is less than amount. Significantly faster than GetDistanceTo since it eliminates the Sqrt.
         /// </summary>
-        /// <param name = "a"></param>
-        /// <param name = "b"></param>
-        /// <param name = "amount"></param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="amount"></param>
         /// <returns></returns>
         public static bool DistanceLessThan(Vector3 a, Vector3 b, double amount)
         {
             float dx = a.X - b.X;
             float dy = a.Y - b.Y;
             float dz = a.Z - b.Z;
-            return (dx * dx + dy * dy + dz * dz) < (amount * amount);
+            return (dx*dx + dy*dy + dz*dz) < (amount*amount);
         }
 
         /// <summary>
-        ///   Get the magnitude of a 3d vector
+        ///     Get the magnitude of a 3d vector
         /// </summary>
-        /// <param name = "a">A 3d vector</param>
+        /// <param name="a">A 3d vector</param>
         /// <returns>The magnitude of the vector</returns>
         public static double GetMagnitude(Vector3 a)
         {
-            return Math.Sqrt((a.X * a.X) + (a.Y * a.Y) + (a.Z * a.Z));
+            return Math.Sqrt((a.X*a.X) + (a.Y*a.Y) + (a.Z*a.Z));
         }
 
         /// <summary>
-        ///   Get a normalized form of a 3d vector
-        ///   The vector paramater cannot be <0,0,0>
+        ///     Get a normalized form of a 3d vector
+        ///     The vector paramater cannot be <0,0,0>
         /// </summary>
-        /// <param name = "a">A 3d vector</param>
+        /// <param name="a">A 3d vector</param>
         /// <returns>A new vector which is normalized form of the vector</returns>
         public static Vector3 GetNormalizedVector(Vector3 a)
         {
             if (IsZeroVector(a))
                 throw new ArgumentException("Vector paramater cannot be a zero vector.");
 
-            float Mag = (float)GetMagnitude(a);
-            return new Vector3(a.X / Mag, a.Y / Mag, a.Z / Mag);
+            float Mag = (float) GetMagnitude(a);
+            return new Vector3(a.X/Mag, a.Y/Mag, a.Z/Mag);
         }
 
         /// <summary>
-        ///   Returns if a vector is a zero vector (has all zero components)
+        ///     Returns if a vector is a zero vector (has all zero components)
         /// </summary>
         /// <returns></returns>
         public static bool IsZeroVector(Vector3 v)
@@ -567,16 +576,16 @@ namespace Aurora.Framework
         public static Quaternion Axes2Rot(Vector3 fwd, Vector3 left, Vector3 up)
         {
             float s;
-            float tr = (float)(fwd.X + left.Y + up.Z + 1.0);
+            float tr = (float) (fwd.X + left.Y + up.Z + 1.0);
 
             if (tr >= 1.0)
             {
-                s = (float)(0.5 / Math.Sqrt(tr));
+                s = (float) (0.5/Math.Sqrt(tr));
                 return new Quaternion(
-                    (left.Z - up.Y) * s,
-                    (up.X - fwd.Z) * s,
-                    (fwd.Y - left.X) * s,
-                    (float)0.25 / s);
+                    (left.Z - up.Y)*s,
+                    (up.X - fwd.Z)*s,
+                    (fwd.Y - left.X)*s,
+                    (float) 0.25/s);
             }
             else
             {
@@ -584,36 +593,36 @@ namespace Aurora.Framework
 
                 if (max < fwd.X)
                 {
-                    s = (float)(Math.Sqrt(fwd.X - (left.Y + up.Z) + 1.0));
-                    float x = (float)(s * 0.5);
-                    s = (float)(0.5 / s);
+                    s = (float) (Math.Sqrt(fwd.X - (left.Y + up.Z) + 1.0));
+                    float x = (float) (s*0.5);
+                    s = (float) (0.5/s);
                     return new Quaternion(
                         x,
-                        (fwd.Y + left.X) * s,
-                        (up.X + fwd.Z) * s,
-                        (left.Z - up.Y) * s);
+                        (fwd.Y + left.X)*s,
+                        (up.X + fwd.Z)*s,
+                        (left.Z - up.Y)*s);
                 }
                 else if (max == left.Y)
                 {
-                    s = (float)(Math.Sqrt(left.Y - (up.Z + fwd.X) + 1.0));
-                    float y = (float)(s * 0.5);
-                    s = (float)(0.5 / s);
+                    s = (float) (Math.Sqrt(left.Y - (up.Z + fwd.X) + 1.0));
+                    float y = (float) (s*0.5);
+                    s = (float) (0.5/s);
                     return new Quaternion(
-                        (fwd.Y + left.X) * s,
+                        (fwd.Y + left.X)*s,
                         y,
-                        (left.Z + up.Y) * s,
-                        (up.X - fwd.Z) * s);
+                        (left.Z + up.Y)*s,
+                        (up.X - fwd.Z)*s);
                 }
                 else
                 {
-                    s = (float)(Math.Sqrt(up.Z - (fwd.X + left.Y) + 1.0));
-                    float z = (float)(s * 0.5);
-                    s = (float)(0.5 / s);
+                    s = (float) (Math.Sqrt(up.Z - (fwd.X + left.Y) + 1.0));
+                    float z = (float) (s*0.5);
+                    s = (float) (0.5/s);
                     return new Quaternion(
-                        (up.X + fwd.Z) * s,
-                        (left.Z + up.Y) * s,
+                        (up.X + fwd.Z)*s,
+                        (left.Z + up.Y)*s,
                         z,
-                        (fwd.Y - left.X) * s);
+                        (fwd.Y - left.X)*s);
                 }
             }
         }
@@ -644,13 +653,12 @@ namespace Aurora.Framework
             return id;
         }
 
-        ///<summary>
-        ///  Debug utility function to convert unbroken strings of XML into something human readable for occasional debugging purposes.
-        ///
-        ///  Please don't delete me even if I appear currently unused!
-        ///</summary>
-        ///<param name = "rawXml"></param>
-        ///<returns></returns>
+        /// <summary>
+        ///     Debug utility function to convert unbroken strings of XML into something human readable for occasional debugging purposes.
+        ///     Please don't delete me even if I appear currently unused!
+        /// </summary>
+        /// <param name="rawXml"></param>
+        /// <returns></returns>
         public static string GetFormattedXml(string rawXml)
         {
             XmlDocument xd = new XmlDocument();
@@ -659,7 +667,7 @@ namespace Aurora.Framework
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
 
-            XmlTextWriter xtw = new XmlTextWriter(sw) { Formatting = Formatting.Indented };
+            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
 
             try
             {
@@ -715,7 +723,7 @@ namespace Aurora.Framework
         {
             get
             {
-                int p = (int)Environment.OSVersion.Platform;
+                int p = (int) Environment.OSVersion.Platform;
                 return (p == 4) || (p == 6) || (p == 128);
             }
         }
@@ -728,7 +736,7 @@ namespace Aurora.Framework
         public static int ToUnixTime(DateTime stamp)
         {
             TimeSpan t = stamp.ToUniversalTime() - UnixEpoch;
-            return (int)t.TotalSeconds;
+            return (int) t.TotalSeconds;
         }
 
         public static DateTime ToDateTime(ulong seconds)
@@ -744,9 +752,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Return an md5 hash of the given string
+        ///     Return an md5 hash of the given string
         /// </summary>
-        /// <param name = "data"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
         public static string Md5Hash(string data)
         {
@@ -764,9 +772,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Return an SHA1 hash of the given string
+        ///     Return an SHA1 hash of the given string
         /// </summary>
-        /// <param name = "data"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
         public static string SHA1Hash(string data)
         {
@@ -802,9 +810,9 @@ namespace Aurora.Framework
         {
             Vector3 ret = x;
             float lenSq = x.LengthSquared();
-            if (lenSq > (max * max))
+            if (lenSq > (max*max))
             {
-                x = x / x.Length() * max;
+                x = x/x.Length()*max;
             }
             return x;
         }
@@ -815,17 +823,19 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Convert a variable length field (byte array) to a string, with a
-        ///   field name prepended to each line of the output
+        ///     Convert a variable length field (byte array) to a string, with a
+        ///     field name prepended to each line of the output
         /// </summary>
         /// <remarks>
-        ///   If the byte array has unprintable characters in it, a
-        ///   hex dump will be put in the string instead
+        ///     If the byte array has unprintable characters in it, a
+        ///     hex dump will be put in the string instead
         /// </remarks>
-        /// <param name = "bytes">The byte array to convert to a string</param>
-        /// <param name = "fieldName">A field name to prepend to each line of output</param>
-        /// <returns>An ASCII string or a string containing a hex dump, minus
-        ///   the null terminator</returns>
+        /// <param name="bytes">The byte array to convert to a string</param>
+        /// <param name="fieldName">A field name to prepend to each line of output</param>
+        /// <returns>
+        ///     An ASCII string or a string containing a hex dump, minus
+        ///     the null terminator
+        /// </returns>
         public static string FieldToString(byte[] bytes, string fieldName)
         {
             // Check for a common case
@@ -876,7 +886,7 @@ namespace Aurora.Framework
                     for (int j = 0; j < 16 && (i + j) < bytes.Length; j++)
                     {
                         if (bytes[i + j] >= 0x20 && bytes[i + j] < 0x7E)
-                            output.Append((char)bytes[i + j]);
+                            output.Append((char) bytes[i + j]);
                         else
                             output.Append(".");
                     }
@@ -887,9 +897,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Removes all invalid path chars (OS dependent)
+        ///     Removes all invalid path chars (OS dependent)
         /// </summary>
-        /// <param name = "path">path</param>
+        /// <param name="path">path</param>
         /// <returns>safe path</returns>
         public static string safePath(string path)
         {
@@ -897,9 +907,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Removes all invalid filename chars (OS dependent)
+        ///     Removes all invalid filename chars (OS dependent)
         /// </summary>
-        /// <param name = "path">filename</param>
+        /// <param name="path">filename</param>
         /// <returns>safe filename</returns>
         public static string safeFileName(string filename)
         {
@@ -945,7 +955,9 @@ namespace Aurora.Framework
             {
                 FileInfo f = new FileInfo(FileName);
 
-                Name = !String.IsNullOrEmpty(f.Extension) ? f.FullName.Substring(0, f.FullName.LastIndexOf('.')) : f.FullName;
+                Name = !String.IsNullOrEmpty(f.Extension)
+                           ? f.FullName.Substring(0, f.FullName.LastIndexOf('.'))
+                           : f.FullName;
 
                 while (File.Exists(FileName))
                 {
@@ -972,10 +984,10 @@ namespace Aurora.Framework
 
         public static void AddDataRowToConfig(IConfigSource config, DataRow row)
         {
-            config.Configs.Add((string)row[0]);
+            config.Configs.Add((string) row[0]);
             for (int i = 0; i < row.Table.Columns.Count; i++)
             {
-                config.Configs[(string)row[0]].Set(row.Table.Columns[i].ColumnName, row[i]);
+                config.Configs[(string) row[0]].Set(row.Table.Columns[i].ColumnName, row[i]);
             }
         }
 
@@ -990,9 +1002,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Convert an UUID to a raw uuid string.  Right now this is a string without hyphens.
+        ///     Convert an UUID to a raw uuid string.  Right now this is a string without hyphens.
         /// </summary>
-        /// <param name = "UUID"></param>
+        /// <param name="UUID"></param>
         /// <returns></returns>
         public static String ToRawUuidString(UUID UUID)
         {
@@ -1026,8 +1038,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   returns the contents of /etc/issue on Unix Systems
-        ///   Use this for where it's absolutely necessary to implement platform specific stuff
+        ///     returns the contents of /etc/issue on Unix Systems
+        ///     Use this for where it's absolutely necessary to implement platform specific stuff
         /// </summary>
         /// <returns></returns>
         public static string ReadEtcIssue()
@@ -1103,7 +1115,7 @@ namespace Aurora.Framework
         public static void Compress7ZipFile(string path, string destination)
         {
             ProcessStartInfo p = new ProcessStartInfo();
-            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
+            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof (Util)).CodeBase);
             if (pa != null)
             {
                 p.FileName = Path.Combine(pa, "7za.exe");
@@ -1117,7 +1129,7 @@ namespace Aurora.Framework
         public static void UnCompress7ZipFile(string path, string destination)
         {
             ProcessStartInfo p = new ProcessStartInfo();
-            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
+            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof (Util)).CodeBase);
             if (pa != null)
             {
                 p.FileName = Path.Combine(pa, "7za.exe");
@@ -1223,9 +1235,9 @@ namespace Aurora.Framework
                     int nextByte = stream.ReadByte();
                     if (nextByte != -1)
                     {
-                        byte[] temp = new byte[readBuffer.Length * 2];
+                        byte[] temp = new byte[readBuffer.Length*2];
                         Buffer.BlockCopy(readBuffer, 0, temp, 0, readBuffer.Length);
-                        Buffer.SetByte(temp, totalBytesRead, (byte)nextByte);
+                        Buffer.SetByte(temp, totalBytesRead, (byte) nextByte);
                         readBuffer = temp;
                         totalBytesRead++;
                     }
@@ -1242,20 +1254,20 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Converts a byte array in big endian order into an ulong.
+        ///     Converts a byte array in big endian order into an ulong.
         /// </summary>
-        /// <param name = "bytes">
-        ///   The array of bytes
+        /// <param name="bytes">
+        ///     The array of bytes
         /// </param>
         /// <returns>
-        ///   The extracted ulong
+        ///     The extracted ulong
         /// </returns>
         public static ulong BytesToUInt64Big(byte[] bytes)
         {
             if (bytes.Length < 8) return 0;
-            return ((ulong)bytes[0] << 56) | ((ulong)bytes[1] << 48) | ((ulong)bytes[2] << 40) |
-                   ((ulong)bytes[3] << 32) |
-                   ((ulong)bytes[4] << 24) | ((ulong)bytes[5] << 16) | ((ulong)bytes[6] << 8) | bytes[7];
+            return ((ulong) bytes[0] << 56) | ((ulong) bytes[1] << 48) | ((ulong) bytes[2] << 40) |
+                   ((ulong) bytes[3] << 32) |
+                   ((ulong) bytes[4] << 24) | ((ulong) bytes[5] << 16) | ((ulong) bytes[6] << 8) | bytes[7];
         }
 
         // used for RemoteParcelRequest (for "About Landmark")
@@ -1317,10 +1329,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Get operating system information if available.  Returns only the first 45 characters of information
+        ///     Get operating system information if available.  Returns only the first 45 characters of information
         /// </summary>
         /// <returns>
-        ///   Operating system information.  Returns an empty string if none was available.
+        ///     Operating system information.  Returns an empty string if none was available.
         /// </returns>
         public static string GetOperatingSystemInformation()
         {
@@ -1365,15 +1377,16 @@ namespace Aurora.Framework
                 case PlatformID.MacOSX:
                     return RuntimeEnvironment.Mono;
                 default:
-                    return Type.GetType("Mono.Runtime") != null ? RuntimeEnvironment.WinMono :
-                               RuntimeEnvironment.NET;
+                    return Type.GetType("Mono.Runtime") != null
+                               ? RuntimeEnvironment.WinMono
+                               : RuntimeEnvironment.NET;
             }
         }
 
         /// <summary>
-        ///   Is the given string a UUID?
+        ///     Is the given string a UUID?
         /// </summary>
-        /// <param name = "s"></param>
+        /// <param name="s"></param>
         /// <returns></returns>
         public static bool isUUID(string s)
         {
@@ -1412,23 +1425,30 @@ namespace Aurora.Framework
                 {
                     if (fieldInfo.FieldType == typeof (String))
                     {
-                        fieldInfo.SetValue(settingsClass, config.Get(fieldInfo.Name, (string) fieldInfo.GetValue(settingsClass)));
+                        fieldInfo.SetValue(settingsClass,
+                                           config.Get(fieldInfo.Name, (string) fieldInfo.GetValue(settingsClass)));
                     }
                     else if (fieldInfo.FieldType == typeof (Boolean))
                     {
-                        fieldInfo.SetValue(settingsClass, config.GetBoolean(fieldInfo.Name, (bool) fieldInfo.GetValue(settingsClass)));
+                        fieldInfo.SetValue(settingsClass,
+                                           config.GetBoolean(fieldInfo.Name, (bool) fieldInfo.GetValue(settingsClass)));
                     }
                     else if (fieldInfo.FieldType == typeof (Int32))
                     {
-                        fieldInfo.SetValue(settingsClass, config.GetInt(fieldInfo.Name, (int) fieldInfo.GetValue(settingsClass)));
+                        fieldInfo.SetValue(settingsClass,
+                                           config.GetInt(fieldInfo.Name, (int) fieldInfo.GetValue(settingsClass)));
                     }
                     else if (fieldInfo.FieldType == typeof (Single))
                     {
-                        fieldInfo.SetValue(settingsClass, config.GetFloat(fieldInfo.Name, (float) fieldInfo.GetValue(settingsClass)));
+                        fieldInfo.SetValue(settingsClass,
+                                           config.GetFloat(fieldInfo.Name, (float) fieldInfo.GetValue(settingsClass)));
                     }
                     else if (fieldInfo.FieldType == typeof (UInt32))
                     {
-                        fieldInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(fieldInfo.Name, ((uint) fieldInfo.GetValue(settingsClass)).ToString())));
+                        fieldInfo.SetValue(settingsClass,
+                                           Convert.ToUInt32(config.Get(fieldInfo.Name,
+                                                                       ((uint) fieldInfo.GetValue(settingsClass))
+                                                                           .ToString())));
                     }
                 }
             }
@@ -1440,23 +1460,34 @@ namespace Aurora.Framework
                 {
                     if (propInfo.PropertyType == typeof (String))
                     {
-                        propInfo.SetValue(settingsClass, config.Get(propInfo.Name, (string) propInfo.GetValue(settingsClass, null)), null);
+                        propInfo.SetValue(settingsClass,
+                                          config.Get(propInfo.Name, (string) propInfo.GetValue(settingsClass, null)),
+                                          null);
                     }
                     else if (propInfo.PropertyType == typeof (Boolean))
                     {
-                        propInfo.SetValue(settingsClass, config.GetBoolean(propInfo.Name, (bool) propInfo.GetValue(settingsClass, null)), null);
+                        propInfo.SetValue(settingsClass,
+                                          config.GetBoolean(propInfo.Name, (bool) propInfo.GetValue(settingsClass, null)),
+                                          null);
                     }
                     else if (propInfo.PropertyType == typeof (Int32))
                     {
-                        propInfo.SetValue(settingsClass, config.GetInt(propInfo.Name, (int) propInfo.GetValue(settingsClass, null)), null);
+                        propInfo.SetValue(settingsClass,
+                                          config.GetInt(propInfo.Name, (int) propInfo.GetValue(settingsClass, null)),
+                                          null);
                     }
                     else if (propInfo.PropertyType == typeof (Single))
                     {
-                        propInfo.SetValue(settingsClass, config.GetFloat(propInfo.Name, (float) propInfo.GetValue(settingsClass, null)), null);
+                        propInfo.SetValue(settingsClass,
+                                          config.GetFloat(propInfo.Name, (float) propInfo.GetValue(settingsClass, null)),
+                                          null);
                     }
                     if (propInfo.PropertyType == typeof (UInt32))
                     {
-                        propInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(propInfo.Name, ((uint) propInfo.GetValue(settingsClass, null)).ToString())), null);
+                        propInfo.SetValue(settingsClass,
+                                          Convert.ToUInt32(config.Get(propInfo.Name,
+                                                                      ((uint) propInfo.GetValue(settingsClass, null))
+                                                                          .ToString())), null);
                     }
                 }
             }
@@ -1527,10 +1558,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Produces an OSDMap from its string representation on a stream
+        ///     Produces an OSDMap from its string representation on a stream
         /// </summary>
-        /// <param name = "data">The stream</param>
-        /// <param name = "length">The size of the data on the stream</param>
+        /// <param name="data">The stream</param>
+        /// <param name="length">The size of the data on the stream</param>
         /// <returns>The OSDMap or an exception</returns>
         public static OSDMap GetOSDMap(Stream stream, int length)
         {
@@ -1542,7 +1573,7 @@ namespace Aurora.Framework
             buffer = OSDParser.DeserializeJson(strdata);
             if (buffer.Type == OSDType.Map)
             {
-                args = (OSDMap)buffer;
+                args = (OSDMap) buffer;
                 return args;
             }
             return null;
@@ -1558,7 +1589,7 @@ namespace Aurora.Framework
                 buffer = OSDParser.DeserializeJson(data);
                 if (buffer.Type == OSDType.Map)
                 {
-                    args = (OSDMap)buffer;
+                    args = (OSDMap) buffer;
                     return args;
                 }
                 else
@@ -1581,7 +1612,7 @@ namespace Aurora.Framework
 
             if (Path.VolumeSeparatorChar != Path.DirectorySeparatorChar)
             {
-                string[] vcomps = path.Split(new[] { Path.VolumeSeparatorChar }, 2, StringSplitOptions.RemoveEmptyEntries);
+                string[] vcomps = path.Split(new[] {Path.VolumeSeparatorChar}, 2, StringSplitOptions.RemoveEmptyEntries);
 
                 if (vcomps.Length > 1)
                 {
@@ -1590,16 +1621,16 @@ namespace Aurora.Framework
                 }
             }
 
-            string[] comps = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
+            string[] comps = path.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar},
                                         StringSplitOptions.RemoveEmptyEntries);
 
             // Glob
 
             path = vol;
             if (vol != String.Empty)
-                path += new String(new[] { Path.VolumeSeparatorChar, Path.DirectorySeparatorChar });
+                path += new String(new[] {Path.VolumeSeparatorChar, Path.DirectorySeparatorChar});
             else
-                path = new String(new[] { Path.DirectorySeparatorChar });
+                path = new String(new[] {Path.DirectorySeparatorChar});
 
             List<string> paths = new List<string>();
             List<string> found = new List<string>();
@@ -1640,7 +1671,7 @@ namespace Aurora.Framework
 
         public static string[] GetSubFiles(string path)
         {
-            string[] comps = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
+            string[] comps = path.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar},
                                         StringSplitOptions.None);
             List<string> paths = new List<string>();
             string endFind = comps[comps.Length - 1];
@@ -1726,7 +1757,7 @@ namespace Aurora.Framework
         #region FireAndForget Threading Pattern
 
         /// <summary>
-        ///   Created to work around a limitation in Mono with nested delegates
+        ///     Created to work around a limitation in Mono with nested delegates
         /// </summary>
         private sealed class FireAndForgetWrapper
         {
@@ -1764,7 +1795,7 @@ namespace Aurora.Framework
 
             private static void EndFireAndForget(IAsyncResult ar)
             {
-                WaitCallback callback = (WaitCallback)ar.AsyncState;
+                WaitCallback callback = (WaitCallback) ar.AsyncState;
 
                 try
                 {
@@ -1802,7 +1833,7 @@ namespace Aurora.Framework
             {
                 //This stops more tasks and threads from being started
                 m_threadPoolRunning = false;
-                m_ThreadPool.WaitForIdle(60 * 1000);
+                m_ThreadPool.WaitForIdle(60*1000);
                 //Wait for the threads to be idle, but don't wait for more than a minute
                 //Destroy the threadpool now
                 m_ThreadPool.Dispose();
@@ -1851,14 +1882,14 @@ namespace Aurora.Framework
                     if (m_ThreadPool == null)
                         InitThreadPool(15);
                     if (m_threadPoolRunning) //Check if the thread pool should be running
-                        m_ThreadPool.QueueWorkItem((WorkItemCallback)SmartThreadPoolCallback, new[] { callback, obj });
+                        m_ThreadPool.QueueWorkItem((WorkItemCallback) SmartThreadPoolCallback, new[] {callback, obj});
                     break;
                 case FireAndForgetMethod.Thread:
                     Thread thread = new Thread(delegate(object o)
-                    {
-                        Culture.SetCurrentCulture();
-                        callback(o);
-                    });
+                                                   {
+                                                       Culture.SetCurrentCulture();
+                                                       callback(o);
+                                                   });
                     thread.Start(obj);
                     break;
                 default:
@@ -1868,8 +1899,8 @@ namespace Aurora.Framework
 
         private static object SmartThreadPoolCallback(object o)
         {
-            object[] array = (object[])o;
-            WaitCallback callback = (WaitCallback)array[0];
+            object[] array = (object[]) o;
+            WaitCallback callback = (WaitCallback) array[0];
             object obj = array[1];
 
             callback(obj);
@@ -1879,10 +1910,10 @@ namespace Aurora.Framework
         #endregion FireAndForget Threading Pattern
 
         /// <summary>
-        ///   Environment.TickCount is an int but it counts all 32 bits so it goes positive
-        ///   and negative every 24.9 days. This trims down TickCount so it doesn't wrap
-        ///   for the callers. 
-        ///   This trims it to a 12 day interval so don't let your frame time get too long.
+        ///     Environment.TickCount is an int but it counts all 32 bits so it goes positive
+        ///     and negative every 24.9 days. This trims down TickCount so it doesn't wrap
+        ///     for the callers.
+        ///     This trims it to a 12 day interval so don't let your frame time get too long.
         /// </summary>
         /// <returns></returns>
         public static Int32 EnvironmentTickCount()
@@ -1893,9 +1924,9 @@ namespace Aurora.Framework
         public const Int32 EnvironmentTickCountMask = 0x3fffffff;
 
         /// <summary>
-        ///   Environment.TickCount is an int but it counts all 32 bits so it goes positive
-        ///   and negative every 24.9 days. Subtracts the passed value (previously fetched by
-        ///   'EnvironmentTickCount()') and accounts for any wrapping.
+        ///     Environment.TickCount is an int but it counts all 32 bits so it goes positive
+        ///     and negative every 24.9 days. Subtracts the passed value (previously fetched by
+        ///     'EnvironmentTickCount()') and accounts for any wrapping.
         /// </summary>
         /// <returns>subtraction of passed prevValue from current Environment.TickCount</returns>
         public static Int32 EnvironmentTickCountSubtract(Int32 prevValue)
@@ -1905,9 +1936,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Environment.TickCount is an int but it counts all 32 bits so it goes positive
-        ///   and negative every 24.9 days. Adds the passed value (previously fetched by
-        ///   'EnvironmentTickCount()') and accounts for any wrapping.
+        ///     Environment.TickCount is an int but it counts all 32 bits so it goes positive
+        ///     and negative every 24.9 days. Adds the passed value (previously fetched by
+        ///     'EnvironmentTickCount()') and accounts for any wrapping.
         /// </summary>
         /// <returns>addition of passed prevValue from current Environment.TickCount</returns>
         public static Int32 EnvironmentTickCountAdd(Int32 ms)
@@ -1917,7 +1948,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Prints the call stack at any given point. Useful for debugging.
+        ///     Prints the call stack at any given point. Useful for debugging.
         /// </summary>
         public static void PrintCallStack()
         {
@@ -1964,36 +1995,36 @@ namespace Aurora.Framework
         public static OSD MakeOSD(object o, Type t)
         {
             if (o is OSD)
-                return (OSD)o;
+                return (OSD) o;
             if (o is System.Drawing.Image)
                 return OSDBinary.FromBinary(ImageToByteArray(o as System.Drawing.Image));
             OSD oo;
             if ((oo = OSD.FromObject(o)).Type != OSDType.Unknown)
-                return (OSD)oo;
+                return (OSD) oo;
             if (o is IDataTransferable)
-                return ((IDataTransferable)o).ToOSD();
+                return ((IDataTransferable) o).ToOSD();
             Type[] genericArgs = t.GetGenericArguments();
-            if (Util.IsInstanceOfGenericType(typeof(List<>), t))
+            if (Util.IsInstanceOfGenericType(typeof (List<>), t))
             {
                 OSDArray array = new OSDArray();
-                System.Collections.IList collection = (System.Collections.IList)o;
+                System.Collections.IList collection = (System.Collections.IList) o;
                 foreach (object item in collection)
                 {
                     array.Add(MakeOSD(item, genericArgs[0]));
                 }
                 return array;
             }
-            else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), t))
+            else if (Util.IsInstanceOfGenericType(typeof (Dictionary<,>), t))
             {
                 OSDMap array = new OSDMap();
-                System.Collections.IDictionary collection = (System.Collections.IDictionary)o;
+                System.Collections.IDictionary collection = (System.Collections.IDictionary) o;
                 foreach (System.Collections.DictionaryEntry item in collection)
                 {
                     array.Add(MakeOSD(item.Key, genericArgs[0]), MakeOSD(item.Value, genericArgs[1]));
                 }
                 return array;
             }
-            if (t.BaseType == typeof(Enum))
+            if (t.BaseType == typeof (Enum))
                 return OSD.FromString(o.ToString());
             return null;
         }
@@ -2014,7 +2045,7 @@ namespace Aurora.Framework
 
         private static object CreateInstance(Type type)
         {
-            if (type == typeof(string))
+            if (type == typeof (string))
                 return string.Empty;
             else
                 return Activator.CreateInstance(type);
@@ -2027,63 +2058,64 @@ namespace Aurora.Framework
 
         public static object OSDToObject(OSD o, Type PossibleArrayType)
         {
-            if (o.Type == OSDType.UUID || PossibleArrayType == typeof(UUID))
+            if (o.Type == OSDType.UUID || PossibleArrayType == typeof (UUID))
                 return o.AsUUID();
-            if (PossibleArrayType == typeof(string) || PossibleArrayType == typeof(OSDString) || PossibleArrayType.BaseType == typeof(Enum))
+            if (PossibleArrayType == typeof (string) || PossibleArrayType == typeof (OSDString) ||
+                PossibleArrayType.BaseType == typeof (Enum))
             {
-                if (PossibleArrayType.BaseType == typeof(Enum))
+                if (PossibleArrayType.BaseType == typeof (Enum))
                     return Enum.Parse(PossibleArrayType, o.AsString());
 
                 return o.AsString();
             }
-            if (o.Type == OSDType.Array && PossibleArrayType == typeof(System.Drawing.Image))
+            if (o.Type == OSDType.Array && PossibleArrayType == typeof (System.Drawing.Image))
                 return ByteArrayToImage(o.AsBinary());
 
-            if (o.Type == OSDType.Integer && PossibleArrayType == typeof(byte))
-                return (byte)o.AsInteger();
-            if (o.Type == OSDType.Integer || PossibleArrayType == typeof(int))
+            if (o.Type == OSDType.Integer && PossibleArrayType == typeof (byte))
+                return (byte) o.AsInteger();
+            if (o.Type == OSDType.Integer || PossibleArrayType == typeof (int))
                 return o.AsInteger();
-            if (o.Type == OSDType.Binary || PossibleArrayType == typeof(byte[]))
+            if (o.Type == OSDType.Binary || PossibleArrayType == typeof (byte[]))
                 return o.AsBinary();
-            if (o.Type == OSDType.Boolean || PossibleArrayType == typeof(bool))
+            if (o.Type == OSDType.Boolean || PossibleArrayType == typeof (bool))
                 return o.AsBoolean();
-            if (PossibleArrayType == typeof(Color4))
+            if (PossibleArrayType == typeof (Color4))
                 return o.AsColor4();
-            if (o.Type == OSDType.Date || PossibleArrayType == typeof(DateTime))
+            if (o.Type == OSDType.Date || PossibleArrayType == typeof (DateTime))
                 return o.AsDate();
-            if (PossibleArrayType == typeof(long))
+            if (PossibleArrayType == typeof (long))
                 return o.AsLong();
-            if (PossibleArrayType == typeof(Quaternion))
+            if (PossibleArrayType == typeof (Quaternion))
                 return o.AsQuaternion();
-            if (PossibleArrayType == typeof(float))
-                return (float)o.AsReal();
-            if (o.Type == OSDType.Real || PossibleArrayType == typeof(double))
+            if (PossibleArrayType == typeof (float))
+                return (float) o.AsReal();
+            if (o.Type == OSDType.Real || PossibleArrayType == typeof (double))
                 return o.AsReal();
-            if (PossibleArrayType == typeof(uint))
+            if (PossibleArrayType == typeof (uint))
                 return o.AsUInteger();
-            if (PossibleArrayType == typeof(ulong))
+            if (PossibleArrayType == typeof (ulong))
                 return o.AsULong();
-            if (o.Type == OSDType.URI || PossibleArrayType == typeof(Uri))
+            if (o.Type == OSDType.URI || PossibleArrayType == typeof (Uri))
                 return o.AsUri();
-            if (PossibleArrayType == typeof(Vector2))
+            if (PossibleArrayType == typeof (Vector2))
                 return o.AsVector2();
-            if (PossibleArrayType == typeof(Vector3))
+            if (PossibleArrayType == typeof (Vector3))
                 return o.AsVector3();
-            if (PossibleArrayType == typeof(Vector3d))
+            if (PossibleArrayType == typeof (Vector3d))
                 return o.AsVector3d();
-            if (PossibleArrayType == typeof(Vector4))
+            if (PossibleArrayType == typeof (Vector4))
                 return o.AsVector4();
-            if (PossibleArrayType == typeof(OSDMap))
-                return (OSDMap)o;
-            if (PossibleArrayType == typeof(OSDArray))
-                return (OSDArray)o;
+            if (PossibleArrayType == typeof (OSDMap))
+                return (OSDMap) o;
+            if (PossibleArrayType == typeof (OSDArray))
+                return (OSDArray) o;
             if (o.Type == OSDType.Array)
             {
-                OSDArray array = (OSDArray)o;
+                OSDArray array = (OSDArray) o;
                 var possArrayType = Activator.CreateInstance(PossibleArrayType);
-                IList list = (IList)possArrayType;
+                IList list = (IList) possArrayType;
                 Type t = PossibleArrayType.GetGenericArguments()[0];
-                if (t == typeof(UInt32))
+                if (t == typeof (UInt32))
                     return o.AsUInteger();
 
                 foreach (OSD oo in array)
@@ -2092,19 +2124,19 @@ namespace Aurora.Framework
                 }
                 return list;
             }
-            
+
             var possType = Activator.CreateInstance(PossibleArrayType);
             if (possType is IDataTransferable)
             {
-                IDataTransferable data = (IDataTransferable)possType;
-                data.FromOSD((OSDMap)o);
+                IDataTransferable data = (IDataTransferable) possType;
+                data.FromOSD((OSDMap) o);
                 return data;
             }
             else if (o.Type == OSDType.Map)
             {
-                OSDMap array = (OSDMap)o;
+                OSDMap array = (OSDMap) o;
                 var possArrayTypeB = Activator.CreateInstance(PossibleArrayType);
-                var list = (IDictionary)possArrayTypeB;
+                var list = (IDictionary) possArrayTypeB;
                 Type t = PossibleArrayType.GetGenericArguments()[1];
                 Type tt = PossibleArrayType.GetGenericArguments()[0];
                 foreach (KeyValuePair<string, OSD> oo in array)
@@ -2126,19 +2158,19 @@ namespace Aurora.Framework
         {
             Dictionary<A, B> newList = new Dictionary<A, B>();
             return newList;
-        }   
+        }
 
         public static void UlongToInts(ulong regionHandle, out int x, out int y)
         {
             uint xx, yy;
             Utils.LongToUInts(regionHandle, out xx, out yy);
-            x = (int)xx;
-            y = (int)yy;
+            x = (int) xx;
+            y = (int) yy;
         }
 
         public static ulong IntsToUlong(int x, int y)
         {
-            return Utils.UIntsToLong((uint)x, (uint)y);
+            return Utils.UIntsToLong((uint) x, (uint) y);
         }
 
         public static string CombineParams(string[] commandParams, int pos)
@@ -2220,8 +2252,8 @@ namespace Aurora.Framework
 
         public static sbyte CheckMeshType(sbyte p)
         {
-            if (p == (sbyte)AssetType.Mesh)
-                return (sbyte)AssetType.Texture;
+            if (p == (sbyte) AssetType.Mesh)
+                return (sbyte) AssetType.Texture;
             return p;
         }
 
@@ -2257,11 +2289,11 @@ namespace Aurora.Framework
 
             do
             {
-                double remainder = value - (26 * Math.Truncate(value / 26));
+                double remainder = value - (26*Math.Truncate(value/26));
 
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
 
-                value = Math.Truncate(value / 26);
+                value = Math.Truncate(value/26);
             } while (value > 0);
 
 
@@ -2277,8 +2309,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Because Escaping the sql might cause it to go over the max length
-        /// DO NOT USE THIS ON JSON STRINGS!!! IT WILL BREAK THE DESERIALIZATION!!!
+        ///     Because Escaping the sql might cause it to go over the max length
+        ///     DO NOT USE THIS ON JSON STRINGS!!! IT WILL BREAK THE DESERIALIZATION!!!
         /// </summary>
         /// <param name="usString"></param>
         /// <param name="maxLength"></param>
@@ -2300,10 +2332,10 @@ namespace Aurora.Framework
 
         /// From http://www.c-sharpcorner.com/UploadFile/mahesh/RandomNumber11232005010428AM/RandomNumber.aspx
         /// <summary>
-        ///   Generates a random string with the given length
+        ///     Generates a random string with the given length
         /// </summary>
-        /// <param name = "size">Size of the string</param>
-        /// <param name = "lowerCase">If true, generate lowercase string</param>
+        /// <param name="size">Size of the string</param>
+        /// <param name="lowerCase">If true, generate lowercase string</param>
         /// <returns>Random string</returns>
         public static string RandomString(int size, bool lowerCase)
         {
@@ -2313,7 +2345,7 @@ namespace Aurora.Framework
             for (int i = 0; i < size; i++)
             {
                 j = Util.RandomClass.Next(25);
-                builder += (char)(j + off);
+                builder += (char) (j + off);
             }
 
             return builder;
@@ -2420,12 +2452,9 @@ namespace Aurora.Framework
 
         public static List<string> SizeSort(List<string> functionKeys, bool smallestToLargest)
         {
-            functionKeys.Sort((a, b) =>
-                {
-                    return a.Length.CompareTo(b.Length);
-                });
+            functionKeys.Sort((a, b) => { return a.Length.CompareTo(b.Length); });
             if (!smallestToLargest)
-                functionKeys.Reverse();//Flip the order then
+                functionKeys.Reverse(); //Flip the order then
             return functionKeys;
         }
     }
@@ -2513,21 +2542,21 @@ namespace Aurora.Framework
 
         public static void InternetFailure()
         {
-            m_nextInternetConnectionCheck = Util.EnvironmentTickCountAdd(5 * 60 * 1000); /*5 mins*/
+            m_nextInternetConnectionCheck = Util.EnvironmentTickCountAdd(5*60*1000); /*5 mins*/
             m_noInternetConnection = true;
         }
 
         /// <summary>
-        ///   Gets the client IP address
+        ///     Gets the client IP address
         /// </summary>
-        /// <param name = "xff"></param>
+        /// <param name="xff"></param>
         /// <returns></returns>
         public static IPEndPoint GetClientIPFromXFF(string xff)
         {
             if (xff == string.Empty)
                 return null;
 
-            string[] parts = xff.Split(new[] { ',' });
+            string[] parts = xff.Split(new[] {','});
             if (parts.Length > 0)
             {
                 try
@@ -2549,7 +2578,7 @@ namespace Aurora.Framework
             {
                 try
                 {
-                    Hashtable headers = (Hashtable)req["headers"];
+                    Hashtable headers = (Hashtable) req["headers"];
                     if (headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
                         return headers["remote_addr"].ToString();
                     if (headers.ContainsKey("Host") && headers["Host"] != null)
@@ -2564,10 +2593,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Attempts to resolve the loopback issue, but only works if this is run on the same network as the iPAddress
+        ///     Attempts to resolve the loopback issue, but only works if this is run on the same network as the iPAddress
         /// </summary>
-        /// <param name = "iPAddress"></param>
-        /// <param name = "clientIP"></param>
+        /// <param name="iPAddress"></param>
+        /// <param name="clientIP"></param>
         /// <returns></returns>
         public static IPAddress ResolveAddressForClient(IPAddress iPAddress, IPEndPoint clientIP)
         {
@@ -2651,9 +2680,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Returns a IP address from a specified DNS, favouring IPv4 addresses.
+        ///     Returns a IP address from a specified DNS, favouring IPv4 addresses.
         /// </summary>
-        /// <param name = "dnsAddress">DNS Hostname</param>
+        /// <param name="dnsAddress">DNS Hostname</param>
         /// <returns>An IP address, or null</returns>
         public static IPAddress GetHostFromDNS(string dnsAddress)
         {
@@ -2668,14 +2697,14 @@ namespace Aurora.Framework
             // Is it already a valid IP? No need to look it up.
             if (IPAddress.TryParse(dnsAddress, out ipa))
             {
-                m_dnsCache.Add(dnsAddress, ipa, 30 * 60 /*30mins*/);
+                m_dnsCache.Add(dnsAddress, ipa, 30*60 /*30mins*/);
                 return ipa;
             }
             try
             {
                 if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
                 {
-                    m_dnsCache.Add(dnsAddress, ipa, 30 * 60 /*30mins*/);
+                    m_dnsCache.Add(dnsAddress, ipa, 30*60 /*30mins*/);
                     return ipa;
                 }
             }
@@ -2698,7 +2727,8 @@ namespace Aurora.Framework
             }
             catch (Exception e)
             {
-                MainConsole.Instance.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
+                MainConsole.Instance.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}",
+                                                dnsAddress, e);
 
                 InternetFailure();
                 // Still going to throw the exception on for now, since this was what was happening in the first place
@@ -2719,14 +2749,14 @@ namespace Aurora.Framework
 #else
                 foreach (IPAddress host in hosts.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    m_dnsCache.Add(dnsAddress, host, 30 * 60 /*30mins*/);
+                    m_dnsCache.Add(dnsAddress, host, 30*60 /*30mins*/);
                     return host;
                 }
 #endif
 
                 if (hosts.Length > 0)
                 {
-                    m_dnsCache.Add(dnsAddress, hosts[0], 30 * 60 /*30mins*/);
+                    m_dnsCache.Add(dnsAddress, hosts[0], 30*60 /*30mins*/);
                     return hosts[0];
                 }
             }
@@ -2740,7 +2770,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Gets a list of all local system IP addresses
+        ///     Gets a list of all local system IP addresses
         /// </summary>
         /// <returns></returns>
         public static IPAddress[] GetLocalHosts()
@@ -2780,7 +2810,10 @@ namespace Aurora.Framework
                 }
             }
 #else
-            foreach (IPAddress host in iplist.Where(host => !IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork))
+            foreach (
+                IPAddress host in
+                    iplist.Where(host => !IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
+                )
             {
                 return host;
             }
@@ -2893,7 +2926,7 @@ namespace Aurora.Framework
             return list;
         }
 
-        public static OSDMap ToOSDMap<A,B>(this Dictionary<A, B> array)
+        public static OSDMap ToOSDMap<A, B>(this Dictionary<A, B> array)
         {
             OSDMap list = new OSDMap();
             foreach (KeyValuePair<A, B> o in array)
@@ -2906,19 +2939,23 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Comes from http://www.codeproject.com/script/Articles/ViewDownloads.aspx?aid=14593
+        ///     Comes from http://www.codeproject.com/script/Articles/ViewDownloads.aspx?aid=14593
         /// </summary>
         /// <param name="method"></param>
         /// <param name="parameters"></param>
         /// <param name="invokeClass"></param>
         /// <param name="invokeParameters"></param>
         /// <returns></returns>
-        public static object FastInvoke(this MethodInfo method, ParameterInfo[] parameters, object invokeClass, object[] invokeParameters)
+        public static object FastInvoke(this MethodInfo method, ParameterInfo[] parameters, object invokeClass,
+                                        object[] invokeParameters)
         {
             DynamicMethod dynamicMethod = new DynamicMethod(string.Empty,
-                             typeof(object), new Type[] { typeof(object), 
-                     typeof(object[]) },
-                             method.DeclaringType.Module);
+                                                            typeof (object), new Type[]
+                                                                                 {
+                                                                                     typeof (object),
+                                                                                     typeof (object[])
+                                                                                 },
+                                                            method.DeclaringType.Module);
             ILGenerator il = dynamicMethod.GetILGenerator();
             Type[] paramTypes = new Type[parameters.Length];
             for (int i = 0; i < paramTypes.Length; i++)
@@ -2944,12 +2981,12 @@ namespace Aurora.Framework
                 il.Emit(OpCodes.Ldloc, locals[i]);
             }
             il.EmitCall(OpCodes.Call, method, null);
-            if (method.ReturnType == typeof(void))
+            if (method.ReturnType == typeof (void))
                 il.Emit(OpCodes.Ldnull);
             else
                 EmitBoxIfNeeded(il, method.ReturnType);
             il.Emit(OpCodes.Ret);
-            return dynamicMethod.Invoke(null, new object[2] {invokeClass, invokeParameters });
+            return dynamicMethod.Invoke(null, new object[2] {invokeClass, invokeParameters});
             /*FastInvokeHandler invoder =
               (FastInvokeHandler)dynamicMethod.CreateDelegate(
               typeof(FastInvokeHandler));
@@ -3014,7 +3051,7 @@ namespace Aurora.Framework
 
             if (value > -129 && value < 128)
             {
-                il.Emit(OpCodes.Ldc_I4_S, (SByte)value);
+                il.Emit(OpCodes.Ldc_I4_S, (SByte) value);
             }
             else
             {
@@ -3026,6 +3063,7 @@ namespace Aurora.Framework
     public class AllScopeIDImpl : IDataTransferable
     {
         public UUID ScopeID = UUID.Zero;
+
         public List<UUID> AllScopeIDs
         {
             get
@@ -3035,16 +3073,16 @@ namespace Aurora.Framework
                     ids.Add(ScopeID);
                 return ids;
             }
-            set
-            {
-            }
+            set { }
         }
 
         public static List<T> CheckScopeIDs<T>(List<UUID> scopeIDs, List<T> list) where T : AllScopeIDImpl
         {
             if (scopeIDs == null || scopeIDs.Count == 0 || scopeIDs.Contains(UUID.Zero))
                 return list;
-            return new List<T>(list.Where(r => scopeIDs.Any(s => r.AllScopeIDs.Contains(s)) || r.AllScopeIDs.Contains(UUID.Zero)));
+            return
+                new List<T>(
+                    list.Where(r => scopeIDs.Any(s => r.AllScopeIDs.Contains(s)) || r.AllScopeIDs.Contains(UUID.Zero)));
         }
 
         public static T CheckScopeIDs<T>(List<UUID> scopeIDs, T l) where T : AllScopeIDImpl

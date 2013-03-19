@@ -31,14 +31,14 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   A new version of the old Channel class, simplified
+    ///     A new version of the old Channel class, simplified
     /// </summary>
     public class TerrainChannel : ITerrainChannel
     {
         private int m_Width;
 
         /// <summary>
-        ///   NOTE: This is NOT a normal map, it has a resolution of 10x
+        ///     NOTE: This is NOT a normal map, it has a resolution of 10x
         /// </summary>
         private short[] m_map;
 
@@ -162,10 +162,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Gets the average height of the area +2 in both the X and Y directions from the given position
+        ///     Gets the average height of the area +2 in both the X and Y directions from the given position
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         /// <returns></returns>
         public float GetNormalizedGroundHeight(int x, int y)
         {

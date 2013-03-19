@@ -48,52 +48,52 @@ namespace Aurora.Framework
     public interface IWorldComm
     {
         /// <summary>
-        ///   Create a listen event callback with the specified filters.
-        ///   The parameters localID,itemID are needed to uniquely identify
-        ///   the script during 'peek' time. Parameter hostID is needed to
-        ///   determine the position of the script.
+        ///     Create a listen event callback with the specified filters.
+        ///     The parameters localID,itemID are needed to uniquely identify
+        ///     the script during 'peek' time. Parameter hostID is needed to
+        ///     determine the position of the script.
         /// </summary>
-        /// <param name = "itemID">UUID of the script engine</param>
-        /// <param name = "hostID">UUID of the SceneObjectPart</param>
-        /// <param name = "channel">channel to listen on</param>
-        /// <param name = "name">name to filter on</param>
-        /// <param name = "id">key to filter on (user given, could be totally faked)</param>
-        /// <param name = "msg">msg to filter on</param>
+        /// <param name="itemID">UUID of the script engine</param>
+        /// <param name="hostID">UUID of the SceneObjectPart</param>
+        /// <param name="channel">channel to listen on</param>
+        /// <param name="name">name to filter on</param>
+        /// <param name="id">key to filter on (user given, could be totally faked)</param>
+        /// <param name="msg">msg to filter on</param>
         /// <returns>number of the scripts handle</returns>
         int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg);
 
         /// <summary>
-        ///   This method scans over the objects which registered an interest in listen callbacks.
-        ///   For everyone it finds, it checks if it fits the given filter. If it does,  then
-        ///   enqueue the message for delivery to the objects listen event handler.
-        ///   The enqueued ListenerInfo no longer has filter values, but the actually trigged values.
-        ///   Objects that do an llSay have their messages delivered here and for nearby avatars,
-        ///   the OnChatFromClient event is used.
+        ///     This method scans over the objects which registered an interest in listen callbacks.
+        ///     For everyone it finds, it checks if it fits the given filter. If it does,  then
+        ///     enqueue the message for delivery to the objects listen event handler.
+        ///     The enqueued ListenerInfo no longer has filter values, but the actually trigged values.
+        ///     Objects that do an llSay have their messages delivered here and for nearby avatars,
+        ///     the OnChatFromClient event is used.
         /// </summary>
-        /// <param name = "type">type of delvery (whisper,say,shout or regionwide)</param>
-        /// <param name = "channel">channel to sent on</param>
-        /// <param name = "name">name of sender (object or avatar)</param>
-        /// <param name = "id">key of sender (object or avatar)</param>
-        /// <param name = "msg">msg to sent</param>
+        /// <param name="type">type of delvery (whisper,say,shout or regionwide)</param>
+        /// <param name="channel">channel to sent on</param>
+        /// <param name="name">name of sender (object or avatar)</param>
+        /// <param name="id">key of sender (object or avatar)</param>
+        /// <param name="msg">msg to sent</param>
         void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg);
 
         void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, UUID to, string msg);
         void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, float Range);
 
         /// <summary>
-        ///   Are there any listen events ready to be dispatched?
+        ///     Are there any listen events ready to be dispatched?
         /// </summary>
         /// <returns>boolean indication</returns>
         bool HasMessages();
 
         /// <summary>
-        ///   Are there any listeners currently?
+        ///     Are there any listeners currently?
         /// </summary>
         /// <returns></returns>
         bool HasListeners();
 
         /// <summary>
-        ///   Pop the first availlable listen event from the queue
+        ///     Pop the first availlable listen event from the queue
         /// </summary>
         /// <returns>ListenerInfo with filter filled in</returns>
         IWorldCommListenerInfo GetNextMessage();

@@ -31,14 +31,14 @@ using System.Linq;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Delegate to fire when a generic event comes in
+    ///     Delegate to fire when a generic event comes in
     /// </summary>
-    /// <param name = "FunctionName">Name of the event being fired</param>
-    /// <param name = "parameters">Parameters that the event has, can be null</param>
+    /// <param name="FunctionName">Name of the event being fired</param>
+    /// <param name="parameters">Parameters that the event has, can be null</param>
     public delegate object OnGenericEventHandler(string FunctionName, object parameters);
 
     /// <summary>
-    ///   A generic event manager that fires one event for many generic events
+    ///     A generic event manager that fires one event for many generic events
     /// </summary>
     public class AuroraEventManager
     {
@@ -46,51 +46,50 @@ namespace Aurora.Framework
             new Dictionary<string, List<OnGenericEventHandler>>();
 
         /// <summary>
-        ///   Events so far:
-        /// 
-        ///   DrawDistanceChanged - Changed Draw Distance
+        ///     Events so far:
+        ///     DrawDistanceChanged - Changed Draw Distance
         ///     param is a ScenePresence
-        ///   BanUser - Added a new banned user to the estate bans
+        ///     BanUser - Added a new banned user to the estate bans
         ///     param is a UUID of an agent
-        ///   UnBanUser - Removed a banned user from the estate bans
+        ///     UnBanUser - Removed a banned user from the estate bans
         ///     param is a UUID of an agent
-        ///   SignficantCameraMovement - The Camera has moved a distance that has triggered this update
+        ///     SignficantCameraMovement - The Camera has moved a distance that has triggered this update
         ///     param is a ScenePresence
-        ///   ObjectSelected - An object has been selected
+        ///     ObjectSelected - An object has been selected
         ///     param is a SceneObjectPart
-        ///   ObjectDeselected - An object has been selected
+        ///     ObjectDeselected - An object has been selected
         ///     param is a SceneObjectPart
-        ///   ObjectChangedOwner - An object's owner was changed
+        ///     ObjectChangedOwner - An object's owner was changed
         ///     param is a SceneObjectGroup
-        ///   ObjectChangedPhysicalStatus - An object's physical status has changed
+        ///     ObjectChangedPhysicalStatus - An object's physical status has changed
         ///     param is a SceneObjectGroup
-        ///   ObjectEnteringNewParcel - An object has entered a new parcel
+        ///     ObjectEnteringNewParcel - An object has entered a new parcel
         ///     param is an object[], with o[0] a SceneObjectGroup, o[1] the new parcel UUID, and o[2] the old parcel UUID
-        ///   UserStatusChange - User's status (logged in/out) has changed
+        ///     UserStatusChange - User's status (logged in/out) has changed
         ///     param is a object[], with o[0] the UUID of the user (as a string), o[1] whether they are logging in, o[2] the region they are entering (if logging in)
-        ///   PreRegisterRegion - A region is about to be registered
+        ///     PreRegisterRegion - A region is about to be registered
         ///     param is a GridRegion
-        ///   NewUserConnection - A new user has been added to the scene (child or root)
+        ///     NewUserConnection - A new user has been added to the scene (child or root)
         ///     param is an object[], with o[0] OSDMap that will be returned to the server, and o[1] the AgentCircuitData that will be added to the region
-        ///   EstateUpdated - An estate has been updated
+        ///     EstateUpdated - An estate has been updated
         ///     param is the EstateSettings of the changed estate
-        ///   ObjectAddedFlag - An object in the Scene has added a prim flag
+        ///     ObjectAddedFlag - An object in the Scene has added a prim flag
         ///     param is an object[], with o[0] a ISceneChildEntity and o[1] the flag that was changed
-        ///   ObjectRemovedFlag - An object in the Scene has removed a prim flag
+        ///     ObjectRemovedFlag - An object in the Scene has removed a prim flag
         ///     param is an object[], with o[0] a ISceneChildEntity and o[1] the flag that was changed
-        ///   SetAppearance - An avatar has updated their appearance
+        ///     SetAppearance - An avatar has updated their appearance
         ///     param is an object[], with o[0] the UUID of the avatar and o[1] the AvatarData that is to be updated
-        ///   GridRegionSuccessfullyRegistered - Aurora.Server, A region has registered with the grid service
+        ///     GridRegionSuccessfullyRegistered - Aurora.Server, A region has registered with the grid service
         ///     param is an object[], with o[0] the OSDMap which will be sent to the new region, o[1] the SessionID, o[2] the GridRegion that registered
-        ///   Backup - The 'backup' console command was triggered, everything should backup
+        ///     Backup - The 'backup' console command was triggered, everything should backup
         ///     no params
-        ///   AssetRequested - This is fired when the asset is requested by the client
+        ///     AssetRequested - This is fired when the asset is requested by the client
         ///     params are IClientAPI and TransferRequestPacket
-        ///   DeleteUserInformation - The user is being deleted, remove all of their information from all databases
+        ///     DeleteUserInformation - The user is being deleted, remove all of their information from all databases
         ///     params are the user's UUID
-        ///   CreateUserInformation - The user account is being created
+        ///     CreateUserInformation - The user account is being created
         ///     params are the user's UUID
-        ///   UpdateUserInformation - The user account is being updated
+        ///     UpdateUserInformation - The user account is being updated
         ///     params are the user's UUID
         /// </summary>
         public void RegisterEventHandler(string functionName, OnGenericEventHandler handler)
@@ -114,10 +113,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Fire a generic event for all modules hooking onto it
+        ///     Fire a generic event for all modules hooking onto it
         /// </summary>
-        /// <param name = "FunctionName">Name of event to trigger</param>
-        /// <param name = "Param">Any parameters to pass along with the event</param>
+        /// <param name="FunctionName">Name of event to trigger</param>
+        /// <param name="Param">Any parameters to pass along with the event</param>
         public List<object> FireGenericEventHandler(string FunctionName, object Param)
         {
             List<object> retVal = new List<object>();
@@ -135,7 +134,9 @@ namespace Aurora.Framework
                             retVal.Add(param);
                     }
 #else
-                    retVal.AddRange(new List<OnGenericEventHandler>(events).Select(handler => handler(FunctionName, Param)).Where(param => param != null));
+                    retVal.AddRange(
+                        new List<OnGenericEventHandler>(events).Select(handler => handler(FunctionName, Param))
+                                                               .Where(param => param != null));
 #endif
                 }
             }

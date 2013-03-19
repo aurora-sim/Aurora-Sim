@@ -111,8 +111,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The default animation is reserved for "main" animations
-        ///   that are mutually exclusive, e.g. flying and sitting.
+        ///     The default animation is reserved for "main" animations
+        ///     that are mutually exclusive, e.g. flying and sitting.
         /// </summary>
         public bool SetDefaultAnimation(UUID animID, int sequenceNum, UUID objectID)
         {
@@ -131,7 +131,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Set the animation as the default animation if it's known
+        ///     Set the animation as the default animation if it's known
         /// </summary>
         public bool TrySetDefaultAnimation(string anim, int sequenceNum, UUID objectID)
         {

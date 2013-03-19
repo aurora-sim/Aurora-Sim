@@ -11,7 +11,10 @@ namespace Aurora.Framework
 
         public delegate B Creator();
 
-        public PreAddedDictionary(Creator c) { _creator = c; }
+        public PreAddedDictionary(Creator c)
+        {
+            _creator = c;
+        }
 
         public void Add(A key, B value)
         {

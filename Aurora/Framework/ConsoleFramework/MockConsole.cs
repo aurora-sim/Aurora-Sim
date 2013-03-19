@@ -31,15 +31,16 @@ using Nini.Config;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   This is a Fake console that's used when setting up the Scene in Unit Tests
-    ///   Don't use this except for Unit Testing or you're in for a world of hurt when the 
-    ///   sim gets to ReadLine
+    ///     This is a Fake console that's used when setting up the Scene in Unit Tests
+    ///     Don't use this except for Unit Testing or you're in for a world of hurt when the
+    ///     sim gets to ReadLine
     /// </summary>
     public class MockConsole : CommandConsole
     {
         public override void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
-            if (source.Configs["Console"] == null || source.Configs["Console"].GetString("Console", String.Empty) != "MockConsole")
+            if (source.Configs["Console"] == null ||
+                source.Configs["Console"].GetString("Console", String.Empty) != "MockConsole")
             {
                 return;
             }

@@ -31,14 +31,14 @@ using OpenMetaverse;
 namespace Aurora.Framework.Capabilities
 {
     /// <summary>
-    ///   Capabilities utility methods
+    ///     Capabilities utility methods
     /// </summary>
     public class CapsUtil
     {
         /// <summary>
-        ///   Generate a CAPS seed path using a previously generated CAPS object path component
+        ///     Generate a CAPS seed path using a previously generated CAPS object path component
         /// </summary>
-        /// <param name = "capsObjectPath"></param>
+        /// <param name="capsObjectPath"></param>
         /// <returns></returns>
         public static string GetCapsSeedPath(string capsObjectPath)
         {
@@ -46,9 +46,9 @@ namespace Aurora.Framework.Capabilities
         }
 
         /// <summary>
-        ///   Retrieve the CapsPath from a CapsSeed
+        ///     Retrieve the CapsPath from a CapsSeed
         /// </summary>
-        /// <param name = "capsSeedPath">Should be in the form of "/CAPS/CapsPath/</param>
+        /// <param name="capsSeedPath">Should be in the form of "/CAPS/CapsPath/</param>
         /// <returns></returns>
         public static string GetCapsPathFromCapsSeed(string capsSeedPath)
         {
@@ -62,7 +62,7 @@ namespace Aurora.Framework.Capabilities
         }
 
         /// <summary>
-        ///   Get a random CAPS object path component that will be used as the identifying part of all future CAPS requests
+        ///     Get a random CAPS object path component that will be used as the identifying part of all future CAPS requests
         /// </summary>
         /// <returns></returns>
         public static string GetRandomCapsObjectPath()

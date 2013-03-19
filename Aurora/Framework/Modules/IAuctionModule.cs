@@ -18,38 +18,34 @@ namespace Aurora.Framework
     public class AuctionInfo
     {
         /// <summary>
-        /// Auction length (in days)
+        ///     Auction length (in days)
         /// </summary>
-        [ProtoMember(1)]
-        public int AuctionLength = 7;
+        [ProtoMember(1)] public int AuctionLength = 7;
 
         /// <summary>
-        /// Date the auction started
+        ///     Date the auction started
         /// </summary>
-        [ProtoMember(2)]
-        public DateTime AuctionStart = DateTime.Now;
+        [ProtoMember(2)] public DateTime AuctionStart = DateTime.Now;
 
         /// <summary>
-        /// Description of the parcel
+        ///     Description of the parcel
         /// </summary>
-        [ProtoMember(3)]
-        public string Description = "";
+        [ProtoMember(3)] public string Description = "";
 
         /// <summary>
-        /// List of bids on the auction so far
+        ///     List of bids on the auction so far
         /// </summary>
-        [ProtoMember(4)]
-        public List<AuctionBid> AuctionBids = new List<AuctionBid>();
+        [ProtoMember(4)] public List<AuctionBid> AuctionBids = new List<AuctionBid>();
 
         public void FromOSD(OSDMap map)
         {
             AuctionStart = map["AuctionStart"];
             Description = map["Description"];
             AuctionLength = map["AuctionLength"];
-            foreach(OSD o in (OSDArray)map["AuctionBids"])
+            foreach (OSD o in (OSDArray) map["AuctionBids"])
             {
                 AuctionBid bid = new AuctionBid();
-                bid.FromOSD((OSDMap)o);
+                bid.FromOSD((OSDMap) o);
                 AuctionBids.Add(bid);
             }
         }
@@ -72,22 +68,19 @@ namespace Aurora.Framework
     public class AuctionBid
     {
         /// <summary>
-        /// The person who bid on the auction
+        ///     The person who bid on the auction
         /// </summary>
-        [ProtoMember(1)]
-        public UUID AuctionBidder;
+        [ProtoMember(1)] public UUID AuctionBidder;
 
         /// <summary>
-        /// The amount bid on the auction
+        ///     The amount bid on the auction
         /// </summary>
-        [ProtoMember(2)]
-        public int Amount;
+        [ProtoMember(2)] public int Amount;
 
         /// <summary>
-        /// The time the bid was added
+        ///     The time the bid was added
         /// </summary>
-        [ProtoMember(3)]
-        public DateTime TimeBid;
+        [ProtoMember(3)] public DateTime TimeBid;
 
         public OSDMap ToOSD()
         {

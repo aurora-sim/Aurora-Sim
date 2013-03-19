@@ -38,7 +38,7 @@ namespace Aurora.Framework
                                out UUID itemID);
 
         /// <summary>
-        /// Saves the given objects as an asset and returns the UUID of it
+        ///     Saves the given objects as an asset and returns the UUID of it
         /// </summary>
         /// <param name="list"></param>
         /// <param name="asset"></param>
@@ -46,40 +46,40 @@ namespace Aurora.Framework
         UUID SaveAsAsset(List<ISceneEntity> list, out AssetBase asset);
 
         /// <summary>
-        ///   Create a SceneObjectGroup representation of an asset xml of the given item
+        ///     Create a SceneObjectGroup representation of an asset xml of the given item
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "itemID"></param>
-        /// <param name = "item"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="itemID"></param>
+        /// <param name="item"></param>
         /// <returns></returns>
         ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, out InventoryItemBase item);
 
         /// <summary>
-        ///   Create a SceneObjectGroup representation of an asset xml of the given item
+        ///     Create a SceneObjectGroup representation of an asset xml of the given item
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "itemID"></param>
-        /// <param name = "assetID"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="itemID"></param>
+        /// <param name="assetID"></param>
         /// <returns></returns>
         ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID);
 
         /// <summary>
-        ///   Rez an object from inventory and add it to the scene
+        ///     Rez an object from inventory and add it to the scene
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "itemID"></param>
-        /// <param name = "RayEnd"></param>
-        /// <param name = "RayStart"></param>
-        /// <param name = "RayTargetID"></param>
-        /// <param name = "BypassRayCast"></param>
-        /// <param name = "RayEndIsIntersection"></param>
-        /// <param name = "RezSelected"></param>
-        /// <param name = "RemoveItem"></param>
-        /// <param name = "fromTaskID"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="itemID"></param>
+        /// <param name="RayEnd"></param>
+        /// <param name="RayStart"></param>
+        /// <param name="RayTargetID"></param>
+        /// <param name="BypassRayCast"></param>
+        /// <param name="RayEndIsIntersection"></param>
+        /// <param name="RezSelected"></param>
+        /// <param name="RemoveItem"></param>
+        /// <param name="fromTaskID"></param>
         /// <returns></returns>
         ISceneEntity RezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
-                                   UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
-                                   bool RezSelected, bool RemoveItem, UUID fromTaskID);
+                               UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
+                               bool RezSelected, bool RemoveItem, UUID fromTaskID);
 
         bool GetAgentInventoryItem(IClientAPI remoteClient, UUID itemID, UUID requestID);
 

@@ -37,28 +37,28 @@ using System.Threading;
 
 namespace Aurora.Framework
 {
-    ///<summary>
-    ///  Gather uuids for a given entity.
-    ///</summary>
-    ///This does a deep inspection of the entity to retrieve all the assets it uses (whether as textures, as scripts
-    ///contained in inventory, as scripts contained in objects contained in another object's inventory, etc.  Assets
-    ///are only retrieved when they are necessary to carry out the inspection (i.e. a serialized object needs to be
-    ///retrieved to work out which assets it references).
+    /// <summary>
+    ///     Gather uuids for a given entity.
+    /// </summary>
+    /// This does a deep inspection of the entity to retrieve all the assets it uses (whether as textures, as scripts
+    /// contained in inventory, as scripts contained in objects contained in another object's inventory, etc.  Assets
+    /// are only retrieved when they are necessary to carry out the inspection (i.e. a serialized object needs to be
+    /// retrieved to work out which assets it references).
     public class UuidGatherer
     {
         /// <summary>
-        ///   Asset cache used for gathering assets
+        ///     Asset cache used for gathering assets
         /// </summary>
         protected IAssetService m_assetCache;
 
         /// <summary>
-        ///   Used as a temporary store of an asset which represents an object.  This can be a null if no appropriate
-        ///   asset was found by the asset service.
+        ///     Used as a temporary store of an asset which represents an object.  This can be a null if no appropriate
+        ///     asset was found by the asset service.
         /// </summary>
         protected AssetBase m_requestedObjectAsset;
 
         /// <summary>
-        ///   Signal whether we are currently waiting for the asset service to deliver an asset.
+        ///     Signal whether we are currently waiting for the asset service to deliver an asset.
         /// </summary>
         protected bool m_waitingForObjectAsset;
 
@@ -68,15 +68,15 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Gather all the asset uuids associated with the asset referenced by a given uuid
+        ///     Gather all the asset uuids associated with the asset referenced by a given uuid
         /// </summary>
         /// This includes both those directly associated with
         /// it (e.g. face textures) and recursively, those of items within it's inventory (e.g. objects contained
         /// within this object).
-        /// <param name = "assetUuid">The uuid of the asset for which to gather referenced assets</param>
-        /// <param name = "assetType">The type of the asset for the uuid given</param>
-        /// <param name = "assetUuids">The assets gathered</param>
-        /// <param name = "scene"></param>
+        /// <param name="assetUuid">The uuid of the asset for which to gather referenced assets</param>
+        /// <param name="assetType">The type of the asset for the uuid given</param>
+        /// <param name="assetUuids">The assets gathered</param>
+        /// <param name="scene"></param>
         public void GatherAssetUuids(UUID assetUuid, AssetType assetType, IDictionary<UUID, AssetType> assetUuids,
                                      IRegistryCore scene)
         {
@@ -105,13 +105,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Gather all the asset uuids associated with a given object.
+        ///     Gather all the asset uuids associated with a given object.
         /// </summary>
         /// This includes both those directly associated with
         /// it (e.g. face textures) and recursively, those of items within it's inventory (e.g. objects contained
         /// within this object).
-        /// <param name = "sceneObject">The scene object for which to gather assets</param>
-        /// <param name = "assetUuids">The assets gathered</param>
+        /// <param name="sceneObject">The scene object for which to gather assets</param>
+        /// <param name="assetUuids">The assets gathered</param>
         public void GatherAssetUuids(ISceneEntity sceneObject, IDictionary<UUID, AssetType> assetUuids,
                                      IRegistryCore scene)
         {
@@ -136,7 +136,9 @@ namespace Aurora.Framework
                         if (textureEntry.FaceTextures != null)
                         {
                             // Loop through the rest of the texture faces (a non-null face means the face is different from DefaultTexture)
-                            foreach (Primitive.TextureEntryFace texture in textureEntry.FaceTextures.Where(texture => texture != null))
+                            foreach (
+                                Primitive.TextureEntryFace texture in
+                                    textureEntry.FaceTextures.Where(texture => texture != null))
                             {
                                 assetUuids[texture.TextureID] = AssetType.Texture;
                             }
@@ -150,7 +152,9 @@ namespace Aurora.Framework
                     TaskInventoryDictionary taskDictionary = (TaskInventoryDictionary) part.TaskInventory.Clone();
 
                     // Now analyze this prim's inventory items to preserve all the uuids that they reference
-                    foreach (TaskInventoryItem tii in taskDictionary.Values.Where(tii => !assetUuids.ContainsKey(tii.AssetID)))
+                    foreach (
+                        TaskInventoryItem tii in
+                            taskDictionary.Values.Where(tii => !assetUuids.ContainsKey(tii.AssetID)))
                     {
                         GatherAssetUuids(tii.AssetID, (AssetType) tii.Type, assetUuids, scene);
                     }
@@ -166,7 +170,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The callback made when we request the asset for an object from the asset service.
+        ///     The callback made when we request the asset for an object from the asset service.
         /// </summary>
         protected void AssetReceived(string id, Object sender, AssetBase asset)
         {
@@ -179,10 +183,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Get an asset synchronously, potentially using an asynchronous callback.  If the
-        ///   asynchronous callback is used, we will wait for it to complete.
+        ///     Get an asset synchronously, potentially using an asynchronous callback.  If the
+        ///     asynchronous callback is used, we will wait for it to complete.
         /// </summary>
-        /// <param name = "uuid"></param>
+        /// <param name="uuid"></param>
         /// <returns></returns>
         protected virtual AssetBase GetAsset(UUID uuid)
         {
@@ -208,10 +212,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Record the asset uuids embedded within the given script.
+        ///     Record the asset uuids embedded within the given script.
         /// </summary>
-        /// <param name = "scriptUuid"></param>
-        /// <param name = "assetUuids">Dictionary in which to record the references</param>
+        /// <param name="scriptUuid"></param>
+        /// <param name="assetUuids">Dictionary in which to record the references</param>
         protected void GetScriptAssetUuids(UUID scriptUuid, IDictionary<UUID, AssetType> assetUuids)
         {
             AssetBase scriptAsset = GetAsset(scriptUuid);
@@ -234,10 +238,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Record the uuids referenced by the given wearable asset
+        ///     Record the uuids referenced by the given wearable asset
         /// </summary>
-        /// <param name = "wearableAssetUuid"></param>
-        /// <param name = "assetUuids">Dictionary in which to record the references</param>
+        /// <param name="wearableAssetUuid"></param>
+        /// <param name="assetUuids">Dictionary in which to record the references</param>
         protected void GetWearableAssetUuids(UUID wearableAssetUuid, IDictionary<UUID, AssetType> assetUuids)
         {
             AssetBase assetBase = GetAsset(wearableAssetUuid);
@@ -259,12 +263,12 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Get all the asset uuids associated with a given object.  This includes both those directly associated with
-        ///   it (e.g. face textures) and recursively, those of items within it's inventory (e.g. objects contained
-        ///   within this object).
+        ///     Get all the asset uuids associated with a given object.  This includes both those directly associated with
+        ///     it (e.g. face textures) and recursively, those of items within it's inventory (e.g. objects contained
+        ///     within this object).
         /// </summary>
-        /// <param name = "sceneObject"></param>
-        /// <param name = "assetUuids"></param>
+        /// <param name="sceneObject"></param>
+        /// <param name="assetUuids"></param>
         protected void GetSceneObjectAssetUuids(UUID sceneObjectUuid, IDictionary<UUID, AssetType> assetUuids,
                                                 IRegistryCore scene)
         {
@@ -281,10 +285,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Get the asset uuid associated with a gesture
+        ///     Get the asset uuid associated with a gesture
         /// </summary>
-        /// <param name = "gestureUuid"></param>
-        /// <param name = "assetUuids"></param>
+        /// <param name="gestureUuid"></param>
+        /// <param name="assetUuids"></param>
         protected void GetGestureAssetUuids(UUID gestureUuid, IDictionary<UUID, AssetType> assetUuids)
         {
             AssetBase assetBase = GetAsset(gestureUuid);

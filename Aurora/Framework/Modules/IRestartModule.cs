@@ -33,27 +33,27 @@ namespace Aurora.Framework
     public interface IRestartModule
     {
         /// <summary>
-        ///   The time until the next restart will occur
+        ///     The time until the next restart will occur
         /// </summary>
         TimeSpan TimeUntilRestart { get; }
 
         /// <summary>
-        ///   Schedule a restart for the scene this module runs in
+        ///     Schedule a restart for the scene this module runs in
         /// </summary>
-        /// <param name = "initiator">The user (or other ID) that caused this restart</param>
-        /// <param name = "message">The message to send to the clients in the sim</param>
-        /// <param name = "alerts">The times to send alert messages to the clients in the sim</param>
-        /// <param name = "notice">Send the alert messages as notices instead of blue box popups</param>
+        /// <param name="initiator">The user (or other ID) that caused this restart</param>
+        /// <param name="message">The message to send to the clients in the sim</param>
+        /// <param name="alerts">The times to send alert messages to the clients in the sim</param>
+        /// <param name="notice">Send the alert messages as notices instead of blue box popups</param>
         void ScheduleRestart(UUID initiator, string message, int[] alerts, bool notice);
 
         /// <summary>
-        ///   Stop the restart and send the given message to the clients
+        ///     Stop the restart and send the given message to the clients
         /// </summary>
-        /// <param name = "message"></param>
+        /// <param name="message"></param>
         void AbortRestart(string message);
 
         /// <summary>
-        ///   Restart the scene that this module is running in
+        ///     Restart the scene that this module is running in
         /// </summary>
         void RestartScene();
     }

@@ -33,64 +33,64 @@ namespace Aurora.Framework
     public interface IRegistryCore
     {
         /// <summary>
-        ///   Register a module into the registry.
+        ///     Register a module into the registry.
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "mod"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="mod"></param>
         void RegisterModuleInterface<T>(T mod);
 
         /// <summary>
-        ///   Add more than one module interface.
-        ///   This is usually used to copy the contents of one registry core into another
+        ///     Add more than one module interface.
+        ///     This is usually used to copy the contents of one registry core into another
         /// </summary>
-        /// <param name = "dictionary"></param>
+        /// <param name="dictionary"></param>
         void AddModuleInterfaces(Dictionary<Type, List<object>> dictionary);
 
         /// <summary>
-        ///   Remove a module from the registry.
+        ///     Remove a module from the registry.
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "mod"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="mod"></param>
         void UnregisterModuleInterface<T>(T mod);
 
         /// <summary>
-        ///   Add more than one module to the same interface in the registry.
+        ///     Add more than one module to the same interface in the registry.
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "mod"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="mod"></param>
         void StackModuleInterface<T>(T mod);
 
         /// <summary>
-        ///   Get a module from the interface by type.
+        ///     Get a module from the interface by type.
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         T RequestModuleInterface<T>();
 
         /// <summary>
-        ///   Try to get a module from the interface by type.
-        ///   Returns false if it could not find a module.
+        ///     Try to get a module from the interface by type.
+        ///     Returns false if it could not find a module.
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "iface"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="iface"></param>
         /// <returns></returns>
         bool TryRequestModuleInterface<T>(out T iface);
 
         /// <summary>
-        ///   Get all the modules for the given interface.
+        ///     Get all the modules for the given interface.
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         T[] RequestModuleInterfaces<T>();
 
         /// <summary>
-        ///   Get all the modules in the registry.
+        ///     Get all the modules in the registry.
         /// </summary>
         /// <returns></returns>
         Dictionary<Type, List<object>> GetInterfaces();
 
         /// <summary>
-        ///   Removes all interfaces from the registry
+        ///     Removes all interfaces from the registry
         /// </summary>
         void RemoveAllInterfaces();
     }

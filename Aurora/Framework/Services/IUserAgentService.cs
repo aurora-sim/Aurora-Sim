@@ -5,7 +5,7 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   HG1.5 only
+    ///     HG1.5 only
     /// </summary>
     public interface IUserAgentService
     {

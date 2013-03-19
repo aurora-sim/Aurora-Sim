@@ -33,7 +33,8 @@ namespace Aurora.Framework
 
         void UnRegisterControlEventsToScript(uint p, UUID uUID);
 
-        void RegisterControlEventsToScript(int controls, int accept, int pass_on, ISceneChildEntity m_host, UUID m_itemID);
+        void RegisterControlEventsToScript(int controls, int accept, int pass_on, ISceneChildEntity m_host,
+                                           UUID m_itemID);
 
         void OnNewMovement(ref AgentManager.ControlFlags flags);
 

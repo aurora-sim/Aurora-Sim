@@ -79,8 +79,8 @@ namespace Mischel.Collections
         private Int32 numItems;
 
         /// <summary>
-        ///   Initializes a new instance of the PriorityQueue class that is empty,
-        ///   has the default initial capacity, and uses the default IComparer.
+        ///     Initializes a new instance of the PriorityQueue class that is empty,
+        ///     has the default initial capacity, and uses the default IComparer.
         /// </summary>
         public PriorityQueue()
             : this(DefaultCapacity, Comparer<TPriority>.Default)
@@ -307,12 +307,14 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Removes the item with the specified value from the queue.
-        ///   The passed equality comparison is used.
+        ///     Removes the item with the specified value from the queue.
+        ///     The passed equality comparison is used.
         /// </summary>
-        /// <param name = "item">The item to be removed.</param>
-        /// <param name = "comp">An object that implements the IEqualityComparer interface
-        ///   for the type of item in the collection.</param>
+        /// <param name="item">The item to be removed.</param>
+        /// <param name="comp">
+        ///     An object that implements the IEqualityComparer interface
+        ///     for the type of item in the collection.
+        /// </param>
         public void Remove(TValue item, IEqualityComparer comparer)
         {
             // need to find the PriorityQueueItem that has the Data value of o
@@ -328,12 +330,14 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Removes the item with the specified value from the queue.
-        ///   The passed equality comparison is used.
+        ///     Removes the item with the specified value from the queue.
+        ///     The passed equality comparison is used.
         /// </summary>
-        /// <param name = "item">The item to be removed.</param>
-        /// <param name = "comp">An object that implements the IEqualityComparer interface
-        ///   for the type of item in the collection.</param>
+        /// <param name="item">The item to be removed.</param>
+        /// <param name="comp">
+        ///     An object that implements the IEqualityComparer interface
+        ///     for the type of item in the collection.
+        /// </param>
         public TValue Find(TValue item, IComparer<TValue> comparer)
         {
             // need to find the PriorityQueueItem that has the Data value of o
@@ -348,10 +352,10 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Removes the item with the specified value from the queue.
-        ///   The default type comparison function is used.
+        ///     Removes the item with the specified value from the queue.
+        ///     The default type comparison function is used.
         /// </summary>
-        /// <param name = "item">The item to be removed.</param>
+        /// <param name="item">The item to be removed.</param>
         public void Remove(TValue item)
         {
             Remove(item, EqualityComparer<TValue>.Default);
@@ -376,8 +380,8 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Set the capacity to the actual number of items, if the current
-        ///   number of items is less than 90 percent of the current capacity.
+        ///     Set the capacity to the actual number of items, if the current
+        ///     number of items is less than 90 percent of the current capacity.
         /// </summary>
         public void TrimExcess()
         {
@@ -459,7 +463,7 @@ namespace Mischel.Collections
     #endregion
 
     /// <summary>
-    ///   Represents the priority queue data structure.
+    ///     Represents the priority queue data structure.
     /// </summary>
     public class LPriorityQueue : ICollection
     {
@@ -494,11 +498,11 @@ namespace Mischel.Collections
         #region Construction
 
         /// <summary>
-        ///   Initializes a new instance of the PriorityQueue class.
+        ///     Initializes a new instance of the PriorityQueue class.
         /// </summary>
         /// <remarks>
-        ///   The PriorityQueue will cast its elements to the IComparable 
-        ///   interface when making comparisons.
+        ///     The PriorityQueue will cast its elements to the IComparable
+        ///     interface when making comparisons.
         /// </remarks>
         public LPriorityQueue()
         {
@@ -506,15 +510,15 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Initializes a new instance of the PriorityQueue class with the
-        ///   specified IComparer.
+        ///     Initializes a new instance of the PriorityQueue class with the
+        ///     specified IComparer.
         /// </summary>
-        /// <param name = "comparer">
-        ///   The IComparer to use for comparing and ordering elements.
+        /// <param name="comparer">
+        ///     The IComparer to use for comparing and ordering elements.
         /// </param>
         /// <remarks>
-        ///   If the specified IComparer is null, the PriorityQueue will cast its
-        ///   elements to the IComparable interface when making comparisons.
+        ///     If the specified IComparer is null, the PriorityQueue will cast its
+        ///     elements to the IComparable interface when making comparisons.
         /// </remarks>
         public LPriorityQueue(IComparer comparer)
         {
@@ -537,13 +541,13 @@ namespace Mischel.Collections
         #region Methods
 
         /// <summary>
-        ///   Enqueues the specified element into the PriorityQueue.
+        ///     Enqueues the specified element into the PriorityQueue.
         /// </summary>
-        /// <param name = "element">
-        ///   The element to enqueue into the PriorityQueue.
+        /// <param name="element">
+        ///     The element to enqueue into the PriorityQueue.
         /// </param>
-        /// <exception cref = "ArgumentNullException">
-        ///   If element is null.
+        /// <exception cref="ArgumentNullException">
+        ///     If element is null.
         /// </exception>
         public virtual void Enqueue(object element)
         {
@@ -600,13 +604,13 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Removes the element at the head of the PriorityQueue.
+        ///     Removes the element at the head of the PriorityQueue.
         /// </summary>
         /// <returns>
-        ///   The element at the head of the PriorityQueue.
+        ///     The element at the head of the PriorityQueue.
         /// </returns>
-        /// <exception cref = "InvalidOperationException">
-        ///   If Count is zero.
+        /// <exception cref="InvalidOperationException">
+        ///     If Count is zero.
         /// </exception>
         public virtual object Dequeue()
         {
@@ -649,13 +653,13 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Removes the specified element from the PriorityQueue.
+        ///     Removes the specified element from the PriorityQueue.
         /// </summary>
-        /// <param name = "element">
-        ///   The element to remove.
+        /// <param name="element">
+        ///     The element to remove.
         /// </param>
-        /// <exception cref = "ArgumentNullException">
-        ///   If element is null
+        /// <exception cref="ArgumentNullException">
+        ///     If element is null
         /// </exception>
         public virtual void Remove(object element)
         {
@@ -707,15 +711,15 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Returns a value indicating whether the specified element is in the
-        ///   PriorityQueue.
+        ///     Returns a value indicating whether the specified element is in the
+        ///     PriorityQueue.
         /// </summary>
-        /// <param name = "element">
-        ///   The element to test.
+        /// <param name="element">
+        ///     The element to test.
         /// </param>
         /// <returns>
-        ///   <b>true</b> if the element is in the PriorityQueue; otherwise
-        ///   <b>false</b>.
+        ///     <b>true</b> if the element is in the PriorityQueue; otherwise
+        ///     <b>false</b>.
         /// </returns>
         public virtual bool Contains(object element)
         {
@@ -757,11 +761,11 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Returns the element at the head of the PriorityQueue without 
-        ///   removing it.
+        ///     Returns the element at the head of the PriorityQueue without
+        ///     removing it.
         /// </summary>
         /// <returns>
-        ///   The element at the head of the PriorityQueue.
+        ///     The element at the head of the PriorityQueue.
         /// </returns>
         public virtual object Peek()
         {
@@ -779,7 +783,7 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Removes all elements from the PriorityQueue.
+        ///     Removes all elements from the PriorityQueue.
         /// </summary>
         public virtual void Clear()
         {
@@ -793,16 +797,16 @@ namespace Mischel.Collections
         }
 
         /// <summary>
-        ///   Returns a synchronized wrapper of the specified PriorityQueue.
+        ///     Returns a synchronized wrapper of the specified PriorityQueue.
         /// </summary>
-        /// <param name = "queue">
-        ///   The PriorityQueue to synchronize.
+        /// <param name="queue">
+        ///     The PriorityQueue to synchronize.
         /// </param>
         /// <returns>
-        ///   A synchronized PriorityQueue.
+        ///     A synchronized PriorityQueue.
         /// </returns>
-        /// <exception cref = "ArgumentNullException">
-        ///   If queue is null.
+        /// <exception cref="ArgumentNullException">
+        ///     If queue is null.
         /// </exception>
         public static LPriorityQueue Synchronized(LPriorityQueue queue)
         {

@@ -32,92 +32,92 @@ namespace Aurora.Framework
     public interface IDialogModule
     {
         /// <summary>
-        ///   Send a non-modal alert message to a particular user.  This can disappear from the user's view after a
-        ///   small interval.
+        ///     Send a non-modal alert message to a particular user.  This can disappear from the user's view after a
+        ///     small interval.
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "message"></param>
+        /// <param name="client"></param>
+        /// <param name="message"></param>
         void SendAlertToUser(IClientAPI client, string message);
 
         /// <summary>
-        ///   Send an alert message to a particular user.
+        ///     Send an alert message to a particular user.
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "message"></param>
-        /// <param name = "modal"></param>
+        /// <param name="client"></param>
+        /// <param name="message"></param>
+        /// <param name="modal"></param>
         void SendAlertToUser(IClientAPI client, string message, bool modal);
 
         /// <summary>
-        ///   Send a non-modal alert message to a particular user.
+        ///     Send a non-modal alert message to a particular user.
         /// </summary>
-        /// <param name = "agentID"></param>
-        /// <param name = "message"></param>
+        /// <param name="agentID"></param>
+        /// <param name="message"></param>
         void SendAlertToUser(UUID agentID, string message);
 
         /// <summary>
-        ///   Send an alert message to a particular user.
+        ///     Send an alert message to a particular user.
         /// </summary>
-        /// <param name = "agentID"></param>
-        /// <param name = "message"></param>
-        /// <param name = "modal"></param>
+        /// <param name="agentID"></param>
+        /// <param name="message"></param>
+        /// <param name="modal"></param>
         void SendAlertToUser(UUID agentID, string message, bool modal);
 
         /// <summary>
-        ///   Send an alert message to a particular user.
+        ///     Send an alert message to a particular user.
         /// </summary>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
-        /// <param name = "message"></param>
-        /// <param name = "modal"></param>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="message"></param>
+        /// <param name="modal"></param>
         void SendAlertToUser(string firstName, string lastName, string message, bool modal);
 
         /// <summary>
-        ///   Send an alert message to all users in the scene.
+        ///     Send an alert message to all users in the scene.
         /// </summary>
-        /// <param name = "message"></param>
+        /// <param name="message"></param>
         void SendGeneralAlert(string message);
 
         /// <summary>
-        ///   Send a dialog box to a particular user.
+        ///     Send a dialog box to a particular user.
         /// </summary>
-        /// <param name = "avatarID"></param>
-        /// <param name = "objectName"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "ownerID"></param>
-        /// <param name = "message"></param>
-        /// <param name = "textureID"></param>
-        /// <param name = "ch"></param>
-        /// <param name = "buttonlabels"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="objectName"></param>
+        /// <param name="objectID"></param>
+        /// <param name="ownerID"></param>
+        /// <param name="message"></param>
+        /// <param name="textureID"></param>
+        /// <param name="ch"></param>
+        /// <param name="buttonlabels"></param>
         void SendDialogToUser(
             UUID avatarID, string objectName, UUID objectID, UUID ownerID,
             string message, UUID textureID, int ch, string[] buttonlabels);
 
         /// <summary>
-        ///   Send a url to a particular user.
+        ///     Send a url to a particular user.
         /// </summary>
-        /// <param name = "avatarID"></param>
-        /// <param name = "objectName"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "ownerID"></param>
-        /// <param name = "groupOwned"></param>
-        /// <param name = "message"></param>
-        /// <param name = "url"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="objectName"></param>
+        /// <param name="objectID"></param>
+        /// <param name="ownerID"></param>
+        /// <param name="groupOwned"></param>
+        /// <param name="message"></param>
+        /// <param name="url"></param>
         void SendUrlToUser(
             UUID avatarID, string objectName, UUID objectID, UUID ownerID, bool groupOwned, string message, string url);
 
         /// <summary>
-        ///   Send a notification to all users in the scene.  This notification should remain around until the 
-        ///   user explicitly dismisses it.
+        ///     Send a notification to all users in the scene.  This notification should remain around until the
+        ///     user explicitly dismisses it.
         /// </summary>
         /// On the Linden Labs Second Client (as of 1.21), this is a big blue box message on the upper right of the 
         /// screen.
-        /// <param name = "fromAvatarID">The user sending the message</param>
-        /// <param name = "fromAvatarName">The name of the user doing the sending</param>
-        /// <param name = "message">The message being sent to the user</param>
+        /// <param name="fromAvatarID">The user sending the message</param>
+        /// <param name="fromAvatarName">The name of the user doing the sending</param>
+        /// <param name="message">The message being sent to the user</param>
         void SendNotificationToUsersInRegion(UUID fromAvatarID, string fromAvatarName, string message);
 
         /// <summary>
-        ///   Send a textbox entry for the client to respond to
+        ///     Send a textbox entry for the client to respond to
         /// </summary>
         void SendTextBoxToUser(UUID avatarid, string message, int chatChannel, string name, UUID objectid, UUID ownerid);
     }

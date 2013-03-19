@@ -32,11 +32,11 @@ namespace Aurora.Framework
     public interface IDefaultLibraryLoader
     {
         /// <summary>
-        ///   Load any default inventory folders and items from this module into the main ILibraryService
+        ///     Load any default inventory folders and items from this module into the main ILibraryService
         /// </summary>
-        /// <param name = "service"></param>
-        /// <param name = "source"></param>
-        /// <param name = "registry"></param>
+        /// <param name="service"></param>
+        /// <param name="source"></param>
+        /// <param name="registry"></param>
         void LoadLibrary(ILibraryService service, IConfigSource source, IRegistryCore registry);
     }
 }

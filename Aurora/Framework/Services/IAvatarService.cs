@@ -32,41 +32,42 @@ namespace Aurora.Framework
     public interface IAvatarService
     {
         /// <summary>
-        ///   The local service (if possible)
+        ///     The local service (if possible)
         /// </summary>
         IAvatarService InnerService { get; }
 
         /// <summary>
-        ///   Called by the login service
+        ///     Called by the login service
         /// </summary>
-        /// <param name = "userID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         AvatarAppearance GetAppearance(UUID userID);
 
         /// <summary>
-        ///   Called by everyone who can change the avatar data (so, regions)
+        ///     Called by everyone who can change the avatar data (so, regions)
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "appearance"></param>
+        /// <param name="userID"></param>
+        /// <param name="appearance"></param>
         /// <returns></returns>
         bool SetAppearance(UUID userID, AvatarAppearance appearance);
 
         /// <summary>
-        ///   Not sure if it's needed
+        ///     Not sure if it's needed
         /// </summary>
-        /// <param name = "userID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         bool ResetAvatar(UUID userID);
 
         /// <summary>
-        /// Gets a user's appearance, and if it does not exist, create it
+        ///     Gets a user's appearance, and if it does not exist, create it
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="avatarName"></param>
         /// <param name="defaultUserAvatarArchive"></param>
         /// <param name="loadedArchive"></param>
         /// <returns></returns>
-        AvatarAppearance GetAndEnsureAppearance(UUID userID, string avatarName, string defaultUserAvatarArchive, out bool loadedArchive);
+        AvatarAppearance GetAndEnsureAppearance(UUID userID, string avatarName, string defaultUserAvatarArchive,
+                                                out bool loadedArchive);
     }
 
     public interface IAvatarData : IAuroraDataPlugin

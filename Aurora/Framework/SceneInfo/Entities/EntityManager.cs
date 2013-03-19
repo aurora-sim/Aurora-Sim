@@ -171,7 +171,9 @@ namespace Aurora.Framework
                         tmp.Add(entity);
                 }
 #else
-                tmp.AddRange(m_presenceEntities.Values.Where(entity => (entity.AbsolutePosition - pos).LengthSquared() < radius * radius));
+                tmp.AddRange(
+                    m_presenceEntities.Values.Where(
+                        entity => (entity.AbsolutePosition - pos).LengthSquared() < radius*radius));
 #endif
 
                 return tmp.ToArray();
@@ -274,10 +276,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Retrives the SceneObjectGroup of this child
+        ///     Retrives the SceneObjectGroup of this child
         /// </summary>
-        /// <param name = "childkey"></param>
-        /// <param name = "obj"></param>
+        /// <param name="childkey"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
         public virtual bool TryGetChildPrimParent(UUID childkey, out IEntity obj)
         {
@@ -294,10 +296,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Retrives the SceneObjectGroup of this child
+        ///     Retrives the SceneObjectGroup of this child
         /// </summary>
-        /// <param name = "childkey"></param>
-        /// <param name = "obj"></param>
+        /// <param name="childkey"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
         public virtual bool TryGetChildPrimParent(uint childkey, out IEntity obj)
         {

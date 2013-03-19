@@ -72,7 +72,8 @@ namespace Aurora.Framework
     public delegate void NetworkStats(int inPackets, int outPackets, int unAckedBytes);
 
     public delegate void SetAppearance(
-        IClientAPI remoteClient, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables, uint serial);
+        IClientAPI remoteClient, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables,
+        uint serial);
 
     public delegate void StartAnim(IClientAPI remoteClient, UUID animID);
 
@@ -427,7 +428,8 @@ namespace Aurora.Framework
     public delegate void DirFindQuery(
         IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, int queryStart);
 
-    public delegate void DirLandQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart);
+    public delegate void DirLandQuery(
+        IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart);
 
     public delegate void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags);
 
@@ -531,13 +533,16 @@ namespace Aurora.Framework
 
     public delegate void SaveStateHandler(IClientAPI client, UUID agentID);
 
-    public delegate void GroupAccountSummaryRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, int currentInterval, int intervalDays);
+    public delegate void GroupAccountSummaryRequest(
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, int currentInterval, int intervalDays);
 
     public delegate void GroupAccountDetailsRequest(
-        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID, int currentInterval, int intervalDays);
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID, int currentInterval,
+        int intervalDays);
 
     public delegate void GroupAccountTransactionsRequest(
-        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID, int currentInterval, int intervalDays);
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID, int currentInterval,
+        int intervalDays);
 
     public delegate void ParcelBuyPass(IClientAPI client, UUID agentID, int ParcelLocalID);
 
@@ -584,8 +589,18 @@ namespace Aurora.Framework
         public string TimeString;
         public string UserCausingCharge;
         private bool _ispayment = true;
-        public bool Payment { get { return _ispayment; } set { _ispayment = value; } }
-        public bool Stipend { get { return !_ispayment; } set { _ispayment = !value; } }
+
+        public bool Payment
+        {
+            get { return _ispayment; }
+            set { _ispayment = value; }
+        }
+
+        public bool Stipend
+        {
+            get { return !_ispayment; }
+            set { _ispayment = !value; }
+        }
 
         public override OSDMap ToOSD()
         {
@@ -746,7 +761,7 @@ namespace Aurora.Framework
             OSDMap map = new OSDMap();
             map["classifiedID"] = classifiedID;
             map["name"] = name;
-            map["classifiedFlags"] = (int)classifiedFlags;
+            map["classifiedFlags"] = (int) classifiedFlags;
             map["creationDate"] = creationDate;
             map["expirationDate"] = expirationDate;
             map["price"] = price;
@@ -758,7 +773,7 @@ namespace Aurora.Framework
         {
             classifiedID = map["classifiedID"];
             name = map["name"];
-            classifiedFlags = (byte)(int)map["classifiedFlags"];
+            classifiedFlags = (byte) (int) map["classifiedFlags"];
             creationDate = map["creationDate"];
             expirationDate = map["expirationDate"];
             price = map["price"];
@@ -839,8 +854,8 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   Specifies the fields that have been changed when sending a prim or
-    ///   avatar update
+    ///     Specifies the fields that have been changed when sending a prim or
+    ///     avatar update
     /// </summary>
     [Flags]
     public enum PrimUpdateFlags : uint
@@ -913,17 +928,17 @@ namespace Aurora.Framework
         int NextAnimationSequenceNumber { get; }
 
         /// <summary>
-        ///   Returns the full name of the agent/avatar represented by this client
+        ///     Returns the full name of the agent/avatar represented by this client
         /// </summary>
         string Name { get; }
 
         /// <value>
-        ///   Determines whether the client thread is doing anything or not.
+        ///     Determines whether the client thread is doing anything or not.
         /// </value>
         bool IsActive { get; set; }
 
         /// <value>
-        ///   Determines whether the client is logging out or not.
+        ///     Determines whether the client is logging out or not.
         /// </value>
         bool IsLoggingOut { get; set; }
 
@@ -1197,7 +1212,7 @@ namespace Aurora.Framework
         event AgentCachedTextureRequest OnAgentCachedTextureRequest;
 
         /// <summary>
-        ///   Set the debug level at which packet output should be printed to console.
+        ///     Set the debug level at which packet output should be printed to console.
         /// </summary>
         void SetDebugPacketLevel(int newDebug);
 
@@ -1209,27 +1224,27 @@ namespace Aurora.Framework
         //     void ActivateGesture(UUID assetId, UUID gestureId);
 
         /// <summary>
-        ///   Tell this client what items it should be wearing now
+        ///     Tell this client what items it should be wearing now
         /// </summary>
         void SendWearables(AvatarWearable[] wearables, int serial);
 
         void SendAgentCachedTexture(List<CachedAgentArgs> args);
 
         /// <summary>
-        ///   Send information about the given agent's appearance to another client.
+        ///     Send information about the given agent's appearance to another client.
         /// </summary>
-        /// <param name = "agentID">The id of the agent associated with the appearance</param>
-        /// <param name = "visualParams"></param>
-        /// <param name = "textureEntry"></param>
+        /// <param name="agentID">The id of the agent associated with the appearance</param>
+        /// <param name="visualParams"></param>
+        /// <param name="textureEntry"></param>
         void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry);
 
         void SendStartPingCheck(byte seq);
 
         /// <summary>
-        ///   Tell the client that an object has been deleted
+        ///     Tell the client that an object has been deleted
         /// </summary>
-        /// <param name = "regionHandle"></param>
-        /// <param name = "localID"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="localID"></param>
         void SendKillObject(ulong regionHandle, IEntity[] entities);
 
         void SendKillObject(ulong regionHandle, uint[] entities);
@@ -1246,30 +1261,30 @@ namespace Aurora.Framework
         void SendGenericMessage(string method, List<byte[]> message);
 
         /// <summary>
-        ///   Send the entire terrain map to the client
+        ///     Send the entire terrain map to the client
         /// </summary>
-        /// <param name = "map"></param>
+        /// <param name="map"></param>
         void SendLayerData(short[] map);
 
         void ForceSendOnAgentUpdate(IClientAPI client, AgentUpdateArgs args);
         void OnForceChatFromViewer(IClientAPI sender, OSChatMessage e);
 
         /// <summary>
-        ///   Send one patch to the client
-        ///   Note: x and y variables are NOT positions, they are terrain patches!
+        ///     Send one patch to the client
+        ///     Note: x and y variables are NOT positions, they are terrain patches!
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
-        /// <param name = "map"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="map"></param>
         void SendLayerData(int px, int py, short[] map);
 
         /// <summary>
-        ///   Send an array of patches to the client
-        ///   Note: all x and y variables are NOT positions, they are terrain patches!
+        ///     Send an array of patches to the client
+        ///     Note: all x and y variables are NOT positions, they are terrain patches!
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
-        /// <param name = "map"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="map"></param>
         void SendLayerData(int[] x, int[] y, short[] map, TerrainPatch.LayerType type);
 
         void SendWindData(Vector2[] windSpeeds);
@@ -1278,7 +1293,7 @@ namespace Aurora.Framework
         void MoveAgentIntoRegion(RegionInfo regInfo, Vector3 pos, Vector3 look);
 
         /// <summary>
-        ///   Return circuit information for this client.
+        ///     Return circuit information for this client.
         /// </summary>
         /// <returns></returns>
         AgentCircuitData RequestClientInfo();
@@ -1311,9 +1326,9 @@ namespace Aurora.Framework
         void SendInventoryItemDetails(UUID ownerID, InventoryItemBase item);
 
         /// <summary>
-        ///   Tell the client that we have created the item it requested.
+        ///     Tell the client that we have created the item it requested.
         /// </summary>
-        /// <param name = "Item"></param>
+        /// <param name="Item"></param>
         void SendInventoryItemCreateUpdate(InventoryItemBase Item, uint callbackId);
 
         void SendRemoveInventoryItem(UUID itemID);
@@ -1323,15 +1338,15 @@ namespace Aurora.Framework
         void SendTaskInventory(UUID taskID, short serial, byte[] fileName);
 
         /// <summary>
-        ///   Used by the server to inform the client of new inventory items.
+        ///     Used by the server to inform the client of new inventory items.
         /// </summary>
-        /// <param name = "node"></param>
+        /// <param name="node"></param>
         void SendBulkUpdateInventory(InventoryItemBase node);
 
         /// <summary>
-        ///   Used by the server to inform the client of new inventory items/folders.
+        ///     Used by the server to inform the client of new inventory items/folders.
         /// </summary>
-        /// <param name = "node"></param>
+        /// <param name="node"></param>
         void SendBulkUpdateInventory(InventoryFolderBase node);
 
         void SendXferPacket(ulong xferID, uint packet, byte[] data);
@@ -1366,30 +1381,30 @@ namespace Aurora.Framework
         void SendLoadURL(string objectname, UUID objectID, UUID ownerID, bool groupOwned, string message, string url);
 
         /// <summary>
-        ///   Open a dialog box on the client.
+        ///     Open a dialog box on the client.
         /// </summary>
-        /// <param name = "objectname"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "ownerID"></param>
-        /// <param name = "ownerFirstName"></param>
-        /// <param name = "ownerLastName"></param>
-        /// <param name = "msg"></param>
-        /// <param name = "textureID"></param>
-        /// <param name = "ch"></param>
-        /// <param name = "buttonlabels"></param>
+        /// <param name="objectname"></param>
+        /// <param name="objectID"></param>
+        /// <param name="ownerID"></param>
+        /// <param name="ownerFirstName"></param>
+        /// <param name="ownerLastName"></param>
+        /// <param name="msg"></param>
+        /// <param name="textureID"></param>
+        /// <param name="ch"></param>
+        /// <param name="buttonlabels"></param>
         void SendDialog(string objectname, UUID objectID, UUID ownerID, string ownerFirstName, string ownerLastName,
                         string msg, UUID textureID, int ch,
                         string[] buttonlabels);
 
         /// <summary>
-        ///   Update the client as to where the sun is currently located.
+        ///     Update the client as to where the sun is currently located.
         /// </summary>
-        /// <param name = "sunPos"></param>
-        /// <param name = "sunVel"></param>
-        /// <param name = "currentTime">Seconds since Unix Epoch 01/01/1970 00:00:00</param>
-        /// <param name = "secondsPerSunCycle"></param>
-        /// <param name = "secondsPerYear"></param>
-        /// <param name = "orbitalPosition">The orbital position is given in radians, and must be "adjusted" for the linden client, see LLClientView</param>
+        /// <param name="sunPos"></param>
+        /// <param name="sunVel"></param>
+        /// <param name="currentTime">Seconds since Unix Epoch 01/01/1970 00:00:00</param>
+        /// <param name="secondsPerSunCycle"></param>
+        /// <param name="secondsPerYear"></param>
+        /// <param name="orbitalPosition">The orbital position is given in radians, and must be "adjusted" for the linden client, see LLClientView</param>
         void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong currentTime, uint secondsPerSunCycle, uint secondsPerYear,
                         float orbitalPosition);
 
@@ -1431,33 +1446,33 @@ namespace Aurora.Framework
         void SendInitiateDownload(string simFileName, string clientFileName);
 
         /// <summary>
-        ///   Send the first part of a texture.  For sufficiently small textures, this may be the only packet.
+        ///     Send the first part of a texture.  For sufficiently small textures, this may be the only packet.
         /// </summary>
-        /// <param name = "numParts"></param>
-        /// <param name = "ImageUUID"></param>
-        /// <param name = "ImageSize"></param>
-        /// <param name = "ImageData"></param>
-        /// <param name = "imageCodec"></param>
+        /// <param name="numParts"></param>
+        /// <param name="ImageUUID"></param>
+        /// <param name="ImageSize"></param>
+        /// <param name="ImageData"></param>
+        /// <param name="imageCodec"></param>
         void SendImageFirstPart(ushort numParts, UUID ImageUUID, uint ImageSize, byte[] ImageData, byte imageCodec);
 
         /// <summary>
-        ///   Send the next packet for a series of packets making up a single texture, 
-        ///   as established by SendImageFirstPart()
+        ///     Send the next packet for a series of packets making up a single texture,
+        ///     as established by SendImageFirstPart()
         /// </summary>
-        /// <param name = "partNumber"></param>
-        /// <param name = "imageUuid"></param>
-        /// <param name = "imageData"></param>
+        /// <param name="partNumber"></param>
+        /// <param name="imageUuid"></param>
+        /// <param name="imageData"></param>
         void SendImageNextPart(ushort partNumber, UUID imageUuid, byte[] imageData);
 
         /// <summary>
-        ///   Tell the client that the requested texture cannot be found
+        ///     Tell the client that the requested texture cannot be found
         /// </summary>
         void SendImageNotFound(UUID imageid);
 
         /// <summary>
-        ///   Send statistical information about the sim to the client.
+        ///     Send statistical information about the sim to the client.
         /// </summary>
-        /// <param name = "stats"></param>
+        /// <param name="stats"></param>
         void SendSimStats(SimStats stats);
 
         void SendObjectPropertiesFamilyData(uint RequestFlags, UUID ObjectUUID, UUID OwnerID, UUID GroupID,
@@ -1569,12 +1584,18 @@ namespace Aurora.Framework
         void SendAvatarInterestsReply(UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText,
                                       string languages);
 
-        void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt, int currentInterval, int interval, string startDate, GroupAccountHistory[] history);
+        void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt,
+                                        int currentInterval, int interval, string startDate,
+                                        GroupAccountHistory[] history);
 
-        void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTier, int usedTier, string startDate, int currentInterval, int intervalLength, string taxDate, string lastTaxDate, int parcelDirectoryFee, int landTaxFee, int groupTaxFee, int objectTaxFee);
+        void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTier,
+                                        int usedTier, string startDate, int currentInterval, int intervalLength,
+                                        string taxDate, string lastTaxDate, int parcelDirectoryFee, int landTaxFee,
+                                        int groupTaxFee, int objectTaxFee);
 
         void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID,
-                                                        UUID sessionID, int currentInterval, int intervalDays, string startingDate, GroupAccountHistory[] history);
+                                                 UUID sessionID, int currentInterval, int intervalDays,
+                                                 string startingDate, GroupAccountHistory[] history);
 
         void SendChangeUserRights(UUID agentID, UUID friendID, int rights);
 

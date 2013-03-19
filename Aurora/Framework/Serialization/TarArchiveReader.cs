@@ -32,7 +32,7 @@ using System.Text;
 namespace Aurora.Framework.Serialization
 {
     /// <summary>
-    ///   Temporary code to do the bare minimum required to read a tar archive for our purposes
+    ///     Temporary code to do the bare minimum required to read a tar archive for our purposes
     /// </summary>
     public class TarArchiveReader
     {
@@ -58,34 +58,34 @@ namespace Aurora.Framework.Serialization
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
 
         /// <summary>
-        ///   Used to trim off null chars
+        ///     Used to trim off null chars
         /// </summary>
         protected static char[] m_nullCharArray = new[] {'\0'};
 
         /// <summary>
-        ///   Used to trim off space chars
+        ///     Used to trim off space chars
         /// </summary>
         protected static char[] m_spaceCharArray = new[] {' '};
 
         /// <summary>
-        ///   Binary reader for the underlying stream
+        ///     Binary reader for the underlying stream
         /// </summary>
         protected BinaryReader m_br;
 
         /// <summary>
-        ///   Generate a tar reader which reads from the given stream.
+        ///     Generate a tar reader which reads from the given stream.
         /// </summary>
-        /// <param name = "s"></param>
+        /// <param name="s"></param>
         public TarArchiveReader(Stream s)
         {
             m_br = new BinaryReader(s);
         }
 
         /// <summary>
-        ///   Read the next entry in the tar file.
+        ///     Read the next entry in the tar file.
         /// </summary>
-        /// <param name = "filePath"></param>
-        /// <param name = "entryType"></param>
+        /// <param name="filePath"></param>
+        /// <param name="entryType"></param>
         /// <returns>the data for the entry.  Returns null if there are no more entries</returns>
         public byte[] ReadEntry(out string filePath, out TarEntryType entryType)
         {
@@ -102,7 +102,7 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Read the next 512 byte chunk of data as a tar header.
+        ///     Read the next 512 byte chunk of data as a tar header.
         /// </summary>
         /// <returns>A tar header struct.  null if we have reached the end of the archive.</returns>
         protected TarHeader ReadHeader()
@@ -172,9 +172,9 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Read data following a header
+        ///     Read data following a header
         /// </summary>
-        /// <param name = "fileSize"></param>
+        /// <param name="fileSize"></param>
         /// <returns></returns>
         protected byte[] ReadData(int fileSize)
         {
@@ -201,9 +201,9 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Convert octal bytes to a decimal representation
+        ///     Convert octal bytes to a decimal representation
         /// </summary>
-        /// <param name = "bytes"></param>
+        /// <param name="bytes"></param>
         /// <returns></returns>
         public static int ConvertOctalBytesToDecimal(byte[] bytes, int startIndex, int count)
         {

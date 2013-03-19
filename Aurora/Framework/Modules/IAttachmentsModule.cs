@@ -33,73 +33,73 @@ namespace Aurora.Framework
     public interface IAttachmentsModule
     {
         /// <summary>
-        ///   Attach an object to an avatar.
+        ///     Attach an object to an avatar.
         /// </summary>
-        /// <param name = "localID"></param>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "grp"></param>
-        /// <param name = "AttachmentPt"></param>
-        /// <param name = "isTempAttach"></param>
+        /// <param name="localID"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="grp"></param>
+        /// <param name="AttachmentPt"></param>
+        /// <param name="isTempAttach"></param>
         /// <returns>true if the object was successfully attached, false otherwise</returns>
         bool AttachObjectFromInworldObject(
             uint localID, IClientAPI remoteClient, ISceneEntity grp, int AttachmentPt, bool isTempAttach);
 
         /// <summary>
-        ///   Rez an attachment from user inventory
+        ///     Rez an attachment from user inventory
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "itemID"></param>
-        /// <param name = "assetID"></param>
-        /// <param name = "AttachmentPt"></param>
-        /// <param name = "updateUUIDs">ONLY make this true if you know that the user will not be crossing or teleporting when this call will be happening</param>
-        ///   <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
+        /// <param name="remoteClient"></param>
+        /// <param name="itemID"></param>
+        /// <param name="assetID"></param>
+        /// <param name="AttachmentPt"></param>
+        /// <param name="updateUUIDs">ONLY make this true if you know that the user will not be crossing or teleporting when this call will be happening</param>
+        /// <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
         ISceneEntity RezSingleAttachmentFromInventory(
             IClientAPI remoteClient, UUID itemID, UUID assetID, int AttachmentPt, bool updateUUIDs);
 
         /// <summary>
-        ///   Detach the given item to the ground.
+        ///     Detach the given item to the ground.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "remoteClient"></param>
+        /// <param name="itemID"></param>
+        /// <param name="remoteClient"></param>
         void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient);
 
         /// <summary>
-        ///   Update the user inventory to show a detach.
+        ///     Update the user inventory to show a detach.
         /// </summary>
-        /// <param name = "itemID">
-        ///   A <see cref = "UUID" />
+        /// <param name="itemID">
+        ///     A <see cref="UUID" />
         /// </param>
-        /// <param name = "remoteClient">
-        ///   A <see cref = "IClientAPI" />
+        /// <param name="remoteClient">
+        ///     A <see cref="IClientAPI" />
         /// </param>
         void DetachSingleAttachmentToInventory(UUID itemID, IClientAPI remoteClient);
 
         /// <summary>
-        ///   Update the position of an attachment
+        ///     Update the position of an attachment
         /// </summary>
-        /// <param name = "client">The client whose attachment we are to move</param>
-        /// <param name = "sog">The object to move</param>
-        /// <param name = "localID">The localID of the object to move</param>
-        /// <param name = "pos">The new position of the attachment</param>
+        /// <param name="client">The client whose attachment we are to move</param>
+        /// <param name="sog">The object to move</param>
+        /// <param name="localID">The localID of the object to move</param>
+        /// <param name="pos">The new position of the attachment</param>
         void UpdateAttachmentPosition(IClientAPI client, ISceneEntity sog, uint localID, Vector3 pos);
 
         /// <summary>
-        ///   Get a list of the given avatar's attachments
+        ///     Get a list of the given avatar's attachments
         /// </summary>
-        /// <param name = "avatarID"></param>
+        /// <param name="avatarID"></param>
         /// <returns></returns>
         ISceneEntity[] GetAttachmentsForAvatar(UUID avatarID);
 
         /// <summary>
-        ///   Send a script event to all attachments
+        ///     Send a script event to all attachments
         /// </summary>
-        /// <param name = "avatarID"></param>
-        /// <param name = "eventName"></param>
-        /// <param name = "args"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="eventName"></param>
+        /// <param name="args"></param>
         void SendScriptEventToAttachments(UUID avatarID, string eventName, Object[] args);
 
         /// <summary>
-        /// Send updates for all attachments to the given presences
+        ///     Send updates for all attachments to the given presences
         /// </summary>
         /// <param name="receiver"></param>
         /// <param name="sender"></param>

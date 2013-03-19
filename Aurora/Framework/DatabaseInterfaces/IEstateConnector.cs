@@ -33,64 +33,64 @@ namespace Aurora.Framework
     public interface IEstateConnector : IAuroraDataPlugin
     {
         /// <summary>
-        ///   Loads the estate data for the given region
+        ///     Loads the estate data for the given region
         /// </summary>
-        /// <param name = "regionID"></param>
+        /// <param name="regionID"></param>
         /// <returns></returns>
         EstateSettings GetEstateSettings(UUID regionID);
 
         /// <summary>
-        /// Loads the estate data for the specified estateID
+        ///     Loads the estate data for the specified estateID
         /// </summary>
         /// <param name="estateID"></param>
         /// <returns></returns>
         EstateSettings GetEstateSettings(int estateID);
 
         /// <summary>
-        /// Loads the estate data for the specified estate name (local only)
+        ///     Loads the estate data for the specified estate name (local only)
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         EstateSettings GetEstateSettings(string name);
 
         /// <summary>
-        ///   Creates a new estate from the given info, returns the updated info
+        ///     Creates a new estate from the given info, returns the updated info
         /// </summary>
-        /// <param name = "ES"></param>
-        /// <param name = "regionID"></param>
+        /// <param name="ES"></param>
+        /// <param name="regionID"></param>
         /// <returns>0 if the estate could not be created, otherwise, the estateID</returns>
         int CreateNewEstate(EstateSettings ES, UUID regionID);
 
         /// <summary>
-        ///   Updates the given Estate data in the database
+        ///     Updates the given Estate data in the database
         /// </summary>
-        /// <param name = "es"></param>
+        /// <param name="es"></param>
         void SaveEstateSettings(EstateSettings es);
 
         /// <summary>
-        ///   Gets the estates that have the given name and owner
+        ///     Gets the estates that have the given name and owner
         /// </summary>
-        /// <param name = "ownerID"></param>
-        /// <param name = "name"></param>
+        /// <param name="ownerID"></param>
+        /// <param name="name"></param>
         /// <returns></returns>
         int GetEstate(UUID ownerID, string name);
 
         /// <summary>
-        ///   Get all regions in the current estate
+        ///     Get all regions in the current estate
         /// </summary>
-        /// <param name = "estateID"></param>
+        /// <param name="estateID"></param>
         /// <returns></returns>
         List<UUID> GetRegions(int estateID);
 
         /// <summary>
-        ///   Gets the estates that have the given owner
+        ///     Gets the estates that have the given owner
         /// </summary>
-        /// <param name = "ownerID"></param>
+        /// <param name="ownerID"></param>
         /// <returns></returns>
         List<EstateSettings> GetEstates(UUID ownerID);
 
         /// <summary>
-        /// Gets the estates that have the specified owner, with optional filters.
+        ///     Gets the estates that have the specified owner, with optional filters.
         /// </summary>
         /// <param name="OwnerID"></param>
         /// <param name="boolFields"></param>
@@ -98,31 +98,31 @@ namespace Aurora.Framework
         List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields);
 
         /// <summary>
-        /// Gets the EstateID for the specified RegionID
+        ///     Gets the EstateID for the specified RegionID
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
         int GetEstateID(UUID regionID);
 
         /// <summary>
-        ///   Add a new region to the estate, authenticates with the password
+        ///     Add a new region to the estate, authenticates with the password
         /// </summary>
-        /// <param name = "regionID"></param>
-        /// <param name = "estateID"></param>
+        /// <param name="regionID"></param>
+        /// <param name="estateID"></param>
         /// <returns></returns>
         bool LinkRegion(UUID regionID, int estateID);
 
         /// <summary>
-        ///   Remove an existing region from the estate
+        ///     Remove an existing region from the estate
         /// </summary>
-        /// <param name = "regionID"></param>
+        /// <param name="regionID"></param>
         /// <returns></returns>
         bool DelinkRegion(UUID regionID);
 
         /// <summary>
-        ///   Deletes the given estate by its estate ID
+        ///     Deletes the given estate by its estate ID
         /// </summary>
-        /// <param name = "estateID"></param>
+        /// <param name="estateID"></param>
         /// <returns></returns>
         bool DeleteEstate(int estateID);
     }

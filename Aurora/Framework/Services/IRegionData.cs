@@ -32,7 +32,7 @@ using System.Collections.Generic;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   An interface for connecting to the authentication datastore
+    ///     An interface for connecting to the authentication datastore
     /// </summary>
     public interface IRegionData : IAuroraDataPlugin
     {
@@ -45,10 +45,12 @@ namespace Aurora.Framework
         List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, List<UUID> scopeIDs);
         List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort);
         List<GridRegion> Get(uint start, uint count, uint EstateID, RegionFlags flags, Dictionary<string, bool> sort);
-        List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count, Dictionary<string, bool> sort);
+
+        List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count,
+                             Dictionary<string, bool> sort);
 
         /// <summary>
-        /// Gets the number of regions matching the specified flags
+        ///     Gets the number of regions matching the specified flags
         /// </summary>
         /// <param name="includeFlags"></param>
         /// <param name="excludeFlags"></param>
@@ -56,7 +58,7 @@ namespace Aurora.Framework
         uint Count(RegionFlags includeFlags, RegionFlags excludeFlags);
 
         /// <summary>
-        /// Gets the neighbouring regions, taking into account variable-sized regions
+        ///     Gets the neighbouring regions, taking into account variable-sized regions
         /// </summary>
         /// <param name="regionID"></param>
         /// <param name="scopeIDs"></param>
@@ -65,7 +67,7 @@ namespace Aurora.Framework
         List<GridRegion> GetNeighbours(UUID regionID, List<UUID> scopeIDs, uint squareRangeFromCenterInMeters);
 
         /// <summary>
-        /// Gets all regions within squareRangeFromCenterInMeters meters of centerX and centerY
+        ///     Gets all regions within squareRangeFromCenterInMeters meters of centerX and centerY
         /// </summary>
         /// <param name="scopeIDs"></param>
         /// <param name="excludeRegion"></param>
@@ -73,7 +75,8 @@ namespace Aurora.Framework
         /// <param name="centerY"></param>
         /// <param name="squareRangeFromCenterInMeters"></param>
         /// <returns></returns>
-        List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters);
+        List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY,
+                             uint squareRangeFromCenterInMeters);
 
         uint Count(uint estateID, RegionFlags flags);
 

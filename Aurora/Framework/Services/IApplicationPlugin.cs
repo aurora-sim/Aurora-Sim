@@ -33,52 +33,52 @@ using Nini.Config;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Aurora-Sim Application Plugin framework interface
+    ///     Aurora-Sim Application Plugin framework interface
     /// </summary>
     public interface IApplicationPlugin
     {
         /// <summary>
-        ///   Returns the plugin name
+        ///     Returns the plugin name
         /// </summary>
         /// <returns></returns>
         string Name { get; }
 
         /// <summary>
-        /// Called before any other calls are made, before the console is setup, and before the HTTP server is ready
+        ///     Called before any other calls are made, before the console is setup, and before the HTTP server is ready
         /// </summary>
         /// <param name="simBase"></param>
         void PreStartup(ISimulationBase simBase);
 
         /// <summary>
-        ///   Initialize the Plugin
+        ///     Initialize the Plugin
         /// </summary>
-        /// <param name = "simBase">The Application instance</param>
+        /// <param name="simBase">The Application instance</param>
         void Initialize(ISimulationBase simBase);
 
         /// <summary>
-        ///   Called when the application initialization is completed
+        ///     Called when the application initialization is completed
         /// </summary>
         void PostInitialise();
 
         /// <summary>
-        ///   Called when the application loading is completed
+        ///     Called when the application loading is completed
         /// </summary>
         void Start();
 
         /// <summary>
-        ///   Called when the application loading is completed
+        ///     Called when the application loading is completed
         /// </summary>
         void PostStart();
 
         /// <summary>
-        ///   Close out the module
+        ///     Close out the module
         /// </summary>
         void Close();
 
         /// <summary>
-        ///   The configuration has changed, make sure that everything is updated with the new info
+        ///     The configuration has changed, make sure that everything is updated with the new info
         /// </summary>
-        /// <param name = "m_config"></param>
+        /// <param name="m_config"></param>
         void ReloadConfiguration(IConfigSource m_config);
     }
 }
@@ -90,7 +90,7 @@ namespace Aurora.Framework
         #region UPDATE
 
         /// <summary>
-        /// UPDATE table SET values[i].key = values[i].value {magic happens with queryFilter here} [LIMIT start[, count]]
+        ///     UPDATE table SET values[i].key = values[i].value {magic happens with queryFilter here} [LIMIT start[, count]]
         /// </summary>
         /// <param name="table">table to update</param>
         /// <param name="values">dictionary of table fields and new values</param>
@@ -99,14 +99,15 @@ namespace Aurora.Framework
         /// <param name="start">LIMIT start or LIMIT start, count</param>
         /// <param name="count">LIMIT start, count</param>
         /// <returns></returns>
-        bool Update(string table, Dictionary<string, object> values, Dictionary<string, int> incrementValues, QueryFilter queryFilter, uint? start, uint? count);
+        bool Update(string table, Dictionary<string, object> values, Dictionary<string, int> incrementValues,
+                    QueryFilter queryFilter, uint? start, uint? count);
 
         #endregion
 
         #region SELECT
 
         /// <summary>
-        /// SELECT string.join(", ", wantedValue) FROM table {magic happens with queryFilter here} {magic happens with sort here} [LIMIT start[, count]]
+        ///     SELECT string.join(", ", wantedValue) FROM table {magic happens with queryFilter here} {magic happens with sort here} [LIMIT start[, count]]
         /// </summary>
         /// <param name="wantedValue"></param>
         /// <param name="table"></param>
@@ -115,28 +116,33 @@ namespace Aurora.Framework
         /// <param name="start"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
+        List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort,
+                           uint? start, uint? count);
 
         /// <summary>
-        ///   select 'wantedValue' from 'table' 'whereClause'
+        ///     select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
         List<string> QueryFullData(string whereClause, string table, string wantedValue);
 
         /// <summary>
-        ///   select 'wantedValue' from 'table' 'whereClause'
+        ///     select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
         DataReaderConnection QueryData(string whereClause, string table, string wantedValue);
 
         /// <summary>
-        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
-        ///   This gives the row names as well as the values
+        ///     select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
+        ///     This gives the row names as well as the values
         /// </summary>
         Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
         #region JOIN
 
-        List<string> Query(string[] wantedValue, QueryTables tables, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
-        Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, QueryTables tables, string wantedValue);
+        List<string> Query(string[] wantedValue, QueryTables tables, QueryFilter queryFilter,
+                           Dictionary<string, bool> sort, uint? start, uint? count);
+
+        Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, QueryTables tables,
+                                                    string wantedValue);
+
         DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue);
         List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue);
 
@@ -147,12 +153,12 @@ namespace Aurora.Framework
         #region INSERT
 
         /// <summary>
-        ///   insert into 'table' values ('values')
+        ///     insert into 'table' values ('values')
         /// </summary>
         bool Insert(string table, object[] values);
 
         /// <summary>
-        /// INSERT INTO table (row.Keys) VALUES(row.Values)
+        ///     INSERT INTO table (row.Keys) VALUES(row.Values)
         /// </summary>
         /// <param name="table"></param>
         /// <param name="row"></param>
@@ -160,7 +166,7 @@ namespace Aurora.Framework
         bool Insert(string table, Dictionary<string, object> row);
 
         /// <summary>
-        /// Runs multiple Insert(table, value) calls in one run
+        ///     Runs multiple Insert(table, value) calls in one run
         /// </summary>
         /// <param name="table"></param>
         /// <param name="values"></param>
@@ -168,18 +174,18 @@ namespace Aurora.Framework
         bool InsertMultiple(string table, List<object[]> values);
 
         /// <summary>
-        ///   Inserts a row into the database 
-        ///   insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
+        ///     Inserts a row into the database
+        ///     insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
         /// </summary>
-        /// <param name = "table">table name</param>
-        /// <param name = "values">All values to be inserted in the correct table order</param>
-        /// <param name = "updateKey">If a row is already existing, update this key</param>
-        /// <param name = "updateValue">If a row is already existing, update this value</param>
+        /// <param name="table">table name</param>
+        /// <param name="values">All values to be inserted in the correct table order</param>
+        /// <param name="updateKey">If a row is already existing, update this key</param>
+        /// <param name="updateValue">If a row is already existing, update this value</param>
         /// <returns></returns>
         bool Insert(string table, object[] values, string updateKey, object updateValue);
 
         /// <summary>
-        /// Inserts rows selected from another table.
+        ///     Inserts rows selected from another table.
         /// </summary>
         /// <param name="tableA"></param>
         /// <param name="fieldsA"></param>
@@ -193,7 +199,7 @@ namespace Aurora.Framework
         #region REPLACE INTO
 
         /// <summary>
-        /// REPLACE INTO table (row.Keys) VALUES(row.Values)
+        ///     REPLACE INTO table (row.Keys) VALUES(row.Values)
         /// </summary>
         /// <param name="table">table name</param>
         /// <param name="row"></param>
@@ -205,16 +211,16 @@ namespace Aurora.Framework
         #region DELETE
 
         /// <summary>
-        ///   delete from 'table' where 'key' < now()
+        ///     delete from 'table' where 'key' < now()
         /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "keys"></param>
-        /// <param name = "values"></param>
+        /// <param name="table"></param>
+        /// <param name="keys"></param>
+        /// <param name="values"></param>
         /// <returns></returns>
         bool DeleteByTime(string table, string keys);
 
         /// <summary>
-        /// DELETE FROM table WHERE {magic happens with queryFilter here}
+        ///     DELETE FROM table WHERE {magic happens with queryFilter here}
         /// </summary>
         /// <param name="table">table name</param>
         /// <param name="queryFilter">filter for determining which rows to delete</param>
@@ -224,26 +230,26 @@ namespace Aurora.Framework
         #endregion
 
         /// <summary>
-        ///   Connects to the database and then performs migrations
+        ///     Connects to the database and then performs migrations
         /// </summary>
-        /// <param name = "connectionString"></param>
+        /// <param name="connectionString"></param>
         void ConnectToDatabase(string connectionString, string migrationName, bool validateTables);
 
         /// <summary>
-        ///   Makes a copy of the IGenericData plugin
+        ///     Makes a copy of the IGenericData plugin
         /// </summary>
         /// <returns></returns>
         IGenericData Copy();
 
         /// <summary>
-        ///   Close the given database connection
+        ///     Close the given database connection
         /// </summary>
         void CloseDatabase(DataReaderConnection connection);
 
         /// <summary>
-        ///   in the sql the strings will return joined fields
+        ///     in the sql the strings will return joined fields
         /// </summary>
-        /// <param name = "toConCat"></param>
+        /// <param name="toConCat"></param>
         /// <returns></returns>
         string ConCat(string[] toConCat);
     }
@@ -296,27 +302,27 @@ namespace Aurora.Framework
         {
             get
             {
-                uint total = (uint)(
-                    andFilters.Count +
-                    orFilters.Count +
-                    orMultiFilters.Count +
-                    andLikeFilters.Count +
-                    orLikeFilters.Count +
-                    orLikeMultiFilters.Count +
-                    andBitfieldAndFilters.Count +
-                    orBitfieldAndFilters.Count +
-                    andBitfieldNandFilters.Count +
-                    andGreaterThanFilters.Count +
-                    orGreaterThanFilters.Count +
-                    andGreaterThanEqFilters.Count +
-                    orGreaterThanEqFilters.Count +
-                    andLessThanFilters.Count +
-                    orLessThanFilters.Count +
-                    andLessThanEqFilters.Count +
-                    andNotFilters.Count +
-                    andIsNullFilters.Count +
-                    andIsNotNullFilters.Count
-                );
+                uint total = (uint) (
+                                        andFilters.Count +
+                                        orFilters.Count +
+                                        orMultiFilters.Count +
+                                        andLikeFilters.Count +
+                                        orLikeFilters.Count +
+                                        orLikeMultiFilters.Count +
+                                        andBitfieldAndFilters.Count +
+                                        orBitfieldAndFilters.Count +
+                                        andBitfieldNandFilters.Count +
+                                        andGreaterThanFilters.Count +
+                                        orGreaterThanFilters.Count +
+                                        andGreaterThanEqFilters.Count +
+                                        orGreaterThanEqFilters.Count +
+                                        andLessThanFilters.Count +
+                                        orLessThanFilters.Count +
+                                        andLessThanEqFilters.Count +
+                                        andNotFilters.Count +
+                                        andIsNullFilters.Count +
+                                        andIsNotNullFilters.Count
+                                    );
 
 //                subFilters.ForEach(delegate(QueryFilter filter)
 //                {
@@ -329,13 +335,24 @@ namespace Aurora.Framework
 
         private static string preparedKey(string key)
         {
-            return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply").Replace("'", "").Replace(",", "").Replace(".","alias");
+            return
+                key.Replace("`", "")
+                   .Replace("(", "_")
+                   .Replace(")", "")
+                   .Replace(" ", "_")
+                   .Replace("-", "minus")
+                   .Replace("+", "add")
+                   .Replace("/", "divide")
+                   .Replace("*", "multiply")
+                   .Replace("'", "")
+                   .Replace(",", "")
+                   .Replace(".", "alias");
         }
 
         public string ToSQL(char prepared, out Dictionary<string, object> ps)
         {
             ps = new Dictionary<string, object>();
-            Dictionary<string, object>[] pss = { ps };
+            Dictionary<string, object>[] pss = {ps};
             string query = "";
             List<string> parts;
             uint i = 0;
@@ -646,23 +663,24 @@ namespace Aurora.Framework
     public interface IAuroraDataPlugin
     {
         /// <summary>
-        ///   Returns the plugin name
+        ///     Returns the plugin name
         /// </summary>
         /// <returns></returns>
         string Name { get; }
 
         /// <summary>
-        ///   Starts the database plugin, performs migrations if needed
+        ///     Starts the database plugin, performs migrations if needed
         /// </summary>
-        /// <param name = "GenericData">The Database Plugin</param>
-        /// <param name = "source">Config if more parameters are needed</param>
-        /// <param name = "DefaultConnectionString">The connection string to use</param>
-        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString);
+        /// <param name="GenericData">The Database Plugin</param>
+        /// <param name="source">Config if more parameters are needed</param>
+        /// <param name="DefaultConnectionString">The connection string to use</param>
+        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                        string DefaultConnectionString);
     }
 
     public class QueryTables
     {
-        readonly List<QueryTable> tables = new List<QueryTable>();
+        private readonly List<QueryTable> tables = new List<QueryTable>();
 
         public void AddTable(QueryTable newTable)
         {
@@ -670,17 +688,17 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Add main table to select from
+        ///     Add main table to select from
         /// </summary>
         /// <param name="Name"></param>
         /// <param name="Alias"></param>
         public void AddTable(string Name, string Alias)
         {
-            AddTable(new QueryTable(){TableName = Name, TableAlias = Alias});
+            AddTable(new QueryTable() {TableName = Name, TableAlias = Alias});
         }
 
         /// <summary>
-        /// Add secondary table that joins to another table
+        ///     Add secondary table that joins to another table
         /// </summary>
         /// <param name="Name"></param>
         /// <param name="Alias"></param>
@@ -688,7 +706,7 @@ namespace Aurora.Framework
         /// <param name="toJoinOn"></param>
         public void AddTable(string Name, string Alias, JoinType jType, string[,] toJoinOn)
         {
-            AddTable(new QueryTable() { JoinOn = toJoinOn, TableAlias = Alias, TableName = Name, TypeJoin = jType });
+            AddTable(new QueryTable() {JoinOn = toJoinOn, TableAlias = Alias, TableName = Name, TypeJoin = jType});
         }
 
         public string ToSQL()
@@ -704,7 +722,7 @@ namespace Aurora.Framework
                         returnValue += " INNER JOIN " + t.TableName + " AS " + t.TableAlias + " ";
                     else
                         returnValue += " OUTER JOIN " + t.TableName + " AS " + t.TableAlias + " ";
-                    for (int loop = 0; loop < t.JoinOn.Length / 2; loop++)
+                    for (int loop = 0; loop < t.JoinOn.Length/2; loop++)
                     {
                         if (loop != 0)
                             returnValue += " AND ";

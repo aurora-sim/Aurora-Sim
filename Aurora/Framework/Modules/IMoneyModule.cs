@@ -119,7 +119,7 @@ namespace Aurora.Framework
                       TransactionType type);
 
         /// <summary>
-        /// Get a list of transactions that have occured over the given interval (0 is this period of interval days, positive #s go back previous sets)
+        ///     Get a list of transactions that have occured over the given interval (0 is this period of interval days, positive #s go back previous sets)
         /// </summary>
         /// <param name="groupID"></param>
         /// <param name="agentID">Requesting agentID (must be checked whether they can call this)</param>
@@ -131,6 +131,7 @@ namespace Aurora.Framework
     }
 
     public delegate void UserDidNotPay(UUID agentID, string paymentTextThatFailed);
+
     public delegate bool CheckWhetherUserShouldPay(UUID agentID, string paymentTextThatFailed);
 
     public interface IScheduledMoneyModule

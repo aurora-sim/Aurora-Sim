@@ -35,29 +35,29 @@ using OpenMetaverse;
 namespace Aurora.Framework.Serialization.External
 {
     /// <summary>
-    ///   Serialize and deserialize LandData as an external format.
+    ///     Serialize and deserialize LandData as an external format.
     /// </summary>
     public class LandDataSerializer
     {
         protected static UTF8Encoding m_utf8Encoding = new UTF8Encoding();
 
         /// <summary>
-        ///   Reify/deserialize landData
+        ///     Reify/deserialize landData
         /// </summary>
-        /// <param name = "serializedLandData"></param>
+        /// <param name="serializedLandData"></param>
         /// <returns></returns>
-        /// <exception cref = "System.Xml.XmlException"></exception>
+        /// <exception cref="System.Xml.XmlException"></exception>
         public static LandData Deserialize(byte[] serializedLandData)
         {
             return Deserialize(m_utf8Encoding.GetString(serializedLandData, 0, serializedLandData.Length));
         }
 
         /// <summary>
-        ///   Reify/deserialize landData
+        ///     Reify/deserialize landData
         /// </summary>
-        /// <param name = "serializedLandData"></param>
+        /// <param name="serializedLandData"></param>
         /// <returns></returns>
-        /// <exception cref = "System.Xml.XmlException"></exception>
+        /// <exception cref="System.Xml.XmlException"></exception>
         public static LandData Deserialize(string serializedLandData)
         {
             LandData landData = new LandData();
@@ -103,7 +103,7 @@ namespace Aurora.Framework.Serialization.External
                     xtr.ReadStartElement("ParcelAccessEntry");
                     pae.AgentID = UUID.Parse(xtr.ReadElementString("AgentID"));
                     xtr.ReadElementString("Time");
-                    pae.Flags = (AccessList)Convert.ToUInt32(xtr.ReadElementString("AccessList"));
+                    pae.Flags = (AccessList) Convert.ToUInt32(xtr.ReadElementString("AccessList"));
                     pae.Time = DateTime.UtcNow;
                     xtr.ReadEndElement();
 

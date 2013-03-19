@@ -37,7 +37,7 @@ using ProtoBuf;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   A dictionary for task inventory.
+    ///     A dictionary for task inventory.
     /// </summary>
     /// This class is not thread safe.  Callers must synchronize on Dictionary methods or Clone() this object before
     /// iterating over it.

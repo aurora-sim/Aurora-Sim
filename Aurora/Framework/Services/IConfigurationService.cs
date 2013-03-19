@@ -28,12 +28,12 @@
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   This service helps to automate the remote grid mode for users so that they do not have to input so many URLs
+    ///     This service helps to automate the remote grid mode for users so that they do not have to input so many URLs
     /// </summary>
     public interface IConfigurationService
     {
         /// <summary>
-        ///   Get the default url's for this service
+        ///     Get the default url's for this service
         /// </summary>
         /// <returns></returns>
         string FindValueOf(string key);

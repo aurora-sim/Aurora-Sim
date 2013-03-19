@@ -32,22 +32,22 @@ namespace Aurora.Framework
     public class AvatarArchive : IDataTransferable
     {
         /// <summary>
-        ///   XML of the archive
+        ///     XML of the archive
         /// </summary>
         public string ArchiveXML;
 
         /// <summary>
-        ///   1 or 0 if its public
+        ///     1 or 0 if its public
         /// </summary>
         public int IsPublic;
 
         /// <summary>
-        ///   Name of the archive
+        ///     Name of the archive
         /// </summary>
         public string Name;
 
         /// <summary>
-        ///   uuid of a text that shows off this archive
+        ///     uuid of a text that shows off this archive
         /// </summary>
         public string Snapshot;
 

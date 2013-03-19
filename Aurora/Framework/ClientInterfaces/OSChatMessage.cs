@@ -38,7 +38,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   ChatFromViewer Arguments
+    ///     ChatFromViewer Arguments
     /// </summary>
     public class OSChatMessage : EventArgs, IEventArgs
     {
@@ -61,7 +61,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The message sent by the user
+        ///     The message sent by the user
         /// </summary>
         public string Message
         {
@@ -70,7 +70,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The type of message, eg say, shout, broadcast.
+        ///     The type of message, eg say, shout, broadcast.
         /// </summary>
         public ChatTypeEnum Type
         {
@@ -79,7 +79,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Which channel was this message sent on? Different channels may have different listeners. Public chat is on channel zero.
+        ///     Which channel was this message sent on? Different channels may have different listeners. Public chat is on channel zero.
         /// </summary>
         public int Channel
         {
@@ -88,7 +88,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   How far should this chat go? -1 is default range for the type
+        ///     How far should this chat go? -1 is default range for the type
         /// </summary>
         public float Range
         {
@@ -97,7 +97,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The position of the sender at the time of the message broadcast.
+        ///     The position of the sender at the time of the message broadcast.
         /// </summary>
         public Vector3 Position
         {
@@ -106,7 +106,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The name of the sender (needed for scripts)
+        ///     The name of the sender (needed for scripts)
         /// </summary>
         public string From
         {
@@ -115,7 +115,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The object responsible for sending the message, or null.
+        ///     The object responsible for sending the message, or null.
         /// </summary>
         public ISceneChildEntity SenderObject
         {
@@ -140,7 +140,7 @@ namespace Aurora.Framework
         /// TODO: Sender and SenderObject should just be Sender and of
         /// type IChatSender
         /// <summary>
-        ///   The client responsible for sending the message, or null.
+        ///     The client responsible for sending the message, or null.
         /// </summary>
         public IClientAPI Sender
         {
@@ -148,8 +148,8 @@ namespace Aurora.Framework
             set { m_sender = value; }
         }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public IScene Scene
         {
             get { return m_scene; }

@@ -38,28 +38,28 @@ namespace Aurora.Framework
         IGridService InnerService { get; }
 
         /// <summary>
-        /// The max size a region can be (meters)
+        ///     The max size a region can be (meters)
         /// </summary>
         int GetMaxRegionSize();
 
         /// <summary>
-        /// The size (in meters) of how far neighbors will be found
+        ///     The size (in meters) of how far neighbors will be found
         /// </summary>
         int GetRegionViewSize();
 
         /// <summary>
-        /// Register a region with the grid service.
+        ///     Register a region with the grid service.
         /// </summary>
         /// <param name="regionInfos"> </param>
         /// <param name="oldSessionID"></param>
         /// <param name="password"> </param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region registration failed</exception>
-        RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password, 
-            int majorProtocolVersion, int minorProtocolVersion);
+        RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password,
+                                      int majorProtocolVersion, int minorProtocolVersion);
 
         /// <summary>
-        /// Deregister a region with the grid service.
+        ///     Deregister a region with the grid service.
         /// </summary>
         /// <param name="region"></param>
         /// <returns></returns>
@@ -67,7 +67,7 @@ namespace Aurora.Framework
         bool DeregisterRegion(GridRegion region);
 
         /// <summary>
-        /// Get a specific region by UUID in the given scope
+        ///     Get a specific region by UUID in the given scope
         /// </summary>
         /// <param name="scopeIDs"></param>
         /// <param name="regionID"></param>
@@ -75,7 +75,7 @@ namespace Aurora.Framework
         GridRegion GetRegionByUUID(List<UUID> scopeIDs, UUID regionID);
 
         /// <summary>
-        /// Get the region at the given position (in meters)
+        ///     Get the region at the given position (in meters)
         /// </summary>
         /// <param name="scopeIDs"></param>
         /// <param name="x"></param>
@@ -84,7 +84,7 @@ namespace Aurora.Framework
         GridRegion GetRegionByPosition(List<UUID> scopeIDs, int x, int y);
 
         /// <summary>
-        /// Get the first returning region by name in the given scope
+        ///     Get the first returning region by name in the given scope
         /// </summary>
         /// <param name="scopeIDs"></param>
         /// <param name="regionName"></param>
@@ -92,33 +92,33 @@ namespace Aurora.Framework
         GridRegion GetRegionByName(List<UUID> scopeIDs, string regionName);
 
         /// <summary>
-        /// Get information about regions starting with the provided name. 
+        ///     Get information about regions starting with the provided name.
         /// </summary>
         /// <param name="scopeIDs"></param>
         /// <param name="name"> The name to match against.</param>
         /// <param name="start"></param>
         /// <param name="count"></param>
         /// <returns>
-        /// A list of <see cref="RegionInfo"/>s of regions with matching name. If the
-        /// grid-server couldn't be contacted or returned an error, return null. 
+        ///     A list of <see cref="RegionInfo" />s of regions with matching name. If the
+        ///     grid-server couldn't be contacted or returned an error, return null.
         /// </returns>
         List<GridRegion> GetRegionsByName(List<UUID> scopeIDs, string name, uint? start, uint? count);
 
         /// <summary>
-        /// Get number of regions starting with the provided name. 
+        ///     Get number of regions starting with the provided name.
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="name">
-        /// The name to match against.
+        ///     The name to match against.
         /// </param>
         /// <returns>
-        /// A the count of <see cref="RegionInfo"/>s of regions with matching name. If the
-        /// grid-server couldn't be contacted or returned an error, returns 0. 
+        ///     A the count of <see cref="RegionInfo" />s of regions with matching name. If the
+        ///     grid-server couldn't be contacted or returned an error, returns 0.
         /// </returns>
         uint GetRegionsByNameCount(List<UUID> scopeIDs, string name);
 
         /// <summary>
-        /// Get all regions within the range of (xmin - xmax, ymin - ymax) (in meters)
+        ///     Get all regions within the range of (xmin - xmax, ymin - ymax) (in meters)
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="xmin"></param>
@@ -129,31 +129,32 @@ namespace Aurora.Framework
         List<GridRegion> GetRegionRange(List<UUID> scopeIDs, int xmin, int xmax, int ymin, int ymax);
 
         /// <summary>
-        /// Get all regions within the range of specified center.
+        ///     Get all regions within the range of specified center.
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="centerX"></param>
         /// <param name="centerY"></param>
         /// <param name="squareRangeFromCenterInMeters"></param>
         /// <returns></returns>
-        List<GridRegion> GetRegionRange(List<UUID> scopeIDs, float centerX, float centerY, uint squareRangeFromCenterInMeters);
+        List<GridRegion> GetRegionRange(List<UUID> scopeIDs, float centerX, float centerY,
+                                        uint squareRangeFromCenterInMeters);
 
         /// <summary>
-        /// Get the neighbors of the given region
+        ///     Get the neighbors of the given region
         /// </summary>
         /// <param name="region"></param>
         /// <returns></returns>
         List<GridRegion> GetNeighbors(List<UUID> scopeIDs, GridRegion region);
 
         /// <summary>
-        /// Get any default regions that have been set for users that are logging in that don't have a region to log into
+        ///     Get any default regions that have been set for users that are logging in that don't have a region to log into
         /// </summary>
         /// <param name="scopeID"></param>
         /// <returns></returns>
         List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs);
 
         /// <summary>
-        /// If all the default regions are down, find any fallback regions that have been set near x,y
+        ///     If all the default regions are down, find any fallback regions that have been set near x,y
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="x"></param>
@@ -162,7 +163,7 @@ namespace Aurora.Framework
         List<GridRegion> GetFallbackRegions(List<UUID> scopeIDs, int x, int y);
 
         /// <summary>
-        /// If there still are no regions after fallbacks have been checked, find any region near x,y
+        ///     If there still are no regions after fallbacks have been checked, find any region near x,y
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="x"></param>
@@ -171,7 +172,7 @@ namespace Aurora.Framework
         List<GridRegion> GetSafeRegions(List<UUID> scopeIDs, int x, int y);
 
         /// <summary>
-        /// Get the current flags of the given region
+        ///     Get the current flags of the given region
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="regionID"></param>
@@ -179,45 +180,45 @@ namespace Aurora.Framework
         int GetRegionFlags(List<UUID> scopeIDs, UUID regionID);
 
         /// <summary>
-        /// Update the map of the given region if the sessionID is correct
+        ///     Update the map of the given region if the sessionID is correct
         /// </summary>
         /// <param name="region"></param>
         /// <returns></returns>
         string UpdateMap(GridRegion region, bool online);
 
         /// <summary>
-        /// Get all map items of the given type for the given region
+        ///     Get all map items of the given type for the given region
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="gridItemType"></param>
         /// <returns></returns>
-        multipleMapItemReply GetMapItems (List<UUID> scopeIDs, ulong regionHandle, GridItemType gridItemType);
+        multipleMapItemReply GetMapItems(List<UUID> scopeIDs, ulong regionHandle, GridItemType gridItemType);
 
         /// <summary>
-        /// The region (RegionID) has been determined to be unsafe, don't let agents log into it if no other region is found
+        ///     The region (RegionID) has been determined to be unsafe, don't let agents log into it if no other region is found
         /// </summary>
         /// <param name="id"></param>
-        void SetRegionUnsafe (UUID id);
+        void SetRegionUnsafe(UUID id);
 
         /// <summary>
-        /// The region (RegionID) has been determined to be safe, allow agents to log into it again
+        ///     The region (RegionID) has been determined to be safe, allow agents to log into it again
         /// </summary>
         /// <param name="id"></param>
-        void SetRegionSafe (UUID id);
+        void SetRegionSafe(UUID id);
 
         /// <summary>
-        /// Verify the given SessionID for the given region
+        ///     Verify the given SessionID for the given region
         /// </summary>
         /// <param name="r"></param>
         /// <param name="SessionID"></param>
         /// <returns></returns>
         bool VerifyRegionSessionID(GridRegion r, UUID SessionID);
 
-        void Configure (Nini.Config.IConfigSource config, IRegistryCore registry);
+        void Configure(Nini.Config.IConfigSource config, IRegistryCore registry);
 
-        void Start (Nini.Config.IConfigSource config, IRegistryCore registry);
+        void Start(Nini.Config.IConfigSource config, IRegistryCore registry);
 
-        void FinishedStartup ();
+        void FinishedStartup();
     }
 
     public class RegisterRegion : IDataTransferable
@@ -243,14 +244,19 @@ namespace Aurora.Framework
         public override void FromOSD(OSDMap map)
         {
             Error = map["Error"];
-            OSDArray n = (OSDArray)map["Neighbors"];
-            Neighbors = n.ConvertAll<GridRegion>((osd) => { GridRegion r = new GridRegion(); r.FromOSD((OSDMap)osd); return r; });
+            OSDArray n = (OSDArray) map["Neighbors"];
+            Neighbors = n.ConvertAll<GridRegion>((osd) =>
+                                                     {
+                                                         GridRegion r = new GridRegion();
+                                                         r.FromOSD((OSDMap) osd);
+                                                         return r;
+                                                     });
             SessionID = map["SessionID"];
             RegionFlags = map["RegionFlags"];
             if (map.ContainsKey("Region"))
             {
                 Region = new GridRegion();
-                Region.FromOSD((OSDMap)map["Region"]);
+                Region.FromOSD((OSDMap) map["Region"]);
             }
         }
     }
@@ -260,28 +266,30 @@ namespace Aurora.Framework
         #region GridRegion
 
         /// <summary>
-        /// The port by which http communication occurs with the region 
+        ///     The port by which http communication occurs with the region
         /// </summary>
         public uint HttpPort
         {
             get { return m_httpPort; }
             set { m_httpPort = value; }
         }
+
         protected uint m_httpPort;
 
         /// <summary>
-        /// A well-formed URI for the host region server (namely "http://" + ExternalHostName + : + HttpPort)
+        ///     A well-formed URI for the host region server (namely "http://" + ExternalHostName + : + HttpPort)
         /// </summary>
         public string ServerURI
         {
-            get 
+            get
             {
-                if(string.IsNullOrEmpty(m_serverURI))
+                if (string.IsNullOrEmpty(m_serverURI))
                     return "http://" + ExternalHostName + ":" + HttpPort;
-                return m_serverURI; 
+                return m_serverURI;
             }
             set { m_serverURI = value; }
         }
+
         protected string m_serverURI;
 
         public string RegionName
@@ -289,6 +297,7 @@ namespace Aurora.Framework
             get { return m_regionName; }
             set { m_regionName = value; }
         }
+
         protected string m_regionName = String.Empty;
 
         public string RegionType
@@ -296,6 +305,7 @@ namespace Aurora.Framework
             get { return m_regionType; }
             set { m_regionType = value; }
         }
+
         protected string m_regionType = String.Empty;
 
         public int RegionLocX
@@ -303,6 +313,7 @@ namespace Aurora.Framework
             get { return m_regionLocX; }
             set { m_regionLocX = value; }
         }
+
         protected int m_regionLocX;
 
         public int RegionLocY
@@ -310,6 +321,7 @@ namespace Aurora.Framework
             get { return m_regionLocY; }
             set { m_regionLocY = value; }
         }
+
         protected int m_regionLocY;
 
         public int RegionLocZ
@@ -317,6 +329,7 @@ namespace Aurora.Framework
             get { return m_regionLocZ; }
             set { m_regionLocZ = value; }
         }
+
         protected int m_regionLocZ;
 
         protected UUID m_estateOwner;
@@ -368,6 +381,7 @@ namespace Aurora.Framework
         protected IPEndPoint m_internalEndPoint;
         public int LastSeen = 0;
         protected OSDMap m_genericMap = new OSDMap();
+
         public OSDMap GenericMap
         {
             get { return m_genericMap; }
@@ -376,15 +390,14 @@ namespace Aurora.Framework
 
         public bool IsOnline
         {
-            get { return (Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == 1; }
+            get { return (Flags & (int) Aurora.Framework.RegionFlags.RegionOnline) == 1; }
             set
             {
                 if (value)
-                    Flags |= (int)Aurora.Framework.RegionFlags.RegionOnline;
+                    Flags |= (int) Aurora.Framework.RegionFlags.RegionOnline;
                 else
-                    Flags &= (int)Aurora.Framework.RegionFlags.RegionOnline;
+                    Flags &= (int) Aurora.Framework.RegionFlags.RegionOnline;
             }
-
         }
 
         public GridRegion()
@@ -411,7 +424,7 @@ namespace Aurora.Framework
             TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
             ParcelMapImage = ConvertFrom.RegionSettings.ParcelMapImageID;
             Access = ConvertFrom.AccessLevel;
-            if(ConvertFrom.EstateSettings != null)
+            if (ConvertFrom.EstateSettings != null)
                 EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
             m_RegionSizeX = ConvertFrom.RegionSizeX;
             m_RegionSizeY = ConvertFrom.RegionSizeY;
@@ -419,13 +432,13 @@ namespace Aurora.Framework
             ScopeID = ConvertFrom.ScopeID;
             AllScopeIDs = ConvertFrom.AllScopeIDs;
             SessionID = ConvertFrom.GridSecureSessionID;
-            Flags |= (int)Aurora.Framework.RegionFlags.RegionOnline;
+            Flags |= (int) Aurora.Framework.RegionFlags.RegionOnline;
         }
 
         #region Definition of equality
 
         /// <summary>
-        /// Define equality as two regions having the same, non-zero UUID.
+        ///     Define equality as two regions having the same, non-zero UUID.
         /// </summary>
         public bool Equals(GridRegion region)
         {
@@ -450,9 +463,8 @@ namespace Aurora.Framework
         #endregion
 
         /// <value>
-        /// This accessor can throw all the exceptions that Dns.GetHostAddresses can throw.
-        ///
-        /// XXX Isn't this really doing too much to be a simple getter, rather than an explict method?
+        ///     This accessor can throw all the exceptions that Dns.GetHostAddresses can throw.
+        ///     XXX Isn't this really doing too much to be a simple getter, rather than an explict method?
         /// </value>
         public IPEndPoint ExternalEndPoint
         {
@@ -480,14 +492,11 @@ namespace Aurora.Framework
         public ulong RegionHandle
         {
             get { return Util.IntsToUlong(RegionLocX, RegionLocY); }
-            set
-            {
-                Util.UlongToInts(value, out m_regionLocX, out m_regionLocY);
-            }
+            set { Util.UlongToInts(value, out m_regionLocX, out m_regionLocY); }
         }
 
         /// <summary>
-        /// Returns whether the grid coordinate is inside of this region
+        ///     Returns whether the grid coordinate is inside of this region
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -517,12 +526,12 @@ namespace Aurora.Framework
             map["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
             map["serverHttpPort"] = HttpPort;
             map["serverURI"] = ServerURI;
-            if(InternalEndPoint != null)
+            if (InternalEndPoint != null)
                 map["serverPort"] = InternalEndPoint.Port;
             map["regionMapTexture"] = TerrainImage;
             map["regionTerrainTexture"] = TerrainMapImage;
             map["ParcelMapImage"] = ParcelMapImage;
-            map["access"] = (int)Access;
+            map["access"] = (int) Access;
             map["owner_uuid"] = EstateOwner;
             map["AuthToken"] = AuthToken;
             map["sizeX"] = RegionSizeX;
@@ -539,7 +548,7 @@ namespace Aurora.Framework
             // We send it along too so that it doesn't need resolved on the other end
             if (ExternalEndPoint != null)
             {
-                map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes ();
+                map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes();
                 map["remoteEndPointPort"] = ExternalEndPoint.Port;
             }
 
@@ -593,7 +602,7 @@ namespace Aurora.Framework
                 ParcelMapImage = map["ParcelMapImage"].AsUUID();
 
             if (map.ContainsKey("access"))
-                Access = (byte)map["access"].AsInteger();
+                Access = (byte) map["access"].AsInteger();
 
             if (map.ContainsKey("owner_uuid"))
                 EstateOwner = map["owner_uuid"].AsUUID();
@@ -626,10 +635,10 @@ namespace Aurora.Framework
                 ScopeID = map["ScopeID"].AsUUID();
 
             if (map.ContainsKey("AllScopeIDs"))
-                AllScopeIDs = ((OSDArray)map["AllScopeIDs"]).ConvertAll<UUID>(o => o);
+                AllScopeIDs = ((OSDArray) map["AllScopeIDs"]).ConvertAll<UUID>(o => o);
 
             if (map.ContainsKey("GenericMap"))
-                GenericMap = (OSDMap)map["GenericMap"];
+                GenericMap = (OSDMap) map["GenericMap"];
 
             if (map.ContainsKey("remoteEndPointIP"))
             {
@@ -643,8 +652,8 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    /// The threat level enum
-    /// Tells how much we trust another host
+    ///     The threat level enum
+    ///     Tells how much we trust another host
     /// </summary>
     public enum ThreatLevel
     {

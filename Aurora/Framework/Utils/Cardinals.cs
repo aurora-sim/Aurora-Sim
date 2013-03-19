@@ -28,7 +28,7 @@
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Currently unused, but left as it is a useful enum
+    ///     Currently unused, but left as it is a useful enum
     /// </summary>
     public enum Cardinals
     {

@@ -30,41 +30,40 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   An interface for connecting to the friends datastore
+    ///     An interface for connecting to the friends datastore
     /// </summary>
     public interface IFriendsData : IAuroraDataPlugin
     {
         /// <summary>
-        ///   Adds/updates a friend in the database
+        ///     Adds/updates a friend in the database
         /// </summary>
-        /// <param name = "PrincipalID">The initiator (user that we are saving for</param>
-        /// <param name = "Friend">The friend of the PrincipalID</param>
-        /// <param name = "flags">Flags between PrincipalID > Friend</param>
-        /// <param name = "offered"></param>
+        /// <param name="PrincipalID">The initiator (user that we are saving for</param>
+        /// <param name="Friend">The friend of the PrincipalID</param>
+        /// <param name="flags">Flags between PrincipalID > Friend</param>
+        /// <param name="offered"></param>
         /// <returns></returns>
         bool Store(UUID PrincipalID, string Friend, int flags, int offered);
 
         /// <summary>
-        ///   Removes the friendship between the two users
+        ///     Removes the friendship between the two users
         /// </summary>
-        /// <param name = "ownerID"></param>
-        /// <param name = "friend"></param>
+        /// <param name="ownerID"></param>
+        /// <param name="friend"></param>
         /// <returns></returns>
         bool Delete(UUID ownerID, string friend);
 
         /// <summary>
-        ///   Gets all friends of the user
+        ///     Gets all friends of the user
         /// </summary>
-        /// <param name = "principalID"></param>
+        /// <param name="principalID"></param>
         /// <returns></returns>
         FriendInfo[] GetFriends(UUID principalID);
 
         /// <summary>
-        ///   Gets all friends of the user
+        ///     Gets all friends of the user
         /// </summary>
-        /// <param name = "principalID"></param>
+        /// <param name="principalID"></param>
         /// <returns></returns>
         FriendInfo[] GetFriendsRequest(UUID principalID);
-        
     }
 }

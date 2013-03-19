@@ -74,7 +74,7 @@ namespace Aurora.Framework
         Flexible = 128
     }
 
-    [Serializable, ProtoContract(UseProtoMembersOnly=false)]
+    [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class PrimitiveBaseShape
     {
         private static readonly byte[] DEFAULT_TEXTURE =
@@ -151,9 +151,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Construct a PrimitiveBaseShape object from a OpenMetaverse.Primitive object
+        ///     Construct a PrimitiveBaseShape object from a OpenMetaverse.Primitive object
         /// </summary>
-        /// <param name = "prim"></param>
+        /// <param name="prim"></param>
         public PrimitiveBaseShape(Primitive prim)
         {
             PCode = (byte) prim.PrimData.PCode;
@@ -230,7 +230,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Entries to store media textures on each face
+        ///     Entries to store media textures on each face
         /// </summary>
         /// Do not change this value directly - always do it through an IMoapModule.
         /// Lock before manipulating.
@@ -252,14 +252,14 @@ namespace Aurora.Framework
                 }
 
                 MainConsole.Instance.Warn("[SHAPE]: Failed to decode texture, length=" +
-                           ((m_textureEntry != null) ? m_textureEntry.Length : 0));
+                                          ((m_textureEntry != null) ? m_textureEntry.Length : 0));
                 return new Primitive.TextureEntry(UUID.Zero);
             }
 
             set { m_textureEntry = value.GetBytes(); }
         }
 
-        [ProtoMember(3, OverwriteList=true)]
+        [ProtoMember(3, OverwriteList = true)]
         public byte[] TextureEntry
         {
             get { return m_textureEntry; }
@@ -419,11 +419,7 @@ namespace Aurora.Framework
         }
 
         [ProtoMember(23)]
-        public byte State
-        {
-            get;
-            set;
-        }
+        public byte State { get; set; }
 
         [ProtoMember(24)]
         public ProfileShape ProfileShape
@@ -453,7 +449,7 @@ namespace Aurora.Framework
             set { _sculptType = value; }
         }
 
-        [ProtoMember(28,OverwriteList=true)]
+        [ProtoMember(28, OverwriteList = true)]
         public byte[] SculptData
         {
             get { return _sculptData; }
@@ -1165,7 +1161,7 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        ///   Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
+        ///     Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
         /// </summary>
         /// <returns></returns>
         public Primitive ToOmvPrimitive()
@@ -1177,10 +1173,10 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        ///   Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
+        ///     Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
         /// </summary>
-        /// <param name = "position"></param>
-        /// <param name = "rotation"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
         /// <returns></returns>
         public Primitive ToOmvPrimitive(Vector3 position, Quaternion rotation)
         {
@@ -1269,7 +1265,7 @@ namespace Aurora.Framework
         #region Nested type: MediaList
 
         /// <summary>
-        ///   Encapsulates a list of media entries.
+        ///     Encapsulates a list of media entries.
         /// </summary>
         /// This class is necessary because we want to replace auto-serialization of MediaEntry with something more
         /// OSD like and less vulnerable to change.
@@ -1381,7 +1377,10 @@ namespace Aurora.Framework
                             Add(me);
                         }
 #else
-                        foreach (MediaEntry me in osdMeArray.Select(osdMe => (osdMe is OSDMap ? MediaEntry.FromOSD(osdMe) : new MediaEntry())))
+                        foreach (
+                            MediaEntry me in
+                                osdMeArray.Select(
+                                    osdMe => (osdMe is OSDMap ? MediaEntry.FromOSD(osdMe) : new MediaEntry())))
                         {
                             Add(me);
                         }

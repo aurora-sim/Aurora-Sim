@@ -32,67 +32,67 @@ using OpenMetaverse;
 namespace Aurora.Framework.Serialization
 {
     /// <summary>
-    ///   Constants for the archiving module
+    ///     Constants for the archiving module
     /// </summary>
     public class ArchiveConstants
     {
         /// <value>
-        ///   The location of the archive control file
+        ///     The location of the archive control file
         /// </value>
         public const string CONTROL_FILE_PATH = "archive.xml";
 
         /// <value>
-        ///   Path for the assets held in an archive
+        ///     Path for the assets held in an archive
         /// </value>
         public const string ASSETS_PATH = "assets/";
 
         /// <value>
-        ///   Path for the inventory data
+        ///     Path for the inventory data
         /// </value>
         public const string INVENTORY_PATH = "inventory/";
 
         /// <value>
-        ///   Path for the prims file
+        ///     Path for the prims file
         /// </value>
         public const string OBJECTS_PATH = "objects/";
 
         /// <value>
-        ///   Path for terrains.  Technically these may be assets, but I think it's quite nice to split them out.
+        ///     Path for terrains.  Technically these may be assets, but I think it's quite nice to split them out.
         /// </value>
         public const string TERRAINS_PATH = "terrains/";
 
         /// <value>
-        ///   Path for region settings.
+        ///     Path for region settings.
         /// </value>
         public const string SETTINGS_PATH = "settings/";
 
         /// <value>
-        ///   Path for region settings.
+        ///     Path for region settings.
         /// </value>
         public const string LANDDATA_PATH = "landdata/";
 
         /// <value>
-        ///   Path for user profiles
+        ///     Path for user profiles
         /// </value>
         public const string USERS_PATH = "userprofiles/";
 
         /// <value>
-        ///   The character the separates the uuid from extension information in an archived asset filename
+        ///     The character the separates the uuid from extension information in an archived asset filename
         /// </value>
         public const string ASSET_EXTENSION_SEPARATOR = "_";
 
         /// <value>
-        ///   Used to separate components in an inventory node name
+        ///     Used to separate components in an inventory node name
         /// </value>
         public const string INVENTORY_NODE_NAME_COMPONENT_SEPARATOR = "__";
 
         /// <summary>
-        ///   Template used for creating filenames in OpenSim Archives.
+        ///     Template used for creating filenames in OpenSim Archives.
         /// </summary>
         public const string OAR_OBJECT_FILENAME_TEMPLATE = "{0}_{1:000}-{2:000}-{3:000}__{4}.xml";
 
         /// <value>
-        ///   Extensions used for asset types in the archive
+        ///     Extensions used for asset types in the archive
         /// </value>
         public static readonly IDictionary<int, string> ASSET_TYPE_TO_EXTENSION = new Dictionary<int, string>();
 
@@ -106,31 +106,31 @@ namespace Aurora.Framework.Serialization
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.CallingCard] = ASSET_EXTENSION_SEPARATOR + "callingcard.txt";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Clothing] = ASSET_EXTENSION_SEPARATOR + "clothing.txt";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Folder] = ASSET_EXTENSION_SEPARATOR + "folder.txt";
-                // Not sure if we'll ever see this
+            // Not sure if we'll ever see this
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Gesture] = ASSET_EXTENSION_SEPARATOR + "gesture.txt";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.ImageJPEG] = ASSET_EXTENSION_SEPARATOR + "image.jpg";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.ImageTGA] = ASSET_EXTENSION_SEPARATOR + "image.tga";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Landmark] = ASSET_EXTENSION_SEPARATOR + "landmark.txt";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.LostAndFoundFolder] = ASSET_EXTENSION_SEPARATOR +
                                                                           "lostandfoundfolder.txt";
-                // Not sure if we'll ever see this
+            // Not sure if we'll ever see this
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.LSLBytecode] = ASSET_EXTENSION_SEPARATOR + "bytecode.lso";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.LSLText] = ASSET_EXTENSION_SEPARATOR + "script.lsl";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Mesh] = ASSET_EXTENSION_SEPARATOR + "mesh.llmesh";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Notecard] = ASSET_EXTENSION_SEPARATOR + "notecard.txt";
             ASSET_TYPE_TO_EXTENSION[(sbyte) AssetType.Object] = ASSET_EXTENSION_SEPARATOR + "object.xml";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.RootFolder] = ASSET_EXTENSION_SEPARATOR + "rootfolder.txt";
-                // Not sure if we'll ever see this
+            // Not sure if we'll ever see this
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Simstate] = ASSET_EXTENSION_SEPARATOR + "simstate.bin";
-                // Not sure if we'll ever see this
+            // Not sure if we'll ever see this
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.SnapshotFolder] = ASSET_EXTENSION_SEPARATOR + "snapshotfolder.txt";
-                // Not sure if we'll ever see this
+            // Not sure if we'll ever see this
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Sound] = ASSET_EXTENSION_SEPARATOR + "sound.ogg";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.SoundWAV] = ASSET_EXTENSION_SEPARATOR + "sound.wav";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.Texture] = ASSET_EXTENSION_SEPARATOR + "texture.jp2";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.TextureTGA] = ASSET_EXTENSION_SEPARATOR + "texture.tga";
             ASSET_TYPE_TO_EXTENSION[(int) AssetType.TrashFolder] = ASSET_EXTENSION_SEPARATOR + "trashfolder.txt";
-                // Not sure if we'll ever see this
+            // Not sure if we'll ever see this
 
             EXTENSION_TO_ASSET_TYPE[ASSET_EXTENSION_SEPARATOR + "animation.bvh"] = AssetType.Animation;
             EXTENSION_TO_ASSET_TYPE[ASSET_EXTENSION_SEPARATOR + "bodypart.txt"] = AssetType.Bodypart;
@@ -158,11 +158,11 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Create the filename used to store an object in an OpenSim Archive.
+        ///     Create the filename used to store an object in an OpenSim Archive.
         /// </summary>
-        /// <param name = "objectName"></param>
-        /// <param name = "uuid"></param>
-        /// <param name = "pos"></param>
+        /// <param name="objectName"></param>
+        /// <param name="uuid"></param>
+        /// <param name="pos"></param>
         /// <returns></returns>
         public static string CreateOarObjectFilename(string objectName, UUID uuid, Vector3 pos)
         {
@@ -173,11 +173,11 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Create the path used to store an object in an OpenSim Archives.
+        ///     Create the path used to store an object in an OpenSim Archives.
         /// </summary>
-        /// <param name = "objectName"></param>
-        /// <param name = "uuid"></param>
-        /// <param name = "pos"></param>
+        /// <param name="objectName"></param>
+        /// <param name="uuid"></param>
+        /// <param name="pos"></param>
         /// <returns></returns>
         public static string CreateOarObjectPath(string objectName, UUID uuid, Vector3 pos)
         {
@@ -185,9 +185,9 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Extract a plain path from an IAR path
+        ///     Extract a plain path from an IAR path
         /// </summary>
-        /// <param name = "iarPath"></param>
+        /// <param name="iarPath"></param>
         /// <returns></returns>
         public static string ExtractPlainPathFromIarPath(string iarPath)
         {

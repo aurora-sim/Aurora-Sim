@@ -39,14 +39,14 @@ namespace Aurora.Framework
         public static bool _ConsoleIsCaseSensitive = true;
 
         /// <value>
-        ///   Commands organized by keyword in a tree
+        ///     Commands organized by keyword in a tree
         /// </value>
         private readonly CommandSet tree = new CommandSet();
 
         /// <summary>
-        ///   Get help for the given help string
+        ///     Get help for the given help string
         /// </summary>
-        /// <param name = "cmd">Parsed parts of the help string.  If empty then general help is returned.</param>
+        /// <param name="cmd">Parsed parts of the help string.  If empty then general help is returned.</param>
         /// <returns></returns>
         public List<string> GetHelp(string[] cmd)
         {
@@ -54,26 +54,27 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Add a command to those which can be invoked from the console.
+        ///     Add a command to those which can be invoked from the console.
         /// </summary>
-        /// <param name = "command">The string that will make the command execute</param>
-        /// <param name = "commandHelp">The message that will show the user how to use the command</param>
-        /// <param name = "infomessage">Any information about how the command works or what it does</param>
-        /// <param name = "fn"></param>
+        /// <param name="command">The string that will make the command execute</param>
+        /// <param name="commandHelp">The message that will show the user how to use the command</param>
+        /// <param name="infomessage">Any information about how the command works or what it does</param>
+        /// <param name="fn"></param>
         public void AddCommand(string command, string commandHelp, string infomessage, CommandDelegate fn)
         {
-            CommandInfo info = new CommandInfo{
-                command = command,
-                commandHelp = commandHelp,
-                info = infomessage,
-                fn = new List<CommandDelegate> {fn}
-            };
+            CommandInfo info = new CommandInfo
+                                   {
+                                       command = command,
+                                       commandHelp = commandHelp,
+                                       info = infomessage,
+                                       fn = new List<CommandDelegate> {fn}
+                                   };
             tree.AddCommand(info);
         }
 
         public bool ContainsCommand(string command)
         {
-            return tree.FindCommands(new string[1] { command }).Length > 0;
+            return tree.FindCommands(new string[1] {command}).Length > 0;
         }
 
         public string[] FindNextOption(string[] cmd)
@@ -89,27 +90,27 @@ namespace Aurora.Framework
         #region Nested type: CommandInfo
 
         /// <summary>
-        ///   Encapsulates a command that can be invoked from the console
+        ///     Encapsulates a command that can be invoked from the console
         /// </summary>
         private class CommandInfo
         {
             /// <summary>
-            ///   The command for this commandinfo
+            ///     The command for this commandinfo
             /// </summary>
             public string command;
 
             /// <summary>
-            ///   The help info for how to use this command
+            ///     The help info for how to use this command
             /// </summary>
             public string commandHelp;
 
             /// <value>
-            ///   The method to invoke for this command
+            ///     The method to invoke for this command
             /// </value>
             public List<CommandDelegate> fn;
 
             /// <summary>
-            ///   Any info about this command
+            ///     Any info about this command
             /// </summary>
             public string info;
         }
@@ -205,7 +206,7 @@ namespace Aurora.Framework
                     }
                     commandOptions.Reverse();
                     commandPath = commandPathList.ToArray();
-                    if(commandOptions.Count > 0)
+                    if (commandOptions.Count > 0)
                         MainConsole.Instance.Info("Options: " + string.Join(", ", commandOptions.ToArray()));
                     List<string> cmdList;
                     if (commandPath.Length == 1 || !m_allowSubSets)
@@ -313,7 +314,9 @@ namespace Aurora.Framework
                                 }
                             }
 #else
-                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(commandPath[0])))
+                            foreach (
+                                KeyValuePair<string, CommandSet> cmd in
+                                    commandsets.Where(cmd => cmd.Key.StartsWith(commandPath[0])))
                             {
                                 cmdList = new List<string>(commandPath);
                                 cmdList.AddRange(commandOptions);
@@ -371,7 +374,9 @@ namespace Aurora.Framework
                     if ((commandPath.Length == 1 || !m_allowSubSets))
                     {
                         string fullcommand = string.Join(" ", command, 0, 2 > command.Length ? command.Length : 2);
-                        values.AddRange(from cmd in commands where cmd.Key.StartsWith(fullcommand) select cmd.Value.commandHelp);
+                        values.AddRange(from cmd in commands
+                                        where cmd.Key.StartsWith(fullcommand)
+                                        select cmd.Value.commandHelp);
                         if (commandPath.Length != 0)
                         {
                             string cmdToExecute = commandPath[0];
@@ -400,7 +405,9 @@ namespace Aurora.Framework
                                     }
                                 }
 #else
-                                foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
+                                foreach (
+                                    KeyValuePair<string, CommandSet> cmd in
+                                        commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
                                 {
                                     values.AddRange(cmd.Value.FindCommands(commandPath));
                                 }
@@ -437,7 +444,9 @@ namespace Aurora.Framework
                                 }
                             }
 #else
-                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
+                            foreach (
+                                KeyValuePair<string, CommandSet> cmd in
+                                    commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
                             {
                                 return cmd.Value.FindCommands(commandPath);
                             }
@@ -482,7 +491,10 @@ namespace Aurora.Framework
                     paths.Add(string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info));
                 }
 #else
-                paths.AddRange(commands.Values.Select(command => string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
+                paths.AddRange(
+                    commands.Values.Select(
+                        command =>
+                        string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
 #endif
                 help.AddRange(StringUtils.AlphanumericSort(paths));
                 return help;
@@ -515,7 +527,7 @@ namespace Aurora.Framework
                 else
                 {
                     startingIndex = 0;
-                    string[] words = unquoted[index].Split(new[] { ' ' });
+                    string[] words = unquoted[index].Split(new[] {' '});
 #if (!ISWIN)
                     foreach (string w in words)
                     {
@@ -525,7 +537,7 @@ namespace Aurora.Framework
                         }
                     }
 #else
-                        result.AddRange(words.Where(w => w != String.Empty));
+                    result.AddRange(words.Where(w => w != String.Empty));
 #endif
                 }
             }
@@ -535,7 +547,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   A console that processes commands internally
+    ///     A console that processes commands internally
     /// </summary>
     public class CommandConsole : BaseConsole, ICommandConsole
     {
@@ -545,7 +557,8 @@ namespace Aurora.Framework
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
-            if (source.Configs["Console"] == null || source.Configs["Console"].GetString("Console", String.Empty) != Name)
+            if (source.Configs["Console"] == null ||
+                source.Configs["Console"].GetString("Console", String.Empty) != Name)
             {
                 return;
             }
@@ -565,7 +578,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Display a command prompt on the console and wait for user input
+        ///     Display a command prompt on the console and wait for user input
         /// </summary>
         public void Prompt()
         {
@@ -679,10 +692,12 @@ namespace Aurora.Framework
         private string InternalPrompt(string prompt, string defaultresponse, List<string> options)
         {
             string ret = ReadLine(String.Format("{0}{2} [{1}]: ",
-                prompt,
-                defaultresponse,
-                options.Count == 0 ? "" : ", Options are [" + string.Join(", ", options.ToArray()) + "]"
-            ), false, true);
+                                                prompt,
+                                                defaultresponse,
+                                                options.Count == 0
+                                                    ? ""
+                                                    : ", Options are [" + string.Join(", ", options.ToArray()) + "]"
+                                      ), false, true);
             if (ret == String.Empty)
                 ret = defaultresponse;
 
@@ -770,7 +785,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The default prompt text.
+        ///     The default prompt text.
         /// </summary>
         public virtual string DefaultPrompt
         {
@@ -808,7 +823,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Starts the prompt for the console. This will never stop until the region is closed.
+        ///     Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
         public void ReadConsole()
         {

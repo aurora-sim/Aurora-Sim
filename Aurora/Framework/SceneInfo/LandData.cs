@@ -35,7 +35,7 @@ using ProtoBuf;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Details of a Parcel of land
+    ///     Details of a Parcel of land
     /// </summary>
     [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class LandData : IDataTransferable
@@ -114,7 +114,7 @@ namespace Aurora.Framework
         #region properties
 
         /// <summary>
-        ///   Whether to obscure parcel media URL
+        ///     Whether to obscure parcel media URL
         /// </summary>
         [ProtoMember(1)]
         public bool ObscureMedia
@@ -124,7 +124,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Whether to obscure parcel music URL
+        ///     Whether to obscure parcel music URL
         /// </summary>
         [ProtoMember(2)]
         public bool ObscureMusic
@@ -134,7 +134,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Whether to loop parcel media
+        ///     Whether to loop parcel media
         /// </summary>
         [ProtoMember(3)]
         public bool MediaLoop
@@ -144,7 +144,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Height of parcel media render
+        ///     Height of parcel media render
         /// </summary>
         [ProtoMember(4)]
         public int MediaHeight
@@ -161,7 +161,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Width of parcel media render
+        ///     Width of parcel media render
         /// </summary>
         [ProtoMember(6)]
         public int MediaWidth
@@ -171,7 +171,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Upper corner of the AABB for the parcel
+        ///     Upper corner of the AABB for the parcel
         /// </summary>
         [ProtoMember(7)]
         public Vector3 AABBMax
@@ -181,7 +181,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Lower corner of the AABB for the parcel
+        ///     Lower corner of the AABB for the parcel
         /// </summary>
         [ProtoMember(8)]
         public Vector3 AABBMin
@@ -191,7 +191,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Area in meters^2 the parcel contains
+        ///     Area in meters^2 the parcel contains
         /// </summary>
         [ProtoMember(9)]
         public int Area
@@ -201,7 +201,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   ID of auction (3rd Party Integration) when parcel is being auctioned
+        ///     ID of auction (3rd Party Integration) when parcel is being auctioned
         /// </summary>
         [ProtoMember(10)]
         public uint AuctionID
@@ -211,7 +211,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   UUID of authorized buyer of parcel.  This is UUID.Zero if anyone can buy it.
+        ///     UUID of authorized buyer of parcel.  This is UUID.Zero if anyone can buy it.
         /// </summary>
         [ProtoMember(11)]
         public UUID AuthBuyerID
@@ -221,15 +221,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Category of parcel.  Used for classifying the parcel in classified listings
+        ///     Category of parcel.  Used for classifying the parcel in classified listings
         /// </summary>
         [ProtoMember(12)]
         public ParcelCategory Category
         {
             get { return _category; }
-            set {
-                _category = value;
-            }
+            set { _category = value; }
         }
 
         [ProtoMember(13)]
@@ -240,7 +238,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Date that the current owner purchased or claimed the parcel
+        ///     Date that the current owner purchased or claimed the parcel
         /// </summary>
         [ProtoMember(14)]
         public int ClaimDate
@@ -250,7 +248,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The last price that the parcel was sold at
+        ///     The last price that the parcel was sold at
         /// </summary>
         [ProtoMember(15)]
         public int ClaimPrice
@@ -260,7 +258,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Global ID for the parcel.  (3rd Party Integration)
+        ///     Global ID for the parcel.  (3rd Party Integration)
         /// </summary>
         [ProtoMember(16)]
         public UUID GlobalID
@@ -270,7 +268,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Grid Wide ID for the parcel.
+        ///     Grid Wide ID for the parcel.
         /// </summary>
         [ProtoMember(17)]
         public UUID InfoUUID
@@ -280,7 +278,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Unique ID of the Group that owns
+        ///     Unique ID of the Group that owns
         /// </summary>
         [ProtoMember(18)]
         public UUID GroupID
@@ -290,7 +288,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Returns true if the Land Parcel is owned by a group
+        ///     Returns true if the Land Parcel is owned by a group
         /// </summary>
         [ProtoMember(19)]
         public bool IsGroupOwned
@@ -300,9 +298,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   jp2 data for the image representative of the parcel in the parcel dialog
+        ///     jp2 data for the image representative of the parcel in the parcel dialog
         /// </summary>
-        [ProtoMember(20, OverwriteList=true)]
+        [ProtoMember(20, OverwriteList = true)]
         public byte[] Bitmap
         {
             get { return _bitmap; }
@@ -310,7 +308,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Parcel Description
+        ///     Parcel Description
         /// </summary>
         [ProtoMember(21)]
         public string Description
@@ -320,18 +318,18 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Parcel settings.  Access flags, Fly, NoPush, Voice, Scripts allowed, etc.  ParcelFlags
+        ///     Parcel settings.  Access flags, Fly, NoPush, Voice, Scripts allowed, etc.  ParcelFlags
         /// </summary>
         [ProtoMember(22)]
         public uint Flags
         {
-            get { return _flags; }//Force add allow voice chat
+            get { return _flags; } //Force add allow voice chat
             set { _flags = value; }
         }
 
         /// <summary>
-        ///   Determines if people are able to teleport where they please on the parcel or if they 
-        ///   get constrainted to a specific point on teleport within the parcel
+        ///     Determines if people are able to teleport where they please on the parcel or if they
+        ///     get constrainted to a specific point on teleport within the parcel
         /// </summary>
         [ProtoMember(23)]
         public byte LandingType
@@ -355,7 +353,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Parcel Name
+        ///     Parcel Name
         /// </summary>
         [ProtoMember(26)]
         public string Name
@@ -365,7 +363,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Status of Parcel, Leased, Abandoned, For Sale
+        ///     Status of Parcel, Leased, Abandoned, For Sale
         /// </summary>
         [ProtoMember(27)]
         public ParcelStatus Status
@@ -375,7 +373,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Internal ID of the parcel.  Sometimes the client will try to use this value
+        ///     Internal ID of the parcel.  Sometimes the client will try to use this value
         /// </summary>
         [ProtoMember(28)]
         public int LocalID
@@ -413,7 +411,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Determines if we scale the media based on the surface it's on
+        ///     Determines if we scale the media based on the surface it's on
         /// </summary>
         [ProtoMember(33)]
         public byte MediaAutoScale
@@ -423,7 +421,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Texture Guid to replace with the output of the media stream
+        ///     Texture Guid to replace with the output of the media stream
         /// </summary>
         [ProtoMember(34)]
         public UUID MediaID
@@ -433,7 +431,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   URL to the media file to display
+        ///     URL to the media file to display
         /// </summary>
         [ProtoMember(35)]
         public string MediaURL
@@ -450,7 +448,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   URL to the shoutcast music stream to play on the parcel
+        ///     URL to the shoutcast music stream to play on the parcel
         /// </summary>
         [ProtoMember(37)]
         public string MusicURL
@@ -460,8 +458,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Owner Avatar or Group of the parcel.  Naturally, all land masses must be
-        ///   owned by someone
+        ///     Owner Avatar or Group of the parcel.  Naturally, all land masses must be
+        ///     owned by someone
         /// </summary>
         [ProtoMember(38)]
         public UUID OwnerID
@@ -471,7 +469,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   List of access data for the parcel.  User data, some bitflags, and a time
+        ///     List of access data for the parcel.  User data, some bitflags, and a time
         /// </summary>
         [ProtoMember(39)]
         public List<ParcelManager.ParcelAccessEntry> ParcelAccessList
@@ -481,7 +479,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   How long in hours a Pass to the parcel is given
+        ///     How long in hours a Pass to the parcel is given
         /// </summary>
         [ProtoMember(40)]
         public float PassHours
@@ -491,7 +489,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Price to purchase a Pass to a restricted parcel
+        ///     Price to purchase a Pass to a restricted parcel
         /// </summary>
         [ProtoMember(41)]
         public int PassPrice
@@ -501,7 +499,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   When the parcel is being sold, this is the price to purchase the parcel
+        ///     When the parcel is being sold, this is the price to purchase the parcel
         /// </summary>
         [ProtoMember(42)]
         public int SalePrice
@@ -511,13 +509,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Number of meters^2 in the Simulator
+        ///     Number of meters^2 in the Simulator
         /// </summary>
         [ProtoMember(43)]
         public int SimwideArea { get; set; }
 
         /// <summary>
-        ///   ID of the snapshot used in the client parcel dialog of the parcel
+        ///     ID of the snapshot used in the client parcel dialog of the parcel
         /// </summary>
         [ProtoMember(44)]
         public UUID SnapshotID
@@ -527,8 +525,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   When teleporting is restricted to a certain point, this is the location 
-        ///   that the user will be redirected to
+        ///     When teleporting is restricted to a certain point, this is the location
+        ///     that the user will be redirected to
         /// </summary>
         [ProtoMember(45)]
         public Vector3 UserLocation
@@ -538,8 +536,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   When teleporting is restricted to a certain point, this is the rotation 
-        ///   that the user will be positioned
+        ///     When teleporting is restricted to a certain point, this is the rotation
+        ///     that the user will be positioned
         /// </summary>
         [ProtoMember(46)]
         public Vector3 UserLookAt
@@ -549,8 +547,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Number of minutes to return SceneObjectGroup that are owned by someone who doesn't own 
-        ///   the parcel and isn't set to the same 'group' as the parcel.
+        ///     Number of minutes to return SceneObjectGroup that are owned by someone who doesn't own
+        ///     the parcel and isn't set to the same 'group' as the parcel.
         /// </summary>
         [ProtoMember(47)]
         public int OtherCleanTime
@@ -560,7 +558,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   parcel media description
+        ///     parcel media description
         /// </summary>
         [ProtoMember(48)]
         public string MediaDescription
@@ -579,7 +577,7 @@ namespace Aurora.Framework
         #endregion
 
         /// <summary>
-        ///   Make a new copy of the land data
+        ///     Make a new copy of the land data
         /// </summary>
         /// <returns></returns>
         public LandData Copy()
@@ -644,12 +642,14 @@ namespace Aurora.Framework
                 landData._parcelAccessList.Add(newEntry);
             }
 #else
-            foreach (ParcelManager.ParcelAccessEntry newEntry in _parcelAccessList.Select(entry => new ParcelManager.ParcelAccessEntry
-                                                                                         {
-                                                                                             AgentID = entry.AgentID,
-                                                                                             Flags = entry.Flags,
-                                                                                             Time = entry.Time
-                                                                                         }))
+            foreach (
+                ParcelManager.ParcelAccessEntry newEntry in
+                    _parcelAccessList.Select(entry => new ParcelManager.ParcelAccessEntry
+                                                          {
+                                                              AgentID = entry.AgentID,
+                                                              Flags = entry.Flags,
+                                                              Time = entry.Time
+                                                          }))
             {
                 landData._parcelAccessList.Add(newEntry);
             }
@@ -756,10 +756,10 @@ namespace Aurora.Framework
             RegionHandle = map["RegionHandle"].AsULong();
             Private = map["Private"].AsBoolean();
             AuctionInfo = new AuctionInfo();
-            if(map.ContainsKey("AuctionInfo"))
-                AuctionInfo.FromOSD((OSDMap)map["AuctionInfo"]);
-				
-			if ((IsGroupOwned) && (GroupID != OwnerID)) OwnerID = GroupID;
+            if (map.ContainsKey("AuctionInfo"))
+                AuctionInfo.FromOSD((OSDMap) map["AuctionInfo"]);
+
+            if ((IsGroupOwned) && (GroupID != OwnerID)) OwnerID = GroupID;
         }
 
         #endregion

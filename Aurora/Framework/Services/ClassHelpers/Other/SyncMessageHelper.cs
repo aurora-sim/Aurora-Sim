@@ -47,11 +47,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Tells the region to tell the given agent that the other agent is online
+        ///     Tells the region to tell the given agent that the other agent is online
         /// </summary>
-        /// <param name = "AgentID">Agent that is either logging in or logging out</param>
-        /// <param name = "FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
-        /// <param name = "newStatus">Whether they are logged in or out</param>
+        /// <param name="AgentID">Agent that is either logging in or logging out</param>
+        /// <param name="FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
+        /// <param name="newStatus">Whether they are logged in or out</param>
         /// <returns></returns>
         public static OSDMap AgentStatusChange(UUID AgentID, UUID FriendToInformID, bool newStatus)
         {
@@ -66,11 +66,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Tells the region to tell the given agent that the other agent is online
+        ///     Tells the region to tell the given agent that the other agent is online
         /// </summary>
-        /// <param name = "AgentID">Agent that is either logging in or logging out</param>
-        /// <param name = "FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
-        /// <param name = "newStatus">Whether they are logged in or out</param>
+        /// <param name="AgentID">Agent that is either logging in or logging out</param>
+        /// <param name="FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
+        /// <param name="newStatus">Whether they are logged in or out</param>
         /// <returns></returns>
         public static OSDMap AgentStatusChanges(List<UUID> AgentIDs, UUID FriendToInformID, bool newStatus)
         {
@@ -150,7 +150,12 @@ namespace Aurora.Framework
 
         public static OSDMap AgentLoggedOut(UUID AgentID, UUID requestingRegion, AgentPosition agentpos)
         {
-            OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"AgentPos", agentpos.Pack()}, {"RequestingRegion", requestingRegion}};
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"AgentID", AgentID},
+                                      {"AgentPos", agentpos.Pack()},
+                                      {"RequestingRegion", requestingRegion}
+                                  };
 
             return buildEvent("AgentLoggedOut", llsdBody, AgentID, requestingRegion);
         }

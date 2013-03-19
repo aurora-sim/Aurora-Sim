@@ -39,41 +39,42 @@ namespace Aurora.Framework
         public Vector3 CurrentPosition;
 
         /// <summary>
-        ///   The region the user is currently active in
+        ///     The region the user is currently active in
         /// </summary>
         public UUID CurrentRegionID;
+
         public string CurrentRegionURI;
 
         public Vector3 HomeLookAt;
         public Vector3 HomePosition;
 
         /// <summary>
-        ///   The home region of this user
+        ///     The home region of this user
         /// </summary>
         public UUID HomeRegionID;
 
         /// <summary>
-        ///   Any other assorted into about this user
+        ///     Any other assorted into about this user
         /// </summary>
         public OSDMap Info = new OSDMap();
 
         /// <summary>
-        ///   Whether this agent is currently online
+        ///     Whether this agent is currently online
         /// </summary>
         public bool IsOnline;
 
         /// <summary>
-        ///   The last login of the user
+        ///     The last login of the user
         /// </summary>
         public DateTime LastLogin;
 
         /// <summary>
-        ///   The last logout of the user
+        ///     The last logout of the user
         /// </summary>
         public DateTime LastLogout;
 
         /// <summary>
-        ///   The user that this info is for
+        ///     The user that this info is for
         /// </summary>
         public string UserID;
 
@@ -116,72 +117,72 @@ namespace Aurora.Framework
     public interface IAgentInfoService
     {
         /// <summary>
-        ///   The local service (if one exists)
+        ///     The local service (if one exists)
         /// </summary>
         IAgentInfoService InnerService { get; }
 
         /// <summary>
-        ///   Get the user infos for the given user
+        ///     Get the user infos for the given user
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "regionID"></param>
+        /// <param name="userID"></param>
+        /// <param name="regionID"></param>
         /// <returns></returns>
         UserInfo GetUserInfo(string userID);
 
         /// <summary>
-        ///   Get the user infos for the given users
+        ///     Get the user infos for the given users
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "regionID"></param>
+        /// <param name="userID"></param>
+        /// <param name="regionID"></param>
         /// <returns></returns>
         List<UserInfo> GetUserInfos(List<string> userIDs);
 
         /// <summary>
-        /// Gets a list of userinfos that are logged into the given region
+        ///     Gets a list of userinfos that are logged into the given region
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
         List<UserInfo> GetUserInfos(UUID regionID);
 
         /// <summary>
-        ///   Get the HTTP URLs for all root agents of the given users
+        ///     Get the HTTP URLs for all root agents of the given users
         /// </summary>
-        /// <param name = "requestor"></param>
-        /// <param name = "userIDs"></param>
+        /// <param name="requestor"></param>
+        /// <param name="userIDs"></param>
         /// <returns></returns>
         List<string> GetAgentsLocations(string requestor, List<string> userIDs);
 
         /// <summary>
-        ///   Set the home position of the given user
+        ///     Set the home position of the given user
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "homeID"></param>
-        /// <param name = "homePosition"></param>
-        /// <param name = "homeLookAt"></param>
+        /// <param name="userID"></param>
+        /// <param name="homeID"></param>
+        /// <param name="homePosition"></param>
+        /// <param name="homeLookAt"></param>
         /// <returns></returns>
         bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt);
 
         /// <summary>
-        ///   Set the last known position of the given user
+        ///     Set the last known position of the given user
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "regionID"></param>
-        /// <param name = "lastPosition"></param>
-        /// <param name = "lastLookAt"></param>
+        /// <param name="userID"></param>
+        /// <param name="regionID"></param>
+        /// <param name="lastPosition"></param>
+        /// <param name="lastLookAt"></param>
         void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt, string regionURI);
 
         /// <summary>
-        ///   Log the agent in or out
+        ///     Log the agent in or out
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "loggingIn">Whether the user is logging in or out</param>
-        /// <param name = "fireLoggedInEvent">Fire the event to log a user in</param>
-        /// <param name = "enteringRegion">The region the user is entering (if logging in)</param>
-        /// <param name = "enteringRegion">The regionURI the user is entering (if logging in)</param>
+        /// <param name="userID"></param>
+        /// <param name="loggingIn">Whether the user is logging in or out</param>
+        /// <param name="fireLoggedInEvent">Fire the event to log a user in</param>
+        /// <param name="enteringRegion">The region the user is entering (if logging in)</param>
+        /// <param name="enteringRegion">The regionURI the user is entering (if logging in)</param>
         void SetLoggedIn(string userID, bool loggingIn, UUID enteringRegion, string enteringRegionURI);
 
         /// <summary>
-        /// Fire the status changed event for this user
+        ///     Fire the status changed event for this user
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="loggingIn"></param>
@@ -204,7 +205,9 @@ namespace Aurora.Framework
         UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged);
 
         uint RecentlyOnline(uint secondsAgo, bool stillOnline);
-        List<UserInfo> RecentlyOnline(uint secondsAgo, bool stillOnline, Dictionary<string, bool> sort, uint start, uint count);
+
+        List<UserInfo> RecentlyOnline(uint secondsAgo, bool stillOnline, Dictionary<string, bool> sort, uint start,
+                                      uint count);
 
         List<UserInfo> GetByCurrentRegion(string regionID);
     }

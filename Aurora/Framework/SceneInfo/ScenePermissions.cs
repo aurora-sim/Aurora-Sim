@@ -260,7 +260,8 @@ namespace Aurora.Framework
                 foreach (GenerateClientFlagsHandler handler in list)
                     perms = perms & handler(userID, part);
 #else
-                perms = list.Cast<GenerateClientFlagsHandler>().Aggregate(perms, (current, check) => current & check(userID, part));
+                perms = list.Cast<GenerateClientFlagsHandler>()
+                            .Aggregate(perms, (current, check) => current & check(userID, part));
 #endif
             }
             return perms;
@@ -548,7 +549,9 @@ namespace Aurora.Framework
                 }
                 return true;
 #else
-                return list.Cast<DuplicateObjectHandler>().All(h => h(objectCount, objectID, owner, m_scene, objectPosition) != false);
+                return
+                    list.Cast<DuplicateObjectHandler>()
+                        .All(h => h(objectCount, objectID, owner, m_scene, objectPosition) != false);
 #endif
             }
             return true;
@@ -689,9 +692,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Checks whether the user is in god mode
+        ///     Checks whether the user is in god mode
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         public bool CanGodTeleport(UUID user, UUID target)
         {
@@ -985,9 +988,9 @@ namespace Aurora.Framework
         #region CAN BE GODLIKE
 
         /// <summary>
-        ///   Checks whether the user is in god mode
+        ///     Checks whether the user is in god mode
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         public bool IsGod(UUID user)
         {
@@ -1009,9 +1012,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Checks whether the user can be in god mode
+        ///     Checks whether the user can be in god mode
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         public bool IsAdministrator(UUID user)
         {
@@ -1146,9 +1149,9 @@ namespace Aurora.Framework
         /// Check whether the specified user is allowed to directly create the given inventory type in a prim's
         /// inventory (e.g. the New Script button in the 1.21 Linden Lab client).
         /// </summary>
-        /// <param name = "invType"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="invType"></param>
+        /// <param name="objectID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanCreateObjectInventory(int invType, UUID objectID, UUID userID)
         {
@@ -1208,10 +1211,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to create the given inventory type in their inventory.
+        ///     Check whether the specified user is allowed to create the given inventory type in their inventory.
         /// </summary>
-        /// <param name = "invType"></param>
-        /// <param name = "userID"></param>
+        /// <param name="invType"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanCreateUserInventory(int invType, UUID userID)
         {
@@ -1233,10 +1236,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to edit the given inventory item within their own inventory.
+        ///     Check whether the specified user is allowed to edit the given inventory item within their own inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanEditUserInventory(UUID itemID, UUID userID)
         {
@@ -1258,10 +1261,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to copy the given inventory item from their own inventory.
+        ///     Check whether the specified user is allowed to copy the given inventory item from their own inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanCopyUserInventory(UUID itemID, UUID userID)
         {
@@ -1283,10 +1286,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to edit the given inventory item within their own inventory.
+        ///     Check whether the specified user is allowed to edit the given inventory item within their own inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanDeleteUserInventory(UUID itemID, UUID userID)
         {
@@ -1308,10 +1311,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check to make sure the user is allowed to teleport within this region
+        ///     Check to make sure the user is allowed to teleport within this region
         /// </summary>
-        /// <param name = "userID">The user that is attempting to leave</param>
-        /// <param name = "reason">If this check fails, this is the reason why</param>
+        /// <param name="userID">The user that is attempting to leave</param>
+        /// <param name="reason">If this check fails, this is the reason why</param>
         /// <returns>Whether the user is allowed to teleport locally</returns>
         public bool AllowedOutgoingLocalTeleport(UUID userID, out string reason)
         {
@@ -1330,11 +1333,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check to make sure the user can be teleporting out of the region to a remote region.
-        ///   If this is false, the user is denied the ability to leave the region at all.
+        ///     Check to make sure the user can be teleporting out of the region to a remote region.
+        ///     If this is false, the user is denied the ability to leave the region at all.
         /// </summary>
-        /// <param name = "userID">The user that is attempting to leave the region</param>
-        /// <param name = "reason">If this fails, this explains why it failed</param>
+        /// <param name="userID">The user that is attempting to leave the region</param>
+        /// <param name="reason">If this fails, this explains why it failed</param>
         /// <returns>Whether the user is allowed to teleport to remote regions</returns>
         public bool AllowedOutgoingRemoteTeleport(UUID userID, out string reason)
         {
@@ -1353,13 +1356,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check to make sure this user has the ability to have an agent in this region.
-        ///   This checks whether they exist in the grid, whether they are banned from the region and more.
-        ///   It is called by the SimulationService in CreateAgent mainly.
+        ///     Check to make sure this user has the ability to have an agent in this region.
+        ///     This checks whether they exist in the grid, whether they are banned from the region and more.
+        ///     It is called by the SimulationService in CreateAgent mainly.
         /// </summary>
-        /// <param name = "agent">The Agent that is coming in</param>
-        /// <param name = "isRootAgent">Whether this agent will be a root agent</param>
-        /// <param name = "reason">If it fails, this explains why they cannot enter</param>
+        /// <param name="agent">The Agent that is coming in</param>
+        /// <param name="isRootAgent">Whether this agent will be a root agent</param>
+        /// <param name="reason">If it fails, this explains why they cannot enter</param>
         /// <returns>Whether this user is allowed to have an agent in this region</returns>
         public bool AllowedIncomingAgent(AgentCircuitData agent, bool isRootAgent, out string reason)
         {
@@ -1378,13 +1381,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check to see whether the user is actually in this region 
-        ///   and then figure out if they can be where they want to be
+        ///     Check to see whether the user is actually in this region
+        ///     and then figure out if they can be where they want to be
         /// </summary>
-        /// <param name = "userID">The user who is teleporting (can be either incoming from a remote region, or a local teleport)</param>
-        /// <param name = "Position">The position the user has requested</param>
-        /// <param name = "newPosition">The position the user is going to get</param>
-        /// <param name = "reason">If the check fails, this will tell why</param>
+        /// <param name="userID">The user who is teleporting (can be either incoming from a remote region, or a local teleport)</param>
+        /// <param name="Position">The position the user has requested</param>
+        /// <param name="newPosition">The position the user is going to get</param>
+        /// <param name="reason">If the check fails, this will tell why</param>
         /// <returns>Whether this user can teleport into/around this region</returns>
         public bool AllowedIncomingTeleport(UUID userID, Vector3 Position, uint TeleportFlags, out Vector3 newPosition,
                                             out string reason)

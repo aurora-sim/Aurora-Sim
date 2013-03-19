@@ -34,12 +34,12 @@ namespace Aurora.Framework
     public class TaskInventoryItemHelpers
     {
         /// <summary>
-        ///   Full permissions
+        ///     Full permissions
         /// </summary>
         public const uint FULL_MASK_PERMISSIONS_GENERAL = 2147483647;
 
         /// <summary>
-        ///   Inventory types
+        ///     Inventory types
         /// </summary>
         public static string[] InvTypes = new[]
                                               {
@@ -77,7 +77,7 @@ namespace Aurora.Framework
                                               };
 
         /// <summary>
-        ///   Asset types
+        ///     Asset types
         /// </summary>
         public static string[] Types = new[]
                                            {
@@ -116,7 +116,7 @@ namespace Aurora.Framework
                                            };
 
         /// <summary>
-        ///   Asset types
+        ///     Asset types
         /// </summary>
         public static string[] SaleTypes = new[]
                                                {
@@ -128,7 +128,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   Represents an item in a task inventory
+    ///     Represents an item in a task inventory
     /// </summary>
     [Serializable, ProtoContract()]
     public class TaskInventoryItem : ICloneable
@@ -190,9 +190,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Used by the DB layer to retrieve / store the entire user identification.
-        ///   The identification can either be a simple UUID or a string of the form
-        ///   uuid[;profile_url[;name]]
+        ///     Used by the DB layer to retrieve / store the entire user identification.
+        ///     The identification can either be a simple UUID or a string of the form
+        ///     uuid[;profile_url[;name]]
         /// </summary>
         [ProtoMember(6)]
         public string CreatorIdentification
@@ -369,9 +369,9 @@ namespace Aurora.Framework
         #endregion
 
         /// <summary>
-        ///   Reset the UUIDs for this item.
+        ///     Reset the UUIDs for this item.
         /// </summary>
-        /// <param name = "partID">The new part ID to which this item belongs</param>
+        /// <param name="partID">The new part ID to which this item belongs</param>
         public void ResetIDs(UUID partID)
         {
             OldItemID = ItemID;

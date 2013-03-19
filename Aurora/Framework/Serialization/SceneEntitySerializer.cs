@@ -7,8 +7,10 @@ namespace Aurora.Framework.Serialization
     public interface ISceneObjectSerializer
     {
         ISceneEntity FromOriginalXmlFormat(string serialization, IRegistryCore scene);
+
         ISceneEntity FromOriginalXmlFormat(UUID fromUserInventoryItemID, string xmlData,
-                                                             IRegistryCore scene);
+                                           IRegistryCore scene);
+
         string ToOriginalXmlFormat(ISceneEntity sceneObject);
         ISceneEntity FromXml2Format(string xmlData, IScene scene);
         ISceneEntity FromXml2Format(ref MemoryStream ms, IScene scene);

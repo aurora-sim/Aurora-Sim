@@ -42,7 +42,10 @@ namespace Aurora.Framework
 
         GroupRecord GetGroupRecord(UUID RequestingAgentID, UUID GroupID, string GroupName);
         GroupProfileData GetGroupProfile(UUID RequestingAgentID, UUID GroupID);
-        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, uint? start, uint? count, uint queryFlags);
+
+        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, uint? start, uint? count,
+                                            uint queryFlags);
+
         List<GroupMembersData> GetGroupMembers(UUID RequestingAgentID, UUID GroupID);
 
         void AddGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description,
@@ -97,7 +100,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   Internal class for chat sessions
+    ///     Internal class for chat sessions
     /// </summary>
     public class ChatSession
     {
@@ -118,14 +121,17 @@ namespace Aurora.Framework
         // Summary:
         //     True if user has voice chat enabled
         public bool CanVoiceChat;
+
         /// <summary>
-        /// Whether the user has accepted being added to the group chat
+        ///     Whether the user has accepted being added to the group chat
         /// </summary>
         public bool HasBeenAdded;
+
         /// <summary>
-        /// Whether the user has asked to be removed from the chat
+        ///     Whether the user has asked to be removed from the chat
         /// </summary>
         public bool RequestedRemoval;
+
         //
         // Summary:
         //     True of Avatar has moderator abilities
@@ -200,7 +206,7 @@ namespace Aurora.Framework
         public override void FromOSD(OSDMap values)
         {
             noticeData = new GroupNoticeData();
-            noticeData.FromOSD((OSDMap)values["noticeData"]);
+            noticeData.FromOSD((OSDMap) values["noticeData"]);
             GroupID = values["GroupID"];
             Message = values["Message"];
             BinaryBucket = values["BinaryBucket"];
@@ -219,22 +225,24 @@ namespace Aurora.Framework
         public DateTime Created = DateTime.Now;
         public DateTime Ending = DateTime.Now;
         public UUID VoteID = UUID.Random();
+
         /// <summary>
-        /// Only set when a user is calling to find out proposal info, it is what said user voted
+        ///     Only set when a user is calling to find out proposal info, it is what said user voted
         /// </summary>
         public string VoteCast = "";
 
         /// <summary>
-        /// The result of the proposal (success or failure)
+        ///     The result of the proposal (success or failure)
         /// </summary>
         public bool Result = false;
+
         /// <summary>
-        /// The number of votes cast (so far if the proposal is still open)
+        ///     The number of votes cast (so far if the proposal is still open)
         /// </summary>
         public int NumVotes = 0;
 
         /// <summary>
-        /// If this is false, the result of the proposal has not been calculated and should be when it is retrieved next
+        ///     If this is false, the result of the proposal has not been calculated and should be when it is retrieved next
         /// </summary>
         public bool HasCalculatedResult = false;
 

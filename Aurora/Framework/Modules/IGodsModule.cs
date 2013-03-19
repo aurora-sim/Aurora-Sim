@@ -30,28 +30,28 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   This interface provides god related methods
+    ///     This interface provides god related methods
     /// </summary>
     public interface IGodsModule
     {
         /// <summary>
-        ///   Handle a request for admin rights
+        ///     Handle a request for admin rights
         /// </summary>
-        /// <param name = "agentID"></param>
-        /// <param name = "sessionID"></param>
-        /// <param name = "token"></param>
-        /// <param name = "godLike"></param>
-        /// <param name = "controllingClient"></param>
+        /// <param name="agentID"></param>
+        /// <param name="sessionID"></param>
+        /// <param name="token"></param>
+        /// <param name="godLike"></param>
+        /// <param name="controllingClient"></param>
         void RequestGodlikePowers(UUID agentID, UUID sessionID, UUID token, bool godLike, IClientAPI controllingClient);
 
         /// <summary>
-        ///   Kicks User specified from the simulator.  This logs them off of the grid.
+        ///     Kicks User specified from the simulator.  This logs them off of the grid.
         /// </summary>
-        /// <param name = "godID">The person doing the kicking</param>
-        /// <param name = "sessionID">The session of the person doing the kicking</param>
-        /// <param name = "agentID">the person that is being kicked</param>
-        /// <param name = "kickflags">What to do to the user (kick, freeze/unfreeze)</param>
-        /// <param name = "reason">The message to send to the user</param>
+        /// <param name="godID">The person doing the kicking</param>
+        /// <param name="sessionID">The session of the person doing the kicking</param>
+        /// <param name="agentID">the person that is being kicked</param>
+        /// <param name="kickflags">What to do to the user (kick, freeze/unfreeze)</param>
+        /// <param name="reason">The message to send to the user</param>
         void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, string reason);
     }
 }

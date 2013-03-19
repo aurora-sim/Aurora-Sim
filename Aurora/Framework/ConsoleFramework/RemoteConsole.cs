@@ -166,7 +166,9 @@ namespace Aurora.Framework
 
             lock (m_Connections)
             {
-                expired.AddRange(from kvp in m_Connections where Environment.TickCount - kvp.Value.last > 500000 select kvp.Key);
+                expired.AddRange(from kvp in m_Connections
+                                 where Environment.TickCount - kvp.Value.last > 500000
+                                 select kvp.Key);
 
                 foreach (UUID id in expired)
                 {

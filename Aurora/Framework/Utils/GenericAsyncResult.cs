@@ -36,19 +36,19 @@ namespace Aurora.Framework
         private readonly AsyncCallback m_callback;
 
         /// <summary>
-        ///   Is process completed?
+        ///     Is process completed?
         /// </summary>
         /// <remarks>
-        ///   Should really be boolean, but VolatileRead has no boolean method
+        ///     Should really be boolean, but VolatileRead has no boolean method
         /// </remarks>
         private byte m_completed;
 
         /// <summary>
-        ///   Did process complete synchronously?
+        ///     Did process complete synchronously?
         /// </summary>
         /// <remarks>
-        ///   I have a hard time imagining a scenario where this is the case, again, same issue about
-        ///   booleans and VolatileRead as m_completed
+        ///     I have a hard time imagining a scenario where this is the case, again, same issue about
+        ///     booleans and VolatileRead as m_completed
         /// </remarks>
         private byte m_completedSynchronously;
 
@@ -114,7 +114,7 @@ namespace Aurora.Framework
         internal void SetAsCompleted(bool completedSynchronously)
         {
             m_completed = 1;
-            m_completedSynchronously = completedSynchronously ? (byte)1 : (byte)0;
+            m_completedSynchronously = completedSynchronously ? (byte) 1 : (byte) 0;
 
             SignalCompletion();
         }
@@ -122,7 +122,7 @@ namespace Aurora.Framework
         internal void HandleException(Exception e, bool completedSynchronously)
         {
             m_completed = 1;
-            m_completedSynchronously = completedSynchronously ? (byte)1 : (byte)0;
+            m_completedSynchronously = completedSynchronously ? (byte) 1 : (byte) 0;
             m_exception = e;
 
             SignalCompletion();

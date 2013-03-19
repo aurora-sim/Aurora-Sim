@@ -44,8 +44,8 @@ namespace Aurora.Framework
             set { m_priority = value; }
         }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public uint PacketNumber
         {
             get { return m_packetNumber; }
@@ -54,16 +54,16 @@ namespace Aurora.Framework
 
         public uint requestSequence { get; set; }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public sbyte DiscardLevel
         {
             get { return m_discardLevel; }
             set { m_discardLevel = value; }
         }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public UUID RequestedAssetID
         {
             get { return m_requestedAssetID; }

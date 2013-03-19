@@ -262,7 +262,12 @@ namespace Aurora.Framework
 
             OSDArray Ban = values["EstateBans"] as OSDArray;
             if (Ban != null)
-                EstateBans = Ban.ConvertAll<EstateBan>((o) => { EstateBan ban = new EstateBan(); ban.FromOSD(o); return ban; });
+                EstateBans = Ban.ConvertAll<EstateBan>((o) =>
+                                                           {
+                                                               EstateBan ban = new EstateBan();
+                                                               ban.FromOSD(o);
+                                                               return ban;
+                                                           });
 
             OSDArray Access = values["EstateAccess"] as OSDArray;
             if (Access != null)
@@ -430,12 +435,15 @@ namespace Aurora.Framework
         public void SetFromFlags(ulong regionFlags)
         {
             ResetHomeOnTeleport = ((regionFlags & (ulong) OpenMetaverse.RegionFlags.ResetHomeOnTeleport) ==
-                                   (ulong)OpenMetaverse.RegionFlags.ResetHomeOnTeleport);
-            BlockDwell = ((regionFlags & (ulong)OpenMetaverse.RegionFlags.BlockDwell) == (ulong)OpenMetaverse.RegionFlags.BlockDwell);
-            AllowLandmark = ((regionFlags & (ulong)OpenMetaverse.RegionFlags.AllowLandmark) == (ulong)OpenMetaverse.RegionFlags.AllowLandmark);
-            AllowParcelChanges = ((regionFlags & (ulong)OpenMetaverse.RegionFlags.AllowParcelChanges) ==
-                                  (ulong)OpenMetaverse.RegionFlags.AllowParcelChanges);
-            AllowSetHome = ((regionFlags & (ulong)OpenMetaverse.RegionFlags.AllowSetHome) == (ulong)OpenMetaverse.RegionFlags.AllowSetHome);
+                                   (ulong) OpenMetaverse.RegionFlags.ResetHomeOnTeleport);
+            BlockDwell = ((regionFlags & (ulong) OpenMetaverse.RegionFlags.BlockDwell) ==
+                          (ulong) OpenMetaverse.RegionFlags.BlockDwell);
+            AllowLandmark = ((regionFlags & (ulong) OpenMetaverse.RegionFlags.AllowLandmark) ==
+                             (ulong) OpenMetaverse.RegionFlags.AllowLandmark);
+            AllowParcelChanges = ((regionFlags & (ulong) OpenMetaverse.RegionFlags.AllowParcelChanges) ==
+                                  (ulong) OpenMetaverse.RegionFlags.AllowParcelChanges);
+            AllowSetHome = ((regionFlags & (ulong) OpenMetaverse.RegionFlags.AllowSetHome) ==
+                            (ulong) OpenMetaverse.RegionFlags.AllowSetHome);
         }
     }
 }

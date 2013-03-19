@@ -159,20 +159,19 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    /// Stream-based multipart handling.
-    ///
-    /// In this incarnation deals with an HttpInputStream as we are now using
-    /// IntPtr-based streams instead of byte [].   In the future, we will also
-    /// send uploads above a certain threshold into the disk (to implement
-    /// limit-less HttpInputFiles). 
+    ///     Stream-based multipart handling.
+    ///     In this incarnation deals with an HttpInputStream as we are now using
+    ///     IntPtr-based streams instead of byte [].   In the future, we will also
+    ///     send uploads above a certain threshold into the disk (to implement
+    ///     limit-less HttpInputFiles).
     /// </summary>
     /// <remarks>
-    /// Taken from HttpRequest in mono (http://www.mono-project.com)
+    ///     Taken from HttpRequest in mono (http://www.mono-project.com)
     /// </remarks>
     internal class HttpMultipart
     {
-        private const byte CR = (byte)'\r';
-        private const byte LF = (byte)'\n';
+        private const byte CR = (byte) '\r';
+        private const byte LF = (byte) '\n';
         private readonly string boundary;
         private readonly byte[] boundary_bytes;
         private readonly byte[] buffer;
@@ -239,7 +238,7 @@ namespace Aurora.Framework
             var temp = l.Substring(begin, end - begin);
             var source = new byte[temp.Length];
             for (var i = temp.Length - 1; i >= 0; i--)
-                source[i] = (byte)temp[i];
+                source[i] = (byte) temp[i];
 
             return encoding.GetString(source);
         }
@@ -379,7 +378,7 @@ namespace Aurora.Framework
                     break;
                 }
                 got_cr = (b == CR);
-                sb.Append((char)b);
+                sb.Append((char) b);
             }
 
             if (got_cr)
@@ -447,24 +446,28 @@ namespace Aurora.Framework
 
         #endregion
     }
-    
+
     public static class Extentions
     {
         #region Stream
 
         /// <summary>
-        ///   Copies the contents of one stream to another, starting at the 
-        ///   current position of each stream
+        ///     Copies the contents of one stream to another, starting at the
+        ///     current position of each stream
         /// </summary>
-        /// <param name = "copyFrom">The stream to copy from, at the position 
-        ///   where copying should begin</param>
-        /// <param name = "copyTo">The stream to copy to, at the position where 
-        ///   bytes should be written</param>
-        /// <param name = "maximumBytesToCopy">The maximum bytes to copy</param>
+        /// <param name="copyFrom">
+        ///     The stream to copy from, at the position
+        ///     where copying should begin
+        /// </param>
+        /// <param name="copyTo">
+        ///     The stream to copy to, at the position where
+        ///     bytes should be written
+        /// </param>
+        /// <param name="maximumBytesToCopy">The maximum bytes to copy</param>
         /// <returns>The total number of bytes copied</returns>
         /// <remarks>
-        ///   Copying begins at the streams' current positions. The positions are
-        ///   NOT reset after copying is complete.
+        ///     Copying begins at the streams' current positions. The positions are
+        ///     NOT reset after copying is complete.
         /// </remarks>
         public static int CopyTo(this Stream copyFrom, Stream copyTo, int maximumBytesToCopy)
         {
@@ -484,14 +487,14 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Converts an entire stream to a string, regardless of current stream
-        ///   position
+        ///     Converts an entire stream to a string, regardless of current stream
+        ///     position
         /// </summary>
-        /// <param name = "stream">The stream to convert to a string</param>
+        /// <param name="stream">The stream to convert to a string</param>
         /// <returns></returns>
         /// <remarks>
-        ///   When this method is done, the stream position will be 
-        ///   reset to its previous position before this method was called
+        ///     When this method is done, the stream position will be
+        ///     reset to its previous position before this method was called
         /// </remarks>
         public static string GetStreamString(this Stream stream)
         {
@@ -522,17 +525,19 @@ namespace Aurora.Framework
         #region Uri
 
         /// <summary>
-        ///   Combines a Uri that can contain both a base Uri and relative path
-        ///   with a second relative path fragment
+        ///     Combines a Uri that can contain both a base Uri and relative path
+        ///     with a second relative path fragment
         /// </summary>
-        /// <param name = "uri">Starting (base) Uri</param>
-        /// <param name = "fragment">Relative path fragment to append to the end
-        ///   of the Uri</param>
+        /// <param name="uri">Starting (base) Uri</param>
+        /// <param name="fragment">
+        ///     Relative path fragment to append to the end
+        ///     of the Uri
+        /// </param>
         /// <returns>The combined Uri</returns>
         /// <remarks>
-        ///   This is similar to the Uri constructor that takes a base
-        ///   Uri and the relative path, except this method can append a relative
-        ///   path fragment on to an existing relative path
+        ///     This is similar to the Uri constructor that takes a base
+        ///     Uri and the relative path, except this method can append a relative
+        ///     path fragment on to an existing relative path
         /// </remarks>
         public static Uri Combine(this Uri uri, string fragment)
         {
@@ -548,13 +553,15 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Combines a Uri that can contain both a base Uri and relative path
-        ///   with a second relative path fragment. If the fragment is absolute,
-        ///   it will be returned without modification
+        ///     Combines a Uri that can contain both a base Uri and relative path
+        ///     with a second relative path fragment. If the fragment is absolute,
+        ///     it will be returned without modification
         /// </summary>
-        /// <param name = "uri">Starting (base) Uri</param>
-        /// <param name = "fragment">Relative path fragment to append to the end
-        ///   of the Uri, or an absolute Uri to return unmodified</param>
+        /// <param name="uri">Starting (base) Uri</param>
+        /// <param name="fragment">
+        ///     Relative path fragment to append to the end
+        ///     of the Uri, or an absolute Uri to return unmodified
+        /// </param>
         /// <returns>The combined Uri</returns>
         public static Uri Combine(this Uri uri, Uri fragment)
         {
@@ -573,14 +580,18 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Appends a query string to a Uri that may or may not have existing 
-        ///   query parameters
+        ///     Appends a query string to a Uri that may or may not have existing
+        ///     query parameters
         /// </summary>
-        /// <param name = "uri">Uri to append the query to</param>
-        /// <param name = "query">Query string to append. Can either start with ?
-        ///   or just containg key/value pairs</param>
-        /// <returns>String representation of the Uri with the query string
-        ///   appended</returns>
+        /// <param name="uri">Uri to append the query to</param>
+        /// <param name="query">
+        ///     Query string to append. Can either start with ?
+        ///     or just containg key/value pairs
+        /// </param>
+        /// <returns>
+        ///     String representation of the Uri with the query string
+        ///     appended
+        /// </returns>
         public static string AppendQuery(this Uri uri, string query)
         {
             if (String.IsNullOrEmpty(query))
@@ -599,11 +610,11 @@ namespace Aurora.Framework
 
         #endregion Uri
 
-        ///<summary>
-        ///</summary>
-        ///<param name = "collection"></param>
-        ///<param name = "key"></param>
-        ///<returns></returns>
+        /// <summary>
+        /// </summary>
+        /// <param name="collection"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public static string GetOne(this NameValueCollection collection, string key)
         {
             string[] values = collection.GetValues(key);

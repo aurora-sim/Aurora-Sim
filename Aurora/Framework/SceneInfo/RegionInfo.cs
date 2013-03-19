@@ -58,43 +58,35 @@ namespace Aurora.Framework
         public bool HasBeenDeleted { get; set; }
         private bool m_seeIntoThisSimFromNeighbor = true;
 
-        [ProtoMember(1)]
-        public UUID RegionID = UUID.Zero;
-        [ProtoMember(2)]
-        public StartupType Startup = StartupType.Normal;
+        [ProtoMember(1)] public UUID RegionID = UUID.Zero;
+        [ProtoMember(2)] public StartupType Startup = StartupType.Normal;
 
-        [ProtoMember(3)]
-        public OpenRegionSettings OpenRegionSettings = new OpenRegionSettings();
+        [ProtoMember(3)] public OpenRegionSettings OpenRegionSettings = new OpenRegionSettings();
 
-        [ProtoMember(4)]
-        public OSD EnvironmentSettings = null;
+        [ProtoMember(4)] public OSD EnvironmentSettings = null;
 
         /// <summary>
-        /// The X length (in meters) that the region is
-        /// The default is 256m
+        ///     The X length (in meters) that the region is
+        ///     The default is 256m
         /// </summary>
-        [ProtoMember(5)]
-        public int RegionSizeX = 256;
+        [ProtoMember(5)] public int RegionSizeX = 256;
 
         /// <summary>
-        /// The Y length (in meters) that the region is
-        /// The default is 256m
+        ///     The Y length (in meters) that the region is
+        ///     The default is 256m
         /// </summary>
-        [ProtoMember(6)]
-        public int RegionSizeY = 256;
+        [ProtoMember(6)] public int RegionSizeY = 256;
 
         /// <summary>
-        /// The Z height (in meters) that the region is (not supported currently)
-        /// The default is 1024m
+        ///     The Z height (in meters) that the region is (not supported currently)
+        ///     The default is 1024m
         /// </summary>
-        [ProtoMember(7)]
-        public int RegionSizeZ = 4096;
+        [ProtoMember(7)] public int RegionSizeZ = 4096;
 
         /// <summary>
-        /// The region flags (as set on the Grid Server in the database), cached on RegisterRegion call
+        ///     The region flags (as set on the Grid Server in the database), cached on RegisterRegion call
         /// </summary>
-        [ProtoMember(8)]
-        public int RegionFlags = -1;
+        [ProtoMember(8)] public int RegionFlags = -1;
 
         [ProtoMember(9)]
         public EstateSettings EstateSettings { get; set; }
@@ -106,8 +98,7 @@ namespace Aurora.Framework
             set { m_regionSettings = value; }
         }
 
-        [ProtoMember(11)]
-        public bool InfiniteRegion = false;
+        [ProtoMember(11)] public bool InfiniteRegion = false;
 
         [ProtoMember(13)]
         public bool SeeIntoThisSimFromNeighbor
@@ -126,8 +117,8 @@ namespace Aurora.Framework
         [ProtoMember(16)]
         public byte AccessLevel
         {
-            get { return Util.ConvertMaturityToAccessLevel((uint)RegionSettings.Maturity); }
-            set { RegionSettings.Maturity = (int)Util.ConvertAccessLevelToMaturity(value); }
+            get { return Util.ConvertMaturityToAccessLevel((uint) RegionSettings.Maturity); }
+            set { RegionSettings.Maturity = (int) Util.ConvertAccessLevelToMaturity(value); }
         }
 
         [ProtoMember(17)]
@@ -181,7 +172,7 @@ namespace Aurora.Framework
 
         public ulong RegionHandle
         {
-            get { return Utils.UIntsToLong((uint)RegionLocX, (uint)RegionLocY); }
+            get { return Utils.UIntsToLong((uint) RegionLocX, (uint) RegionLocY); }
         }
 
         public OSDMap PackRegionInfoData()
@@ -205,10 +196,10 @@ namespace Aurora.Framework
             args["object_capacity"] = OSD.FromInteger(m_objectCapacity);
             args["region_type"] = OSD.FromString(RegionType);
             args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
-            args["startupType"] = OSD.FromInteger((int)Startup);
+            args["startupType"] = OSD.FromInteger((int) Startup);
             args["RegionSettings"] = RegionSettings.ToOSD();
             args["GridSecureSessionID"] = GridSecureSessionID;
-            if(EnvironmentSettings != null)
+            if (EnvironmentSettings != null)
                 args["EnvironmentSettings"] = EnvironmentSettings;
             args["OpenRegionSettings"] = OpenRegionSettings.ToOSD();
             return args;
@@ -251,7 +242,7 @@ namespace Aurora.Framework
             if (args.ContainsKey("scope_id"))
                 ScopeID = args["scope_id"].AsUUID();
             if (args.ContainsKey("all_scope_ids"))
-                AllScopeIDs = ((OSDArray)args["all_scope_ids"]).ConvertAll<UUID>(o => o);
+                AllScopeIDs = ((OSDArray) args["all_scope_ids"]).ConvertAll<UUID>(o => o);
 
             if (args.ContainsKey("region_size_x"))
                 RegionSizeX = args["region_size_x"].AsInteger();
@@ -266,21 +257,21 @@ namespace Aurora.Framework
                 RegionType = args["region_type"].AsString();
             if (args.ContainsKey("see_into_this_sim_from_neighbor"))
                 SeeIntoThisSimFromNeighbor = args["see_into_this_sim_from_neighbor"].AsBoolean();
-            if (args.ContainsKey ("startupType"))
-                Startup = (StartupType)args["startupType"].AsInteger();
-            if(args.ContainsKey("InfiniteRegion"))
+            if (args.ContainsKey("startupType"))
+                Startup = (StartupType) args["startupType"].AsInteger();
+            if (args.ContainsKey("InfiniteRegion"))
                 InfiniteRegion = args["InfiniteRegion"].AsBoolean();
             if (args.ContainsKey("RegionSettings"))
             {
                 RegionSettings = new RegionSettings();
-                RegionSettings.FromOSD((OSDMap)args["RegionSettings"]);
+                RegionSettings.FromOSD((OSDMap) args["RegionSettings"]);
             }
             if (args.ContainsKey("GridSecureSessionID"))
                 GridSecureSessionID = args["GridSecureSessionID"];
             if (args.ContainsKey("OpenRegionSettings"))
             {
                 OpenRegionSettings = new OpenRegionSettings();
-                OpenRegionSettings.FromOSD((OSDMap)args["OpenRegionSettings"]);
+                OpenRegionSettings.FromOSD((OSDMap) args["OpenRegionSettings"]);
             }
             else
                 OpenRegionSettings = new OpenRegionSettings();

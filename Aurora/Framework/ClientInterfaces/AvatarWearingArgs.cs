@@ -35,8 +35,8 @@ namespace Aurora.Framework
     {
         private List<Wearable> m_nowWearing = new List<Wearable>();
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public List<Wearable> NowWearing
         {
             get { return m_nowWearing; }

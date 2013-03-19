@@ -41,7 +41,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   Replacement for ChildAgentDataUpdate. Used over RESTComms and LocalComms.
+    ///     Replacement for ChildAgentDataUpdate. Used over RESTComms and LocalComms.
     /// </summary>
     public class AgentPosition : IDataTransferable, IAgentData
     {
@@ -355,10 +355,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Deserialization of agent data.
-        ///   Avoiding reflection makes it painful to write, but that's the price!
+        ///     Deserialization of agent data.
+        ///     Avoiding reflection makes it painful to write, but that's the price!
         /// </summary>
-        /// <param name = "hash"></param>
+        /// <param name="hash"></param>
         public virtual void Unpack(OSDMap args)
         {
             // DEBUG ON

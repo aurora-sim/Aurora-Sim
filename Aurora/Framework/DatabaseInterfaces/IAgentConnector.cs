@@ -32,28 +32,28 @@ namespace Aurora.Framework
     public interface IAgentConnector : IAuroraDataPlugin
     {
         /// <summary>
-        ///   Gets the info about the agent (TOS data, maturity info, language, etc)
+        ///     Gets the info about the agent (TOS data, maturity info, language, etc)
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         IAgentInfo GetAgent(UUID agentID);
 
         /// <summary>
-        ///   Updates the language and maturity params of the agent.
-        ///   Note: we only allow for this on the grid side
+        ///     Updates the language and maturity params of the agent.
+        ///     Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name = "agent"></param>
+        /// <param name="agent"></param>
         void UpdateAgent(IAgentInfo agent);
 
         /// <summary>
-        ///   Creates a new database entry for the agent.
-        ///   Note: we only allow for this on the grid side
+        ///     Creates a new database entry for the agent.
+        ///     Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         void CreateNewAgent(UUID agentID);
 
         /// <summary>
-        /// Cache a given agent info
+        ///     Cache a given agent info
         /// </summary>
         /// <param name="agent"></param>
         void CacheAgent(IAgentInfo agent);

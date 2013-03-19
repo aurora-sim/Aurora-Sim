@@ -63,9 +63,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   For outgoing packets that just have the packet type
+        ///     For outgoing packets that just have the packet type
         /// </summary>
-        /// <param name = "type"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
         public Packet GetPacket(PacketType type)
         {
@@ -133,11 +133,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   For incoming packets that are just types
+        ///     For incoming packets that are just types
         /// </summary>
-        /// <param name = "bytes"></param>
-        /// <param name = "packetEnd"></param>
-        /// <param name = "zeroBuffer"></param>
+        /// <param name="bytes"></param>
+        /// <param name="packetEnd"></param>
+        /// <param name="zeroBuffer"></param>
         /// <returns></returns>
         public Packet GetPacket(byte[] bytes, ref int packetEnd, byte[] zeroBuffer)
         {
@@ -156,9 +156,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Return a packet to the packet pool
+        ///     Return a packet to the packet pool
         /// </summary>
-        /// <param name = "packet"></param>
+        /// <param name="packet"></param>
         public bool ReturnPacket(Packet packet)
         {
             /*if (dataBlockPoolEnabled)

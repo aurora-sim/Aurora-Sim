@@ -34,27 +34,27 @@ namespace Aurora.Framework
     public class RegistryCore : IRegistryCore
     {
         /// <value>
-        ///   The module interfaces available from this scene.
+        ///     The module interfaces available from this scene.
         /// </value>
         protected Dictionary<Type, List<object>> ModuleInterfaces = new Dictionary<Type, List<object>>();
 
         #region IRegistryCore Members
 
         /// <summary>
-        ///   Register an interface to a region module.  This allows module methods to be called directly as
-        ///   well as via events.  If there is already a module registered for this interface, it is not replaced
-        ///   (is this the best behaviour?)
+        ///     Register an interface to a region module.  This allows module methods to be called directly as
+        ///     well as via events.  If there is already a module registered for this interface, it is not replaced
+        ///     (is this the best behaviour?)
         /// </summary>
-        /// <param name = "mod"></param>
+        /// <param name="mod"></param>
         public void RegisterModuleInterface<T>(T mod)
         {
             //            MainConsole.Instance.DebugFormat("[SCENE BASE]: Registering interface {0}", typeof(M));
 
             List<Object> l = null;
-            if (!ModuleInterfaces.TryGetValue(typeof(T), out l))
+            if (!ModuleInterfaces.TryGetValue(typeof (T), out l))
             {
                 l = new List<Object>();
-                ModuleInterfaces.Add(typeof(T), l);
+                ModuleInterfaces.Add(typeof (T), l);
             }
 
             if (l.Count > 0)
@@ -97,7 +97,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   For the given interface, retrieve the region module which implements it.
+        ///     For the given interface, retrieve the region module which implements it.
         /// </summary>
         /// <returns>null if there is no registered module implementing that interface</returns>
         public T RequestModuleInterface<T>()
@@ -123,7 +123,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   For the given interface, retrieve an array of region modules that implement it.
+        ///     For the given interface, retrieve an array of region modules that implement it.
         /// </summary>
         /// <returns>an empty array if there are no registered modules implementing that interface</returns>
         public T[] RequestModuleInterfaces<T>()

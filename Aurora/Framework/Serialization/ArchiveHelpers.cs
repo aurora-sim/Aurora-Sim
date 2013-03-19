@@ -32,15 +32,15 @@ using System.Net;
 namespace Aurora.Framework.Serialization
 {
     /// <summary>
-    ///   Helper methods for archive manipulation
+    ///     Helper methods for archive manipulation
     /// </summary>
     /// This is a separate class from ArchiveConstants because we need to bring in very OpenSim specific classes.
     public static class ArchiveHelpers
     {
         /// <summary>
-        ///   Create the filename used for objects in OpenSim Archives.
+        ///     Create the filename used for objects in OpenSim Archives.
         /// </summary>
-        /// <param name = "sog"></param>
+        /// <param name="sog"></param>
         /// <returns></returns>
         public static string CreateObjectFilename(ISceneEntity sog)
         {
@@ -48,9 +48,9 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Create the path used to store an object in an OpenSim Archive.
+        ///     Create the path used to store an object in an OpenSim Archive.
         /// </summary>
-        /// <param name = "sog"></param>
+        /// <param name="sog"></param>
         /// <returns></returns>
         public static string CreateObjectPath(ISceneEntity sog)
         {
@@ -58,9 +58,9 @@ namespace Aurora.Framework.Serialization
         }
 
         /// <summary>
-        ///   Resolve path to a working FileStream
+        ///     Resolve path to a working FileStream
         /// </summary>
-        /// <param name = "path"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
         public static Stream GetStream(string path)
         {

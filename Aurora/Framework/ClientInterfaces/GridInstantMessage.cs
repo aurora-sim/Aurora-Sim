@@ -67,7 +67,7 @@ namespace Aurora.Framework
             fromGroup = _fromGroup;
             message = _message;
             imSessionID = _imSessionID;
-            offline = _offline ? (Byte)1 : (Byte)0;
+            offline = _offline ? (Byte) 1 : (Byte) 0;
             Position = _position;
             binaryBucket = _binaryBucket;
 

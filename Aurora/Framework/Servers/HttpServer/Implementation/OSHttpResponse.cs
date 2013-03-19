@@ -32,63 +32,49 @@ using System.Text;
 namespace Aurora.Framework.Servers.HttpServer
 {
     /// <summary>
-    /// OSHttpResponse is the OpenSim representation of an HTTP
-    /// response.
+    ///     OSHttpResponse is the OpenSim representation of an HTTP
+    ///     response.
     /// </summary>
     public class OSHttpResponse
     {
         /// <summary>
-        /// Content type property.
+        ///     Content type property.
         /// </summary>
         /// <remarks>
-        /// Setting this property will also set IsContentTypeSet to
-        /// true.
+        ///     Setting this property will also set IsContentTypeSet to
+        ///     true.
         /// </remarks>
         public virtual string ContentType
         {
-            get
-            {
-                return _httpResponse.ContentType;
-            }
+            get { return _httpResponse.ContentType; }
 
-            set
-            {
-                _httpResponse.ContentType = value;
-            }
+            set { _httpResponse.ContentType = value; }
         }
 
-        /// <summary>
-        /// Boolean property indicating whether the content type
-        /// property actively has been set.
-        /// </summary>
-        /// <remarks>
-        /// IsContentTypeSet will go away together with .NET base.
-        /// </remarks>
         // public bool IsContentTypeSet
         // {
         //     get { return _contentTypeSet; }
         // }
         // private bool _contentTypeSet;
-
-
         /// <summary>
-        /// Length of the body content; 0 if there is no body.
+        ///     Boolean property indicating whether the content type
+        ///     property actively has been set.
+        /// </summary>
+        /// <remarks>
+        ///     IsContentTypeSet will go away together with .NET base.
+        /// </remarks>
+        /// <summary>
+        ///     Length of the body content; 0 if there is no body.
         /// </summary>
         public long ContentLength
         {
-            get
-            {
-                return _httpResponse.ContentLength64;
-            }
+            get { return _httpResponse.ContentLength64; }
 
-            set
-            {
-                _httpResponse.ContentLength64 = value;
-            }
+            set { _httpResponse.ContentLength64 = value; }
         }
 
         /// <summary>
-        /// Alias for ContentLength.
+        ///     Alias for ContentLength.
         /// </summary>
         public long ContentLength64
         {
@@ -97,121 +83,79 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// Encoding of the body content.
+        ///     Encoding of the body content.
         /// </summary>
         public Encoding ContentEncoding
         {
-            get
-            {
-                return _httpResponse.ContentEncoding;
-            }
+            get { return _httpResponse.ContentEncoding; }
 
-            set
-            {
-                _httpResponse.ContentEncoding = value;
-            }
+            set { _httpResponse.ContentEncoding = value; }
         }
 
         public bool KeepAlive
         {
-            get
-            {
-                return _httpResponse.KeepAlive;
-            }
+            get { return _httpResponse.KeepAlive; }
 
-            set
-            {
-                _httpResponse.KeepAlive = value;
-            }
+            set { _httpResponse.KeepAlive = value; }
         }
 
         /// <summary>
-        /// Return the output stream feeding the body.
+        ///     Return the output stream feeding the body.
         /// </summary>
         /// <remarks>
-        /// On its way out...
+        ///     On its way out...
         /// </remarks>
         public Stream OutputStream
         {
-            get
-            {
-                return _httpResponse.OutputStream;
-            }
+            get { return _httpResponse.OutputStream; }
         }
 
         public string ProtocolVersion
         {
-            get
-            {
-                return _httpResponse.ProtocolVersion.ToString();
-            }
+            get { return _httpResponse.ProtocolVersion.ToString(); }
 
-            set
-            {
-                _httpResponse.ProtocolVersion = new System.Version(value);
-            }
+            set { _httpResponse.ProtocolVersion = new System.Version(value); }
         }
 
         /// <summary>
-        /// Set a redirct location.
+        ///     Set a redirct location.
         /// </summary>
         public string RedirectLocation
         {
             // get { return _redirectLocation; }
-            set
-            {
-                _httpResponse.Redirect(value);
-            }
+            set { _httpResponse.Redirect(value); }
         }
 
 
         /// <summary>
-        /// Chunk transfers.
+        ///     Chunk transfers.
         /// </summary>
         public bool SendChunked
         {
-            get
-            {
-                return _httpResponse.SendChunked;
-            }
+            get { return _httpResponse.SendChunked; }
 
-            set
-            {
-                _httpResponse.SendChunked = value;
-            }
+            set { _httpResponse.SendChunked = value; }
         }
 
         /// <summary>
-        /// HTTP status code.
+        ///     HTTP status code.
         /// </summary>
         public virtual int StatusCode
         {
-            get
-            {
-                return _httpResponse.StatusCode;
-            }
+            get { return _httpResponse.StatusCode; }
 
-            set
-            {
-                _httpResponse.StatusCode = value;
-            }
+            set { _httpResponse.StatusCode = value; }
         }
 
 
         /// <summary>
-        /// HTTP status description.
+        ///     HTTP status description.
         /// </summary>
         public string StatusDescription
         {
-            get
-            {
-                return _httpResponse.StatusDescription;
-            }
+            get { return _httpResponse.StatusDescription; }
 
-            set
-            {
-                _httpResponse.StatusDescription = value;
-            }
+            set { _httpResponse.StatusDescription = value; }
         }
 
         public System.Web.HttpCookieCollection Cookies
@@ -228,7 +172,12 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public void AddCookie(System.Web.HttpCookie cookie)
         {
-            _httpResponse.Cookies.Add(new Cookie(cookie.Name, cookie.Value, cookie.Path, cookie.Domain) { Expires = cookie.Expires });
+            _httpResponse.Cookies.Add(new Cookie(cookie.Name, cookie.Value, cookie.Path, cookie.Domain)
+                                          {
+                                              Expires =
+                                                  cookie
+                                                  .Expires
+                                          });
         }
 
         protected HttpListenerResponse _httpResponse;
@@ -241,19 +190,23 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// Add a header field and content to the response.
+        ///     Add a header field and content to the response.
         /// </summary>
-        /// <param name="key">string containing the header field
-        /// name</param>
-        /// <param name="value">string containing the header field
-        /// value</param>
+        /// <param name="key">
+        ///     string containing the header field
+        ///     name
+        /// </param>
+        /// <param name="value">
+        ///     string containing the header field
+        ///     value
+        /// </param>
         public void AddHeader(string key, string value)
         {
             _httpResponse.AddHeader(key, value);
         }
 
         /// <summary>
-        /// Send the response back to the remote client
+        ///     Send the response back to the remote client
         /// </summary>
         public void Send()
         {

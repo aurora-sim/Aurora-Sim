@@ -62,7 +62,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   This module sends Aurora-specific settings to the viewer to tell it about different settings for the region
+    ///     This module sends Aurora-specific settings to the viewer to tell it about different settings for the region
     /// </summary>
     [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class OpenRegionSettings : IDataTransferable
@@ -310,8 +310,8 @@ namespace Aurora.Framework
         {
             if (rm == null)
                 return;
-            MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
-            DefaultDrawDistance = (float)rm["DrawDistance"].AsReal();
+            MaxDragDistance = (float) rm["MaxDragDistance"].AsReal();
+            DefaultDrawDistance = (float) rm["DrawDistance"].AsReal();
             ForceDrawDistance = rm["ForceDrawDistance"].AsInteger() == 1;
             MaximumPrimScale = (float) rm["MaxPrimScale"].AsReal();
             MinimumPrimScale = (float) rm["MinPrimScale"].AsReal();

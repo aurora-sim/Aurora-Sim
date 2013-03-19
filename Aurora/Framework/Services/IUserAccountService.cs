@@ -36,7 +36,7 @@ namespace Aurora.Framework
     {
         public int Created;
         public string Email;
-        public string Name { get; set;}
+        public string Name { get; set; }
         public UUID PrincipalID { get; set; }
         public int UserFlags;
         public int UserLevel;
@@ -114,7 +114,7 @@ namespace Aurora.Framework
             if (map.ContainsKey("ScopeID"))
                 ScopeID = map["ScopeID"];
             if (map.ContainsKey("AllScopeIDs"))
-                AllScopeIDs = ((OSDArray)map["AllScopeIDs"]).ConvertAll<UUID>(o => o);
+                AllScopeIDs = ((OSDArray) map["AllScopeIDs"]).ConvertAll<UUID>(o => o);
             if (map.ContainsKey("UserLevel"))
                 UserLevel = map["UserLevel"];
             if (map.ContainsKey("UserFlags"))
@@ -132,40 +132,40 @@ namespace Aurora.Framework
         IUserAccountService InnerService { get; }
 
         /// <summary>
-        ///   Get a user given by UUID
+        ///     Get a user given by UUID
         /// </summary>
-        /// <param name = "scopeID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         UserAccount GetUserAccount(List<UUID> scopeIDs, UUID userID);
 
         /// <summary>
-        ///   Get a user given by a first and last name
+        ///     Get a user given by a first and last name
         /// </summary>
-        /// <param name = "scopeID"></param>
-        /// <param name = "FirstName"></param>
-        /// <param name = "LastName"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="FirstName"></param>
+        /// <param name="LastName"></param>
         /// <returns></returns>
         UserAccount GetUserAccount(List<UUID> scopeIDs, string FirstName, string LastName);
 
         /// <summary>
-        ///   Get a user given by its full name
+        ///     Get a user given by its full name
         /// </summary>
-        /// <param name = "scopeID"></param>
-        /// <param name = "Email"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="Email"></param>
         /// <returns></returns>
         UserAccount GetUserAccount(List<UUID> scopeIDs, string Name);
 
         /// <summary>
-        ///   Returns the list of avatars that matches both the search criterion and the scope ID passed
+        ///     Returns the list of avatars that matches both the search criterion and the scope ID passed
         /// </summary>
-        /// <param name = "scopeID"></param>
-        /// <param name = "query"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="query"></param>
         /// <returns></returns>
         List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query);
 
         /// <summary>
-        /// Returns a paginated list of avatars that matches both the search criteriion and the scope ID passed
+        ///     Returns a paginated list of avatars that matches both the search criteriion and the scope ID passed
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="query"></param>
@@ -175,7 +175,7 @@ namespace Aurora.Framework
         List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query, uint? start, uint? count);
 
         /// <summary>
-        /// Returns a paginated list of avatars that matches both the search criteriion and the scope ID passed
+        ///     Returns a paginated list of avatars that matches both the search criteriion and the scope ID passed
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="level">greater than or equal to clause is used</param>
@@ -184,7 +184,7 @@ namespace Aurora.Framework
         List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, int level, int flags);
 
         /// <summary>
-        /// Returns the number of avatars that match both the search criterion and the scope ID passed
+        ///     Returns the number of avatars that match both the search criterion and the scope ID passed
         /// </summary>
         /// <param name="scopeID"></param>
         /// <param name="query"></param>
@@ -192,45 +192,45 @@ namespace Aurora.Framework
         uint NumberOfUserAccounts(List<UUID> scopeIDs, string query);
 
         /// <summary>
-        ///   Store the data given, wich replaces the stored data, therefore must be complete.
+        ///     Store the data given, wich replaces the stored data, therefore must be complete.
         /// </summary>
-        /// <param name = "data"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
         bool StoreUserAccount(UserAccount data);
 
         /// <summary>
-        /// Cache the given userAccount so that it doesn't have to be queried later
+        ///     Cache the given userAccount so that it doesn't have to be queried later
         /// </summary>
         /// <param name="account"></param>
         void CacheAccount(UserAccount account);
 
         /// <summary>
-        ///   Create the user with the given info
+        ///     Create the user with the given info
         /// </summary>
-        /// <param name = "name"></param>
-        /// <param name = "md5password">MD5 hashed password</param>
-        /// <param name = "email"></param>
+        /// <param name="name"></param>
+        /// <param name="md5password">MD5 hashed password</param>
+        /// <param name="email"></param>
         void CreateUser(string name, string md5password, string email);
 
         /// <summary>
-        ///   Create the user with the given info
+        ///     Create the user with the given info
         /// </summary>
-        /// <param name = "name"></param>
-        /// <param name = "md5password">MD5 hashed password</param>
-        /// <param name = "email"></param>
+        /// <param name="name"></param>
+        /// <param name="md5password">MD5 hashed password</param>
+        /// <param name="email"></param>
         /// <returns>The error message (if one exists)</returns>
         string CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email);
 
         /// <summary>
-        ///   Create the user with the given info
+        ///     Create the user with the given info
         /// </summary>
-        /// <param name = "account"></param>
-        /// <param name = "password"></param>
+        /// <param name="account"></param>
+        /// <param name="password"></param>
         /// <returns>The error message (if one exists)</returns>
         string CreateUser(UserAccount account, string password);
 
         /// <summary>
-        /// Delete a user from the database permanently
+        ///     Delete a user from the database permanently
         /// </summary>
         /// <param name="userID">The user's ID</param>
         /// <param name="password">The user's password</param>
@@ -240,7 +240,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   An interface for connecting to the user accounts datastore
+    ///     An interface for connecting to the user accounts datastore
     /// </summary>
     public interface IUserAccountData : IAuroraDataPlugin
     {

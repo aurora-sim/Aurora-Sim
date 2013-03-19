@@ -32,8 +32,8 @@ namespace Aurora.Framework
     public abstract class EntityBase : RegistryCore, IEntity
     {
         /// <summary>
-        ///   Signal whether the non-inventory attributes of any prims in the group have changed
-        ///   since the group's last persistent backup
+        ///     Signal whether the non-inventory attributes of any prims in the group have changed
+        ///     since the group's last persistent backup
         /// </summary>
         protected bool m_hasGroupChanged;
 
@@ -48,7 +48,7 @@ namespace Aurora.Framework
         protected UUID m_uuid;
 
         /// <summary>
-        ///   Creates a new Entity (should not occur on it's own)
+        ///     Creates a new Entity (should not occur on it's own)
         /// </summary>
         public EntityBase()
         {
@@ -56,7 +56,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The scene to which this entity belongs
+        ///     The scene to which this entity belongs
         /// </summary>
         public IScene Scene
         {
@@ -65,7 +65,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Signals whether this entity was in a scene but has since been removed from it.
+        ///     Signals whether this entity was in a scene but has since been removed from it.
         /// </summary>
         public bool IsDeleted
         {
@@ -88,7 +88,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The name of this entity
+        ///     The name of this entity
         /// </summary>
         public virtual string Name
         {
@@ -98,16 +98,16 @@ namespace Aurora.Framework
 
         public int LinkNum { get; set; }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public virtual Vector3 AbsolutePosition
         {
             get { return m_pos; }
             set { m_pos = value; }
         }
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public virtual Quaternion Rotation
         {
             get { return m_rot; }
@@ -115,7 +115,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Current velocity of the entity.
+        ///     Current velocity of the entity.
         /// </summary>
         public virtual Vector3 Velocity
         {

@@ -35,31 +35,31 @@ namespace Aurora.Framework
     public interface IScriptModule
     {
         /// <summary>
-        ///   Should we be able to run currently?
+        ///     Should we be able to run currently?
         /// </summary>
         bool Disabled { get; set; }
 
         /// <summary>
-        ///   The name of our script engine
+        ///     The name of our script engine
         /// </summary>
         string ScriptEngineName { get; }
 
         /// <summary>
-        ///   Adds an event to one script with the given parameters
+        ///     Adds an event to one script with the given parameters
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "primID"></param>
-        /// <param name = "name"></param>
-        /// <param name = "args"></param>
+        /// <param name="itemID"></param>
+        /// <param name="primID"></param>
+        /// <param name="name"></param>
+        /// <param name="args"></param>
         /// <returns></returns>
         bool PostScriptEvent(UUID itemID, UUID primID, string name, Object[] args);
 
         /// <summary>
-        ///   Posts an event to the entire given object
+        ///     Posts an event to the entire given object
         /// </summary>
-        /// <param name = "primID"></param>
-        /// <param name = "name"></param>
-        /// <param name = "args"></param>
+        /// <param name="primID"></param>
+        /// <param name="name"></param>
+        /// <param name="args"></param>
         /// <returns></returns>
         bool PostObjectEvent(UUID primID, string name, Object[] args);
 
@@ -72,106 +72,106 @@ namespace Aurora.Framework
         void ResumeScript(UUID itemID);
 
         /// <summary>
-        ///   Gets all script errors for the given itemID
+        ///     Gets all script errors for the given itemID
         /// </summary>
-        /// <param name = "itemID"></param>
+        /// <param name="itemID"></param>
         /// <returns></returns>
         ArrayList GetScriptErrors(UUID itemID);
 
         /// <summary>
-        ///   Updates the given script with the options given
+        ///     Updates the given script with the options given
         /// </summary>
-        /// <param name = "partID"></param>
-        /// <param name = "itemID"></param>
-        /// <param name = "script"></param>
-        /// <param name = "startParam"></param>
-        /// <param name = "postOnRez"></param>
-        /// <param name = "stateSource"></param>
+        /// <param name="partID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="script"></param>
+        /// <param name="startParam"></param>
+        /// <param name="postOnRez"></param>
+        /// <param name="stateSource"></param>
         void UpdateScript(UUID partID, UUID itemID, string script, int startParam, bool postOnRez,
                           StateSource stateSource);
 
         /// <summary>
-        ///   Stops all scripts that the ScriptEngine is running
+        ///     Stops all scripts that the ScriptEngine is running
         /// </summary>
         void StopAllScripts();
 
         /// <summary>
-        ///   Attempt to compile a script from the given assetID and return any compile errors
+        ///     Attempt to compile a script from the given assetID and return any compile errors
         /// </summary>
-        /// <param name = "assetID"></param>
-        /// <param name = "itemID"></param>
+        /// <param name="assetID"></param>
+        /// <param name="itemID"></param>
         /// <returns></returns>
         string TestCompileScript(UUID assetID, UUID itemID);
 
         /// <summary>
-        ///   Changes script references from an old Item/Prim to a new one
+        ///     Changes script references from an old Item/Prim to a new one
         /// </summary>
-        /// <param name = "olditemID"></param>
-        /// <param name = "newItem"></param>
-        /// <param name = "newPart"></param>
+        /// <param name="olditemID"></param>
+        /// <param name="newItem"></param>
+        /// <param name="newPart"></param>
         void UpdateScriptToNewObject(UUID olditemID, TaskInventoryItem newItem, ISceneChildEntity newPart);
 
         /// <summary>
-        ///   Force a state save for the given script
+        ///     Force a state save for the given script
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "primID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="primID"></param>
         void SaveStateSave(UUID itemID, UUID primID);
 
         /// <summary>
-        ///   Get a list of all script function names in the Apis
+        ///     Get a list of all script function names in the Apis
         /// </summary>
         /// <returns></returns>
         List<string> GetAllFunctionNames();
 
         /// <summary>
-        ///   Get the number of active (running) scripts in the given entity
+        ///     Get the number of active (running) scripts in the given entity
         /// </summary>
-        /// <param name = "obj"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
         int GetActiveScripts(IEntity obj);
 
         /// <summary>
-        ///   Get the number of scripts in the given entity
+        ///     Get the number of scripts in the given entity
         /// </summary>
-        /// <param name = "obj"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
         int GetTotalScripts(IEntity obj);
 
         /// <summary>
-        ///   Get the number of active (running) scripts that this engine is controlling
+        ///     Get the number of active (running) scripts that this engine is controlling
         /// </summary>
         /// <returns></returns>
         int GetActiveScripts();
 
         /// <summary>
-        ///   Get the number of events fired per second currently
+        ///     Get the number of events fired per second currently
         /// </summary>
         /// <returns></returns>
         int GetScriptEPS();
 
         /// <summary>
-        ///   Get the top scripts in the Script Engine
+        ///     Get the top scripts in the Script Engine
         /// </summary>
-        /// <param name = "RegionID"></param>
+        /// <param name="RegionID"></param>
         /// <returns></returns>
         Dictionary<uint, float> GetTopScripts(UUID RegionID);
 
         /// <summary>
-        ///   This makes sure that the cmd handler (for long running events like timers/listeners) is running
+        ///     This makes sure that the cmd handler (for long running events like timers/listeners) is running
         /// </summary>
-        /// <param name = "itemID">Item causing the poke</param>
+        /// <param name="itemID">Item causing the poke</param>
         void PokeThreads(UUID itemID);
 
         /// <summary>
-        ///   Save states for all scripts that require it
+        ///     Save states for all scripts that require it
         /// </summary>
         void SaveStateSaves();
 
         /// <summary>
-        ///   Get the script time for the given script
+        ///     Get the script time for the given script
         /// </summary>
-        /// <param name = "m_itemID"></param>
+        /// <param name="m_itemID"></param>
         /// <returns></returns>
         int GetScriptTime(UUID itemID);
     }

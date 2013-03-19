@@ -36,27 +36,27 @@ namespace Aurora.Framework
     public interface IEventQueueService
     {
         /// <summary>
-        ///   The local service (if possible)
+        ///     The local service (if possible)
         /// </summary>
         IEventQueueService InnerService { get; }
 
         /// <summary>
-        ///   This adds a EventQueueMessage to the user's CAPS handler at the given region handle
+        ///     This adds a EventQueueMessage to the user's CAPS handler at the given region handle
         /// </summary>
-        /// <param name = "o"></param>
-        /// <param name = "avatarID"></param>
-        /// <param name = "regionID"></param>
+        /// <param name="o"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="regionID"></param>
         /// <returns>Whether it was added successfully</returns>
         bool Enqueue(OSD o, UUID avatarID, UUID regionID);
 
         // These are required to decouple Scenes from EventQueueHelper
 
         /// <summary>
-        ///   Disables the simulator in the client
+        ///     Disables the simulator in the client
         /// </summary>
-        /// <param name = "avatarID"></param>
-        /// <param name = "RegionHandle"></param>
-        /// <param name = "regionID"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <param name="regionID"></param>
         void DisableSimulator(UUID avatarID, ulong RegionHandle, UUID regionID);
 
         void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY,

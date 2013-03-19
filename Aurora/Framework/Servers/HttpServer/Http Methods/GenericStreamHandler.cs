@@ -30,11 +30,13 @@ using System.IO;
 namespace Aurora.Framework.Servers.HttpServer
 {
     public delegate byte[] HttpServerHandle(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+
     public class GenericStreamHandler : BaseRequestHandler
     {
         private HttpServerHandle _method;
-        public GenericStreamHandler(string httpMethod, string path, HttpServerHandle method) 
+
+        public GenericStreamHandler(string httpMethod, string path, HttpServerHandle method)
             : base(httpMethod, path)
         {
             _method = method;
@@ -52,7 +54,7 @@ namespace Aurora.Framework.Servers.HttpServer
         public static byte[] ReadFully(Stream stream)
         {
             byte[] buffer = new byte[1024];
-            using (MemoryStream ms = new MemoryStream(1024 * 256))
+            using (MemoryStream ms = new MemoryStream(1024*256))
             {
                 while (true)
                 {

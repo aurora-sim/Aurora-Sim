@@ -325,7 +325,7 @@ namespace Aurora.Framework
 
         public TValue[] Values
         {
-            get 
+            get
             {
                 lock (m_lock)
                 {

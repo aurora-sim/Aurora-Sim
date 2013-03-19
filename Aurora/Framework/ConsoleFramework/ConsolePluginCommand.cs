@@ -31,36 +31,34 @@ namespace Aurora.Framework
 {
     public delegate void ConsoleCommand(string[] comParams);
 
-    ///<summary>
-    ///  Holder object for a new console plugin command
-    ///
-    ///  Override the methods like Run and IsHelpfull (but the defaults might work ok.)
-    ///</summary>
+    /// <summary>
+    ///     Holder object for a new console plugin command
+    ///     Override the methods like Run and IsHelpfull (but the defaults might work ok.)
+    /// </summary>
     public class ConsolePluginCommand
     {
         /// <summary>
-        ///   command in the form of "showme new commands"
+        ///     command in the form of "showme new commands"
         /// </summary>
         private readonly string[] m_cmdText;
 
         /// <summary>
-        ///   command delegate used in running
+        ///     command delegate used in running
         /// </summary>
         private readonly ConsoleCommand m_commandDelegate;
 
         /// <summary>
-        ///   help text displayed
+        ///     help text displayed
         /// </summary>
         private readonly string m_helpText;
 
-        ///<summary>
-        ///  Construct a new ConsolePluginCommand
-        ///
-        ///  for use with OpenSim.RegisterConsolePluginCommand(myCmd);
-        ///</summary>
-        ///<param name = "command">in the form of "showme new commands"</param>
-        ///<param name = "dlg">ommand delegate used in running</param>
-        ///<param name = "help">the text displayed in "help showme new commands"</param>
+        /// <summary>
+        ///     Construct a new ConsolePluginCommand
+        ///     for use with OpenSim.RegisterConsolePluginCommand(myCmd);
+        /// </summary>
+        /// <param name="command">in the form of "showme new commands"</param>
+        /// <param name="dlg">ommand delegate used in running</param>
+        /// <param name="help">the text displayed in "help showme new commands"</param>
         public ConsolePluginCommand(string command, ConsoleCommand dlg, string help)
         {
             m_cmdText = command.Split(new[] {' '});
@@ -68,14 +66,13 @@ namespace Aurora.Framework
             m_helpText = help;
         }
 
-        ///<summary>
-        ///  Returns the match length this command has upon the 'cmdWithParams'
-        ///  At least a higher number for "show plugin status" then "show" would return
-        ///  This is used to have multi length command verbs
-        ///
-        ///  @see OopenSim.RunPluginCommands
-        ///  It will only run the one with the highest number
-        ///</summary>
+        /// <summary>
+        ///     Returns the match length this command has upon the 'cmdWithParams'
+        ///     At least a higher number for "show plugin status" then "show" would return
+        ///     This is used to have multi length command verbs
+        ///     @see OopenSim.RunPluginCommands
+        ///     It will only run the one with the highest number
+        /// </summary>
         public int matchLength(string cmdWithParams)
         {
             // QUESTION: have a case insensitive flag?
@@ -90,7 +87,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Run the delegate the incomming string may contain the command, if so, it is chopped off the cmdParams[]
+        ///     Run the delegate the incomming string may contain the command, if so, it is chopped off the cmdParams[]
         /// </summary>
         public void Run(string cmd, string[] cmdParams)
         {
@@ -120,7 +117,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   return true if the ShowHelp(..) method might be helpfull
+        ///     return true if the ShowHelp(..) method might be helpfull
         /// </summary>
         public bool IsHelpfull(string cmdWithParams)
         {

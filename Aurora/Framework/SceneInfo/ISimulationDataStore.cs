@@ -32,92 +32,92 @@ namespace Aurora.Framework
     public interface ISimulationDataStore
     {
         /// <summary>
-        ///   The name of the plugin
+        ///     The name of the plugin
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// A new map tile needs generated
+        ///     A new map tile needs generated
         /// </summary>
         bool MapTileNeedsGenerated { get; set; }
 
         /// <summary>
-        ///   Whether we should save backups currently or not
+        ///     Whether we should save backups currently or not
         /// </summary>
         bool SaveBackups { get; set; }
 
         /// <summary>
-        ///   Initialises the data storage engine
+        ///     Initialises the data storage engine
         /// </summary>
         void Initialise();
 
         /// <summary>
-        ///   Entirely removes the region, this includes everything about the region
+        ///     Entirely removes the region, this includes everything about the region
         /// </summary>
         /// <returns></returns>
         void RemoveRegion();
 
         /// <summary>
-        ///   Something has changed in the region, just alerting us to the change if we need to do anything
+        ///     Something has changed in the region, just alerting us to the change if we need to do anything
         /// </summary>
         void Tainted();
 
         /// <summary>
-        ///   Load persisted objects from region storage.
+        ///     Load persisted objects from region storage.
         /// </summary>
         /// <returns>List of loaded groups</returns>
         List<ISceneEntity> LoadObjects();
 
         /// <summary>
-        ///   Load the latest terrain revision from region storage
+        ///     Load the latest terrain revision from region storage
         /// </summary>
-        /// <param name = "RevertMap"></param>
-        /// <param name = "RegionSizeX"></param>
-        /// <param name = "RegionSizeY"></param>
+        /// <param name="RevertMap"></param>
+        /// <param name="RegionSizeX"></param>
+        /// <param name="RegionSizeY"></param>
         /// <returns>Heightfield data</returns>
         void LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
-        ///   Load the latest water revision from region storage
+        ///     Load the latest water revision from region storage
         /// </summary>
-        /// <param name = "RevertMap"></param>
-        /// <param name = "RegionSizeX"></param>
-        /// <param name = "RegionSizeY"></param>
+        /// <param name="RevertMap"></param>
+        /// <param name="RegionSizeX"></param>
+        /// <param name="RegionSizeY"></param>
         /// <returns>Heightfield data</returns>
         void LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
-        ///   Load all parcels from the database
+        ///     Load all parcels from the database
         /// </summary>
-        /// <param name = "regionUUID"></param>
+        /// <param name="regionUUID"></param>
         /// <returns></returns>
         List<LandData> LoadLandObjects();
 
         /// <summary>
-        ///   Shutdown and exit the module
+        ///     Shutdown and exit the module
         /// </summary>
         void Shutdown();
 
         /// <summary>
-        /// Clears out all references of the backup stream and dumps local caches
+        ///     Clears out all references of the backup stream and dumps local caches
         /// </summary>
         void CacheDispose();
 
         /// <summary>
-        /// Load the region info for this sim
+        ///     Load the region info for this sim
         /// </summary>
         /// <param name="simBase"></param>
         /// <returns></returns>
         RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion);
 
         /// <summary>
-        /// Set the region ref
+        ///     Set the region ref
         /// </summary>
         /// <param name="scene"></param>
         void SetRegion(IScene scene);
 
         /// <summary>
-        /// Forces the datastore to backup the region
+        ///     Forces the datastore to backup the region
         /// </summary>
         void ForceBackup();
     }

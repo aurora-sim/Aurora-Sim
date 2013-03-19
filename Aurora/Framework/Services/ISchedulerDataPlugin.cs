@@ -50,7 +50,6 @@ namespace Aurora.Framework
         SchedulerItem Get(string id);
 
         SchedulerItem Get(string scheduleFor, string fireFunction);
-
     }
 
     public interface IScheduleService

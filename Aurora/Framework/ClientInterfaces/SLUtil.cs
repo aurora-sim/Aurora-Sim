@@ -271,9 +271,9 @@ namespace Aurora.Framework
 //        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        ///   Parse a notecard in Linden format to a string of ordinary text.
+        ///     Parse a notecard in Linden format to a string of ordinary text.
         /// </summary>
-        /// <param name = "rawInput"></param>
+        /// <param name="rawInput"></param>
         /// <returns></returns>
         public static string ParseNotecardToString(string rawInput)
         {
@@ -286,9 +286,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Parse a notecard in Linden format to a list of ordinary lines.
+        ///     Parse a notecard in Linden format to a list of ordinary lines.
         /// </summary>
-        /// <param name = "rawInput"></param>
+        /// <param name="rawInput"></param>
         /// <returns></returns>
         public static List<string> ParseNotecardToList(string rawInput)
         {

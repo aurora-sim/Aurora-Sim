@@ -43,21 +43,21 @@ namespace Aurora.Framework
         bool IsManager(UUID avatarID);
 
         /// <summary>
-        ///   Tell all clients about the current state of the region (terrain textures, water height, etc.).
+        ///     Tell all clients about the current state of the region (terrain textures, water height, etc.).
         /// </summary>
         void sendRegionHandshakeToAll();
-        
+
         void setEstateTerrainBaseTexture(int level, UUID texture);
         void setEstateTerrainTextureHeights(int corner, float lowValue, float highValue);
 
         void TriggerEstateSunUpdate();
 
         /// <summary>
-        ///   Disable/Enable the scripting engine, the collision events, and the physics engine
+        ///     Disable/Enable the scripting engine, the collision events, and the physics engine
         /// </summary>
-        /// <param name = "ScriptEngine"></param>
-        /// <param name = "CollisionEvents"></param>
-        /// <param name = "PhysicsEngine"></param>
+        /// <param name="ScriptEngine"></param>
+        /// <param name="CollisionEvents"></param>
+        /// <param name="PhysicsEngine"></param>
         void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine);
     }
 }

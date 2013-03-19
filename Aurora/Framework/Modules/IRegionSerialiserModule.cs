@@ -30,25 +30,25 @@ namespace Aurora.Framework
     public interface IRegionSerialiserModule
     {
         /// <summary>
-        ///   Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
+        ///     Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
         /// </summary>
-        /// <param name = "xmlString"></param>
-        /// <param name = "scene"></param>
+        /// <param name="xmlString"></param>
+        /// <param name="scene"></param>
         /// <returns>The scene object created</returns>
         ISceneEntity DeserializeGroupFromXml2(string xmlString, IScene scene);
 
         /// <summary>
-        ///   Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
+        ///     Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
         /// </summary>
-        /// <param name = "xml"></param>
-        /// <param name = "scene"></param>
+        /// <param name="xml"></param>
+        /// <param name="scene"></param>
         /// <returns>The scene object created</returns>
         ISceneEntity DeserializeGroupFromXml2(byte[] xml, IScene scene);
 
         /// <summary>
-        ///   Serialize an individual scene object into the xml2 format
+        ///     Serialize an individual scene object into the xml2 format
         /// </summary>
-        /// <param name = "grp"></param>
+        /// <param name="grp"></param>
         /// <returns></returns>
         string SerializeGroupToXml2(ISceneEntity grp);
     }

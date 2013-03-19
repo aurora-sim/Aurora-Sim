@@ -139,7 +139,9 @@ namespace Aurora.Framework
             }
             return null;
 #else
-            return scenes.FirstOrDefault(scene => scene.RegionInfo.RegionLocX == RegX && scene.RegionInfo.RegionLocY == RegY);
+            return
+                scenes.FirstOrDefault(
+                    scene => scene.RegionInfo.RegionLocX == RegX && scene.RegionInfo.RegionLocY == RegY);
 #endif
         }
 

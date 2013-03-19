@@ -32,7 +32,7 @@ using OpenMetaverse.StructuredData;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Inventory Item - contains all the properties associated with an individual inventory piece.
+    ///     Inventory Item - contains all the properties associated with an individual inventory piece.
     /// </summary>
     public sealed class InventoryItemBase : InventoryNodeBase, ICloneable
     {
@@ -72,7 +72,7 @@ namespace Aurora.Framework
         }
 
         /// <value>
-        ///   The inventory type of the item.  This is slightly different from the asset type in some situations.
+        ///     The inventory type of the item.  This is slightly different from the asset type in some situations.
         /// </value>
         public int InvType
         {
@@ -82,7 +82,7 @@ namespace Aurora.Framework
         }
 
         /// <value>
-        ///   The folder this item is contained in
+        ///     The folder this item is contained in
         /// </value>
         public UUID Folder
         {
@@ -92,7 +92,7 @@ namespace Aurora.Framework
         }
 
         /// <value>
-        ///   The creator of this item
+        ///     The creator of this item
         /// </value>
         public string CreatorId
         {
@@ -101,18 +101,16 @@ namespace Aurora.Framework
             set { m_creatorId = value; }
         }
 
-        ///<value>
-        ///  The UUID for the creator.  This may be different from the canonical CreatorId.  This property is used
-        ///  for communication with the client over the Second Life protocol, since that protocol can only understand
-        ///  UUIDs.  As this is a basic framework class, this means that both the string creator id and the uuid
-        ///  reference have to be settable separately
-        ///
-        ///  Database plugins don't need to set this, it will be set by
-        ///  upstream code (or set by the get accessor if left unset).
-        ///
-        ///  XXX: An alternative to having a separate uuid property would be to hash the CreatorId appropriately
-        ///  every time there was communication with a UUID-only client.  This may be much more expensive.
-        ///</value>
+        /// <value>
+        ///     The UUID for the creator.  This may be different from the canonical CreatorId.  This property is used
+        ///     for communication with the client over the Second Life protocol, since that protocol can only understand
+        ///     UUIDs.  As this is a basic framework class, this means that both the string creator id and the uuid
+        ///     reference have to be settable separately
+        ///     Database plugins don't need to set this, it will be set by
+        ///     upstream code (or set by the get accessor if left unset).
+        ///     XXX: An alternative to having a separate uuid property would be to hash the CreatorId appropriately
+        ///     every time there was communication with a UUID-only client.  This may be much more expensive.
+        /// </value>
         public UUID CreatorIdAsUuid
         {
             get
@@ -135,9 +133,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Used by the DB layer to retrieve / store the entire user identification.
-        ///   The identification can either be a simple UUID or a string of the form
-        ///   uuid[;profile_url[;name]]
+        ///     Used by the DB layer to retrieve / store the entire user identification.
+        ///     The identification can either be a simple UUID or a string of the form
+        ///     uuid[;profile_url[;name]]
         /// </summary>
         public string CreatorIdentification
         {
@@ -177,7 +175,7 @@ namespace Aurora.Framework
         }
 
         /// <value>
-        ///   The description of the inventory item (must be less than 64 characters)
+        ///     The description of the inventory item (must be less than 64 characters)
         /// </value>
         public string Description
         {
@@ -186,9 +184,8 @@ namespace Aurora.Framework
             set { m_description = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public uint NextPermissions
         {
             get { return m_nextPermissions; }
@@ -197,7 +194,7 @@ namespace Aurora.Framework
         }
 
         /// <value>
-        ///   A mask containing permissions for the current owner (cannot be enforced)
+        ///     A mask containing permissions for the current owner (cannot be enforced)
         /// </value>
         public uint CurrentPermissions
         {
@@ -206,9 +203,8 @@ namespace Aurora.Framework
             set { m_currentPermissions = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public uint BasePermissions
         {
             get { return m_basePermissions; }
@@ -216,9 +212,8 @@ namespace Aurora.Framework
             set { m_basePermissions = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public uint EveryOnePermissions
         {
             get { return m_everyonePermissions; }
@@ -226,9 +221,8 @@ namespace Aurora.Framework
             set { m_everyonePermissions = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public uint GroupPermissions
         {
             get { return m_groupPermissions; }
@@ -237,7 +231,7 @@ namespace Aurora.Framework
         }
 
         /// <value>
-        ///   This is an enumerated value determining the type of asset (eg Notecard, Sound, Object, etc)
+        ///     This is an enumerated value determining the type of asset (eg Notecard, Sound, Object, etc)
         /// </value>
         public int AssetType
         {
@@ -247,7 +241,7 @@ namespace Aurora.Framework
         }
 
         /// <value>
-        ///   The UUID of the associated asset on the asset server
+        ///     The UUID of the associated asset on the asset server
         /// </value>
         public UUID AssetID
         {
@@ -256,9 +250,8 @@ namespace Aurora.Framework
             set { m_assetID = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public UUID GroupID
         {
             get { return m_groupID; }
@@ -266,9 +259,8 @@ namespace Aurora.Framework
             set { m_groupID = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public bool GroupOwned
         {
             get { return m_groupOwned; }
@@ -276,9 +268,8 @@ namespace Aurora.Framework
             set { m_groupOwned = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public int SalePrice
         {
             get { return m_salePrice; }
@@ -286,9 +277,8 @@ namespace Aurora.Framework
             set { m_salePrice = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public byte SaleType
         {
             get { return m_saleType; }
@@ -296,9 +286,8 @@ namespace Aurora.Framework
             set { m_saleType = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public uint Flags
         {
             get { return m_flags; }
@@ -306,9 +295,8 @@ namespace Aurora.Framework
             set { m_flags = value; }
         }
 
-        ///<value>
-        ///
-        ///</value>
+        /// <value>
+        /// </value>
         public int CreationDate
         {
             get { return m_creationDate; }
@@ -351,7 +339,7 @@ namespace Aurora.Framework
             map["NextPermissions"] = NextPermissions;
             map["Owner"] = Owner;
             map["SalePrice"] = SalePrice;
-            map["SaleType"] = (int)SaleType;
+            map["SaleType"] = (int) SaleType;
             return map;
         }
 
@@ -378,7 +366,7 @@ namespace Aurora.Framework
             this.NextPermissions = map["NextPermissions"];
             this.Owner = map["Owner"];
             this.SalePrice = map["SalePrice"];
-            this.SaleType = (byte)(int)map["SaleType"];
+            this.SaleType = (byte) (int) map["SaleType"];
         }
 
         #endregion

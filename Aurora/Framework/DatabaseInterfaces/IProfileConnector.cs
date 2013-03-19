@@ -38,23 +38,23 @@ namespace Aurora.Framework
     public interface IProfileConnector : IAuroraDataPlugin
     {
         /// <summary>
-        ///   Gets the profile for an agent
+        ///     Gets the profile for an agent
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         IUserProfileInfo GetUserProfile(UUID agentID);
 
         /// <summary>
-        ///   Updates the user's profile (Note: the user must already have a profile created)
+        ///     Updates the user's profile (Note: the user must already have a profile created)
         /// </summary>
-        /// <param name = "Profile"></param>
+        /// <param name="Profile"></param>
         /// <returns></returns>
         bool UpdateUserProfile(IUserProfileInfo Profile);
 
         /// <summary>
-        ///   Creates an new profile for the user
+        ///     Creates an new profile for the user
         /// </summary>
-        /// <param name = "UUID"></param>
+        /// <param name="UUID"></param>
         void CreateNewProfile(UUID UUID);
 
         bool AddClassified(Classified classified);

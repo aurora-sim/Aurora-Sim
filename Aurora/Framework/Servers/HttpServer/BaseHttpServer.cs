@@ -48,11 +48,17 @@ namespace Aurora.Framework.Servers.HttpServer
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
         protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
-        protected Dictionary<string, IStreamedRequestHandler> m_streamHandlers = new Dictionary<string, IStreamedRequestHandler>();
-        protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
-        protected Dictionary<string, IStreamedRequestHandler> m_HTTPStreamHandlers = new Dictionary<string, IStreamedRequestHandler>();
 
-        protected Dictionary<string, PollServiceEventArgs> m_pollHandlers = new Dictionary<string, PollServiceEventArgs>();
+        protected Dictionary<string, IStreamedRequestHandler> m_streamHandlers =
+            new Dictionary<string, IStreamedRequestHandler>();
+
+        protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
+
+        protected Dictionary<string, IStreamedRequestHandler> m_HTTPStreamHandlers =
+            new Dictionary<string, IStreamedRequestHandler>();
+
+        protected Dictionary<string, PollServiceEventArgs> m_pollHandlers =
+            new Dictionary<string, PollServiceEventArgs>();
 
         protected bool m_isSecure;
         protected uint m_port;
@@ -61,7 +67,10 @@ namespace Aurora.Framework.Servers.HttpServer
 
         protected IPAddress m_listenIPAddress = IPAddress.Any;
 
-        internal PollServiceRequestManager PollServiceManager { get { return m_PollServiceManager; } }
+        internal PollServiceRequestManager PollServiceManager
+        {
+            get { return m_PollServiceManager; }
+        }
 
         private PollServiceRequestManager m_PollServiceManager;
 
@@ -99,7 +108,7 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// A well-formed URI for the host region server (namely "http://ExternalHostName:Port)
+        ///     A well-formed URI for the host region server (namely "http://ExternalHostName:Port)
         /// </summary>
         public string ServerURI
         {
@@ -120,7 +129,7 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// Add a stream handler to the http server.  If the handler already exists, then nothing happens.
+        ///     Add a stream handler to the http server.  If the handler already exists, then nothing happens.
         /// </summary>
         /// <param name="handler"></param>
         public void AddStreamHandler(IStreamedRequestHandler handler)
@@ -232,7 +241,7 @@ namespace Aurora.Framework.Servers.HttpServer
         #region Finding Handlers
 
         /// <summary>
-        /// Checks if we have an Exact path in the LLSD handlers for the path provided
+        ///     Checks if we have an Exact path in the LLSD handlers for the path provided
         /// </summary>
         /// <param name="path">URI of the request</param>
         /// <returns>true if we have one, false if not</returns>
@@ -357,7 +366,7 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// Checks if we have an Exact path in the HTTP handlers for the path provided
+        ///     Checks if we have an Exact path in the HTTP handlers for the path provided
         /// </summary>
         /// <param name="path">URI of the request</param>
         /// <returns>true if we have one, false if not</returns>
@@ -610,12 +619,15 @@ namespace Aurora.Framework.Servers.HttpServer
         // Fallback HTTP responses in case the HTTP error response files don't exist
         private static string getDefaultHTTP404(string host)
         {
-            return "<HTML><HEAD><TITLE>404 Page not found</TITLE><BODY><BR /><H1>Ooops!</H1><P>The page you requested has been obsconded with by knomes. Find hippos quick!</P><P>If you are trying to log-in, your link parameters should have: &quot;-loginpage http://" + host + "/?method=login -loginuri http://" + host + "/&quot; in your link </P></BODY></HTML>";
+            return
+                "<HTML><HEAD><TITLE>404 Page not found</TITLE><BODY><BR /><H1>Ooops!</H1><P>The page you requested has been obsconded with by knomes. Find hippos quick!</P><P>If you are trying to log-in, your link parameters should have: &quot;-loginpage http://" +
+                host + "/?method=login -loginuri http://" + host + "/&quot; in your link </P></BODY></HTML>";
         }
 
         private static string getDefaultHTTP500()
         {
-            return "<HTML><HEAD><TITLE>500 Internal Server Error</TITLE><BODY><BR /><H1>Ooops!</H1><P>The server you requested is overun by knomes! Find hippos quick!</P></BODY></HTML>";
+            return
+                "<HTML><HEAD><TITLE>500 Internal Server Error</TITLE><BODY><BR /><H1>Ooops!</H1><P>The server you requested is overun by knomes! Find hippos quick!</P></BODY></HTML>";
         }
 
         #endregion
@@ -682,7 +694,7 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// This methods is the start of incoming HTTP request handling.
+        ///     This methods is the start of incoming HTTP request handling.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="response"></param>
@@ -717,7 +729,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
             try
             {
-                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US", true);
+                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US",
+                                                                                                            true);
 
                 //response.KeepAlive = true;
                 response.SendChunked = false;
@@ -728,7 +741,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 if (TryGetStreamHandler(handlerKey, out requestHandler))
                 {
-                    response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
+                    response.ContentType = requestHandler.ContentType;
+                        // Lets do this defaulting before in case handler has varying content type.
 
                     buffer = requestHandler.Handle(path, request.InputStream, req, resp);
                 }
@@ -767,7 +781,7 @@ namespace Aurora.Framework.Servers.HttpServer
                                 // generic login request.
                                 buffer = HandleXmlRpcRequests(req, resp);
                             }
-                            //                        MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Checking for HTTP Handler for request {0}", request.RawUrl);
+                                //                        MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Checking for HTTP Handler for request {0}", request.RawUrl);
                             else if (DoWeHaveAHTTPHandler(request.RawUrl))
                             {
                                 buffer = HandleHTTPRequest(req, resp);
@@ -811,7 +825,8 @@ namespace Aurora.Framework.Servers.HttpServer
                 //
                 // An alternative may be to turn off all response write exceptions on the HttpListener, but let's go
                 // with the minimum first
-                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux ", e.ToString());
+                MainConsole.Instance.WarnFormat(
+                    "[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux ", e.ToString());
             }
             catch (IOException e)
             {
@@ -857,7 +872,7 @@ namespace Aurora.Framework.Servers.HttpServer
             switch (request.HttpMethod)
             {
                 case "OPTIONS":
-                    response.StatusCode = (int)OSHttpStatusCode.SuccessOk;
+                    response.StatusCode = (int) OSHttpStatusCode.SuccessOk;
                     return null;
 
                 default:
@@ -866,8 +881,8 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// Try all the registered xmlrpc handlers when an xmlrpc request is received.
-        /// Sends back an XMLRPC unknown request response if no handler is registered for the requested method.
+        ///     Try all the registered xmlrpc handlers when an xmlrpc request is received.
+        ///     Sends back an XMLRPC unknown request response if no handler is registered for the requested method.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="response"></param>
@@ -888,13 +903,13 @@ namespace Aurora.Framework.Servers.HttpServer
 
             try
             {
-                xmlRprcRequest = (XmlRpcRequest)(new XmlRpcRequestDeserializer()).Deserialize(requestBody);
+                xmlRprcRequest = (XmlRpcRequest) (new XmlRpcRequestDeserializer()).Deserialize(requestBody);
             }
             catch (XmlException e)
             {
                 MainConsole.Instance.WarnFormat(
-                        "[BASE HTTP SERVER]: Got XMLRPC request with invalid XML from {0}.  XML was '{1}'.  Sending blank response.  Exception: {2}",
-                        request.RemoteIPEndPoint, requestBody, e.ToString());
+                    "[BASE HTTP SERVER]: Got XMLRPC request with invalid XML from {0}.  XML was '{1}'.  Sending blank response.  Exception: {2}",
+                    request.RemoteIPEndPoint, requestBody, e.ToString());
             }
 
             if (xmlRprcRequest != null)
@@ -1010,12 +1025,14 @@ namespace Aurora.Framework.Servers.HttpServer
             OSD llsdRequest = null;
             OSD llsdResponse = null;
 
-            bool LegacyLLSDLoginLibOMV = (requestBody.Contains("passwd") && requestBody.Contains("mac") && requestBody.Contains("viewer_digest"));
+            bool LegacyLLSDLoginLibOMV = (requestBody.Contains("passwd") && requestBody.Contains("mac") &&
+                                          requestBody.Contains("viewer_digest"));
 
             if (requestBody.Length == 0)
-            // Get Request
+                // Get Request
             {
-                requestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><llsd><map><key>request</key><string>get</string></map></llsd>";
+                requestBody =
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><llsd><map><key>request</key><string>get</string></map></llsd>";
             }
             try
             {
@@ -1026,7 +1043,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex.Message);
             }
 
-            if (llsdRequest != null)// && m_defaultLlsdHandler != null)
+            if (llsdRequest != null) // && m_defaultLlsdHandler != null)
             {
                 LLSDMethod llsdhandler = null;
 
@@ -1075,6 +1092,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             return buffer;
         }
+
         private OSDMap GenerateNoLLSDHandlerResponse()
         {
             OSDMap map = new OSDMap();
@@ -1162,7 +1180,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             if (headervals.Contains("Host"))
             {
-                host = (string)headervals["Host"];
+                host = (string) headervals["Host"];
             }
 
             keysvals.Add("headers", headervals);
@@ -1173,7 +1191,7 @@ namespace Aurora.Framework.Servers.HttpServer
             if (keysvals.Contains("method"))
             {
                 //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: Contains Method");
-                string method = (string)keysvals["method"];
+                string method = (string) keysvals["method"];
                 //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: " + requestBody);
                 GenericHTTPMethod requestprocessor;
                 IStreamedRequestHandler streamProcessor;
@@ -1197,7 +1215,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     //SendHTML500(response);
                 }
                 else if (TryGetStreamHTTPHandler(method, out streamProcessor) ||
-                    TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
+                         TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
                 {
                     buffer = streamProcessor.Handle(request.RawUrl, request.InputStream, request, response);
                 }
@@ -1247,24 +1265,23 @@ namespace Aurora.Framework.Servers.HttpServer
         public byte[] DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response)
         {
             //MainConsole.Instance.Info("[BASE HTTP SERVER]: Doing HTTP Grunt work with response");
-            int responsecode = (int)responsedata["int_response_code"];
-            string responseString = (string)responsedata["str_response_string"];
-            string contentType = (string)responsedata["content_type"];
+            int responsecode = (int) responsedata["int_response_code"];
+            string responseString = (string) responsedata["str_response_string"];
+            string contentType = (string) responsedata["content_type"];
 
             if (responsedata.ContainsKey("error_status_text"))
             {
-                response.StatusDescription = (string)responsedata["error_status_text"];
+                response.StatusDescription = (string) responsedata["error_status_text"];
             }
             if (responsedata.ContainsKey("http_protocol_version"))
             {
-                response.ProtocolVersion = (string)responsedata["http_protocol_version"];
+                response.ProtocolVersion = (string) responsedata["http_protocol_version"];
             }
 
             if (responsedata.ContainsKey("keepalive"))
             {
-                bool keepalive = (bool)responsedata["keepalive"];
+                bool keepalive = (bool) responsedata["keepalive"];
                 response.KeepAlive = keepalive;
-
             }
 
             //if (responsedata.ContainsKey("reusecontext"))
@@ -1272,7 +1289,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             // Cross-Origin Resource Sharing with simple requests
             if (responsedata.ContainsKey("access_control_allow_origin"))
-                response.AddHeader("Access-Control-Allow-Origin", (string)responsedata["access_control_allow_origin"]);
+                response.AddHeader("Access-Control-Allow-Origin", (string) responsedata["access_control_allow_origin"]);
 
             //Even though only one other part of the entire code uses HTTPHandlers, we shouldn't expect this
             //and should check for NullReferenceExceptions
@@ -1286,9 +1303,9 @@ namespace Aurora.Framework.Servers.HttpServer
 
             response.StatusCode = responsecode;
 
-            if (responsecode == (int)OSHttpStatusCode.RedirectMovedPermanently)
+            if (responsecode == (int) OSHttpStatusCode.RedirectMovedPermanently)
             {
-                response.RedirectLocation = (string)responsedata["str_redirect_location"];
+                response.RedirectLocation = (string) responsedata["str_redirect_location"];
                 response.StatusCode = responsecode;
             }
 
@@ -1297,9 +1314,9 @@ namespace Aurora.Framework.Servers.HttpServer
             byte[] buffer;
 
             if (!(contentType.Contains("image")
-                || contentType.Contains("x-shockwave-flash")
-                || contentType.Contains("application/x-oar")
-                || contentType.Contains("application/vnd.ll.mesh")))
+                  || contentType.Contains("x-shockwave-flash")
+                  || contentType.Contains("application/x-oar")
+                  || contentType.Contains("application/vnd.ll.mesh")))
             {
                 // Text
                 buffer = Encoding.UTF8.GetBytes(responseString);
@@ -1336,7 +1353,7 @@ namespace Aurora.Framework.Servers.HttpServer
         public byte[] SendHTML500(HttpListenerResponse response)
         {
             // I know this statuscode is dumb, but the client doesn't respond to 404s and 500s
-            response.StatusCode = (int)OSHttpStatusCode.SuccessOk;
+            response.StatusCode = (int) OSHttpStatusCode.SuccessOk;
             response.AddHeader("Content-type", "text/html");
 
             string responseString = GetHTTP500();
@@ -1371,12 +1388,13 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (Exception e)
             {
-                if (e is HttpListenerException && ((HttpListenerException)e).Message == "Access is denied")
+                if (e is HttpListenerException && ((HttpListenerException) e).Message == "Access is denied")
                     MainConsole.Instance.Error("[BASE HTTP SERVER]: You must run this program as an administrator.");
                 else
                 {
                     MainConsole.Instance.Error("[BASE HTTP SERVER]: Error - " + e.Message);
-                    MainConsole.Instance.Error("[BASE HTTP SERVER]: Tip: Do you have permission to listen on port " + m_port + "?");
+                    MainConsole.Instance.Error("[BASE HTTP SERVER]: Tip: Do you have permission to listen on port " +
+                                               m_port + "?");
                 }
 
                 // We want this exception to halt the entire server since in current configurations we aren't too

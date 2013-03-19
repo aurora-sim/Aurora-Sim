@@ -38,7 +38,7 @@ namespace Aurora.Framework
     public interface IDataTransferableOSDMap
     {
         /// <summary>
-        ///   Serialize the module to OSD
+        ///     Serialize the module to OSD
         /// </summary>
         /// <returns></returns>
         OSDMap ToOSD();
@@ -52,23 +52,23 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Deserialize the module from OSD
+        ///     Deserialize the module from OSD
         /// </summary>
-        /// <param name = "map"></param>
+        /// <param name="map"></param>
         public virtual void FromOSD(OSDMap map)
         {
         }
 
         /// <summary>
-        ///   Serialize the module to a Dictionary
+        ///     Serialize the module to a Dictionary
         /// </summary>
-        /// <param name = "KVP"></param>
+        /// <param name="KVP"></param>
         public virtual void FromKVP(Dictionary<string, object> KVP)
         {
         }
 
         /// <summary>
-        ///   Deserialize this module from a Dictionary
+        ///     Deserialize this module from a Dictionary
         /// </summary>
         /// <returns></returns>
         public virtual Dictionary<string, object> ToKVP()

@@ -42,7 +42,7 @@ namespace Aurora.Framework
         #endregion
 
         /// <value>
-        ///   These appear to be terrain textures that are shipped with the client.
+        ///     These appear to be terrain textures that are shipped with the client.
         /// </value>
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_1 = new UUID("b8d3965a-ad78-bf43-699b-bff8eca6c975");
 
@@ -145,36 +145,28 @@ namespace Aurora.Framework
         public UUID TerrainTexture1
         {
             get { return m_TerrainTexture1; }
-            set {
-                m_TerrainTexture1 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_1 : value;
-            }
+            set { m_TerrainTexture1 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_1 : value; }
         }
 
         [ProtoMember(17)]
         public UUID TerrainTexture2
         {
             get { return m_TerrainTexture2; }
-            set {
-                m_TerrainTexture2 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_2 : value;
-            }
+            set { m_TerrainTexture2 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_2 : value; }
         }
 
         [ProtoMember(18)]
         public UUID TerrainTexture3
         {
             get { return m_TerrainTexture3; }
-            set {
-                m_TerrainTexture3 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_3 : value;
-            }
+            set { m_TerrainTexture3 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_3 : value; }
         }
 
         [ProtoMember(19)]
         public UUID TerrainTexture4
         {
             get { return m_TerrainTexture4; }
-            set {
-                m_TerrainTexture4 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_4 : value;
-            }
+            set { m_TerrainTexture4 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_4 : value; }
         }
 
         [ProtoMember(20)]
@@ -268,25 +260,25 @@ namespace Aurora.Framework
         public Vector3 SunVector { get; set; }
 
         /// <summary>
-        ///   Terrain (and probably) prims asset ID for the map
+        ///     Terrain (and probably) prims asset ID for the map
         /// </summary>
         [ProtoMember(34)]
         public UUID TerrainImageID { get; set; }
 
         /// <summary>
-        /// Displays which lands are for sale (and for auction)
+        ///     Displays which lands are for sale (and for auction)
         /// </summary>
         [ProtoMember(35)]
         public UUID ParcelMapImageID { get; set; }
 
         /// <summary>
-        ///   Terrain only asset ID for the map
+        ///     Terrain only asset ID for the map
         /// </summary>
         [ProtoMember(36)]
         public UUID TerrainMapImageID { get; set; }
 
         /// <summary>
-        ///   Time that the map tile was last created
+        ///     Time that the map tile was last created
         /// </summary>
         [ProtoMember(37)]
         public DateTime TerrainMapLastRegenerated { get; set; }

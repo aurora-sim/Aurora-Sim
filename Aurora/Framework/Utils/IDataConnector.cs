@@ -32,24 +32,24 @@ using System.Linq;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Connector that links Aurora IDataPlugins to a database backend
+    ///     Connector that links Aurora IDataPlugins to a database backend
     /// </summary>
     public interface IDataConnector : IGenericData
     {
         /// <summary>
-        ///   Name of the module
+        ///     Name of the module
         /// </summary>
         string Identifier { get; }
 
         /// <summary>
-        ///   Checks to see if table 'table' exists
+        ///     Checks to see if table 'table' exists
         /// </summary>
-        /// <param name = "table"></param>
+        /// <param name="table"></param>
         /// <returns></returns>
         bool TableExists(string table);
 
         /// <summary>
-        /// Creates a table with indices
+        ///     Creates a table with indices
         /// </summary>
         /// <param name="table"></param>
         /// <param name="columns"></param>
@@ -57,54 +57,57 @@ namespace Aurora.Framework
         void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions);
 
         /// <summary>
-        ///   Get the latest version of the database
+        ///     Get the latest version of the database
         /// </summary>
         /// <returns></returns>
         Version GetAuroraVersion(string migratorName);
 
         /// <summary>
-        ///   Set the version of the database
+        ///     Set the version of the database
         /// </summary>
-        /// <param name = "version"></param>
-        /// <param name = "MigrationName"></param>
+        /// <param name="version"></param>
+        /// <param name="MigrationName"></param>
         void WriteAuroraVersion(Version version, string MigrationName);
 
         /// <summary>
-        /// copy tables
+        ///     copy tables
         /// </summary>
         /// <param name="sourceTableName"></param>
         /// <param name="destinationTableName"></param>
         /// <param name="columnDefinitions"></param>
         /// <param name="indexDefinitions"></param>
-        void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions);
+        void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions,
+                              IndexDefinition[] indexDefinitions);
 
         /// <summary>
-        ///   Check whether the data table exists and that the columns are correct
+        ///     Check whether the data table exists and that the columns are correct
         /// </summary>
-        /// <param name = "tableName"></param>
-        /// <param name = "columnDefinitions"></param>
+        /// <param name="tableName"></param>
+        /// <param name="columnDefinitions"></param>
         /// <returns></returns>
-        bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions);
+        bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions,
+                               IndexDefinition[] indexDefinitions);
 
         /// <summary>
-        ///   Check whether the data table exists and that the columns are correct
-        ///   Then create the table if it is not created
+        ///     Check whether the data table exists and that the columns are correct
+        ///     Then create the table if it is not created
         /// </summary>
-        /// <param name = "tableName"></param>
-        /// <param name = "columnDefinitions"></param>
-        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions, Dictionary<string, string> renameColumns);
+        /// <param name="tableName"></param>
+        /// <param name="columnDefinitions"></param>
+        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions,
+                               IndexDefinition[] indexDefinitions, Dictionary<string, string> renameColumns);
 
         /// <summary>
-        ///   Rename the table from oldTableName to newTableName
+        ///     Rename the table from oldTableName to newTableName
         /// </summary>
-        /// <param name = "oldTableName"></param>
-        /// <param name = "newTableName"></param>
+        /// <param name="oldTableName"></param>
+        /// <param name="newTableName"></param>
         void RenameTable(string oldTableName, string newTableName);
 
         /// <summary>
-        ///   Drop a table
+        ///     Drop a table
         /// </summary>
-        /// <param name = "tableName"></param>
+        /// <param name="tableName"></param>
         void DropTable(string tableName);
     }
 
@@ -119,16 +122,19 @@ namespace Aurora.Framework
     public class SchemaDefinition
     {
         private string m_name;
+
         /// <summary>
-        /// Name of schema
+        ///     Name of schema
         /// </summary>
-        public string Name {
-            get{ return m_name; }
+        public string Name
+        {
+            get { return m_name; }
         }
 
         private ColumnDefinition[] m_columns;
+
         /// <summary>
-        /// Columns in schema
+        ///     Columns in schema
         /// </summary>
         public ColumnDefinition[] Columns
         {
@@ -136,8 +142,9 @@ namespace Aurora.Framework
         }
 
         private IndexDefinition[] m_indices;
+
         /// <summary>
-        /// Indices in schema
+        ///     Indices in schema
         /// </summary>
         public IndexDefinition[] Indices
         {
@@ -145,7 +152,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Defines a schema with no indices.
+        ///     Defines a schema with no indices.
         /// </summary>
         /// <param name="schemaName">Name of schema</param>
         /// <param name="columns">Columns in schema</param>
@@ -157,7 +164,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Defines a schema with indices
+        ///     Defines a schema with indices
         /// </summary>
         /// <param name="schemaName">Name of schema</param>
         /// <param name="columns">Columns in schema</param>
@@ -242,7 +249,9 @@ namespace Aurora.Framework
         public override bool Equals(object obj)
         {
             ColumnTypeDef foo = obj as ColumnTypeDef;
-            return (foo != null && foo.Type.ToString() == Type.ToString() && foo.Size == Size && foo.defaultValue == defaultValue && foo.isNull == isNull && foo.unsigned == unsigned && foo.auto_increment == auto_increment);
+            return (foo != null && foo.Type.ToString() == Type.ToString() && foo.Size == Size &&
+                    foo.defaultValue == defaultValue && foo.isNull == isNull && foo.unsigned == unsigned &&
+                    foo.auto_increment == auto_increment);
         }
 
         public override int GetHashCode()

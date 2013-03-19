@@ -37,9 +37,9 @@ using Timer = System.Timers.Timer;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   This is a special class designed to take over control of the command console prompt of
-    ///   the server instance to allow for the input and output to the server to be redirected
-    ///   by an external application, in this case a GUI based application on Windows.
+    ///     This is a special class designed to take over control of the command console prompt of
+    ///     the server instance to allow for the input and output to the server to be redirected
+    ///     by an external application, in this case a GUI based application on Windows.
     /// </summary>
     public class GUIConsole : BaseConsole, ICommandConsole
     {
@@ -50,7 +50,8 @@ namespace Aurora.Framework
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
-            if (source.Configs["Console"] == null || source.Configs["Console"].GetString("Console", String.Empty) != Name)
+            if (source.Configs["Console"] == null ||
+                source.Configs["Console"].GetString("Console", String.Empty) != Name)
             {
                 return;
             }
@@ -72,14 +73,15 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Display a command prompt on the console and wait for user input
+        ///     Display a command prompt on the console and wait for user input
         /// </summary>
         public void Prompt()
         {
             // Set this culture for the thread 
             // to en-US to avoid number parsing issues
             Culture.SetCurrentCulture();
-            /*string line = */ReadLine(m_defaultPrompt + "# ", true, true);
+            /*string line = */
+            ReadLine(m_defaultPrompt + "# ", true, true);
 
 //            result.AsyncWaitHandle.WaitOne(-1);
 
@@ -97,11 +99,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Method that reads a line of text from the user.
+        ///     Method that reads a line of text from the user.
         /// </summary>
-        /// <param name = "p"></param>
-        /// <param name = "isCommand"></param>
-        /// <param name = "e"></param>
+        /// <param name="p"></param>
+        /// <param name="isCommand"></param>
+        /// <param name="e"></param>
         /// <returns></returns>
         public virtual string ReadLine(string p, bool isCommand, bool e)
         {
@@ -310,7 +312,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The default prompt text.
+        ///     The default prompt text.
         /// </summary>
         public virtual string DefaultPrompt
         {
@@ -346,7 +348,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Starts the prompt for the console. This will never stop until the region is closed.
+        ///     Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
         public void ReadConsole()
         {

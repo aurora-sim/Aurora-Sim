@@ -83,7 +83,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Reset all the info about this collider
+        ///     Reset all the info about this collider
         /// </summary>
         public void Clear()
         {
@@ -116,7 +116,9 @@ namespace Aurora.Framework
     }
 
     public delegate void PositionUpdate(Vector3 position);
+
     public delegate void VelocityUpdate(Vector3 velocity);
+
     public delegate void OrientationUpdate(Quaternion orientation);
 
     public enum ActorTypes
@@ -136,12 +138,20 @@ namespace Aurora.Framework
         public abstract bool Flying { get; set; }
         public abstract bool SetAlwaysRun { get; set; }
 
-        public virtual void AddMovementForce(Vector3 force) { }
-        public virtual void SetMovementForce(Vector3 force) { }
+        public virtual void AddMovementForce(Vector3 force)
+        {
+        }
 
-        public virtual void Destroy() { }
+        public virtual void SetMovementForce(Vector3 force)
+        {
+        }
+
+        public virtual void Destroy()
+        {
+        }
 
         public delegate bool checkForRegionCrossing();
+
         public event checkForRegionCrossing OnCheckForRegionCrossing;
 
         public virtual bool CheckForRegionCrossing()
@@ -159,13 +169,19 @@ namespace Aurora.Framework
 
     public abstract class PhysicsObject : PhysicsActor
     {
-        public virtual void link(PhysicsObject obj) { }
+        public virtual void link(PhysicsObject obj)
+        {
+        }
 
-        public virtual void delink() { }
+        public virtual void delink()
+        {
+        }
 
         public virtual bool LinkSetIsColliding { get; set; }
 
-        public virtual void LockAngularMotion(Vector3 axis) { }
+        public virtual void LockAngularMotion(Vector3 axis)
+        {
+        }
 
         public virtual PrimitiveBaseShape Shape
         {
@@ -176,15 +192,37 @@ namespace Aurora.Framework
 
         public abstract void CrossingFailure();
 
-        public virtual void SetMaterial(int material, bool forceMaterialSettings) { }
+        public virtual void SetMaterial(int material, bool forceMaterialSettings)
+        {
+        }
 
         // set never appears to be called
-        public virtual int VehicleType { get { return 0; } set { return; } }
-        public virtual void VehicleFloatParam(int param, float value) { }
-        public virtual void VehicleVectorParam(int param, Vector3 value) { }
-        public virtual void VehicleRotationParam(int param, Quaternion rotation) { }
-        public virtual void VehicleFlags(int param, bool remove) { }
-        public virtual void SetCameraPos(Quaternion CameraRotation) { }
+        public virtual int VehicleType
+        {
+            get { return 0; }
+            set { return; }
+        }
+
+        public virtual void VehicleFloatParam(int param, float value)
+        {
+        }
+
+        public virtual void VehicleVectorParam(int param, Vector3 value)
+        {
+        }
+
+        public virtual void VehicleRotationParam(int param, Quaternion rotation)
+        {
+        }
+
+        public virtual void VehicleFlags(int param, bool remove)
+        {
+        }
+
+        public virtual void SetCameraPos(Quaternion CameraRotation)
+        {
+        }
+
         public virtual bool BuildingRepresentation { get; set; }
         public virtual bool BlockPhysicalReconstruction { get; set; }
         public abstract float Buoyancy { get; set; }
@@ -202,11 +240,13 @@ namespace Aurora.Framework
 
         public abstract Vector3 Acceleration { get; }
         public abstract void AddAngularForce(Vector3 force, bool pushforce);
+
         public virtual void ClearVelocity()
         {
         }
 
         public event BlankHandler OnPhysicalRepresentationChanged;
+
         public void FirePhysicalRepresentationChanged()
         {
             if (OnPhysicalRepresentationChanged != null)
@@ -223,7 +263,9 @@ namespace Aurora.Framework
         // disable warning: public events
 #pragma warning disable 67
         public delegate void RequestTerseUpdate();
+
         public delegate void CollisionUpdate(EventArgs e);
+
         public delegate void OutOfBounds(Vector3 pos);
 
         public event RequestTerseUpdate OnRequestTerseUpdate;

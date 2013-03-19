@@ -30,7 +30,7 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   This class was created to refactor OutPacket out of AssetCache
+    ///     This class was created to refactor OutPacket out of AssetCache
     /// </summary>
     public class AssetRequestToClient
     {

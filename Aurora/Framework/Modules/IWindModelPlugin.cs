@@ -34,50 +34,50 @@ namespace Aurora.Framework
     public interface IWindModelPlugin
     {
         /// <summary>
-        ///   Brief description of this plugin's wind model
+        ///     Brief description of this plugin's wind model
         /// </summary>
         string Description { get; }
 
         /// <summary>
-        ///   Returns the plugin name
+        ///     Returns the plugin name
         /// </summary>
         /// <returns></returns>
         string Name { get; }
 
         /// <summary>
-        ///   Provides access to the wind configuration, if any.
+        ///     Provides access to the wind configuration, if any.
         /// </summary>
         void WindConfig(IScene scene, IConfig windConfig);
 
         /// <summary>
-        ///   Update wind.
+        ///     Update wind.
         /// </summary>
         void WindUpdate(uint frame);
 
         /// <summary>
-        ///   Returns the wind vector at the given local region coordinates.
+        ///     Returns the wind vector at the given local region coordinates.
         /// </summary>
         Vector3 WindSpeed(float x, float y, float z);
 
         /// <summary>
-        ///   Generate a 16 x 16 Vector2 array of wind speeds for LL* based viewers
+        ///     Generate a 16 x 16 Vector2 array of wind speeds for LL* based viewers
         /// </summary>
         /// <returns>Must return a Vector2[256]</returns>
         Vector2[] WindLLClientArray();
 
         /// <summary>
-        ///   Retrieve a list of parameter/description pairs.
+        ///     Retrieve a list of parameter/description pairs.
         /// </summary>
         /// <returns></returns>
         Dictionary<string, string> WindParams();
 
         /// <summary>
-        ///   Set the specified parameter
+        ///     Set the specified parameter
         /// </summary>
         void WindParamSet(string param, float value);
 
         /// <summary>
-        ///   Get the specified parameter
+        ///     Get the specified parameter
         /// </summary>
         float WindParamGet(string param);
 

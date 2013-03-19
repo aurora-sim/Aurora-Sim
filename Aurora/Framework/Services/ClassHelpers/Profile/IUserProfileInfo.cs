@@ -49,48 +49,48 @@ namespace Aurora.Framework
     public class IAgentInfo : IDataTransferable, BaseCacheAccount
     {
         /// <summary>
-        ///   Did this user accept the TOS?
+        ///     Did this user accept the TOS?
         /// </summary>
         public bool AcceptTOS;
 
         /// <summary>
-        ///   AgentFlags
+        ///     AgentFlags
         /// </summary>
         public IAgentFlags Flags = 0;
 
         /// <summary>
-        ///   Current language
+        ///     Current language
         /// </summary>
         public string Language = "en-us";
 
         /// <summary>
-        ///   Is the users language public
+        ///     Is the users language public
         /// </summary>
         public bool LanguageIsPublic = true;
 
         /// <summary>
-        ///   Max maturity rating the user wishes to see
+        ///     Max maturity rating the user wishes to see
         /// </summary>
         public int MaturityRating = 2;
 
         /// <summary>
-        ///   Max maturity rating the user can ever to see
+        ///     Max maturity rating the user can ever to see
         /// </summary>
         public int MaxMaturity = 2;
 
         /// <summary>
-        ///   Other information can be stored in here.
-        ///   For ex, temperary ban info for this user
+        ///     Other information can be stored in here.
+        ///     For ex, temperary ban info for this user
         /// </summary>
         public OSDMap OtherAgentInformation = new OSDMap();
 
         /// <summary>
-        ///   The ID value for this user
+        ///     The ID value for this user
         /// </summary>
         public UUID PrincipalID { get; set; }
 
         /// <summary>
-        /// Unused, only exists for caching purposes
+        ///     Unused, only exists for caching purposes
         /// </summary>
         public string Name { get; set; }
 
@@ -108,7 +108,7 @@ namespace Aurora.Framework
                                  {
                                      "OtherAgentInformation",
                                      OSD.FromString(OSDParser.SerializeLLSDXmlString(OtherAgentInformation))
-                                     }
+                                 }
                              };
 
             return map;
@@ -143,99 +143,99 @@ namespace Aurora.Framework
         #endregion
 
         /// <summary>
-        ///   The appearance archive to load for this user
+        ///     The appearance archive to load for this user
         /// </summary>
         public string AArchiveName = String.Empty;
 
         /// <summary>
-        ///   The about text listed in a users profile.
+        ///     The about text listed in a users profile.
         /// </summary>
         public string AboutText = String.Empty;
 
         /// <summary>
-        ///   Show in search
+        ///     Show in search
         /// </summary>
         public bool AllowPublish = true;
 
         /// <summary>
-        ///   A UNIX Timestamp (seconds since epoch) for the users creation
+        ///     A UNIX Timestamp (seconds since epoch) for the users creation
         /// </summary>
         public int Created = Util.UnixTimeSinceEpoch();
 
         /// <summary>
-        ///   The type of the user
+        ///     The type of the user
         /// </summary>
         public string CustomType = String.Empty;
 
         /// <summary>
-        ///   The display name of the avatar
+        ///     The display name of the avatar
         /// </summary>
         public string DisplayName = String.Empty;
 
         /// <summary>
-        ///   The first life about text listed in a users profile
+        ///     The first life about text listed in a users profile
         /// </summary>
         public string FirstLifeAboutText = String.Empty;
 
         /// <summary>
-        ///   The profile image for the users first life tab
+        ///     The profile image for the users first life tab
         /// </summary>
         public UUID FirstLifeImage = UUID.Zero;
 
         /// <summary>
-        ///   Should IM's be sent to the user's email?
+        ///     Should IM's be sent to the user's email?
         /// </summary>
         public bool IMViaEmail;
 
         /// <summary>
-        ///   The profile image for an avatar stored on the asset server
+        ///     The profile image for an avatar stored on the asset server
         /// </summary>
         public UUID Image = UUID.Zero;
 
         /// <summary>
-        ///   The interests of the user
+        ///     The interests of the user
         /// </summary>
         public ProfileInterests Interests = new ProfileInterests();
 
         /// <summary>
-        ///   Is the user a new user?
+        ///     Is the user a new user?
         /// </summary>
         public bool IsNewUser = true;
 
         /// <summary>
-        ///   Allow for mature publishing
+        ///     Allow for mature publishing
         /// </summary>
         public bool MaturePublish;
 
         /// <summary>
-        ///   The group that the user is assigned to, ex: Premium
+        ///     The group that the user is assigned to, ex: Premium
         /// </summary>
         public string MembershipGroup = String.Empty;
 
         /// <summary>
-        ///   All of the notes of the user
+        ///     All of the notes of the user
         /// </summary>
         /// UUID - target agent
         /// string - notes
         public OSDMap Notes = new OSDMap();
 
         /// <summary>
-        ///   The partner of this user
+        ///     The partner of this user
         /// </summary>
         public UUID Partner = UUID.Zero;
 
         /// <summary>
-        ///   The ID value for this user
+        ///     The ID value for this user
         /// </summary>
         public UUID PrincipalID = UUID.Zero;
 
         /// <summary>
-        ///   Is this user's online status visible to others?
+        ///     Is this user's online status visible to others?
         /// </summary>
         public bool Visible = true;
 
         /// <summary>
-        ///   the web address of the Profile URL
+        ///     the web address of the Profile URL
         /// </summary>
         public string WebURL = String.Empty;
 
@@ -245,11 +245,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   This method creates a smaller OSD that 
-        ///   does not contain sensitive information
-        ///   if the trusted boolean is false
+        ///     This method creates a smaller OSD that
+        ///     does not contain sensitive information
+        ///     if the trusted boolean is false
         /// </summary>
-        /// <param name = "secure"></param>
+        /// <param name="secure"></param>
         /// <returns></returns>
         public OSDMap ToOSD(bool trusted)
         {

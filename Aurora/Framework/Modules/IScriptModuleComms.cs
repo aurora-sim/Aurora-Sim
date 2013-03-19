@@ -31,26 +31,26 @@ namespace Aurora.Framework
 {
     public delegate void ScriptCommand(UUID script, string id, string module, string command, string k);
 
-    ///<summary>
-    ///  Interface for communication between OpenSim modules and in-world scripts
-    ///</summary>
-    ///See OpenSim.Region.ScriptEngine.Shared.Api.MOD_Api.modSendCommand() for information on receiving messages
-    ///from scripts in OpenSim modules.
+    /// <summary>
+    ///     Interface for communication between OpenSim modules and in-world scripts
+    /// </summary>
+    /// See OpenSim.Region.ScriptEngine.Shared.Api.MOD_Api.modSendCommand() for information on receiving messages
+    /// from scripts in OpenSim modules.
     public interface IScriptModuleComms
     {
         /// <summary>
-        ///   Modules can subscribe to this event to receive command invocations from in-world scripts
+        ///     Modules can subscribe to this event to receive command invocations from in-world scripts
         /// </summary>
         event ScriptCommand OnScriptCommand;
 
         /// <summary>
-        ///   Send a link_message event to an in-world script
+        ///     Send a link_message event to an in-world script
         /// </summary>
-        /// <param name = "scriptId"></param>
-        /// <param name = "primID"></param>
-        /// <param name = "code"></param>
-        /// <param name = "text"></param>
-        /// <param name = "key"></param>
+        /// <param name="scriptId"></param>
+        /// <param name="primID"></param>
+        /// <param name="code"></param>
+        /// <param name="text"></param>
+        /// <param name="key"></param>
         void DispatchReply(UUID scriptId, UUID primID, int code, string text, string key);
 
         // For use ONLY by the script API

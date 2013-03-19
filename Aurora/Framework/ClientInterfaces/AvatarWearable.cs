@@ -203,7 +203,7 @@ namespace Aurora.Framework
 
         public override void FromOSD(OSDMap map)
         {
-            Unpack((OSDArray)map["Value"]);
+            Unpack((OSDArray) map["Value"]);
         }
 
         public void Unpack(OSDArray args)

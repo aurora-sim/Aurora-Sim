@@ -49,7 +49,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   Asset class.   All Assets are reference by this class or a class derived from this class
+    ///     Asset class.   All Assets are reference by this class or a class derived from this class
     /// </summary>
     [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class AssetBase : IDataTransferable, IDisposable
@@ -115,8 +115,9 @@ namespace Aurora.Framework
             if (assetType == AssetType.Unknown)
             {
                 StackTrace trace = new StackTrace(true);
-                MainConsole.Instance.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
-                                  name, assetID, trace);
+                MainConsole.Instance.ErrorFormat(
+                    "[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
+                    name, assetID, trace);
             }
 
             IDString = assetID;
@@ -135,7 +136,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Checks if this asset is a binary or text asset
+        ///     Checks if this asset is a binary or text asset
         /// </summary>
         public bool IsBinaryAsset
         {
@@ -180,7 +181,7 @@ namespace Aurora.Framework
         #region properties
 
         /// <summary>
-        /// used by archive loaders to track with assets have been saved	
+        ///     used by archive loaders to track with assets have been saved
         /// </summary>
         public bool HasBeenSaved { get; set; }
 
@@ -247,6 +248,7 @@ namespace Aurora.Framework
 
         [ProtoMember(5)]
         public string Name { get; set; }
+
         [ProtoMember(6)]
         public string Description { get; set; }
 
@@ -261,20 +263,37 @@ namespace Aurora.Framework
 
         [ProtoMember(8)]
         public AssetFlags Flags { get; set; }
+
         [ProtoMember(9)]
         public string DatabaseTable { get; set; }
+
         [ProtoMember(10)]
         public string HostUri { get; set; }
+
         [ProtoMember(11)]
         public DateTime LastAccessed { get; set; }
+
         [ProtoMember(12)]
         public DateTime CreationDate { get; set; }
+
         public UUID CreatorID { get; set; }
+
         [ProtoMember(13)]
-        public string SerializedCreatorID { get { return CreatorID.ToString(); } set { CreatorID = UUID.Parse(value); } }
+        public string SerializedCreatorID
+        {
+            get { return CreatorID.ToString(); }
+            set { CreatorID = UUID.Parse(value); }
+        }
+
         public UUID ParentID { get; set; }
+
         [ProtoMember(14)]
-        public string SerializedParentID { get { return ParentID.ToString(); } set { ParentID = UUID.Parse(value); } }
+        public string SerializedParentID
+        {
+            get { return ParentID.ToString(); }
+            set { ParentID = UUID.Parse(value); }
+        }
+
         [ProtoMember(15)]
         public bool MetaOnly { get; set; }
 
@@ -305,7 +324,7 @@ namespace Aurora.Framework
         #region Packing/Unpacking
 
         /// <summary>
-        ///   Pack this asset into an OSDMap
+        ///     Pack this asset into an OSDMap
         /// </summary>
         /// <returns></returns>
         public OSDMap Pack()
@@ -314,7 +333,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Pack this asset into an OSDMap
+        ///     Pack this asset into an OSDMap
         /// </summary>
         /// <returns></returns>
         public override OSDMap ToOSD()
@@ -343,9 +362,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Unpack the asset from an OSDMap
+        ///     Unpack the asset from an OSDMap
         /// </summary>
-        /// <param name = "osd"></param>
+        /// <param name="osd"></param>
         public AssetBase Unpack(OSD osd)
         {
             if (!(osd is OSDMap))
@@ -392,7 +411,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Make an OSDMap (json) with only the needed parts for the database and then compress it
+        ///     Make an OSDMap (json) with only the needed parts for the database and then compress it
         /// </summary>
         /// <returns>A compressed (gzip) string of the data needed for the database</returns>
         public string CompressedPack()

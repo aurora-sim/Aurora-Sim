@@ -98,9 +98,9 @@ namespace Aurora.Framework
     #endregion
 
     /// <summary>
-    ///   List that has an expiring built in
+    ///     List that has an expiring built in
     /// </summary>
-    /// <typeparam name = "TKey"></typeparam>
+    /// <typeparam name="TKey"></typeparam>
     public sealed class ExpiringList<TKey>
     {
         private const double CACHE_PURGE_HZ = 1.0;
@@ -109,12 +109,12 @@ namespace Aurora.Framework
         #region Private fields
 
         /// <summary>
-        ///   For thread safety
+        ///     For thread safety
         /// </summary>
         private readonly object isPurging = new object();
 
         /// <summary>
-        ///   For thread safety
+        ///     For thread safety
         /// </summary>
         private readonly object syncRoot = new object();
 
@@ -460,7 +460,7 @@ namespace Aurora.Framework
         #region Private methods
 
         /// <summary>
-        ///   Purges expired objects from the cache. Called automatically by the purge timer.
+        ///     Purges expired objects from the cache. Called automatically by the purge timer.
         /// </summary>
         private void PurgeCache(object sender, ElapsedEventArgs e)
         {
@@ -490,7 +490,9 @@ namespace Aurora.Framework
                         }
                     }
 #else
-                    foreach (TimedCacheKey<TKey> timedKey in timedStorage.Where(timedKey => timedKey.ExpirationDate < signalTime))
+                    foreach (
+                        TimedCacheKey<TKey> timedKey in
+                            timedStorage.Where(timedKey => timedKey.ExpirationDate < signalTime))
                     {
                         // Mark the object for purge
                         expiredItems.Value.Add(timedKey.Key);
@@ -499,7 +501,9 @@ namespace Aurora.Framework
 
                     if (expiredItems.IsValueCreated)
                     {
-                        foreach (TimedCacheKey<TKey> timedKey in from TKey key in expiredItems.Value select timedStorageIndex[key])
+                        foreach (
+                            TimedCacheKey<TKey> timedKey in
+                                from TKey key in expiredItems.Value select timedStorageIndex[key])
                         {
                             timedStorageIndex.Remove(timedKey.Key);
                             timedStorage.Remove(timedKey);

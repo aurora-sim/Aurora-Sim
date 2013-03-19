@@ -30,12 +30,12 @@ using System;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Utility class that is used to find small prime numbers and test is number prime number.
+    ///     Utility class that is used to find small prime numbers and test is number prime number.
     /// </summary>
     public static class PrimeNumberHelper
     {
         /// <summary>
-        ///   Precalculated prime numbers.
+        ///     Precalculated prime numbers.
         /// </summary>
         private static readonly int[] Primes = new[]
                                                    {
@@ -51,13 +51,13 @@ namespace Aurora.Framework
                                                    };
 
         /// <summary>
-        ///   Get prime number that is equal or larger than <see cref = "min" />.
+        ///     Get prime number that is equal or larger than <see cref="min" />.
         /// </summary>
-        /// <param name = "min">
-        ///   Minimal returned prime number.
+        /// <param name="min">
+        ///     Minimal returned prime number.
         /// </param>
         /// <returns>
-        ///   Primer number that is equal or larger than <see cref = "min" />. If <see cref = "min" /> is too large, return -1.
+        ///     Primer number that is equal or larger than <see cref="min" />. If <see cref="min" /> is too large, return -1.
         /// </returns>
         public static int GetPrime(int min)
         {
@@ -88,13 +88,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Just basic Sieve of Eratosthenes prime number test.
+        ///     Just basic Sieve of Eratosthenes prime number test.
         /// </summary>
-        /// <param name = "candinate">
-        ///   Number that is tested.
+        /// <param name="candinate">
+        ///     Number that is tested.
         /// </param>
         /// <returns>
-        ///   true, if <see cref = "candinate" /> is prime number; otherwise false.
+        ///     true, if <see cref="candinate" /> is prime number; otherwise false.
         /// </returns>
         public static bool IsPrime(int candinate)
         {

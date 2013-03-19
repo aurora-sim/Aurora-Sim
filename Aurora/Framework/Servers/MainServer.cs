@@ -31,7 +31,7 @@ namespace Aurora.Framework
 {
     public class MainServer
     {
-        public static byte[] NoResponse = new byte[1] { 1 };
+        public static byte[] NoResponse = new byte[1] {1};
         public static IHttpServer Instance { get; set; }
         public static byte[] BlankResponse = System.Text.Encoding.UTF8.GetBytes("");
         public static byte[] BadRequest = new byte[0];

@@ -35,12 +35,11 @@ using System.Net.Sockets;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Handles NAT translation in a 'manner of speaking'
-    ///   Allows you to return multiple different external
-    ///   hostnames depending on the requestors network
-    /// 
-    ///   This enables standard port forwarding techniques
-    ///   to work correctly with OpenSim.
+    ///     Handles NAT translation in a 'manner of speaking'
+    ///     Allows you to return multiple different external
+    ///     hostnames depending on the requestors network
+    ///     This enables standard port forwarding techniques
+    ///     to work correctly with OpenSim.
     /// </summary>
     public static class NetworkUtil
     {
@@ -53,7 +52,13 @@ namespace Aurora.Framework
         {
             try
             {
-                foreach (UnicastIPAddressInformation address in from ni in NetworkInterface.GetAllNetworkInterfaces() from address in ni.GetIPProperties().UnicastAddresses where address.Address.AddressFamily == AddressFamily.InterNetwork where address.IPv4Mask != null select address)
+                foreach (UnicastIPAddressInformation address in from ni in NetworkInterface.GetAllNetworkInterfaces()
+                                                                from address in ni.GetIPProperties().UnicastAddresses
+                                                                where
+                                                                    address.Address.AddressFamily ==
+                                                                    AddressFamily.InterNetwork
+                                                                where address.IPv4Mask != null
+                                                                select address)
                 {
                     m_subnets.Add(address.Address, address.IPv4Mask);
                 }
@@ -86,10 +91,14 @@ namespace Aurora.Framework
                 }
             }
 #else
-            foreach (IPAddress host in Dns.GetHostAddresses(Dns.GetHostName()).Where(host => host.Equals(user) && host.AddressFamily == AddressFamily.InterNetwork))
+            foreach (
+                IPAddress host in
+                    Dns.GetHostAddresses(Dns.GetHostName())
+                       .Where(host => host.Equals(user) && host.AddressFamily == AddressFamily.InterNetwork))
             {
-                MainConsole.Instance.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" +
-                           simulator + "'");
+                MainConsole.Instance.Info("[NetworkUtil] Localhost user detected, sending them '" + host +
+                                          "' instead of '" +
+                                          simulator + "'");
                 return host;
             }
 #endif
@@ -125,8 +134,9 @@ namespace Aurora.Framework
 
                 if (valid)
                 {
-                    MainConsole.Instance.Info("[NetworkUtil] Local LAN user detected, sending them '" + subnet.Key + "' instead of '" +
-                               simulator + "'");
+                    MainConsole.Instance.Info("[NetworkUtil] Local LAN user detected, sending them '" + subnet.Key +
+                                              "' instead of '" +
+                                              simulator + "'");
                     return subnet.Key;
                 }
             }
@@ -150,10 +160,14 @@ namespace Aurora.Framework
                     }
                 }
 #else
-                foreach (IPAddress host in Dns.GetHostAddresses(defaultHostname).Where(host => host.AddressFamily == AddressFamily.InterNetworkV6))
+                foreach (
+                    IPAddress host in
+                        Dns.GetHostAddresses(defaultHostname)
+                           .Where(host => host.AddressFamily == AddressFamily.InterNetworkV6))
                 {
-                    MainConsole.Instance.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" +
-                               defaultHostname + "'");
+                    MainConsole.Instance.Info("[NetworkUtil] Localhost user detected, sending them '" + host +
+                                              "' instead of '" +
+                                              defaultHostname + "'");
                     return host;
                 }
 #endif
@@ -174,10 +188,15 @@ namespace Aurora.Framework
                 }
             }
 #else
-            foreach (IPAddress host in m_subnets.Select(pair => pair.Value).Where(host => host.Equals(destination) && host.AddressFamily == AddressFamily.InterNetwork))
+            foreach (
+                IPAddress host in
+                    m_subnets.Select(pair => pair.Value)
+                             .Where(host => host.Equals(destination) && host.AddressFamily == AddressFamily.InterNetwork)
+                )
             {
-                MainConsole.Instance.Info("[NATROUTING] Localhost user detected, sending them '" + host + "' instead of '" +
-                           defaultHostname + "'");
+                MainConsole.Instance.Info("[NATROUTING] Localhost user detected, sending them '" + host +
+                                          "' instead of '" +
+                                          defaultHostname + "'");
                 return destination;
             }
 #endif
@@ -213,8 +232,9 @@ namespace Aurora.Framework
 
                 if (valid)
                 {
-                    MainConsole.Instance.Info("[NetworkUtil] Local LAN user detected, sending them '" + subnet.Key + "' instead of '" +
-                               defaultHostname + "'");
+                    MainConsole.Instance.Info("[NetworkUtil] Local LAN user detected, sending them '" + subnet.Key +
+                                              "' instead of '" +
+                                              defaultHostname + "'");
                     return subnet.Key;
                 }
             }
@@ -229,7 +249,10 @@ namespace Aurora.Framework
                 }
             }
 #else
-            foreach (IPAddress host in Dns.GetHostAddresses(defaultHostname).Where(host => host.AddressFamily == AddressFamily.InterNetwork))
+            foreach (
+                IPAddress host in
+                    Dns.GetHostAddresses(defaultHostname)
+                       .Where(host => host.AddressFamily == AddressFamily.InterNetwork))
             {
                 return host;
             }
@@ -263,7 +286,9 @@ namespace Aurora.Framework
             }
             return null;
 #else
-            return Dns.GetHostAddresses(defaultHostname).FirstOrDefault(Adr => Adr.AddressFamily == AddressFamily.InterNetwork);
+            return
+                Dns.GetHostAddresses(defaultHostname)
+                   .FirstOrDefault(Adr => Adr.AddressFamily == AddressFamily.InterNetwork);
 #endif
         }
 

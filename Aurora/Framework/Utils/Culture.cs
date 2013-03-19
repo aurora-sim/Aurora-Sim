@@ -46,7 +46,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Set Culture to en-US to make string processing of numbers simpler.
+        ///     Set Culture to en-US to make string processing of numbers simpler.
         /// </summary>
         public static void SetCurrentCulture()
         {

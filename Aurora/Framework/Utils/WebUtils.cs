@@ -51,7 +51,7 @@ namespace Aurora.Framework
         // number of milliseconds a call can take before it is considered
         // a "long" call for warning & debugging purposes
         public const int LongCallTime = 500;
-        
+
         private const int m_defaultTimeout = 20000;
 
         public static Dictionary<string, object> ParseQueryString(string query)
@@ -201,7 +201,10 @@ namespace Aurora.Framework
                         foreach (KeyValuePair<string, string> pair in ((Dictionary<string, string>) kvp.Value))
                             value.Add(pair.Key, pair.Value);
 #else
-                        Dictionary<string, object> value = ((Dictionary<string, string>) kvp.Value).ToDictionary<KeyValuePair<string, string>, string, object>(pair => pair.Key, pair => pair.Value);
+                        Dictionary<string, object> value =
+                            ((Dictionary<string, string>) kvp.Value)
+                                .ToDictionary<KeyValuePair<string, string>, string, object>(pair => pair.Key,
+                                                                                            pair => pair.Value);
 #endif
                         BuildXmlData(elem, value);
                     }
@@ -264,8 +267,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   POST URL-encoded form data to a web service that returns LLSD or
-        ///   JSON data
+        ///     POST URL-encoded form data to a web service that returns LLSD or
+        ///     JSON data
         /// </summary>
         public static string PostToService(string url, OSDMap data)
         {
@@ -273,8 +276,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   GET JSON-encoded data to a web service that returns LLSD or
-        ///   JSON data
+        ///     GET JSON-encoded data to a web service that returns LLSD or
+        ///     JSON data
         /// </summary>
         public static string GetFromService(string url)
         {
@@ -282,8 +285,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   PUT JSON-encoded data to a web service that returns LLSD or
-        ///   JSON data
+        ///     PUT JSON-encoded data to a web service that returns LLSD or
+        ///     JSON data
         /// </summary>
         public static string PutToService(string url, OSDMap data)
         {
@@ -291,7 +294,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Dictionary of end points
+        ///     Dictionary of end points
         /// </summary>
         private static Dictionary<string, object> m_endpointSerializer = new Dictionary<string, object>();
 
@@ -329,12 +332,12 @@ namespace Aurora.Framework
                 HttpWebRequest request = null;
                 try
                 {
-                    request = (HttpWebRequest)WebRequest.Create(url);
+                    request = (HttpWebRequest) WebRequest.Create(url);
                     request.Method = method;
                     request.Timeout = timeout;
                     request.KeepAlive = false;
                     request.MaximumAutomaticRedirections = 10;
-                    request.ReadWriteTimeout = timeout / 4;
+                    request.ReadWriteTimeout = timeout/4;
 
                     // If there is some input, write it into the request
                     if (buffer != null && buffer.Length > 0)
@@ -367,13 +370,15 @@ namespace Aurora.Framework
                     errorMessage = we.Message;
                     if (we.Status == WebExceptionStatus.ProtocolError)
                     {
-                        HttpWebResponse webResponse = (HttpWebResponse)we.Response;
+                        HttpWebResponse webResponse = (HttpWebResponse) we.Response;
                         if (webResponse.StatusCode == HttpStatusCode.BadRequest)
                             MainConsole.Instance.WarnFormat("[WebUtils]: bad request to {0}, data {1}", url,
-                                             data != null ? OSDParser.SerializeJsonString(data) : "");
+                                                            data != null ? OSDParser.SerializeJsonString(data) : "");
                         else
-                            MainConsole.Instance.WarnFormat("[WebUtils]: {0} to {1}, data {2}, response {3}", webResponse.StatusCode, url,
-                                             data != null ? OSDParser.SerializeJsonString(data) : "", webResponse.StatusDescription);
+                            MainConsole.Instance.WarnFormat("[WebUtils]: {0} to {1}, data {2}, response {3}",
+                                                            webResponse.StatusCode, url,
+                                                            data != null ? OSDParser.SerializeJsonString(data) : "",
+                                                            webResponse.StatusDescription);
                         return "";
                     }
                     if (request != null)
@@ -402,7 +407,8 @@ namespace Aurora.Framework
 
                                 MainConsole.Instance.TraceFormat(
                                     "[WebUtils]: osd request (URI:{0}, METHOD:{1}, UPSTACK(4):{5}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                                    url, method, tickdiff, tickdata, tickserialize, stackTrace.GetFrame(4).GetMethod().Name);
+                                    url, method, tickdiff, tickdata, tickserialize,
+                                    stackTrace.GetFrame(4).GetMethod().Name);
                             }
                             else
                                 MainConsole.Instance.DebugFormat(
@@ -417,20 +423,21 @@ namespace Aurora.Framework
                 }
 
                 if (MainConsole.Instance != null)
-                    MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
-                                     data != null ? data.AsString() : "");
+                    MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage,
+                                                    url,
+                                                    data != null ? data.AsString() : "");
                 return "";
             }
         }
 
         /// <summary>
-        ///   Takes the value of an Accept header and returns the preferred types
-        ///   ordered by q value (if it exists).
-        ///   Example input: image/jpg;q=0.7, image/png;q=0.8, image/jp2
-        ///   Exmaple output: ["jp2", "png", "jpg"]
-        ///   NOTE: This doesn't handle the semantics of *'s...
+        ///     Takes the value of an Accept header and returns the preferred types
+        ///     ordered by q value (if it exists).
+        ///     Example input: image/jpg;q=0.7, image/png;q=0.8, image/jp2
+        ///     Exmaple output: ["jp2", "png", "jpg"]
+        ///     NOTE: This doesn't handle the semantics of *'s...
         /// </summary>
-        /// <param name = "accept"></param>
+        /// <param name="accept"></param>
         /// <returns></returns>
         public static string[] GetPreferredImageTypes(string accept)
         {
@@ -467,13 +474,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Extract the param from an uri.
+        ///     Extract the param from an uri.
         /// </summary>
-        /// <param name = "uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release/other</param>
-        /// <param name = "uuid">uuid on uuid field</param>
+        /// <param name="uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release/other</param>
+        /// <param name="uuid">uuid on uuid field</param>
         /// <param name="regionID"></param>
-        /// <param name = "action">optional action</param>
-        /// <param name = "other">Any other data</param>
+        /// <param name="action">optional action</param>
+        /// <param name="other">Any other data</param>
         public static bool GetParams(string uri, out UUID uuid, out UUID regionID, out string action, out string other)
         {
             uuid = UUID.Zero;
@@ -501,12 +508,12 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Extract the param from an uri.
+        ///     Extract the param from an uri.
         /// </summary>
-        /// <param name = "uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release</param>
-        /// <param name = "uuid">uuid on uuid field</param>
+        /// <param name="uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release</param>
+        /// <param name="uuid">uuid on uuid field</param>
         /// <param name="regionID"></param>
-        /// <param name = "action">optional action</param>
+        /// <param name="action">optional action</param>
         public static bool GetParams(string uri, out UUID uuid, out UUID regionID, out string action)
         {
             uuid = UUID.Zero;
@@ -549,7 +556,7 @@ namespace Aurora.Framework
                     return args;
                 }
                 // uh?
-                if(doLogMessages)
+                if (doLogMessages)
                     MainConsole.Instance.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
                 return null;
             }
@@ -611,7 +618,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   Class supporting the request side of an XML-RPC transaction.
+    ///     Class supporting the request side of an XML-RPC transaction.
     /// </summary>
     public sealed class ConfigurableKeepAliveXmlRpcRequest : XmlRpcRequest
     {
@@ -623,11 +630,15 @@ namespace Aurora.Framework
         public string RequestResponse = String.Empty;
 
         /// <summary>
-        ///   Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.
+        ///     Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.
         /// </summary>
-        /// <param name = "methodName"><c>String</c> designating the <i>object.method</i> on the server the request
-        ///   should be directed to.</param>
-        /// <param name = "parameters"><c>ArrayList</c> of XML-RPC type parameters to invoke the request with.</param>
+        /// <param name="methodName">
+        ///     <c>String</c> designating the <i>object.method</i> on the server the request
+        ///     should be directed to.
+        /// </param>
+        /// <param name="parameters">
+        ///     <c>ArrayList</c> of XML-RPC type parameters to invoke the request with.
+        /// </param>
         /// <param name="disableKeepAlive"></param>
         public ConfigurableKeepAliveXmlRpcRequest(String methodName, IList parameters, bool disableKeepAlive)
         {
@@ -637,10 +648,14 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Send the request to the server.
+        ///     Send the request to the server.
         /// </summary>
-        /// <param name = "url"><c>String</c> The url of the XML-RPC server.</param>
-        /// <returns><c>XmlRpcResponse</c> The response generated.</returns>
+        /// <param name="url">
+        ///     <c>String</c> The url of the XML-RPC server.
+        /// </param>
+        /// <returns>
+        ///     <c>XmlRpcResponse</c> The response generated.
+        /// </returns>
         public XmlRpcResponse Send(String url)
         {
             HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);

@@ -39,12 +39,12 @@ namespace Aurora.Framework
         public static readonly string PATH_DELIMITER = "/";
 
         /// <summary>
-        ///   Items that are contained in this folder
+        ///     Items that are contained in this folder
         /// </summary>
         public Dictionary<UUID, InventoryItemBase> Items = new Dictionary<UUID, InventoryItemBase>();
 
         /// <summary>
-        ///   Child folders that are contained in this folder
+        ///     Child folders that are contained in this folder
         /// </summary>
         private Dictionary<UUID, InventoryFolderImpl> m_childFolders = new Dictionary<UUID, InventoryFolderImpl>();
 
@@ -64,8 +64,8 @@ namespace Aurora.Framework
         }
 
         /// <value>
-        ///   The total number of items in this folder and in the immediate child folders (though not from other
-        ///   descendants).
+        ///     The total number of items in this folder and in the immediate child folders (though not from other
+        ///     descendants).
         /// </value>
         public int TotalCount
         {
@@ -83,11 +83,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Create a new subfolder.
+        ///     Create a new subfolder.
         /// </summary>
-        /// <param name = "folderID"></param>
-        /// <param name = "folderName"></param>
-        /// <param name = "type"></param>
+        /// <param name="folderID"></param>
+        /// <param name="folderName"></param>
+        /// <param name="type"></param>
         /// <returns>The newly created subfolder.  Returns null if the folder already exists</returns>
         public InventoryFolderImpl CreateChildFolder(UUID folderID, string folderName, ushort type)
         {
@@ -113,9 +113,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Add a folder that already exists.
+        ///     Add a folder that already exists.
         /// </summary>
-        /// <param name = "folder"></param>
+        /// <param name="folder"></param>
         public void AddChildFolder(InventoryFolderImpl folder)
         {
             lock (m_childFolders)
@@ -126,9 +126,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Does this folder contain the given child folder?
+        ///     Does this folder contain the given child folder?
         /// </summary>
-        /// <param name = "folderID"></param>
+        /// <param name="folderID"></param>
         /// <returns></returns>
         public bool ContainsChildFolder(UUID folderID)
         {
@@ -136,9 +136,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Get a child folder
+        ///     Get a child folder
         /// </summary>
-        /// <param name = "folderID"></param>
+        /// <param name="folderID"></param>
         /// <returns>The folder if it exists, null if it doesn't</returns>
         public InventoryFolderImpl GetChildFolder(UUID folderID)
         {
@@ -153,11 +153,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Removes the given child subfolder.
+        ///     Removes the given child subfolder.
         /// </summary>
-        /// <param name = "folderID"></param>
+        /// <param name="folderID"></param>
         /// <returns>
-        ///   The folder removed, or null if the folder was not present.
+        ///     The folder removed, or null if the folder was not present.
         /// </returns>
         public InventoryFolderImpl RemoveChildFolder(UUID folderID)
         {
@@ -176,7 +176,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Delete all the folders and items in this folder.
+        ///     Delete all the folders and items in this folder.
         /// </summary>
         public void Purge()
         {
@@ -190,9 +190,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Returns the item if it exists in this folder or in any of this folder's descendant folders
+        ///     Returns the item if it exists in this folder or in any of this folder's descendant folders
         /// </summary>
-        /// <param name = "itemID"></param>
+        /// <param name="itemID"></param>
         /// <returns>null if the item is not found</returns>
         public InventoryItemBase FindItem(UUID itemID)
         {
@@ -216,7 +216,9 @@ namespace Aurora.Framework
                     }
                 }
 #else
-                foreach (InventoryItemBase item in m_childFolders.Values.Select(folder => folder.FindItem(itemID)).Where(item => item != null))
+                foreach (
+                    InventoryItemBase item in
+                        m_childFolders.Values.Select(folder => folder.FindItem(itemID)).Where(item => item != null))
                 {
                     return item;
                 }
@@ -258,7 +260,9 @@ namespace Aurora.Framework
                     }
                 }
 #else
-                foreach (InventoryItemBase item in m_childFolders.Values.Select(folder => folder.FindAsset(assetID)).Where(item => item != null))
+                foreach (
+                    InventoryItemBase item in
+                        m_childFolders.Values.Select(folder => folder.FindAsset(assetID)).Where(item => item != null))
                 {
                     return item;
                 }
@@ -269,9 +273,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Deletes an item if it exists in this folder or any children
+        ///     Deletes an item if it exists in this folder or any children
         /// </summary>
-        /// <param name = "folderID"></param>
+        /// <param name="folderID"></param>
         /// <returns></returns>
         public bool DeleteItem(UUID itemID)
         {
@@ -303,8 +307,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Returns the folder requested if it is this folder or is a descendent of this folder.  The search is depth
-        ///   first.
+        ///     Returns the folder requested if it is this folder or is a descendent of this folder.  The search is depth
+        ///     first.
         /// </summary>
         /// <returns>The requested folder if it exists, null if it does not.</returns>
         public InventoryFolderImpl FindFolder(UUID folderID)
@@ -324,7 +328,10 @@ namespace Aurora.Framework
                     }
                 }
 #else
-                foreach (InventoryFolderImpl returnFolder in m_childFolders.Values.Select(folder => folder.FindFolder(folderID)).Where(returnFolder => returnFolder != null))
+                foreach (
+                    InventoryFolderImpl returnFolder in
+                        m_childFolders.Values.Select(folder => folder.FindFolder(folderID))
+                                      .Where(returnFolder => returnFolder != null))
                 {
                     return returnFolder;
                 }
@@ -335,9 +342,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Look through all child subfolders for a folder marked as one for a particular asset type, and return it.
+        ///     Look through all child subfolders for a folder marked as one for a particular asset type, and return it.
         /// </summary>
-        /// <param name = "type"></param>
+        /// <param name="type"></param>
         /// <returns>Returns null if no such folder is found</returns>
         public InventoryFolderImpl FindFolderForType(int type)
         {
@@ -362,20 +369,20 @@ namespace Aurora.Framework
             return null;
         }
 
-        ///<summary>
-        ///  Find a folder given a PATH_DELIMITER delimited path starting from this folder
-        ///</summary>
-        ///This method does not handle paths that contain multiple delimitors
-        ///
-        ///FIXME: We do not yet handle situations where folders have the same name.  We could handle this by some
-        ///XPath like expression
-        ///
-        ///FIXME: Delimitors which occur in names themselves are not currently escapable.
-        ///<param name = "path">
-        ///  The path to the required folder.
-        ///  It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
-        ///</param>
-        ///<returns>null if the folder is not found</returns>
+        /// <summary>
+        ///     Find a folder given a PATH_DELIMITER delimited path starting from this folder
+        /// </summary>
+        /// This method does not handle paths that contain multiple delimitors
+        /// 
+        /// FIXME: We do not yet handle situations where folders have the same name.  We could handle this by some
+        /// XPath like expression
+        /// 
+        /// FIXME: Delimitors which occur in names themselves are not currently escapable.
+        /// <param name="path">
+        ///     The path to the required folder.
+        ///     It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
+        /// </param>
+        /// <returns>null if the folder is not found</returns>
         public InventoryFolderImpl FindFolderByPath(string path)
         {
             if (path == string.Empty)
@@ -402,7 +409,8 @@ namespace Aurora.Framework
                     }
                 }
 #else
-                foreach (InventoryFolderImpl folder in m_childFolders.Values.Where(folder => folder.Name == components[0]))
+                foreach (
+                    InventoryFolderImpl folder in m_childFolders.Values.Where(folder => folder.Name == components[0]))
                 {
                     if (components.Length > 1)
                         return folder.FindFolderByPath(components[1]);
@@ -416,20 +424,17 @@ namespace Aurora.Framework
             return null;
         }
 
-        ///<summary>
-        ///  Find an item given a PATH_DELIMITOR delimited path starting from this folder.
-        ///
-        ///  This method does not handle paths that contain multiple delimitors
-        ///
-        ///  FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
-        ///  XPath like expression
-        ///
-        ///  FIXME: Delimitors which occur in names themselves are not currently escapable.
-        ///</summary>
-        ///<param name = "path">
-        ///  The path to the required item.
-        ///</param>
-        ///<returns>null if the item is not found</returns>
+        /// <summary>
+        ///     Find an item given a PATH_DELIMITOR delimited path starting from this folder.
+        ///     This method does not handle paths that contain multiple delimitors
+        ///     FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
+        ///     XPath like expression
+        ///     FIXME: Delimitors which occur in names themselves are not currently escapable.
+        /// </summary>
+        /// <param name="path">
+        ///     The path to the required item.
+        /// </param>
+        /// <returns>null if the item is not found</returns>
         public InventoryItemBase FindItemByPath(string path)
         {
             string[] components = path.Split(new[] {PATH_DELIMITER}, 2, StringSplitOptions.None);
@@ -467,7 +472,9 @@ namespace Aurora.Framework
                         }
                     }
 #else
-                    foreach (InventoryFolderImpl folder in m_childFolders.Values.Where(folder => folder.Name == components[0]))
+                    foreach (
+                        InventoryFolderImpl folder in
+                            m_childFolders.Values.Where(folder => folder.Name == components[0]))
                     {
                         return folder.FindItemByPath(components[1]);
                     }
@@ -480,7 +487,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Return a copy of the list of child items in this folder.  The items themselves are the originals.
+        ///     Return a copy of the list of child items in this folder.  The items themselves are the originals.
         /// </summary>
         public List<InventoryItemBase> RequestListOfItems()
         {
@@ -497,7 +504,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Return a copy of the list of child folders in this folder.  The folders themselves are the originals.
+        ///     Return a copy of the list of child folders in this folder.  The folders themselves are the originals.
         /// </summary>
         public List<InventoryFolderBase> RequestListOfFolders()
         {

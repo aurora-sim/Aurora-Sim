@@ -31,7 +31,7 @@ using OpenMetaverse.Packets;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Enapsulate statistics for a simulator/scene.
+    ///     Enapsulate statistics for a simulator/scene.
     /// </summary>
     public class SimStats
     {

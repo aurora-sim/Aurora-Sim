@@ -66,15 +66,15 @@ namespace Aurora.Framework
     public interface IEmailConnector : IAuroraDataPlugin
     {
         /// <summary>
-        ///   Adds an email to the database for the prim to get later
+        ///     Adds an email to the database for the prim to get later
         /// </summary>
-        /// <param name = "email"></param>
+        /// <param name="email"></param>
         void InsertEmail(Email email);
 
         /// <summary>
-        ///   Finds previously saved AA data.
+        ///     Finds previously saved AA data.
         /// </summary>
-        /// <param name = "primID"></param>
+        /// <param name="primID"></param>
         /// <returns></returns>
         List<Email> GetEmails(UUID primID);
     }

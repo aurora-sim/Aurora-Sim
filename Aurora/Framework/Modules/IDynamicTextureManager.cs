@@ -52,62 +52,70 @@ namespace Aurora.Framework
                                    int updateTimer);
 
         /// <summary>
-        /// Apply a dynamically generated texture to all sides of the given prim.  The texture is not persisted to the
-        /// asset service.
+        ///     Apply a dynamically generated texture to all sides of the given prim.  The texture is not persisted to the
+        ///     asset service.
         /// </summary>
-        /// <param name = "simID">The simulator in which the texture is being generated</param>
-        /// <param name = "primID">The prim to which to apply the texture.</param>
-        /// <param name = "contentType">The content type to create.  Current choices are "vector" to create a vector
-        ///   based texture or "image" to create a texture from an image at a particular URL</param>
-        /// <param name = "data">The data for the generator</param>
-        /// <param name = "extraParams">Parameters for the generator that don't form part of the main data.</param>
-        /// <param name = "updateTimer">If zero, the image is never updated after the first generation.  If positive
-        ///   the image is updated at the given interval.  Not implemented for </param>
-        /// <param name = "SetBlending">
-        ///   If true, the newly generated texture is blended with the appropriate existing ones on the prim
+        /// <param name="simID">The simulator in which the texture is being generated</param>
+        /// <param name="primID">The prim to which to apply the texture.</param>
+        /// <param name="contentType">
+        ///     The content type to create.  Current choices are "vector" to create a vector
+        ///     based texture or "image" to create a texture from an image at a particular URL
         /// </param>
-        /// <param name = "AlphaValue">
-        ///   The alpha value of the generated texture.
+        /// <param name="data">The data for the generator</param>
+        /// <param name="extraParams">Parameters for the generator that don't form part of the main data.</param>
+        /// <param name="updateTimer">
+        ///     If zero, the image is never updated after the first generation.  If positive
+        ///     the image is updated at the given interval.  Not implemented for
+        /// </param>
+        /// <param name="SetBlending">
+        ///     If true, the newly generated texture is blended with the appropriate existing ones on the prim
+        /// </param>
+        /// <param name="AlphaValue">
+        ///     The alpha value of the generated texture.
         /// </param>
         /// <returns>
-        ///   The UUID of the texture updater, not the texture UUID.  If you need the texture UUID then you will need
-        ///   to obtain it directly from the SceneObjectPart.  For instance, if ALL_SIDES is set then this texture
-        ///   can be obtained as SceneObjectPart.Shape.Textures.DefaultTexture.TextureID
+        ///     The UUID of the texture updater, not the texture UUID.  If you need the texture UUID then you will need
+        ///     to obtain it directly from the SceneObjectPart.  For instance, if ALL_SIDES is set then this texture
+        ///     can be obtained as SceneObjectPart.Shape.Textures.DefaultTexture.TextureID
         /// </returns>
         UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data,
                                    string extraParams,
                                    int updateTimer, bool SetBlending, byte AlphaValue);
 
         /// <summary>
-        ///   Apply a dynamically generated texture to the given prim.
+        ///     Apply a dynamically generated texture to the given prim.
         /// </summary>
-        /// <param name = "simID">The simulator in which the texture is being generated</param>
-        /// <param name = "primID">The prim to which to apply the texture.</param>
-        /// <param name = "contentType">The content type to create.  Current choices are "vector" to create a vector
-        ///   based texture or "image" to create a texture from an image at a particular URL</param>
-        /// <param name = "data">The data for the generator</param>
-        /// <param name = "extraParams">Parameters for the generator that don't form part of the main data.</param>
-        /// <param name = "updateTimer">If zero, the image is never updated after the first generation.  If positive
-        ///   the image is updated at the given interval.  Not implemented for </param>
-        /// <param name = "SetBlending">
-        ///   If true, the newly generated texture is blended with the appropriate existing ones on the prim
+        /// <param name="simID">The simulator in which the texture is being generated</param>
+        /// <param name="primID">The prim to which to apply the texture.</param>
+        /// <param name="contentType">
+        ///     The content type to create.  Current choices are "vector" to create a vector
+        ///     based texture or "image" to create a texture from an image at a particular URL
         /// </param>
-        /// <param name = "disp">
-        ///   Display flags.  If DISP_EXPIRE then the old texture is deleted if it is replaced by a
-        ///   newer generated texture (may not currently be implemented).  If DISP_TEMP then the asset is flagged as
-        ///   temporary, which often means that it is not persisted to the database.
+        /// <param name="data">The data for the generator</param>
+        /// <param name="extraParams">Parameters for the generator that don't form part of the main data.</param>
+        /// <param name="updateTimer">
+        ///     If zero, the image is never updated after the first generation.  If positive
+        ///     the image is updated at the given interval.  Not implemented for
         /// </param>
-        /// <param name = "AlphaValue">
-        ///   The alpha value of the generated texture.
+        /// <param name="SetBlending">
+        ///     If true, the newly generated texture is blended with the appropriate existing ones on the prim
         /// </param>
-        /// <param name = "face">
-        ///   The face of the prim on which to put the generated texture.  If ALL_SIDES then all sides of the prim are
-        ///   set
+        /// <param name="disp">
+        ///     Display flags.  If DISP_EXPIRE then the old texture is deleted if it is replaced by a
+        ///     newer generated texture (may not currently be implemented).  If DISP_TEMP then the asset is flagged as
+        ///     temporary, which often means that it is not persisted to the database.
+        /// </param>
+        /// <param name="AlphaValue">
+        ///     The alpha value of the generated texture.
+        /// </param>
+        /// <param name="face">
+        ///     The face of the prim on which to put the generated texture.  If ALL_SIDES then all sides of the prim are
+        ///     set
         /// </param>
         /// <returns>
-        ///   The UUID of the texture updater, not the texture UUID.  If you need the texture UUID then you will need
-        ///   to obtain it directly from the SceneObjectPart.  For instance, if ALL_SIDES is set then this texture
-        ///   can be obtained as SceneObjectPart.Shape.Textures.DefaultTexture.TextureID
+        ///     The UUID of the texture updater, not the texture UUID.  If you need the texture UUID then you will need
+        ///     to obtain it directly from the SceneObjectPart.  For instance, if ALL_SIDES is set then this texture
+        ///     can be obtained as SceneObjectPart.Shape.Textures.DefaultTexture.TextureID
         /// </returns>
         UUID AddDynamicTextureData(
             UUID simID, UUID primID, UUID oldAssetID, string contentType, string data, string extraParams,

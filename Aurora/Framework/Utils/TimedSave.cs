@@ -29,7 +29,7 @@ namespace Aurora.Framework
 
         public void Add(UUID agentid)
         {
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime * 1000 * 10000);
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime*1000*10000);
             lock (_queue)
             {
                 _queue[agentid] = timestamp;
@@ -39,7 +39,7 @@ namespace Aurora.Framework
 
         public void Add(UUID agentid, T data)
         {
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime * 1000 * 10000);
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime*1000*10000);
             lock (_queue)
             {
                 _queue[agentid] = timestamp;
@@ -96,7 +96,7 @@ namespace Aurora.Framework
 
         public void Add(UUID agentid)
         {
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime * 1000 * 10000);
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime*1000*10000);
             lock (_queue)
             {
                 _queue[agentid] = timestamp;
@@ -106,7 +106,7 @@ namespace Aurora.Framework
 
         public void Add(UUID agentid, List<T> data)
         {
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime * 1000 * 10000);
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime*1000*10000);
             lock (_queue)
             {
                 _queue[agentid] = timestamp;
@@ -119,7 +119,7 @@ namespace Aurora.Framework
 
         public void Add(UUID agentid, T data)
         {
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime * 1000 * 10000);
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime*1000*10000);
             lock (_queue)
             {
                 _queue[agentid] = timestamp;

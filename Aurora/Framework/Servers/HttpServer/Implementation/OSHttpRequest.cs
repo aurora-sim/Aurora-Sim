@@ -45,27 +45,27 @@ namespace Aurora.Framework.Servers.HttpServer
         public class HttpFile : IDisposable
         {
             /// <summary>
-            /// Gets or sets form element name
+            ///     Gets or sets form element name
             /// </summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Gets or sets client side file name
+            ///     Gets or sets client side file name
             /// </summary>
             public string OriginalFileName { get; set; }
 
             /// <summary>
-            /// Gets or sets mime content type
+            ///     Gets or sets mime content type
             /// </summary>
             public string ContentType { get; set; }
 
             /// <summary>
-            /// Gets or sets full path to local file
+            ///     Gets or sets full path to local file
             /// </summary>
             public string TempFileName { get; set; }
 
             /// <summary>
-            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
             /// </summary>
             /// <filterpriority>2</filterpriority>
             public void Dispose()
@@ -89,6 +89,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get { return _contentEncoding; }
         }
+
         private Encoding _contentEncoding;
 
         public long ContentLength
@@ -105,6 +106,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get { return _contentType; }
         }
+
         private string _contentType;
 
         public HttpCookieCollection Cookies
@@ -143,19 +145,20 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get { return _queryString; }
         }
+
         private NameValueCollection _queryString;
 
         public Hashtable Query
         {
             get { return _query; }
         }
+
         private Hashtable _query;
 
         /// <value>
-        /// POST request values, if applicable
+        ///     POST request values, if applicable
         /// </value>
         //        public Hashtable Form { get; private set; }
-
         public string RawUrl
         {
             get { return _request.RawUrl; }
@@ -175,19 +178,23 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get { return _userAgent; }
         }
+
         private string _userAgent;
 
         /// <summary>
-        /// Internal whiteboard for handlers to store temporary stuff
-        /// into.
+        ///     Internal whiteboard for handlers to store temporary stuff
+        ///     into.
         /// </summary>
         internal Dictionary<string, object> Whiteboard
         {
             get { return _whiteboard; }
         }
+
         private Dictionary<string, object> _whiteboard = new Dictionary<string, object>();
 
-        public OSHttpRequest() { }
+        public OSHttpRequest()
+        {
+        }
 
         public OSHttpRequest(HttpListenerContext context)
         {
@@ -213,7 +220,8 @@ namespace Aurora.Framework.Servers.HttpServer
                     }
                     catch (InvalidCastException)
                     {
-                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it", item);
+                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it",
+                                                         item);
                         continue;
                     }
                 }
@@ -243,7 +251,7 @@ namespace Aurora.Framework.Servers.HttpServer
                         // Read the file data
                         var buffer = new byte[element.Length];
                         InputStream.Seek(element.Start, SeekOrigin.Begin);
-                        InputStream.Read(buffer, 0, (int)element.Length);
+                        InputStream.Read(buffer, 0, (int) element.Length);
 
                         // Generate a filename
                         var originalFileName = element.Filename;
@@ -266,12 +274,12 @@ namespace Aurora.Framework.Servers.HttpServer
                         File.WriteAllBytes(element.Filename, buffer);
 
                         var file = new HttpFile
-                        {
-                            Name = element.Name,
-                            OriginalFileName = originalFileName,
-                            ContentType = element.ContentType,
-                            TempFileName = element.Filename
-                        };
+                                       {
+                                           Name = element.Name,
+                                           OriginalFileName = originalFileName,
+                                           ContentType = element.ContentType,
+                                           TempFileName = element.Filename
+                                       };
                         Files.Add(element.Name, file);
                     }
                     /*else

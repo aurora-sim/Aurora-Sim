@@ -32,57 +32,57 @@ using System.IO;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Used for the OnInventoryArchiveSaved event.
+    ///     Used for the OnInventoryArchiveSaved event.
     /// </summary>
-    /// <param name = "id">Request id</param>
-    /// <param name = "succeeded">true if the save succeeded, false otherwise</param>
-    /// <param name = "userInfo">The user for whom the save was conducted</param>
-    /// <param name = "invPath">The inventory path saved</param>
-    /// <param name = "saveStream">The stream to which the archive was saved</param>
-    /// <param name = "reportedException">Contains the exception generated if the save did not succeed</param>
+    /// <param name="id">Request id</param>
+    /// <param name="succeeded">true if the save succeeded, false otherwise</param>
+    /// <param name="userInfo">The user for whom the save was conducted</param>
+    /// <param name="invPath">The inventory path saved</param>
+    /// <param name="saveStream">The stream to which the archive was saved</param>
+    /// <param name="reportedException">Contains the exception generated if the save did not succeed</param>
     public delegate void InventoryArchiveSaved(
         Guid id, bool succeeded, UserAccount userInfo, string invPath, Stream saveStream, Exception reportedException);
 
     public interface IInventoryArchiverModule
     {
         /// <summary>
-        ///   Fired when an archive inventory save has been completed.
+        ///     Fired when an archive inventory save has been completed.
         /// </summary>
         event InventoryArchiveSaved OnInventoryArchiveSaved;
 
         /// <summary>
-        ///   Dearchive a user's inventory folder from the given stream
+        ///     Dearchive a user's inventory folder from the given stream
         /// </summary>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
-        /// <param name = "invPath">The inventory path in which to place the loaded folders and items</param>
-        /// <param name = "loadPath">The file from which the inventory archive will be loaded</param>
-        /// <param name = "options"></param>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="invPath">The inventory path in which to place the loaded folders and items</param>
+        /// <param name="loadPath">The file from which the inventory archive will be loaded</param>
+        /// <param name="options"></param>
         /// <returns>true if the first stage of the operation succeeded, false otherwise</returns>
         bool DearchiveInventory(
             string firstName, string lastName, string invPath, string loadPath,
             Dictionary<string, object> options);
 
         /// <summary>
-        ///   Archive a user's inventory folder to the given stream
+        ///     Archive a user's inventory folder to the given stream
         /// </summary>
-        /// <param name = "id">ID representing this request.  This will later be returned in the save event</param>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
-        /// <param name = "invPath">The inventory path from which the inventory should be saved.</param>
-        /// <param name = "saveStream">The stream to which the inventory archive will be saved</param>
+        /// <param name="id">ID representing this request.  This will later be returned in the save event</param>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="invPath">The inventory path from which the inventory should be saved.</param>
+        /// <param name="saveStream">The stream to which the inventory archive will be saved</param>
         /// <returns>true if the first stage of the operation succeeded, false otherwise</returns>
         bool ArchiveInventory(Guid id, string firstName, string lastName, string invPath, Stream saveStream);
 
         /// <summary>
-        ///   Archive a user's inventory folder to the given stream
+        ///     Archive a user's inventory folder to the given stream
         /// </summary>
-        /// <param name = "id">ID representing this request.  This will later be returned in the save event</param>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
-        /// <param name = "invPath">The inventory path from which the inventory should be saved.</param>
-        /// <param name = "saveStream">The stream to which the inventory archive will be saved</param>
-        /// <param name = "options">Archiving options.  Currently, there are none.</param>
+        /// <param name="id">ID representing this request.  This will later be returned in the save event</param>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="invPath">The inventory path from which the inventory should be saved.</param>
+        /// <param name="saveStream">The stream to which the inventory archive will be saved</param>
+        /// <param name="options">Archiving options.  Currently, there are none.</param>
         /// <returns>true if the first stage of the operation succeeded, false otherwise</returns>
         bool ArchiveInventory(
             Guid id, string firstName, string lastName, string invPath, Stream saveStream,

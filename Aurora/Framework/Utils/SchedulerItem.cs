@@ -31,7 +31,7 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
-    public enum RepeatType 
+    public enum RepeatType
     {
         second = 1,
         minute = 2,
@@ -48,14 +48,15 @@ namespace Aurora.Framework
         Megaannum = 13
     }
 
-    public class SchedulerItem: IDataTransferable
+    public class SchedulerItem : IDataTransferable
     {
         public SchedulerItem()
         {
             SimpleInitilize();
         }
 
-        public SchedulerItem(string sName, string sParams, bool runOnce, DateTime startTime, int runEvery, RepeatType runEveryType, UUID schedulefor)
+        public SchedulerItem(string sName, string sParams, bool runOnce, DateTime startTime, int runEvery,
+                             RepeatType runEveryType, UUID schedulefor)
         {
             SimpleInitilize();
             FireFunction = sName;
@@ -82,18 +83,18 @@ namespace Aurora.Framework
                     break;
                 case RepeatType.minute:
                     {
-                        TimeToRun = fromTime.AddMinutes(RunEvery * Math.Ceiling(ts.TotalMinutes / RunEvery));
+                        TimeToRun = fromTime.AddMinutes(RunEvery*Math.Ceiling(ts.TotalMinutes/RunEvery));
                         break;
                     }
                 case RepeatType.hours:
-                    TimeToRun = fromTime.AddHours(RunEvery * Math.Ceiling(ts.Duration().TotalHours / RunEvery));
+                    TimeToRun = fromTime.AddHours(RunEvery*Math.Ceiling(ts.Duration().TotalHours/RunEvery));
                     break;
                 case RepeatType.days:
-                    TimeToRun = fromTime.AddDays(RunEvery * Math.Ceiling(ts.Duration().TotalDays / RunEvery));
+                    TimeToRun = fromTime.AddDays(RunEvery*Math.Ceiling(ts.Duration().TotalDays/RunEvery));
                     break;
                 case RepeatType.weeks:
-                    RunEvery = RunEvery * 7;
-                    TimeToRun = fromTime.AddDays(RunEvery * Math.Ceiling(ts.Duration().TotalDays / RunEvery));
+                    RunEvery = RunEvery*7;
+                    TimeToRun = fromTime.AddDays(RunEvery*Math.Ceiling(ts.Duration().TotalDays/RunEvery));
                     break;
                 case RepeatType.months:
                     TimeToRun = fromTime.AddMonths(RunEvery);
@@ -157,20 +158,20 @@ namespace Aurora.Framework
                                      {
                                          {"id", id},
                                          {"HistoryLastID", HistoryLastID},
-                                         {"TimeToRun",TimeToRun},
-                                         {"Enabled",Enabled},
-                                         {"HisotryKeep",HisotryKeep},
-                                         {"FireParams",FireParams},
-                                         {"FireFunction",FireFunction},
-                                         {"HistoryReciept",HistoryReciept},
-                                         {"RunOnce",RunOnce},
-                                         {"RunEvery",RunEvery},
-                                         {"CreateTime",CreateTime},
-                                         {"RunEveryType", (int)RunEveryType},
-                                         {"StartTime",StartTime},
+                                         {"TimeToRun", TimeToRun},
+                                         {"Enabled", Enabled},
+                                         {"HisotryKeep", HisotryKeep},
+                                         {"FireParams", FireParams},
+                                         {"FireFunction", FireFunction},
+                                         {"HistoryReciept", HistoryReciept},
+                                         {"RunOnce", RunOnce},
+                                         {"RunEvery", RunEvery},
+                                         {"CreateTime", CreateTime},
+                                         {"RunEveryType", (int) RunEveryType},
+                                         {"StartTime", StartTime},
                                          {"ScheduleFor", ScheduleFor}
                                      };
-            
+
             return returnvalue;
         }
 
@@ -187,7 +188,7 @@ namespace Aurora.Framework
             RunOnce = map["RunOnce"].AsBoolean();
             RunEvery = map["RunEvery"].AsInteger();
             CreateTime = map["CreateTime"].AsDate();
-            RunEveryType = (RepeatType)map["RunEveryType"].AsInteger();
+            RunEveryType = (RepeatType) map["RunEveryType"].AsInteger();
             StartTime = map["StartTime"].AsDate();
             ScheduleFor = map["ScheduleFor"].AsUUID();
         }

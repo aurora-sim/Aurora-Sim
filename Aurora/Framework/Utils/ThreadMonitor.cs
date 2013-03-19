@@ -44,13 +44,13 @@ namespace Aurora.Framework
         private int m_sleepTime;
         protected int m_timesToIterate;
         protected Thread m_thread;
-		private bool startedshutdown = false;
+        private bool startedshutdown = false;
 
         /// <summary>
-        ///   Add this delegate to the tracker so that it can run.
+        ///     Add this delegate to the tracker so that it can run.
         /// </summary>
-        /// <param name = "millisecondTimeOut">The time that the thread can run before it is forcefully stopped.</param>
-        /// <param name = "hb">The delegate to run.</param>
+        /// <param name="millisecondTimeOut">The time that the thread can run before it is forcefully stopped.</param>
+        /// <param name="hb">The delegate to run.</param>
         public void StartTrackingThread(int millisecondTimeOut, Heartbeat hb)
         {
             lock (m_lock)
@@ -60,18 +60,20 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Start the thread and run through the threads that are given.
+        ///     Start the thread and run through the threads that are given.
         /// </summary>
-        /// <param name = "timesToIterate">The number of times to run the delegate.
-        ///   <remarks>
-        ///     If you set this parameter to 0, it will loop infinitely.
-        ///   </remarks>
+        /// <param name="timesToIterate">
+        ///     The number of times to run the delegate.
+        ///     <remarks>
+        ///         If you set this parameter to 0, it will loop infinitely.
+        ///     </remarks>
         /// </param>
-        /// <param name = "sleepTime">The sleep time between each iteration.
-        ///   <remarks>
-        ///     If you set this parameter to 0, it will loop without sleeping at all.
-        ///     The sleeping will have to be deal with in the delegates.
-        ///   </remarks>
+        /// <param name="sleepTime">
+        ///     The sleep time between each iteration.
+        ///     <remarks>
+        ///         If you set this parameter to 0, it will loop without sleeping at all.
+        ///         The sleeping will have to be deal with in the delegates.
+        ///     </remarks>
         /// </param>
         public void StartMonitor(int timesToIterate, int sleepTime)
         {
@@ -79,12 +81,12 @@ namespace Aurora.Framework
             m_sleepTime = sleepTime;
 
             m_thread = new Thread(Run)
-                                {IsBackground = true, Name = "ThreadMonitor", Priority = ThreadPriority.Normal};
+                           {IsBackground = true, Name = "ThreadMonitor", Priority = ThreadPriority.Normal};
             m_thread.Start();
         }
 
         /// <summary>
-        ///   Run the loop through the heartbeats.
+        ///     Run the loop through the heartbeats.
         /// </summary>
         protected internal void Run()
         {
@@ -101,7 +103,8 @@ namespace Aurora.Framework
                             bool isRunning = false;
                             if (!CallAndWait(intHB.millisecondTimeOut, intHB.heartBeat, out isRunning))
                             {
-                                MainConsole.Instance.Warn("[ThreadTracker]: Could not run Heartbeat in specified limits!");
+                                MainConsole.Instance.Warn(
+                                    "[ThreadTracker]: Could not run Heartbeat in specified limits!");
                             }
                             else if (!isRunning)
                             {
@@ -144,10 +147,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Call the method and wait for it to complete or the max time.
+        ///     Call the method and wait for it to complete or the max time.
         /// </summary>
-        /// <param name = "timeout"></param>
-        /// <param name = "enumerator"></param>
+        /// <param name="timeout"></param>
+        /// <param name="enumerator"></param>
         /// <returns></returns>
         public static bool CallAndWait(int timeout, Heartbeat enumerator, out bool isRunning)
         {
@@ -190,7 +193,7 @@ namespace Aurora.Framework
 
         public void Stop()
         {
-			startedshutdown = true;
+            startedshutdown = true;
             lock (m_lock)
             {
                 //Remove all

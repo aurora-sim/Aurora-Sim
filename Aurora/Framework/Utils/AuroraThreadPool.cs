@@ -124,7 +124,7 @@ namespace Aurora.Framework
         {
             if (delegat == null)
                 return;
-            
+
             queue.Enqueue(delegat);
 
             if (nthreads == 0 || (nthreads - nSleepingthreads < queue.Count - 1 && nthreads < Threads.Length))

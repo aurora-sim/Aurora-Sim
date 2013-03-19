@@ -30,6 +30,7 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     public delegate void NextEmail(Email email);
+
     public interface IEmailModule : IService
     {
         void SendEmail(UUID objectID, string address, string subject, string body, IScene scene);

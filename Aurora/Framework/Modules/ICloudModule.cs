@@ -30,7 +30,7 @@ namespace Aurora.Framework
     public interface ICloudModule : INonSharedRegionModule
     {
         /// <summary>
-        ///   Retrieves the cloud density at the given region coordinates
+        ///     Retrieves the cloud density at the given region coordinates
         /// </summary>
         float CloudCover(int x, int y, int z);
 

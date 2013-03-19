@@ -42,7 +42,7 @@ namespace Aurora.Framework
         private uint m_estateID = 1;
 
         /// <summary>
-        ///   ID of the estate this ban limits access to.
+        ///     ID of the estate this ban limits access to.
         /// </summary>
         [ProtoMember(1)]
         public uint EstateID
@@ -52,7 +52,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   ID of the banned user.
+        ///     ID of the banned user.
         /// </summary>
         [ProtoMember(2)]
         public UUID BannedUserID
@@ -62,7 +62,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   IP address or domain name of the banned client.
+        ///     IP address or domain name of the banned client.
         /// </summary>
         [ProtoMember(3)]
         public string BannedHostAddress
@@ -72,7 +72,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   IP address mask for banning group of client hosts.
+        ///     IP address mask for banning group of client hosts.
         /// </summary>
         [ProtoMember(3)]
         public string BannedHostIPMask
@@ -82,7 +82,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Domain name mask for banning group of client hosts.
+        ///     Domain name mask for banning group of client hosts.
         /// </summary>
         [ProtoMember(4)]
         public string BannedHostNameMask

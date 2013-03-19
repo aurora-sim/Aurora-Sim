@@ -33,24 +33,29 @@ namespace Aurora.Framework
 {
     public class PathHelpers
     {
-        const string usernameVar = "%username%";
+        private const string usernameVar = "%username%";
+
         public static string PathUsername(string Path) //supports using %username% in place of username
         {
-            if (Path.IndexOf(usernameVar, StringComparison.CurrentCultureIgnoreCase) == -1) //does not contain username var
+            if (Path.IndexOf(usernameVar, StringComparison.CurrentCultureIgnoreCase) == -1)
+                //does not contain username var
             {
                 return Path;
             }
             else //contains username var
             {
                 string userName = Environment.UserName; //check system for current username
-                return Regex.Replace(Path, usernameVar, userName, RegexOptions.IgnoreCase); //return Path with the system username
+                return Regex.Replace(Path, usernameVar, userName, RegexOptions.IgnoreCase);
+                    //return Path with the system username
             }
         }
 
-        const string HomedriveVar = "%homedrive%";
+        private const string HomedriveVar = "%homedrive%";
+
         public static string PathHomeDrive(string Path) //supports for %homedrive%, gives the drive letter on Windows
         {
-            if (Path.IndexOf(HomedriveVar, StringComparison.CurrentCultureIgnoreCase) == -1) //does not contain username var
+            if (Path.IndexOf(HomedriveVar, StringComparison.CurrentCultureIgnoreCase) == -1)
+                //does not contain username var
             {
                 return Path;
             }
@@ -69,7 +74,8 @@ namespace Aurora.Framework
             }
         }
 
-        public static string ComputeFullPath(string Path) //single function that calls the functions that help compute a full url Path
+        public static string ComputeFullPath(string Path)
+            //single function that calls the functions that help compute a full url Path
         {
             return PathHomeDrive(PathUsername(Path));
         }

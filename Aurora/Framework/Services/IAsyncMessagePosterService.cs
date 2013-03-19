@@ -31,33 +31,34 @@ using OpenMetaverse.StructuredData;
 namespace Aurora.Framework
 {
     public delegate void GetResponse(OSDMap response);
+
     /// <summary>
-    ///   This Service deals with posting events to a (local or remote) host
-    ///   This is used for secure communications between regions and the grid service
-    ///   for things such as EventQueueMessages and posting of a grid wide notice
+    ///     This Service deals with posting events to a (local or remote) host
+    ///     This is used for secure communications between regions and the grid service
+    ///     for things such as EventQueueMessages and posting of a grid wide notice
     /// </summary>
     public interface ISyncMessagePosterService
     {
         /// <summary>
-        ///   Post a request to all hosts that we have
+        ///     Post a request to all hosts that we have
         /// </summary>
-        /// <param name = "url"></param>
-        /// <param name = "request"></param>
+        /// <param name="url"></param>
+        /// <param name="request"></param>
         void Post(string url, OSDMap request);
 
         /// <summary>
-        /// Posts a request directly to the messaging server
+        ///     Posts a request directly to the messaging server
         /// </summary>
         /// <param name="request"></param>
         void PostToServer(OSDMap request);
 
         /// <summary>
-        ///   Post a request to all hosts that we have
-        ///   Returns an OSDMap of the response.
+        ///     Post a request to all hosts that we have
+        ///     Returns an OSDMap of the response.
         /// </summary>
-        /// <param name = "url"></param>
-        /// <param name = "request"></param>
-        /// <param name = "response"></param>
+        /// <param name="url"></param>
+        /// <param name="request"></param>
+        /// <param name="response"></param>
         /// <returns></returns>
         void Get(string url, OSDMap request, GetResponse response);
     }
@@ -65,26 +66,25 @@ namespace Aurora.Framework
     public delegate OSDMap MessageReceived(OSDMap message);
 
     /// <summary>
-    ///   This is used to deal with incoming requests from the ISyncMessagePosterService
+    ///     This is used to deal with incoming requests from the ISyncMessagePosterService
     /// </summary>
     public interface ISyncMessageRecievedService
     {
         /// <summary>
-        ///   This is fired when a message from the ISyncMessagePosterService
-        ///   has been received either by the IAsyncMessagePosterService for Aurora
-        ///   or the ISyncMessagePosterService for Aurora.Server
-        ///   
-        ///   Notes on this event:
-        ///   This is subscribed to by many events and many events will not be dealing with the request.
-        ///   If you do not wish to send a response back to the poster, return null, otherwise, return a
-        ///   valid OSDMap that will be added to the response.
+        ///     This is fired when a message from the ISyncMessagePosterService
+        ///     has been received either by the IAsyncMessagePosterService for Aurora
+        ///     or the ISyncMessagePosterService for Aurora.Server
+        ///     Notes on this event:
+        ///     This is subscribed to by many events and many events will not be dealing with the request.
+        ///     If you do not wish to send a response back to the poster, return null, otherwise, return a
+        ///     valid OSDMap that will be added to the response.
         /// </summary>
         event MessageReceived OnMessageReceived;
 
         /// <summary>
-        ///   Fire the MessageReceived event
+        ///     Fire the MessageReceived event
         /// </summary>
-        /// <param name = "message"></param>
+        /// <param name="message"></param>
         /// <returns></returns>
         OSDMap FireMessageReceived(OSDMap message);
     }
@@ -112,7 +112,7 @@ namespace Aurora.Framework
         {
             Success = map["Success"];
             CircuitData = new AgentCircuitData();
-            CircuitData.FromOSD((OSDMap)map["CircuitData"]);
+            CircuitData.FromOSD((OSDMap) map["CircuitData"]);
             SeedCap = map["SeedCap"];
             Reason = map["Reason"];
         }
@@ -121,80 +121,80 @@ namespace Aurora.Framework
     public interface IAgentProcessing
     {
         /// <summary>
-        ///   Log out the current agent
+        ///     Log out the current agent
         /// </summary>
-        /// <param name = "regionCaps"></param>
+        /// <param name="regionCaps"></param>
         void LogoutAgent(IRegionClientCapsService regionCaps, bool kickRootAgent);
 
         /// <summary>
-        ///   Called by the login service, adds an agent to the region without firing any EQM messages
+        ///     Called by the login service, adds an agent to the region without firing any EQM messages
         /// </summary>
-        /// <param name = "region"></param>
-        /// <param name = "aCircuit"></param>
-        /// <param name = "reason"></param>
+        /// <param name="region"></param>
+        /// <param name="aCircuit"></param>
+        /// <param name="reason"></param>
         LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit);
 
         /// <summary>
-        ///   Logout all agents in the given region
+        ///     Logout all agents in the given region
         /// </summary>
-        /// <param name = "requestingRegion"></param>
+        /// <param name="requestingRegion"></param>
         void LogOutAllAgentsForRegion(UUID requestingRegion);
 
         /// <summary>
-        ///   Enable any child agents that might need added for the restarted region
+        ///     Enable any child agents that might need added for the restarted region
         /// </summary>
-        /// <param name = "requestingRegion"></param>
+        /// <param name="requestingRegion"></param>
         /// <returns></returns>
         bool EnableChildAgentsForRegion(GridRegion requestingRegion);
 
         /// <summary>
-        ///   Enable all child agents that should exist in neighboring regions for the given avatar
+        ///     Enable all child agents that should exist in neighboring regions for the given avatar
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "requestingRegion"></param>
-        /// <param name = "DrawDistance"></param>
-        /// <param name = "circuit"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="requestingRegion"></param>
+        /// <param name="DrawDistance"></param>
+        /// <param name="circuit"></param>
         /// <returns></returns>
         void EnableChildAgents(UUID AgentID, UUID requestingRegion, int DrawDistance, AgentCircuitData circuit);
 
         /// <summary>
-        ///   Teleport the given agent to another sim
+        ///     Teleport the given agent to another sim
         /// </summary>
-        /// <param name = "destination"></param>
-        /// <param name = "TeleportFlags"></param>
-        /// <param name = "DrawDistance"></param>
-        /// <param name = "circuit"></param>
-        /// <param name = "agentData"></param>
-        /// <param name = "AgentID"></param>
-        /// <param name = "requestingRegion"></param>
-        /// <param name = "reason"></param>
+        /// <param name="destination"></param>
+        /// <param name="TeleportFlags"></param>
+        /// <param name="DrawDistance"></param>
+        /// <param name="circuit"></param>
+        /// <param name="agentData"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="requestingRegion"></param>
+        /// <param name="reason"></param>
         /// <returns></returns>
         bool TeleportAgent(ref GridRegion destination, uint TeleportFlags, int DrawDistance,
                            AgentCircuitData circuit, AgentData agentData, UUID AgentID, UUID requestingRegion,
                            out string reason);
 
         /// <summary>
-        ///   Cross the given agent to another sim
+        ///     Cross the given agent to another sim
         /// </summary>
-        /// <param name = "crossingRegion"></param>
-        /// <param name = "pos"></param>
-        /// <param name = "velocity"></param>
-        /// <param name = "circuit"></param>
-        /// <param name = "cAgent"></param>
-        /// <param name = "AgentID"></param>
-        /// <param name = "requestingRegion"></param>
-        /// <param name = "reason"></param>
+        /// <param name="crossingRegion"></param>
+        /// <param name="pos"></param>
+        /// <param name="velocity"></param>
+        /// <param name="circuit"></param>
+        /// <param name="cAgent"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="requestingRegion"></param>
+        /// <param name="reason"></param>
         /// <returns></returns>
         bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
                         Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, UUID AgentID,
                         UUID requestingRegion, out string reason);
 
         /// <summary>
-        ///   Send an agent update to all neighbors for the given agent
-        ///   This updates the agent's position, throttles, velocity, etc
+        ///     Send an agent update to all neighbors for the given agent
+        ///     This updates the agent's position, throttles, velocity, etc
         /// </summary>
-        /// <param name = "agentpos"></param>
-        /// <param name = "regionCaps"></param>
+        /// <param name="agentpos"></param>
+        /// <param name="regionCaps"></param>
         void SendChildAgentUpdate(AgentPosition agentpos, IRegionClientCapsService regionCaps);
     }
 }

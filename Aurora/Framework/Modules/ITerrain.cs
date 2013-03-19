@@ -75,9 +75,10 @@ namespace Aurora.Framework
     public interface IMapImageGenerator
     {
         /// <summary>
-        ///   Build a terrain tile for the current region
+        ///     Build a terrain tile for the current region
         /// </summary>
         void CreateTerrainTexture();
+
         void CreateTerrainTexture(bool forced);
 
         void CreateMapTile(out Bitmap terrainBMP, out Bitmap mapBMP);

@@ -38,7 +38,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   An interface for connecting to the authentication datastore
+    ///     An interface for connecting to the authentication datastore
     /// </summary>
     public interface IAuthenticationData : IAuroraDataPlugin
     {

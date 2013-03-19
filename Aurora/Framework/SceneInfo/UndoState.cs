@@ -69,7 +69,8 @@ namespace Aurora.Framework
                 }
                 else
                 {
-                    if (Position == part.OffsetPosition && Rotation == part.GetRotationOffset() && Scale == part.Shape.Scale)
+                    if (Position == part.OffsetPosition && Rotation == part.GetRotationOffset() &&
+                        Scale == part.Shape.Scale)
                         return true;
                     else
                         return false;
@@ -103,7 +104,9 @@ namespace Aurora.Framework
                         part.Scale = Scale;
                     }
 
-                    foreach (ISceneChildEntity child in part.ParentEntity.ChildrenEntities().Where(child => child.UUID != part.UUID))
+                    foreach (
+                        ISceneChildEntity child in
+                            part.ParentEntity.ChildrenEntities().Where(child => child.UUID != part.UUID))
                     {
                         child.Undo(); //No updates here, child undo will do it on their own
                     }
@@ -157,7 +160,9 @@ namespace Aurora.Framework
                         part.Resize(Scale);
                     }
 
-                    foreach (ISceneChildEntity child in part.ParentEntity.ChildrenEntities().Where(child => child.UUID != part.UUID))
+                    foreach (
+                        ISceneChildEntity child in
+                            part.ParentEntity.ChildrenEntities().Where(child => child.UUID != part.UUID))
                     {
                         child.Redo(); //No updates here, child redo will do it on their own
                     }

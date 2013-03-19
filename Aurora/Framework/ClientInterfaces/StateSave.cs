@@ -33,33 +33,19 @@ namespace Aurora.Framework
     [ProtoContract]
     public class StateSave
     {
-        [ProtoMember(1)]
-        public string AssemblyName;
-        [ProtoMember(2)]
-        public bool Compiled = true;
-        [ProtoMember(3)]
-        public bool Disabled;
-        [ProtoMember(4)]
-        public UUID ItemID;
-        [ProtoMember(5)]
-        public double MinEventDelay;
-        [ProtoMember(6)]
-        public UUID PermsGranter;
-        [ProtoMember(7)]
-        public int PermsMask;
-        [ProtoMember(8)]
-        public string Plugins;
-        [ProtoMember(9)]
-        public bool Running;
-        [ProtoMember(10)]
-        public string Source;
-        [ProtoMember(11)]
-        public string State;
-        [ProtoMember(12)]
-        public bool TargetOmegaWasSet;
-        [ProtoMember(13)]
-        public UUID UserInventoryID;
-        [ProtoMember(14)]
-        public string Variables;
+        [ProtoMember(1)] public string AssemblyName;
+        [ProtoMember(2)] public bool Compiled = true;
+        [ProtoMember(3)] public bool Disabled;
+        [ProtoMember(4)] public UUID ItemID;
+        [ProtoMember(5)] public double MinEventDelay;
+        [ProtoMember(6)] public UUID PermsGranter;
+        [ProtoMember(7)] public int PermsMask;
+        [ProtoMember(8)] public string Plugins;
+        [ProtoMember(9)] public bool Running;
+        [ProtoMember(10)] public string Source;
+        [ProtoMember(11)] public string State;
+        [ProtoMember(12)] public bool TargetOmegaWasSet;
+        [ProtoMember(13)] public UUID UserInventoryID;
+        [ProtoMember(14)] public string Variables;
     }
 }

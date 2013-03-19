@@ -44,18 +44,18 @@ namespace Aurora.Framework
         void ModifyTerrain(UUID user, Vector3 pos, byte size, byte action, UUID agentId);
 
         /// <summary>
-        ///   Taint the terrain. This will lead to sending the terrain data to the clients again.
-        ///   Use this if you change terrain data outside of the terrain module (e.g. in osTerrainSetHeight)
+        ///     Taint the terrain. This will lead to sending the terrain data to the clients again.
+        ///     Use this if you change terrain data outside of the terrain module (e.g. in osTerrainSetHeight)
         /// </summary>
         void TaintTerrain();
 
         /// <summary>
-        ///   Load a terrain from a stream.
+        ///     Load a terrain from a stream.
         /// </summary>
-        /// <param name = "filename">
-        ///   Only required here to identify the image type.  Not otherwise used in the loading itself.
+        /// <param name="filename">
+        ///     Only required here to identify the image type.  Not otherwise used in the loading itself.
         /// </param>
-        /// <param name = "stream"></param>
+        /// <param name="stream"></param>
         void LoadFromStream(string filename, Stream stream);
 
         void LoadFromStream(string filename, Uri pathToTerrainHeightmap);
@@ -65,13 +65,13 @@ namespace Aurora.Framework
         void LoadWaterRevertMapFromStream(string filename, Stream stream, int offsetX, int offsetY);
 
         /// <summary>
-        ///   Save a terrain to a stream.
+        ///     Save a terrain to a stream.
         /// </summary>
-        /// <param name = "channel"></param>
-        /// <param name = "filename">
-        ///   Only required here to identify the image type.  Not otherwise used in the saving itself.
+        /// <param name="channel"></param>
+        /// <param name="filename">
+        ///     Only required here to identify the image type.  Not otherwise used in the saving itself.
         /// </param>
-        /// <param name = "stream"></param>
+        /// <param name="stream"></param>
         void SaveToStream(ITerrainChannel channel, string filename, Stream stream);
 
         void UndoTerrain(ITerrainChannel channel);

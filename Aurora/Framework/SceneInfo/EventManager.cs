@@ -5,8 +5,9 @@ using System;
 using System.Collections.Generic;
 
 namespace Aurora.Framework
-{/// <summary>
-    /// A class for triggering remote scene events.
+{
+    /// <summary>
+    ///     A class for triggering remote scene events.
     /// </summary>
     public class EventManager
     {
@@ -17,13 +18,15 @@ namespace Aurora.Framework
         public delegate void OnNewClientDelegate(IClientAPI client);
 
         /// <summary>
-        /// Deprecated in favour of OnClientConnect.
-        /// Will be marked Obsolete after IClientCore has 100% of IClientAPI interfaces.
+        ///     Deprecated in favour of OnClientConnect.
+        ///     Will be marked Obsolete after IClientCore has 100% of IClientAPI interfaces.
         /// </summary>
         public event OnNewClientDelegate OnNewClient;
+
         public event OnNewClientDelegate OnClosingClient;
 
         public delegate void OnClientLoginDelegate(IClientAPI client);
+
         public event OnClientLoginDelegate OnClientLogin;
 
         public delegate void OnNewPresenceDelegate(IScenePresence presence);
@@ -39,94 +42,124 @@ namespace Aurora.Framework
         public delegate void OnPermissionErrorDelegate(UUID user, string reason);
 
         /// <summary>
-        /// Fired when an object is touched/grabbed.
+        ///     Fired when an object is touched/grabbed.
         /// </summary>
         /// The child is the part that was actually touched.
         public event ObjectGrabDelegate OnObjectGrab;
-        public delegate void ObjectGrabDelegate(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
+
+        public delegate void ObjectGrabDelegate(
+            ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient,
+            SurfaceTouchEventArgs surfaceArgs);
 
         public event ObjectGrabDelegate OnObjectGrabbing;
         public event ObjectDeGrabDelegate OnObjectDeGrab;
-        public delegate void ObjectDeGrabDelegate(ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
+
+        public delegate void ObjectDeGrabDelegate(
+            ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
 
         public event OnPermissionErrorDelegate OnPermissionError;
 
         /// <summary>
-        /// Fired when a new script is created.
+        ///     Fired when a new script is created.
         /// </summary>
         public event NewRezScripts OnRezScripts;
-        public delegate void NewRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom, bool clearStateSaves);
+
+        public delegate void NewRezScripts(
+            ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez,
+            StateSource stateSource, UUID RezzedFrom, bool clearStateSaves);
 
         public delegate void RemoveScript(uint localID, UUID itemID);
+
         public event RemoveScript OnRemoveScript;
 
         public delegate bool SceneGroupMoved(UUID groupID, Vector3 delta);
+
         public event SceneGroupMoved OnSceneGroupMove;
 
         public delegate void SceneGroupGrabed(UUID groupID, Vector3 offset, UUID userID);
+
         public event SceneGroupGrabed OnSceneGroupGrab;
 
         public delegate bool SceneGroupSpinStarted(UUID groupID);
+
         public event SceneGroupSpinStarted OnSceneGroupSpinStart;
 
         public delegate bool SceneGroupSpun(UUID groupID, Quaternion rotation);
+
         public event SceneGroupSpun OnSceneGroupSpin;
 
         public delegate void LandObjectAdded(LandData newParcel);
+
         public event LandObjectAdded OnLandObjectAdded;
 
         public delegate void LandObjectRemoved(UUID RegionID, UUID globalID);
+
         public event LandObjectRemoved OnLandObjectRemoved;
 
         public delegate void AvatarEnteringNewParcel(IScenePresence avatar, ILandObject oldParcel);
+
         public event AvatarEnteringNewParcel OnAvatarEnteringNewParcel;
 
         public delegate void SignificantClientMovement(IScenePresence sp);
+
         public event SignificantClientMovement OnSignificantClientMovement;
 
         public event SignificantClientMovement OnClientMovement;
 
         public delegate void SignificantObjectMovement(ISceneEntity group);
+
         public event SignificantObjectMovement OnSignificantObjectMovement;
 
         public delegate void IncomingInstantMessage(GridInstantMessage message);
+
         public event IncomingInstantMessage OnIncomingInstantMessage;
 
         public delegate string ChatSessionRequest(UUID agentID, OSDMap request);
+
         public event ChatSessionRequest OnChatSessionRequest;
 
         public event IncomingInstantMessage OnUnhandledInstantMessage;
 
         /// <summary>
-        /// This is fired when a scene object property that a script might be interested in (such as color, scale or
-        /// inventory) changes.  Only enough information is sent for the LSL changed event
-        /// (see http://lslwiki.net/lslwiki/wakka.php?wakka=changed)
+        ///     This is fired when a scene object property that a script might be interested in (such as color, scale or
+        ///     inventory) changes.  Only enough information is sent for the LSL changed event
+        ///     (see http://lslwiki.net/lslwiki/wakka.php?wakka=changed)
         /// </summary>
         public event ScriptChangedEvent OnScriptChangedEvent;
+
         public delegate void ScriptChangedEvent(ISceneChildEntity part, uint change);
 
         public event ScriptMovingStartEvent OnScriptMovingStartEvent;
+
         public delegate void ScriptMovingStartEvent(ISceneChildEntity part);
 
         public event ScriptMovingEndEvent OnScriptMovingEndEvent;
+
         public delegate void ScriptMovingEndEvent(ISceneChildEntity part);
 
-        public delegate void ScriptControlEvent(ISceneChildEntity part, UUID item, UUID avatarID, uint held, uint changed);
+        public delegate void ScriptControlEvent(
+            ISceneChildEntity part, UUID item, UUID avatarID, uint held, uint changed);
+
         public event ScriptControlEvent OnScriptControlEvent;
 
         public delegate void ScriptAtTargetEvent(uint localID, uint handle, Vector3 targetpos, Vector3 atpos);
+
         public event ScriptAtTargetEvent OnScriptAtTargetEvent;
 
         public delegate void ScriptNotAtTargetEvent(uint localID);
+
         public event ScriptNotAtTargetEvent OnScriptNotAtTargetEvent;
 
         public delegate void ScriptAtRotTargetEvent(uint localID, uint handle, Quaternion targetrot, Quaternion atrot);
+
         public event ScriptAtRotTargetEvent OnScriptAtRotTargetEvent;
 
         public delegate void ScriptNotAtRotTargetEvent(uint localID);
+
         public event ScriptNotAtRotTargetEvent OnScriptNotAtRotTargetEvent;
 
         public delegate void ScriptColliding(ISceneChildEntity part, ColliderArgs colliders);
+
         public event ScriptColliding OnScriptColliderStart;
         public event ScriptColliding OnScriptColliding;
         public event ScriptColliding OnScriptCollidingEnd;
@@ -135,10 +168,12 @@ namespace Aurora.Framework
         public event ScriptColliding OnScriptLandColliderEnd;
 
         public delegate void OnMakeChildAgentDelegate(IScenePresence presence, GridRegion destination);
+
         public event OnMakeChildAgentDelegate OnMakeChildAgent;
         public event OnMakeChildAgentDelegate OnSetAgentLeaving;
 
         public delegate void OnMakeRootAgentDelegate(IScenePresence presence);
+
         public event OnMakeRootAgentDelegate OnMakeRootAgent;
         public event OnMakeRootAgentDelegate OnAgentFailedToLeave;
 
@@ -147,8 +182,11 @@ namespace Aurora.Framework
         public event RequestChangeWaterHeight OnRequestChangeWaterHeight;
 
         public delegate void AddToStartupQueue(string name);
+
         public delegate void FinishedStartup(string name, List<string> data);
+
         public delegate void StartupComplete(IScene scene, List<string> data);
+
         public event FinishedStartup OnModuleFinishedStartup;
         public event AddToStartupQueue OnAddToStartupQueue;
         public event StartupComplete OnStartupComplete;
@@ -156,90 +194,104 @@ namespace Aurora.Framework
         public event StartupComplete OnStartupFullyComplete;
 
         public delegate void EstateToolsSunUpdate(ulong regionHandle, bool FixedTime, bool EstateSun, float LindenHour);
+
         public event EstateToolsSunUpdate OnEstateToolsSunUpdate;
 
         public delegate void ObjectBeingRemovedFromScene(ISceneEntity obj);
+
         public event ObjectBeingRemovedFromScene OnObjectBeingRemovedFromScene;
 
         public event ObjectBeingRemovedFromScene OnObjectBeingAddedToScene;
 
         public delegate void IncomingLandDataFromStorage(List<LandData> data, Vector2 parcelOffset);
+
         public event IncomingLandDataFromStorage OnIncomingLandDataFromStorage;
 
         /// <summary>
-        /// RegisterCapsEvent is called by Scene after the Caps object
-        /// has been instantiated and before it is return to the
-        /// client and provides region modules to add their caps.
+        ///     RegisterCapsEvent is called by Scene after the Caps object
+        ///     has been instantiated and before it is return to the
+        ///     client and provides region modules to add their caps.
         /// </summary>
         public delegate OSDMap RegisterCapsEvent(UUID agentID, IHttpServer httpServer);
+
         public event RegisterCapsEvent OnRegisterCaps;
 
         /// <summary>
-        /// DeregisterCapsEvent is called by Scene when the caps
-        /// handler for an agent are removed.
+        ///     DeregisterCapsEvent is called by Scene when the caps
+        ///     handler for an agent are removed.
         /// </summary>
         public delegate void DeregisterCapsEvent(UUID agentID, IRegionClientCapsService caps);
+
         public event DeregisterCapsEvent OnDeregisterCaps;
 
         /// <summary>
-        /// ChatFromWorldEvent is called via Scene when a chat message
-        /// from world comes in.
+        ///     ChatFromWorldEvent is called via Scene when a chat message
+        ///     from world comes in.
         /// </summary>
         public delegate void ChatFromWorldEvent(Object sender, OSChatMessage chat);
+
         public event ChatFromWorldEvent OnChatFromWorld;
 
         /// <summary>
-        /// ChatFromClientEvent is triggered via ChatModule (or
-        /// substitutes thereof) when a chat message
-        /// from the client  comes in.
+        ///     ChatFromClientEvent is triggered via ChatModule (or
+        ///     substitutes thereof) when a chat message
+        ///     from the client  comes in.
         /// </summary>
         public delegate void ChatFromClientEvent(IClientAPI sender, OSChatMessage chat);
+
         public event ChatFromClientEvent OnChatFromClient;
 
         /// <summary>
-        /// ChatBroadcastEvent is called via Scene when a broadcast chat message
-        /// from world comes in
+        ///     ChatBroadcastEvent is called via Scene when a broadcast chat message
+        ///     from world comes in
         /// </summary>
         public delegate void ChatBroadcastEvent(Object sender, OSChatMessage chat);
+
         public event ChatBroadcastEvent OnChatBroadcast;
 
         /// <summary>
-        /// Called when oar file has finished loading, although
-        /// the scripts may not have started yet
-        /// Message is non empty string if there were problems loading the oar file
+        ///     Called when oar file has finished loading, although
+        ///     the scripts may not have started yet
+        ///     Message is non empty string if there were problems loading the oar file
         /// </summary>
         public delegate void OarFileLoaded(Guid guid, string message);
+
         public event OarFileLoaded OnOarFileLoaded;
 
         /// <summary>
-        /// Called when an oar file has finished saving
-        /// Message is non empty string if there were problems saving the oar file
-        /// If a guid was supplied on the original call to identify, the request, this is returned.  Otherwise 
-        /// Guid.Empty is returned.
+        ///     Called when an oar file has finished saving
+        ///     Message is non empty string if there were problems saving the oar file
+        ///     If a guid was supplied on the original call to identify, the request, this is returned.  Otherwise
+        ///     Guid.Empty is returned.
         /// </summary>
         public delegate void OarFileSaved(Guid guid, string message);
+
         public event OarFileSaved OnOarFileSaved;
 
         /// <summary>
-        /// Called when the script compile queue becomes empty
-        /// Returns the number of scripts which failed to start
+        ///     Called when the script compile queue becomes empty
+        ///     Returns the number of scripts which failed to start
         /// </summary>
         public delegate void EmptyScriptCompileQueue(int numScriptsFailed, string message);
+
         public event EmptyScriptCompileQueue OnEmptyScriptCompileQueue;
 
         /// <summary>
-        /// Called whenever an object is attached, or detached from an in-world presence.
+        ///     Called whenever an object is attached, or detached from an in-world presence.
         /// </summary>
         /// If the object is being attached, then the avatarID will be present.  If the object is being detached then
         /// the avatarID is UUID.Zero (I know, this doesn't make much sense but now it's historical).
         public delegate void Attach(uint localID, UUID itemID, UUID avatarID);
+
         public event Attach OnAttach;
 
         public delegate void RegionUp(GridRegion region);
+
         public event RegionUp OnRegionUp;
         public event RegionUp OnRegionDown;
 
         public delegate void CachedUserInfo(UUID agentID, Aurora.Framework.CachedUserInfo info);
+
         public event CachedUserInfo OnCachedUserInfo;
 
         public class LandBuyArgs : EventArgs
@@ -263,8 +315,8 @@ namespace Aurora.Framework
             public int amountDebited = 0;
 
             public LandBuyArgs(UUID pagentId, UUID pgroupId, bool pfinal, bool pgroupOwned,
-                bool premoveContribution, int pparcelLocalID, int pparcelArea, int pparcelPrice,
-                bool pauthenticated, UUID pparcelOwnerID)
+                               bool premoveContribution, int pparcelLocalID, int pparcelArea, int pparcelPrice,
+                               bool pauthenticated, UUID pparcelOwnerID)
             {
                 agentId = pagentId;
                 groupId = pgroupId;
@@ -491,7 +543,6 @@ namespace Aurora.Framework
                     }
                 }
             }
-
         }
 
         public void TriggerOnNewPresence(IScenePresence presence)
@@ -578,7 +629,8 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerObjectGrab(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectGrab(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
+                                      IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectGrabDelegate handlerObjectGrab = OnObjectGrab;
             if (handlerObjectGrab != null)
@@ -599,7 +651,8 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerObjectGrabbing(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectGrabbing(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
+                                          IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectGrabDelegate handlerObjectGrabbing = OnObjectGrabbing;
             if (handlerObjectGrabbing != null)
@@ -620,7 +673,8 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerObjectDeGrab(ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectDeGrab(ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient,
+                                        SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectDeGrabDelegate handlerObjectDeGrab = OnObjectDeGrab;
             if (handlerObjectDeGrab != null)
@@ -641,7 +695,8 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID rezzedFrom, bool clearStateSaves)
+        public void TriggerRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam,
+                                      bool postOnRez, StateSource stateSource, UUID rezzedFrom, bool clearStateSaves)
         {
             NewRezScripts handlerRezScripts = OnRezScripts;
             if (handlerRezScripts != null)
@@ -1343,13 +1398,14 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Updates the system as to how the position of the sun should be handled.
+        ///     Updates the system as to how the position of the sun should be handled.
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="fixedTime">True if the Sun Position is fixed</param>
         /// <param name="useEstateTime">True if the Estate Settings should be used instead of region</param>
         /// <param name="fixedSunHour">The hour 0.0 &lt;= FixedSunHour &lt;= 24.0 at which the sun is fixed at. Sun Hour 0 is sun-rise, when Day/Night ratio is 1:1</param>
-        public void TriggerEstateToolsSunUpdate(ulong regionHandle, bool fixedTime, bool useEstateTime, float fixedSunHour)
+        public void TriggerEstateToolsSunUpdate(ulong regionHandle, bool fixedTime, bool useEstateTime,
+                                                float fixedSunHour)
         {
             EstateToolsSunUpdate handlerEstateToolsSunUpdate = OnEstateToolsSunUpdate;
             if (handlerEstateToolsSunUpdate != null)

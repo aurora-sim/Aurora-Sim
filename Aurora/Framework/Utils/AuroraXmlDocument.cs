@@ -5,21 +5,21 @@ using System.Xml;
 namespace Aurora.Framework
 {
     /// <summary>
-    /// Summary description for NSXML.
+    ///     Summary description for NSXML.
     /// </summary>
     public sealed class AuroraXmlDocument : XmlDocument
     {
         #region Constructors
+
         /// <summary>
-        /// Default Constructor
+        ///     Default Constructor
         /// </summary>
-        /// 
         public AuroraXmlDocument()
         {
         }
 
         /// <summary>
-        /// Creates a AuroraXmlDocument and loads it with the xml
+        ///     Creates a AuroraXmlDocument and loads it with the xml
         /// </summary>
         /// <param name="xml"></param>
         public AuroraXmlDocument(string xml)
@@ -29,10 +29,11 @@ namespace Aurora.Framework
         }
 
         #endregion
+
         #region root work
 
         /// <summary>
-        /// Creates a new AuroraXmlDocument with the specified rootName
+        ///     Creates a new AuroraXmlDocument with the specified rootName
         /// </summary>
         /// <param name="rootName"></param>
         /// <returns></returns>
@@ -42,7 +43,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Adds the nodeName as the root element
+        ///     Adds the nodeName as the root element
         /// </summary>
         /// <param name="nodeName"></param>
         /// <returns></returns>
@@ -51,12 +52,12 @@ namespace Aurora.Framework
             return CreateElement(nodeName);
         }
 
-
         #endregion
+
         #region addnode functions
 
         /// <summary>
-        /// Creates and returns an XmlNode with an attribute and attribute value. This does not place it in the DOM.
+        ///     Creates and returns an XmlNode with an attribute and attribute value. This does not place it in the DOM.
         /// </summary>
         /// <param name="nodeName">Name of the node to create</param>
         /// <param name="nodeValue">Value of the node to create</param>
@@ -83,7 +84,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Creates and returns an XmlNode. This does not place it in the DOM.
+        ///     Creates and returns an XmlNode. This does not place it in the DOM.
         /// </summary>
         /// <param name="nodeName">Name of the node to create</param>
         /// <param name="nodeValue">Value of the node to create</param>
@@ -94,7 +95,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Creates and returns an XmlNode. This does not place it in the DOM.
+        ///     Creates and returns an XmlNode. This does not place it in the DOM.
         /// </summary>
         /// <param name="nodeName">Name of the node to create</param>
         /// <param name="nodeValue">Value of the node to create</param>
@@ -105,7 +106,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Creates and returns an XmlNode with an attribute and attribute value. This does not place it in the DOM.
+        ///     Creates and returns an XmlNode with an attribute and attribute value. This does not place it in the DOM.
         /// </summary>
         /// <param name="nodeName">Name of the node to create</param>
         /// <param name="nodeValue">Value of the node to create</param>
@@ -118,7 +119,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Creates and returns an XmlNode with an attribute and attribute value. This does not place it in the DOM.
+        ///     Creates and returns an XmlNode with an attribute and attribute value. This does not place it in the DOM.
         /// </summary>
         /// <param name="nodeName">Name of the node to create</param>
         /// <param name="nodeValue">Value of the node to create</param>
@@ -131,7 +132,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Creates and returns an XmlNode with an attribute and attribute value. This does not place it in the DOM.
+        ///     Creates and returns an XmlNode with an attribute and attribute value. This does not place it in the DOM.
         /// </summary>
         /// <param name="nodeName">Name of the node to create</param>
         /// <param name="nodeValue">Value of the node to create</param>
@@ -145,7 +146,7 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        /// Adds a node to root
+        ///     Adds a node to root
         /// </summary>
         /// <param name="selectedNode">XmlNode where to add</param>
         /// <param name="nodeToAdd">XmlNode to add</param>
@@ -157,7 +158,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Adds a node to root
+        ///     Adds a node to root
         /// </summary>
         /// <param name="nodeName">Name of the node to add</param>
         /// <param name="nodeValue">Value of node to add</param>
@@ -168,7 +169,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Adds a node with an attribute and attribute value to root
+        ///     Adds a node with an attribute and attribute value to root
         /// </summary>
         /// <param name="nodeName"></param>
         /// <param name="nodeValue"></param>
@@ -181,7 +182,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Adds a node to root named by xPath
+        ///     Adds a node to root named by xPath
         /// </summary>
         /// <param name="xPath"></param>
         /// <param name="nodeName"></param>
@@ -194,7 +195,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Adds a node to root named by xPath
+        ///     Adds a node to root named by xPath
         /// </summary>
         /// <param name="xPath"></param>
         /// <param name="nodeName"></param>
@@ -202,17 +203,20 @@ namespace Aurora.Framework
         /// <param name="attributeName"></param>
         /// <param name="attributeValue"></param>
         /// <returns>XmlNode added</returns>
-        public XmlNode AddNode(string xPath, string nodeName, string nodeValue, string attributeName, string attributeValue)
+        public XmlNode AddNode(string xPath, string nodeName, string nodeValue, string attributeName,
+                               string attributeValue)
         {
             if (DocumentElement == null) throw new Exception("DocumentElemnt is null");
-            return AddNode(DocumentElement.SelectSingleNode(xPath), CreateNode(nodeName, nodeValue, attributeName, attributeValue));
+            return AddNode(DocumentElement.SelectSingleNode(xPath),
+                           CreateNode(nodeName, nodeValue, attributeName, attributeValue));
         }
 
         #endregion
+
         #region AddXMLDoc funtions
 
         /// <summary>
-        /// Combines to xml documents into one. 
+        ///     Combines to xml documents into one.
         /// </summary>
         /// <param name="XmlDoc">XmlDoc you want to add to this Xmldoc</param>
         /// <param name="xPathFrom">XPath to the node or nodes you want to move</param>
@@ -237,10 +241,11 @@ namespace Aurora.Framework
         }
 
         #endregion
+
         #region editNode functions
 
         /// <summary>
-        /// Edit the value of a node
+        ///     Edit the value of a node
         /// </summary>
         /// <param name="xPath">XPath to the node</param>
         /// <param name="theValue">New Value of the node</param>
@@ -251,7 +256,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Edit the value of a node
+        ///     Edit the value of a node
         /// </summary>
         /// <param name="xPath">XPath to the node</param>
         /// <param name="theValue">New Value of the node</param>
@@ -262,7 +267,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Edit the value of a node
+        ///     Edit the value of a node
         /// </summary>
         /// <param name="xPath">XPath to the node</param>
         /// <param name="theValue">New Value of the node</param>
@@ -275,7 +280,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Edit the value of a node
+        ///     Edit the value of a node
         /// </summary>
         /// <param name="xPath">XPath to the node</param>
         /// <param name="theValue">New Value of the node</param>
@@ -288,7 +293,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Edit the value of a node
+        ///     Edit the value of a node
         /// </summary>
         /// <param name="xPath">XPath to the node</param>
         /// <param name="theValue">New Value of the node</param>
@@ -301,7 +306,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Edit the value of a node
+        ///     Edit the value of a node
         /// </summary>
         /// <param name="xPath">XPath to the node</param>
         /// <param name="theValue">New Value of the node</param>
@@ -311,7 +316,10 @@ namespace Aurora.Framework
         public XmlNode EditNode(string xPath, string theValue, string attributeName, string attributeValue)
         {
             if (DocumentElement == null) throw new Exception("DocumentElemnt is null");
-            XmlNode selectedNode = !IsNull(attributeName) ? DocumentElement.SelectSingleNode(xPath + "[@" + attributeName + "='" + attributeValue + "']") : DocumentElement.SelectSingleNode(xPath);
+            XmlNode selectedNode = !IsNull(attributeName)
+                                       ? DocumentElement.SelectSingleNode(xPath + "[@" + attributeName + "='" +
+                                                                          attributeValue + "']")
+                                       : DocumentElement.SelectSingleNode(xPath);
 
             if (selectedNode != null)
             {
@@ -322,10 +330,11 @@ namespace Aurora.Framework
         }
 
         #endregion
+
         #region delete Node(s)
 
         /// <summary>
-        /// Delete node
+        ///     Delete node
         /// </summary>
         /// <param name="xPath">XPath to the node to delete</param>
         /// <returns></returns>
@@ -336,7 +345,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Delete node
+        ///     Delete node
         /// </summary>
         /// <param name="selectedNode">Node to delete from document</param>
         /// <returns></returns>
@@ -349,7 +358,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Delete multiple nodes
+        ///     Delete multiple nodes
         /// </summary>
         /// <param name="xPath">xPath to the nodes to be deleted</param>
         /// <returns></returns>
@@ -360,7 +369,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Delete multiple nodes
+        ///     Delete multiple nodes
         /// </summary>
         /// <param name="selectedNodes">Nodes to be deleted</param>
         /// <returns></returns>
@@ -372,14 +381,12 @@ namespace Aurora.Framework
             return true;
         }
 
-
-
-
         #endregion
+
         #region attributes
 
         /// <summary>
-        /// Addes an attribute and attribute value to a node that the xPath resolves to
+        ///     Addes an attribute and attribute value to a node that the xPath resolves to
         /// </summary>
         /// <param name="xPath">XPath of the node to add the attribute and attribute value to</param>
         /// <param name="attributeName">Name of the attribute to add</param>
@@ -391,7 +398,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Addes an attribute and attribute value to a node passed in
+        ///     Addes an attribute and attribute value to a node passed in
         /// </summary>
         /// <param name="node">Node to add the attribute and attribute value to</param>
         /// <param name="attributeName">Name of the attribute to add</param>
@@ -408,7 +415,7 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        /// Edit the value of an attribute
+        ///     Edit the value of an attribute
         /// </summary>
         /// <param name="xPath">XPath to the node with the attribute to edit</param>
         /// <param name="attributeName">Name of the attribute to edit</param>
@@ -427,7 +434,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Edit the value of an attribute
+        ///     Edit the value of an attribute
         /// </summary>
         /// <param name="xPath">XPath to the node with the attribute to edit</param>
         /// <param name="attributeName">Name of the attribute to edit</param>
@@ -447,6 +454,7 @@ namespace Aurora.Framework
         }
 
         #endregion
+
         #region misc functions
 
         public bool hasChildNodes2(XmlNode selectedNode)
@@ -456,7 +464,7 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        /// Converts the common xml date to normal date
+        ///     Converts the common xml date to normal date
         /// </summary>
         /// <param name="xmlDate"></param>
         /// <returns></returns>
@@ -480,7 +488,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Return the value of a node, if the node does not exsist then string.Empty is returned
+        ///     Return the value of a node, if the node does not exsist then string.Empty is returned
         /// </summary>
         /// <param name="xPath">XPath to the node you want the value of</param>
         /// <returns>Return the value of a node, if the node does not exsist then string.Empty is returned</returns>

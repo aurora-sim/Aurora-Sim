@@ -33,6 +33,7 @@ namespace Aurora.Framework
     {
         public OSDMap URLS;
         public string SessionID;
+
         public override OSDMap ToOSD()
         {
             OSDMap retVal = new OSDMap();
@@ -43,9 +44,8 @@ namespace Aurora.Framework
 
         public override void FromOSD(OSDMap retVal)
         {
-            URLS = (OSDMap)retVal["URLS"];
+            URLS = (OSDMap) retVal["URLS"];
             SessionID = retVal["SessionID"].AsString();
         }
     }
-
 }

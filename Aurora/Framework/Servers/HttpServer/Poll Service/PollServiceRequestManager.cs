@@ -45,7 +45,10 @@ namespace Aurora.Framework.Servers.HttpServer
         private int m_pollTimeout;
         private readonly object m_queueSync = new object();
 
-        public bool Started { get { return m_running; } }
+        public bool Started
+        {
+            get { return m_running; }
+        }
 
         public PollServiceRequestManager(IHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
         {
@@ -66,9 +69,9 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, m_pollTimeout);
                 m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
-                
+
                 m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart)
-                                            {Name = String.Format("PollServiceWorkerThread{0}", i)};
+                                         {Name = String.Format("PollServiceWorkerThread{0}", i)};
                 m_workerThreads[i].Start();
             }
 
@@ -115,7 +118,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 //                m_log.DebugFormat("[POLL SERVICE REQUEST MANAGER]: Processing {0} requests", m_requests.Count);
 
-                int reqperthread = (int)(m_requests.Count / m_WorkerThreadCount) + 1;
+                int reqperthread = (int) (m_requests.Count/m_WorkerThreadCount) + 1;
 
                 // For Each WorkerThread
                 for (int tc = 0; tc < m_WorkerThreadCount && m_requests.Count > 0; tc++)
@@ -125,19 +128,17 @@ namespace Aurora.Framework.Servers.HttpServer
                     {
                         try
                         {
-                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest)m_requests.Dequeue());
+                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest) m_requests.Dequeue());
                         }
                         catch (InvalidOperationException)
                         {
                             // The queue is empty, we did our calculations wrong!
                             return true;
                         }
-
                     }
                 }
                 return true;
             }
-
         }
 
         public void Stop()
@@ -145,7 +146,7 @@ namespace Aurora.Framework.Servers.HttpServer
             m_running = false;
             foreach (object o in m_requests)
             {
-                PollServiceHttpRequest req = (PollServiceHttpRequest)o;
+                PollServiceHttpRequest req = (PollServiceHttpRequest) o;
                 PollServiceWorkerThread.DoHTTPGruntWork(
                     m_server, req, req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id));
             }

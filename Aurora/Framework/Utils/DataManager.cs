@@ -31,7 +31,7 @@ using System.Collections.Generic;
 namespace Aurora.DataManager
 {
     /// <summary>
-    ///   Plugin manager that deals with retrieving IDataPlugins
+    ///     Plugin manager that deals with retrieving IDataPlugins
     /// </summary>
     public static class DataManager
     {
@@ -44,9 +44,9 @@ namespace Aurora.DataManager
         }
 
         /// <summary>
-        ///   Request a data plugin from the registry
+        ///     Request a data plugin from the registry
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static T RequestPlugin<T>() where T : IAuroraDataPlugin
         {
@@ -61,9 +61,9 @@ namespace Aurora.DataManager
         }
 
         /// <summary>
-        ///   Request a data plugin from the registry
+        ///     Request a data plugin from the registry
         /// </summary>
-        /// <typeparam name = "T"></typeparam>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static T RequestPlugin<T>(string name) where T : IAuroraDataPlugin
         {
@@ -78,19 +78,19 @@ namespace Aurora.DataManager
         }
 
         /// <summary>
-        ///   Register a new plugin to the registry
+        ///     Register a new plugin to the registry
         /// </summary>
-        /// <param name = "plugin"></param>
+        /// <param name="plugin"></param>
         public static void RegisterPlugin(IAuroraDataPlugin plugin)
         {
             RegisterPlugin(plugin.Name, plugin);
         }
-        
+
         /// <summary>
-        ///   Register a new plugin to the registry
+        ///     Register a new plugin to the registry
         /// </summary>
-        /// <param name = "name"></param>
-        /// <param name = "plugin"></param>
+        /// <param name="name"></param>
+        /// <param name="plugin"></param>
         public static void RegisterPlugin(string name, IAuroraDataPlugin plugin)
         {
             if (!Plugins.ContainsKey(name))

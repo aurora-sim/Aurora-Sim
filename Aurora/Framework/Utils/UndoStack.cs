@@ -30,9 +30,9 @@ using System;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Undo stack.  Deletes entries beyond a certain capacity
+    ///     Undo stack.  Deletes entries beyond a certain capacity
     /// </summary>
-    /// <typeparam name = "T"></typeparam>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
     public class UndoStack<T>
     {

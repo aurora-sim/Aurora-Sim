@@ -136,7 +136,9 @@ namespace Aurora.Framework
     {
         string Name { get; }
         void Initialize(ILoginService service, IConfigSource config, IRegistryCore registry);
-        LoginResponse Login(Hashtable request, UserAccount acc, IAgentInfo agentInfo, string authType, string password, out object data);
+
+        LoginResponse Login(Hashtable request, UserAccount acc, IAgentInfo agentInfo, string authType, string password,
+                            out object data);
     }
 
     public interface ILoginService

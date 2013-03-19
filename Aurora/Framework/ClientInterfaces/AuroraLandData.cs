@@ -42,7 +42,7 @@ namespace Aurora.Framework
             GlobalPosX = map["GlobalPosX"];
             GlobalPosY = map["GlobalPosY"];
             LandData = new LandData();
-            LandData.FromOSD((OSDMap)map["LandData"]);
+            LandData.FromOSD((OSDMap) map["LandData"]);
             RegionName = map["RegionName"];
             RegionType = map["RegionType"];
         }

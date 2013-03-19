@@ -30,10 +30,10 @@ namespace Aurora.Framework
     public interface IAvatarAppearanceArchiver
     {
         /// <summary>
-        ///   Updates an avatars appearance from the saved AvatarArchive in the database.
+        ///     Updates an avatars appearance from the saved AvatarArchive in the database.
         /// </summary>
-        /// <param name = "FileName"></param>
-        /// <param name = "Name"></param>
+        /// <param name="FileName"></param>
+        /// <param name="Name"></param>
         AvatarAppearance LoadAvatarArchive(string FileName, string Name);
     }
 }

@@ -8,7 +8,10 @@ namespace Aurora.Framework
     {
         ISceneEntity AddNewPrim(
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape);
-        Vector3 GetNewRezLocation(Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot, byte bypassRayCast, byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter);
+
+        Vector3 GetNewRezLocation(Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot, byte bypassRayCast,
+                                  byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter);
+
         bool GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations);
         IScenePresence GetScenePresence(string firstName, string lastName);
         IScenePresence GetScenePresence(uint localID);
@@ -31,7 +34,9 @@ namespace Aurora.Framework
         uint AllocateLocalId();
         int LinkSetSorter(ISceneChildEntity a, ISceneChildEntity b);
 
-        List<EntityIntersection> GetIntersectingPrims(Ray hray, float length, int count, bool frontFacesOnly, bool faceCenters, bool getAvatars, bool getLand, bool getPrims);
+        List<EntityIntersection> GetIntersectingPrims(Ray hray, float length, int count, bool frontFacesOnly,
+                                                      bool faceCenters, bool getAvatars, bool getLand, bool getPrims);
+
         void RegisterEntityCreatorModule(IEntityCreator entityCreator);
 
         void TaintPresenceForUpdate(IScenePresence sp, PresenceTaint taint);

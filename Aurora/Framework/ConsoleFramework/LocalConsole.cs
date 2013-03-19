@@ -35,7 +35,7 @@ using log4net.Core;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   A console that uses cursor control and color
+    ///     A console that uses cursor control and color
     /// </summary>
     public class LocalConsole : CommandConsole
     {
@@ -43,22 +43,23 @@ namespace Aurora.Framework
 
         // private readonly object m_syncRoot = new object();
 
-        private static readonly ConsoleColor[] Colors = {
-                                                            // the dark colors don't seem to be visible on some black background terminals like putty :(
-                                                            //ConsoleColor.DarkBlue,
-                                                            //ConsoleColor.DarkGreen,
-                                                            //ConsoleColor.Gray, 
-                                                            //ConsoleColor.DarkGray,
-                                                            ConsoleColor.DarkCyan,
-                                                            ConsoleColor.DarkMagenta,
-                                                            ConsoleColor.DarkYellow,
-                                                            ConsoleColor.Green,
-                                                            ConsoleColor.Blue,
-                                                            ConsoleColor.Magenta,
-                                                            ConsoleColor.Red,
-                                                            ConsoleColor.Yellow,
-                                                            ConsoleColor.Cyan
-                                                        };
+        private static readonly ConsoleColor[] Colors =
+            {
+                // the dark colors don't seem to be visible on some black background terminals like putty :(
+                //ConsoleColor.DarkBlue,
+                //ConsoleColor.DarkGreen,
+                //ConsoleColor.Gray, 
+                //ConsoleColor.DarkGray,
+                ConsoleColor.DarkCyan,
+                ConsoleColor.DarkMagenta,
+                ConsoleColor.DarkYellow,
+                ConsoleColor.Green,
+                ConsoleColor.Blue,
+                ConsoleColor.Magenta,
+                ConsoleColor.Red,
+                ConsoleColor.Yellow,
+                ConsoleColor.Cyan
+            };
 
         private readonly List<string> history = new List<string>();
 
@@ -105,16 +106,16 @@ namespace Aurora.Framework
             history.Add(text);
         }
 
-        ///<summary>
-        ///  Set the cursor row.
-        ///</summary>
-        ///<param name = "top">
-        ///  Row to set.  If this is below 0, then the row is set to 0.  If it is equal to the buffer height or greater
-        ///  then it is set to one less than the height.
-        ///</param>
-        ///<returns>
-        ///  The new cursor row.
-        ///</returns>
+        /// <summary>
+        ///     Set the cursor row.
+        /// </summary>
+        /// <param name="top">
+        ///     Row to set.  If this is below 0, then the row is set to 0.  If it is equal to the buffer height or greater
+        ///     then it is set to one less than the height.
+        /// </param>
+        /// <returns>
+        ///     The new cursor row.
+        /// </returns>
         private int SetCursorTop(int top)
         {
             // From at least mono 2.4.2.3, window resizing can give mono an invalid row and column values.  If we try
@@ -153,16 +154,16 @@ namespace Aurora.Framework
             return top;
         }
 
-        ///<summary>
-        ///  Set the cursor column.
-        ///</summary>
-        ///<param name = "left">
-        ///  Column to set.  If this is below 0, then the column is set to 0.  If it is equal to the buffer width or greater
-        ///  then it is set to one less than the width.
-        ///</param>
-        ///<returns>
-        ///  The new cursor column.
-        ///</returns>
+        /// <summary>
+        ///     Set the cursor column.
+        /// </summary>
+        /// <param name="left">
+        ///     Column to set.  If this is below 0, then the column is set to 0.  If it is equal to the buffer width or greater
+        ///     then it is set to one less than the width.
+        /// </param>
+        /// <returns>
+        ///     The new cursor column.
+        /// </returns>
         private int SetCursorLeft(int left)
         {
             // From at least mono 2.4.2.3, window resizing can give mono an invalid row and column values.  If we try

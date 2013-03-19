@@ -31,12 +31,12 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Implemented by classes which collect up non-viewer statistical information
+    ///     Implemented by classes which collect up non-viewer statistical information
     /// </summary>
     public interface IStatsCollector
     {
         /// <summary>
-        ///   Report back collected statistical information.
+        ///     Report back collected statistical information.
         /// </summary>
         /// <returns></returns>
         string Report();
@@ -68,22 +68,22 @@ namespace Aurora.Framework
     public interface IMonitorModule
     {
         /// <summary>
-        ///   Event that gives others the SimStats class that is being sent out to the client
+        ///     Event that gives others the SimStats class that is being sent out to the client
         /// </summary>
         event SendStatResult OnSendStatsResult;
 
         /// <summary>
-        ///   Get a monitor module by the RegionID (key parameter, can be "" to get the base monitors) and Name of the monitor
+        ///     Get a monitor module by the RegionID (key parameter, can be "" to get the base monitors) and Name of the monitor
         /// </summary>
-        /// <param name = "Key"></param>
-        /// <param name = "Name"></param>
+        /// <param name="Key"></param>
+        /// <param name="Name"></param>
         /// <returns></returns>
         IMonitor GetMonitor(string Key, string Name);
 
         /// <summary>
-        ///   Get the latest stats
+        ///     Get the latest stats
         /// </summary>
-        /// <param name = "p">The RegionID of the region</param>
+        /// <param name="p">The RegionID of the region</param>
         /// <returns></returns>
         float[] GetRegionStats(string Key);
     }
@@ -91,25 +91,25 @@ namespace Aurora.Framework
     public interface IMonitor
     {
         /// <summary>
-        ///   Get the value of this monitor
+        ///     Get the value of this monitor
         /// </summary>
         /// <returns></returns>
         double GetValue();
 
         /// <summary>
-        ///   Get the name of this monitor
+        ///     Get the name of this monitor
         /// </summary>
         /// <returns></returns>
         string GetName();
 
         /// <summary>
-        ///   Get the nice looking value of GetValue()
+        ///     Get the nice looking value of GetValue()
         /// </summary>
         /// <returns></returns>
         string GetFriendlyValue();
 
         /// <summary>
-        ///   Resets any per stats beat stats that may need done
+        ///     Resets any per stats beat stats that may need done
         /// </summary>
         void ResetStats();
     }
@@ -119,18 +119,18 @@ namespace Aurora.Framework
     public interface IAlert
     {
         /// <summary>
-        ///   The name of the alert
+        ///     The name of the alert
         /// </summary>
         /// <returns></returns>
         string GetName();
 
         /// <summary>
-        ///   Test the alert
+        ///     Test the alert
         /// </summary>
         void Test();
 
         /// <summary>
-        ///   What will happen when the alert is triggered
+        ///     What will happen when the alert is triggered
         /// </summary>
         event Alert OnTriggerAlert;
     }
@@ -143,35 +143,35 @@ namespace Aurora.Framework
     public interface IAssetMonitor
     {
         /// <summary>
-        ///   Add a failure to ask the asset service
+        ///     Add a failure to ask the asset service
         /// </summary>
         void AddAssetServiceRequestFailure();
 
         /// <summary>
-        ///   The time that it took to request the asset after it was not found in the cache
+        ///     The time that it took to request the asset after it was not found in the cache
         /// </summary>
-        /// <param name = "ts"></param>
+        /// <param name="ts"></param>
         void AddAssetRequestTimeAfterCacheMiss(TimeSpan ts);
 
         /// <summary>
-        ///   Add the asset's memory to the memory count
+        ///     Add the asset's memory to the memory count
         /// </summary>
-        /// <param name = "asset"></param>
+        /// <param name="asset"></param>
         void AddAsset(AssetBase asset);
 
         /// <summary>
-        ///   This asset was removed, take it out of the asset list
+        ///     This asset was removed, take it out of the asset list
         /// </summary>
-        /// <param name = "uuid"></param>
+        /// <param name="uuid"></param>
         void RemoveAsset(UUID uuid);
 
         /// <summary>
-        ///   Clear the cache for assets
+        ///     Clear the cache for assets
         /// </summary>
         void ClearAssetCacheStatistics();
 
         /// <summary>
-        ///   Add a missing texture request
+        ///     Add a missing texture request
         /// </summary>
         void AddBlockedMissingTextureRequest();
     }
@@ -179,70 +179,70 @@ namespace Aurora.Framework
     public interface INetworkMonitor
     {
         /// <summary>
-        ///   The number of packets coming in per second
+        ///     The number of packets coming in per second
         /// </summary>
         float InPacketsPerSecond { get; }
 
         /// <summary>
-        ///   The number of packets going out per second
+        ///     The number of packets going out per second
         /// </summary>
         float OutPacketsPerSecond { get; }
 
         /// <summary>
-        ///   The number of bytes that we have not acked yet (see LLUDPClient for more info)
+        ///     The number of bytes that we have not acked yet (see LLUDPClient for more info)
         /// </summary>
         float UnackedBytes { get; }
 
         /// <summary>
-        ///   The number of downloads that the client has requested, but has not recieved at this time
+        ///     The number of downloads that the client has requested, but has not recieved at this time
         /// </summary>
         float PendingDownloads { get; }
 
         /// <summary>
-        ///   The number of updates that the client has started, but not finished
+        ///     The number of updates that the client has started, but not finished
         /// </summary>
         float PendingUploads { get; }
 
         /// <summary>
-        ///   Add the number of packets that are incoming
+        ///     Add the number of packets that are incoming
         /// </summary>
-        /// <param name = "numPackets"></param>
+        /// <param name="numPackets"></param>
         void AddInPackets(int numPackets);
 
         /// <summary>
-        ///   Add the number of outgoing packets
+        ///     Add the number of outgoing packets
         /// </summary>
-        /// <param name = "numPackets"></param>
+        /// <param name="numPackets"></param>
         void AddOutPackets(int numPackets);
 
         /// <summary>
-        ///   Add the current bytes that are not acked
+        ///     Add the current bytes that are not acked
         /// </summary>
-        /// <param name = "numBytes"></param>
+        /// <param name="numBytes"></param>
         void AddUnackedBytes(int numBytes);
 
         /// <summary>
-        ///   Add new pending downloads
+        ///     Add new pending downloads
         /// </summary>
-        /// <param name = "count"></param>
+        /// <param name="count"></param>
         void AddPendingDownloads(int count);
 
         /// <summary>
-        ///   Add new pending upload
+        ///     Add new pending upload
         /// </summary>
-        /// <param name = "count"></param>
+        /// <param name="count"></param>
         void AddPendingUploads(int count);
     }
 
     public interface IScriptCountMonitor : IMonitor
     {
         /// <summary>
-        ///   The number of active scripts in the region
+        ///     The number of active scripts in the region
         /// </summary>
         int ActiveScripts { get; }
 
         /// <summary>
-        ///   The number of events firing per second in the script engine
+        ///     The number of events firing per second in the script engine
         /// </summary>
         int ScriptEPS { get; }
     }
@@ -250,130 +250,130 @@ namespace Aurora.Framework
     public interface ISetMonitor : IMonitor
     {
         /// <summary>
-        ///   Set the Value for the monitor
+        ///     Set the Value for the monitor
         /// </summary>
-        /// <param name = "value"></param>
+        /// <param name="value"></param>
         void SetValue(int value);
     }
 
     public interface ITimeDilationMonitor : IMonitor
     {
         /// <summary>
-        ///   Set the Value for the monitor
+        ///     Set the Value for the monitor
         /// </summary>
-        /// <param name = "value"></param>
+        /// <param name="value"></param>
         void SetPhysicsFPS(float value);
     }
 
     public interface IPhysicsFrameMonitor
     {
         /// <summary>
-        ///   The last reported PhysicsSim FPS
+        ///     The last reported PhysicsSim FPS
         /// </summary>
         float LastReportedPhysicsFPS { get; set; }
 
         /// <summary>
-        ///   The 'current' Physics FPS (NOTE: This will NOT be what you expect, you will have to divide by the time since the last check to get the correct average Physics FPS)
+        ///     The 'current' Physics FPS (NOTE: This will NOT be what you expect, you will have to divide by the time since the last check to get the correct average Physics FPS)
         /// </summary>
         float PhysicsFPS { get; }
 
         /// <summary>
-        ///   Add X frames to the stats
+        ///     Add X frames to the stats
         /// </summary>
-        /// <param name = "frames"></param>
+        /// <param name="frames"></param>
         void AddFPS(int frames);
     }
 
     public interface ISimFrameMonitor
     {
         /// <summary>
-        ///   The last reported Sim FPS (for llGetRegionFPS())
+        ///     The last reported Sim FPS (for llGetRegionFPS())
         /// </summary>
         float LastReportedSimFPS { get; set; }
 
         /// <summary>
-        ///   The 'current' Sim FPS (NOTE: This will NOT be what you expect, you will have to divide by the time since the last check to get the correct average Sim FPS)
+        ///     The 'current' Sim FPS (NOTE: This will NOT be what you expect, you will have to divide by the time since the last check to get the correct average Sim FPS)
         /// </summary>
         float SimFPS { get; }
 
         /// <summary>
-        ///   Add X frames to the stats
+        ///     Add X frames to the stats
         /// </summary>
-        /// <param name = "frames"></param>
+        /// <param name="frames"></param>
         void AddFPS(int frames);
     }
 
     public interface IImageFrameTimeMonitor
     {
         /// <summary>
-        ///   Add the time it took to process sending of images to the client
+        ///     Add the time it took to process sending of images to the client
         /// </summary>
-        /// <param name = "time">time in milliseconds</param>
+        /// <param name="time">time in milliseconds</param>
         void AddImageTime(int time);
     }
 
     public interface ITotalFrameTimeMonitor : IMonitor
     {
         /// <summary>
-        ///   Add the time it took to process sending of images to the client
+        ///     Add the time it took to process sending of images to the client
         /// </summary>
-        /// <param name = "time">time in milliseconds</param>
+        /// <param name="time">time in milliseconds</param>
         void AddFrameTime(int time);
     }
 
     public interface IObjectUpdateMonitor
     {
         /// <summary>
-        ///   The current number of prims that were not sent to the client
+        ///     The current number of prims that were not sent to the client
         /// </summary>
         float PrimsLimited { get; }
 
         /// <summary>
-        ///   Add X prims updates that were limited to the stats
+        ///     Add X prims updates that were limited to the stats
         /// </summary>
-        /// <param name = "frames"></param>
+        /// <param name="frames"></param>
         void AddLimitedPrims(int prims);
     }
 
     public interface IAgentUpdateMonitor
     {
         /// <summary>
-        ///   The time it takes to update the agent with info
+        ///     The time it takes to update the agent with info
         /// </summary>
         int AgentFrameTime { get; }
 
         /// <summary>
-        ///   The number of updates sent to the agent
+        ///     The number of updates sent to the agent
         /// </summary>
         int AgentUpdates { get; }
 
         /// <summary>
-        ///   Add the agent updates
+        ///     Add the agent updates
         /// </summary>
-        /// <param name = "value"></param>
+        /// <param name="value"></param>
         void AddAgentUpdates(int value);
 
         /// <summary>
-        ///   Add the amount of time it took to update the client
+        ///     Add the amount of time it took to update the client
         /// </summary>
-        /// <param name = "value"></param>
+        /// <param name="value"></param>
         void AddAgentTime(int value);
     }
 
     public interface ILoginMonitor
     {
         /// <summary>
-        ///   Add a successful login to the stats
+        ///     Add a successful login to the stats
         /// </summary>
         void AddSuccessfulLogin();
 
         /// <summary>
-        ///   Add a successful logout to the stats
+        ///     Add a successful logout to the stats
         /// </summary>
         void AddLogout();
 
         /// <summary>
-        ///   Add a terminated client thread to the stats
+        ///     Add a terminated client thread to the stats
         /// </summary>
         void AddAbnormalClientThreadTermination();
     }

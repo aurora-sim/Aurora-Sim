@@ -33,67 +33,67 @@ namespace Aurora.Framework
     public interface IRegionModuleBase
     {
         /// <value>
-        ///   The name of the module
+        ///     The name of the module
         /// </value>
         string Name { get; }
 
         /// <summary>
-        ///   If this returns non-null, it is the type of an interface that
-        ///   this module intends to register.
-        ///   This will cause the loader to defer loading of this module
-        ///   until all other modules have been loaded. If no other module
-        ///   has registered the interface by then, this module will be
-        ///   activated, else it will remain inactive, letting the other module
-        ///   take over. This should return non-null ONLY in modules that are
-        ///   intended to be easily replaceable, e.g. stub implementations
-        ///   that the developer expects to be replaced by third party provided
-        ///   modules.
+        ///     If this returns non-null, it is the type of an interface that
+        ///     this module intends to register.
+        ///     This will cause the loader to defer loading of this module
+        ///     until all other modules have been loaded. If no other module
+        ///     has registered the interface by then, this module will be
+        ///     activated, else it will remain inactive, letting the other module
+        ///     take over. This should return non-null ONLY in modules that are
+        ///     intended to be easily replaceable, e.g. stub implementations
+        ///     that the developer expects to be replaced by third party provided
+        ///     modules.
         /// </summary>
         Type ReplaceableInterface { get; }
 
         /// <summary>
-        ///   This is called to initialize the region module. For shared modules, this is called
-        ///   exactly once, after creating the single (shared) instance. For non-shared modules,
-        ///   this is called once on each instance, after the instace for the region has been created.
+        ///     This is called to initialize the region module. For shared modules, this is called
+        ///     exactly once, after creating the single (shared) instance. For non-shared modules,
+        ///     this is called once on each instance, after the instace for the region has been created.
         /// </summary>
-        /// <param name = "source">
-        ///   A <see cref = "IConfigSource" />
+        /// <param name="source">
+        ///     A <see cref="IConfigSource" />
         /// </param>
         void Initialise(IConfigSource source);
 
         /// <summary>
-        ///   This is called whenever a <see cref = "IScene" /> is added. For shared modules, this can happen several times.
-        ///   For non-shared modules, this happens exactly once, after <see cref = "Initialise" /> has been called.
+        ///     This is called whenever a <see cref="IScene" /> is added. For shared modules, this can happen several times.
+        ///     For non-shared modules, this happens exactly once, after <see cref="Initialise" /> has been called.
         /// </summary>
-        /// <param name = "scene">
-        ///   A <see cref = "IScene" />
+        /// <param name="scene">
+        ///     A <see cref="IScene" />
         /// </param>
         void AddRegion(IScene scene);
 
         /// <summary>
-        ///   This will be called once for every scene loaded. In a shared module
-        ///   this will be multiple times in one instance, while a nonshared
-        ///   module instance will only be called once.
-        ///   This method is called after AddRegion has been called in all
-        ///   modules for that scene, providing an opportunity to request 
-        ///   another module's interface, or hook an event from another module.
+        ///     This will be called once for every scene loaded. In a shared module
+        ///     this will be multiple times in one instance, while a nonshared
+        ///     module instance will only be called once.
+        ///     This method is called after AddRegion has been called in all
+        ///     modules for that scene, providing an opportunity to request
+        ///     another module's interface, or hook an event from another module.
         /// </summary>
-        /// <param name = "scene">
-        ///   A <see cref = "IScene" />
+        /// <param name="scene">
+        ///     A <see cref="IScene" />
         /// </param>
         void RegionLoaded(IScene scene);
 
         /// <summary>
-        ///   This is called whenever a <see cref = "IScene" /> is removed. For shared modules, this can happen several times.
-        ///   For non-shared modules, this happens exactly once, if the scene this instance is associated with is removed.
+        ///     This is called whenever a <see cref="IScene" /> is removed. For shared modules, this can happen several times.
+        ///     For non-shared modules, this happens exactly once, if the scene this instance is associated with is removed.
         /// </summary>
-        /// <param name = "scene">
-        ///   A <see cref = "IScene" />
+        /// <param name="scene">
+        ///     A <see cref="IScene" />
         /// </param>
         void RemoveRegion(IScene scene);
 
         /// <summary>
-        ///   This is the inverse to <see cref = "Initialise" />. After a Close(), this instance won't be usable anymore.
+        ///     This is the inverse to <see cref="Initialise" />. After a Close(), this instance won't be usable anymore.
         /// </summary>
         void Close();
     }

@@ -32,7 +32,7 @@ using log4net.Core;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Writes log information out onto the console
+    ///     Writes log information out onto the console
     /// </summary>
     public class OpenSimAppender : AnsiColorTerminalAppender
     {

@@ -33,7 +33,7 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Manage client circuits
+    ///     Manage client circuits
     /// </summary>
     public class AgentCircuitManager
     {
@@ -64,10 +64,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Add information about a new circuit so that later on we can authenticate a new client session.
+        ///     Add information about a new circuit so that later on we can authenticate a new client session.
         /// </summary>
-        /// <param name = "circuitCode"></param>
-        /// <param name = "agentData"></param>
+        /// <param name="circuitCode"></param>
+        /// <param name="agentData"></param>
         public virtual void AddNewCircuit(uint circuitCode, AgentCircuitData agentData)
         {
             lock (AgentCircuits)
@@ -97,7 +97,10 @@ namespace Aurora.Framework
                     }
                 }
 #else
-                foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values).Where(circuitData => circuitData.AgentID == agentID))
+                foreach (
+                    AgentCircuitData circuitData in
+                        new List<AgentCircuitData>(AgentCircuits.Values).Where(
+                            circuitData => circuitData.AgentID == agentID))
                 {
                     AgentCircuits.Remove(circuitData.circuitcode);
                 }
@@ -121,7 +124,9 @@ namespace Aurora.Framework
             }
             return null;
 #else
-            return new List<AgentCircuitData>(AgentCircuits.Values).FirstOrDefault(circuitData => circuitData.AgentID == agentID);
+            return
+                new List<AgentCircuitData>(AgentCircuits.Values).FirstOrDefault(
+                    circuitData => circuitData.AgentID == agentID);
 #endif
         }
 
@@ -140,10 +145,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Sometimes the circuitcode may not be known before setting up the connection
+        ///     Sometimes the circuitcode may not be known before setting up the connection
         /// </summary>
-        /// <param name = "circuitcode"></param>
-        /// <param name = "newcircuitcode"></param>
+        /// <param name="circuitcode"></param>
+        /// <param name="newcircuitcode"></param>
         public bool TryChangeCiruitCode(uint circuitcode, uint newcircuitcode)
         {
             lock (AgentCircuits)

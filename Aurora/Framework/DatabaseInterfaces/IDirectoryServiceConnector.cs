@@ -36,15 +36,15 @@ namespace Aurora.Framework
         #region Regions
 
         /// <summary>
-        ///   Adds a region into search
+        ///     Adds a region into search
         /// </summary>
-        /// <param name = "args"></param>
+        /// <param name="args"></param>
         void AddRegion(List<LandData> args);
 
         /// <summary>
-        ///   Removes a region from search
+        ///     Removes a region from search
         /// </summary>
-        /// <param name = "regionID"></param>
+        /// <param name="regionID"></param>
         void ClearRegion(UUID regionID);
 
         #endregion
@@ -52,14 +52,14 @@ namespace Aurora.Framework
         #region Parcels
 
         /// <summary>
-        ///   Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)
+        ///     Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)
         /// </summary>
-        /// <param name = "ParcelID"></param>
+        /// <param name="ParcelID"></param>
         /// <returns></returns>
         LandData GetParcelInfo(UUID ParcelID);
 
         /// <summary>
-        /// Gets the first parcel from the search database in the specified region with the specified name
+        ///     Gets the first parcel from the search database in the specified region with the specified name
         /// </summary>
         /// <param name="RegionID"></param>
         /// <param name="ParcelName"></param>
@@ -67,14 +67,14 @@ namespace Aurora.Framework
         LandData GetParcelInfo(UUID RegionID, string ParcelName);
 
         /// <summary>
-        ///   Gets all parcels owned by the given user
+        ///     Gets all parcels owned by the given user
         /// </summary>
-        /// <param name = "OwnerID"></param>
+        /// <param name="OwnerID"></param>
         /// <returns></returns>
         List<ExtendedLandData> GetParcelByOwner(UUID OwnerID);
 
         /// <summary>
-        /// Gets all parcels in a region, optionally filtering by owner, parcel flags and category.
+        ///     Gets all parcels in a region, optionally filtering by owner, parcel flags and category.
         /// </summary>
         /// <param name="start"></param>
         /// <param name="count"></param>
@@ -83,10 +83,11 @@ namespace Aurora.Framework
         /// <param name="flags"></param>
         /// <param name="category"></param>
         /// <returns></returns>
-        List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID owner, ParcelFlags flags, ParcelCategory category);
+        List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID owner, ParcelFlags flags,
+                                          ParcelCategory category);
 
         /// <summary>
-        /// Get the number of parcels in the specified region that match the specified filters.
+        ///     Get the number of parcels in the specified region that match the specified filters.
         /// </summary>
         /// <param name="RegionID"></param>
         /// <param name="owner"></param>
@@ -96,7 +97,7 @@ namespace Aurora.Framework
         uint GetNumberOfParcelsByRegion(UUID RegionID, UUID owner, ParcelFlags flags, ParcelCategory category);
 
         /// <summary>
-        /// Get a list of parcels in a region with the specified name.
+        ///     Get a list of parcels in a region with the specified name.
         /// </summary>
         /// <param name="start"></param>
         /// <param name="count"></param>
@@ -106,7 +107,7 @@ namespace Aurora.Framework
         List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, string name);
 
         /// <summary>
-        /// Get the number of parcels in the specified region with the specified name
+        ///     Get the number of parcels in the specified region with the specified name
         /// </summary>
         /// <param name="RegionID"></param>
         /// <param name="name"></param>
@@ -114,45 +115,47 @@ namespace Aurora.Framework
         uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, string name);
 
         /// <summary>
-        ///   Searches for parcels around the grid
+        ///     Searches for parcels around the grid
         /// </summary>
-        /// <param name = "queryText"></param>
-        /// <param name = "category"></param>
-        /// <param name = "StartQuery"></param>
-        /// <param name = "Flags"></param>
-        /// <param name = "scopeID"></param>
+        /// <param name="queryText"></param>
+        /// <param name="category"></param>
+        /// <param name="StartQuery"></param>
+        /// <param name="Flags"></param>
+        /// <param name="scopeID"></param>
         /// <returns></returns>
         List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags, UUID scopeID);
 
         /// <summary>
-        ///   Searches for parcels for sale around the grid
+        ///     Searches for parcels for sale around the grid
         /// </summary>
-        /// <param name = "searchType"></param>
-        /// <param name = "price"></param>
-        /// <param name = "area"></param>
-        /// <param name = "StartQuery"></param>
-        /// <param name = "Flags"></param>
-        /// <param name = "scopeID"></param>
+        /// <param name="searchType"></param>
+        /// <param name="price"></param>
+        /// <param name="area"></param>
+        /// <param name="StartQuery"></param>
+        /// <param name="Flags"></param>
+        /// <param name="scopeID"></param>
         /// <returns></returns>
-        List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID scopeID);
+        List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags,
+                                               UUID scopeID);
 
         /// <summary>
-        ///   Searches for parcels for sale around the grid
+        ///     Searches for parcels for sale around the grid
         /// </summary>
-        /// <param name = "searchType"></param>
-        /// <param name = "price"></param>
-        /// <param name = "area"></param>
-        /// <param name = "StartQuery"></param>
+        /// <param name="searchType"></param>
+        /// <param name="price"></param>
+        /// <param name="area"></param>
+        /// <param name="StartQuery"></param>
         /// <returns></returns>
-        List<DirLandReplyData> FindLandForSaleInRegion(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID regionID);
+        List<DirLandReplyData> FindLandForSaleInRegion(string searchType, uint price, uint area, int StartQuery,
+                                                       uint Flags, UUID regionID);
 
         /// <summary>
-        ///   Searches for the most popular places around the grid
+        ///     Searches for the most popular places around the grid
         /// </summary>
-        /// <param name = "searchType"></param>
-        /// <param name = "price"></param>
-        /// <param name = "area"></param>
-        /// <param name = "StartQuery"></param>
+        /// <param name="searchType"></param>
+        /// <param name="price"></param>
+        /// <param name="area"></param>
+        /// <param name="StartQuery"></param>
         /// <returns></returns>
         List<DirPopularReplyData> FindPopularPlaces(uint queryFlags, UUID scopeID);
 
@@ -161,19 +164,20 @@ namespace Aurora.Framework
         #region Classifieds
 
         /// <summary>
-        ///   Searches for classifieds
+        ///     Searches for classifieds
         /// </summary>
-        /// <param name = "queryText"></param>
-        /// <param name = "category"></param>
-        /// <param name = "queryFlags"></param>
-        /// <param name = "StartQuery"></param>
+        /// <param name="queryText"></param>
+        /// <param name="category"></param>
+        /// <param name="queryFlags"></param>
+        /// <param name="StartQuery"></param>
         /// <returns></returns>
-        List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery, UUID scopeID);
+        List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery,
+                                                     UUID scopeID);
 
         /// <summary>
-        ///   Gets all classifieds in the given region
+        ///     Gets all classifieds in the given region
         /// </summary>
-        /// <param name = "regionName"></param>
+        /// <param name="regionName"></param>
         /// <returns></returns>
         List<Classified> GetClassifiedsInRegion(string regionName);
 
@@ -184,32 +188,32 @@ namespace Aurora.Framework
         #region Events
 
         /// <summary>
-        ///   Searches for events with the given parameters
+        ///     Searches for events with the given parameters
         /// </summary>
-        /// <param name = "queryText"></param>
-        /// <param name = "flags"></param>
-        /// <param name = "StartQuery"></param>
+        /// <param name="queryText"></param>
+        /// <param name="flags"></param>
+        /// <param name="StartQuery"></param>
         /// <returns></returns>
         List<DirEventsReplyData> FindEvents(string queryText, uint flags, int StartQuery, UUID scopeID);
 
         /// <summary>
-        ///   Retrives all events in the given region by their maturity level
+        ///     Retrives all events in the given region by their maturity level
         /// </summary>
-        /// <param name = "regionName"></param>
-        /// <param name = "maturity">Uses DirectoryManager.EventFlags to determine the maturity requested</param>
+        /// <param name="regionName"></param>
+        /// <param name="maturity">Uses DirectoryManager.EventFlags to determine the maturity requested</param>
         /// <returns></returns>
         List<DirEventsReplyData> FindAllEventsInRegion(string regionName, int maturity);
 
         /// <summary>
-        ///   Gets more info about the event by the events unique event ID
+        ///     Gets more info about the event by the events unique event ID
         /// </summary>
-        /// <param name = "EventID"></param>
+        /// <param name="EventID"></param>
         /// <returns></returns>
         EventData GetEventInfo(uint EventID);
 
 
         /// <summary>
-        /// creates an event
+        ///     creates an event
         /// </summary>
         /// <param name="creator"></param>
         /// <param name="region"></param>
@@ -224,53 +228,55 @@ namespace Aurora.Framework
         /// <param name="description"></param>
         /// <param name="category"></param>
         /// <returns></returns>
-        EventData CreateEvent(UUID creator, UUID region, UUID parcel, DateTime date, uint cover, DirectoryManager.EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category);
+        EventData CreateEvent(UUID creator, UUID region, UUID parcel, DateTime date, uint cover,
+                              DirectoryManager.EventFlags maturity, uint flags, uint duration, Vector3 localPos,
+                              string name, string description, string category);
 
         /// <summary>
-        /// Gets a list of events with optional filters
+        ///     Gets a list of events with optional filters
         /// </summary>
         /// <param name="start"></param>
         /// <param name="count"></param>
         /// <param name="sort"></param>
         /// <param name="filter"></param>
         /// <returns></returns>
-        List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, object> filter);
+        List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort,
+                                  Dictionary<string, object> filter);
 
         /// <summary>
-        /// Get the number of events matching the specified filters
+        ///     Get the number of events matching the specified filters
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
         uint GetNumberOfEvents(Dictionary<string, object> filter);
 
         /// <summary>
-        /// Gets the highest event ID
+        ///     Gets the highest event ID
         /// </summary>
         /// <returns></returns>
         uint GetMaxEventID();
 
         /// <summary>
-        /// Adds a notification for the user on login that events are going to occur
+        ///     Adds a notification for the user on login that events are going to occur
         /// </summary>
         /// <param name="user"></param>
         /// <param name="EventID"></param>
         void AddEventNofication(UUID user, uint EventID);
 
         /// <summary>
-        /// Removes a notification for the user on login that events are going to occur
+        ///     Removes a notification for the user on login that events are going to occur
         /// </summary>
         /// <param name="user"></param>
         /// <param name="EventID"></param>
         void RemoveEventNofication(UUID user, uint EventID);
 
         /// <summary>
-        /// Get all event notifications for the user
+        ///     Get all event notifications for the user
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
         List<EventData> GetEventNotifications(UUID user);
 
         #endregion
-
     }
 }

@@ -41,6 +41,7 @@ namespace Aurora.Framework
     public class ConnectorRegistry
     {
         public static List<ConnectorBase> Connectors = new List<ConnectorBase>();
+
         public static void RegisterConnector(ConnectorBase con)
         {
             Connectors.Add(con);
@@ -50,10 +51,12 @@ namespace Aurora.Framework
     public class ConnectorBase
     {
         protected IRegistryCore m_registry;
+
         protected IConfigurationService m_configService
         {
             get { return m_registry.RequestModuleInterface<IConfigurationService>(); }
         }
+
         protected bool m_doRemoteCalls = false;
         protected string m_name;
         protected bool m_doRemoteOnly = false;
@@ -66,13 +69,9 @@ namespace Aurora.Framework
             get { return m_name; }
         }
 
-        public bool Enabled
-        {
-            get;
-            set;
-        }
+        public bool Enabled { get; set; }
 
-        public void Init(IRegistryCore registry, string name, string password="", string serverPath = "")
+        public void Init(IRegistryCore registry, string name, string password = "", string serverPath = "")
         {
             Enabled = true;
             m_registry = registry;
@@ -87,7 +86,9 @@ namespace Aurora.Framework
                 IConfig config;
                 if ((config = source.Configs["AuroraConnectors"]) != null)
                 {
-                    m_doRemoteCalls = config.Contains(name + "DoRemoteCalls") ? config.GetBoolean(name + "DoRemoteCalls", false) : config.GetBoolean("DoRemoteCalls", false);
+                    m_doRemoteCalls = config.Contains(name + "DoRemoteCalls")
+                                          ? config.GetBoolean(name + "DoRemoteCalls", false)
+                                          : config.GetBoolean("DoRemoteCalls", false);
 
                     if ((config = source.Configs["Handlers"]) != null)
                     {
@@ -102,7 +103,7 @@ namespace Aurora.Framework
                 }
             }
             if (m_doRemoteCalls)
-                m_doRemoteOnly = true;//Lock out local + remote for now
+                m_doRemoteOnly = true; //Lock out local + remote for now
             ConnectorRegistry.RegisterConnector(this);
 
             if (openServerHandler)
@@ -164,7 +165,9 @@ namespace Aurora.Framework
             MethodInfo method;
             CanBeReflected reflection;
             GetReflection(upStack, stackTrace, out method, out reflection);
-            string methodName = reflection != null && reflection.RenamedMethod != "" ? reflection.RenamedMethod : method.Name;
+            string methodName = reflection != null && reflection.RenamedMethod != ""
+                                    ? reflection.RenamedMethod
+                                    : method.Name;
             OSDMap map = new OSDMap();
             map["Method"] = methodName;
             if (reflection != null && reflection.UsePassword)
@@ -173,10 +176,12 @@ namespace Aurora.Framework
             var parameters = method.GetParameters();
             if (o.Length != parameters.Length)
             {
-                MainConsole.Instance.ErrorFormat("FAILED TO GET VALID NUMBER OF PARAMETERS TO SEND REMOTELY FOR {0}, EXPECTED {1}, GOT {2}", methodName, parameters.Length, o.Length);
+                MainConsole.Instance.ErrorFormat(
+                    "FAILED TO GET VALID NUMBER OF PARAMETERS TO SEND REMOTELY FOR {0}, EXPECTED {1}, GOT {2}",
+                    methodName, parameters.Length, o.Length);
                 return null;
             }
-            foreach(ParameterInfo info in parameters)
+            foreach (ParameterInfo info in parameters)
             {
                 OSD osd = o[i] == null ? null : Util.MakeOSD(o[i], o[i].GetType());
                 if (osd != null)
@@ -201,20 +206,20 @@ namespace Aurora.Framework
             object inst = null;
             try
             {
-                if (method.ReturnType == typeof(string))
+                if (method.ReturnType == typeof (string))
                     inst = string.Empty;
-                else if (method.ReturnType == typeof(void))
+                else if (method.ReturnType == typeof (void))
                     return null;
-                else if (method.ReturnType == typeof(System.Drawing.Image))
+                else if (method.ReturnType == typeof (System.Drawing.Image))
                     inst = null;
-                else if (method.ReturnType == typeof(byte[]))
+                else if (method.ReturnType == typeof (byte[]))
                     return response["Value"].AsBinary();
                 else
                     inst = Activator.CreateInstance(method.ReturnType);
             }
             catch
             {
-                if (method.ReturnType == typeof(string))
+                if (method.ReturnType == typeof (string))
                     inst = string.Empty;
             }
             if (response["Value"] == "null")
@@ -222,16 +227,17 @@ namespace Aurora.Framework
             var instance = inst as IDataTransferable;
             if (instance != null)
             {
-                instance.FromOSD((OSDMap)response["Value"]);
+                instance.FromOSD((OSDMap) response["Value"]);
                 return instance;
             }
             return Util.OSDToObject(response["Value"], method.ReturnType);
         }
 
-        private void GetReflection(int upStack, StackTrace stackTrace, out MethodInfo method, out CanBeReflected reflection)
+        private void GetReflection(int upStack, StackTrace stackTrace, out MethodInfo method,
+                                   out CanBeReflected reflection)
         {
-            method = (MethodInfo)stackTrace.GetFrame(upStack).GetMethod();
-            reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+            method = (MethodInfo) stackTrace.GetFrame(upStack).GetMethod();
+            reflection = (CanBeReflected) Attribute.GetCustomAttribute(method, typeof (CanBeReflected));
             if (reflection != null && reflection.NotReflectableLookUpAnotherTrace)
                 GetReflection(upStack + 1, stackTrace, out method, out reflection);
         }
@@ -240,12 +246,12 @@ namespace Aurora.Framework
         {
             response = null;
             string resp = WebUtils.ServiceOSDRequest(url, map, "POST", m_OSDRequestTimeout);
-            
+
             if (resp == "" || resp.StartsWith("<"))
                 return false;
             try
             {
-                response = (OSDMap)OSDParser.DeserializeJson(resp);
+                response = (OSDMap) OSDParser.DeserializeJson(resp);
             }
             catch
             {
@@ -274,7 +280,9 @@ namespace Aurora.Framework
             {
                 m_methods = new Dictionary<string, List<MethodImplementation>>();
                 List<string> alreadyRunPlugins = new List<string>();
-                List<ConnectorBase> connectors = conn == null ? ConnectorRegistry.Connectors : new List<ConnectorBase>() { conn };
+                List<ConnectorBase> connectors = conn == null
+                                                     ? ConnectorRegistry.Connectors
+                                                     : new List<ConnectorBase>() {conn};
                 foreach (ConnectorBase plugin in connectors)
                 {
                     if (alreadyRunPlugins.Contains(plugin.PluginName))
@@ -282,12 +290,18 @@ namespace Aurora.Framework
                     alreadyRunPlugins.Add(plugin.PluginName);
                     foreach (MethodInfo method in plugin.GetType().GetMethods())
                     {
-                        CanBeReflected reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+                        CanBeReflected reflection =
+                            (CanBeReflected) Attribute.GetCustomAttribute(method, typeof (CanBeReflected));
                         if (reflection != null)
                         {
                             string methodName = reflection.RenamedMethod == "" ? method.Name : reflection.RenamedMethod;
                             List<MethodImplementation> methods = new List<MethodImplementation>();
-                            MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin, Attribute = reflection };
+                            MethodImplementation imp = new MethodImplementation()
+                                                           {
+                                                               Method = method,
+                                                               Reference = plugin,
+                                                               Attribute = reflection
+                                                           };
                             if (!m_methods.TryGetValue(methodName, out methods))
                                 m_methods.Add(methodName, (methods = new List<MethodImplementation>()));
 
@@ -334,11 +348,11 @@ namespace Aurora.Framework
                         int paramNum = 0;
                         foreach (ParameterInfo param in paramInfo)
                         {
-                            if (param.ParameterType == typeof(bool) && !args.ContainsKey(param.Name))
+                            if (param.ParameterType == typeof (bool) && !args.ContainsKey(param.Name))
                                 parameters[paramNum++] = false;
                             else if (args[param.Name].Type == OSDType.Unknown)
                                 parameters[paramNum++] = null;
-                            else if(param.ParameterType == typeof(OSD))
+                            else if (param.ParameterType == typeof (OSD))
                                 parameters[paramNum++] = args[param.Name];
                             else
                                 parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
@@ -346,7 +360,7 @@ namespace Aurora.Framework
 
                         object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
                         OSDMap response = new OSDMap();
-                        if (o == null)//void method
+                        if (o == null) //void method
                             response["Value"] = "null";
                         else
                             response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
@@ -356,7 +370,8 @@ namespace Aurora.Framework
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.WarnFormat("[ServerHandler]: Error occured for method {0}: {1}", method, ex.ToString());
+                    MainConsole.Instance.WarnFormat("[ServerHandler]: Error occured for method {0}: {1}", method,
+                                                    ex.ToString());
                 }
             }
             else

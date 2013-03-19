@@ -48,7 +48,7 @@ namespace Aurora.Framework
         private static string CachedExternalIP = "";
 
         /// <summary>
-        ///   Get the URL to the release notes for the current version of Aurora
+        ///     Get the URL to the release notes for the current version of Aurora
         /// </summary>
         /// <returns></returns>
         public static string GetServerReleaseNotesURL()
@@ -58,7 +58,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Get the URL to our sim
+        ///     Get the URL to our sim
         /// </summary>
         /// <returns></returns>
         public static string GetAddress()
@@ -68,7 +68,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   What is our version?
+        ///     What is our version?
         /// </summary>
         /// <returns></returns>
         public static string AuroraServerVersion()
@@ -85,59 +85,59 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   This is for encryption, it sets the number of times to iterate through the encryption
+        ///     This is for encryption, it sets the number of times to iterate through the encryption
         /// </summary>
-        /// <param name = "iterations"></param>
+        /// <param name="iterations"></param>
         public static void SetEncryptIterations(int iterations)
         {
             EncryptIterations = iterations;
         }
 
         /// <summary>
-        ///   This is for encryption, it sets the size of the key
+        ///     This is for encryption, it sets the size of the key
         /// </summary>
-        /// <param name = "size"></param>
+        /// <param name="size"></param>
         public static void SetKeySize(int size)
         {
             KeySize = size;
         }
 
         /// <summary>
-        ///   Encrypts specified plaintext using Rijndael symmetric key algorithm
-        ///   and returns a base64-encoded result.
+        ///     Encrypts specified plaintext using Rijndael symmetric key algorithm
+        ///     and returns a base64-encoded result.
         /// </summary>
-        /// <param name = "plainText">
-        ///   Plaintext value to be encrypted.
+        /// <param name="plainText">
+        ///     Plaintext value to be encrypted.
         /// </param>
-        /// <param name = "passPhrase">
-        ///   Passphrase from which a pseudo-random password will be derived. The
-        ///   derived password will be used to generate the encryption key.
-        ///   Passphrase can be any string. In this example we assume that this
-        ///   passphrase is an ASCII string.
+        /// <param name="passPhrase">
+        ///     Passphrase from which a pseudo-random password will be derived. The
+        ///     derived password will be used to generate the encryption key.
+        ///     Passphrase can be any string. In this example we assume that this
+        ///     passphrase is an ASCII string.
         /// </param>
-        /// <param name = "saltValue">
-        ///   Salt value used along with passphrase to generate password. Salt can
-        ///   be any string. In this example we assume that salt is an ASCII string.
+        /// <param name="saltValue">
+        ///     Salt value used along with passphrase to generate password. Salt can
+        ///     be any string. In this example we assume that salt is an ASCII string.
         /// </param>
-        /// <param name = "hashAlgorithm">
-        ///   Hash algorithm used to generate password. Allowed values are: "MD5" and
-        ///   "SHA1". SHA1 hashes are a bit slower, but more secure than MD5 hashes.
+        /// <param name="hashAlgorithm">
+        ///     Hash algorithm used to generate password. Allowed values are: "MD5" and
+        ///     "SHA1". SHA1 hashes are a bit slower, but more secure than MD5 hashes.
         /// </param>
-        /// <param name = "passwordIterations">
-        ///   Number of iterations used to generate password. One or two iterations
-        ///   should be enough.
+        /// <param name="passwordIterations">
+        ///     Number of iterations used to generate password. One or two iterations
+        ///     should be enough.
         /// </param>
-        /// <param name = "initVector">
-        ///   Initialization vector (or IV). This value is required to encrypt the
-        ///   first block of plaintext data. For RijndaelManaged class IV must be 
-        ///   exactly 16 ASCII characters long.
+        /// <param name="initVector">
+        ///     Initialization vector (or IV). This value is required to encrypt the
+        ///     first block of plaintext data. For RijndaelManaged class IV must be
+        ///     exactly 16 ASCII characters long.
         /// </param>
-        /// <param name = "keySize">
-        ///   Size of encryption key in bits. Allowed values are: 128, 192, and 256. 
-        ///   Longer keys are more secure than shorter keys.
+        /// <param name="keySize">
+        ///     Size of encryption key in bits. Allowed values are: 128, 192, and 256.
+        ///     Longer keys are more secure than shorter keys.
         /// </param>
         /// <returns>
-        ///   Encrypted value formatted as a base64-encoded string.
+        ///     Encrypted value formatted as a base64-encoded string.
         /// </returns>
         public static string Encrypt(string plainText,
                                      string passPhrase,
@@ -209,47 +209,47 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Decrypts specified ciphertext using Rijndael symmetric key algorithm.
+        ///     Decrypts specified ciphertext using Rijndael symmetric key algorithm.
         /// </summary>
-        /// <param name = "cipherText">
-        ///   Base64-formatted ciphertext value.
+        /// <param name="cipherText">
+        ///     Base64-formatted ciphertext value.
         /// </param>
-        /// <param name = "passPhrase">
-        ///   Passphrase from which a pseudo-random password will be derived. The
-        ///   derived password will be used to generate the encryption key.
-        ///   Passphrase can be any string. In this example we assume that this
-        ///   passphrase is an ASCII string.
+        /// <param name="passPhrase">
+        ///     Passphrase from which a pseudo-random password will be derived. The
+        ///     derived password will be used to generate the encryption key.
+        ///     Passphrase can be any string. In this example we assume that this
+        ///     passphrase is an ASCII string.
         /// </param>
-        /// <param name = "saltValue">
-        ///   Salt value used along with passphrase to generate password. Salt can
-        ///   be any string. In this example we assume that salt is an ASCII string.
+        /// <param name="saltValue">
+        ///     Salt value used along with passphrase to generate password. Salt can
+        ///     be any string. In this example we assume that salt is an ASCII string.
         /// </param>
-        /// <param name = "hashAlgorithm">
-        ///   Hash algorithm used to generate password. Allowed values are: "MD5" and
-        ///   "SHA1". SHA1 hashes are a bit slower, but more secure than MD5 hashes.
+        /// <param name="hashAlgorithm">
+        ///     Hash algorithm used to generate password. Allowed values are: "MD5" and
+        ///     "SHA1". SHA1 hashes are a bit slower, but more secure than MD5 hashes.
         /// </param>
-        /// <param name = "passwordIterations">
-        ///   Number of iterations used to generate password. One or two iterations
-        ///   should be enough.
+        /// <param name="passwordIterations">
+        ///     Number of iterations used to generate password. One or two iterations
+        ///     should be enough.
         /// </param>
-        /// <param name = "initVector">
-        ///   Initialization vector (or IV). This value is required to encrypt the
-        ///   first block of plaintext data. For RijndaelManaged class IV must be
-        ///   exactly 16 ASCII characters long.
+        /// <param name="initVector">
+        ///     Initialization vector (or IV). This value is required to encrypt the
+        ///     first block of plaintext data. For RijndaelManaged class IV must be
+        ///     exactly 16 ASCII characters long.
         /// </param>
-        /// <param name = "keySize">
-        ///   Size of encryption key in bits. Allowed values are: 128, 192, and 256.
-        ///   Longer keys are more secure than shorter keys.
+        /// <param name="keySize">
+        ///     Size of encryption key in bits. Allowed values are: 128, 192, and 256.
+        ///     Longer keys are more secure than shorter keys.
         /// </param>
         /// <returns>
-        ///   Decrypted string value.
+        ///     Decrypted string value.
         /// </returns>
         /// <remarks>
-        ///   Most of the logic in this function is similar to the Encrypt
-        ///   logic. In order for decryption to work, all parameters of this function
-        ///   - except cipherText value - must match the corresponding parameters of
-        ///   the Encrypt function which was called to generate the
-        ///   ciphertext.
+        ///     Most of the logic in this function is similar to the Encrypt
+        ///     logic. In order for decryption to work, all parameters of this function
+        ///     - except cipherText value - must match the corresponding parameters of
+        ///     the Encrypt function which was called to generate the
+        ///     ciphertext.
         /// </remarks>
         public static string Decrypt(string cipherText,
                                      string passPhrase,
@@ -334,7 +334,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Get OUR external IP
+        ///     Get OUR external IP
         /// </summary>
         /// <returns></returns>
         public static string GetExternalIp()
@@ -368,7 +368,7 @@ namespace Aurora.Framework
                     {
                         NetworkUtils.InternetFailure();
                         MainConsole.Instance.Error("[Utilities]: Failed to get external IP, " + iex +
-                                    ", please check your internet connection (if this applies), setting to internal...");
+                                                   ", please check your internet connection (if this applies), setting to internal...");
                         externalIp = "127.0.0.1";
                     }
                 }
@@ -380,9 +380,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Read a website into a string
+        ///     Read a website into a string
         /// </summary>
-        /// <param name = "URL">URL to change into a string</param>
+        /// <param name="URL">URL to change into a string</param>
         /// <returns></returns>
         public static string ReadExternalWebsite(string URL)
         {
@@ -431,16 +431,17 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        ///   Download the file from downloadLink and save it to Aurora + Version +
+        ///     Download the file from downloadLink and save it to Aurora + Version +
         /// </summary>
-        /// <param name = "downloadLink">Link to the download</param>
-        /// <param name = "filename">Name to put the download in</param>
+        /// <param name="downloadLink">Link to the download</param>
+        /// <param name="filename">Name to put the download in</param>
         public static void DownloadFile(string downloadLink, string filename)
         {
             WebClient webClient = new WebClient();
             try
             {
-                MainConsole.Instance.Warn("Downloading new file from " + downloadLink + " now into file " + filename + ".");
+                MainConsole.Instance.Warn("Downloading new file from " + downloadLink + " now into file " + filename +
+                                          ".");
                 webClient.DownloadFile(downloadLink, filename);
             }
             catch (Exception)
@@ -449,18 +450,21 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Downloads a file async
+        ///     Downloads a file async
         /// </summary>
         /// <param name="downloadLink"></param>
         /// <param name="filename"></param>
         /// <param name="onProgress">can be null</param>
         /// <param name="onComplete">can be null</param>
-        public static void DownloadFileAsync(string downloadLink, string filename, DownloadProgressChangedEventHandler onProgress, AsyncCompletedEventHandler onComplete)
+        public static void DownloadFileAsync(string downloadLink, string filename,
+                                             DownloadProgressChangedEventHandler onProgress,
+                                             AsyncCompletedEventHandler onComplete)
         {
             WebClient webClient = new WebClient();
             try
             {
-                MainConsole.Instance.Warn("Downloading new file from " + downloadLink + " now into file " + filename + ".");
+                MainConsole.Instance.Warn("Downloading new file from " + downloadLink + " now into file " + filename +
+                                          ".");
                 if (onProgress != null)
                     webClient.DownloadProgressChanged += onProgress;
                 if (onComplete != null)
@@ -473,11 +477,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Bring up a popup with a text box to ask the user for some input
+        ///     Bring up a popup with a text box to ask the user for some input
         /// </summary>
-        /// <param name = "title"></param>
-        /// <param name = "promptText"></param>
-        /// <param name = "value"></param>
+        /// <param name="title"></param>
+        /// <param name="promptText"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
         public static DialogResult InputBox(string title, string promptText, ref string value)
         {
@@ -522,10 +526,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Bring up a popup with a text box to ask the user for some input
+        ///     Bring up a popup with a text box to ask the user for some input
         /// </summary>
-        /// <param name = "title"></param>
-        /// <param name = "promptText"></param>
+        /// <param name="title"></param>
+        /// <param name="promptText"></param>
         /// <returns></returns>
         public static DialogResult InputBox(string title, string promptText)
         {

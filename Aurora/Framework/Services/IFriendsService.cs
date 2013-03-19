@@ -34,28 +34,29 @@ namespace Aurora.Framework
     public class FriendInfo : IDataTransferable
     {
         /// <summary>
-        ///   The friend of PrincipalID
+        ///     The friend of PrincipalID
         /// </summary>
         public string Friend;
 
         /// <summary>
-        ///   The flags that PrincipalID has given to Friend
+        ///     The flags that PrincipalID has given to Friend
         /// </summary>
         public int MyFlags;
 
         /// <summary>
-        ///   The user who is a friend of "Friend"
+        ///     The user who is a friend of "Friend"
         /// </summary>
         public UUID PrincipalID;
 
         /// <summary>
-        ///   The flags Friend has given to PrincipalID
+        ///     The flags Friend has given to PrincipalID
         /// </summary>
         public int TheirFlags;
 
         public FriendInfo()
         {
         }
+
         public override void FromOSD(OpenMetaverse.StructuredData.OSDMap map)
         {
             PrincipalID = map["PrincipalID"];
@@ -79,39 +80,38 @@ namespace Aurora.Framework
     public interface IFriendsService
     {
         /// <summary>
-        ///   The local service (if possible)
+        ///     The local service (if possible)
         /// </summary>
         IFriendsService InnerService { get; }
 
         /// <summary>
-        ///   Get all friends of the given user
+        ///     Get all friends of the given user
         /// </summary>
-        /// <param name = "principalID"></param>
+        /// <param name="principalID"></param>
         /// <returns></returns>
         List<FriendInfo> GetFriends(UUID principalID);
 
         /// <summary>
-        ///   Get all friends requests of the given user
+        ///     Get all friends requests of the given user
         /// </summary>
-        /// <param name = "principalID"></param>
+        /// <param name="principalID"></param>
         /// <returns></returns>
-        /// 
         List<FriendInfo> GetFriendsRequest(UUID principalID);
 
         /// <summary>
-        ///   Store the changes of the friend of PrincipalID
+        ///     Store the changes of the friend of PrincipalID
         /// </summary>
-        /// <param name = "principalID"></param>
-        /// <param name = "friend"></param>
-        /// <param name = "flags"></param>
+        /// <param name="principalID"></param>
+        /// <param name="friend"></param>
+        /// <param name="flags"></param>
         /// <returns></returns>
         bool StoreFriend(UUID principalID, string friend, int flags);
 
         /// <summary>
-        ///   Delete the friendship between the two users
+        ///     Delete the friendship between the two users
         /// </summary>
-        /// <param name = "principalID"></param>
-        /// <param name = "friend"></param>
+        /// <param name="principalID"></param>
+        /// <param name="friend"></param>
         /// <returns></returns>
         bool Delete(UUID principalID, string friend);
 

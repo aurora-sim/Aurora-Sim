@@ -40,7 +40,9 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         public void Dispose()
-        { Stop(); }
+        {
+            Stop();
+        }
 
         public void Stop()
         {
@@ -57,7 +59,7 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 var context = _listener.BeginGetContext(ContextReady, null);
 
-                if (0 == WaitHandle.WaitAny(new[] { _stop, context.AsyncWaitHandle }))
+                if (0 == WaitHandle.WaitAny(new[] {_stop, context.AsyncWaitHandle}))
                     return;
             }
         }
@@ -69,12 +71,15 @@ namespace Aurora.Framework.Servers.HttpServer
                 _queue.Enqueue(_listener.EndGetContext(ar));
                 _ready.Set();
             }
-            catch { return; }
+            catch
+            {
+                return;
+            }
         }
 
         private void Worker()
         {
-            WaitHandle[] wait = new[] { _ready, _stop };
+            WaitHandle[] wait = new[] {_ready, _stop};
             while (0 == WaitHandle.WaitAny(wait))
             {
                 HttpListenerContext context;
@@ -84,8 +89,14 @@ namespace Aurora.Framework.Servers.HttpServer
                     continue;
                 }
 
-                try { ProcessRequest(context); }
-                catch (Exception e) { Console.Error.WriteLine(e); }
+                try
+                {
+                    ProcessRequest(context);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine(e);
+                }
             }
         }
     }

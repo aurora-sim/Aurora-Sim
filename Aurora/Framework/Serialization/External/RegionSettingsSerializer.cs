@@ -33,29 +33,29 @@ using OpenMetaverse;
 namespace Aurora.Framework.Serialization.External
 {
     /// <summary>
-    ///   Serialize and deserialize region settings as an external format.
+    ///     Serialize and deserialize region settings as an external format.
     /// </summary>
     public class RegionSettingsSerializer
     {
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
 
         /// <summary>
-        ///   Deserialize settings
+        ///     Deserialize settings
         /// </summary>
-        /// <param name = "serializedSettings"></param>
+        /// <param name="serializedSettings"></param>
         /// <returns></returns>
-        /// <exception cref = "System.Xml.XmlException"></exception>
+        /// <exception cref="System.Xml.XmlException"></exception>
         public static RegionSettings Deserialize(byte[] serializedSettings)
         {
             return Deserialize(m_asciiEncoding.GetString(serializedSettings, 0, serializedSettings.Length));
         }
 
         /// <summary>
-        ///   Deserialize settings
+        ///     Deserialize settings
         /// </summary>
-        /// <param name = "serializedSettings"></param>
+        /// <param name="serializedSettings"></param>
         /// <returns></returns>
-        /// <exception cref = "System.Xml.XmlException"></exception>
+        /// <exception cref="System.Xml.XmlException"></exception>
         public static RegionSettings Deserialize(string serializedSettings)
         {
             RegionSettings settings = new RegionSettings();

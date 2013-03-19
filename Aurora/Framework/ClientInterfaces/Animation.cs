@@ -32,7 +32,7 @@ using OpenMetaverse.StructuredData;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Information about an Animation
+    ///     Information about an Animation
     /// </summary>
     [Serializable]
     public class Animation
@@ -47,11 +47,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Creates an Animation based on the data
+        ///     Creates an Animation based on the data
         /// </summary>
-        /// <param name = "animID">UUID ID of animation</param>
-        /// <param name = "sequenceNum"></param>
-        /// <param name = "objectID">ID of object to be animated</param>
+        /// <param name="animID">UUID ID of animation</param>
+        /// <param name="sequenceNum"></param>
+        /// <param name="objectID">ID of object to be animated</param>
         public Animation(UUID animID, int sequenceNum, UUID objectID)
         {
             this.animID = animID;
@@ -60,16 +60,16 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Animation from OSDMap from LLSD XML or LLSD json
+        ///     Animation from OSDMap from LLSD XML or LLSD json
         /// </summary>
-        /// <param name = "args"></param>
+        /// <param name="args"></param>
         public Animation(OSDMap args)
         {
             UnpackUpdateMessage(args);
         }
 
         /// <summary>
-        ///   ID of Animation
+        ///     ID of Animation
         /// </summary>
         public UUID AnimID
         {
@@ -84,7 +84,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Unique ID of object that is being animated
+        ///     Unique ID of object that is being animated
         /// </summary>
         public UUID ObjectID
         {
@@ -94,7 +94,7 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        ///   Pack this object up as an OSDMap for transferring via LLSD XML or LLSD json
+        ///     Pack this object up as an OSDMap for transferring via LLSD XML or LLSD json
         /// </summary>
         /// <returns></returns>
         public OSDMap PackUpdateMessage()
@@ -107,9 +107,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Fill object with data from OSDMap
+        ///     Fill object with data from OSDMap
         /// </summary>
-        /// <param name = "args"></param>
+        /// <param name="args"></param>
         public void UnpackUpdateMessage(OSDMap args)
         {
             if (args["animation"] != null)

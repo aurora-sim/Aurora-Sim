@@ -35,34 +35,34 @@ namespace Aurora.Framework
     public class Telehub : IDataTransferable
     {
         /// <summary>
-        ///   Name of the teleHUB object
+        ///     Name of the teleHUB object
         /// </summary>
         public string Name = "";
 
         /// <summary>
-        ///   UUID of the teleHUB object
+        ///     UUID of the teleHUB object
         /// </summary>
         public UUID ObjectUUID = UUID.Zero;
 
         /// <summary>
-        ///   Region UUID
+        ///     Region UUID
         /// </summary>
         public UUID RegionID = UUID.Zero;
 
         /// <summary>
-        ///   Global region coordinates (in meters)
+        ///     Global region coordinates (in meters)
         /// </summary>
         public float RegionLocX;
 
         public float RegionLocY;
 
         /// <summary>
-        ///   Positions users will spawn at in order of creation
+        ///     Positions users will spawn at in order of creation
         /// </summary>
         public List<Vector3> SpawnPos = new List<Vector3>();
 
         /// <summary>
-        ///   Position of the telehub in the region
+        ///     Position of the telehub in the region
         /// </summary>
         public float TelehubLocX;
 
@@ -70,7 +70,7 @@ namespace Aurora.Framework
         public float TelehubLocZ;
 
         /// <summary>
-        ///   Rotation of the av
+        ///     Rotation of the av
         /// </summary>
         public float TelehubRotX;
 

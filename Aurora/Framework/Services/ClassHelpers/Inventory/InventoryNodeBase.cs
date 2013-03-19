@@ -30,14 +30,14 @@ using OpenMetaverse;
 namespace Aurora.Framework
 {
     /// <summary>
-    ///   Common base class for inventory nodes of different types (files, folders, etc.)
+    ///     Common base class for inventory nodes of different types (files, folders, etc.)
     /// </summary>
     public class InventoryNodeBase : IDataTransferable
     {
         private string m_name = string.Empty;
 
         /// <summary>
-        ///   The name of the node (64 characters or less)
+        ///     The name of the node (64 characters or less)
         /// </summary>
         public virtual string Name
         {
@@ -46,12 +46,12 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   A UUID containing the ID for the inventory node itself
+        ///     A UUID containing the ID for the inventory node itself
         /// </summary>
         public UUID ID { get; set; }
 
         /// <summary>
-        ///   The agent who's inventory this is contained by
+        ///     The agent who's inventory this is contained by
         /// </summary>
         public virtual UUID Owner { get; set; }
     }

@@ -3,18 +3,18 @@
 namespace Aurora.Framework
 {
     /// <summary>
-    /// Interface to a class that is capable of creating entities
+    ///     Interface to a class that is capable of creating entities
     /// </summary>
     public interface IEntityCreator
     {
         /// <summary>
-        /// The entities that this class is capable of creating.  These match the PCode format.
+        ///     The entities that this class is capable of creating.  These match the PCode format.
         /// </summary>
         /// <returns></returns>
         PCode[] CreationCapabilities { get; }
 
         /// <summary>
-        /// Create an entity
+        ///     Create an entity
         /// </summary>
         /// <param name="baseEntity"></param>
         /// <param name="ownerID"></param>
@@ -23,6 +23,7 @@ namespace Aurora.Framework
         /// <param name="rot"></param>
         /// <param name="shape"></param>
         /// <returns>The entity created, or null if the creation failed</returns>
-        ISceneEntity CreateEntity(ISceneEntity baseEntity, UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape);
+        ISceneEntity CreateEntity(ISceneEntity baseEntity, UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot,
+                                  PrimitiveBaseShape shape);
     }
 }

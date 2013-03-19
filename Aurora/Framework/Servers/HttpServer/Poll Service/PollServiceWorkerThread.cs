@@ -39,7 +39,7 @@ namespace Aurora.Framework.Servers.HttpServer
     public class PollServiceWorkerThread
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         public event ReQueuePollServiceItem ReQueue;
@@ -84,7 +84,8 @@ namespace Aurora.Framework.Servers.HttpServer
                             continue;
                         }
 
-                        Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id, str.ReadToEnd());
+                        Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
+                                                                               str.ReadToEnd());
                         DoHTTPGruntWork(m_server, req, responsedata);
                     }
                     else
@@ -117,7 +118,7 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// FIXME: This should be part of BaseHttpServer
+        ///     FIXME: This should be part of BaseHttpServer
         /// </summary>
         internal static void DoHTTPGruntWork(IHttpServer server, PollServiceHttpRequest req, Hashtable responsedata)
         {

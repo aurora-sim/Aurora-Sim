@@ -35,14 +35,14 @@ namespace Aurora.Framework
     public delegate void AssetRetrieved(string id, Object sender, AssetBase asset);
 
     /// <summary>
-    ///   Interface for getting a module that can access assets (only) outside of this grid
+    ///     Interface for getting a module that can access assets (only) outside of this grid
     /// </summary>
     public interface IAssetServiceConnector : IAssetService
     {
     }
 
     /// <summary>
-    ///   Interface for getting a module that can access assets inside and outside of this grid
+    ///     Interface for getting a module that can access assets inside and outside of this grid
     /// </summary>
     public interface IExternalAssetService : IAssetService
     {
@@ -51,75 +51,75 @@ namespace Aurora.Framework
     public interface IAssetService
     {
         /// <summary>
-        ///   Get the local service (if applicable)
+        ///     Get the local service (if applicable)
         /// </summary>
         IAssetService InnerService { get; }
 
         /// <summary>
-        ///   Get an asset synchronously.
+        ///     Get an asset synchronously.
         /// </summary>
-        /// <param name = "id"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         AssetBase Get(string id);
 
         /// <summary>
-        ///   Get a mesh asset synchronously.
+        ///     Get a mesh asset synchronously.
         /// </summary>
-        /// <param name = "id"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         AssetBase GetMesh(string id);
 
         /// <summary>
-        ///   Get whether an asset with the given ID exists
+        ///     Get whether an asset with the given ID exists
         /// </summary>
-        /// <param name = "id"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         bool GetExists(string id);
 
         /// <summary>
-        ///   Get the asset data for the given asset
+        ///     Get the asset data for the given asset
         /// </summary>
-        /// <param name = "id"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         byte[] GetData(string id);
 
         /// <summary>
-        ///   Synchronously fetches an asset from the local cache only
+        ///     Synchronously fetches an asset from the local cache only
         /// </summary>
-        /// <param name = "id">Asset ID</param>
+        /// <param name="id">Asset ID</param>
         /// <returns>The fetched asset, or null if it did not exist in the local cache</returns>
         AssetBase GetCached(string id);
 
         /// <summary>
-        ///   Get an asset synchronously or asynchronously (depending on whether 
-        ///   it is locally cached) and fire a callback with the fetched asset
+        ///     Get an asset synchronously or asynchronously (depending on whether
+        ///     it is locally cached) and fire a callback with the fetched asset
         /// </summary>
-        /// <param name = "id">The asset id</param>
-        /// <param name = "sender">Represents the requester.  Passed back via the handler</param>
-        /// <param name = "handler">The handler to call back once the asset has been retrieved</param>
+        /// <param name="id">The asset id</param>
+        /// <param name="sender">Represents the requester.  Passed back via the handler</param>
+        /// <param name="handler">The handler to call back once the asset has been retrieved</param>
         void Get(string id, Object sender, AssetRetrieved handler);
 
         /// <summary>
-        ///   Creates a new asset
+        ///     Creates a new asset
         /// </summary>
         /// Returns a random ID if none is passed into it
-        /// <param name = "asset"></param>
+        /// <param name="asset"></param>
         /// <returns></returns>
         UUID Store(AssetBase asset);
 
         /// <summary>
-        ///   Update an asset's content. Will return false, and UUID.ZERO if it fails
+        ///     Update an asset's content. Will return false, and UUID.ZERO if it fails
         /// </summary>
         /// Attachments and bare scripts need this!!
-        /// <param name = "id"> </param>
-        /// <param name = "data"></param>
+        /// <param name="id"> </param>
+        /// <param name="data"></param>
         /// <returns></returns>
         UUID UpdateContent(UUID id, byte[] data);
 
         /// <summary>
-        ///   Delete an asset
+        ///     Delete an asset
         /// </summary>
-        /// <param name = "id"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         bool Delete(UUID id);
 

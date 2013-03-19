@@ -53,20 +53,16 @@ namespace Aurora.Framework
 
         public const int VERSIONINFO_VERSION_LENGTH = 27;
 
-        ///<value>
-        ///  This is the external interface version.  It is separate from the OpenSimulator project version.
-        /// 
-        ///  This version number should be 
-        ///  increased by 1 every time a code change makes the previous OpenSimulator revision incompatible
-        ///  with the new revision.  This will usually be due to interregion or grid facing interface changes.
-        /// 
-        ///  Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
-        ///  but not outright failure) do not need a version number increment.
-        /// 
-        ///  Having this version number allows the grid service to reject connections from regions running a version
-        ///  of the code that is too old. 
-        ///
-        ///</value>
+        /// <value>
+        ///     This is the external interface version.  It is separate from the OpenSimulator project version.
+        ///     This version number should be
+        ///     increased by 1 every time a code change makes the previous OpenSimulator revision incompatible
+        ///     with the new revision.  This will usually be due to interregion or grid facing interface changes.
+        ///     Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
+        ///     but not outright failure) do not need a version number increment.
+        ///     Having this version number allows the grid service to reject connections from regions running a version
+        ///     of the code that is too old.
+        /// </value>
         public static readonly int MajorInterfaceVersion = 7;
 
         public static string Version
@@ -102,16 +98,19 @@ namespace Aurora.Framework
                     {
                         string[] lines = File.ReadAllLines(gitFile);
                         string lastLine = lines[lines.Length - 1];
-                        string[] splitLastLine = lastLine.Split(new string[2] { " ", "\t" },
+                        string[] splitLastLine = lastLine.Split(new string[2] {" ", "\t"},
                                                                 StringSplitOptions.RemoveEmptyEntries);
-                        versionString = "Aurora-" + splitLastLine[1].Substring(0, 6) /*First 6 digits of the commit hash*/+
+                        versionString = "Aurora-" + splitLastLine[1].Substring(0, 6)
+                                        /*First 6 digits of the commit hash*/+
                                         " " + splitLastLine[5] /*Time zone info*/;
                         FileStream s = File.Open(gitCommitFileName, FileMode.Create);
                         byte[] data = Encoding.UTF8.GetBytes(versionString);
                         s.Write(data, 0, data.Length);
                         s.Close();
                     }
-                    catch { }
+                    catch
+                    {
+                    }
                 }
             }
             else if (File.Exists(gitCommitFileName))

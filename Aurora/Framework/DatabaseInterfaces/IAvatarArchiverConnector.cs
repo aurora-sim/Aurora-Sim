@@ -32,22 +32,22 @@ namespace Aurora.Framework
     public interface IAvatarArchiverConnector : IAuroraDataPlugin
     {
         /// <summary>
-        ///   Gets avatar archives from the database
+        ///     Gets avatar archives from the database
         /// </summary>
-        /// <param name = "Name">Name of the avatar archive</param>
+        /// <param name="Name">Name of the avatar archive</param>
         /// <returns></returns>
         AvatarArchive GetAvatarArchive(string Name);
 
         /// <summary>
-        ///   Save an avatar archive to the database
+        ///     Save an avatar archive to the database
         /// </summary>
-        /// <param name = "archive">Archive</param>
+        /// <param name="archive">Archive</param>
         void SaveAvatarArchive(AvatarArchive archive);
 
         /// <summary>
-        ///   Gets a list of avatar archives used for the website now only
+        ///     Gets a list of avatar archives used for the website now only
         /// </summary>
-        /// <param name = "isPublic">IsPublic</param>
+        /// <param name="isPublic">IsPublic</param>
         /// <returns>List of archives</returns>
         List<AvatarArchive> GetAvatarArchives(bool isPublic);
     }

@@ -31,7 +31,7 @@ using Nini.Config;
 namespace Aurora.Framework
 {
     /// <value>
-    ///   Different user set names that come in from the configuration file.
+    ///     Different user set names that come in from the configuration file.
     /// </value>
     public enum UserSet
     {
@@ -44,11 +44,11 @@ namespace Aurora.Framework
     public class UserSetHelpers
     {
         /// <summary>
-        ///   Parse a user set configuration setting
+        ///     Parse a user set configuration setting
         /// </summary>
-        /// <param name = "config"></param>
-        /// <param name = "settingName"></param>
-        /// <param name = "defaultValue">The default value for this attribute</param>
+        /// <param name="config"></param>
+        /// <param name="settingName"></param>
+        /// <param name="defaultValue">The default value for this attribute</param>
         /// <returns>The parsed value</returns>
         public static UserSet ParseUserSetConfigSetting(IConfig config, string settingName, UserSet defaultValue)
         {
