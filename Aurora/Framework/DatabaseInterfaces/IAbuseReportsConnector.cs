@@ -28,7 +28,7 @@
 using System.Collections.Generic;
 using Aurora.Framework.Services;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IAbuseReportsConnector : IAuroraDataPlugin
     {

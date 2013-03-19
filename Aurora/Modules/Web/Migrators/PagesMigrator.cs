@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using OpenMetaverse;
 using System.Collections.Generic;
 

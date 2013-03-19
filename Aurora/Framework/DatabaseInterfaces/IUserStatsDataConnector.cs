@@ -30,7 +30,7 @@ using Aurora.Framework.Services;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IUserStatsDataConnector : IAuroraDataPlugin
     {

@@ -31,7 +31,7 @@ using Aurora.Framework.Services;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public class Email : IDataTransferable
     {

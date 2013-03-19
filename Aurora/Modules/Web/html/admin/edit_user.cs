@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Services;

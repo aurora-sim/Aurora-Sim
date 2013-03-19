@@ -33,7 +33,7 @@ using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IDirectoryServiceConnector : IAuroraDataPlugin
     {

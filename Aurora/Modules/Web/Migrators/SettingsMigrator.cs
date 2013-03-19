@@ -1,4 +1,5 @@
 ﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using OpenMetaverse;
 
 namespace Aurora.Modules.Web

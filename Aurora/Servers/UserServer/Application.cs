@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Services;
 using Aurora.Simulation.Base;
 using System;

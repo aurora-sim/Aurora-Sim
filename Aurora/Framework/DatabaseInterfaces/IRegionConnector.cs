@@ -28,7 +28,7 @@
 using Aurora.Framework.Services;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IRegionConnector : IAuroraDataPlugin
     {

@@ -30,7 +30,7 @@ using Aurora.Framework.Services;
 using OpenMetaverse;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IEstateConnector : IAuroraDataPlugin
     {

@@ -31,7 +31,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     /// <summary>
     ///     Some background to this class

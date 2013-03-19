@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;

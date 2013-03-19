@@ -29,7 +29,7 @@ using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Profile;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IAgentConnector : IAuroraDataPlugin
     {
