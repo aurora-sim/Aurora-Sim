@@ -27,8 +27,9 @@
 
 using System;
 using System.IO;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace Aurora.Framework.Servers.HttpServer.Interfaces
 {
     public interface IStreamedRequestHandler : IDisposable
     {

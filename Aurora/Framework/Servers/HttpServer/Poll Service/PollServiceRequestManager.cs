@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Threading;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 
 namespace Aurora.Framework.Servers.HttpServer
 {

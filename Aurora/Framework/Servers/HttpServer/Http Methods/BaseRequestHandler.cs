@@ -27,6 +27,8 @@
 
 using System;
 using System.IO;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 
 namespace Aurora.Framework.Servers.HttpServer
 {

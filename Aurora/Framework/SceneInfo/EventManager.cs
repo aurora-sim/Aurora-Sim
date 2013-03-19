@@ -1,4 +1,6 @@
-﻿using Aurora.Framework.Servers.HttpServer;
+﻿using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;

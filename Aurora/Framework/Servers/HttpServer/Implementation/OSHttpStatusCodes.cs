@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace Aurora.Framework.Servers.HttpServer.Implementation
 {
     /// <summary>
     ///     HTTP status codes (almost) as defined by W3C in http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html and IETF in http://tools.ietf.org/html/rfc6585

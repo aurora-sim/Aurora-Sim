@@ -35,7 +35,7 @@ using System.Text;
 using System.Web;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace Aurora.Framework.Servers.HttpServer.Implementation
 {
     public class OSHttpRequest
     {

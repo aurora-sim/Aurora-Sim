@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Other;
 using Aurora.Framework.Utilities;

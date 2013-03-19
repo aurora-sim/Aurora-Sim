@@ -26,7 +26,9 @@
  */
 
 
-namespace Aurora.Framework.Servers.HttpServer
+using Aurora.Framework.Servers.HttpServer.Implementation;
+
+namespace Aurora.Framework.Servers.HttpServer.Interfaces
 {
     /// <summary>
     ///     Interface to OpenSimulator's built in HTTP server.  Use this to register handlers (http, llsd, xmlrpc, etc.)

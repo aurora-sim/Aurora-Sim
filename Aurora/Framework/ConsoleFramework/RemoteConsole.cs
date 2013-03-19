@@ -32,7 +32,9 @@ using System.Linq;
 using System.Threading;
 using System.Web;
 using System.Xml;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
 
