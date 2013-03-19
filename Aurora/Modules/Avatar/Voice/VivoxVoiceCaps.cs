@@ -210,18 +210,17 @@ namespace Aurora.Modules
             catch (Exception e)
             {
                 MainConsole.Instance.ErrorFormat("[VivoxVoice] plugin initialization failed: {0}", e.ToString());
-                return;
             }
         }
 
-        public void Start(Nini.Config.IConfigSource config, IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             if (m_registry == null)
                 return;
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                manager.OnAddedScene += (scene) =>
+                manager.OnAddedScene += scene =>
                                             {
                                                 lock (vlock)
                                                 {
@@ -370,7 +369,6 @@ namespace Aurora.Modules
             vivoxSipUri = m_vivoxSipUri;
             vivoxVoiceAccountApi = m_vivoxVoiceAccountApi;
 
-            XmlElement resp;
             bool retry = false;
             agentname = "x" + Convert.ToBase64String(regionClient.AgentID.GetBytes());
             password = new UUID(Guid.NewGuid()).ToString().Replace('-', 'Z').Substring(0, 16);
@@ -380,7 +378,7 @@ namespace Aurora.Modules
 
             do
             {
-                resp = VivoxGetAccountInfo(agentname);
+                XmlElement resp = VivoxGetAccountInfo(agentname);
 
                 if (XmlFind(resp, "response.level0.status", out code))
                 {
@@ -511,7 +509,7 @@ namespace Aurora.Modules
             request["AvatarID"] = avatarID;
             request["Method"] = "GetParcelChannelInfo";
             OSDMap response = null;
-            syncPoster.Get(URL, request, (resp) => { response = resp; });
+            syncPoster.Get(URL, request, resp => { response = resp; });
             while (response == null)
                 Thread.Sleep(5);
 
@@ -703,11 +701,11 @@ namespace Aurora.Modules
         {
             string requrl = String.Format(m_vivoxChannelPath, m_vivoxServer, "create", channelId, m_authToken);
 
-            if (parent != null && parent != String.Empty)
+            if (!string.IsNullOrEmpty(parent))
             {
                 requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             }
-            if (description != null && description != String.Empty)
+            if (!string.IsNullOrEmpty(description))
             {
                 requrl = String.Format("{0}&chan_desc={1}", requrl, description);
             }
@@ -743,7 +741,7 @@ namespace Aurora.Modules
             //     requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             // }
 
-            if (description != null && description != String.Empty)
+            if (!string.IsNullOrEmpty(description))
             {
                 requrl = String.Format("{0}&chan_desc={1}", requrl, description);
             }
@@ -934,7 +932,7 @@ namespace Aurora.Modules
         private XmlElement VivoxDeleteChannel(string parent, string channelid)
         {
             string requrl = String.Format(m_vivoxChannelDel, m_vivoxServer, "delete", channelid, m_authToken);
-            if (parent != null && parent != String.Empty)
+            if (!string.IsNullOrEmpty(parent))
             {
                 requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             }
@@ -1107,8 +1105,6 @@ namespace Aurora.Modules
                         case XmlNodeType.Text:
                             MainConsole.Instance.DebugFormat("\"{0}\"".PadLeft(index + 5), node.Value);
                             break;
-                        default:
-                            break;
                     }
                 MainConsole.Instance.TraceFormat("</{0}>".PadLeft(index + 6), e.Name);
             }
@@ -1190,15 +1186,10 @@ namespace Aurora.Modules
                 XmlNodeList children = e.ChildNodes;
                 foreach (XmlNode node in children)
                 {
-                    switch (node.NodeType)
+                    if (node.NodeType == XmlNodeType.Element)
                     {
-                        case XmlNodeType.Element:
-                            if (XmlSearch((XmlElement) node, tags, index + 1, ref nth, out result))
-                                return true;
-                            break;
-
-                        default:
-                            break;
+                        if (XmlSearch((XmlElement) node, tags, index + 1, ref nth, out result))
+                            return true;
                     }
                 }
             }
