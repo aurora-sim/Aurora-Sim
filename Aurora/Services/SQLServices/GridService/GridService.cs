@@ -102,8 +102,8 @@ namespace Aurora.Services.SQLServices.GridService
                                                          "Set database scope for region",
                                                          HandleSetScope);
 
-                MainConsole.Instance.Commands.AddCommand("grid clear regions",
-                                                         "grid clear regions",
+                MainConsole.Instance.Commands.AddCommand("grid clear all regions",
+                                                         "grid clear all regions",
                                                          "Clears all regions from the database",
                                                          HandleClearAllRegions);
 
@@ -750,7 +750,7 @@ namespace Aurora.Services.SQLServices.GridService
         {
             //Delete everything... give no criteria to just do 'delete from gridregions'
             m_Database.DeleteAll(new[]{ "1" }, new object[]{ 1 });
-            MainConsole.Instance.Warn("Cleared all regions");
+            MainConsole.Instance.Warn("[GridService]: Cleared all regions");
         }
 
         private void HandleClearRegion(string[] cmd)
@@ -765,10 +765,11 @@ namespace Aurora.Services.SQLServices.GridService
             GridRegion r = GetRegionByName(null, regionName);
             if (r == null)
             {
-                MainConsole.Instance.Warn("Region was not found");
+                MainConsole.Instance.Warn("[GridService]: Region was not found");
                 return;
             }
             m_Database.Delete(r.RegionID);
+            MainConsole.Instance.Warn("[GridService]: Region was removed");
         }
 
         private void HandleRegionRegistration(string[] cmd)
@@ -786,7 +787,7 @@ namespace Aurora.Services.SQLServices.GridService
             //Delete any flags with (Flags & 254) == 254
             m_Database.DeleteAll(new[] {"Flags", "Flags", "Flags", "Flags"},
                                  new object[] {254, 267, 275, 296});
-            MainConsole.Instance.Warn("Cleared all down regions");
+            MainConsole.Instance.Warn("[GridService]: Cleared all down regions");
         }
 
         private void HandleShowRegion(string[] cmd)

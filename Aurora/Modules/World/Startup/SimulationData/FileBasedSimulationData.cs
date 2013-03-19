@@ -121,8 +121,12 @@ namespace Aurora.Modules
         {
             if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini")))
             {
+                if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini.example")))
+                    File.Create(Path.Combine("Regions", "RegionConfig.ini")).Close();
+                else
+                    File.Copy(Path.Combine("Regions", "RegionConfig.ini.example"), Path.Combine("Regions", "RegionConfig.ini"));
                 newRegion = true;
-                return info = CreateRegionFromConsole();
+                return info = CreateRegionFromConsole(null);
             }
             newRegion = false;
             try
@@ -135,8 +139,8 @@ namespace Aurora.Modules
 
                 info.RegionID = UUID.Parse(config.GetString("RegionID"));
                 info.RegionName = config.GetString("RegionName");
-                info.RegionLocX = config.GetInt("RegionLocX");
-                info.RegionLocY = config.GetInt("RegionLocY");
+                info.RegionLocX = config.GetInt("RegionLocX") * Constants.RegionSize;
+                info.RegionLocY = config.GetInt("RegionLocY") * Constants.RegionSize;
                 info.RegionSizeX = config.GetInt("RegionSizeX");
                 info.RegionSizeY = config.GetInt("RegionSizeY");
 
@@ -158,48 +162,54 @@ namespace Aurora.Modules
             return null;
         }
 
-        private RegionInfo CreateRegionFromConsole()
+        private RegionInfo CreateRegionFromConsole(RegionInfo info)
         {
-            if (!File.Exists(Path.Combine("Regions", "RegionConfig.ini.example")))
-                File.Create(Path.Combine("Regions", "RegionConfig.ini")).Close();
-            else
-                File.Copy(Path.Combine("Regions", "RegionConfig.ini.example"), Path.Combine("Regions", "RegionConfig.ini"));
             Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine("Regions", "RegionConfig.ini"), Nini.Ini.IniFileType.AuroraStyle);
             Nini.Config.IniConfigSource source = new IniConfigSource(doc);
             IConfig section = source.Configs["Region"] != null ? source.Configs["Region"] : source.AddConfig("Region");
 
-            RegionInfo info = new RegionInfo();
-            info.RegionID = UUID.Random();
+            if (info == null)
+            {
+                info = new RegionInfo();
+                info.RegionID = UUID.Random();
+            }
             section.Set("RegionID", info.RegionID.ToString());
-            info.RegionName = MainConsole.Instance.Prompt("Region Name: ");
+            info.RegionName = MainConsole.Instance.Prompt("Region Name: ", info.RegionName);
             section.Set("RegionName", info.RegionName);
 
-            info.RegionLocX = int.Parse(MainConsole.Instance.Prompt("Region Location X: "));
-            info.RegionLocY = int.Parse(MainConsole.Instance.Prompt("Region location Y: "));
-            section.Set("RegionLocX", info.RegionLocX.ToString());
-            section.Set("RegionLocY", info.RegionLocY.ToString());
+            info.RegionLocX = int.Parse(MainConsole.Instance.Prompt("Region Location X: ", (info.RegionLocX / Constants.RegionSize).ToString())) * Constants.RegionSize;
+            info.RegionLocY = int.Parse(MainConsole.Instance.Prompt("Region location Y: ", (info.RegionLocY / Constants.RegionSize).ToString())) * Constants.RegionSize;
+            section.Set("RegionLocX", (info.RegionLocX / Constants.RegionSize).ToString());
+            section.Set("RegionLocY", (info.RegionLocY / Constants.RegionSize).ToString());
 
-            info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: ", "256"));
-            info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: ", "256"));
+            info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: ", info.RegionSizeX.ToString()));
+            info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: ", info.RegionSizeY.ToString()));
             section.Set("RegionSizeX", info.RegionSizeX.ToString());
             section.Set("RegionSizeY", info.RegionSizeY.ToString());
 
-            System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: ", "0.0.0.0"));
-            int intPort = int.Parse(MainConsole.Instance.Prompt("Internal port: ", "9000"));
+            if (info.InternalEndPoint == null)
+                info.InternalEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse("0.0.0.0"), 9000);
+            System.Net.IPAddress intAdd = System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: ", info.InternalEndPoint.Address.ToString()));
+            int intPort = int.Parse(MainConsole.Instance.Prompt("Internal port: ", info.InternalEndPoint.Port.ToString()));
             info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
             section.Set("InternalPort", intPort.ToString());
             section.Set("InternalAddress", intAdd.ToString());
 
-            info.RegionType = MainConsole.Instance.Prompt("Region Type: ", "Mainland");
+            info.RegionType = MainConsole.Instance.Prompt("Region Type: ", (info.RegionType == "" ? "Mainland" : info.RegionType));
             section.Set("RegionType", info.RegionType);
 
-            info.SeeIntoThisSimFromNeighbor = bool.Parse(MainConsole.Instance.Prompt("See into this sim from neighbors: ", "true", new List<string>() { "true", "false" }).ToLower());
+            info.SeeIntoThisSimFromNeighbor = bool.Parse(MainConsole.Instance.Prompt("See into this sim from neighbors: ", info.SeeIntoThisSimFromNeighbor.ToString().ToLower(), new List<string>() { "true", "false" }).ToLower());
             section.Set("SeeIntoThisSimFromNeighbor", info.SeeIntoThisSimFromNeighbor);
 
-            info.ObjectCapacity = int.Parse(MainConsole.Instance.Prompt("Object capacity: ", "50000"));
+            info.ObjectCapacity = int.Parse(MainConsole.Instance.Prompt("Object capacity: ", info.ObjectCapacity == 0 ? "50000" : info.ObjectCapacity.ToString()));
             section.Set("MaxPrims", info.ObjectCapacity);
 
             source.Save(Path.Combine("Regions", "RegionConfig.ini"));
+
+            IGridRegisterModule gridRegister = m_scene.RequestModuleInterface<IGridRegisterModule>();
+            gridRegister.UpdateGridRegion(m_scene);
+
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Save completed.");
 
             return info;
         }
@@ -257,6 +267,14 @@ namespace Aurora.Modules
         {
             scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
             m_scene = scene;
+
+            if(!MainConsole.Instance.Commands.ContainsCommand("update region info"))
+                MainConsole.Instance.Commands.AddCommand("update region info", "update region info", "Updates a region's info (and the resulting .ini file)", UpdateRegionInfo);
+        }
+
+        public void UpdateRegionInfo(string[] info)
+        {
+            m_scene.RegionInfo = CreateRegionFromConsole(m_scene.RegionInfo);
         }
 
         public virtual List<ISceneEntity> LoadObjects()
