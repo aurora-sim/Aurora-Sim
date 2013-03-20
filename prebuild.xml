@@ -1276,7 +1276,6 @@
       </Configuration>
 
       <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="Microsoft.VisualBasic"/>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Data"/>
@@ -1284,13 +1283,11 @@
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Web"/>
-
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Region"/>
-	  <Reference name="Aurora.Services.DataService"/>
-      
-	  <Reference name="CSJ2K" path="../../bin/"/>
+	    <Reference name="Aurora.Services.DataService"/>    
+	    <Reference name="CSJ2K" path="../../bin/"/>
       <Reference name="DotNetOpenMail" path="../../bin/"/>
       <Reference name="GlynnTucker.Cache" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
