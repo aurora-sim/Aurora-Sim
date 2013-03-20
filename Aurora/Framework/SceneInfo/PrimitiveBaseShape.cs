@@ -1321,18 +1321,11 @@ namespace Aurora.Framework.SceneInfo
                             xtw.WriteAttributeString("version", "0.1");
 
                             OSDArray meArray = new OSDArray();
-#if (!ISWIN)
-                            foreach (MediaEntry me in this)
-                            {
-                                OSD osd = (null == me ? new OSD() : me.GetOSD());
-                                meArray.Add(osd);
-                            }
-#else
+
                             foreach (OSD osd in this.Select(me => (null == me ? new OSD() : me.GetOSD())))
                             {
                                 meArray.Add(osd);
                             }
-#endif
 
                             xtw.WriteStartElement("OSData");
                             xtw.WriteRaw(OSDParser.SerializeLLSDXmlString(meArray));
@@ -1371,13 +1364,7 @@ namespace Aurora.Framework.SceneInfo
                         xtr.ReadStartElement("OSMedia");
 
                         OSDArray osdMeArray = (OSDArray) OSDParser.DeserializeLLSDXml(xtr.ReadInnerXml());
-#if (!ISWIN)
-                        foreach (OSD osdMe in osdMeArray)
-                        {
-                            MediaEntry me = (osdMe is OSDMap ? MediaEntry.FromOSD(osdMe) : new MediaEntry());
-                            Add(me);
-                        }
-#else
+
                         foreach (
                             MediaEntry me in
                                 osdMeArray.Select(
@@ -1385,7 +1372,6 @@ namespace Aurora.Framework.SceneInfo
                         {
                             Add(me);
                         }
-#endif
 
                         xtr.ReadEndElement();
                     }

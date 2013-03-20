@@ -761,12 +761,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 try
                 {
-#if (!ISWIN)
-                    foreach (Vector3 vector3 in m_forcelist)
-                        TaintedForce = TaintedForce + (vector3);
-#else
                     TaintedForce = m_forcelist.Aggregate(TaintedForce, (current, t) => current + (t));
-#endif
                 }
                 catch (IndexOutOfRangeException)
                 {

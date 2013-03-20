@@ -394,15 +394,7 @@ namespace Aurora.Framework.Utilities
         // Contains
         public bool Contains(TValue o)
         {
-#if (!ISWIN)
-            foreach (PriorityQueueItem<TValue, TPriority> x in items)
-            {
-                if (x.Value.Equals(o)) return true;
-            }
-            return false;
-#else
             return items.Any(x => x.Value.Equals(o));
-#endif
         }
 
         public void CopyTo(PriorityQueueItem<TValue, TPriority>[] array, int arrayIndex)

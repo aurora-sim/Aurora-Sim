@@ -284,19 +284,7 @@ namespace Aurora.Modules.Permissions
             if (perm != "")
             {
                 string[] ids = perm.Split(',');
-#if (!ISWIN)
-                foreach (string id in ids)
-                {
-                    string current = id.Trim();
-                    UUID uuid;
 
-                    if (UUID.TryParse(current, out uuid))
-                    {
-                        if (uuid != UUID.Zero)
-                            m_allowedAdministrators.Add(uuid);
-                    }
-                }
-#else
                 foreach (string current in ids.Select(id => id.Trim()))
                 {
                     UUID uuid;
@@ -307,9 +295,7 @@ namespace Aurora.Modules.Permissions
                             m_allowedAdministrators.Add(uuid);
                     }
                 }
-#endif
             }
-
 
             string permissionModules = PermissionsConfig.GetString("Modules", "DefaultPermissionsModule");
 
@@ -430,103 +416,55 @@ namespace Aurora.Modules.Permissions
             string grant = PermissionsConfig.GetString("GrantLSL", "");
             if (grant.Length > 0)
             {
-#if (!ISWIN)
-                foreach (string uuidl in grant.Split(','))
-                {
-                    string uuid = uuidl.Trim(" \t".ToCharArray());
-                    GrantLSL.Add(uuid, true);
-                }
-#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantLSL.Add(uuid, true);
                 }
-#endif
             }
 
             grant = PermissionsConfig.GetString("GrantCS", "");
             if (grant.Length > 0)
             {
-#if (!ISWIN)
-                foreach (string uuidl in grant.Split(','))
-                {
-                    string uuid = uuidl.Trim(" \t".ToCharArray());
-                    GrantCS.Add(uuid, true);
-                }
-#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantCS.Add(uuid, true);
                 }
-#endif
             }
 
             grant = PermissionsConfig.GetString("GrantVB", "");
             if (grant.Length > 0)
             {
-#if (!ISWIN)
-                foreach (string uuidl in grant.Split(','))
-                {
-                    string uuid = uuidl.Trim(" \t".ToCharArray());
-                    GrantVB.Add(uuid, true);
-                }
-#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantVB.Add(uuid, true);
                 }
-#endif
             }
 
             grant = PermissionsConfig.GetString("GrantJS", "");
             if (grant.Length > 0)
             {
-#if (!ISWIN)
-                foreach (string uuidl in grant.Split(','))
-                {
-                    string uuid = uuidl.Trim(" \t".ToCharArray());
-                    GrantJS.Add(uuid, true);
-                }
-#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantJS.Add(uuid, true);
                 }
-#endif
             }
 
             grant = PermissionsConfig.GetString("GrantYP", "");
             if (grant.Length > 0)
             {
-#if (!ISWIN)
-                foreach (string uuidl in grant.Split(','))
-                {
-                    string uuid = uuidl.Trim(" \t".ToCharArray());
-                    GrantYP.Add(uuid, true);
-                }
-#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantYP.Add(uuid, true);
                 }
-#endif
             }
 
             grant = PermissionsConfig.GetString("GrantAScript", "");
             if (grant.Length > 0)
             {
-#if (!ISWIN)
-                foreach (string uuidl in grant.Split(','))
-                {
-                    string uuid = uuidl.Trim(" \t".ToCharArray());
-                    GrantAScript.Add(uuid, true);
-                }
-#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantAScript.Add(uuid, true);
                 }
-#endif
             }
         }
 
@@ -1857,86 +1795,6 @@ namespace Aurora.Modules.Permissions
             IClientAPI client = sp.ControllingClient;
 
             //Make a copy so that it doesn't get modified outside of this loop
-#if (!ISWIN)
-            foreach (ISceneEntity g in new List<ISceneEntity>(objects))
-            {
-                if (!GenericObjectPermission(user, g.UUID, false))
-                {
-                    // This is a short cut for efficiency. If land is non-null,
-                    // then all objects are on that parcel and we can save
-                    // ourselves the checking for each prim. Much faster.
-                    //
-                    if (land != null)
-                    {
-                        l = land;
-                    }
-                    else
-                    {
-                        Vector3 pos = g.AbsolutePosition;
-                        if (m_parcelManagement == null)
-                            continue;
-
-                        l = m_parcelManagement.GetLandObject(pos.X, pos.Y);
-                    }
-
-                    // If it's not over any land, then we can't do a thing
-                    if (l == null)
-                    {
-                        objects.Remove(g);
-                        continue;
-                    }
-
-                    // If we own the land outright, then allow
-                    //
-                    if (l.LandData.OwnerID == user)
-                        continue;
-
-                    // Group voodoo
-                    //
-                    if (l.LandData.IsGroupOwned)
-                    {
-                        // Not a group member, or no rights at all
-                        //
-                        if (!m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.None))
-                        {
-                            objects.Remove(g);
-                            continue;
-                        }
-
-                        // Group deeded object?
-                        //
-                        if (g.OwnerID == l.LandData.GroupID && !m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnGroupOwned))
-                        {
-                            objects.Remove(g);
-                            continue;
-                        }
-
-                        // Group set object?
-                        //
-                        if (g.GroupID == l.LandData.GroupID && !m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnGroupSet))
-                        {
-                            objects.Remove(g);
-                            continue;
-                        }
-
-                        if (!m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnNonGroup))
-                        {
-                            objects.Remove(g);
-                            continue;
-                        }
-
-                        // So we can remove all objects from this group land.
-                        // Fine.
-                        //
-                        continue;
-                    }
-
-                    // By default, we can't remove
-                    //
-                    objects.Remove(g);
-                }
-            }
-#else
             foreach (
                 ISceneEntity g in
                     new List<ISceneEntity>(objects).Where(g => !GenericObjectPermission(user, g.UUID, false)))
@@ -2016,7 +1874,6 @@ namespace Aurora.Modules.Permissions
                 //
                 objects.Remove(g);
             }
-#endif
 
             if (objects.Count == 0)
                 return false;

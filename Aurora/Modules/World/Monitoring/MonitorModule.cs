@@ -624,21 +624,12 @@ namespace Aurora.Modules.Monitoring
                     m_module.SendStatsResults(simStats);
 
                     //Tell all the scene presences about the new stats
-#if (!ISWIN)
-                    foreach (IScenePresence agent in m_currentScene.GetScenePresences())
-                    {
-                        if (!agent.IsChildAgent)
-                        {
-                            agent.ControllingClient.SendSimStats(simStats);
-                        }
-                    }
-#else
                     foreach (
                         IScenePresence agent in m_currentScene.GetScenePresences().Where(agent => !agent.IsChildAgent))
                     {
                         agent.ControllingClient.SendSimStats(simStats);
                     }
-#endif
+
                     //Now fix any values that require reseting
                     ResetValues();
                 }

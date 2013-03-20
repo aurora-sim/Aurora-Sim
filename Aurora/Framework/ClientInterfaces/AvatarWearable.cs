@@ -170,14 +170,7 @@ namespace Aurora.Framework.ClientInterfaces
 
         public Dictionary<UUID, UUID> GetItems()
         {
-#if (!ISWIN)
-            Dictionary<UUID, UUID> dictionary = new Dictionary<UUID, UUID>();
-            foreach (KeyValuePair<UUID, UUID> item in m_items)
-                dictionary.Add(item.Key, item.Value);
-            return dictionary;
-#else
             return m_items.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-#endif
         }
 
         public override OSDMap ToOSD()
@@ -263,22 +256,11 @@ namespace Aurora.Framework.ClientInterfaces
         {
             UUID itemID = UUID.Zero;
 
-#if (!ISWIN)
-            foreach (KeyValuePair<UUID, UUID> kvp in m_items)
-            {
-                if (kvp.Value == assetID)
-                {
-                    itemID = kvp.Key;
-                    break;
-                }
-            }
-#else
             foreach (KeyValuePair<UUID, UUID> kvp in m_items.Where(kvp => kvp.Value == assetID))
             {
                 itemID = kvp.Key;
                 break;
             }
-#endif
 
             if (itemID != UUID.Zero)
             {
@@ -298,20 +280,12 @@ namespace Aurora.Framework.ClientInterfaces
         {
             if (!m_items.ContainsValue(assetID))
                 return UUID.Zero;
-#if (!ISWIN)
-            foreach (KeyValuePair<UUID, UUID> kvp in m_items)
-            {
-                if (kvp.Value == assetID)
-                {
-                    return kvp.Key;
-                }
-            }
-#else
+
             foreach (KeyValuePair<UUID, UUID> kvp in m_items.Where(kvp => kvp.Value == assetID))
             {
                 return kvp.Key;
             }
-#endif
+
             return UUID.Zero;
         }
     }

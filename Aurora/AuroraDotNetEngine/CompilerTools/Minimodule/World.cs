@@ -212,16 +212,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                 {
                     List<ILandObject> m_los = parcelManagement.AllParcels();
 
-#if (!ISWIN)
-                    foreach (ILandObject landObject in m_los)
-                    {
-                        m_parcels.Add(new LOParcel(m_internalScene, landObject.LandData.LocalID));
-                    }
-#else
                     m_parcels.AddRange(
                         m_los.Select(landObject => new LOParcel(m_internalScene, landObject.LandData.LocalID))
                              .Cast<IParcel>());
-#endif
                 }
 
                 return m_parcels.ToArray();

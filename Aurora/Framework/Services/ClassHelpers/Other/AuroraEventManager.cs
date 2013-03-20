@@ -126,18 +126,9 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
                 List<OnGenericEventHandler> events;
                 if (m_events.TryGetValue(FunctionName, out events))
                 {
-#if (!ISWIN)
-                    foreach (OnGenericEventHandler handler in new List<OnGenericEventHandler>(events))
-                    {
-                        object param = handler(FunctionName, Param);
-                        if (param != null)
-                            retVal.Add(param);
-                    }
-#else
                     retVal.AddRange(
                         new List<OnGenericEventHandler>(events).Select(handler => handler(FunctionName, Param))
                                                                .Where(param => param != null));
-#endif
                 }
             }
             return retVal;

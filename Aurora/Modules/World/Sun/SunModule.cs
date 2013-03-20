@@ -582,14 +582,7 @@ namespace Aurora.Modules.Sun
             if ((args.Length == 1) || (args[1].ToLower() == "help") || (args[1].ToLower() == "list"))
             {
                 Output.Add("The following parameters can be changed or viewed:");
-#if (!ISWIN)
-                foreach (KeyValuePair<string, string> kvp in GetParamList())
-                {
-                    Output.Add(String.Format("{0} - {1}", kvp.Key, kvp.Value));
-                }
-#else
                 Output.AddRange(GetParamList().Select(kvp => String.Format("{0} - {1}", kvp.Key, kvp.Value)));
-#endif
                 return Output;
             }
 

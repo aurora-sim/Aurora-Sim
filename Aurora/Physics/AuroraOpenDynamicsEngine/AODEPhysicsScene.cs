@@ -1694,35 +1694,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             List<AuroraODEPrim> collidingPrims = new List<AuroraODEPrim>();
             lock (_prims)
             {
-#if (!ISWIN)
-                foreach (AuroraODEPrim prm in _prims)
-                {
-                    if (prm.CollisionScore > 0)
-                    {
-                        if (!collidingPrims.Contains(prm))
-                        {
-                            collidingPrims.Add(prm);
-                        }
-                    }
-                }
-#else
                 foreach (
                     AuroraODEPrim prm in
                         _prims.Where(prm => prm.CollisionScore > 0).Where(prm => !collidingPrims.Contains(prm)))
                 {
                     collidingPrims.Add(prm);
                 }
-#endif
             }
             //Sort them by their score
-#if (!ISWIN)
-            collidingPrims.Sort(delegate(AuroraODEPrim a, AuroraODEPrim b)
-            {
-                return b.CollisionScore.CompareTo(a.CollisionScore);
-            });
-#else
             collidingPrims.Sort((a, b) => b.CollisionScore.CompareTo(a.CollisionScore));
-#endif
+
             //Limit to 25
             if (collidingPrims.Count > 25)
                 collidingPrims.RemoveRange(25, collidingPrims.Count - 25);

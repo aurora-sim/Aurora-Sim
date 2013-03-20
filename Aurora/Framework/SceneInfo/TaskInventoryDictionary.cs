@@ -127,14 +127,7 @@ namespace Aurora.Framework.SceneInfo
 
             lock (this)
             {
-#if (!ISWIN)
-                foreach (UUID uuid in Keys)
-                {
-                    clone.Add((TaskInventoryItem)this[uuid].Clone());
-                }
-#else
                 clone.AddRange(Keys.Select(uuid => (TaskInventoryItem) this[uuid].Clone()));
-#endif
             }
 
             return clone;

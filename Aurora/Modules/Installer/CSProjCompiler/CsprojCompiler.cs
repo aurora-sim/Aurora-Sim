@@ -52,18 +52,13 @@ namespace RunTimeCompiler
             CompilerResults results = codeProvider.CompileAssemblyFromSource(parameters, sources);
             if (results.Errors.Count > 0)
             {
-#if (!ISWIN)
-                buildMessage = string.Empty;
-                foreach (CompilerError error in results.Errors)
-                    buildMessage = buildMessage + "Line number " + error.Line + ", Error Number: " + error.ErrorNumber + ", '" + error.ErrorText + ";" + Environment.NewLine + Environment.NewLine;
-#else
                 buildMessage = results.Errors.Cast<CompilerError>()
                                       .Aggregate(string.Empty,
                                                  (current, CompErr) =>
                                                  current + "Line number " + CompErr.Line + ", Error Number: " +
                                                  CompErr.ErrorNumber + ", '" + CompErr.ErrorText + ";" +
                                                  Environment.NewLine + Environment.NewLine);
-#endif
+
                 project.BuildOutput = buildMessage;
                 MessageBox.Show(buildMessage);
             }

@@ -989,20 +989,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 lock (childrenPrim)
                 {
-#if (!ISWIN)
-                    foreach (AuroraODEPrim prm in prim.childrenPrim)
-                    {
-                        if (!childrenPrim.Contains(prm))
-                        {
-                            childrenPrim.Add(prm);
-                        }
-                    }
-#else
                     foreach (AuroraODEPrim prm in prim.childrenPrim.Where(prm => !childrenPrim.Contains(prm)))
                     {
                         childrenPrim.Add(prm);
                     }
-#endif
+
                     if (!childrenPrim.Contains(prim)) // must allow full reconstruction
                         childrenPrim.Add(prim);
                 }

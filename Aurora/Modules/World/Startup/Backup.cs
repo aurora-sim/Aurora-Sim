@@ -388,15 +388,7 @@ namespace Aurora.Modules.Startup
                     lock (m_scene.Entities)
                     {
                         ISceneEntity[] entities = m_scene.Entities.GetEntities();
-#if (!ISWIN)
-                        foreach (ISceneEntity entity in entities)
-                        {
-                            if (!entity.IsAttachment)
-                                groups.Add(entity);
-                        }
-#else
                         groups.AddRange(entities.Where(entity => !entity.IsAttachment));
-#endif
                     }
                     //Delete all the groups now
                     DeleteSceneObjects(groups.ToArray(), true, true);
@@ -427,17 +419,11 @@ namespace Aurora.Modules.Startup
                                 List<ISceneChildEntity> parts = new List<ISceneChildEntity>();
                                 parts.AddRange(entity.ChildrenEntities());
                                 DeleteSceneObject(entity, true, false); //Don't remove from the database
-#if (!ISWIN)
-                                m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
-                                {
-                                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, parts.ToArray());
-                                });
-#else
+
                                 m_scene.ForEachScenePresence(
                                     avatar =>
                                     avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle,
                                                                             parts.ToArray()));
-#endif
                             }
                         }
                     }
@@ -471,16 +457,8 @@ namespace Aurora.Modules.Startup
                 }
                 if (sendKillPackets)
                 {
-#if (!ISWIN)
-                    m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
-                    {
-                        avatar.ControllingClient.SendKillObject(
-                            m_scene.RegionInfo.RegionHandle, parts.ToArray());
-                    });
-#else
                     m_scene.ForEachScenePresence(avatar => avatar.ControllingClient.SendKillObject(
                         m_scene.RegionInfo.RegionHandle, parts.ToArray()));
-#endif
                 }
 
                 return true;

@@ -467,20 +467,11 @@ namespace Aurora.Framework.ClientInterfaces
                 OSDArray anims = (OSDArray) (args["animations"]);
                 Anims = new Animation[anims.Count];
                 int i = 0;
-#if (!ISWIN)
-                foreach (OSD o in anims)
-                {
-                    if (o.Type == OSDType.Map)
-                    {
-                        Anims[i++] = new Animation((OSDMap) o);
-                    }
-                }
-#else
+
                 foreach (OSD o in anims.Where(o => o.Type == OSDType.Map))
                 {
                     Anims[i++] = new Animation((OSDMap) o);
                 }
-#endif
             }
 
             Appearance = new AvatarAppearance(AgentID);
@@ -503,20 +494,11 @@ namespace Aurora.Framework.ClientInterfaces
                 OSDArray controls = (OSDArray) (args["controllers"]);
                 Controllers = new ControllerData[controls.Count];
                 int i = 0;
-#if (!ISWIN)
-                foreach (OSD o in controls)
-                {
-                    if (o.Type == OSDType.Map)
-                    {
-                        Controllers[i++] = new ControllerData((OSDMap) o);
-                    }
-                }
-#else
+
                 foreach (OSD o in controls.Where(o => o.Type == OSDType.Map))
                 {
                     Controllers[i++] = new ControllerData((OSDMap) o);
                 }
-#endif
             }
 
             if (args["SittingObjects"] != null && args["SittingObjects"].Type == OSDType.Map)

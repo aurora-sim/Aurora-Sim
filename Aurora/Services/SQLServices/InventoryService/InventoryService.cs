@@ -566,15 +566,10 @@ namespace Aurora.Services.SQLServices.InventoryService
                 return null;
 
             InventoryFolderBase root = null;
-#if (!ISWIN)
-            foreach (InventoryFolderBase folder in folders)
-            {
-                if (folder.Name == "My Inventory") root = folder;
-            }
-#else
+
             foreach (InventoryFolderBase folder in folders.Where(folder => folder.Name == "My Inventory"))
                 root = folder;
-#endif
+
             if (folders == null) // oops
                 root = folders[0];
 

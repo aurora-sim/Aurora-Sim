@@ -313,15 +313,6 @@ namespace Aurora.Modules.Selection
                     }
                 }
 
-#if (!ISWIN)
-                foreach (IScenePresence client in scene.GetScenePresences())
-                {
-                    if (client.ControllingClient.AgentId != remoteClient.AgentId)
-                    {
-                        client.ControllingClient.SendViewerEffect(effectBlockArray);
-                    }
-                }
-#else
                 foreach (
                     IScenePresence client in
                         scene.GetScenePresences()
@@ -329,7 +320,6 @@ namespace Aurora.Modules.Selection
                 {
                     client.ControllingClient.SendViewerEffect(effectBlockArray);
                 }
-#endif
             }
         }
 
@@ -433,18 +423,9 @@ namespace Aurora.Modules.Selection
                 effect.TypeData = part;
                 effectBlockArray[0] = effect;
 
-#if (!ISWIN)
-                m_presence.Scene.ForEachClient(
-                    delegate(IClientAPI client)
-                    {
-                        client.SendViewerEffect(effectBlockArray);
-                    }
-                );
-#else
                 m_presence.Scene.ForEachClient(
                     client => client.SendViewerEffect(effectBlockArray)
                     );
-#endif
             }
         }
 

@@ -510,28 +510,6 @@ namespace Aurora.Physics.Meshing
                 }
             }
 
-#if (!ISWIN)
-            foreach(Face face in this.faces)
-            {
-                ViewerFace vf = new ViewerFace(0)
-                                                                    {
-                                                                        v1 = this.coords[face.v1],
-                                                                        v2 = this.coords[face.v2],
-                                                                        v3 = this.coords[face.v3],
-                                                                        coordIndex1 = face.v1,
-                                                                        coordIndex2 = face.v2,
-                                                                        coordIndex3 = face.v3,
-                                                                        n1 = this.normals[face.n1],
-                                                                        n2 = this.normals[face.n2],
-                                                                        n3 = this.normals[face.n3],
-                                                                        uv1 = this.uvs[face.uv1],
-                                                                        uv2 = this.uvs[face.uv2],
-                                                                        uv3 = this.uvs[face.uv3]
-                                                                    };
-                this.viewerFaces.Add(vf);
-
-            }
-#else
             foreach (ViewerFace vf in this.faces.Select(face => new ViewerFace(0)
                                                                     {
                                                                         v1 = this.coords[face.v1],
@@ -550,7 +528,6 @@ namespace Aurora.Physics.Meshing
             {
                 this.viewerFaces.Add(vf);
             }
-#endif
         }
 
         /// <summary>

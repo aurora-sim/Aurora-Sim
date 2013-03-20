@@ -2091,16 +2091,6 @@ namespace Aurora.Region
 
                 lock (TaskInventory)
                 {
-#if (!ISWIN)
-                    foreach (KeyValuePair<UUID, TaskInventoryItem> item in TaskInventory)
-                    {
-                        if (item.Value.Name == sound)
-                        {
-                            soundID = item.Value.ItemID;
-                            break;
-                        }
-                    }
-#else
                     foreach (
                         KeyValuePair<UUID, TaskInventoryItem> item in
                             TaskInventory.Where(item => item.Value.Name == sound))
@@ -2108,7 +2098,6 @@ namespace Aurora.Region
                         soundID = item.Value.ItemID;
                         break;
                     }
-#endif
                 }
             }
 
@@ -2261,16 +2250,6 @@ namespace Aurora.Region
                 // search sound file from inventory
                 lock (TaskInventory)
                 {
-#if (!ISWIN)
-                    foreach (KeyValuePair<UUID, TaskInventoryItem> item in TaskInventory)
-                    {
-                        if (item.Value.Name == sound && item.Value.Type == (int) AssetType.Sound)
-                        {
-                            soundID = item.Value.ItemID;
-                            break;
-                        }
-                    }
-#else
                     foreach (
                         KeyValuePair<UUID, TaskInventoryItem> item in
                             TaskInventory.Where(
@@ -2279,7 +2258,6 @@ namespace Aurora.Region
                         soundID = item.Value.ItemID;
                         break;
                     }
-#endif
                 }
             }
 
@@ -3875,15 +3853,7 @@ namespace Aurora.Region
             }
 
             // calculate things that ended colliding
-#if (!ISWIN)
-            List<uint> endedColliders = new List<uint>();
-            foreach (uint localId in m_lastColliders)
-            {
-                if (!thisHitColliders.Contains(localId)) endedColliders.Add(localId);
-            }
-#else
             List<uint> endedColliders = m_lastColliders.Where(localID => !thisHitColliders.Contains(localID)).ToList();
-#endif
 
             //add the items that started colliding this time to the last colliders list.
             m_lastColliders.AddRange(startedColliders);
@@ -4890,19 +4860,10 @@ namespace Aurora.Region
             byte[] old = m_shape.TextureEntry;
             if (old.Length == textureEntry.Length)
             {
-#if (!ISWIN)
-                for (int i = 0; i < textureEntry.Length; i++)
-                    if (old[i] != textureEntry[i])
-                    {
-                        same = false;
-                        break;
-                    }
-#else
                 if (textureEntry.Where((t, i) => old[i] != t).Any())
                 {
                     same = false;
                 }
-#endif
             }
             else
                 same = false;

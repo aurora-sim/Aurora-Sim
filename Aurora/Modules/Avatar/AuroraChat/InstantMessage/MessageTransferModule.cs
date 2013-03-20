@@ -463,13 +463,7 @@ namespace Aurora.Modules.Chat
             HTTPPaths.Clear();
 
             //Now query the grid server for the agents
-#if (!ISWIN)
-            List<string> Queries = new List<string>();
-            foreach (UUID agentId in users)
-                Queries.Add(agentId.ToString());
-#else
             List<string> Queries = users.Select(agentID => agentID.ToString()).ToList();
-#endif
 
             if (Queries.Count == 0)
                 return; //All done

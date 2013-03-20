@@ -167,17 +167,10 @@ namespace Aurora.Framework.SceneInfo.Entities
             lock (m_presenceEntitiesLock)
             {
                 List<IScenePresence> tmp = new List<IScenePresence>(m_presenceEntities.Count);
-#if (!ISWIN)
-                foreach (IScenePresence entity in m_presenceEntities.Values)
-                {
-                    if ((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
-                        tmp.Add(entity);
-                }
-#else
+
                 tmp.AddRange(
                     m_presenceEntities.Values.Where(
                         entity => (entity.AbsolutePosition - pos).LengthSquared() < radius*radius));
-#endif
 
                 return tmp.ToArray();
             }

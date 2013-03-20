@@ -334,22 +334,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
 
-#if (!ISWIN)
-            foreach (DetectedObject detobj in col.Colliders)
-            {
-                DetectParams d = new DetectParams { Key = detobj.keyUUID };
-                d.Populate(part.ParentEntity.Scene);
-                d.LinkNum = part.LinkNum;
-                det.Add(d);
-            }
-#else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams {Key = detobj.keyUUID}))
             {
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
-#endif
 
             if (det.Count > 0)
             {
@@ -376,22 +366,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
 
-#if (!ISWIN)
-            foreach (DetectedObject detobj in col.Colliders)
-            {
-                DetectParams d = new DetectParams { Key = detobj.keyUUID };
-                d.Populate(part.ParentEntity.Scene);
-                d.LinkNum = part.LinkNum;
-                det.Add(d);
-            }
-#else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams {Key = detobj.keyUUID}))
             {
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
-#endif
 
             if (det.Count > 0)
             {
@@ -418,22 +398,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
 
-#if (!ISWIN)
-            foreach (DetectedObject detobj in col.Colliders)
-            {
-                DetectParams d = new DetectParams { Key = detobj.keyUUID };
-                d.Populate(part.ParentEntity.Scene);
-                d.LinkNum = part.LinkNum;
-                det.Add(d);
-            }
-#else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams {Key = detobj.keyUUID}))
             {
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
-#endif
 
             if (det.Count > 0)
             {
@@ -459,21 +429,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             List<DetectParams> det = new List<DetectParams>();
 
-#if (!ISWIN)
-            foreach (DetectedObject detobj in col.Colliders)
-            {
-                DetectParams d = new DetectParams
-                                     {
-                                         Position =
-                                             new LSL_Types.Vector3(detobj.posVector.X, detobj.posVector.Y,
-                                                                   detobj.posVector.Z),
-                                         Key = detobj.keyUUID
-                                     };
-                d.Populate(part.ParentEntity.Scene);
-                d.LinkNum = part.LinkNum;
-                det.Add(d);
-            }
-#else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
                                                                           {
                                                                               Position =
@@ -488,7 +443,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
-#endif
+
             if (det.Count != 0)
             {
                 ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -513,19 +468,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             List<DetectParams> det = new List<DetectParams>();
 
-#if (!ISWIN)
-            foreach (DetectedObject detobj in col.Colliders)
-            {
-                DetectParams d = new DetectParams
-                                     {
-                                         Position = new LSL_Types.Vector3(detobj.posVector.X, detobj.posVector.Y, detobj.posVector.Z),
-                                         Key = detobj.keyUUID
-                                     };
-                d.Populate(part.ParentEntity.Scene);
-                d.LinkNum = part.LinkNum;
-                det.Add(d);
-            }
-#else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
                                                                           {
                                                                               Position =
@@ -540,7 +482,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
-#endif
+
             if (det.Count != 0)
             {
                 ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -565,19 +507,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             List<DetectParams> det = new List<DetectParams>();
 
-#if (!ISWIN)
-            foreach (DetectedObject detobj in col.Colliders)
-            {
-                DetectParams d = new DetectParams
-                                     {
-                                         Position = new LSL_Types.Vector3(detobj.posVector.X, detobj.posVector.Y, detobj.posVector.Z),
-                                         Key = detobj.keyUUID
-                                     };
-                d.Populate(part.ParentEntity.Scene);
-                d.LinkNum = part.LinkNum;
-                det.Add(d);
-            }
-#else
             foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
                                                                           {
                                                                               Position =
@@ -592,7 +521,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
-#endif
+
             if (det.Count != 0)
             {
                 ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -848,14 +777,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 int startParam, bool postOnRez, StateSource stateSource, UUID rezzedFrom,
                                 bool clearStateSaves)
         {
-#if (!ISWIN)
-            List<LUStruct> ItemsToStart = new List<LUStruct>();
-            foreach (TaskInventoryItem item in items)
-            {
-                LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID, startParam, postOnRez, stateSource, rezzedFrom, clearStateSaves);
-                if (itemToQueue.Action != LUType.Unknown) ItemsToStart.Add(itemToQueue);
-            }
-#else
             List<LUStruct> ItemsToStart =
                 items.Select(
                     item =>
@@ -863,8 +784,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                clearStateSaves))
                      .Where(itemToQueue => itemToQueue.Action != LUType.Unknown)
                      .ToList();
-#endif
-            if (ItemsToStart.Count != 0)
+
+			if (ItemsToStart.Count != 0)
                 m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToStart.ToArray(), LoadPriority.FirstStart);
         }
 

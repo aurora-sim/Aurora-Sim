@@ -531,19 +531,6 @@ namespace Aurora.Modules.Chat
             //If the message is not blank, tell the plugins about it
             if (c.Message != "")
             {
-#if (!ISWIN)
-                foreach (string pluginMain in ChatPlugins.Keys)
-                {
-                    if (pluginMain == "all" || c.Message.StartsWith(pluginMain + "."))
-                    {
-                        IChatPlugin plugin;
-                        ChatPlugins.TryGetValue(pluginMain, out plugin);
-                        //If it returns false, stop the message from being sent
-                        if (!plugin.OnNewChatMessageFromWorld(c, out c))
-                            return;
-                    }
-                }
-#else
                 foreach (
                     string pluginMain in
                         ChatPlugins.Keys.Where(
@@ -555,7 +542,6 @@ namespace Aurora.Modules.Chat
                     if (!plugin.OnNewChatMessageFromWorld(c, out c))
                         return;
                 }
-#endif
             }
             string Name2 = "";
             if (sender is IClientAPI)

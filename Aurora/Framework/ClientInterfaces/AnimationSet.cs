@@ -57,15 +57,7 @@ namespace Aurora.Framework.ClientInterfaces
             if (m_defaultAnimation.AnimID == animID)
                 return true;
 
-#if (!ISWIN)
-            foreach (Animation t in m_animations)
-            {
-                if (t.AnimID == animID) return true;
-            }
-            return false;
-#else
             return m_animations.Any(t => t.AnimID == animID);
-#endif
         }
 
         public bool Add(UUID animID, int sequenceNum, UUID objectID)

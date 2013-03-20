@@ -93,37 +93,11 @@ namespace Aurora.Services
         public static OSD ObjectPhysicsProperties(ISceneChildEntity[] entities)
         {
             ObjectPhysicsPropertiesMessage message = new ObjectPhysicsPropertiesMessage();
-#if (!ISWIN)
-            int i = 0;
-            foreach (ISceneChildEntity entity in entities)
-            {
-                if (entity != null) i++;
-            }
-#else
             int i = entities.Count(entity => entity != null);
-#endif
 
             message.ObjectPhysicsProperties = new Primitive.PhysicsProperties[i];
             i = 0;
-#if (!ISWIN)
-            foreach (ISceneChildEntity entity in entities)
-            {
-                if (entity != null)
-                {
-                    message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties
-                                                             {
-                                                                 Density = entity.Density,
-                                                                 Friction = entity.Friction,
-                                                                 GravityMultiplier = entity.GravityMultiplier,
-                                                                 LocalID = entity.LocalId,
-                                                                 PhysicsShapeType =
-                                                                     (PhysicsShapeType) entity.PhysicsType,
-                                                                 Restitution = entity.Restitution
-                                                             };
-                    i++;
-                }
-            }
-#else
+
             foreach (ISceneChildEntity entity in entities.Where(entity => entity != null))
             {
                 message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties
@@ -137,7 +111,6 @@ namespace Aurora.Services
                                                          };
                 i++;
             }
-#endif
 
             OSDMap m = new OSDMap {{"message", OSD.FromString("ObjectPhysicsProperties")}};
             OSD message_body = message.Serialize();
@@ -439,21 +412,6 @@ namespace Aurora.Services
 
             OSDArray groupData = new OSDArray();
 
-#if(!ISWIN)
-            foreach (AgentGroupDataUpdatePacket.GroupDataBlock groupDataBlock in groupUpdatePacket.GroupData)
-            {
-                OSDMap groupDataMap = new OSDMap();
-                groupDataMap.Add("ListInProfile", OSD.FromBoolean(false));
-                groupDataMap.Add("GroupID", OSD.FromUUID(groupDataBlock.GroupID));
-                groupDataMap.Add("GroupInsigniaID", OSD.FromUUID(groupDataBlock.GroupInsigniaID));
-                groupDataMap.Add("Contribution", OSD.FromInteger(groupDataBlock.Contribution));
-                groupDataMap.Add("GroupPowers", OSD.FromBinary(ulongToByteArray(groupDataBlock.GroupPowers)));
-                groupDataMap.Add("GroupName", OSD.FromString(Utils.BytesToString(groupDataBlock.GroupName)));
-                groupDataMap.Add("AcceptNotices", OSD.FromBoolean(groupDataBlock.AcceptNotices));
-
-                groupData.Add(groupDataMap);
-            }
-#else
             foreach (OSDMap groupDataMap in groupUpdatePacket.GroupData.Select(groupDataBlock => new OSDMap
                                                                                                      {
                                                                                                          {
@@ -512,7 +470,7 @@ namespace Aurora.Services
             {
                 groupData.Add(groupDataMap);
             }
-#endif
+
             body.Add("GroupData", groupData);
             groupUpdate.Add("body", body);
 

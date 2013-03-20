@@ -293,36 +293,18 @@ namespace Aurora.DataManager.Migration
 
         protected bool TestThatAllTablesValidate(IDataConnector genericData)
         {
-#if (!ISWIN)
-            foreach (SchemaDefinition s in schema)
-            {
-                if (!genericData.VerifyTableExists(s.Name, s.Columns, s.Indices)) return false;
-            }
-            return true;
-#else
             return schema.All(s => genericData.VerifyTableExists(s.Name, s.Columns, s.Indices));
-#endif
         }
 
         public bool DebugTestThatAllTablesValidate(IDataConnector genericData, out SchemaDefinition reason)
         {
             reason = null;
-#if (!ISWIN)
-            foreach (var s in schema)
-            {
-                if (!genericData.VerifyTableExists(s.Name, s.Columns, s.Indices))
-                {
-                    reason = s;
-                    return false;
-                }
-            }
-#else
+
             foreach (var s in schema.Where(s => !genericData.VerifyTableExists(s.Name, s.Columns, s.Indices)))
             {
                 reason = s;
                 return false;
             }
-#endif
             return true;
         }
 

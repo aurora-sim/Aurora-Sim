@@ -480,16 +480,7 @@ namespace Aurora.Framework.Utilities
                 try
                 {
                     Framework.Utilities.Lazy<List<object>> expiredItems = new Framework.Utilities.Lazy<List<object>>();
-#if (!ISWIN)
-                    foreach (TimedCacheKey<TKey> timedKey in timedStorage)
-                    {
-                        if (timedKey.ExpirationDate < signalTime)
-                        {
-                            // Mark the object for purge
-                            expiredItems.Value.Add(timedKey.Key);
-                        }
-                    }
-#else
+
                     foreach (
                         TimedCacheKey<TKey> timedKey in
                             timedStorage.Where(timedKey => timedKey.ExpirationDate < signalTime))
@@ -497,7 +488,6 @@ namespace Aurora.Framework.Utilities
                         // Mark the object for purge
                         expiredItems.Value.Add(timedKey.Key);
                     }
-#endif
 
                     if (expiredItems.IsValueCreated)
                     {

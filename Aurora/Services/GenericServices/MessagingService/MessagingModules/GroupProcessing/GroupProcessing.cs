@@ -98,15 +98,9 @@ namespace Aurora.Services
                 List<GroupRoleMembersData> members = con.GetGroupRoleMembers(agentID, groupID);
                 List<GroupRolesData> roles = con.GetGroupRoles(agentID, groupID);
                 GroupRolesData everyone = null;
-#if (!ISWIN)
-                foreach (GroupRolesData role in roles)
-                {
-                    if (role.Name == "Everyone") everyone = role;
-                }
-#else
+
                 foreach (GroupRolesData role in roles.Where(role => role.Name == "Everyone"))
                     everyone = role;
-#endif
 
                 List<UserInfo> regionsToBeUpdated = new List<UserInfo>();
                 foreach (GroupRoleMembersData data in members)

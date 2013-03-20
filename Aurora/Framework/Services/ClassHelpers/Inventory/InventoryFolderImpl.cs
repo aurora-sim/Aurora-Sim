@@ -71,14 +71,7 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
         {
             get
             {
-#if (!ISWIN)
-                int result = Items.Count;
-                foreach (InventoryFolderImpl value in m_childFolders.Values)
-                    result = result + value.TotalCount;
-                return result;
-#else
                 return m_childFolders.Values.Aggregate(Items.Count, (current, folder) => current + folder.TotalCount);
-#endif
             }
         }
 
@@ -206,23 +199,12 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
 
             lock (m_childFolders)
             {
-#if (!ISWIN)
-                foreach (InventoryFolderImpl folder in m_childFolders.Values)
-                {
-                    InventoryItemBase item = folder.FindItem(itemID);
-                    if (item != null)
-                    {
-                        return item;
-                    }
-                }
-#else
                 foreach (
                     InventoryItemBase item in
                         m_childFolders.Values.Select(folder => folder.FindItem(itemID)).Where(item => item != null))
                 {
                     return item;
                 }
-#endif
             }
 
             return null;
@@ -232,41 +214,20 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
         {
             lock (Items)
             {
-#if (!ISWIN)
-                foreach (InventoryItemBase item in Items.Values)
-                {
-                    if (item.AssetID == assetID)
-                    {
-                        return item;
-                    }
-                }
-#else
                 foreach (InventoryItemBase item in Items.Values.Where(item => item.AssetID == assetID))
                 {
                     return item;
                 }
-#endif
             }
 
             lock (m_childFolders)
             {
-#if (!ISWIN)
-                foreach (InventoryFolderImpl folder in m_childFolders.Values)
-                {
-                    InventoryItemBase item = folder.FindAsset(assetID);
-                    if (item != null)
-                    {
-                        return item;
-                    }
-                }
-#else
                 foreach (
                     InventoryItemBase item in
                         m_childFolders.Values.Select(folder => folder.FindAsset(assetID)).Where(item => item != null))
                 {
                     return item;
                 }
-#endif
             }
 
             return null;
@@ -318,16 +279,6 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
 
             lock (m_childFolders)
             {
-#if (!ISWIN)
-                foreach (InventoryFolderImpl folder in m_childFolders.Values)
-                {
-                    InventoryFolderImpl returnFolder = folder.FindFolder(folderID);
-                    if (returnFolder != null)
-                    {
-                        return returnFolder;
-                    }
-                }
-#else
                 foreach (
                     InventoryFolderImpl returnFolder in
                         m_childFolders.Values.Select(folder => folder.FindFolder(folderID))
@@ -335,7 +286,6 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
                 {
                     return returnFolder;
                 }
-#endif
             }
 
             return null;
@@ -350,20 +300,10 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
         {
             lock (m_childFolders)
             {
-#if (!ISWIN)
-                foreach (InventoryFolderImpl f in m_childFolders.Values)
-                {
-                    if (f.Type == type)
-                    {
-                        return f;
-                    }
-                }
-#else
                 foreach (InventoryFolderImpl f in m_childFolders.Values.Where(f => f.Type == type))
                 {
                     return f;
                 }
-#endif
             }
 
             return null;
@@ -397,18 +337,6 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
 
             lock (m_childFolders)
             {
-#if (!ISWIN)
-                foreach (InventoryFolderImpl folder in m_childFolders.Values)
-                {
-                    if (folder.Name == components[0])
-                    {
-                        if (components.Length > 1)
-                            return folder.FindFolderByPath(components[1]);
-                        else
-                            return folder;
-                    }
-                }
-#else
                 foreach (
                     InventoryFolderImpl folder in m_childFolders.Values.Where(folder => folder.Name == components[0]))
                 {
@@ -417,7 +345,6 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
                     else
                         return folder;
                 }
-#endif
             }
 
             // We didn't find a folder with the given name
@@ -443,42 +370,22 @@ namespace Aurora.Framework.Services.ClassHelpers.Inventory
             {
                 lock (Items)
                 {
-#if (!ISWIN)
-                    foreach (InventoryItemBase item in Items.Values)
-                    {
-                        if (item.Name == components[0])
-                        {
-                            return item;
-                        }
-                    }
-#else
                     foreach (InventoryItemBase item in Items.Values.Where(item => item.Name == components[0]))
                     {
                         return item;
                     }
-#endif
                 }
             }
             else
             {
                 lock (m_childFolders)
                 {
-#if (!ISWIN)
-                    foreach (InventoryFolderImpl folder in m_childFolders.Values)
-                    {
-                        if (folder.Name == components[0])
-                        {
-                            return folder.FindItemByPath(components[1]);
-                        }
-                    }
-#else
                     foreach (
                         InventoryFolderImpl folder in
                             m_childFolders.Values.Where(folder => folder.Name == components[0]))
                     {
                         return folder.FindItemByPath(components[1]);
                     }
-#endif
                 }
             }
 

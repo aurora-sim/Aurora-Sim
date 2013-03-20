@@ -637,15 +637,7 @@ namespace Aurora.Modules.Friends
 
             public bool IsFriend(string friend)
             {
-#if (!ISWIN)
-                foreach (FriendInfo fi in Friends)
-                {
-                    if (fi.Friend == friend) return true;
-                }
-                return false;
-#else
                 return Friends.Any(fi => fi.Friend == friend);
-#endif
             }
         }
 

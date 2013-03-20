@@ -197,21 +197,10 @@ namespace Aurora.Services
                     I = m_database.SaveHistoryComplete(I);
                 else
                 {
-#if (!ISWIN)
-                    foreach (Object o in reciept)
-                    {
-                        string results = (string)o;
-                        if (results != "")
-                        {
-                            m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
-                        }
-                    }
-#else
                     foreach (string results in reciept.Cast<string>().Where(results => results != ""))
                     {
                         m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
                     }
-#endif
                 }
             }
             catch (Exception e)

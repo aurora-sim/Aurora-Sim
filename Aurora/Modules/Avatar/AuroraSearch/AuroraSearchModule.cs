@@ -120,15 +120,8 @@ namespace Aurora.Modules.Search
                 directoryService.FindLand(queryText, category.ToString(), queryStart,
                                           (uint) queryFlags, remoteClient.ScopeID);
 
-#if (!ISWIN)
-            SplitPackets<DirPlacesReplyData>(ReturnValues, delegate(DirPlacesReplyData[] data)
-            {
-                remoteClient.SendDirPlacesReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirPlacesReply(queryID, data));
-#endif
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
@@ -156,15 +149,8 @@ namespace Aurora.Modules.Search
                 new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area,
                                                                             queryStart, queryFlags, remoteClient.ScopeID));
 
-#if (!ISWIN)
-            SplitPackets<DirLandReplyData>(ReturnValues, delegate(DirLandReplyData[] data)
-            {
-                remoteClient.SendDirLandReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirLandReply(queryID, data));
-#endif
         }
 
         /// <summary>
@@ -261,15 +247,8 @@ namespace Aurora.Modules.Search
                 }
             }
 
-#if (!ISWIN)
-            SplitPackets<DirPeopleReplyData>(ReturnValues, delegate(DirPeopleReplyData[] data)
-            {
-                remoteClient.SendDirPeopleReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirPeopleReply(queryID, data));
-#endif
         }
 
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags,
@@ -279,14 +258,7 @@ namespace Aurora.Modules.Search
                 new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart,
                                                                          remoteClient.ScopeID));
 
-#if (!ISWIN)
-            SplitPackets<DirEventsReplyData>(ReturnValues, delegate(DirEventsReplyData[] data)
-            {
-                remoteClient.SendDirEventsReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues, data => remoteClient.SendDirEventsReply(queryID, data));
-#endif
         }
 
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags,
@@ -297,15 +269,8 @@ namespace Aurora.Modules.Search
                                                                                   queryFlags, queryStart,
                                                                                   remoteClient.ScopeID));
 
-#if (!ISWIN)
-            SplitPackets<DirClassifiedReplyData>(ReturnValues, delegate(DirClassifiedReplyData[] data)
-            {
-                remoteClient.SendDirClassifiedReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirClassifiedReply(queryID, data));
-#endif
         }
 
         public void SplitPackets<T>(List<T> packets, SendPacket<T> send)

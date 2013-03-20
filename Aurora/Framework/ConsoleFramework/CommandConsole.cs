@@ -222,24 +222,13 @@ namespace Aurora.Framework.ConsoleFramework
                             if (commands.ContainsKey(com))
                             {
                                 MainConsole.Instance.HasProcessedCurrentCommand = false;
-#if (!ISWIN)
-                                foreach (CommandDelegate fn in commands[com].fn)
-                                {
-                                    if (fn != null)
-                                    {
-                                        cmdList = new List<string>(commandPath);
-                                        cmdList.AddRange(commandOptions);
-                                        fn(cmdList.ToArray());
-                                    }
-                                }
-#else
+
                                 foreach (CommandDelegate fn in commands[com].fn.Where(fn => fn != null))
                                 {
                                     cmdList = new List<string>(commandPath);
                                     cmdList.AddRange(commandOptions);
                                     fn(cmdList.ToArray());
                                 }
-#endif
                                 return new string[0];
                             }
                             else if (commandPath[0] == "help")
@@ -305,17 +294,6 @@ namespace Aurora.Framework.ConsoleFramework
                         else
                         {
                             //See if this is part of a word, and if it is part of a word, execute it
-#if (!ISWIN)
-                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
-                            {
-                                if (cmd.Key.StartsWith(commandPath[0]))
-                                {
-                                    cmdList = new List<string>(commandPath);
-                                    cmdList.AddRange(commandOptions);
-                                    return cmd.Value.ExecuteCommand(cmdList.ToArray());
-                                }
-                            }
-#else
                             foreach (
                                 KeyValuePair<string, CommandSet> cmd in
                                     commandsets.Where(cmd => cmd.Key.StartsWith(commandPath[0])))
@@ -324,27 +302,15 @@ namespace Aurora.Framework.ConsoleFramework
                                 cmdList.AddRange(commandOptions);
                                 return cmd.Value.ExecuteCommand(cmdList.ToArray());
                             }
-#endif
+
                             if (commands.ContainsKey(cmdToExecute))
                             {
-#if (!ISWIN)
-                                foreach (CommandDelegate fn in commands[cmdToExecute].fn)
-                                {
-                                    if (fn != null)
-                                    {
-                                       cmdList = new List<string>(commandPath);
-                                       cmdList.AddRange(commandOptions);
-                                       fn(cmdList.ToArray());
-                                    }
-                                }
-#else
                                 foreach (CommandDelegate fn in commands[cmdToExecute].fn.Where(fn => fn != null))
                                 {
                                     cmdList = new List<string>(commandPath);
                                     cmdList.AddRange(commandOptions);
                                     fn(cmdList.ToArray());
                                 }
-#endif
                                 return new string[0];
                             }
                         }
@@ -398,22 +364,12 @@ namespace Aurora.Framework.ConsoleFramework
                             else
                             {
                                 //See if this is part of a word, and if it is part of a word, execute it
-#if (!ISWIN)
-                                foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
-                                {
-                                    if (cmd.Key.StartsWith(cmdToExecute))
-                                    {
-                                        values.AddRange(cmd.Value.FindCommands(commandPath));
-                                    }
-                                }
-#else
                                 foreach (
                                     KeyValuePair<string, CommandSet> cmd in
                                         commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
                                 {
                                     values.AddRange(cmd.Value.FindCommands(commandPath));
                                 }
-#endif
                             }
                         }
                     }
@@ -437,22 +393,12 @@ namespace Aurora.Framework.ConsoleFramework
                         else
                         {
                             //See if this is part of a word, and if it is part of a word, execute it
-#if (!ISWIN)
-                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
-                            {
-                                if (cmd.Key.StartsWith(cmdToExecute))
-                                {
-                                    return cmd.Value.FindCommands(commandPath);
-                                }
-                            }
-#else
                             foreach (
                                 KeyValuePair<string, CommandSet> cmd in
                                     commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
                             {
                                 return cmd.Value.FindCommands(commandPath);
                             }
-#endif
                         }
                     }
                 }
@@ -471,14 +417,9 @@ namespace Aurora.Framework.ConsoleFramework
                     help.Add("");
                 }
                 List<string> paths = new List<string>();
-#if (!ISWIN)
-                foreach (CommandSet set in commandsets.Values)
-                {
-                    paths.Add(string.Format("-- Help Set: {0}", set.Path));
-                }
-#else
+
                 paths.AddRange(commandsets.Values.Select(set => string.Format("-- Help Set: {0}", set.Path)));
-#endif
+
                 help.AddRange(StringUtils.AlphanumericSort(paths));
                 if (help.Count != 0)
                 {
@@ -487,17 +428,12 @@ namespace Aurora.Framework.ConsoleFramework
                     help.Add("");
                 }
                 paths.Clear();
-#if (!ISWIN)
-                foreach (CommandInfo command in commands.Values)
-                {
-                    paths.Add(string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info));
-                }
-#else
-                paths.AddRange(
+
+				paths.AddRange(
                     commands.Values.Select(
                         command =>
                         string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
-#endif
+
                 help.AddRange(StringUtils.AlphanumericSort(paths));
                 return help;
             }
@@ -530,17 +466,7 @@ namespace Aurora.Framework.ConsoleFramework
                 {
                     startingIndex = 0;
                     string[] words = unquoted[index].Split(new[] {' '});
-#if (!ISWIN)
-                    foreach (string w in words)
-                    {
-                        if (w != String.Empty)
-                        {
-                            result.Add(w);
-                        }
-                    }
-#else
                     result.AddRange(words.Where(w => w != String.Empty));
-#endif
                 }
             }
 
@@ -656,16 +582,10 @@ namespace Aurora.Framework.ConsoleFramework
             m_promptOptions = new List<string>(options);
 
             bool itisdone = false;
-#if (!ISWIN)
-            string optstr = String.Empty;
-            foreach (string option in options)
-                optstr = optstr + (" " + option);
-#else
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
-#endif
-
             string temp = InternalPrompt(prompt, defaultresponse, options);
-            while (itisdone == false && options.Count > 0)
+ 
+			while (!itisdone && options.Count > 0)
             {
                 if (options.Contains(temp))
                 {

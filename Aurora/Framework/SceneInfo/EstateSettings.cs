@@ -390,15 +390,7 @@ namespace Aurora.Framework.SceneInfo
 
         public bool IsBanned(UUID avatarID)
         {
-#if (!ISWIN)
-            foreach (EstateBan ban in l_EstateBans)
-            {
-                if (ban.BannedUserID == avatarID) return true;
-            }
-            return false;
-#else
             return l_EstateBans.Any(ban => ban.BannedUserID == avatarID);
-#endif
         }
 
         public void AddBan(EstateBan ban)
@@ -416,15 +408,8 @@ namespace Aurora.Framework.SceneInfo
 
         public void RemoveBan(UUID avatarID)
         {
-#if (!ISWIN)
-            foreach (EstateBan ban in new List<EstateBan>(l_EstateBans))
-            {
-                if (ban.BannedUserID == avatarID) l_EstateBans.Remove(ban);
-            }
-#else
             foreach (EstateBan ban in new List<EstateBan>(l_EstateBans).Where(ban => ban.BannedUserID == avatarID))
                 l_EstateBans.Remove(ban);
-#endif
         }
 
         public bool HasAccess(UUID user)
