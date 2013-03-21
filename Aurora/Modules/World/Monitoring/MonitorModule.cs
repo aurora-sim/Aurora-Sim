@@ -190,8 +190,7 @@ namespace Aurora.Modules.Monitoring
                 {
                     //Kill the stats heartbeat and http handler
                     m_report.Stop();
-                    MainServer.Instance.RemoveHTTPHandler("POST",
-                                                          "/monitorstats/" + m_currentScene.RegionInfo.RegionID + "/");
+                    MainServer.Instance.RemoveHttpStreamHandler("/monitorstats/" + m_currentScene.RegionInfo.RegionID + "/");
                 }
                 //Remove all monitors/alerts
                 m_alerts.Clear();

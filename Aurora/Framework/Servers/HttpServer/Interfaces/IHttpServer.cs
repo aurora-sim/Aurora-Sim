@@ -73,28 +73,6 @@ namespace Aurora.Framework.Servers.HttpServer.Interfaces
         ///     URI.  So if a handler for "/myapp/" is registered and a request for "/myapp/page" is received, then
         ///     the "/myapp/" handler is invoked if no "/myapp/page" handler exists.
         /// </summary>
-        /// <param name="methodName"></param>
-        /// <param name="handler"></param>
-        /// <returns>
-        ///     true if the handler was successfully registered, false if a handler with the same name already existed.
-        /// </returns>
-        bool AddHTTPHandler(string methodName, GenericHTTPMethod handler);
-
-        /// <summary>
-        ///     Add a handler for an HTTP request.
-        ///     This handler can actually be invoked either as
-        ///     http://hostname:port/?method=methodName
-        ///     or
-        ///     http://hostname:portmethodName
-        ///     if the method name starts with a slash.  For example, AddHTTPHandler("/object/", ...) on a standalone region
-        ///     server will register a handler that can be invoked with either
-        ///     http://localhost:9000/?method=/object/
-        ///     or
-        ///     http://localhost:9000/object/
-        ///     In addition, the handler invoked by the HTTP server for any request is the one when best matches the request
-        ///     URI.  So if a handler for "/myapp/" is registered and a request for "/myapp/page" is received, then
-        ///     the "/myapp/" handler is invoked if no "/myapp/page" handler exists.
-        /// </summary>
         /// <param name="handler"></param>
         /// <returns>
         ///     true if the handler was successfully registered, false if a handler with the same name already existed.
@@ -127,18 +105,13 @@ namespace Aurora.Framework.Servers.HttpServer.Interfaces
         /// <returns>Returns null if not found</returns>
         XmlRpcMethod GetXmlRPCHandler(string method);
 
-        /// <summary>
-        ///     Remove an HTTP handler
-        /// </summary>
-        /// <param name="httpMethod"></param>
-        /// <param name="path"></param>
-        void RemoveHTTPHandler(string httpMethod, string path);
-
         void RemovePollServiceHTTPHandler(string httpMethod, string path);
 
         bool RemoveLLSDHandler(string path, LLSDMethod handler);
 
         void RemoveStreamHandler(string httpMethod, string path);
+
+        void RemoveHttpStreamHandler(string path);
 
         void RemoveXmlRPCHandler(string method);
 

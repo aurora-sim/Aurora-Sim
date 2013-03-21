@@ -30,13 +30,18 @@ using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
+using System.IO;
 using System.Net;
+using System.Text;
 using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
@@ -60,7 +65,8 @@ namespace Aurora.Services
             m_secure = secure;
         }
 
-        public Hashtable Handler(Hashtable request)
+        public byte[] Handler(string path, Stream request, OSHttpRequest httpRequest,
+                                        OSHttpResponse httpResponse)
         {
             //MainConsole.Instance.Debug("[CONNECTION DEBUGGING]: AgentHandler Called");
 
@@ -70,58 +76,49 @@ namespace Aurora.Services
             //MainConsole.Instance.Debug(" >> http-method=" + request["http-method"]);
             //MainConsole.Instance.Debug("---------------------------\n");
 
-            Hashtable responsedata = new Hashtable();
-            responsedata["content_type"] = "text/html";
-            responsedata["keepalive"] = false;
-            responsedata["int_response_code"] = HttpStatusCode.OK;
-            responsedata["str_response_string"] = "";
+            httpResponse.ContentType = "text/html";
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
 
 
             UUID agentID;
             UUID regionID;
             string action;
             string other;
-            string uri = ((string) request["uri"]);
+            string uri = httpRequest.RawUrl;
             if (m_secure)
                 uri = uri.Remove(0, 37); //Remove the secure UUID from the uri
             if (!WebUtils.GetParams(uri, out agentID, out regionID, out action, out other))
             {
                 MainConsole.Instance.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}",
-                                                request["uri"]);
-                responsedata["int_response_code"] = 404;
-                responsedata["str_response_string"] = "false";
-
-                return responsedata;
+                                                httpRequest.RawUrl);
+                httpResponse.StatusCode = 404;
+                return Encoding.UTF8.GetBytes("false");
             }
 
             // Next, let's parse the verb
-            string method = (string) request["http-method"];
+            string method = httpRequest.HttpMethod;
             if (method.Equals("PUT"))
             {
-                DoAgentPut(request, responsedata);
-                return responsedata;
+                return DoAgentPut(request, httpRequest, httpResponse);
             }
             else if (method.Equals("POST"))
             {
                 OSDMap map = null;
                 try
                 {
-                    string data = request["body"].ToString();
-                    map = (OSDMap) OSDParser.DeserializeJson(data);
+                    if (httpRequest.ContentType == "application/x-gzip")
+                    {
+                        System.IO.Stream inputStream =
+                            new System.IO.Compression.GZipStream(request,
+                                System.IO.Compression.CompressionMode.Decompress);
+                        map = (OSDMap)OSDParser.DeserializeJson(inputStream);
+                        inputStream.Close();
+                    }
+                    else
+                        map = (OSDMap) OSDParser.DeserializeJson(request);
                 }
                 catch
                 {
-                    if (request["content-type"].ToString() == "application/x-gzip")
-                    {
-                        System.IO.Stream inputStream =
-                            new System.IO.Compression.GZipStream(
-                                new System.IO.MemoryStream(Utils.StringToBytes(request["body"].ToString())),
-                                System.IO.Compression.CompressionMode.Decompress);
-                        System.IO.StreamReader reader = new System.IO.StreamReader(inputStream,
-                                                                                   System.Text.Encoding.UTF8);
-                        string requestBody = reader.ReadToEnd();
-                        map = (OSDMap) OSDParser.DeserializeJson(requestBody);
-                    }
                 }
                 if (map != null)
                 {
@@ -133,39 +130,26 @@ namespace Aurora.Services
                         FailedToTeleportAgent(map["FailedRegionID"].AsUUID(), agentID, map["Reason"].AsString(),
                                               map["IsCrossing"].AsBoolean());
                     else
-                        DoAgentPost(request, responsedata, agentID);
+                        return DoAgentPost(map, httpRequest, httpResponse, agentID);
+                    return MainServer.BlankResponse;
                 }
-                return responsedata;
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Encoding.UTF8.GetBytes("Bad request");
             }
             else if (method.Equals("GET"))
             {
-                DoAgentGet(request, responsedata, agentID, regionID, bool.Parse(action));
-                return responsedata;
+                return DoAgentGet(request, httpRequest, httpResponse, agentID, regionID, bool.Parse(action));
             }
             else if (method.Equals("DELETE"))
             {
-                DoAgentDelete(request, responsedata, agentID, action, regionID);
-                return responsedata;
-            }
-            else if (method.Equals("QUERYACCESS"))
-            {
-                responsedata["int_response_code"] = HttpStatusCode.OK;
-
-                OSDMap resp = new OSDMap(2);
-
-                resp["success"] = OSD.FromBoolean(true);
-                resp["reason"] = OSD.FromString("");
-
-                responsedata["str_response_string"] = OSDParser.SerializeJsonString(resp);
-                return responsedata;
+                return DoAgentDelete(request, httpRequest, httpResponse, agentID, action, regionID);
             }
             else
             {
-                MainConsole.Instance.InfoFormat("[AGENT HANDLER]: method {0} not supported in agent message", method);
-                responsedata["int_response_code"] = HttpStatusCode.MethodNotAllowed;
-                responsedata["str_response_string"] = "Method not allowed";
+                MainConsole.Instance.WarnFormat("[AGENT HANDLER]: method {0} not supported in agent message", method);
 
-                return responsedata;
+                httpResponse.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                return Encoding.UTF8.GetBytes("Method not allowed");
             }
         }
 
@@ -185,16 +169,8 @@ namespace Aurora.Services
                                                              AgentID, reason, isCrossing);
         }
 
-        protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)
+        protected byte[] DoAgentPost(OSDMap args, OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID id)
         {
-            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
-            if (args == null)
-            {
-                responsedata["int_response_code"] = HttpStatusCode.BadRequest;
-                responsedata["str_response_string"] = "Bad request";
-                return;
-            }
-
             // retrieve the input arguments
             int x = 0, y = 0;
             UUID uuid = UUID.Zero;
@@ -242,9 +218,8 @@ namespace Aurora.Services
             catch (Exception ex)
             {
                 MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex);
-                responsedata["int_response_code"] = HttpStatusCode.BadRequest;
-                responsedata["str_response_string"] = "Bad request";
-                return;
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Encoding.UTF8.GetBytes("Bad request");
             }
 
             OSDMap resp = new OSDMap(3);
@@ -257,30 +232,9 @@ namespace Aurora.Services
             resp["reason"] = reason;
             resp["requestedUDPPort"] = requestedUDPPort;
             resp["success"] = OSD.FromBoolean(result);
-            // Let's also send out the IP address of the caller back to the caller (HG 1.5)
-            resp["your_ip"] = OSD.FromString(GetCallerIP(request));
 
-            // TODO: add reason if not String.Empty?
-            responsedata["int_response_code"] = HttpStatusCode.OK;
-            responsedata["str_response_string"] = OSDParser.SerializeJsonString(resp);
-        }
-
-        private string GetCallerIP(Hashtable request)
-        {
-            if (!m_Proxy)
-                return NetworkUtils.GetCallerIP(request);
-
-            // We're behind a proxy
-            Hashtable headers = (Hashtable) request["headers"];
-            if (headers.ContainsKey("X-Forwarded-For") && headers["X-Forwarded-For"] != null)
-            {
-                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string) headers["X-Forwarded-For"]);
-                if (ep != null)
-                    return ep.Address.ToString();
-            }
-
-            // Oops
-            return NetworkUtils.GetCallerIP(request);
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
+            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resp));
         }
 
         // subclasses can override this
@@ -291,14 +245,13 @@ namespace Aurora.Services
                                                    out reason);
         }
 
-        protected void DoAgentPut(Hashtable request, Hashtable responsedata)
+        protected byte[] DoAgentPut(Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
+            OSDMap args = WebUtils.GetOSDMap(request.ReadUntilEnd());
             if (args == null)
             {
-                responsedata["int_response_code"] = HttpStatusCode.BadRequest;
-                responsedata["str_response_string"] = "Bad request";
-                return;
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Encoding.UTF8.GetBytes("Bad request");
             }
 
             // retrieve the input arguments
@@ -338,9 +291,8 @@ namespace Aurora.Services
                 {
                     MainConsole.Instance.InfoFormat(
                         "[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
-                    responsedata["int_response_code"] = HttpStatusCode.BadRequest;
-                    responsedata["str_response_string"] = "Bad request";
-                    return;
+                    httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                    return Encoding.UTF8.GetBytes("Bad request");
                 }
 
                 //agent.Dump();
@@ -358,7 +310,8 @@ namespace Aurora.Services
                 {
                     MainConsole.Instance.InfoFormat(
                         "[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
-                    return;
+                    httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                    return Encoding.UTF8.GetBytes("Bad request");
                 }
                 //agent.Dump();
                 // This is one of the meanings of PUT agent
@@ -366,8 +319,8 @@ namespace Aurora.Services
             }
             OSDMap resp = new OSDMap();
             resp["Updated"] = result;
-            responsedata["int_response_code"] = HttpStatusCode.OK;
-            responsedata["str_response_string"] = OSDParser.SerializeJsonString(resp);
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
+            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resp));
         }
 
         // subclasses can override this
@@ -376,17 +329,14 @@ namespace Aurora.Services
             return m_SimulationService.UpdateAgent(destination, agent);
         }
 
-        protected virtual void DoAgentGet(Hashtable request, Hashtable responsedata, UUID id, UUID regionID,
+        protected virtual byte[] DoAgentGet(Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID id, UUID regionID,
                                           bool agentIsLeaving)
         {
             if (m_SimulationService == null)
             {
-                MainConsole.Instance.Debug("[AGENT HANDLER]: Agent GET called. Harmless but useless.");
-                responsedata["content_type"] = "application/json";
-                responsedata["int_response_code"] = HttpStatusCode.NotImplemented;
-                responsedata["str_response_string"] = string.Empty;
-
-                return;
+                httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                // ignore. buffer will be empty, caller should check.
+                return MainServer.BlankResponse;
             }
 
             GridRegion destination = new GridRegion {RegionID = regionID};
@@ -410,8 +360,9 @@ namespace Aurora.Services
                     {
                         MainConsole.Instance.WarnFormat(
                             "[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e);
-                        responsedata["int_response_code"] = HttpStatusCode.InternalServerError;
+                        httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
                         // ignore. buffer will be empty, caller should check.
+                        return MainServer.BlankResponse;
                     }
                 }
                 else
@@ -425,14 +376,13 @@ namespace Aurora.Services
                 map = new OSDMap();
                 map["Result"] = "Not Found";
             }
-            strBuffer = OSDParser.SerializeJsonString(map);
 
-            responsedata["content_type"] = "application/json";
-            responsedata["int_response_code"] = HttpStatusCode.OK;
-            responsedata["str_response_string"] = strBuffer;
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
+            httpResponse.ContentType = "application/json";
+            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(map));
         }
 
-        protected void DoAgentDelete(Hashtable request, Hashtable responsedata, UUID id, string action, UUID regionID)
+        protected byte[] DoAgentDelete(Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID id, string action, UUID regionID)
         {
             MainConsole.Instance.Debug(" >>> DoDelete action:" + action + "; RegionID:" + regionID);
 
@@ -449,13 +399,13 @@ namespace Aurora.Services
             }
             else
                 m_SimulationService.CloseAgent(destination, id);
+            MainConsole.Instance.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
 
-            responsedata["int_response_code"] = HttpStatusCode.OK;
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
+            httpResponse.ContentType = "application/json";
             OSDMap map = new OSDMap();
             map["Agent"] = id;
-            responsedata["str_response_string"] = OSDParser.SerializeJsonString(map);
-
-            MainConsole.Instance.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
+            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(map));
         }
     }
 }

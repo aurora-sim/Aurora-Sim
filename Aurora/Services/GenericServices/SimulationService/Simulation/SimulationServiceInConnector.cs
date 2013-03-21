@@ -95,11 +95,11 @@ namespace Aurora.Services
                 path = "/agent/";
             }
 
-            server.AddHTTPHandler(path,
+            server.AddHTTPHandler(new GenericStreamHandler("GET", path,
                                   new AgentHandler(m_LocalSimulationService, m_registry, secure).
-                                      Handler);
-            server.AddHTTPHandler("/object/",
-                                  new ObjectHandler(m_LocalSimulationService, m_config).Handler);
+                                      Handler));
+            server.AddHTTPHandler(new GenericStreamHandler("GET", "/object/",
+                                  new ObjectHandler(m_LocalSimulationService, m_config).Handler));
             return null;
         }
     }

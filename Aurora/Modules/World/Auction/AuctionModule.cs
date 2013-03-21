@@ -127,7 +127,7 @@ namespace Aurora.Modules.Auction
         {
             //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
-            return MainServer.NoResponse;
+            return MainServer.BlankResponse;
         }
 
         #endregion

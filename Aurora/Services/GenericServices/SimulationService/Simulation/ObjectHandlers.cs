@@ -29,6 +29,8 @@ using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
@@ -36,7 +38,9 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
+using System.IO;
 using System.Net;
+using System.Text;
 using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
@@ -59,7 +63,8 @@ namespace Aurora.Services
             m_SimulationService = sim.InnerService;
         }
 
-        public Hashtable Handler(Hashtable request)
+        public byte[] Handler(string path, Stream request, OSHttpRequest httpRequest,
+                                        OSHttpResponse httpResponse)
         {
             //MainConsole.Instance.Debug("[CONNECTION DEBUGGING]: ObjectHandler Called");
 
@@ -69,57 +74,45 @@ namespace Aurora.Services
             //MainConsole.Instance.Debug(" >> http-method=" + request["http-method"]);
             //MainConsole.Instance.Debug("---------------------------\n");
 
-            Hashtable responsedata = new Hashtable();
-            responsedata["content_type"] = "text/html";
+            httpResponse.ContentType = "text/html";
 
             UUID objectID;
             UUID regionID;
             string action;
-            if (!WebUtils.GetParams((string) request["uri"], out objectID, out regionID, out action) ||
+            if (!WebUtils.GetParams(httpRequest.RawUrl, out objectID, out regionID, out action) ||
                 m_allowForeignIncomingObjects)
             {
                 //MainConsole.Instance.InfoFormat("[OBJECT HANDLER]: Invalid parameters for object message {0}", request["uri"]);
-                responsedata["int_response_code"] = 404;
-                responsedata["str_response_string"] = "false";
-
-                return responsedata;
+                httpResponse.StatusCode = 404;
+                return Encoding.UTF8.GetBytes("false");
             }
 
             // Next, let's parse the verb
-            string method = (string) request["http-method"];
+            string method = httpRequest.HttpMethod;
             if (method.Equals("POST"))
             {
-                DoObjectPost(request, responsedata, regionID);
-                return responsedata;
+                return DoObjectPost(request, httpRequest, httpResponse, regionID);
             }
             else if (method.Equals("PUT"))
             {
-                DoObjectPut(request, responsedata, regionID);
-                return responsedata;
+                return DoObjectPut(request, httpRequest, httpResponse, regionID);
             }
-                //else if (method.Equals("DELETE"))
-                //{
-                //    DoObjectDelete(request, responsedata, agentID, action, regionHandle);
-                //    return responsedata;
-                //}
             else
             {
                 MainConsole.Instance.InfoFormat("[OBJECT HANDLER]: method {0} not supported in object message", method);
-                responsedata["int_response_code"] = HttpStatusCode.MethodNotAllowed;
-                responsedata["str_response_string"] = "Mthod not allowed";
-
-                return responsedata;
+                httpResponse.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                return Encoding.UTF8.GetBytes("Method not allowed");
             }
         }
 
-        protected virtual void DoObjectPost(Hashtable request, Hashtable responsedata, UUID regionID)
+        protected virtual byte[] DoObjectPost(Stream request, OSHttpRequest httpRequest,
+                                        OSHttpResponse httpResponse, UUID regionID)
         {
-            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
+            OSDMap args = WebUtils.GetOSDMap(request.ReadUntilEnd());
             if (args == null)
             {
-                responsedata["int_response_code"] = 400;
-                responsedata["str_response_string"] = "false";
-                return;
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Encoding.UTF8.GetBytes("false");
             }
             // retrieve the input arguments
             int x = 0, y = 0;
@@ -153,9 +146,8 @@ namespace Aurora.Services
             catch (Exception ex)
             {
                 MainConsole.Instance.InfoFormat("[OBJECT HANDLER]: exception on deserializing scene object {0}", ex);
-                responsedata["int_response_code"] = HttpStatusCode.BadRequest;
-                responsedata["str_response_string"] = "Bad request";
-                return;
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Encoding.UTF8.GetBytes("Bad request");
             }
 
             bool result = false;
@@ -165,8 +157,8 @@ namespace Aurora.Services
                 MainConsole.Instance.ErrorFormat(
                     "[OBJECT HANDLER]: error on deserializing scene object as the object was null!");
 
-                responsedata["int_response_code"] = HttpStatusCode.OK;
-                responsedata["str_response_string"] = result.ToString();
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Encoding.UTF8.GetBytes(result.ToString());
             }
 
             try
@@ -179,18 +171,18 @@ namespace Aurora.Services
                 MainConsole.Instance.DebugFormat("[OBJECT HANDLER]: Exception in CreateObject: {0}", e.StackTrace);
             }
 
-            responsedata["int_response_code"] = HttpStatusCode.OK;
-            responsedata["str_response_string"] = result.ToString();
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
+            return Encoding.UTF8.GetBytes(result.ToString());
         }
 
-        protected virtual void DoObjectPut(Hashtable request, Hashtable responsedata, UUID regionID)
+        protected virtual byte[] DoObjectPut(Stream request, OSHttpRequest httpRequest,
+                                        OSHttpResponse httpResponse, UUID regionID)
         {
-            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
+            OSDMap args = WebUtils.GetOSDMap(request.ReadUntilEnd());
             if (args == null)
             {
-                responsedata["int_response_code"] = 400;
-                responsedata["str_response_string"] = "false";
-                return;
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Encoding.UTF8.GetBytes("false");
             }
 
             // retrieve the input arguments
@@ -218,8 +210,8 @@ namespace Aurora.Services
             // This is the meaning of PUT object
             bool result = m_SimulationService.CreateObject(destination, userID, itemID);
 
-            responsedata["int_response_code"] = 200;
-            responsedata["str_response_string"] = result.ToString();
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
+            return Encoding.UTF8.GetBytes(result.ToString());
         }
     }
 }
