@@ -660,7 +660,8 @@ namespace Aurora.Framework.ClientInterfaces
                         UUID textureID = AppearanceManager.DEFAULT_AVATAR_TEXTURE;
                         if (textures[i] != null)
                             textureID = textures[i].AsUUID();
-                        m_texture.CreateFace((uint) i).TextureID = new UUID(textureID);
+                        if (textureID != AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+                            m_texture.CreateFace((uint) i).TextureID = new UUID(textureID);
                     }
                 }
                 else

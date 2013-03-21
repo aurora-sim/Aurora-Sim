@@ -165,7 +165,7 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         private void RemoveOldBaked(UUID principalID, AvatarAppearance newdata)
         {
-            AvatarAppearance olddata = m_Database.Get(principalID);
+            /*AvatarAppearance olddata = m_Database.Get(principalID);
 
             if (olddata == null || olddata.Texture == null)
                 return;
@@ -179,7 +179,7 @@ namespace Aurora.Services.SQLServices.AvatarService
                 AssetBase ab = m_assetService.Get(olddata.Texture.FaceTextures[i].TextureID.ToString());
                 if ((ab != null) && (ab.Name == "Baked Texture"))
                     m_assetService.Delete(olddata.Texture.FaceTextures[i].TextureID);
-            }
+            }*/
         }
 
         private object DeleteUserInformation(string name, object param)

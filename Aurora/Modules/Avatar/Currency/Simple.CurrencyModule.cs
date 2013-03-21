@@ -155,10 +155,20 @@ namespace Simple.Currency
                                                     TransactionType.SystemGenerated, UUID.Zero);
         }
 
-#pragma warning disable 67
         public event ObjectPaid OnObjectPaid;
         public event PostObjectPaid OnPostObjectPaid;
-#pragma warning restore 67
+
+        public void FireObjectPaid(UUID uuid1, UUID uuid2, int p)
+        {
+            if (OnObjectPaid != null)
+                OnObjectPaid(uuid1, uuid2, p);
+        }
+
+        public void FirePostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount)
+        {
+            if (OnPostObjectPaid != null)
+                OnPostObjectPaid(localID, regionHandle, agentID, amount);
+        }
 
         public bool Transfer(UUID toID, UUID fromID, int amount, string description)
         {
@@ -175,8 +185,18 @@ namespace Simple.Currency
         public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
                              TransactionType type)
         {
-            return m_connector.UserCurrencyTransfer(toID, fromID, toObjectID, fromObjectID, (uint) amount, description,
-                                                    type, UUID.Zero);
+            bool result = m_connector.UserCurrencyTransfer(toID, fromID, toObjectID, fromObjectID, (uint)amount, description, type, UUID.Zero);
+            if (toObjectID != UUID.Zero)
+            {
+                ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
+                if(manager != null && manager.Scene != null)
+                {
+                    ISceneChildEntity ent = manager.Scene.GetSceneObjectPart(toID);
+                    if(ent != null)
+                        FirePostObjectPaid(ent.LocalId, manager.Scene.RegionInfo.RegionHandle, fromID, amount);
+                }
+            }
+            return result;
         }
 
         public List<GroupAccountHistory> GetTransactions(UUID groupID, UUID agentID, int currentInterval,

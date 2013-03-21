@@ -574,7 +574,11 @@ namespace Aurora.Framework.Servers.HttpServer
             OSHttpResponse resp = new OSHttpResponse(context);
             if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
             {
-                SendHTML500(response);
+                byte[] buffer = SendHTML500(response);
+                if (buffer != null)
+                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.OutputStream.Close();
+                response.Close();
                 return;
             }
 
@@ -1111,7 +1115,7 @@ namespace Aurora.Framework.Servers.HttpServer
             return buffer;
         }
 
-        public void SendHTML500(HttpListenerResponse response)
+        public byte[] SendHTML500(HttpListenerResponse response)
         {
             try
             {
@@ -1121,14 +1125,15 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 string responseString = GetHTTP500();
                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-
                 response.SendChunked = false;
                 response.ContentLength64 = buffer.Length;
                 response.ContentEncoding = Encoding.UTF8;
+                return buffer;
             }
             catch
             {
             }
+            return null;
         }
 
         public void Start()
@@ -1141,7 +1146,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 //m_httpListener = new HttpListener();
 
                 NotSocketErrors = 0;
-                m_internalServer = new HttpListenerManager(10, Secure);
+                m_internalServer = new HttpListenerManager(1, Secure);
                 m_internalServer.ProcessRequest += OnRequest;
 
                 m_internalServer.Start(m_port);

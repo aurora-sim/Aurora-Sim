@@ -285,7 +285,6 @@ namespace Aurora.FileBasedServices.AssetService
         public AssetBase FileGetAsset(string id)
         {
             AssetBase asset = null;
-
 #if DEBUG
             long startTime = System.Diagnostics.Stopwatch.GetTimestamp();
 #endif
@@ -302,8 +301,10 @@ namespace Aurora.FileBasedServices.AssetService
                     asset.Data = File.ReadAllBytes(GetDataPathForID(asset.HashCode));
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                MainConsole.Instance.WarnFormat("[FILE BASED ASSET SERVICE]: Failed to get asset {0}: {1} ", id, ex.ToString());
+                return null;
             }
             finally
             {
@@ -360,6 +361,7 @@ namespace Aurora.FileBasedServices.AssetService
                 lock (_lock)
                 {
                     assetStream = File.OpenWrite(GetPathForID(asset.IDString));
+                    asset.HashCode = hash;
                     ProtoBuf.Serializer.Serialize<AssetBase>(assetStream, asset);
                     assetStream.Close();
                     asset.Data = data;
@@ -392,7 +394,8 @@ namespace Aurora.FileBasedServices.AssetService
             if (asset == null)
                 return;
             File.Delete(GetPathForID(id));
-            File.Delete(GetDataPathForID(asset.HashCode));
+            //DON'T DO THIS, there might be other references to this hash
+            //File.Delete(GetDataPathForID(asset.HashCode));
         }
 
         #region Console Commands

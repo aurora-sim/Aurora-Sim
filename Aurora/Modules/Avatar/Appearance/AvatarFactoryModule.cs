@@ -645,8 +645,10 @@ textures 1
                     if (appearance.Wearables[i][j].ItemID == UUID.Zero)
                         continue;
 
-                    if (nowWearing[i].ItemID == oldAppearance.Wearables[i][j].ItemID)
-                        continue; //Don't relookup items that are the same and have already been found earlier
+                    // ItemIDs will be updated with new assetIDs if the avatar has just updated their clothing,
+                    //    so we can't assume this...
+                    //if (nowWearing[i].ItemID == oldAppearance.Wearables[i][j].ItemID)
+                    //    continue; //Don't relookup items that are the same and have already been found earlier
 
                     UUID assetID = invService.GetItemAssetID(userID, appearance.Wearables[i][j].ItemID);
 
