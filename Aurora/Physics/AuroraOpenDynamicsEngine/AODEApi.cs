@@ -9,6 +9,7 @@ namespace OdeAPI
 	using dReal = System.Double;
 #else
     using dReal = Single;
+    using Aurora.Framework.Modules;
 
 #endif
 
@@ -1967,8 +1968,7 @@ namespace OdeAPI
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Output(
-                    "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
+                MainConsole.Instance.Format(Level.All, "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
                     ex.ToString());
             }
             try
@@ -1978,8 +1978,7 @@ namespace OdeAPI
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Output(
-                    "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
+                MainConsole.Instance.Format(Level.All, "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
                     ex.ToString());
             }
         }

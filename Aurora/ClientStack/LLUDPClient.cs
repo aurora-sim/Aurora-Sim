@@ -30,6 +30,7 @@
 using Aurora.Framework;
 using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using System;
@@ -607,7 +608,7 @@ namespace Aurora.ClientStack
                     // this queue
                 else if (m_outbox.Dequeue(out packet))
                 {
-                    MainConsole.Instance.Output(AgentID + " - " + packet.Packet.Type, "Verbose");
+                    MainConsole.Instance.Format(Level.All, AgentID + " - " + packet.Packet.Type);
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
                     if (packet.Category == ThrottleOutPacketType.OutBand ||
@@ -745,7 +746,7 @@ namespace Aurora.ClientStack
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.Error("[LLUDPCLIENT]: OnQueueEmpty() threw an exception: " + e.Message, e);
+                    MainConsole.Instance.ErrorFormat("[LLUDPCLIENT]: OnQueueEmpty() threw an exception: {0}", e.ToString());
                 }
             }
 

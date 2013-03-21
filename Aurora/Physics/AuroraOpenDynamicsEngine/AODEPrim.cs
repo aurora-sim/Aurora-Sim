@@ -1260,7 +1260,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     catch (Exception e)
                     {
-                        MainConsole.Instance.Warn("[PHYSICS]: Create sphere failed: {0}", e);
+                        MainConsole.Instance.WarnFormat("[PHYSICS]: Create sphere failed: {0}", e.ToString());
                         return;
                     }
                 }
@@ -1272,7 +1272,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     catch (Exception e)
                     {
-                        MainConsole.Instance.Warn("[PHYSICS]: Create box failed: {0}", e);
+                        MainConsole.Instance.WarnFormat("[PHYSICS]: Create box failed: {0}", e.ToString());
                         return;
                     }
                 }
@@ -1305,7 +1305,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                MainConsole.Instance.ErrorFormat("[PHYSICS]: PrimGeom destruction BAD");
+                MainConsole.Instance.Error("[PHYSICS]: PrimGeom destruction BAD");
             }
             Body = IntPtr.Zero;
             hasOOBoffsetFromMesh = false;

@@ -31,7 +31,6 @@ using System.Text;
 using System.Threading;
 using Aurora.Framework.Modules;
 using Nini.Config;
-using log4net.Core;
 
 namespace Aurora.Framework.ConsoleFramework
 {
@@ -91,6 +90,8 @@ namespace Aurora.Framework.ConsoleFramework
 
             m_Commands.AddCommand("help", "help",
                                   "Get a general command list", base.Help);
+
+            InitializeLog(null);
         }
 
         private static ConsoleColor DeriveColor(string input)
@@ -297,7 +298,6 @@ namespace Aurora.Framework.ConsoleFramework
 
         private void WriteLocalText(string text, Level level)
         {
-            MainConsole.TriggerLog(level.Name, text);
             string logtext = "";
             if (text != "")
             {
@@ -313,13 +313,11 @@ namespace Aurora.Framework.ConsoleFramework
                     {
                         if (line[currentPos] == '[')
                         {
-                            if (level == Level.Alert)
-                                WriteColorText(ConsoleColor.Magenta, "[");
-                            else if (level.Value >= Level.Fatal.Value)
+                            if (level >= Level.Fatal)
                                 WriteColorText(ConsoleColor.White, "[");
-                            else if (level.Value >= Level.Error.Value)
+                            else if (level >= Level.Error)
                                 WriteColorText(ConsoleColor.Red, "[");
-                            else if (level.Value >= Level.Warn.Value)
+                            else if (level >= Level.Warn)
                                 WriteColorText(ConsoleColor.Yellow, "[");
                             else
                                 WriteColorText(ConsoleColor.Gray, "[");
@@ -332,8 +330,6 @@ namespace Aurora.Framework.ConsoleFramework
                                 WriteColorText(ConsoleColor.Red, "]");
                             else if (level == Level.Warn)
                                 WriteColorText(ConsoleColor.Yellow, "]");
-                            else if (level == Level.Alert)
-                                WriteColorText(ConsoleColor.Magenta, "]");
                             else
                                 WriteColorText(ConsoleColor.Gray, "]");
                             boxNum--;
@@ -345,8 +341,6 @@ namespace Aurora.Framework.ConsoleFramework
                                 WriteColorText(ConsoleColor.Red, s);
                             else if (level == Level.Warn)
                                 WriteColorText(ConsoleColor.Yellow, s);
-                            else if (level == Level.Alert)
-                                WriteColorText(ConsoleColor.Magenta, s);
                             else
                                 WriteColorText(ConsoleColor.Gray, s);
                         }
@@ -366,16 +360,17 @@ namespace Aurora.Framework.ConsoleFramework
             Console.WriteLine();
         }
 
-        public override void Output(string text)
+        public override void Output(string text, Level level)
         {
-            Output(text, "Info");
-        }
-
-        public override void Output(string text, string lvl)
-        {
-            Level level = GetLevel(lvl);
-            if (MaxLogLevel <= level)
+            if (Threshold <= level)
             {
+                text = string.Format("{0}:{1}:{2}: {3}",
+                    (DateTime.Now.Hour < 10 ? "0" + DateTime.Now.Hour : DateTime.Now.Hour.ToString()),
+                    (DateTime.Now.Minute < 10 ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString()),
+                    (DateTime.Now.Second < 10 ? "0" + DateTime.Now.Second : DateTime.Now.Second.ToString()), text);
+                MainConsole.TriggerLog(level.ToString(), text);
+                m_logFile.WriteLine(text);
+                m_logFile.Flush();
                 lock (cmdline)
                 {
                     if (y == -1)
@@ -419,11 +414,11 @@ namespace Aurora.Framework.ConsoleFramework
             string[] opts = Commands.FindNextOption(words);
 
             if (opts.Length == 0)
-                Output("No options.");
+                Output("No options.", Threshold);
             else if (opts[0].StartsWith("Command help:"))
-                Output(opts[0]);
+                Output(opts[0], Threshold);
             else
-                Output(String.Format("Options: {0}", String.Join("\n         ", opts)));
+                Output(String.Format("Options: {0}", String.Join("\n         ", opts)), Threshold);
 
             return true;
         }

@@ -1150,8 +1150,8 @@ namespace Aurora.ClientStack
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Error(
-                    "[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
+                MainConsole.Instance.ErrorFormat(
+                    "[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: {0}", ex.ToString());
             }
             return true;
         }
@@ -1184,8 +1184,8 @@ namespace Aurora.ClientStack
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Error("[LLUDPSERVER]: OutgoingPacketHandler iteration for " + client.Name +
-                                           " threw an exception: " + ex.Message, ex);
+                MainConsole.Instance.ErrorFormat("[LLUDPSERVER]: OutgoingPacketHandler iteration for " + client.Name +
+                                           " threw an exception: " + ex.ToString());
                 return;
             }
         }
@@ -1218,7 +1218,7 @@ namespace Aurora.ClientStack
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Error("[LLUDPSERVER]: Error in the incoming packet handler loop: " + ex.Message, ex);
+                MainConsole.Instance.ErrorFormat("[LLUDPSERVER]: Error in the incoming packet handler loop: " + ex.ToString());
             }
             return true;
         }
@@ -1253,9 +1253,8 @@ namespace Aurora.ClientStack
                         // Don't let a failure in an individual client thread crash the whole sim.
                         if (packet != null)
                             MainConsole.Instance.ErrorFormat(
-                                "[LLUDPSERVER]: Client packet handler for {0} for packet {1} threw an exception",
-                                udpClient.AgentID, packet.Type);
-                        MainConsole.Instance.Error(e.Message, e);
+                                "[LLUDPSERVER]: Client packet handler for {0} for packet {1} threw an exception: {2}",
+                                udpClient.AgentID, packet.Type, e.ToString());
                     }
                 }
             }
@@ -1335,7 +1334,7 @@ namespace Aurora.ClientStack
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.Error("Packet statistics gathering failed: " + ex.Message, ex);
+                    MainConsole.Instance.ErrorFormat("Packet statistics gathering failed: ", ex.ToString());
                     if (PacketLog != null && PacketLog.Log != null)
                     {
                         PacketLog.Log.Close();

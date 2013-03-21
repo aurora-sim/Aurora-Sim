@@ -102,7 +102,7 @@ namespace Aurora.Framework.ConsoleFramework
             m_Server.AddHTTPHandler("/SessionCommand/", HandleHttpSessionCommand);
         }
 
-        public override void Output(string text, string level)
+        public override void Output(string text, Level level)
         {
             lock (m_Scrollback)
             {
@@ -114,17 +114,12 @@ namespace Aurora.Framework.ConsoleFramework
             Console.WriteLine(text.Trim());
         }
 
-        public override void Output(string text)
-        {
-            Output(text, "Info");
-        }
-
         public override string ReadLine(string p, bool isCommand, bool e)
         {
             if (isCommand)
-                Output("+++" + p);
+                Output("+++" + p, Threshold);
             else
-                Output("-++" + p);
+                Output("-++" + p, Threshold);
 
             m_DataEvent.WaitOne();
 
@@ -440,7 +435,7 @@ namespace Aurora.Framework.ConsoleFramework
             if (c.newConnection)
             {
                 c.newConnection = false;
-                Output("+++" + DefaultPrompt);
+                Output("+++" + DefaultPrompt, Threshold);
             }
 
             lock (m_Scrollback)

@@ -28,7 +28,6 @@
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Utilities;
-using log4net.Core;
 using Nini.Config;
 using System;
 using System.Collections.Generic;
@@ -248,7 +247,7 @@ namespace Aurora.Framework.ConsoleFramework
 
                                 foreach (string s in help)
                                 {
-                                    MainConsole.Instance.Output(s, "Severe");
+                                    MainConsole.Instance.Format(Level.All, s);
                                 }
                                 return new string[0];
                             }
@@ -551,10 +550,12 @@ namespace Aurora.Framework.ConsoleFramework
     /// <summary>
     ///     A console that processes commands internally
     /// </summary>
-    public class CommandConsole : BaseConsole, ICommandConsole
+    public class CommandConsole : ICommandConsole
     {
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
+        protected System.IO.StreamWriter m_logFile;
+        private string m_logFileName;
         public List<string> m_promptOptions = new List<string>();
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
@@ -569,6 +570,12 @@ namespace Aurora.Framework.ConsoleFramework
             MainConsole.Instance = this;
 
             m_Commands.AddCommand("help", "help", "Get a general command list", Help);
+            InitializeLog(null);
+        }
+
+        protected void InitializeLog(string filename)
+        {
+            m_logFile = new System.IO.StreamWriter(filename ?? System.IO.Path.ChangeExtension(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName, ".log"), true);
         }
 
         public void Help(string[] cmd)
@@ -576,7 +583,7 @@ namespace Aurora.Framework.ConsoleFramework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-                Output(s, "Severe");
+                Output(s, Level.All);
         }
 
         /// <summary>
@@ -599,7 +606,7 @@ namespace Aurora.Framework.ConsoleFramework
         {
             string[] parts = Parser.Parse(cmd);
             m_Commands.Resolve(parts);
-            Output("");
+            Output("", Threshold);
         }
 
         public virtual string ReadLine(string p, bool isCommand, bool e)
@@ -716,15 +723,20 @@ namespace Aurora.Framework.ConsoleFramework
             return line;
         }
 
-        public virtual void Output(string text, string lvl)
+        public virtual void Output(string text, Level level)
         {
-            MainConsole.TriggerLog(lvl, text);
-            Console.WriteLine(text);
-        }
+            if (Threshold <= level)
+            {
+                MainConsole.TriggerLog(level.ToString(), text);
+                text = string.Format("{0}:{1}:{2}: {3}",
+                    (DateTime.Now.Hour < 10 ? "0" + DateTime.Now.Hour : DateTime.Now.Hour.ToString()),
+                    (DateTime.Now.Minute < 10 ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString()),
+                    (DateTime.Now.Second < 10 ? "0" + DateTime.Now.Second : DateTime.Now.Second.ToString()), text);
 
-        public virtual void Output(string text)
-        {
-            Output(text, "Debug");
+                Console.WriteLine(text);
+                m_logFile.WriteLine(text);
+                m_logFile.Flush();
+            }
         }
 
         public virtual void LockOutput()
@@ -737,53 +749,9 @@ namespace Aurora.Framework.ConsoleFramework
 
         public virtual bool CompareLogLevels(string a, string b)
         {
-            Level aa = GetLevel(a);
-            Level bb = GetLevel(b);
+            Level aa = (Level)Enum.Parse(typeof(Level), a);
+            Level bb = (Level)Enum.Parse(typeof(Level), b);
             return aa <= bb;
-        }
-
-        public Level GetLevel(string lvl)
-        {
-            switch (lvl.ToLower())
-            {
-                case "alert":
-                    return Level.Alert;
-                case "all":
-                    return Level.All;
-                case "critical":
-                    return Level.Critical;
-                case "debug":
-                    return Level.Debug;
-                case "emergency":
-                    return Level.Emergency;
-                case "error":
-                    return Level.Error;
-                case "fatal":
-                    return Level.Fatal;
-                case "fine":
-                    return Level.Fine;
-                case "finer":
-                    return Level.Finer;
-                case "finest":
-                    return Level.Finest;
-                case "info":
-                    return Level.Info;
-                case "notice":
-                    return Level.Notice;
-                case "none":
-                    return new Level(0, "None");
-                case "off":
-                    return Level.Off;
-                case "severe":
-                    return Level.Severe;
-                case "trace":
-                    return Level.Trace;
-                case "verbose":
-                    return Level.Verbose;
-                case "warn":
-                    return Level.Warn;
-            }
-            return null;
         }
 
         /// <summary>
@@ -834,5 +802,111 @@ namespace Aurora.Framework.ConsoleFramework
                 Prompt();
             }
         }
+
+        public Level Threshold { get; set; }
+
+        #region ILog Members
+
+        public bool IsDebugEnabled
+        {
+            get { return Threshold < Level.Debug; }
+        }
+
+        public bool IsErrorEnabled
+        {
+            get { return Threshold < Level.Error; }
+        }
+
+        public bool IsFatalEnabled
+        {
+            get { return Threshold < Level.Fatal; }
+        }
+
+        public bool IsInfoEnabled
+        {
+            get { return Threshold < Level.Info; }
+        }
+
+        public bool IsWarnEnabled
+        {
+            get { return Threshold < Level.Warn; }
+        }
+
+        public bool IsTraceEnabled
+        {
+            get { return Threshold < Level.Trace; }
+        }
+
+        public void Debug(object message)
+        {
+            Output(message.ToString(), Level.Debug);
+        }
+
+        public void DebugFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Debug);
+        }
+
+        public void Error(object message)
+        {
+            Output(message.ToString(), Level.Error);
+        }
+
+        public void ErrorFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Error);
+        }
+
+        public void Fatal(object message)
+        {
+            Output(message.ToString(), Level.Fatal);
+        }
+
+        public void FatalFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Fatal);
+        }
+
+        public void Format(Level level, string format, params object[] args)
+        {
+            Output(string.Format(format, args), level);
+        }
+
+        public void Info(object message)
+        {
+            Output(message.ToString(), Level.Info);
+        }
+
+        public void InfoFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Info);
+        }
+
+        public void Log(Level level, object message)
+        {
+            Output(message.ToString(), level);
+        }
+
+        public void Trace(object message)
+        {
+            Output(message.ToString(), Level.Trace);
+        }
+
+        public void TraceFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Trace);
+        }
+
+        public void Warn(object message)
+        {
+            Output(message.ToString(), Level.Warn);
+        }
+
+        public void WarnFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Warn);
+        }
+
+        #endregion
     }
 }

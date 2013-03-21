@@ -710,7 +710,7 @@ namespace Aurora.Framework.ModuleLoader
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error(string.Format("Error loading plugin from {0}", dllName), e);
+                MainConsole.Instance.ErrorFormat("Error loading plugin from {0}: {1}", dllName, e.ToString());
                 return null;
             }
         }

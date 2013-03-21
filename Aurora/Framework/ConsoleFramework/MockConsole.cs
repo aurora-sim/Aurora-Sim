@@ -52,11 +52,7 @@ namespace Aurora.Framework.ConsoleFramework
             m_Commands.AddCommand("help", "help", "Get a general command list", Help);
         }
 
-        public override void Output(string text)
-        {
-        }
-
-        public override void Output(string text, string level)
+        public override void Output(string text, Level level)
         {
         }
 

@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Nwc.XmlRpc;
@@ -690,7 +691,7 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error(String.Format("[BASE HTTP SERVER]: OnRequest() failed: {0} ", e.Message), e);
+                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: OnRequest() failed: {0} ", e.ToString());
             }
         }
 
@@ -851,9 +852,9 @@ namespace Aurora.Framework.Servers.HttpServer
                         remoteIP,
                         tickdiff);
                 }
-                else if (MainConsole.Instance.IsEnabled(log4net.Core.Level.Trace))
+                else if (MainConsole.Instance.IsTraceEnabled)
                 {
-                    MainConsole.Instance.InfoFormat(
+                    MainConsole.Instance.TraceFormat(
                         "[BASE HTTP SERVER]: Handling {0} {1} from {2} took {3}ms",
                         requestMethod,
                         uriString,

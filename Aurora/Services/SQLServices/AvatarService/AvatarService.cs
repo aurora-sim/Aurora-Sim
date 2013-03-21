@@ -200,7 +200,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, name);
             if (acc == null)
             {
-                MainConsole.Instance.Output("No known avatar with that name.");
+                MainConsole.Instance.Format(Level.All, "No known avatar with that name.");
                 return;
             }
             ResetAvatar(acc.PrincipalID);
@@ -209,7 +209,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             if (folder != null)
                 m_invService.ForcePurgeFolder(folder);
 
-            MainConsole.Instance.Output("Reset avatar's appearance successfully.");
+            MainConsole.Instance.Format(Level.All, "Reset avatar's appearance successfully.");
         }
 
         #endregion

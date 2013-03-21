@@ -28,7 +28,6 @@
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Utilities;
-using log4net.Core;
 using Nini.Config;
 using System;
 using System.Collections.Generic;
@@ -42,7 +41,7 @@ namespace Aurora.Framework.ConsoleFramework
     ///     the server instance to allow for the input and output to the server to be redirected
     ///     by an external application, in this case a GUI based application on Windows.
     /// </summary>
-    public class GUIConsole : BaseConsole, ICommandConsole
+    public class GUIConsole : ICommandConsole
     {
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
@@ -70,7 +69,7 @@ namespace Aurora.Framework.ConsoleFramework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-                Output(s, "Severe");
+                Output(s, Level.All);
         }
 
         /// <summary>
@@ -96,7 +95,7 @@ namespace Aurora.Framework.ConsoleFramework
         {
             string[] parts = Parser.Parse(cmd);
             m_Commands.Resolve(parts);
-            Output("");
+            Output("", Threshold);
         }
 
         /// <summary>
@@ -240,18 +239,7 @@ namespace Aurora.Framework.ConsoleFramework
             return line;
         }
 
-        public virtual void Output(string text, string level)
-        {
-            Output(text);
-        }
-
-        public virtual void Output(string text)
-        {
-            Log(text);
-            Console.WriteLine(text);
-        }
-
-        public virtual void Log(string text)
+        public virtual void Output(string text, Level level)
         {
         }
 
@@ -265,51 +253,9 @@ namespace Aurora.Framework.ConsoleFramework
 
         public virtual bool CompareLogLevels(string a, string b)
         {
-            Level aa = GetLevel(a);
-            Level bb = GetLevel(b);
+            Level aa = (Level)Enum.Parse(typeof(Level), a);
+            Level bb = (Level)Enum.Parse(typeof(Level), b);
             return aa <= bb;
-        }
-
-        public Level GetLevel(string lvl)
-        {
-            switch (lvl.ToLower())
-            {
-                case "alert":
-                    return Level.Alert;
-                case "all":
-                    return Level.All;
-                case "critical":
-                    return Level.Critical;
-                case "debug":
-                    return Level.Debug;
-                case "emergency":
-                    return Level.Emergency;
-                case "error":
-                    return Level.Error;
-                case "fatal":
-                    return Level.Fatal;
-                case "fine":
-                    return Level.Fine;
-                case "finer":
-                    return Level.Finer;
-                case "finest":
-                    return Level.Finest;
-                case "info":
-                    return Level.Info;
-                case "notice":
-                    return Level.Notice;
-                case "off":
-                    return Level.Off;
-                case "severe":
-                    return Level.Severe;
-                case "trace":
-                    return Level.Trace;
-                case "verbose":
-                    return Level.Verbose;
-                case "warn":
-                    return Level.Warn;
-            }
-            return null;
         }
 
         /// <summary>
@@ -364,5 +310,111 @@ namespace Aurora.Framework.ConsoleFramework
             //Tell the GUI that we are still here and it needs to keep checking
             Console.Write((char) 0);
         }
+
+        public Level Threshold { get; set; }
+
+        #region ILog Members
+
+        public bool IsDebugEnabled
+        {
+            get { return Threshold < Level.Debug; }
+        }
+
+        public bool IsErrorEnabled
+        {
+            get { return Threshold < Level.Error; }
+        }
+
+        public bool IsFatalEnabled
+        {
+            get { return Threshold < Level.Fatal; }
+        }
+
+        public bool IsInfoEnabled
+        {
+            get { return Threshold < Level.Info; }
+        }
+
+        public bool IsWarnEnabled
+        {
+            get { return Threshold < Level.Warn; }
+        }
+
+        public bool IsTraceEnabled
+        {
+            get { return Threshold < Level.Trace; }
+        }
+
+        public void Debug(object message)
+        {
+            Output(message.ToString(), Level.Debug);
+        }
+
+        public void DebugFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Debug);
+        }
+
+        public void Error(object message)
+        {
+            Output(message.ToString(), Level.Error);
+        }
+
+        public void ErrorFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Error);
+        }
+
+        public void Fatal(object message)
+        {
+            Output(message.ToString(), Level.Fatal);
+        }
+
+        public void FatalFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Fatal);
+        }
+
+        public void Format(Level level, string format, params object[] args)
+        {
+            Output(string.Format(format, args), level);
+        }
+
+        public void Info(object message)
+        {
+            Output(message.ToString(), Level.Info);
+        }
+
+        public void InfoFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Info);
+        }
+
+        public void Log(Level level, object message)
+        {
+            Output(message.ToString(), level);
+        }
+
+        public void Trace(object message)
+        {
+            Output(message.ToString(), Level.Trace);
+        }
+
+        public void TraceFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Trace);
+        }
+
+        public void Warn(object message)
+        {
+            Output(message.ToString(), Level.Warn);
+        }
+
+        public void WarnFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Warn);
+        }
+
+        #endregion
     }
 }

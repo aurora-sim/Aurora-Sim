@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.SceneInfo;
 using Nini.Config;
-using log4net.Core;
 
 namespace Aurora.Framework.Modules
 {
@@ -54,7 +53,7 @@ namespace Aurora.Framework.Modules
         /// <summary>
         ///     The log level required to write onto the console
         /// </summary>
-        Level MaxLogLevel { get; set; }
+        Level Threshold { get; set; }
 
         /// <summary>
         ///     The text behind the blinking cursor on the console
@@ -84,19 +83,6 @@ namespace Aurora.Framework.Modules
         ///     All finished with inserting text onto the console, let other threads go through
         /// </summary>
         void UnlockOutput();
-
-        /// <summary>
-        ///     This is only to be used by the OpenSimAppender, do NOT use unless you have a valid reason!
-        /// </summary>
-        /// <param name="text">The text that will be shown on the console</param>
-        /// <param name="level">The level of output that this text is (determines the color)</param>
-        void Output(string text, string level);
-
-        /// <summary>
-        ///     This is only to be used by the OpenSimAppender, do NOT use unless you have a valid reason!
-        /// </summary>
-        /// <param name="text">The text that will be shown on the console</param>
-        void Output(string text);
 
         /// <summary>
         ///     Read a line of text from the console, can return ""
@@ -160,59 +146,36 @@ namespace Aurora.Framework.Modules
 
         bool IsDebugEnabled { get; }
         bool IsErrorEnabled { get; }
+        bool IsTraceEnabled { get; }
         bool IsFatalEnabled { get; }
         bool IsInfoEnabled { get; }
         bool IsWarnEnabled { get; }
 
         void Debug(object message);
-        void Debug(object message, Exception exception);
-        void DebugFormat(string format, object arg0);
         void DebugFormat(string format, params object[] args);
-        void DebugFormat(IFormatProvider provider, string format, params object[] args);
-        void DebugFormat(string format, object arg0, object arg1);
-        void DebugFormat(string format, object arg0, object arg1, object arg2);
         void Error(object message);
-        void Error(object message, Exception exception);
-        void ErrorFormat(string format, object arg0);
         void ErrorFormat(string format, params object[] args);
-        void ErrorFormat(IFormatProvider provider, string format, params object[] args);
-        void ErrorFormat(string format, object arg0, object arg1);
-        void ErrorFormat(string format, object arg0, object arg1, object arg2);
         void Fatal(object message);
-        void Fatal(object message, Exception exception);
-        void FatalFormat(string format, object arg0);
         void FatalFormat(string format, params object[] args);
-        void FatalFormat(IFormatProvider provider, string format, params object[] args);
-        void FatalFormat(string format, object arg0, object arg1);
-        void FatalFormat(string format, object arg0, object arg1, object arg2);
-        void Format(Level level, string format, object arg0);
         void Format(Level level, string format, params object[] args);
-        void Format(Level level, IFormatProvider provider, string format, params object[] args);
-        void Format(Level level, string format, object arg0, object arg1);
-        void Format(Level level, string format, object arg0, object arg1, object arg2);
         void Info(object message);
-        void Info(object message, Exception exception);
-        void InfoFormat(string format, object arg0);
         void InfoFormat(string format, params object[] args);
-        void InfoFormat(IFormatProvider provider, string format, params object[] args);
-        void InfoFormat(string format, object arg0, object arg1);
-        void InfoFormat(string format, object arg0, object arg1, object arg2);
-        bool IsEnabled(Level level);
         void Log(Level level, object message);
-        void Log(Level level, object message, Exception exception);
         void Trace(object message);
-        void Trace(object message, Exception exception);
-        void TraceFormat(string format, object arg0);
         void TraceFormat(string format, params object[] args);
-        void TraceFormat(IFormatProvider provider, string format, params object[] args);
-        void TraceFormat(string format, object arg0, object arg1);
-        void TraceFormat(string format, object arg0, object arg1, object arg2);
         void Warn(object message);
-        void Warn(object message, Exception exception);
-        void WarnFormat(string format, object arg0);
         void WarnFormat(string format, params object[] args);
-        void WarnFormat(IFormatProvider provider, string format, params object[] args);
-        void WarnFormat(string format, object arg0, object arg1);
-        void WarnFormat(string format, object arg0, object arg1, object arg2);
+    }
+
+    public enum Level
+    {
+        Off = 0,
+        Trace = 1,
+        Debug = 2,
+        Info = 3,
+        Warn = 4,
+        Error = 5,
+        Fatal = 6,
+        All = 7
     }
 }
