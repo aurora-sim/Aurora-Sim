@@ -434,7 +434,8 @@ namespace Aurora.RedisServices.AssetService
             if (asset == null)
                 return;
             RedisEnsureConnection((conn) => conn.Del(id) == 1);
-            RedisEnsureConnection((conn) => conn.Del(DATA_PREFIX + asset.HashCode) == 1);
+            //DON'T DO THIS, there might be other references to this hash
+            //RedisEnsureConnection((conn) => conn.Del(DATA_PREFIX + asset.HashCode) == 1);
         }
 
         #region Console Commands
