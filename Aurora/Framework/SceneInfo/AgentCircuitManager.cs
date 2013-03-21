@@ -89,15 +89,6 @@ namespace Aurora.Framework.SceneInfo
         {
             lock (AgentCircuits)
             {
-#if (!ISWIN)
-                foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values))
-                {
-                    if (circuitData.AgentID == agentID)
-                    {
-                        AgentCircuits.Remove(circuitData.circuitcode);
-                    }
-                }
-#else
                 foreach (
                     AgentCircuitData circuitData in
                         new List<AgentCircuitData>(AgentCircuits.Values).Where(
@@ -105,7 +96,6 @@ namespace Aurora.Framework.SceneInfo
                 {
                     AgentCircuits.Remove(circuitData.circuitcode);
                 }
-#endif
             }
         }
 
@@ -118,17 +108,9 @@ namespace Aurora.Framework.SceneInfo
 
         public AgentCircuitData GetAgentCircuitData(UUID agentID)
         {
-#if (!ISWIN)
-            foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values))
-            {
-                if (circuitData.AgentID == agentID) return circuitData;
-            }
-            return null;
-#else
             return
                 new List<AgentCircuitData>(AgentCircuits.Values).FirstOrDefault(
                     circuitData => circuitData.AgentID == agentID);
-#endif
         }
 
         public void UpdateAgentData(AgentCircuitData agentData)

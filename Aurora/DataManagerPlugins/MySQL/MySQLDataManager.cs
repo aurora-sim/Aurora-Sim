@@ -25,16 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using Aurora.DataManager.Migration;
-using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 
 namespace Aurora.DataManager.MySQL
 {
@@ -629,13 +628,7 @@ namespace Aurora.DataManager.MySQL
 
         public override string ConCat(string[] toConcat)
         {
-#if (!ISWIN)
-            string returnValue = "concat(";
-            foreach (string s in toConcat)
-                returnValue = returnValue + (s + ",");
-#else
             string returnValue = toConcat.Aggregate("concat(", (current, s) => current + (s + ","));
-#endif
             return returnValue.Substring(0, returnValue.Length - 1) + ")";
         }
 
@@ -718,31 +711,7 @@ namespace Aurora.DataManager.MySQL
 
             Dictionary<string, ColumnDefinition> removedColumns = new Dictionary<string, ColumnDefinition>();
             Dictionary<string, ColumnDefinition> modifiedColumns = new Dictionary<string, ColumnDefinition>();
-#if (!ISWIN)
-            Dictionary<string, ColumnDefinition> addedColumns = new Dictionary<string, ColumnDefinition>();
-            foreach (ColumnDefinition column in columns)
-            {
-                if (!oldColumns.Contains(column)) addedColumns.Add(column.Name.ToLower(), column);
-            }
-            foreach (ColumnDefinition column in oldColumns)
-            {
-                if (!columns.Contains(column))
-                {
-                    if (addedColumns.ContainsKey(column.Name.ToLower()))
-                    {
-                        if (column.Name.ToLower() != addedColumns[column.Name.ToLower()].Name.ToLower() || column.Type != addedColumns[column.Name.ToLower()].Type)
-                        {
-                            modifiedColumns.Add(column.Name.ToLower(), addedColumns[column.Name.ToLower()]);
-                        }
-                        addedColumns.Remove(column.Name.ToLower());
-                    }
-                    else
-                    {
-                        removedColumns.Add(column.Name.ToLower(), column);
-                    }
-                }
-            }
-#else
+
             Dictionary<string, ColumnDefinition> addedColumns =
                 columns.Where(column => !oldColumns.Contains(column)).ToDictionary(column => column.Name.ToLower());
             foreach (ColumnDefinition column in oldColumns.Where(column => !columns.Contains(column)))
@@ -761,31 +730,9 @@ namespace Aurora.DataManager.MySQL
                     removedColumns.Add(column.Name.ToLower(), column);
                 }
             }
-#endif
-
 
             try
             {
-#if (!ISWIN)
-                foreach (ColumnDefinition column in addedColumns.Values)
-                {
-                    string addedColumnsQuery = "add `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + " ";
-                    string query = string.Format("alter table " + table + " " + addedColumnsQuery);
-                    ExecuteNonQuery(query, new Dictionary<string, object>());
-                }
-                foreach (ColumnDefinition column in modifiedColumns.Values)
-                {
-                    string modifiedColumnsQuery = "modify column `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + " ";
-                    string query = string.Format("alter table " + table + " " + modifiedColumnsQuery);
-                    ExecuteNonQuery(query, new Dictionary<string, object>());
-                }
-                foreach (ColumnDefinition column in removedColumns.Values)
-                {
-                    string droppedColumnsQuery = "drop `" + column.Name + "` ";
-                    string query = string.Format("alter table " + table + " " + droppedColumnsQuery);
-                    ExecuteNonQuery(query, new Dictionary<string, object>());
-                }
-#else
                 foreach (
                     string query in
                         addedColumns.Values.Select(
@@ -816,7 +763,6 @@ namespace Aurora.DataManager.MySQL
                 {
                     ExecuteNonQuery(query, new Dictionary<string, object>());
                 }
-#endif
             }
             catch (Exception e)
             {

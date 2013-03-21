@@ -25,15 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
-using Aurora.Framework.ConsoleFramework;
-using Aurora.Framework.Physics;
-using OdeAPI;
-using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Physics;
+using OpenMetaverse;
 
 //using Ode.NET;
 
@@ -198,19 +196,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Find closest contact and object.
             lock (m_contactResults)
             {
-#if (!ISWIN)
-                foreach (ContactResult cResult in m_contactResults)
-                {
-                    if (Vector3.Distance(req.Origin, cResult.Pos) < Vector3.Distance(req.Origin, closestcontact[0]))
-                    {
-                        closestcontact[0] = cResult.Pos;
-                        hitConsumerID = cResult.ConsumerID;
-                        distance = cResult.Depth;
-                        hitYN = true;
-                        snormal = cResult.Normal;
-                    }
-                }
-#else
                 foreach (
                     ContactResult cResult in
                         m_contactResults.Where(
@@ -224,7 +209,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     hitYN = true;
                     snormal = cResult.Normal;
                 }
-#endif
 
                 m_contactResults.Clear();
             }

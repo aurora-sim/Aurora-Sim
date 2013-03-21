@@ -27,14 +27,13 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.Estate
 {
     public class EstateMigrator_1 : Migrator
     {

@@ -130,19 +130,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (string strl in allowComp.Split(','))
             {
                 string strlan = strl.Trim(" \t".ToCharArray()).ToLower();
-#if (!ISWIN)
-                foreach (IScriptConverter converter in converters)
-                {
-                    if (converter.Name == strlan)
-                    {
-                        AllowedCompilers.Add(strlan, converter);
-                        if (converter.Name == DefaultCompileLanguage)
-                        {
-                            found = true;
-                        }
-                    }
-                }
-#else
                 foreach (IScriptConverter converter in converters.Where(converter => converter.Name == strlan))
                 {
                     AllowedCompilers.Add(strlan, converter);
@@ -151,7 +138,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         found = true;
                     }
                 }
-#endif
             }
             if (AllowedCompilers.Count == 0)
                 MainConsole.Instance.Error(
@@ -276,17 +262,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public IScriptConverter FindConverterForScript(string Script)
         {
-#if (!ISWIN)
-            IScriptConverter language = null;
-            foreach (IScriptConverter convert in converters)
-            {
-                if (Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture))
-                    language = convert;
-
-                if (language == null && convert.Name == DefaultCompileLanguage)
-                    language = convert;
-            }
-#else
             IScriptConverter language = converters.FirstOrDefault(convert => convert.Name == DefaultCompileLanguage);
             foreach (
                 IScriptConverter convert in
@@ -295,8 +270,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 language = convert;
             }
-#endif
-
             return language;
         }
 
@@ -307,15 +280,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             converter = null;
             string language = DefaultCompileLanguage;
 
-#if (!ISWIN)
-            foreach (IScriptConverter convert in converters)
-            {
-                if (Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture))
-                {
-                    language = convert.Name;
-                }
-            }
-#else
             foreach (
                 IScriptConverter convert in
                     converters.Where(
@@ -323,7 +287,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 language = convert.Name;
             }
-#endif
+
             if (!AllowedCompilers.ContainsKey(language))
             {
                 // Not allowed to compile to this language!

@@ -128,18 +128,6 @@ namespace Aurora.Modules.Archivers
 
             InventoryCollection contents = inventoryService.GetFolderContent(startFolder.Owner, startFolder.ID);
 
-#if (!ISWIN)
-            foreach (InventoryFolderBase folder in contents.Folders)
-            {
-                if (folder.Name == components[0])
-                {
-                    if (components.Length > 1)
-                        foundFolders.AddRange(FindFolderByPath(inventoryService, folder, components[1]));
-                    else
-                        foundFolders.Add(folder);
-                }
-            }
-#else
             foreach (InventoryFolderBase folder in contents.Folders.Where(folder => folder.Name == components[0]))
             {
                 if (components.Length > 1)
@@ -147,8 +135,6 @@ namespace Aurora.Modules.Archivers
                 else
                     foundFolders.Add(folder);
             }
-#endif
-
             return foundFolders;
         }
 
@@ -218,15 +204,7 @@ namespace Aurora.Modules.Archivers
 
 //                MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVE UTILS]: Found {0} items in FindItemByPath()", items.Count);
 
-#if (!ISWIN)
-                foreach (InventoryItemBase item in items)
-                {
-                    if (item.Name == components[0]) return item;
-                }
-                return null;
-#else
                 return items.FirstOrDefault(item => item.Name == components[0]);
-#endif
             }
             else
             {

@@ -290,28 +290,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             lock (m_appDomainLock)
             {
                 // Go through all
-#if (!ISWIN)
-                foreach (AppDomainStructure ads in appDomains)
-                {
-                    if (ads.ScriptsLoaded <= ads.ScriptsWaitingUnload)
-                    {
-                        // Remove from internal list
-                        appDomains.Remove(ads);
 
-                        try
-                        {
-                            // Unload
-                            if (ads != null) AppDomain.Unload(ads.CurrentAppDomain);
-                        }
-                        catch
-                        {
-                        }
-                        if (ads.CurrentAppDomain == currentAD.CurrentAppDomain)
-                            currentAD = null;
-                        ads.CurrentAppDomain = null;
-                    }
-                }
-#else
                 foreach (
                     AppDomainStructure ads in appDomains.Where(ads => ads.ScriptsLoaded <= ads.ScriptsWaitingUnload))
                 {
@@ -330,7 +309,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         currentAD = null;
                     ads.CurrentAppDomain = null;
                 }
-#endif
+
                 if (currentAD != null)
                 {
                     if (currentAD.ScriptsLoaded <= currentAD.ScriptsWaitingUnload)
@@ -382,24 +361,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else
                 {
                     // Lopp through all AppDomains
-#if (!ISWIN)
-                    foreach (AppDomainStructure ads in appDomains)
-                    {
-                        if (ads.CurrentAppDomain == ad)
-                        {
-                            // Found it
-                            ads.ScriptsWaitingUnload++;
-                            break;
-                        }
-                    }
-#else
                     foreach (AppDomainStructure ads in appDomains.Where(ads => ads.CurrentAppDomain == ad))
                     {
                         // Found it
                         ads.ScriptsWaitingUnload++;
                         break;
                     }
-#endif
                 }
             }
 

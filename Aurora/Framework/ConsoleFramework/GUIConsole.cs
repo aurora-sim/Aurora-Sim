@@ -173,22 +173,12 @@ namespace Aurora.Framework.ConsoleFramework
                 else
                 {
                     string ret1 = ret;
-#if (!ISWIN)
-                    foreach (char c in excludedCharacters)
-                    {
-                        if (ret1.Contains(c.ToString()))
-                        {
-                            Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                            itisdone = false;
-                        }
-                    }
-#else
+
                     foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
                     {
                         Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
                         itisdone = false;
                     }
-#endif
                 }
             }
             m_isPrompting = false;
@@ -203,13 +193,8 @@ namespace Aurora.Framework.ConsoleFramework
             m_promptOptions = new List<string>(options);
 
             bool itisdone = false;
-#if (!ISWIN)
-            string optstr = String.Empty;
-            foreach (string option in options)
-                optstr = optstr + (" " + option);
-#else
+
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
-#endif
 
             string temp = Prompt(prompt, defaultresponse);
             while (itisdone == false)

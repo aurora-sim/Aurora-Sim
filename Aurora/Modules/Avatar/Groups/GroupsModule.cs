@@ -921,15 +921,9 @@ namespace Aurora.Modules.Groups
                                           GroupMembershipData[] membershipArray;
                                           if (client.AgentId != dataForAgentID)
                                           {
-#if (!ISWIN)
-                                                    Predicate<GroupMembershipData> showInProfile = delegate(GroupMembershipData membership)
-                                                    {
-                                                        return membership.ListInProfile;
-                                                    };
-#else
                                               Predicate<GroupMembershipData> showInProfile =
                                                   membership => membership.ListInProfile;
-#endif
+
                                               membershipArray = membershipData.FindAll(showInProfile).ToArray();
                                           }
                                           else
@@ -989,15 +983,8 @@ namespace Aurora.Modules.Groups
 
             if (requestingClient.AgentId != dataForAgentID)
             {
-#if (!ISWIN)
-                Predicate<GroupMembershipData> showInProfile = delegate(GroupMembershipData membership)
-                {
-                    return membership.ListInProfile;
-                };
-#else
                 Predicate<GroupMembershipData> showInProfile =
                     membership => membership.ListInProfile;
-#endif
 
                 membershipArray = membershipData.FindAll(showInProfile).ToArray();
             }

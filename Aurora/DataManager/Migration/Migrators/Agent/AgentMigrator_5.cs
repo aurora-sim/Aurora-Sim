@@ -27,11 +27,10 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.Agent
 {
     public class AgentMigrator_5 : Migrator
     {

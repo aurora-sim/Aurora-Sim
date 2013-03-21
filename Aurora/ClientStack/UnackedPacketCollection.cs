@@ -141,27 +141,7 @@ namespace Aurora.ClientStack
             {
                 int now = Environment.TickCount & Int32.MaxValue;
                 int i = 0;
-#if (!ISWIN)
-                foreach (OutgoingPacket packet in m_packets.Values)
-                {
-                    if (packet.TickCount != 0)
-                    {
-                        if (now - packet.TickCount >= timeoutMS)
-                        {
-                            if (expiredPackets == null)
-                                expiredPackets = new List<OutgoingPacket>();
 
-                            // The TickCount will be set to the current time when the packet
-                            // is actually sent out again
-                            packet.TickCount = 0;
-
-                            expiredPackets.Add(packet);
-                            if (i++ > 50) // limit number of packets loop
-                                break;
-                        }
-                    }
-                }
-#else
                 foreach (
                     OutgoingPacket packet in
                         m_packets.Values.Where(packet => packet.TickCount != 0)
@@ -178,7 +158,6 @@ namespace Aurora.ClientStack
                     if (i++ > 50) // limit number of packets loop
                         break;
                 }
-#endif
             }
 
             if (expiredPackets != null && expiredPackets.Count > 0)

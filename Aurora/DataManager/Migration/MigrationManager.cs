@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Utilities;
@@ -52,25 +51,13 @@ namespace Aurora.DataManager.Migration
             this.migratorName = migratorName;
             this.validateTables = validateTables;
             List<IMigrator> allMigrators = AuroraModuleLoader.PickupModules<IMigrator>();
-#if (!ISWIN)
-            foreach (IMigrator m in allMigrators)
-            {
-                if (m.MigrationName != null)
-                {
-                    if (m.MigrationName == migratorName)
-                    {
-                        migrators.Add((Migrator)m);
-                    }
-                }
-            }
-#else
+
             foreach (
                 IMigrator m in
                     allMigrators.Where(m => m.MigrationName != null).Where(m => m.MigrationName == migratorName))
             {
                 migrators.Add((Migrator) m);
             }
-#endif
         }
 
         public Version LatestVersion
@@ -129,20 +116,9 @@ namespace Aurora.DataManager.Migration
                 return null;
             }
 
-#if (!ISWIN)
-            foreach (Migrator migrator in (from m in migrators orderby m.Version ascending select m))
-            {
-                if (migrator.Version > version)
-                {
-                    return migrator;
-                }
-            }
-            return null;
-#else
             return
                 (from m in migrators orderby m.Version ascending select m).FirstOrDefault(
                     migrator => migrator.Version > version);
-#endif
         }
 
         private Migrator GetLatestVersionMigrator()

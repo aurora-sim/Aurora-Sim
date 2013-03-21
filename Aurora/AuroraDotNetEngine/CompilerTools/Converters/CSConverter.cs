@@ -224,22 +224,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                                                  "OpenMetaverse.StructuredData.dll"));
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "Aurora.BotManager.dll"));
-#if (!ISWIN)
-                foreach (string line in m_includedAssemblies)
-                {
-                    if (!parameters.ReferencedAssemblies.Contains(line))
-                    {
-                        parameters.ReferencedAssemblies.Add(Path.Combine(rootPath, line));
-                    }
-                }
-#else
                 foreach (
                     string line in m_includedAssemblies.Where(line => !parameters.ReferencedAssemblies.Contains(line)))
                 {
                     parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                      line));
                 }
-#endif
             }
             bool complete = false;
             bool retried = false;

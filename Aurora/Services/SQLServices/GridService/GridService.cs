@@ -208,15 +208,7 @@ namespace Aurora.Services.SQLServices.GridService
 
             List<GridRegion> regions = m_Database.GetDefaultRegions(scopeIDs);
 
-#if (!ISWIN)
-            List<GridRegion> ret = new List<GridRegion>();
-            foreach (GridRegion r in regions)
-            {
-                if ((r.Flags & (int) RegionFlags.RegionOnline) != 0) ret.Add(r);
-            }
-#else
             List<GridRegion> ret = regions.Where(r => (r.Flags & (int) RegionFlags.RegionOnline) != 0).ToList();
-#endif
 
             MainConsole.Instance.DebugFormat("[GRID SERVICE]: GetDefaultRegions returning {0} regions", ret.Count);
             return ret;
@@ -292,15 +284,7 @@ namespace Aurora.Services.SQLServices.GridService
 
             List<GridRegion> regions = m_Database.GetFallbackRegions(scopeIDs, x, y);
 
-#if (!ISWIN)
-            List<GridRegion> ret = new List<GridRegion>();
-            foreach (GridRegion r in regions)
-            {
-                if ((r.Flags & (int) RegionFlags.RegionOnline) != 0) ret.Add(r);
-            }
-#else
             List<GridRegion> ret = regions.Where(r => (r.Flags & (int) RegionFlags.RegionOnline) != 0).ToList();
-#endif
 
             MainConsole.Instance.DebugFormat("[GRID SERVICE]: Fallback returned {0} regions", ret.Count);
             return ret;

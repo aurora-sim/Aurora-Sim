@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace PrimMesher
+namespace Aurora.Physics.Meshing
 {
     public struct Quat
     {

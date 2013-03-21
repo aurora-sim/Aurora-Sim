@@ -298,20 +298,10 @@ namespace Aurora.Region
                 {
                     m_rootPart.PhysActor.Selected = value;
                     // Pass it on to the children.
-#if (!ISWIN)
-                    foreach (SceneObjectPart child in ChildrenList)
-                    {
-                        if (child.PhysActor != null)
-                        {
-                            child.PhysActor.Selected = value;
-                        }
-                    }
-#else
                     foreach (SceneObjectPart child in ChildrenList.Where(child => child.PhysActor != null))
                     {
                         child.PhysActor.Selected = value;
                     }
-#endif
                 }
             }
         }
@@ -1469,15 +1459,7 @@ namespace Aurora.Region
             }
 
             // calculate things that ended colliding
-#if (!ISWIN)
-            List<uint> endedColliders = new List<uint>();
-            foreach (uint localId in m_lastColliders)
-            {
-                if (!thisHitColliders.Contains(localId)) endedColliders.Add(localId);
-            }
-#else
             List<uint> endedColliders = m_lastColliders.Where(localID => !thisHitColliders.Contains(localID)).ToList();
-#endif
 
             //add the items that started colliding this time to the last colliders list.
             foreach (uint localID in startedColliders)
@@ -3119,20 +3101,10 @@ namespace Aurora.Region
             //We have to send the root part first as the client wants it that way
             presence.AddUpdateToAvatar(RootPart, UpdateFlags);
 
-#if (!ISWIN)
-            foreach (SceneObjectPart part in m_partsList)
-            {
-                if (part != RootPart)
-                {
-                    presence.AddUpdateToAvatar(part, UpdateFlags);
-                }
-            }
-#else
             foreach (SceneObjectPart part in m_partsList.Where(part => part != RootPart))
             {
                 presence.AddUpdateToAvatar(part, UpdateFlags);
             }
-#endif
         }
 
         /// <summary>
@@ -3211,20 +3183,11 @@ namespace Aurora.Region
             {
                 if (m_parts.Count == 1)
                     return RootPart;
-#if (!ISWIN)
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (part.LinkNum == linknum)
-                    {
-                        return part;
-                    }
-                }
-#else
+
                 foreach (SceneObjectPart part in m_partsList.Where(part => part.LinkNum == linknum))
                 {
                     return part;
                 }
-#endif
             }
             //Check sitting avatars
             int count = m_parts.Count + 1;
@@ -3283,15 +3246,7 @@ namespace Aurora.Region
         /// <returns>null if a child part with the primID was not found</returns>
         public ISceneChildEntity GetChildPart(uint primID)
         {
-#if (!ISWIN)
-            foreach (ISceneChildEntity part in m_partsList)
-            {
-                if (part.LocalId == primID) return part;
-            }
-            return null;
-#else
             return m_partsList.Cast<ISceneChildEntity>().FirstOrDefault(part => part.LocalId == primID);
-#endif
         }
 
         #endregion
@@ -3359,18 +3314,6 @@ namespace Aurora.Region
                         linkPart.PhysActor.link(m_rootPart.PhysActor);
                 }
                 //rest of parts
-#if (!ISWIN)
-                foreach (SceneObjectPart part in objectGroupChildren)
-                {
-                    if (part.UUID != objectGroup.m_rootPart.UUID)
-                    {
-                        LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
-                        part.FixOffsetPosition(part.OffsetPosition, true);
-                        if (part.PhysActor != null && m_rootPart.PhysActor != null)
-                            part.PhysActor.link(m_rootPart.PhysActor);
-                    }
-                }
-#else
                 foreach (
                     SceneObjectPart part in objectGroupChildren.Where(part => part.UUID != objectGroup.m_rootPart.UUID))
                 {
@@ -3379,7 +3322,6 @@ namespace Aurora.Region
                     if (part.PhysActor != null && m_rootPart.PhysActor != null)
                         part.PhysActor.link(m_rootPart.PhysActor);
                 }
-#endif
             }
             // Here's the deal, this is ABSOLUTELY CRITICAL so the physics scene gets the update about the 
             // position of linkset prims.  IF YOU CHANGE THIS, YOU MUST TEST colliding with just linked and 
@@ -3714,18 +3656,7 @@ namespace Aurora.Region
                 bool needsPhysicalRebuild = ((SceneObjectPart) selectionPart).UpdatePrimFlags(UsePhysics, IsTemporary,
                                                                                               IsPhantom, IsVolumeDetect,
                                                                                               blocks);
-#if (!ISWIN)
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (selectionPart != part)
-                    {
-                        if (needsPhysicalRebuild)
-                            part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
-                        else
-                            needsPhysicalRebuild = part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
-                    }
-                }
-#else
+
                 foreach (SceneObjectPart part in m_partsList.Where(part => selectionPart != part))
                 {
                     if (needsPhysicalRebuild)
@@ -3734,7 +3665,7 @@ namespace Aurora.Region
                         needsPhysicalRebuild = part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom,
                                                                     IsVolumeDetect, null);
                 }
-#endif
+
                 if (needsPhysicalRebuild)
                     RebuildPhysicalRepresentation(true);
             }
@@ -3914,26 +3845,6 @@ namespace Aurora.Region
                 prevScale.Z *= z;
                 part.Resize(prevScale);
 
-#if (!ISWIN)
-                foreach (SceneObjectPart obPart in m_partsList)
-                {
-                    if (obPart.UUID != m_rootPart.UUID)
-                    {
-                        obPart.IgnoreUndoUpdate = true;
-                        Vector3 currentpos = new Vector3(obPart.OffsetPosition);
-                        currentpos.X *= x;
-                        currentpos.Y *= y;
-                        currentpos.Z *= z;
-                        Vector3 newSize = new Vector3(obPart.Scale);
-                        newSize.X *= x;
-                        newSize.Y *= y;
-                        newSize.Z *= z;
-                        obPart.Resize(newSize);
-                        obPart.UpdateOffSet(currentpos);
-                        obPart.IgnoreUndoUpdate = false;
-                    }
-                }
-#else
                 foreach (SceneObjectPart obPart in m_partsList.Where(obPart => obPart.UUID != m_rootPart.UUID))
                 {
                     obPart.IgnoreUndoUpdate = true;
@@ -3949,7 +3860,6 @@ namespace Aurora.Region
                     obPart.UpdateOffSet(currentpos);
                     obPart.IgnoreUndoUpdate = false;
                 }
-#endif
 
                 if (part.PhysActor != null)
                     part.PhysActor.Size = prevScale;
@@ -4059,24 +3969,13 @@ namespace Aurora.Region
                                                                                              .GetMaxRegionSize()),
                                                                                        (int) (TargetY + 256));
                         }
-#if (!ISWIN)
-                        GridRegion neighborRegion = null;
-                        foreach (GridRegion region in m_nearbyInfiniteRegions)
-                        {
-                            if (TargetX >= region.RegionLocX && TargetY >= region.RegionLocY && TargetX < (region.RegionLocX + region.RegionSizeX) && TargetY < (region.RegionLocY + region.RegionSizeY))
-                            {
-                                neighborRegion = region;
-                                break;
-                            }
-                        }
-#else
+
                         GridRegion neighborRegion =
                             m_nearbyInfiniteRegions.FirstOrDefault(
                                 region =>
                                 TargetX >= region.RegionLocX && TargetY >= region.RegionLocY &&
                                 TargetX < (region.RegionLocX + region.RegionSizeX) &&
                                 TargetY < (region.RegionLocY + region.RegionSizeY));
-#endif
 
                         if (neighborRegion != null)
                         {
@@ -4380,35 +4279,6 @@ namespace Aurora.Region
             if (m_rootPart.PhysActor != null)
                 m_rootPart.PhysActor.Orientation = m_rootPart.GetRotationOffset();
 
-#if (!ISWIN)
-            foreach (SceneObjectPart childPrim in m_partsList)
-            {
-                if (childPrim.UUID != m_rootPart.UUID)
-                {
-                    childPrim.StoreUndoState();
-                    childPrim.IgnoreUndoUpdate = true;
-
-                    // fix rotation
-                    // get in world coords
-                    Quaternion primsRot = old_global_group_rot*childPrim.RotationOffset;
-                    // set new offset as inverse of the one on root
-                    // so world is right
-                    primsRot = Quaternion.Inverse(new_global_group_rot)*primsRot;
-                    // just store it
-                    childPrim.SetRotationOffset(false, primsRot, false);
-
-                    // fix position offset
-                    Vector3 axPos = childPrim.OffsetPosition;
-                    axPos *= old_global_group_rot;
-                    axPos *= Quaternion.Inverse(new_global_group_rot);
-                    // store it and let physics know about both changes
-                    childPrim.FixOffsetPosition(axPos, true);
-
-                    childPrim.ScheduleTerseUpdate();
-                    childPrim.IgnoreUndoUpdate = false;
-                }
-            }
-#else
             foreach (SceneObjectPart childPrim in m_partsList.Where(childPrim => childPrim.UUID != m_rootPart.UUID))
             {
                 childPrim.StoreUndoState();
@@ -4433,7 +4303,6 @@ namespace Aurora.Region
                 childPrim.ScheduleTerseUpdate();
                 childPrim.IgnoreUndoUpdate = false;
             }
-#endif
 
             m_rootPart.ScheduleTerseUpdate();
         }

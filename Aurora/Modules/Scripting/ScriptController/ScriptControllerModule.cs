@@ -258,22 +258,6 @@ namespace Aurora.Modules.Scripting
                 {
                     scriptedcontrols.Clear();
 
-#if (!ISWIN)
-                    foreach (ControllerData c in controllerData)
-                    {
-                        ScriptControllers sc = new ScriptControllers
-                                                   {
-                                                       itemID = c.ItemID,
-                                                       part = m_sp.Scene.GetSceneObjectPart(c.ObjectID),
-                                                       ignoreControls = (ScriptControlled) c.IgnoreControls,
-                                                       eventControls = (ScriptControlled) c.EventControls
-                                                   };
-                        if (sc.part != null)
-                        {
-                            scriptedcontrols[sc.itemID] = sc;
-                        }
-                    }
-#else
                     foreach (ScriptControllers sc in controllerData.Select(c => new ScriptControllers
                                                                                     {
                                                                                         itemID = c.ItemID,
@@ -291,7 +275,6 @@ namespace Aurora.Modules.Scripting
                     {
                         scriptedcontrols[sc.itemID] = sc;
                     }
-#endif
                 }
             }
 

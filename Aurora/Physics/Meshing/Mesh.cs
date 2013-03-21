@@ -32,7 +32,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Aurora.Framework.Physics;
 using OpenMetaverse;
-using Aurora.Framework;
 using OSDArray = OpenMetaverse.StructuredData.OSDArray;
 using OSD = OpenMetaverse.StructuredData.OSD;
 
@@ -225,20 +224,6 @@ namespace Aurora.Physics.Meshing
                 m_verticesPtr != IntPtr.Zero)
                 throw new NotSupportedException("Attempt to TransformLinear a pinned Mesh");
 
-#if (!ISWIN)
-            foreach (Vertex v in m_vertices.Keys)
-            {
-                if (v != null)
-                {
-                    float x = v.X*matrix[0, 0] + v.Y*matrix[1, 0] + v.Z*matrix[2, 0];
-                    float y = v.X*matrix[0, 1] + v.Y*matrix[1, 1] + v.Z*matrix[2, 1];
-                    float z = v.X*matrix[0, 2] + v.Y*matrix[1, 2] + v.Z*matrix[2, 2];
-                    v.X = x + offset[0];
-                    v.Y = y + offset[1];
-                    v.Z = z + offset[2];
-                }
-            }
-#else
             foreach (Vertex v in m_vertices.Keys.Where(v => v != null))
             {
                 float x = v.X*matrix[0, 0] + v.Y*matrix[1, 0] + v.Z*matrix[2, 0];
@@ -248,7 +233,6 @@ namespace Aurora.Physics.Meshing
                 v.Y = y + offset[1];
                 v.Z = z + offset[2];
             }
-#endif
         }
 
         #endregion
@@ -401,19 +385,14 @@ namespace Aurora.Physics.Meshing
             if (path == null)
                 return;
             String fileName = name + "_" + title + ".raw";
-            String completePath = Path.Combine(path, fileName);
+            String completePath = System.IO.Path.Combine(path, fileName);
             StreamWriter sw = new StreamWriter(completePath);
-#if (!ISWIN)
-            foreach (Triangle s in m_triangles)
-            {
-                sw.WriteLine(s.ToStringRaw());
-            }
-#else
+
             foreach (string s in m_triangles.Select(t => t.ToStringRaw()))
             {
                 sw.WriteLine(s);
             }
-#endif
+
             sw.Close();
         }
 

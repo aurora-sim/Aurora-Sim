@@ -172,22 +172,9 @@ namespace Aurora.Modules.Entities.BuySell
                 case 3: // Sell contents
                     List<UUID> invList = part.Inventory.GetInventoryList();
 
-#if (!ISWIN)
-                    bool okToSell = true;
-                    foreach (UUID invId in invList)
-                    {
-                        TaskInventoryItem item1 = part.Inventory.GetInventoryItem(invId);
-                        if ((item1.CurrentPermissions & (uint) PermissionMask.Transfer) == 0)
-                        {
-                            okToSell = false;
-                            break;
-                        }
-                    }
-#else
                     bool okToSell =
                         invList.Select(invID => part.Inventory.GetInventoryItem(invID))
                                .All(item1 => (item1.CurrentPermissions & (uint) PermissionMask.Transfer) != 0);
-#endif
 
                     if (!okToSell)
                     {

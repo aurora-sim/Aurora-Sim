@@ -737,14 +737,9 @@ namespace Aurora.Services
         private string GetFileName(string id)
         {
             // Would it be faster to just hash the darn thing?
-#if (!ISWIN)
-            foreach (char invalidChar in m_InvalidChars)
-                id = id.Replace(invalidChar, '_');
-#else
             id = m_InvalidChars.Aggregate(id, (current, c) => current.Replace(c, '_'));
-#endif
 
-            string path = m_CacheDirectory;
+			string path = m_CacheDirectory;
             for (int p = 1; p <= m_CacheDirectoryTiers; p++)
             {
                 string pathPart = id.Substring((p - 1)*m_CacheDirectoryTierLen, m_CacheDirectoryTierLen);
@@ -895,15 +890,8 @@ namespace Aurora.Services
         /// <returns></returns>
         private int GetFileCacheCount(string dir)
         {
-#if (!ISWIN)
-            int sum = 0;
-            foreach (string subdir in Directory.GetDirectories(dir))
-                sum += GetFileCacheCount(subdir);
-            return Directory.GetFiles(dir).Length + sum;
-#else
             return Directory.GetFiles(dir).Length +
                    Directory.GetDirectories(dir).Sum(subdir => GetFileCacheCount(subdir));
-#endif
         }
 
         /// <summary>

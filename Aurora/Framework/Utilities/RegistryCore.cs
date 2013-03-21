@@ -131,15 +131,7 @@ namespace Aurora.Framework.Utilities
         {
             if (ModuleInterfaces.ContainsKey(typeof (T)))
             {
-#if (!ISWIN)
-                List<T> ret = new List<T>();
-
-                foreach (Object o in ModuleInterfaces[typeof(T)])
-                    ret.Add((T)o);
-                return ret.ToArray();
-#else
                 return ModuleInterfaces[typeof (T)].Select(o => (T) o).ToArray();
-#endif
             }
             else
             {
@@ -150,14 +142,7 @@ namespace Aurora.Framework.Utilities
         public Dictionary<Type, List<object>> GetInterfaces()
         {
             //Flatten the array
-#if (!ISWIN)
-            Dictionary<Type, List<object>> dictionary = new Dictionary<Type, List<object>>();
-            foreach (KeyValuePair<Type, List<object>> @interface in ModuleInterfaces)
-                dictionary.Add(@interface.Key, @interface.Value);
-            return dictionary;
-#else
             return ModuleInterfaces.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-#endif
         }
 
         public void RemoveAllInterfaces()

@@ -278,19 +278,7 @@ namespace Aurora.Modules.SimConsole
         {
             if (text == "")
                 return;
-#if (!ISWIN)
-            foreach (KeyValuePair<UUID, Access> kvp in m_authorizedParticipants)
-            {
-                if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
-                {
-                    if (m_userLogLevel.ContainsKey(kvp.Key) && MainConsole.Instance.CompareLogLevels(m_userLogLevel[kvp.Key], level))
-                    {
-                        //Send the EQM with the message to all people who have read access
-                        SendConsoleEventEQM(kvp.Key, text);
-                    }
-                }
-            }
-#else
+
             foreach (
                 KeyValuePair<UUID, Access> kvp in
                     m_authorizedParticipants.Where(kvp => kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
@@ -302,7 +290,6 @@ namespace Aurora.Modules.SimConsole
                 //Send the EQM with the message to all people who have read access
                 SendConsoleEventEQM(kvp.Key, text);
             }
-#endif
         }
 
         /// <summary>

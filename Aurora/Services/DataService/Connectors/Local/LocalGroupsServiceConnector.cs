@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.DatabaseInterfaces;
@@ -821,17 +820,9 @@ namespace Aurora.Services.DataService
             List<UUID> groupIDs = new List<UUID>();
             if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
             {
-#if (!ISWIN)
-                foreach (UUID GroupID in GroupIDs)
-                {
-                    if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ReceiveNotices))
-                        groupIDs.Add(GroupID);
-                }
-#else
                 groupIDs.AddRange(
                     GroupIDs.Where(
                         GroupID => CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ReceiveNotices)));
-#endif
             }
             else
             {
@@ -1764,19 +1755,9 @@ namespace Aurora.Services.DataService
             List<UUID> groupIDs = new List<UUID>();
             if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
             {
-#if (!ISWIN)
-                foreach (UUID GroupID in GroupIDs)
-                {
-                    if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ReceiveNotices))
-                    {
-                        groupIDs.Add(GroupID);
-                    }
-                }
-#else
                 groupIDs.AddRange(
                     GroupIDs.Where(
                         GroupID => CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ReceiveNotices)));
-#endif
             }
             else
             {

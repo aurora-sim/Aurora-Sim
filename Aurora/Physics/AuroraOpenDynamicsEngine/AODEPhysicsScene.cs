@@ -25,21 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
-using Aurora.Framework.ConsoleFramework;
-using Aurora.Framework.Modules;
-using Aurora.Framework.Physics;
-using Aurora.Framework.SceneInfo;
-using Aurora.Framework.Utilities;
-using Nini.Config;
-using OdeAPI;
-using OpenMetaverse;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
@@ -1696,35 +1694,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             List<AuroraODEPrim> collidingPrims = new List<AuroraODEPrim>();
             lock (_prims)
             {
-#if (!ISWIN)
-                foreach (AuroraODEPrim prm in _prims)
-                {
-                    if (prm.CollisionScore > 0)
-                    {
-                        if (!collidingPrims.Contains(prm))
-                        {
-                            collidingPrims.Add(prm);
-                        }
-                    }
-                }
-#else
                 foreach (
                     AuroraODEPrim prm in
                         _prims.Where(prm => prm.CollisionScore > 0).Where(prm => !collidingPrims.Contains(prm)))
                 {
                     collidingPrims.Add(prm);
                 }
-#endif
             }
             //Sort them by their score
-#if (!ISWIN)
-            collidingPrims.Sort(delegate(AuroraODEPrim a, AuroraODEPrim b)
-            {
-                return b.CollisionScore.CompareTo(a.CollisionScore);
-            });
-#else
             collidingPrims.Sort((a, b) => b.CollisionScore.CompareTo(a.CollisionScore));
-#endif
+
             //Limit to 25
             if (collidingPrims.Count > 25)
                 collidingPrims.RemoveRange(25, collidingPrims.Count - 25);

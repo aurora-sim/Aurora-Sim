@@ -937,46 +937,6 @@ namespace Aurora.ClientStack
 
 
             int i = 0;
-#if (!ISWIN)
-            foreach (GroupActiveProposals proposal in Proposals)
-            {
-                GroupActiveProposalItemReplyPacket.ProposalDataBlock ProposalData = new GroupActiveProposalItemReplyPacket
-                    .ProposalDataBlock
-                                                                                        {
-                                                                                            VoteCast =
-                                                                                                Utils.StringToBytes(
-                                                                                                    proposal.VoteCast),
-                                                                                            VoteID =
-                                                                                                new UUID(proposal.VoteID),
-                                                                                            VoteInitiator =
-                                                                                                new UUID(
-                                                                                                proposal.VoteInitiator),
-                                                                                            Majority =
-                                                                                                (float)Convert.ToDouble(
-                                                                                                    proposal.Majority),
-                                                                                            Quorum =
-                                                                                                Convert.ToInt32(
-                                                                                                    proposal.Quorum),
-                                                                                            TerseDateID =
-                                                                                                Utils.StringToBytes(
-                                                                                                    proposal.TerseDateID),
-                                                                                            StartDateTime =
-                                                                                                Utils.StringToBytes(
-                                                                                                    proposal.
-                                                                                                        StartDateTime),
-                                                                                            EndDateTime =
-                                                                                                Utils.StringToBytes(
-                                                                                                    proposal.EndDateTime),
-                                                                                            ProposalText =
-                                                                                                Utils.StringToBytes(
-                                                                                                    proposal.
-                                                                                                        ProposalText),
-                                                                                            AlreadyVoted = proposal.VoteAlreadyCast
-                                                                                        };
-                GAPIRP.ProposalData[i] = ProposalData;
-                i++;
-            }
-#else
             foreach (
                 GroupActiveProposalItemReplyPacket.ProposalDataBlock ProposalData in
                     Proposals.Select(Proposal => new GroupActiveProposalItemReplyPacket.ProposalDataBlock
@@ -996,7 +956,6 @@ namespace Aurora.ClientStack
                 GAPIRP.ProposalData[i] = ProposalData;
                 i++;
             }
-#endif
             OutPacket(GAPIRP, ThrottleOutPacketType.AvatarInfo);
         }
 
@@ -1031,21 +990,7 @@ namespace Aurora.ClientStack
 
             int i = 0;
             GVHIRP.VoteItem = new GroupVoteHistoryItemReplyPacket.VoteItemBlock[VoteItems.Length];
-#if (!ISWIN)
-            foreach (GroupVoteHistoryItem item in VoteItems)
-            {
-                GroupVoteHistoryItemReplyPacket.VoteItemBlock VoteItem = new GroupVoteHistoryItemReplyPacket.
-                    VoteItemBlock
-                                                                             {
-                                                                                 CandidateID = item.CandidateID,
-                                                                                 NumVotes = item.NumVotes,
-                                                                                 VoteCast =
-                                                                                     Utils.StringToBytes(item.VoteCast)
-                                                                             };
-                GVHIRP.VoteItem[i] = VoteItem;
-                i++;
-            }
-#else
+
             foreach (
                 GroupVoteHistoryItemReplyPacket.VoteItemBlock VoteItem in
                     VoteItems.Select(item => new GroupVoteHistoryItemReplyPacket.VoteItemBlock
@@ -1058,8 +1003,6 @@ namespace Aurora.ClientStack
                 GVHIRP.VoteItem[i] = VoteItem;
                 i++;
             }
-#endif
-
             OutPacket(GVHIRP, ThrottleOutPacketType.AvatarInfo);
         }
 
@@ -1745,33 +1688,15 @@ namespace Aurora.ClientStack
             //If the # of entities is not correct, we have to rebuild the entire packet
             if (brokenUpdate)
             {
-#if (!ISWIN)
-                int count = 0;
-                foreach (KillObjectPacket.ObjectDataBlock block in kill.ObjectData)
-                {
-                    if (block != null) count++;
-                }
-#else
                 int count = kill.ObjectData.Count(block => block != null);
-#endif
                 i = 0;
                 KillObjectPacket.ObjectDataBlock[] bk = new KillObjectPacket.ObjectDataBlock[count];
-#if (!ISWIN)
-                foreach (KillObjectPacket.ObjectDataBlock block in kill.ObjectData)
-                {
-                    if (block != null)
-                    {
-                        bk[i] = block;
-                        i++;
-                    }
-                }
-#else
+
                 foreach (KillObjectPacket.ObjectDataBlock block in kill.ObjectData.Where(block => block != null))
                 {
                     bk[i] = block;
                     i++;
                 }
-#endif
                 kill.ObjectData = bk;
             }
 
@@ -1791,14 +1716,7 @@ namespace Aurora.ClientStack
             KillObjectPacket kill = (KillObjectPacket) PacketPool.Instance.GetPacket(PacketType.KillObject);
             kill.ObjectData = new KillObjectPacket.ObjectDataBlock[entities.Length];
             int i = 0;
-#if (!ISWIN)
-            foreach (uint entity in entities)
-            {
-                KillObjectPacket.ObjectDataBlock block = new KillObjectPacket.ObjectDataBlock {ID = entity};
-                kill.ObjectData[i] = block;
-                i++;
-            }
-#else
+
             foreach (
                 KillObjectPacket.ObjectDataBlock block in
                     entities.Select(entity => new KillObjectPacket.ObjectDataBlock {ID = entity}))
@@ -1806,7 +1724,7 @@ namespace Aurora.ClientStack
                 kill.ObjectData[i] = block;
                 i++;
             }
-#endif
+
             kill.Header.Reliable = true;
             kill.Header.Zerocoded = true;
 
@@ -2402,21 +2320,6 @@ namespace Aurora.ClientStack
         public void SendAvatarPickerReply(AvatarPickerReplyAgentDataArgs AgentData, List<AvatarPickerReplyDataArgs> Data)
         {
             //construct the AvatarPickerReply packet.
-#if (!ISWIN)
-            List<AvatarPickerReplyPacket.DataBlock> list = new List<AvatarPickerReplyPacket.DataBlock>();
-            foreach (AvatarPickerReplyDataArgs arg in Data)
-                list.Add(new AvatarPickerReplyPacket.DataBlock
-                             {
-                                 AvatarID = arg.AvatarID, FirstName = arg.FirstName, LastName = arg.LastName
-                             });
-            AvatarPickerReplyPacket replyPacket = new AvatarPickerReplyPacket
-                                                      {
-                                                          AgentData =
-                                                              {AgentID = AgentData.AgentID, QueryID = AgentData.QueryID},
-                                                          Data =
-                                                              list.ToArray()
-                                                      };
-#else
             AvatarPickerReplyPacket replyPacket = new AvatarPickerReplyPacket
                                                       {
                                                           AgentData =
@@ -2429,7 +2332,7 @@ namespace Aurora.ClientStack
                                                                                          LastName = arg.LastName
                                                                                      }).ToArray()
                                                       };
-#endif
+
             //int i = 0;
             OutPacket(replyPacket, ThrottleOutPacketType.AvatarInfo);
         }
@@ -3680,13 +3583,7 @@ namespace Aurora.ClientStack
             aw.AgentData.SerialNum = (uint) serial;
             aw.AgentData.SessionID = m_sessionId;
 
-#if (!ISWIN)
-            int count = 0;
-            foreach (AvatarWearable t in wearables)
-                count += t.Count;
-#else
             int count = wearables.Sum(t => t.Count);
-#endif
 
             // TODO: don't create new blocks if recycling an old packet
             aw.WearableData = new AgentWearablesUpdatePacket.WearableDataBlock[count];
@@ -3897,18 +3794,6 @@ namespace Aurora.ClientStack
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-#if (!ISWIN)
-                OutPacket(packet, ThrottleOutPacketType.AvatarInfo, true, delegate(OutgoingPacket p)
-                {
-                    ResendPrimUpdates(terseUpdates, p);
-                },
-                delegate(OutgoingPacket p)
-                {
-                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
-                    if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
-                });
-#else
                 OutPacket(packet, ThrottleOutPacketType.AvatarInfo, true,
                           p => ResendPrimUpdates(terseUpdates, p),
                           delegate
@@ -3917,7 +3802,6 @@ namespace Aurora.ClientStack
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
                               });
-#endif
             }
         }
 
@@ -4188,18 +4072,6 @@ namespace Aurora.ClientStack
 
                 //ObjectUpdatePacket oo = new ObjectUpdatePacket(packet.ToBytes(), ref ii);
 
-#if (!ISWIN)
-                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
-                {
-                    ResendPrimUpdates(fullUpdates, p);
-                },
-                delegate(OutgoingPacket p)
-                {
-                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
-                    if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(fullUpdates);
-                });
-#else
                 OutPacket(packet, ThrottleOutPacketType.Task, true,
                           p => ResendPrimUpdates(fullUpdates, p),
                           delegate
@@ -4208,7 +4080,6 @@ namespace Aurora.ClientStack
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(fullUpdates);
                               });
-#endif
             }
 
             if (compressedUpdateBlocks.IsValueCreated)
@@ -4225,18 +4096,6 @@ namespace Aurora.ClientStack
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-#if (!ISWIN)
-                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
-                {
-                    ResendPrimUpdates(compressedUpdates, p);
-                },
-                delegate(OutgoingPacket p)
-                {
-                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
-                    if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(compressedUpdates);
-                });
-#else
                 OutPacket(packet, ThrottleOutPacketType.Task, true,
                           p => ResendPrimUpdates(compressedUpdates, p),
                           delegate
@@ -4245,7 +4104,6 @@ namespace Aurora.ClientStack
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(compressedUpdates);
                               });
-#endif
             }
 
             if (cachedUpdateBlocks.IsValueCreated)
@@ -4261,18 +4119,6 @@ namespace Aurora.ClientStack
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-#if (!ISWIN)
-                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
-                {
-                    ResendPrimUpdates(cachedUpdates, p);
-                },
-                delegate(OutgoingPacket p)
-                {
-                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
-                    if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(cachedUpdates);
-                });
-#else
                 OutPacket(packet, ThrottleOutPacketType.Task, true,
                           p => ResendPrimUpdates(cachedUpdates, p),
                           delegate
@@ -4281,7 +4127,6 @@ namespace Aurora.ClientStack
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(cachedUpdates);
                               });
-#endif
             }
 
             if (terseUpdateBlocks.IsValueCreated)
@@ -4303,18 +4148,6 @@ namespace Aurora.ClientStack
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
-#if (!ISWIN)
-                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
-                {
-                    ResendPrimUpdates(terseUpdates, p);
-                },
-                delegate(OutgoingPacket p)
-                {
-                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
-                    if (presence != null)
-                        presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
-                });
-#else
                 OutPacket(packet, ThrottleOutPacketType.Task, true,
                           p => ResendPrimUpdates(terseUpdates, p),
                           delegate
@@ -4323,7 +4156,6 @@ namespace Aurora.ClientStack
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
                               });
-#endif
             }
         }
 
@@ -4562,43 +4394,6 @@ namespace Aurora.ClientStack
             ObjectPropertiesPacket proper =
                 (ObjectPropertiesPacket) PacketPool.Instance.GetPacket(PacketType.ObjectProperties);
 
-#if (!ISWIN)
-            List<ObjectPropertiesPacket.ObjectDataBlock> list = new List<ObjectPropertiesPacket.ObjectDataBlock>();
-            foreach (IEntity part in parts)
-            {
-                ISceneChildEntity entity = part as ISceneChildEntity;
-                if (entity != null)
-                {
-                    ISceneChildEntity part1 = entity as ISceneChildEntity;
-                    list.Add(new ObjectPropertiesPacket.ObjectDataBlock
-                                 {
-                                     ItemID = part1.FromUserInventoryItemID,
-                                     CreationDate = (ulong) part1.CreationDate*1000000,
-                                     CreatorID = part1.CreatorID,
-                                     FolderID = UUID.Zero,
-                                     FromTaskID = UUID.Zero,
-                                     GroupID = part1.GroupID,
-                                     InventorySerial = (short) part1.InventorySerial,
-                                     LastOwnerID = part1.LastOwnerID,
-                                     ObjectID = part1.UUID,
-                                     OwnerID = part1.OwnerID == part1.GroupID ? UUID.Zero : part1.OwnerID,
-                                     TouchName = Util.StringToBytes256(part1.ParentEntity.RootChild.TouchName),
-                                     TextureID = new byte[0],
-                                     SitName = Util.StringToBytes256(part1.ParentEntity.RootChild.SitName),
-                                     Name = Util.StringToBytes256(part1.Name),
-                                     Description = Util.StringToBytes256(part1.Description),
-                                     OwnerMask = part1.ParentEntity.RootChild.OwnerMask,
-                                     NextOwnerMask = part1.ParentEntity.RootChild.NextOwnerMask,
-                                     GroupMask = part1.ParentEntity.RootChild.GroupMask,
-                                     EveryoneMask = part1.ParentEntity.RootChild.EveryoneMask,
-                                     BaseMask = part1.ParentEntity.RootChild.BaseMask,
-                                     SaleType = part1.ParentEntity.RootChild.ObjectSaleType,
-                                     SalePrice = part1.ParentEntity.RootChild.SalePrice
-                                 });
-                }
-            }
-            proper.ObjectData = list.ToArray();
-#else
             proper.ObjectData =
                 parts.OfType<ISceneChildEntity>()
                      .Select(entity => entity as ISceneChildEntity)
@@ -4627,7 +4422,6 @@ namespace Aurora.ClientStack
                                              SaleType = part.ParentEntity.RootChild.ObjectSaleType,
                                              SalePrice = part.ParentEntity.RootChild.SalePrice
                                          }).ToArray();
-#endif
 
             proper.Header.Zerocoded = true;
             bool hasFinishedSending = false; //Since this packet will be split up, we only want to finish sending once
@@ -4987,17 +4781,11 @@ namespace Aurora.ClientStack
             replyPacket.Data.LocalID = localLandID;
             replyPacket.Data.SequenceID = 0;
 
-#if (!ISWIN)
-            List<ParcelAccessListReplyPacket.ListBlock> list = new List<ParcelAccessListReplyPacket.ListBlock>();
-            foreach (UUID avatar in avatars)
-                list.Add(new ParcelAccessListReplyPacket.ListBlock {Flags = accessFlag, ID = avatar, Time = 0});
-            replyPacket.List = list.ToArray();
-#else
             replyPacket.List =
                 avatars.Select(
                     avatar => new ParcelAccessListReplyPacket.ListBlock {Flags = accessFlag, ID = avatar, Time = 0}).
                         ToArray();
-#endif
+
             replyPacket.Header.Zerocoded = true;
             OutPacket(replyPacket, ThrottleOutPacketType.Land);
         }
@@ -6490,13 +6278,7 @@ namespace Aurora.ClientStack
             UUID agentID = afriendpack.AgentData.AgentID;
             UUID transactionID = afriendpack.TransactionBlock.TransactionID;
 
-#if (!ISWIN)
-            List<UUID> callingCardFolders = new List<UUID>();
-            foreach (AcceptFriendshipPacket.FolderDataBlock t in afriendpack.FolderData)
-                callingCardFolders.Add(t.FolderID);
-#else
             List<UUID> callingCardFolders = afriendpack.FolderData.Select(t => t.FolderID).ToList();
-#endif
 
             FriendActionDelegate handlerApproveFriendRequest = OnApproveFriendRequest;
             if (handlerApproveFriendRequest != null)
@@ -6670,13 +6452,7 @@ namespace Aurora.ClientStack
             DeRezObject handlerDeRezObject = OnDeRezObject;
             if (handlerDeRezObject != null)
             {
-#if (!ISWIN)
-                List<uint> deRezIDs = new List<uint>();
-                foreach (DeRezObjectPacket.ObjectDataBlock data in DeRezPacket.ObjectData)
-                    deRezIDs.Add(data.ObjectLocalID);
-#else
                 List<uint> deRezIDs = DeRezPacket.ObjectData.Select(data => data.ObjectLocalID).ToList();
-#endif
 
                 // It just so happens that the values on the DeRezAction enumerator match the Destination
                 // values given by a Second Life client
@@ -6826,15 +6602,9 @@ namespace Aurora.ClientStack
 
             if (cachedtex.AgentData.SessionID != SessionId) return false;
 
-#if (!ISWIN)
-            List<CachedAgentArgs> args = new List<CachedAgentArgs>();
-            foreach (AgentCachedTexturePacket.WearableDataBlock t in cachedtex.WearableData)
-                args.Add(new CachedAgentArgs {ID = t.ID, TextureIndex = t.TextureIndex});
-#else
             List<CachedAgentArgs> args =
                 cachedtex.WearableData.Select(t => new CachedAgentArgs {ID = t.ID, TextureIndex = t.TextureIndex}).
                           ToList();
-#endif
 
             AgentCachedTextureRequest actr = OnAgentCachedTextureRequest;
             if (actr != null)
@@ -6885,13 +6655,7 @@ namespace Aurora.ClientStack
                 #endregion
 
                 AvatarWearingArgs wearingArgs = new AvatarWearingArgs();
-#if (!ISWIN)
-                foreach (AgentIsNowWearingPacket.WearableDataBlock t in nowWearing.WearableData)
-                {
-                    AvatarWearingArgs.Wearable wearable = new AvatarWearingArgs.Wearable(t.ItemID, t.WearableType);
-                    wearingArgs.NowWearing.Add(wearable);
-                }
-#else
+
                 foreach (
                     AvatarWearingArgs.Wearable wearable in
                         nowWearing.WearableData.Select(t => new AvatarWearingArgs.Wearable(t.ItemID,
@@ -6899,7 +6663,6 @@ namespace Aurora.ClientStack
                 {
                     wearingArgs.NowWearing.Add(wearable);
                 }
-#endif
 
                 AvatarNowWearing handlerAvatarNowWearing = OnAvatarNowWearing;
                 if (handlerAvatarNowWearing != null)
@@ -7708,14 +7471,10 @@ namespace Aurora.ClientStack
             #endregion
 
             ObjectSelect handlerObjectSelect = null;
-#if (!ISWIN)
-            List<uint> LocalIDs = new List<uint>();
-            foreach (ObjectSelectPacket.ObjectDataBlock t in incomingselect.ObjectData)
-                LocalIDs.Add(t.ObjectLocalID);
-#else
-            List<uint> LocalIDs = incomingselect.ObjectData.Select(t => t.ObjectLocalID).ToList();
-#endif
-            handlerObjectSelect = OnObjectSelect;
+            
+			List<uint> LocalIDs = incomingselect.ObjectData.Select(t => t.ObjectLocalID).ToList();
+
+			handlerObjectSelect = OnObjectSelect;
             if (handlerObjectSelect != null)
             {
                 handlerObjectSelect(LocalIDs, this);
@@ -7892,21 +7651,6 @@ namespace Aurora.ClientStack
                 List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
                 if ((grab.SurfaceInfo != null) && (grab.SurfaceInfo.Length > 0))
                 {
-#if (!ISWIN)
-                    foreach (ObjectGrabPacket.SurfaceInfoBlock surfaceInfo in grab.SurfaceInfo)
-                    {
-                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs
-                                                        {
-                                                            Binormal = surfaceInfo.Binormal,
-                                                            FaceIndex = surfaceInfo.FaceIndex,
-                                                            Normal = surfaceInfo.Normal,
-                                                            Position = surfaceInfo.Position,
-                                                            STCoord = surfaceInfo.STCoord,
-                                                            UVCoord = surfaceInfo.UVCoord
-                                                        };
-                        touchArgs.Add(arg);
-                    }
-#else
                     touchArgs.AddRange(grab.SurfaceInfo.Select(surfaceInfo => new SurfaceTouchEventArgs
                                                                                   {
                                                                                       Binormal = surfaceInfo.Binormal,
@@ -7916,7 +7660,6 @@ namespace Aurora.ClientStack
                                                                                       STCoord = surfaceInfo.STCoord,
                                                                                       UVCoord = surfaceInfo.UVCoord
                                                                                   }));
-#endif
                 }
                 handlerGrabObject(grab.ObjectData.LocalID, grab.ObjectData.GrabOffset, this, touchArgs);
             }
@@ -7945,21 +7688,6 @@ namespace Aurora.ClientStack
                 List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
                 if ((grabUpdate.SurfaceInfo != null) && (grabUpdate.SurfaceInfo.Length > 0))
                 {
-#if (!ISWIN)
-                    foreach (ObjectGrabUpdatePacket.SurfaceInfoBlock surfaceInfo in grabUpdate.SurfaceInfo)
-                    {
-                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs
-                                                        {
-                                                            Binormal = surfaceInfo.Binormal,
-                                                            FaceIndex = surfaceInfo.FaceIndex,
-                                                            Normal = surfaceInfo.Normal,
-                                                            Position = surfaceInfo.Position,
-                                                            STCoord = surfaceInfo.STCoord,
-                                                            UVCoord = surfaceInfo.UVCoord
-                                                        };
-                        touchArgs.Add(arg);
-                    }
-#else
                     touchArgs.AddRange(grabUpdate.SurfaceInfo.Select(surfaceInfo => new SurfaceTouchEventArgs
                                                                                         {
                                                                                             Binormal =
@@ -7974,7 +7702,6 @@ namespace Aurora.ClientStack
                                                                                             UVCoord =
                                                                                                 surfaceInfo.UVCoord
                                                                                         }));
-#endif
                 }
                 handlerGrabUpdate(grabUpdate.ObjectData.ObjectID, grabUpdate.ObjectData.GrabOffsetInitial,
                                   grabUpdate.ObjectData.GrabPosition, this, touchArgs);
@@ -8003,19 +7730,6 @@ namespace Aurora.ClientStack
                 List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
                 if ((deGrab.SurfaceInfo != null) && (deGrab.SurfaceInfo.Length > 0))
                 {
-#if (!ISWIN)
-                    foreach (ObjectDeGrabPacket.SurfaceInfoBlock surfaceInfo in deGrab.SurfaceInfo)
-                    {
-                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs();
-                        arg.Binormal = surfaceInfo.Binormal;
-                        arg.FaceIndex = surfaceInfo.FaceIndex;
-                        arg.Normal = surfaceInfo.Normal;
-                        arg.Position = surfaceInfo.Position;
-                        arg.STCoord = surfaceInfo.STCoord;
-                        arg.UVCoord = surfaceInfo.UVCoord;
-                        touchArgs.Add(arg);
-                    }
-#else
                     touchArgs.AddRange(deGrab.SurfaceInfo.Select(surfaceInfo => new SurfaceTouchEventArgs
                                                                                     {
                                                                                         Binormal = surfaceInfo.Binormal,
@@ -8026,7 +7740,6 @@ namespace Aurora.ClientStack
                                                                                         STCoord = surfaceInfo.STCoord,
                                                                                         UVCoord = surfaceInfo.UVCoord
                                                                                     }));
-#endif
                 }
                 handlerDeGrabObject(deGrab.ObjectData.LocalID, this, touchArgs);
             }
@@ -9685,14 +9398,6 @@ namespace Aurora.ClientStack
 
             #endregion
 
-#if (!ISWIN)
-            List<ParcelManager.ParcelAccessEntry> entries = new List<ParcelManager.ParcelAccessEntry>();
-            foreach (ParcelAccessListUpdatePacket.ListBlock block in updatePacket.List)
-                entries.Add(new ParcelManager.ParcelAccessEntry
-                                {
-                                    AgentID = block.ID, Flags = (AccessList) block.Flags, Time = new DateTime()
-                                });
-#else
             List<ParcelManager.ParcelAccessEntry> entries =
                 updatePacket.List.Select(block => new ParcelManager.ParcelAccessEntry
                                                       {
@@ -9700,7 +9405,6 @@ namespace Aurora.ClientStack
                                                           Flags = (AccessList) block.Flags,
                                                           Time = new DateTime()
                                                       }).ToList();
-#endif
 
             ParcelAccessListUpdateRequest handlerParcelAccessListUpdateRequest = OnParcelAccessListUpdateRequest;
             if (handlerParcelAccessListUpdateRequest != null)
@@ -9863,13 +9567,7 @@ namespace Aurora.ClientStack
 
             #endregion
 
-#if (!ISWIN)
-            List<UUID> returnIDs = new List<UUID>();
-            foreach (ParcelSelectObjectsPacket.ReturnIDsBlock rb in selectPacket.ReturnIDs)
-                returnIDs.Add(rb.ReturnID);
-#else
             List<UUID> returnIDs = selectPacket.ReturnIDs.Select(rb => rb.ReturnID).ToList();
-#endif
 
             ParcelSelectObjects handlerParcelSelectObjects = OnParcelSelectObjects;
 
@@ -10253,20 +9951,12 @@ namespace Aurora.ClientStack
                 case "estatechangecovenantid":
                     if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
-#if (!ISWIN)
-                        foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
-                        {
-                            UUID newCovenantID = new UUID(Utils.BytesToString(block.Parameter));
-                            OnEstateChangeCovenantRequest(this, newCovenantID);
-                        }
-#else
                         foreach (
                             UUID newCovenantID in
                                 messagePacket.ParamList.Select(block => new UUID(Utils.BytesToString(block.Parameter))))
                         {
                             OnEstateChangeCovenantRequest(this, newCovenantID);
                         }
-#endif
                     }
                     return true;
                 case "estateaccessdelta": // Estate access delta manages the banlist and allow list too.
@@ -10449,14 +10139,9 @@ namespace Aurora.ClientStack
                 case "telehub":
                     if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
-#if (!ISWIN)
-                        List<string> Parameters = new List<string>();
-                        foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
-                            Parameters.Add(Utils.BytesToString(block.Parameter));
-#else
                         List<string> Parameters =
                             messagePacket.ParamList.Select(block => Utils.BytesToString(block.Parameter)).ToList();
-#endif
+
                         GodlikeMessage handlerEstateTelehubRequest = OnEstateTelehubRequest;
                         if (handlerEstateTelehubRequest != null)
                         {
@@ -10639,14 +10324,10 @@ namespace Aurora.ClientStack
             #endregion
 
             GodlikeMessage handlerGodlikeMessage = OnGodlikeMessage;
-#if (!ISWIN)
-            List<string> Parameters = new List<string>();
-            foreach (GodlikeMessagePacket.ParamListBlock block in GodlikeMessage.ParamList)
-                Parameters.Add(Utils.BytesToString(block.Parameter));
-#else
+
             List<string> Parameters =
                 GodlikeMessage.ParamList.Select(block => Utils.BytesToString(block.Parameter)).ToList();
-#endif
+
             if (handlerGodlikeMessage != null)
             {
                 handlerGodlikeMessage(this,
@@ -10953,13 +10634,7 @@ namespace Aurora.ClientStack
 
             #endregion
 
-#if (!ISWIN)
-            List<uint> localIDs = new List<uint>();
-            foreach (ObjectOwnerPacket.ObjectDataBlock d in objectOwnerPacket.ObjectData)
-                localIDs.Add(d.ObjectLocalID);
-#else
             List<uint> localIDs = objectOwnerPacket.ObjectData.Select(d => d.ObjectLocalID).ToList();
-#endif
 
             ObjectOwner handlerObjectOwner = OnObjectOwner;
             if (handlerObjectOwner != null)
@@ -11210,21 +10885,9 @@ namespace Aurora.ClientStack
 
             if (handlerParcelDisableObjectsRequest != null)
             {
-#if (!ISWIN)
-                List<UUID> list = new List<UUID>();
-                foreach (ParcelDisableObjectsPacket.TaskIDsBlock block in aPacket.TaskIDs)
-                    list.Add(block.TaskID);
-                List<UUID> list1 = new List<UUID>();
-                foreach (ParcelDisableObjectsPacket.OwnerIDsBlock block in aPacket.OwnerIDs)
-                    list1.Add(block.OwnerID);
-                handlerParcelDisableObjectsRequest(aPacket.ParcelData.LocalID, aPacket.ParcelData.ReturnType,
-                                                   list1.ToArray(),
-                                                   list.ToArray(), this);
-#else
                 handlerParcelDisableObjectsRequest(aPacket.ParcelData.LocalID, aPacket.ParcelData.ReturnType,
                                                    aPacket.OwnerIDs.Select(block => block.OwnerID).ToArray(),
                                                    aPacket.TaskIDs.Select(block => block.TaskID).ToArray(), this);
-#endif
                 return true;
             }
             return false;
@@ -13308,13 +12971,7 @@ namespace Aurora.ClientStack
             SetFollowCamPropertiesPacket.CameraPropertyBlock[] camPropBlock =
                 new SetFollowCamPropertiesPacket.CameraPropertyBlock[parameters.Count];
             uint idx = 0;
-#if (!ISWIN)
-            foreach (KeyValuePair<int, float> pair in parameters)
-            {
-                SetFollowCamPropertiesPacket.CameraPropertyBlock block = new SetFollowCamPropertiesPacket.CameraPropertyBlock {Type = pair.Key, Value = pair.Value};
-                camPropBlock[idx++] = block;
-            }
-#else
+
             foreach (
                 SetFollowCamPropertiesPacket.CameraPropertyBlock block in
                     parameters.Select(
@@ -13323,7 +12980,7 @@ namespace Aurora.ClientStack
             {
                 camPropBlock[idx++] = block;
             }
-#endif
+
             packet.CameraProperty = camPropBlock;
             OutPacket(packet, ThrottleOutPacketType.AvatarInfo);
         }

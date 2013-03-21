@@ -844,19 +844,8 @@ namespace Aurora.Framework.Utilities
             if (bytes.Length == 0) return String.Empty;
 
             StringBuilder output = new StringBuilder();
-#if (!ISWIN)
-            bool printable = true;
-            foreach (byte t in bytes)
-            {
-                if ((t < 0x20 || t > 0x7E) && t != 0x09 && t != 0x0D && t != 0x0A && t != 0x00)
-                {
-                    printable = false;
-                    break;
-                }
-            }
-#else
+
             bool printable = bytes.All(t => (t >= 0x20 && t <= 0x7E) || t == 0x09 || t == 0x0D || t == 0x0A || t == 0x00);
-#endif
 
             if (printable)
             {
@@ -1649,12 +1638,7 @@ namespace Aurora.Framework.Utilities
 
                     if (dirs.Length != 0)
                     {
-#if (!ISWIN)
-                        foreach (string dir in dirs)
-                            addpaths.Add(Path.Combine(path, dir));
-#else
                         addpaths.AddRange(dirs.Select(dir => Path.Combine(path, dir)));
-#endif
                     }
 
                     // Only add files if that is the last path component
@@ -1686,15 +1670,7 @@ namespace Aurora.Framework.Utilities
             }
             paths.Add(baseDir);
 
-#if (!ISWIN)
-            List<string> list = new List<string>();
-            foreach (string p in paths)
-                foreach (string file in Directory.GetFiles(p, endFind))
-                    list.Add(file);
-            return list.ToArray();
-#else
             return paths.SelectMany(p => Directory.GetFiles(p, endFind)).ToArray();
-#endif
         }
 
         public static byte[] StringToBytes256(string str, params object[] args)
@@ -2738,22 +2714,11 @@ namespace Aurora.Framework.Utilities
 
             if (hosts != null)
             {
-#if (!ISWIN)
-                foreach (IPAddress host in hosts)
-                {
-                    if (host.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        m_dnsCache.Add(dnsAddress, host, 30*60 /*30mins*/);
-                        return host;
-                    }
-                }
-#else
                 foreach (IPAddress host in hosts.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
                     m_dnsCache.Add(dnsAddress, host, 30*60 /*30mins*/);
                     return host;
                 }
-#endif
 
                 if (hosts.Length > 0)
                 {
@@ -2802,15 +2767,6 @@ namespace Aurora.Framework.Utilities
                 }
             }
 
-#if (!ISWIN)
-            foreach (IPAddress host in iplist)
-            {
-                if (!IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return host;
-                }
-            }
-#else
             foreach (
                 IPAddress host in
                     iplist.Where(host => !IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
@@ -2818,24 +2774,14 @@ namespace Aurora.Framework.Utilities
             {
                 return host;
             }
-#endif
 
             if (iplist.Length > 0)
             {
-#if (!ISWIN)
-                foreach (IPAddress host in iplist)
-                {
-                    if (host.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        return host;
-                    }
-                }
-#else
                 foreach (IPAddress host in iplist.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
                     return host;
                 }
-#endif
+
                 // Well all else failed...
                 return iplist[0];
             }

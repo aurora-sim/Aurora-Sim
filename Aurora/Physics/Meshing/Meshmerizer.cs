@@ -35,7 +35,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenMetaverse.StructuredData;
-using PrimMesher;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -43,7 +42,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using zlib;
-using Path = System.IO.Path;
 
 namespace Aurora.Physics.Meshing
 {
@@ -426,7 +424,7 @@ namespace Aurora.Physics.Meshing
                 {
                     if (cacheSculptMaps && primShape.SculptTexture != UUID.Zero)
                     {
-                        decodedSculptFileName = Path.Combine(decodedSculptMapPath,
+                        decodedSculptFileName = System.IO.Path.Combine(decodedSculptMapPath,
                                                              "smap_" + primShape.SculptTexture.ToString());
                         try
                         {

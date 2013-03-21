@@ -397,17 +397,7 @@ namespace Aurora.Modules.Land
         protected void CheckPrimForTemperary()
         {
             HashSet<ISceneEntity> entitiesToRemove = new HashSet<ISceneEntity>();
-#if (!ISWIN)
-            foreach (ISceneEntity entity in m_entitiesInAutoReturnQueue)
-            {
-                if (entity.RootChild.Expires <= DateTime.Now)
-                {
-                    entitiesToRemove.Add(entity);
-                    //Temporary objects don't get a reason, they return quietly
-                    AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
-                }
-            }
-#else
+
             foreach (
                 ISceneEntity entity in
                     m_entitiesInAutoReturnQueue.Where(entity => entity.RootChild.Expires <= DateTime.Now))
@@ -416,7 +406,7 @@ namespace Aurora.Modules.Land
                 //Temporary objects don't get a reason, they return quietly
                 AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
             }
-#endif
+
             foreach (ISceneEntity entity in entitiesToRemove)
             {
                 m_entitiesInAutoReturnQueue.Remove(entity);
@@ -593,15 +583,7 @@ namespace Aurora.Modules.Land
 
         public ILandObject GetLandObject(UUID GlobalID)
         {
-#if (!ISWIN)
-            foreach (ILandObject land in AllParcels())
-            {
-                if (land.LandData.GlobalID == GlobalID) return land;
-            }
-            return null;
-#else
             return AllParcels().FirstOrDefault(land => land.LandData.GlobalID == GlobalID);
-#endif
         }
 
         public ILandObject GetLandObject(float x, float y)
@@ -723,38 +705,6 @@ namespace Aurora.Modules.Land
                 avatar.CurrentParcel.SendLandUpdateToClient(avatar.ControllingClient);
 
                 //Gotta kill all avatars outside the parcel
-#if (!ISWIN)
-                foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences())
-                {
-                    if (sp.UUID != avatar.UUID && !sp.IsChildAgent)
-                    {
-                        if (sp.CurrentParcel != null)
-                        {
-                            if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID) //Send full updates for those in the sim
-                            {
-                                if (avatar.CurrentParcel.LandData.Private || (oldParcel != null && oldParcel.LandData.Private))
-                                    //Either one, we gotta send an update
-                                {
-                                    sp.SceneViewer.RemoveAvatarFromView(avatar);
-                                    avatar.SceneViewer.RemoveAvatarFromView(sp);
-                                    sp.SceneViewer.QueuePresenceForFullUpdate(avatar, true);
-                                    avatar.SceneViewer.QueuePresenceForFullUpdate(sp, true);
-                                }
-                            }
-                            else //Kill those outside the parcel
-                            {
-                                if (sp.CurrentParcel.LandData.Private || avatar.CurrentParcel.LandData.Private)
-                                {
-                                    sp.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {avatar});
-                                    avatar.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {sp});
-                                    sp.SceneViewer.RemoveAvatarFromView(avatar);
-                                    avatar.SceneViewer.RemoveAvatarFromView(sp);
-                                }
-                            }
-                        }
-                    }
-                }
-#else
                 foreach (
                     IScenePresence sp in
                         avatar.Scene.Entities.GetPresences()
@@ -785,7 +735,6 @@ namespace Aurora.Modules.Land
                         }
                     }
                 }
-#endif
 
                 if (UseDwell)
                     avatar.CurrentParcel.LandData.Dwell += 1;
@@ -1273,16 +1222,6 @@ namespace Aurora.Modules.Land
             }
             ILandObject masterLandObject = selectedLandObjects[0];
 
-#if (!ISWIN)
-            foreach (ILandObject p in selectedLandObjects)
-            {
-                if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) || (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide && !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false)))
-                {
-                    client.SendAlertMessage("Permissions: you cannot join these parcels");
-                    return;
-                }
-            }
-#else
             if (selectedLandObjects.Any(p => !m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) ||
                                              (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
                                               !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false))))
@@ -1290,7 +1229,6 @@ namespace Aurora.Modules.Land
                 client.SendAlertMessage("Permissions: you cannot join these parcels");
                 return;
             }
-#endif
 
             m_hasSentParcelOverLay.Clear(); //Clear everyone out
             selectedLandObjects.RemoveAt(0);

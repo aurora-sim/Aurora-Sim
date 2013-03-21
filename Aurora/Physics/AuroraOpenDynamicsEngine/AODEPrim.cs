@@ -39,16 +39,14 @@
  * settings use.
  */
 
-using Aurora.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Physics;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Utilities;
-using OdeAPI;
 using OpenMetaverse;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 //using Ode.NET;
 
@@ -991,20 +989,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 lock (childrenPrim)
                 {
-#if (!ISWIN)
-                    foreach (AuroraODEPrim prm in prim.childrenPrim)
-                    {
-                        if (!childrenPrim.Contains(prm))
-                        {
-                            childrenPrim.Add(prm);
-                        }
-                    }
-#else
                     foreach (AuroraODEPrim prm in prim.childrenPrim.Where(prm => !childrenPrim.Contains(prm)))
                     {
                         childrenPrim.Add(prm);
                     }
-#endif
+
                     if (!childrenPrim.Contains(prim)) // must allow full reconstruction
                         childrenPrim.Add(prim);
                 }

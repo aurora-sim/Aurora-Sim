@@ -68,15 +68,8 @@ namespace Aurora.Modules.Voice
         {
             if (m_enabled)
             {
-#if (!ISWIN)
-                scene.EventManager.OnRegisterCaps += delegate(UUID agentID, IHttpServer server)
-                {
-                    return OnRegisterCaps(scene, agentID, server);
-                };
-#else
                 scene.EventManager.OnRegisterCaps +=
                     (agentID, server) => OnRegisterCaps(scene, agentID, server);
-#endif
             }
         }
 

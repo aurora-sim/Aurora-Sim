@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Aurora.Framework;
+using Aurora.DataManager.Migration;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
@@ -76,19 +76,6 @@ namespace Aurora.DataManager
             if (results.Count > 0)
             {
                 Version[] highestVersion = {null};
-#if (!ISWIN)
-                foreach (string result in results)
-                {
-                    if (result.Trim() != string.Empty)
-                    {
-                        var version = new Version(result);
-                        if (highestVersion[0] == null || version > highestVersion[0])
-                        {
-                            highestVersion[0] = version;
-                        }
-                    }
-                }
-#else
                 foreach (
                     var version in
                         results.Where(result => result.Trim() != string.Empty)
@@ -97,7 +84,6 @@ namespace Aurora.DataManager
                 {
                     highestVersion[0] = version;
                 }
-#endif
                 return highestVersion[0];
             }
 
@@ -207,21 +193,10 @@ namespace Aurora.DataManager
             {
                 if (!newColumns.Contains(columnDefinition))
                 {
-#if (!ISWIN)
-                    ColumnDefinition thisDef = null;
-                    foreach (ColumnDefinition extractedDefinition in newColumns)
-                    {
-                        if (extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower())
-                        {
-                            thisDef = extractedDefinition;
-                            break;
-                        }
-                    }
-#else
                     ColumnDefinition thisDef =
                         newColumns.FirstOrDefault(
                             extractedDefinition => extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower());
-#endif
+
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {

@@ -673,16 +673,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.TaskInventory)
             {
-#if (!ISWIN)
-                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
-                {
-                    if (inv.Value.Type == 10 && inv.Value.ItemID == m_itemID)
-                    {
-                        invItemID = inv.Key;
-                        break;
-                    }
-                }
-#else
                 foreach (
                     KeyValuePair<UUID, TaskInventoryItem> inv in
                         m_host.TaskInventory.Where(inv => inv.Value.Type == 10 && inv.Value.ItemID == m_itemID))
@@ -690,7 +680,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     invItemID = inv.Key;
                     break;
                 }
-#endif
             }
 
             return invItemID;

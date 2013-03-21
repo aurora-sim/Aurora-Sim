@@ -31,7 +31,6 @@ using Aurora.Framework.Physics;
 using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Physics.BasicPhysicsPlugin
 {

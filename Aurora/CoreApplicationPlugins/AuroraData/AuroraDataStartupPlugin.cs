@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Aurora.Services.DataService;
 using Nini.Config;
 
-namespace Aurora.CoreApplicationPlugins
+namespace Aurora.CoreApplicationPlugins.AuroraData
 {
     public class AuroraDataStartupPlugin : IApplicationPlugin
     {

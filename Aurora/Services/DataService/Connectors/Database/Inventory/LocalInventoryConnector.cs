@@ -32,7 +32,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using Aurora.Framework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Inventory;
@@ -314,14 +313,11 @@ namespace Aurora.Services.DataService
                     {
                         addToCount = false;
                         query = String.Format("where {0} = '{1}' and (", "avatarID", AgentID);
-#if (!ISWIN)
-                    foreach (UUID item in moreLinkedItems)
-                        query = query + String.Format("{0} = '{1}' or ", "inventoryID", item);
-#else
+
                         query = moreLinkedItems.Aggregate(query,
                                                           (current, t) =>
                                                           current + String.Format("{0} = '{1}' or ", "inventoryID", t));
-#endif
+
                         query = query.Remove(query.Length - 4, 4);
                         query += ")";
                         moreLinkedItems.Clear();

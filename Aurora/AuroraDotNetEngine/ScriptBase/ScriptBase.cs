@@ -59,16 +59,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 if (m_lastStateSaveValues == null)
                     m_lastStateSaveValues = m_InitialValues;
                 Dictionary<string, object> vars = GetVars();
-#if(!ISWIN)
-                foreach (KeyValuePair<string, object> kvp in vars)
-                {
-                    if (m_lastStateSaveValues[kvp.Key].ToString() != kvp.Value.ToString()) //Something changed!
-                        return true;
-                }
-                return false;
-#else
                 return vars.Any(kvp => m_lastStateSaveValues[kvp.Key].ToString() != kvp.Value.ToString());
-#endif
             }
             set
             {

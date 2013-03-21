@@ -571,16 +571,9 @@ namespace Aurora.Region.Animation
                                           ObjectIDs = objectIDs,
                                           AvatarID = m_scenePresence.UUID
                                       };
-#if (!ISWIN)
-            m_scenePresence.Scene.ForEachScenePresence(
-                delegate(IScenePresence presence)
-                {
-                    presence.SceneViewer.QueuePresenceForAnimationUpdate(m_scenePresence, anis);
-                });
-#else
+
             m_scenePresence.Scene.ForEachScenePresence(
                 presence => presence.SceneViewer.QueuePresenceForAnimationUpdate(presence, anis));
-#endif
         }
 
         /// <summary>

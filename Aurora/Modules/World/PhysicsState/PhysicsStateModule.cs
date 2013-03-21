@@ -109,20 +109,12 @@ namespace Aurora.Modules.PhysicsState
             {
                 state.AddPrim(prm);
             }
-#if (!ISWIN)
-            foreach (IScenePresence sp in m_scene.GetScenePresences())
-            {
-                if (!sp.IsChildAgent)
-                {
-                    state.AddAvatar(sp.PhysicsActor);
-                }
-            }
-#else
+
             foreach (IScenePresence sp in m_scene.GetScenePresences().Where(sp => !sp.IsChildAgent))
             {
                 state.AddAvatar(sp.PhysicsActor);
             }
-#endif
+
             return state;
         }
 

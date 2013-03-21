@@ -71,16 +71,7 @@ namespace Aurora.Modules.Monitoring.Monitors
             get
             {
                 IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                int sum = 0;
-                foreach (IScriptModule module in modules)
-                {
-                    if (module != null) sum += module.GetActiveScripts();
-                }
-                return sum;
-#else
                 return modules.Where(module => module != null).Sum(module => module.GetActiveScripts());
-#endif
             }
         }
 
@@ -89,16 +80,7 @@ namespace Aurora.Modules.Monitoring.Monitors
             get
             {
                 IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                int sum = 0;
-                foreach (IScriptModule module in modules)
-                {
-                    if (module != null) sum += module.GetScriptEPS();
-                }
-                return sum;
-#else
                 return modules.Where(module => module != null).Sum(module => module.GetScriptEPS());
-#endif
             }
         }
 

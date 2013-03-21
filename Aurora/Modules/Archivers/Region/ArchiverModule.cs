@@ -176,16 +176,7 @@ namespace Aurora.Modules.Archivers
             {
                 string permissions = null;
                 List<string> newParams = new List<string>(cmdparams);
-#if (!ISWIN)
-                foreach (string param in cmdparams)
-                {
-                    if (param.StartsWith("--perm=", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        permissions = param.Remove(0, 7);
-                        newParams.Remove(param);
-                    }
-                }
-#else
+
                 foreach (
                     string param in
                         cmdparams.Where(param => param.StartsWith("--perm=", StringComparison.CurrentCultureIgnoreCase))
@@ -194,7 +185,6 @@ namespace Aurora.Modules.Archivers
                     permissions = param.Remove(0, 7);
                     newParams.Remove(param);
                 }
-#endif
                 ArchiveRegion(newParams[2], Guid.Empty, permissions);
             }
             else

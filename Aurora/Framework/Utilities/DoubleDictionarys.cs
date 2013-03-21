@@ -256,20 +256,11 @@ namespace Aurora.Framework.Utilities
         {
             lock (m_lock)
             {
-#if (!ISWIN)
-                foreach (TValue value in Dictionary1.Values)
-                {
-                    if (predicate(value))
-                    {
-                        return value;
-                    }
-                }
-#else
                 foreach (TValue value in Dictionary1.Values.Where(value => predicate(value)))
                 {
                     return value;
                 }
-#endif
+
                 return default(TValue);
             }
         }
@@ -278,16 +269,7 @@ namespace Aurora.Framework.Utilities
         {
             lock (m_lock)
             {
-#if (!ISWIN)
-                List<TValue> list = new List<TValue>();
-                foreach (TValue value in Dictionary1.Values)
-                {
-                    if (predicate(value)) list.Add(value);
-                }
-                return list;
-#else
                 return Dictionary1.Values.Where(value => predicate(value)).ToList();
-#endif
             }
         }
 
@@ -298,20 +280,11 @@ namespace Aurora.Framework.Utilities
                 IList<TKey1> list = (from kvp in Dictionary1 where predicate(kvp.Value) select kvp.Key).ToList();
 
                 IList<TKey2> list2 = new List<TKey2>(list.Count);
-#if (!ISWIN)
-                foreach (KeyValuePair<TKey2, TValue> kvp in Dictionary2)
-                {
-                    if (predicate(kvp.Value))
-                    {
-                        list2.Add(kvp.Key);
-                    }
-                }
-#else
+
                 foreach (KeyValuePair<TKey2, TValue> kvp in Dictionary2.Where(kvp => predicate(kvp.Value)))
                 {
                     list2.Add(kvp.Key);
                 }
-#endif
 
                 foreach (TKey1 t in list)
                     Dictionary1.Remove(t);

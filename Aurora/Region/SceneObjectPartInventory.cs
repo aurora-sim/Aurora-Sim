@@ -291,23 +291,11 @@ namespace Aurora.Region
 
             lock (m_items)
             {
-#if (!ISWIN)
-                foreach (TaskInventoryItem item in m_items.Values)
-                {
-                    if (item.InvType == (int)InventoryType.LSL)
-                    {
-                        if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
-                            continue;
-                        ret.Add(item);
-                    }
-                }
-#else
                 ret.AddRange(
                     m_items.Values.Where(item => item.InvType == (int) InventoryType.LSL)
                            .Where(
                                item =>
                                m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID)));
-#endif
             }
 
             return ret;
@@ -478,20 +466,10 @@ namespace Aurora.Region
         {
             lock (m_itemsLock)
             {
-#if (!ISWIN)
-                foreach (TaskInventoryItem item in m_items.Values)
-                {
-                    if (item.Name == name)
-                    {
-                        return true;
-                    }
-                }
-#else
                 if (m_items.Values.Any(item => item.Name == name))
                 {
                     return true;
                 }
-#endif
             }
             return false;
         }
@@ -1095,20 +1073,10 @@ namespace Aurora.Region
         {
             lock (m_itemsLock)
             {
-#if (!ISWIN)
-                foreach (TaskInventoryItem item in m_items.Values)
-                {
-                    if (item.InvType == (int) InventoryType.LSL)
-                    {
-                        return true;
-                    }
-                }
-#else
                 if (m_items.Values.Any(item => item.InvType == (int) InventoryType.LSL))
                 {
                     return true;
                 }
-#endif
             }
 
             return false;
@@ -1120,12 +1088,7 @@ namespace Aurora.Region
 
             lock (m_itemsLock)
             {
-#if (!ISWIN)
-                foreach (TaskInventoryItem item in m_items.Values)
-                    ret.Add(item.ItemID);
-#else
                 ret.AddRange(m_items.Values.Select(item => item.ItemID));
-#endif
             }
 
             return ret;

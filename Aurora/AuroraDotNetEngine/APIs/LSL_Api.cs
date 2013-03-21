@@ -357,14 +357,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_host.ParentEntity != null)
                 {
                     List<ISceneChildEntity> parts = new List<ISceneChildEntity>(m_host.ParentEntity.ChildrenEntities());
-#if (!ISWIN)
-                    return parts.ConvertAll<IEntity>(new Converter<ISceneChildEntity, IEntity>(delegate(ISceneChildEntity part)
-                    {
-                        return (IEntity)part;
-                    }));
-#else
                     return parts.ConvertAll(part => (IEntity) part);
-#endif
                 }
                 return ret;
             }
@@ -385,14 +378,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return new List<IEntity>();
                 List<ISceneChildEntity> sceneobjectparts =
                     new List<ISceneChildEntity>(m_host.ParentEntity.ChildrenEntities());
-#if (!ISWIN)
-                ret = sceneobjectparts.ConvertAll<IEntity>(new Converter<ISceneChildEntity, IEntity>(delegate(ISceneChildEntity part)
-                {
-                    return (IEntity)part;
-                }));
-#else
+
                 ret = sceneobjectparts.ConvertAll(part => (IEntity) part);
-#endif
+
                 if (ret.Contains(m_host))
                     ret.Remove(m_host);
                 return ret;
@@ -403,14 +391,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_host.ParentEntity == null)
                     return new List<IEntity>();
                 List<ISceneChildEntity> children = new List<ISceneChildEntity>(m_host.ParentEntity.ChildrenEntities());
-#if (!ISWIN)
-                ret = children.ConvertAll<IEntity>(new Converter<ISceneChildEntity, IEntity>(delegate(ISceneChildEntity part)
-                {
-                    return (IEntity)part;
-                }));
-#else
+
                 ret = children.ConvertAll(part => (IEntity) part);
-#endif
+
                 if (ret.Contains(m_host.ParentEntity.RootChild))
                     ret.Remove(m_host.ParentEntity.RootChild);
                 return ret;
@@ -1429,24 +1412,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     ISceneEntity group = m_host.ParentEntity;
                     if (group == null)
                         return;
-#if (!ISWIN)
-                    bool allow = true;
-                    foreach (ISceneChildEntity part in group.ChildrenEntities())
-                    {
-                        IOpenRegionSettingsModule WSModule = group.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
-                        if (WSModule != null && WSModule.MaximumPhysPrimScale != -1)
-                        {
-                            Vector3 tmp = part.Scale;
-                            if (tmp.X > WSModule.MaximumPhysPrimScale ||
-                                tmp.Y > WSModule.MaximumPhysPrimScale ||
-                                tmp.Z > WSModule.MaximumPhysPrimScale)
-                            {
-                                allow = false;
-                                break;
-                            }
-                        }
-                    }
-#else
+
                     bool allow = !(from part in @group.ChildrenEntities()
                                    let WSModule = @group.Scene.RequestModuleInterface<IOpenRegionSettingsModule>()
                                    where WSModule != null && WSModule.MaximumPhysPrimScale != -1
@@ -1455,8 +1421,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                        tmp.X > WSModule.MaximumPhysPrimScale || tmp.Y > WSModule.MaximumPhysPrimScale ||
                                        tmp.Z > WSModule.MaximumPhysPrimScale
                                    select WSModule).Any();
-#endif
-
 
                     if (!allow)
                         return;
@@ -3619,16 +3583,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         // center is on average of all positions
                         // less root prim position
-#if (!ISWIN)
-                        Vector3 offset = Vector3.Zero;
-                        foreach (ISceneChildEntity child in partList)
-                        {
-                            offset += child.AbsolutePosition;
-                        }
-#else
                         Vector3 offset = partList.Aggregate(Vector3.Zero,
                                                             (current, child) => current + child.AbsolutePosition);
-#endif
+
                         offset /= partList.Count;
                         offset -= group.AbsolutePosition;
                         offset += pos;
@@ -4924,13 +4881,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.TaskInventory)
             {
-#if (!ISWIN)
-                foreach (TaskInventoryItem item in m_host.TaskInventory.Values)
-                    if (item.Type == type || type == -1)
-                        count++;
-#else
                 count += m_host.TaskInventory.Values.Count(item => item.Type == type || type == -1);
-#endif
             }
 
             return count;
@@ -6523,16 +6474,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             int neighborX = World.RegionInfo.RegionLocX + (int) dir.x;
             int neighborY = World.RegionInfo.RegionLocY + (int) dir.y;
-#if (!ISWIN)
-            foreach (GridRegion neighbor in neighbors)
-                if (neighbor.RegionLocX == neighborX && neighbor.RegionLocY == neighborY)
-                    return LSL_Integer.TRUE;
-#else
+
             if (neighbors.Any(neighbor => neighbor.RegionLocX == neighborX && neighbor.RegionLocY == neighborY))
             {
                 return LSL_Integer.TRUE;
             }
-#endif
+
             return LSL_Integer.FALSE;
         }
 
@@ -6573,24 +6520,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (att.Length > 0)
                 {
                     flags |= ScriptBaseClass.AGENT_ATTACHMENTS;
-#if (!ISWIN)
-                    foreach (ISceneEntity gobj in att)
-                    {
-                        if (gobj != null)
-                        {
-                            if (gobj.RootChild.Inventory.ContainsScripts())
-                            {
-                                flags |= ScriptBaseClass.AGENT_SCRIPTED;
-                                break;
-                            }
-                        }
-                    }
-#else
                     if (att.Where(gobj => gobj != null).Any(gobj => gobj.RootChild.Inventory.ContainsScripts()))
                     {
                         flags |= ScriptBaseClass.AGENT_SCRIPTED;
                     }
-#endif
                 }
             }
 
@@ -7826,13 +7759,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return String.Empty;
             }
-#if (!ISWIN)
-            string ret = "";
-            foreach (object o in src.Data)
-                ret += o.ToString() + seperator;
-#else
+
             string ret = src.Data.Aggregate("", (current, o) => current + (o.ToString() + seperator));
-#endif
 
             ret = ret.Substring(0, ret.Length - seperator.Length);
             return ret;
@@ -8451,13 +8379,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
         {
             List<ISceneChildEntity> Parts = GetLinkParts(LinkNum);
-#if (!ISWIN)
-            int faces = 0;
-            foreach (ISceneChildEntity part in Parts)
-                faces += GetNumberOfSides(part);
-#else
             int faces = Parts.Sum(part => GetNumberOfSides(part));
-#endif
             return new LSL_Integer(faces);
         }
 
@@ -9281,18 +9203,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_List res = new LSL_List();
 
-#if (!ISWIN)
-            LSL_List result = res;
-            foreach (ISceneChildEntity part in parts)
-            {
-                LSL_List list = GetLinkPrimitiveParams(part, rules);
-                result = result + list;
-            }
-            return result;
-#else
             return parts.Select(part => GetLinkPrimitiveParams(part, rules))
                         .Aggregate(res, (current, partRes) => current + partRes);
-#endif
         }
 
         public LSL_List GetLinkPrimitiveParams(ISceneChildEntity part, LSL_List rules)
@@ -11073,19 +10985,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return new LSL_List();
             LSL_List res = new LSL_List();
 
-#if (!ISWIN)
-            LSL_List result = res;
-            foreach (ISceneChildEntity part in entities)
-            {
-                LSL_List list = GetPrimMediaParams(part, face, rules);
-                result = result + list;
-            }
-            return result;
-#else
             return entities.Select(part => GetPrimMediaParams(part, face, rules)).Aggregate(res,
                                                                                             (current, partRes) =>
                                                                                             current + partRes);
-#endif
         }
 
         private LSL_List GetPrimMediaParams(ISceneChildEntity obj, int face, LSL_List rules)
@@ -11316,13 +11218,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     string[] rawWhiteListUrls = rules.GetLSLStringItem(i++).ToString().Split(new[] {','});
                     List<string> whiteListUrls = new List<string>();
-#if (!ISWIN)
-                    Array.ForEach(
-                        rawWhiteListUrls, delegate(string rawUrl) { whiteListUrls.Add(rawUrl.Trim()); });
-#else
+
                     Array.ForEach(
                         rawWhiteListUrls, rawUrl => whiteListUrls.Add(rawUrl.Trim()));
-#endif
+
                     me.WhiteList = whiteListUrls.ToArray();
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT)
@@ -11530,16 +11429,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (module != null)
                 {
                     bool cached = false; //Unneeded
-#if (!ISWIN)
-                    foreach (MuteList mute in module.GetMutes(avatar.UUID, out cached))
-                        if (mute.MuteID == m_host.OwnerID)
-                            return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
-#else
                     if (module.GetMutes(avatar.UUID, out cached).Any(mute => mute.MuteID == m_host.OwnerID))
                     {
                         return DateTime.Now; //If the avatar is muted, they don't get any contact from the muted av
                     }
-#endif
                 }
                 avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
                                                                    new Vector3((float) pos.x, (float) pos.y,
@@ -11812,13 +11705,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             IHttpRequestModule httpScriptMod =
                 World.RequestModuleInterface<IHttpRequestModule>();
-#if (!ISWIN)
-            List<string> param = new List<string>();
-            foreach (object o in parameters.Data)
-                param.Add(o.ToString());
-#else
+
             List<string> param = parameters.Data.Select(o => o.ToString()).ToList();
-#endif
 
             Vector3 position = m_host.AbsolutePosition;
             Vector3 velocity = m_host.Velocity;
@@ -12170,25 +12058,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer) o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                            int activeScripts = 0;
-                            foreach (IScriptModule mod in modules)
-                                activeScripts += mod.GetActiveScripts(av);
-#else
                             int activeScripts = modules.Sum(mod => mod.GetActiveScripts(av));
-#endif
                             ret.Add(activeScripts);
                         }
                         else if ((LSL_Integer) o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                            int totalScripts = 0;
-                            foreach (IScriptModule mod in modules)
-                                totalScripts += mod.GetTotalScripts(av);
-#else
                             int totalScripts = modules.Sum(mod => mod.GetTotalScripts(av));
-#endif
                             ret.Add(totalScripts);
                         }
                         else if ((LSL_Integer) o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
@@ -12198,13 +12074,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer) o == ScriptBaseClass.OBJECT_SCRIPT_TIME)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                            int scriptTime = 0;
-                            foreach (IScriptModule mod in modules)
-                                scriptTime += mod.GetScriptTime(m_itemID);
-#else
                             int scriptTime = modules.Sum(mod => mod.GetScriptTime(m_itemID));
-#endif
                             ret.Add(scriptTime);
                         }
                         else if ((LSL_Integer) o == ScriptBaseClass.OBJECT_PRIM_EQUIVALENCE)
@@ -12289,25 +12159,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer) o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                            int activeScripts = 0;
-                            foreach (IScriptModule mod in modules)
-                                activeScripts += mod.GetActiveScripts(obj);
-#else
                             int activeScripts = modules.Sum(mod => mod.GetActiveScripts(obj));
-#endif
                             ret.Add(new LSL_Integer(activeScripts));
                         }
                         else if ((LSL_Integer) o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                            int totalScripts = 0;
-                            foreach (IScriptModule mod in modules)
-                                totalScripts += mod.GetTotalScripts(obj);
-#else
                             int totalScripts = modules.Sum(mod => mod.GetTotalScripts(obj));
-#endif
                             ret.Add(new LSL_Integer(totalScripts));
                         }
                         else if ((LSL_Integer) o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
@@ -12548,14 +12406,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         private void castRaySort(Vector3 pos, ref List<ContactResult> list)
         {
-#if (!ISWIN)
-            list.Sort(delegate(ContactResult a, ContactResult b)
-            {
-                return Vector3.DistanceSquared(a.Pos, pos).CompareTo(Vector3.DistanceSquared(b.Pos, pos));
-            });
-#else
             list.Sort((a, b) => Vector3.DistanceSquared(a.Pos, pos).CompareTo(Vector3.DistanceSquared(b.Pos, pos)));
-#endif
         }
 
         public LSL_Key llGetNumberOfNotecardLines(string name)
