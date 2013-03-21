@@ -669,8 +669,8 @@ namespace Aurora.Framework.ConsoleFramework
 
         public virtual bool CompareLogLevels(string a, string b)
         {
-            Level aa = (Level)Enum.Parse(typeof(Level), a);
-            Level bb = (Level)Enum.Parse(typeof(Level), b);
+            Level aa = (Level)Enum.Parse(typeof(Level), a, true);
+            Level bb = (Level)Enum.Parse(typeof(Level), b, true);
             return aa <= bb;
         }
 

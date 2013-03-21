@@ -95,6 +95,7 @@ namespace Aurora.Services
         private void InitializeHandlers(IHttpServer server)
         {
             server.AddXmlRPCHandler("login_to_simulator", HandleXMLRPCLogin, false);
+            server.AddXmlRPCHandler("/", HandleXMLRPCLogin, false);
             server.AddXmlRPCHandler("set_login_level", HandleXMLRPCSetLoginLevel, false);
             server.AddLLSDHandler("/", HandleLLSDLogin);
         }
