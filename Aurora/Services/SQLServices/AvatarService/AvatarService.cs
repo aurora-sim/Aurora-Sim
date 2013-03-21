@@ -150,16 +150,7 @@ namespace Aurora.Services.SQLServices.AvatarService
                                                                                                               appearance
                                                                                                           });
             RemoveOldBaked(principalID, appearance);
-            AvatarAppearance oldapp = GetAppearance(principalID);
-            bool result = m_Database.Store(principalID, appearance);
-            PrintWearables("old", oldapp);
-            PrintWearables("new", appearance);
-            return result;
-        }
-
-        private void PrintWearables(string prefix, AvatarAppearance app)
-        {
-            MainConsole.Instance.InfoFormat(prefix + " {0}", app.Texture.ToString());
+            return m_Database.Store(principalID, appearance);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
