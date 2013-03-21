@@ -670,12 +670,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 response.OutputStream.Close();
                 response.Close();
 
-                // Do not include the time taken to actually send the response to the caller in the measurement
-                // time.  This is to avoid logging when it's the client that is slow to process rather than the
-                // server
                 requestEndTick = Environment.TickCount;
-
-                //response.FreeContext();
             }
             catch (SocketException e)
             {
@@ -726,19 +721,46 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public byte[] HandleHTTPRequest(OSHttpRequest request, OSHttpResponse response)
         {
-            //            MainConsole.Instance.DebugFormat(
-            //                "[BASE HTTP SERVER]: HandleHTTPRequest for request to {0}, method {1}",
-            //                request.RawUrl, request.HttpMethod);
-
-            switch (request.HttpMethod)
+            if (request.HttpMethod == "OPTIONS")
             {
-                case "OPTIONS":
-                    response.StatusCode = (int) OSHttpStatusCode.SuccessOk;
-                    return null;
-
-                default:
-                    return HandleContentVerbs(request, response);
+                response.StatusCode = (int) OSHttpStatusCode.SuccessOk;
+                return null;
             }
+
+            byte[] buffer;
+
+            if (request.QueryString["method"] != null)
+            {
+                //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: Contains Method");
+                string method = request.QueryString["method"];
+                //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: " + requestBody);
+                IStreamedRequestHandler streamProcessor;
+                if (TryGetStreamHTTPHandler(method, out streamProcessor) ||
+                         TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
+                {
+                    buffer = streamProcessor.Handle(request.RawUrl, request.InputStream, request, response);
+                }
+                else
+                {
+                    //                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Handler Not Found");
+                    buffer = SendHTML404(response);
+                }
+            }
+            else
+            {
+                IStreamedRequestHandler streamProcessor;
+                if (TryGetStreamHTTPHandler(request.Url.AbsolutePath, out streamProcessor))
+                {
+                    buffer = streamProcessor.Handle(request.Url.AbsolutePath, request.InputStream, request, response);
+                }
+                else
+                {
+                    //                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Handler Not Found2");
+                    buffer = SendHTML404(response);
+                }
+            }
+
+            return buffer;
         }
 
         /// <summary>
@@ -750,12 +772,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private byte[] HandleXmlRpcRequests(OSHttpRequest request, OSHttpResponse response)
         {
             Stream requestStream = request.InputStream;
-
-            Encoding encoding = Encoding.UTF8;
-            StreamReader reader = new StreamReader(requestStream, encoding);
-
-            string requestBody = reader.ReadToEnd();
-            reader.Close();
+            string requestBody = requestStream.ReadUntilEnd();
             requestStream.Close();
             //MainConsole.Instance.Debug(requestBody);
             requestBody = requestBody.Replace("<base64></base64>", "");
@@ -1004,44 +1021,6 @@ namespace Aurora.Framework.Servers.HttpServer
             // return Util.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
             response.ContentType = "application/llsd+xml";
             return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
-        }
-
-        private byte[] HandleContentVerbs(OSHttpRequest request, OSHttpResponse response)
-        {
-            byte[] buffer;
-
-            if (request.QueryString["method"] != null)
-            {
-                //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: Contains Method");
-                string method = request.QueryString["method"];
-                //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: " + requestBody);
-                IStreamedRequestHandler streamProcessor;
-                if (TryGetStreamHTTPHandler(method, out streamProcessor) ||
-                         TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
-                {
-                    buffer = streamProcessor.Handle(request.RawUrl, request.InputStream, request, response);
-                }
-                else
-                {
-                    //                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Handler Not Found");
-                    buffer = SendHTML404(response);
-                }
-            }
-            else
-            {
-                IStreamedRequestHandler streamProcessor;
-                if (TryGetStreamHTTPHandler(request.Url.AbsolutePath, out streamProcessor))
-                {
-                    buffer = streamProcessor.Handle(request.Url.AbsolutePath, request.InputStream, request, response);
-                }
-                else
-                {
-                    //                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Handler Not Found2");
-                    buffer = SendHTML404(response);
-                }
-            }
-
-            return buffer;
         }
 
         public byte[] DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response)
