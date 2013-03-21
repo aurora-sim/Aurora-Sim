@@ -230,7 +230,7 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
             }
             catch (Exception)
             {
-                MainConsole.Instance.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
+                MainConsole.Instance.Error("[OSHttpRequest]: Error parsing querystring");
             }
 
             if (ContentType != null && ContentType.StartsWith("multipart/form-data"))

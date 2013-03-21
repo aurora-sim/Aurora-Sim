@@ -237,8 +237,7 @@ namespace Aurora.Modules.Land
 
         public void UpdateLandProperties(LandUpdateArgs args, IClientAPI remote_client)
         {
-            if (m_scene.Permissions.CanEditParcel(remote_client.AgentId, this) &&
-                m_scene.RegionInfo.EstateSettings.AllowParcelChanges)
+            if (m_scene.RegionInfo.EstateSettings.AllowParcelChanges)
             {
                 try
                 {
@@ -288,26 +287,49 @@ namespace Aurora.Modules.Land
                         LandData.ObscureMedia = args.ObscureMedia;
                     }
 
-                    if (m_scene.RegionInfo.RegionSettings.BlockFly &&
-                        ((args.ParcelFlags & (uint) ParcelFlags.AllowFly) == (uint) ParcelFlags.AllowFly))
-                        //Vanquish flying as per estate settings!
-                        args.ParcelFlags &= ~(uint) ParcelFlags.AllowFly;
+                    if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.LandOptions))
+                    {
+                        if (m_scene.RegionInfo.RegionSettings.BlockFly &&
+                            ((args.ParcelFlags & (uint)ParcelFlags.AllowFly) == (uint)ParcelFlags.AllowFly))
+                            //Vanquish flying as per estate settings!
+                            args.ParcelFlags &= ~(uint)ParcelFlags.AllowFly;
 
-                    if (m_scene.RegionInfo.RegionSettings.RestrictPushing &&
-                        ((args.ParcelFlags & (uint) ParcelFlags.RestrictPushObject) ==
-                         (uint) ParcelFlags.RestrictPushObject))
-                        //Vanquish pushing as per estate settings!
-                        args.ParcelFlags &= ~(uint) ParcelFlags.RestrictPushObject;
+                        if (m_scene.RegionInfo.RegionSettings.RestrictPushing &&
+                            ((args.ParcelFlags & (uint)ParcelFlags.RestrictPushObject) ==
+                             (uint)ParcelFlags.RestrictPushObject))
+                            //Vanquish pushing as per estate settings!
+                            args.ParcelFlags &= ~(uint)ParcelFlags.RestrictPushObject;
 
-                    if (!m_scene.RegionInfo.EstateSettings.AllowLandmark &&
-                        ((args.ParcelFlags & (uint) ParcelFlags.AllowLandmark) == (uint) ParcelFlags.AllowLandmark))
-                        //Vanquish landmarks as per estate settings!
-                        args.ParcelFlags &= ~(uint) ParcelFlags.AllowLandmark;
+                        if (!m_scene.RegionInfo.EstateSettings.AllowLandmark &&
+                            ((args.ParcelFlags & (uint)ParcelFlags.AllowLandmark) == (uint)ParcelFlags.AllowLandmark))
+                            //Vanquish landmarks as per estate settings!
+                            args.ParcelFlags &= ~(uint)ParcelFlags.AllowLandmark;
 
-                    if (m_scene.RegionInfo.RegionSettings.BlockShowInSearch &&
-                        ((args.ParcelFlags & (uint) ParcelFlags.ShowDirectory) == (uint) ParcelFlags.ShowDirectory))
-                        //Vanquish show in search as per estate settings!
-                        args.ParcelFlags &= ~(uint) ParcelFlags.ShowDirectory;
+                        if (m_scene.RegionInfo.RegionSettings.BlockShowInSearch &&
+                            ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory))
+                            //Vanquish show in search as per estate settings!
+                            args.ParcelFlags &= ~(uint)ParcelFlags.ShowDirectory;
+
+                        if ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory &&
+                            (LandData.Flags & (uint)ParcelFlags.ShowDirectory) != (uint)ParcelFlags.ShowDirectory)
+                        {
+                            //If the flags have changed, we need to charge them.. maybe
+                            // We really need to check per month or whatever
+                            IScheduledMoneyModule moneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
+                            if (moneyModule != null)
+                            {
+                                if (
+                                    !moneyModule.Charge(remote_client.AgentId, 30,
+                                                        "Parcel Show in Search Fee - " + LandData.GlobalID, 7))
+                                {
+                                    remote_client.SendAlertMessage(
+                                        "You don't have enough money to set this parcel in search.");
+                                    args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
+                                }
+                            }
+                        }
+                        LandData.Flags = args.ParcelFlags;
+                    }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this,
                                                                     GroupPowers.SetLandingPoint))
@@ -332,26 +354,6 @@ namespace Aurora.Modules.Land
                         LandData.PassHours = args.PassHours;
                         LandData.PassPrice = args.PassPrice;
                     }
-
-                    if ((args.ParcelFlags & (uint) ParcelFlags.ShowDirectory) == (uint) ParcelFlags.ShowDirectory &&
-                        (LandData.Flags & (uint) ParcelFlags.ShowDirectory) != (uint) ParcelFlags.ShowDirectory)
-                    {
-                        //If the flags have changed, we need to charge them.. maybe
-                        // We really need to check per month or whatever
-                        IScheduledMoneyModule moneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
-                        if (moneyModule != null)
-                        {
-                            if (
-                                !moneyModule.Charge(remote_client.AgentId, 30,
-                                                    "Parcel Show in Search Fee - " + LandData.GlobalID, 7))
-                            {
-                                remote_client.SendAlertMessage(
-                                    "You don't have enough money to set this parcel in search.");
-                                args.ParcelFlags &= (uint) ParcelFlags.ShowDirectory;
-                            }
-                        }
-                    }
-                    LandData.Flags = args.ParcelFlags;
 
                     LandData.Status = LandData.OwnerID == m_parcelManagementModule.GodParcelOwner
                                           ? ParcelStatus.Abandoned

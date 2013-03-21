@@ -26,7 +26,7 @@
  */
 
 using Aurora.Framework.ConsoleFramework;
-using log4net.Core;
+using Aurora.Framework.Modules;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -371,10 +371,10 @@ namespace Aurora.Framework.Utilities
                             MainConsole.Instance.WarnFormat("[WebUtils]: bad request to {0}, data {1}", url,
                                                             data != null ? OSDParser.SerializeJsonString(data) : "");
                         else
-                            MainConsole.Instance.WarnFormat("[WebUtils]: {0} to {1}, data {2}, response {3}",
+                            MainConsole.Instance.Warn(string.Format("[WebUtils]: {0} to {1}, data {2}, response {3}",
                                                             webResponse.StatusCode, url,
                                                             data != null ? OSDParser.SerializeJsonString(data) : "",
-                                                            webResponse.StatusDescription);
+                                                            webResponse.StatusDescription));
                         return "";
                     }
                     if (request != null)
@@ -397,23 +397,23 @@ namespace Aurora.Framework.Utilities
                         {
                             // This just dumps a warning for any operation that takes more than 500 ms
                             int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                            if (MainConsole.Instance.IsEnabled(Level.Trace))
+                            if (MainConsole.Instance.IsTraceEnabled)
                             {
                                 System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
 
-                                MainConsole.Instance.TraceFormat(
-                                    "[WebUtils]: osd request (URI:{0}, METHOD:{1}, UPSTACK(4):{5}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                MainConsole.Instance.Trace(
+                                    string.Format("[WebUtils]: osd request (URI:{0}, METHOD:{1}, UPSTACK(4):{5}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
                                     url, method, tickdiff, tickdata, tickserialize,
-                                    stackTrace.GetFrame(4).GetMethod().Name);
+                                    stackTrace.GetFrame(4).GetMethod().Name));
                             }
-                            else
-                                MainConsole.Instance.DebugFormat(
-                                    "[WebUtils]: osd request (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                                    url, method, tickdiff, tickdata, tickserialize);
+                            else if(MainConsole.Instance.IsDebugEnabled)
+                                MainConsole.Instance.Debug(
+                                    string.Format("[WebUtils]: osd request (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                    url, method, tickdiff, tickdata, tickserialize));
                             if (tickdiff > 5000)
-                                MainConsole.Instance.InfoFormat(
-                                    "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                                    url, method, tickdiff, tickdata, tickserialize);
+                                MainConsole.Instance.Info(
+                                    string.Format("[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                    url, method, tickdiff, tickdata, tickserialize));
                         }
                     }
                 }

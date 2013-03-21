@@ -169,7 +169,7 @@ namespace Aurora.Services
             }
             catch (Exception ee)
             {
-                MainConsole.Instance.Error("[Scheduler] t_Elapsed Error ", ee);
+                MainConsole.Instance.ErrorFormat("[Scheduler] t_Elapsed Error {0}", ee.ToString());
             }
             finally
             {
@@ -205,7 +205,7 @@ namespace Aurora.Services
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[Scheduler] FireEvent Error " + I.id, e);
+                MainConsole.Instance.ErrorFormat("[Scheduler] FireEvent Error {0}: {1}", I.id, e.ToString());
             }
         }
 

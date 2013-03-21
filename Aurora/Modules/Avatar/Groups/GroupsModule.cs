@@ -336,6 +336,7 @@ namespace Aurora.Modules.Groups
                 if (sp.ControllingClient.ActiveGroupId == groupID)
                 {
                     m_cachedGroupTitles.Remove(sp.UUID); //Remove the old title
+                    m_cachedGroupMemberships.Remove(sp.UUID);
                     UpdateAllClientsWithGroupInfo(sp.UUID, GetGroupTitle(sp.UUID));
                 }
                 //Remove their permissions too

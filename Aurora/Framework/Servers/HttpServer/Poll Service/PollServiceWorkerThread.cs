@@ -33,7 +33,7 @@ using System.Text;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Utilities;
-using log4net;
+using Aurora.Framework.ConsoleFramework;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -41,10 +41,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
     public class PollServiceWorkerThread
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         public event ReQueuePollServiceItem ReQueue;
 
         private readonly IHttpServer m_server;
@@ -110,7 +106,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("Exception in poll service thread: " + e.ToString());
+                    MainConsole.Instance.ErrorFormat("Exception in poll service thread: {0}", e.ToString());
                 }
             }
         }
@@ -139,7 +135,7 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (Exception ex)
             {
-                m_log.Warn(string.Format("[POLL SERVICE WORKER THREAD]: Error ", ex));
+                MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
             }
             finally
             {
@@ -154,7 +150,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    m_log.Warn(String.Format("[POLL SERVICE WORKER THREAD]: Error ", e));
+                    MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
                 }
             }
         }

@@ -1233,7 +1233,7 @@ namespace Aurora.ClientStack
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[CLIENT]: SendLayerData() Failed with exception: " + e.Message, e);
+                MainConsole.Instance.ErrorFormat("[CLIENT]: SendLayerData() Failed with exception: " + e.ToString());
             }
         }
 

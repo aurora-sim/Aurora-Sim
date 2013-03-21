@@ -94,8 +94,7 @@ namespace Aurora.Modules.SimConsole
                         m_userKeys.Add(Users[i], (Access) Enum.Parse(typeof (Access), Users[i + 1]));
                     }
                     else
-                        MainConsole.Instance.Output(
-                            "No second configuration option given for SimConsole Users, ignoring", "WARN");
+                        MainConsole.Instance.Warn("[SimConsole]: No second configuration option given for SimConsole Users, ignoring");
                 }
             }
         }

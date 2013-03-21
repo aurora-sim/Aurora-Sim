@@ -433,6 +433,8 @@ namespace Aurora.Modules.Monitoring
             /// <param name="e"></param>
             protected void statsHeartBeat(object sender, EventArgs e)
             {
+                if (m_currentScene.PhysicsScene == null)
+                    return;
                 lock (m_report)
                     m_report.Stop();
                 if (rb == null)

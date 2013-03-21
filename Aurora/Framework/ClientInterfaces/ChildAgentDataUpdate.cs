@@ -482,7 +482,7 @@ namespace Aurora.Framework.ClientInterfaces
                     Appearance = new AvatarAppearance(AgentID, (OSDMap) args["packed_appearance"]);
                     // DEBUG ON
                 else
-                    MainConsole.Instance.WarnFormat("[CHILDAGENTDATAUPDATE] No packed appearance");
+                    MainConsole.Instance.Warn("[CHILDAGENTDATAUPDATE] No packed appearance");
                 // DEBUG OFF
             }
             catch

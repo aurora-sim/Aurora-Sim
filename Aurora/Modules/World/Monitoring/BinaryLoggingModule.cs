@@ -156,7 +156,7 @@ namespace Aurora.Modules.Monitoring
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.Error("statistics gathering failed: " + ex.Message, ex);
+                    MainConsole.Instance.ErrorFormat("statistics gathering failed: {0}", ex.ToString());
                     if (m_statLog != null && m_statLog.Log != null)
                     {
                         m_statLog.Log.Close();

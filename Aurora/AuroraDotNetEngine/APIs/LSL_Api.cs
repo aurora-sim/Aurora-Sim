@@ -12637,7 +12637,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
                 {
                     // yes, this is a real LSL function. See: http://wiki.secondlife.com/wiki/Print
-                    MainConsole.Instance.Output("LSL print():" + str);
+                    MainConsole.Instance.Fatal("LSL print():" + str);
                 }
             }
         }

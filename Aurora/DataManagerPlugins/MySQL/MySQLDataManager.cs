@@ -67,7 +67,7 @@ namespace Aurora.DataManager.MySQL
             {
                 MainConsole.Instance.Error(
                     "[MySQLDatabase]: We cannot connect to the MySQL instance you have provided. Please make sure it is online, and then press enter to try again.");
-                Console.ReadKey();
+                Console.Read();
                 goto retry;
             }
 
@@ -694,7 +694,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] CreateTable", e);
+                MainConsole.Instance.ErrorFormat("[MySQLDataLoader] CreateTable: {0}", e.ToString());
             }
         }
 
@@ -766,7 +766,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] UpdateTable", e);
+                MainConsole.Instance.ErrorFormat("[MySQLDataLoader] UpdateTable: {0}", e);
             }
 
             Dictionary<string, IndexDefinition> oldIndicesDict = ExtractIndicesFromTable(table);
@@ -984,7 +984,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] DropTable", e);
+                MainConsole.Instance.ErrorFormat("[MySQLDataLoader] DropTable {0}", e.ToString());
             }
         }
 
@@ -998,7 +998,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] ForceRenameTable", e);
+                MainConsole.Instance.ErrorFormat("[MySQLDataLoader] ForceRenameTable {0}", e.ToString());
             }
         }
 
@@ -1016,7 +1016,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] CopyAllDataBetweenMatchingTables", e);
+                MainConsole.Instance.ErrorFormat("[MySQLDataLoader] CopyAllDataBetweenMatchingTables", e.ToString());
             }
         }
 
@@ -1039,7 +1039,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] TableExists", e);
+                MainConsole.Instance.ErrorFormat("[MySQLDataLoader] TableExists: {0}", e.ToString());
             }
             finally
             {
@@ -1053,7 +1053,7 @@ namespace Aurora.DataManager.MySQL
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.Error("[MySQLDataLoader] TableExists", e);
+                    MainConsole.Instance.ErrorFormat("[MySQLDataLoader] TableExists: {0}", e.ToString());
                 }
             }
             return retVal.Contains(table.ToLower());
@@ -1090,7 +1090,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] ExtractColumnsFromTable", e);
+                MainConsole.Instance.ErrorFormat("[MySQLDataLoader] ExtractColumnsFromTable: {0}", e.ToString());
             }
             finally
             {
@@ -1104,7 +1104,7 @@ namespace Aurora.DataManager.MySQL
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.Debug("[MySQLDataLoader] ExtractColumnsFromTable", e);
+                    MainConsole.Instance.DebugFormat("[MySQLDataLoader] ExtractColumnsFromTable: {0}", e.ToString());
                 }
             }
             return defs;
@@ -1138,7 +1138,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] ExtractIndicesFromTable", e);
+                MainConsole.Instance.ErrorFormat("[MySQLDataLoader] ExtractIndicesFromTable: {1}", e.ToString());
             }
             finally
             {
@@ -1151,7 +1151,7 @@ namespace Aurora.DataManager.MySQL
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.Debug("[MySQLDataLoader] ExtractIndicesFromTable", e);
+                    MainConsole.Instance.DebugFormat("[MySQLDataLoader] ExtractIndicesFromTable: {0}", e.ToString());
                 }
             }
 

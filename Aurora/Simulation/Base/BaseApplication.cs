@@ -32,7 +32,6 @@ using Aurora.Framework.Configuration;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Utilities;
-using log4net.Config;
 using Nini.Config;
 using System;
 using System.Diagnostics;
@@ -78,14 +77,6 @@ namespace Aurora.Simulation.Base
 
             if (!args.Contains("-skipconfig"))
                 Configure(false);
-
-            // Configure Log4Net
-            configSource.AddSwitch("Startup", "logconfig");
-            string logConfigFile = configSource.Configs["Startup"].GetString("logconfig", String.Empty);
-            if (logConfigFile != String.Empty)
-                XmlConfigurator.Configure(new FileInfo(logConfigFile));
-            else
-                XmlConfigurator.Configure();
 
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             int workerThreads, iocpThreads;

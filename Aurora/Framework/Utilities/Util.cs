@@ -1780,7 +1780,7 @@ namespace Aurora.Framework.Utilities
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.Error("[UTIL]: Asynchronous method threw an exception: " + ex, ex);
+                    MainConsole.Instance.ErrorFormat("[UTIL]: Asynchronous method threw an exception: {0}", ex.ToString());
                 }
 
                 ar.AsyncWaitHandle.Close();
