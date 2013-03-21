@@ -166,7 +166,7 @@ namespace Aurora.Modules.WorldMap
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            MainServer.Instance.RemoveHTTPHandler("", regionimage);
+            MainServer.Instance.RemoveHttpStreamHandler(regionimage);
         }
 
         #region EventHandlers

@@ -38,6 +38,9 @@ using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using System.IO;
+using System.Text;
 
 namespace Aurora.Framework.ConsoleFramework
 {
@@ -97,9 +100,9 @@ namespace Aurora.Framework.ConsoleFramework
         {
             m_Server = server;
 
-            m_Server.AddHTTPHandler("/StartSession/", HandleHttpStartSession);
-            m_Server.AddHTTPHandler("/CloseSession/", HandleHttpCloseSession);
-            m_Server.AddHTTPHandler("/SessionCommand/", HandleHttpSessionCommand);
+            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/StartSession/", HandleHttpStartSession));
+            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/CloseSession/", HandleHttpCloseSession));
+            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/SessionCommand/", HandleHttpSessionCommand));
         }
 
         public override void Output(string text, Level level)
@@ -176,28 +179,23 @@ namespace Aurora.Framework.ConsoleFramework
             }
         }
 
-        private Hashtable HandleHttpStartSession(Hashtable request)
+        private byte[] HandleHttpStartSession(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
-            Hashtable reply = new Hashtable();
+            Hashtable post = DecodePostString(request.ReadUntilEnd());
 
-            reply["str_response_string"] = "";
-            reply["int_response_code"] = 401;
-            reply["content_type"] = "text/plain";
-
+            httpResponse.StatusCode = 401;
+            httpResponse.ContentType = "text/plain";
             if (m_UserName == String.Empty)
-                return reply;
+                return MainServer.BlankResponse;
 
             if (post["USER"] == null || post["PASS"] == null)
-                return reply;
+                return MainServer.BlankResponse;
 
             if (m_UserName != post["USER"].ToString() ||
                 m_Password != post["PASS"].ToString())
-            {
-                return reply;
-            }
+                return MainServer.BlankResponse;
 
             ConsoleConnection c = new ConsoleConnection {last = Environment.TickCount, lastLineSeen = 0};
 
@@ -234,11 +232,9 @@ namespace Aurora.Framework.ConsoleFramework
 
             rootElement.AppendChild(prompt);
 
-            reply["str_response_string"] = xmldoc.InnerXml;
-            reply["int_response_code"] = 200;
-            reply["content_type"] = "text/xml";
-
-            return reply;
+            httpResponse.StatusCode = 200;
+            httpResponse.ContentType = "text/xml";
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
 
         private bool Valid()
@@ -251,23 +247,20 @@ namespace Aurora.Framework.ConsoleFramework
             return new Hashtable();
         }
 
-        private Hashtable HandleHttpCloseSession(Hashtable request)
+        private byte[] HandleHttpCloseSession(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
-            Hashtable reply = new Hashtable();
+            Hashtable post = DecodePostString(request.ReadUntilEnd());
 
-            reply["str_response_string"] = "";
-            reply["int_response_code"] = 404;
-            reply["content_type"] = "text/plain";
-
+            httpResponse.StatusCode = 401;
+            httpResponse.ContentType = "text/plain";
             if (post["ID"] == null)
-                return reply;
+                return MainServer.BlankResponse;
 
             UUID id;
             if (!UUID.TryParse(post["ID"].ToString(), out id))
-                return reply;
+                return MainServer.BlankResponse;
 
             lock (m_Connections)
             {
@@ -293,39 +286,35 @@ namespace Aurora.Framework.ConsoleFramework
 
             rootElement.AppendChild(res);
 
-            reply["str_response_string"] = xmldoc.InnerXml;
-            reply["int_response_code"] = 200;
-            reply["content_type"] = "text/xml";
-
-            return reply;
+            httpResponse.StatusCode = 200;
+            httpResponse.ContentType = "text/xml";
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
 
-        private Hashtable HandleHttpSessionCommand(Hashtable request)
+        private byte[] HandleHttpSessionCommand(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
+            Hashtable post = DecodePostString(request.ReadUntilEnd());
             Hashtable reply = new Hashtable();
 
-            reply["str_response_string"] = "";
-            reply["int_response_code"] = 404;
-            reply["content_type"] = "text/plain";
-
+            httpResponse.StatusCode = 401;
+            httpResponse.ContentType = "text/plain";
             if (post["ID"] == null)
-                return reply;
+                return MainServer.BlankResponse;
 
             UUID id;
             if (!UUID.TryParse(post["ID"].ToString(), out id))
-                return reply;
+                return MainServer.BlankResponse;
 
             lock (m_Connections)
             {
                 if (!m_Connections.ContainsKey(id))
-                    return reply;
+                    return MainServer.BlankResponse;
             }
 
             if (post["COMMAND"] == null)
-                return reply;
+                return MainServer.BlankResponse;
 
             lock (m_InputData)
             {
@@ -348,11 +337,9 @@ namespace Aurora.Framework.ConsoleFramework
 
             rootElement.AppendChild(res);
 
-            reply["str_response_string"] = xmldoc.InnerXml;
-            reply["int_response_code"] = 200;
-            reply["content_type"] = "text/xml";
-
-            return reply;
+            httpResponse.StatusCode = 200;
+            httpResponse.ContentType = "text/xml";
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
 
         private Hashtable DecodePostString(string data)

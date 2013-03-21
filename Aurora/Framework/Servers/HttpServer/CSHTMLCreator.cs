@@ -22,16 +22,16 @@ namespace Aurora.Framework.Servers.HttpServer
                             (urlToAppend == "" ? "" : "/") + urlToAppend + "/index.php?method=" + methodName + secret2;
             string url = MainServer.Instance.ServerURI +
                          (urlToAppend == "" ? "" : "/") + urlToAppend + "/index.php?method=" + methodName + secret;
-            MainServer.Instance.RemoveHTTPHandler(null, methodName + secret);
-            MainServer.Instance.RemoveHTTPHandler(null, methodName + secret2);
+            MainServer.Instance.RemoveHttpStreamHandler("/index.php?method=" + methodName + secret);
+            MainServer.Instance.RemoveHttpStreamHandler(methodName + secret2);
             variables["url"] = url;
             MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET", methodName + secret2,
                                                                         delegate(string path, Stream request,
                                                                                  OSHttpRequest httpRequest,
                                                                                  OSHttpResponse httpResponse)
                                                                             {
-                                                                                MainServer.Instance.RemoveHTTPHandler(
-                                                                                    null, methodName + secret2);
+                                                                                MainServer.Instance.RemoveHttpStreamHandler
+                                                                                    (methodName + secret2);
                                                                                 return SetUpWebpage(httpResponse, url,
                                                                                                     html, variables);
                                                                             }));
@@ -41,8 +41,7 @@ namespace Aurora.Framework.Servers.HttpServer
                                                                                  OSHttpRequest httpRequest,
                                                                                  OSHttpResponse httpResponse)
                                                                             {
-                                                                                MainServer.Instance.RemoveHTTPHandler(
-                                                                                    null,
+                                                                                MainServer.Instance.RemoveHttpStreamHandler(
                                                                                     "/index.php?method=" + methodName +
                                                                                     secret);
                                                                                 return HandleResponse(httpRequest,

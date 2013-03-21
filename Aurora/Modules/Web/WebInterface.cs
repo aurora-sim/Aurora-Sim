@@ -131,7 +131,7 @@ namespace Aurora.Modules.Web
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
             if (filename == null)
-                return MainServer.NoResponse;
+                return MainServer.BlankResponse;
             if (httpRequest.HttpMethod == "POST")
                 httpResponse.KeepAlive = false;
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename + ", keep-alive: " + httpResponse.KeepAlive);
@@ -179,7 +179,7 @@ namespace Aurora.Modules.Web
                     if (!string.IsNullOrEmpty(respStr))
                         return response = Encoding.UTF8.GetBytes(respStr);
                     if (httpResponse.StatusCode != 200)
-                        return MainServer.NoResponse;
+                        return MainServer.BlankResponse;
                     if (vars == null)
                         return MainServer.BadRequest;
                     response = Encoding.UTF8.GetBytes(ConvertHTML(filename, text, httpRequest, httpResponse,

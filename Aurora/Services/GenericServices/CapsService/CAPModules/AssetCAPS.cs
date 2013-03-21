@@ -106,7 +106,7 @@ namespace Aurora.Services
             if (m_assetService == null)
             {
                 httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
-                return MainServer.NoResponse;
+                return MainServer.BlankResponse;
             }
 
             UUID textureID;
@@ -136,7 +136,7 @@ namespace Aurora.Services
             }
 
             httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
-            return MainServer.NoResponse;
+            return MainServer.BlankResponse;
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace Aurora.Services
                         texture.Type != (sbyte) AssetType.Simstate)
                     {
                         httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
-                        response = MainServer.NoResponse;
+                        response = MainServer.BlankResponse;
                         return true;
                     }
                     WriteTextureData(httpRequest, httpResponse, texture, format);
@@ -178,7 +178,7 @@ namespace Aurora.Services
                     string textureUrl = REDIRECT_URL + textureID.ToString();
                     MainConsole.Instance.Debug("[GETTEXTURE]: Redirecting texture request to " + textureUrl);
                     httpResponse.RedirectLocation = textureUrl;
-                    response = MainServer.NoResponse;
+                    response = MainServer.BlankResponse;
                     return true;
                 }
             }
@@ -200,7 +200,7 @@ namespace Aurora.Services
                             texture.Type != (sbyte) AssetType.Simstate)
                         {
                             httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
-                            response = MainServer.NoResponse;
+                            response = MainServer.BlankResponse;
                             return true;
                         }
                         if (format == DefaultFormat)
@@ -214,7 +214,7 @@ namespace Aurora.Services
                                                    {Data = ConvertTextureData(texture, format)};
                         if (newTexture.Data.Length == 0)
                         {
-                            response = MainServer.NoResponse;
+                            response = MainServer.BlankResponse;
                             return false; // !!! Caller try another codec, please!
                         }
 
@@ -231,7 +231,7 @@ namespace Aurora.Services
                         texture.Type != (sbyte) AssetType.Simstate)
                     {
                         httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
-                        response = MainServer.NoResponse;
+                        response = MainServer.BlankResponse;
                         return true;
                     }
                     //MainConsole.Instance.DebugFormat("[GETTEXTURE]: texture was in the cache");
@@ -244,7 +244,7 @@ namespace Aurora.Services
             // not found
             MainConsole.Instance.Warn("[GETTEXTURE]: Texture " + textureID + " not found");
             httpResponse.StatusCode = (int) System.Net.HttpStatusCode.NotFound;
-            response = MainServer.NoResponse;
+            response = MainServer.BlankResponse;
             return true;
         }
 
@@ -266,7 +266,7 @@ namespace Aurora.Services
                     if (start >= texture.Data.Length)
                     {
                         response.StatusCode = (int) System.Net.HttpStatusCode.RequestedRangeNotSatisfiable;
-                        return MainServer.NoResponse;
+                        return MainServer.BlankResponse;
                     }
                     else
                     {
@@ -293,7 +293,7 @@ namespace Aurora.Services
                 {
                     MainConsole.Instance.Warn("[GETTEXTURE]: Malformed Range header: " + range);
                     response.StatusCode = (int) System.Net.HttpStatusCode.BadRequest;
-                    return MainServer.NoResponse;
+                    return MainServer.BlankResponse;
                 }
             }
             else // JP2's or other formats

@@ -114,7 +114,7 @@ namespace Aurora.Modules.Caps
             IScenePresence avatar;
 
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
-                return MainServer.NoResponse;
+                return MainServer.BlankResponse;
 
             OSDMap r = (OSDMap) OSDParser.Deserialize(request);
             UploadObjectAssetMessage message = new UploadObjectAssetMessage();
@@ -302,7 +302,7 @@ namespace Aurora.Modules.Caps
                     //Stop now then
                     avatar.ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " +
                                                               reason);
-                    return MainServer.NoResponse;
+                    return MainServer.BlankResponse;
                 }
                 allparts[i] = grp;
             }
