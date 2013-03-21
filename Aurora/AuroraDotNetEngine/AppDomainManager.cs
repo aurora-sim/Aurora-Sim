@@ -32,7 +32,7 @@ using System.Security;
 using System.Security.Permissions;
 using System.Security.Policy;
 
-#if NET_3_5 || LINUX
+#if LINUX
 using System.Collections;
 using System.Net;
 #endif
@@ -207,7 +207,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
             AppDomain restrictedDomain = null;
 
-#if NET_3_5 || LINUX
+#if LINUX
 
             PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));
             UnionCodeGroup policyRoot = new UnionCodeGroup(new AllMembershipCondition(), emptyPolicy);
@@ -333,13 +333,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public IScript LoadScript(string FileName, string TypeName, out AppDomain ad)
+        public IScript LoadScript(string fileName, string typeName, out AppDomain ad)
         {
             // Find next available AppDomain to put it in
             AppDomainStructure FreeAppDomain = GetFreeAppDomain();
             IScript mbrt = (IScript)
                            FreeAppDomain.CurrentAppDomain.CreateInstanceFromAndUnwrap(
-                               FileName, TypeName);
+                               fileName, typeName);
             FreeAppDomain.ScriptsLoaded++;
             ad = FreeAppDomain.CurrentAppDomain;
 

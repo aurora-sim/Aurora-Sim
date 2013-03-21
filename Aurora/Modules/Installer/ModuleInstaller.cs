@@ -147,7 +147,7 @@ namespace Aurora.Modules.Installer
                             {
                                 StartInfo =
                                     new ProcessStartInfo(Path.Combine(Environment.CurrentDirectory, "Prebuild.exe"),
-                                                         "/target vs2008 /targetframework v3_5 /file " + tmpFile)
+                                                         "/target vs2010 /targetframework v4_0 /file " + tmpFile)
                             };
             p.Start();
             p.WaitForExit();
