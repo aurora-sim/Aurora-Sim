@@ -17,9 +17,6 @@
     </Configuration>
     <Configuration name="Debug" platform="AnyCPU">
       <Options>
-		<target name="net-1.1" description="Sets framework to .NET 1.1">
-			<property name="nant.settings.currentframework" value="net-1.1" />
-		</target>
         <CompilerDefines>TRACE;DEBUG</CompilerDefines>
         <OptimizeCode>false</OptimizeCode>
         <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
@@ -48,7 +45,7 @@
     </Configuration>
     <Configuration name="Release" platform="x86">
       <Options>
-        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <CompilerDefines></CompilerDefines>
         <OptimizeCode>true</OptimizeCode>
         <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
         <AllowUnsafe>true</AllowUnsafe>
@@ -63,7 +60,7 @@
     </Configuration>
     <Configuration name="Release" platform="AnyCPU">
       <Options>
-        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <CompilerDefines></CompilerDefines>
         <OptimizeCode>true</OptimizeCode>
         <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
         <AllowUnsafe>true</AllowUnsafe>
@@ -78,7 +75,7 @@
     </Configuration>
     <Configuration name="Release" platform="x64">
       <Options>
-        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <CompilerDefines></CompilerDefines>
         <OptimizeCode>true</OptimizeCode>
         <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
         <AllowUnsafe>true</AllowUnsafe>
@@ -575,7 +572,6 @@
       
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-		<Match buildAction="EmbeddedResource" path="Legacy/Resources" pattern="*.migrations"/>
       </Files>
     </Project>
 
@@ -632,7 +628,6 @@
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-		<Match buildAction="EmbeddedResource" path="Legacy/Resources" pattern="*.migrations"/>
       </Files>
     </Project>
 
