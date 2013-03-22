@@ -221,7 +221,7 @@ namespace Aurora.Region
         /// <param name="ownerId"></param>
         public void ChangeInventoryOwner(UUID ownerId)
         {
-            lock (Items)
+            lock (m_itemsLock)
             {
                 if (0 == Items.Count)
                 {
@@ -250,7 +250,7 @@ namespace Aurora.Region
         /// <param name="groupID"></param>
         public void ChangeInventoryGroup(UUID groupID)
         {
-            lock (Items)
+            lock (m_itemsLock)
             {
                 if (0 == Items.Count)
                 {
@@ -289,7 +289,7 @@ namespace Aurora.Region
         {
             List<TaskInventoryItem> ret = new List<TaskInventoryItem>();
 
-            lock (m_items)
+            lock (m_itemsLock)
             {
                 ret.AddRange(
                     m_items.Values.Where(item => item.InvType == (int) InventoryType.LSL)

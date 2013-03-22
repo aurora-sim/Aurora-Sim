@@ -2606,8 +2606,8 @@ namespace Aurora.Region
             for (i = 0; i < parts.Length; i++)
             {
                 part = parts[i];
-//                PhysicsObject oldActor = part.PhysActor;
-//                PrimitiveBaseShape pbs = part.Shape;
+                //                PhysicsObject oldActor = part.PhysActor;
+                //                PrimitiveBaseShape pbs = part.Shape;
                 if (part.PhysActor != null)
                 {
                     part.PhysActor.RotationalVelocity = Vector3.Zero;
@@ -2637,7 +2637,7 @@ namespace Aurora.Region
 
             // check root part setting that make the entire object not having physics rep
 
-            if (RootPart.PhysicsType == (byte) PhysicsShapeType.None ||
+            if (RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
                 ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom && !RootPart.VolumeDetectActive))
             {
                 Scene.AuroraEventManager.FireGenericEventHandler("ObjectChangedPhysicalStatus", this);
@@ -2665,15 +2665,15 @@ namespace Aurora.Region
 
             RootPart.PhysActor.SetMaterial(RootPart.Material, false);
 
-//            bool rootIsPhysical;
+            //            bool rootIsPhysical;
 
             if ((RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
             {
-//                rootIsPhysical = true;
+                //                rootIsPhysical = true;
                 RootPart.PhysActor.IsPhysical = true;
             }
-//            else
-//                rootIsPhysical = false;
+            //            else
+            //                rootIsPhysical = false;
 
             //Add collision updates
             //part.PhysActor.OnCollisionUpdate += RootPart.PhysicsCollision;
@@ -2688,9 +2688,8 @@ namespace Aurora.Region
             {
                 part = parts[i];
                 if (part == RootPart ||
-                    part.PhysicsType == (byte) PhysicsShapeType.None ||
+                    part.PhysicsType == (byte)PhysicsShapeType.None ||
                     ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom && !part.VolumeDetectActive))
-
                 {
                     continue; // ignore phantom prims
                 }
@@ -2725,14 +2724,14 @@ namespace Aurora.Region
                 part.FireOnAddedPhysics();
                 part.aggregateScriptEvents();
                 //Link the prim then
-//                if(rootIsPhysical)
+                //                if(rootIsPhysical)
                 part.PhysActor.link(RootPart.PhysActor);
             }
 
             Scene.AuroraEventManager.FireGenericEventHandler("ObjectChangedPhysicalStatus", this);
 
             RootPart.PhysActor.BlockPhysicalReconstruction = false; // this sets children also (in AODE at least)
-//            RootPart.PhysActor.BuildingRepresentation = false;
+            //            RootPart.PhysActor.BuildingRepresentation = false;
 
             FixVehicleParams(RootPart);
 
@@ -2741,113 +2740,6 @@ namespace Aurora.Region
             OnFinishedPhysicalRepresentationBuilding = null;
         }
 
-/*
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    PhysicsObject oldActor = part.PhysActor;
-                    PrimitiveBaseShape pbs = part.Shape;
-                    //Reset any old data that we have
-                    part.Velocity = Vector3.Zero;
-                    part.Acceleration = Vector3.Zero;
-                    if (part.PhysActor != null)
-                    {
-                        part.PhysActor.RotationalVelocity = Vector3.Zero;
-                        part.PhysActor.UnSubscribeEvents ();
-                        part.m_hasSubscribedToCollisionEvent = false;
-                        part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
-                        part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
-                        part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
-                        part.PhysActor.OnOutOfBounds -= part.PhysicsOutOfBounds;
-
-                        //part.PhysActor.delink ();
-                        //Remove the old one so that we don't have more than we should,
-                        //  as when we copy, it readds it to the PhysicsScene somehow
-                        //if (part.IsRoot)//The root removes all children
-                        m_scene.PhysicsScene.RemovePrim (part.PhysActor);
-
-                        part.FireOnRemovedPhysics ();
-                    }
-                    part.AngularVelocity = Vector3.Zero;
-                    part.GenerateRotationalVelocityFromOmega ();
-                }
-            }
-            //Check for meshes and stuff
-            CheckSculptAndLoad ();
-
-            //This is a heavy operation... it is really bad to lock this, but if we don't, we could have multiple threads in here... which would be baaad
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (RootPart.PhysicsType == (byte)PhysicsShapeType.None ||
-                        part.PhysicsType == (byte)PhysicsShapeType.None ||
-                        ((part.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
-                        !part.VolumeDetectActive) ||
-                        ((RootPart.Flags & PrimFlags.Phantom) == PrimFlags.Phantom &&
-                        !RootPart.VolumeDetectActive))
-                    {
-                        part.PhysActor = null;
-                        continue; //Don't rebuild! All phantom if the root is phantom
-                    }
-                    
-                    //Now readd the physics actor to the physics scene
-                    part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
-//                    part.PhysActor.BuildingRepresentation = true;
-//                    if(part.IsRoot)
-//                        part.PhysActor.BlockPhysicalReconstruction = true;//Don't let it rebuild it until we have all the links done
-
-                    //Fix the localID!
-                    part.PhysActor.LocalID = part.LocalId;
-                    part.PhysActor.UUID = part.UUID;
-                    part.PhysActor.VolumeDetect = part.VolumeDetectActive;
-                    
-                    //Force deselection here so that it isn't stuck forever
-                    if (!keepSelectedStatuses)
-                        part.PhysActor.Selected = false;
-                    else
-                        part.PhysActor.Selected = part.IsSelected;
-
-                    part.PhysActor.SetMaterial (part.Material, false);
-                    //Add collision updates
-                    //part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
-                    part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
-                    part.PhysActor.OnSignificantMovement += part.ParentGroup.CheckForSignificantMovement;
-                    part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
-
-                    part.FireOnAddedPhysics ();
-                    part.aggregateScriptEvents ();
-                }
-                Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", this);
-            }
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (!part.IsRoot && RootPart.PhysActor != null && part.PhysActor != null)//Link the prim then
-                        part.PhysActor.link (RootPart.PhysActor);
-                }
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (part.PhysActor != null)
-                    {
-                        FixVehicleParams(part);
-// *
-                        if(part.IsRoot)
-                        {
-                            //All done linking, build the body
-                            part.PhysActor.BlockPhysicalReconstruction = false;
-                        }
-                        part.PhysActor.BuildingRepresentation = false;
-// *
-                    }
-                }
-                if(OnFinishedPhysicalRepresentationBuilding != null)
-                    OnFinishedPhysicalRepresentationBuilding();
-            }
-        }
-*/
 
         /// <summary>
         ///     Fix all the vehicle params after rebuilding the representation

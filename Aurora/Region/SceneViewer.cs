@@ -726,14 +726,6 @@ namespace Aurora.Region
                         for (int i = 0; i < count; i++)
                         {
                             EntityUpdate update = ((EntityUpdate) m_objectUpdatesToSend[0]);
-                            /*if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
-                            {
-                                m_objectUpdatesToSend.RemoveAt (0);
-                                m_objectUpdatesToSend.Insert (m_objectUpdatesToSend.Count, update.Entity.UUID, update);
-                                continue;
-                            }
-                            m_EntitiesInPacketQueue.Add (update.Entity.UUID);*/
-
                             //Fix the CRC for this update
                             //Increment the CRC code so that the client won't be sent a cached update for this
                             if (update.Flags != PrimUpdateFlags.PrimFlags)

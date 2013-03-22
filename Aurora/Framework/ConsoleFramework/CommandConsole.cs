@@ -481,7 +481,6 @@ namespace Aurora.Framework.ConsoleFramework
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
         protected System.IO.StreamWriter m_logFile;
-        private string m_logFileName;
         public List<string> m_promptOptions = new List<string>();
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)

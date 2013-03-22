@@ -154,7 +154,7 @@ namespace Aurora.Region
             foreach (IScenePresence presence in presences)
             {
                 presence.IsTainted = false;
-                    //We set this first so that it is cleared out, but also so that the method can re-taint us
+                //We set this first so that it is cleared out, but also so that the method can re-taint us
                 presence.Update();
             }
         }
@@ -167,22 +167,6 @@ namespace Aurora.Region
             {
                 // Update DisableCollisions 
                 _PhyScene.DisableCollisions = m_regInfo.RegionSettings.DisableCollisions;
-
-                // Here is where the Scene calls the PhysicsScene. This is a one-way
-                // interaction; the PhysicsScene cannot access the calling Scene directly.
-                // But with joints, we want a PhysicsActor to be able to influence a
-                // non-physics SceneObjectPart. In particular, a PhysicsActor that is connected
-                // with a joint should be able to move the SceneObjectPart which is the visual
-                // representation of that joint (for editing and serialization purposes).
-                // However the PhysicsActor normally cannot directly influence anything outside
-                // of the PhysicsScene, and the non-physical SceneObjectPart which represents
-                // the joint in the Scene does not exist in the PhysicsScene.
-                //
-                // To solve this, we have an event in the PhysicsScene that is fired when a joint
-                // has changed position (because one of its associated PhysicsActors has changed 
-                // position).
-                //
-                // Therefore, JointMoved and JointDeactivated events will be fired as a result of the following Simulate().
 
                 _PhyScene.Simulate((float) elapsed);
             }

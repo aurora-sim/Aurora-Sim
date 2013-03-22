@@ -3680,13 +3680,10 @@ namespace Aurora.Region
         public void ClearUndoState()
         {
             lock (m_undo)
-            {
                 m_undo = new UndoStack<UndoState>(5);
-            }
             lock (m_redo)
-            {
                 m_redo = new UndoStack<UndoState>(5);
-            }
+
             StoreUndoState();
         }
 
