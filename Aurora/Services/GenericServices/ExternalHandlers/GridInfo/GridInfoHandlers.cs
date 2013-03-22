@@ -56,6 +56,7 @@ namespace Aurora.Services
         public string GridRegisterURI { get; protected set; }
         public string GridForgotPasswordURI { get; protected set; }
         public string GridMapTileURI { get; protected set; }
+        public string AgentAppearanceURI { get; protected set; }
         public string GridWebProfileURI { get; protected set; }
         public string GridSearchURI { get; protected set; }
         public string GridDestinationURI { get; protected set; }
@@ -136,6 +137,10 @@ namespace Aurora.Services
                 IMapService mapService = registry.RequestModuleInterface<IMapService>();
                 if (GridMapTileURI == "" && mapService != null)
                     GridMapTileURI = mapService.MapServiceURL;
+                AgentAppearanceURI = GetConfig(configSource, "AgentAppearanceURI");
+                IAgentAppearanceService agentAppearanceService = registry.RequestModuleInterface<IAgentAppearanceService>();
+                if (AgentAppearanceURI == "" && agentAppearanceService != null)
+                    AgentAppearanceURI = agentAppearanceService.ServiceURI;
                 GridWebProfileURI = GetConfig(configSource, "webprofile");
                 if (GridWebProfileURI == "" && webInterface != null)
                     GridWebProfileURI = webInterface.WebProfileURL;

@@ -187,6 +187,7 @@ namespace Aurora.Services
                 LLLoginResponseRegister.RegisterValue("SnapshotConfigURL", gridInfo.GridSnapshotConfigURI);
                 LLLoginResponseRegister.RegisterValue("HelpURL", gridInfo.GridHelpURI);
                 LLLoginResponseRegister.RegisterValue("MapTileURL", gridInfo.GridMapTileURI);
+                LLLoginResponseRegister.RegisterValue("AgentAppearanceURL", gridInfo.AgentAppearanceURI);
                 LLLoginResponseRegister.RegisterValue("WebProfileURL", gridInfo.GridWebProfileURI);
                 LLLoginResponseRegister.RegisterValue("SearchURL", gridInfo.GridSearchURI);
                 LLLoginResponseRegister.RegisterValue("DestinationURL", gridInfo.GridDestinationURI);
@@ -651,7 +652,7 @@ namespace Aurora.Services
                                                where, startLocation, position, lookAt, gestures, home, clientIP,
                                                MaxMaturity, MaturityRating,
                                                eventCategories, eventNotifications, classifiedCategories, seedCap,
-                                               m_config, DisplayName);
+                                               m_config, DisplayName, avappearance.Serial.ToString());
 
                 MainConsole.Instance.InfoFormat(
                     "[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " +

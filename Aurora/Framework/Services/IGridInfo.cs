@@ -12,6 +12,7 @@
         string GridRegisterURI { get; }
         string GridForgotPasswordURI { get; }
         string GridMapTileURI { get; }
+        string AgentAppearanceURI { get; }
         string GridWebProfileURI { get; }
         string GridSearchURI { get; }
         string GridDestinationURI { get; }

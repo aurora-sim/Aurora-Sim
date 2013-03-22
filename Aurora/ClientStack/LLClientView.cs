@@ -3631,7 +3631,7 @@ namespace Aurora.ClientStack
                                          new AvatarAppearancePacket.AppearanceDataBlock() 
                                          {  
                                              CofVersion = app.Serial,
-                                             AppearanceVersion = 0
+                                             AppearanceVersion = 1//SSA setting
                                          }
                                      };
             avp.Sender.IsTrial = false;

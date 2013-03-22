@@ -73,6 +73,7 @@ namespace Aurora.Services
         private string login;
         private Hashtable loginFlagsHash;
         private string lookAt;
+        private string COFVersion;
 
         private BuddyList m_buddyList;
         private string seedCapability;
@@ -108,7 +109,7 @@ namespace Aurora.Services
                                GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating,
                                ArrayList eventValues, ArrayList eventNotificationValues, ArrayList classifiedValues,
                                string seedCap, IConfigSource source,
-                               string DisplayName)
+                               string DisplayName, string cofversion)
             : this()
         {
             m_source = source;
@@ -132,6 +133,7 @@ namespace Aurora.Services
             eventCategories = eventValues;
             eventNotifications = eventNotificationValues;
             classifiedCategories = classifiedValues;
+            COFVersion = cofversion;
 
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
@@ -334,7 +336,8 @@ namespace Aurora.Services
                 responseData["region_y"] = (Int32) (RegionY);
                 responseData["region_size_x"] = (RegionSizeX);
                 responseData["region_size_y"] = (RegionSizeY);
-
+                responseData["cof_version"] = COFVersion;
+                
                 #region Global Textures
 
                 ArrayList globalTextures = new ArrayList();
@@ -352,6 +355,9 @@ namespace Aurora.Services
 
                 if (MapTileURL != String.Empty)
                     responseData["map-server-url"] = MapTileURL;
+
+                if (AgentAppearanceURL != String.Empty)
+                    responseData["agent_appearance_service"] = AgentAppearanceURL;
 
                 if (WebProfileURL != String.Empty)
                     responseData["web_profile_url"] = WebProfileURL;
@@ -901,6 +907,11 @@ namespace Aurora.Services
         public string MapTileURL
         {
             get { return (string) LLLoginResponseRegister.GetValue("MapTileURL"); }
+        }
+
+        public string AgentAppearanceURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue("AgentAppearanceURL"); }
         }
 
         public string SearchURL
