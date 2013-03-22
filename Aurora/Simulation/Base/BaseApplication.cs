@@ -174,6 +174,7 @@ namespace Aurora.Simulation.Base
                     string gridName = "Aurora-Sim Grid";
                     string welcomeMessage = "";
                     string allowAnonLogin = "true";
+                    uint port = 9000;
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("====================================================================");
                     Console.WriteLine("========================= AURORA CONFIGURATOR ======================");
@@ -187,6 +188,13 @@ namespace Aurora.Simulation.Base
                         Console.WriteLine("[1] Standalone Mode \n[2] Grid Mode");
                         Console.ResetColor();
                         mode = ReadLine("Choose 1 or 2", mode);
+
+
+                        Console.WriteLine("Http Port for the server");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("Default is 9000");
+                        Console.ResetColor();
+                        port = uint.Parse(ReadLine("Choose the port", "9000"));
                     }
 
                     if (mode == "1")
@@ -283,6 +291,28 @@ namespace Aurora.Simulation.Base
 
                     if (isAuroraExe)
                     {
+                        MakeSureExists("Aurora.ini");
+                        IniConfigSource aurora_ini = new IniConfigSource("Aurora.ini", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource aurora_ini_example = new IniConfigSource("Aurora.ini.example", Nini.Ini.IniFileType.AuroraStyle);
+
+                        foreach (IConfig config in aurora_ini_example.Configs)
+                        {
+                            IConfig newConfig = aurora_ini.AddConfig(config.Name);
+                            foreach (string key in config.GetKeys())
+                            {
+                                //No GUI for mono
+                                if (key == "http_listener_port")
+                                    newConfig.Set(key, port);
+                                else
+                                    newConfig.Set(key, config.Get(key));
+                            }
+                        }
+
+                        aurora_ini.Save();
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("Your Aurora.ini has been successfully configured");
+                        Console.ResetColor();
+
                         MakeSureExists("Configuration/Main.ini");
                         IniConfigSource main_ini = new IniConfigSource("Configuration/Main.ini",
                                                                        Nini.Ini.IniFileType.AuroraStyle);
