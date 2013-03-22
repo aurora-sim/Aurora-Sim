@@ -104,7 +104,7 @@ namespace Aurora.Services
                     else
                     {
                         titles.Add(gmd.Title);
-                        member["title"] = titles.Count;
+                        member["title"] = titles.Count-1;
                     }
                     member["powers"] = gmd.AgentPowers;
                     count++;
