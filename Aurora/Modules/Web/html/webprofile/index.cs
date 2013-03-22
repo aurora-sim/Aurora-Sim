@@ -74,10 +74,10 @@ namespace Aurora.Modules.Web
 
             vars.Add("UserName", account.Name);
             vars.Add("UserBorn", Util.ToDateTime(account.Created).ToShortDateString());
-            vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
             IUserProfileInfo profile = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>().
                                               GetUserProfile(account.PrincipalID);
+            vars.Add("UserType", profile.MembershipGroup == "" ? "Resident" : profile.MembershipGroup);
             if (profile != null)
             {
                 if (profile.Partner != UUID.Zero)

@@ -239,8 +239,6 @@ namespace Aurora.Services.SQLServices.UserAccountService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;*/
 
-            if (data.UserTitle == null)
-                data.UserTitle = "";
             m_registry.RequestModuleInterface<ISimulationBase>()
                       .EventManager.FireGenericEventHandler("UpdateUserInformation", data.PrincipalID);
             return m_Database.Store(data);
@@ -437,7 +435,6 @@ namespace Aurora.Services.SQLServices.UserAccountService
                 return;
             }
             title = cmdparams.Length < 7 ? MainConsole.Instance.Prompt("User Title") : Util.CombineParams(cmdparams, 6);
-            account.UserTitle = title;
             if (m_profileConnector != null)
             {
                 IUserProfileInfo profile = m_profileConnector.GetUserProfile(account.PrincipalID);
@@ -510,7 +507,6 @@ namespace Aurora.Services.SQLServices.UserAccountService
 
             MainConsole.Instance.InfoFormat("Name:    {0}", ua.Name);
             MainConsole.Instance.InfoFormat("ID:      {0}", ua.PrincipalID);
-            MainConsole.Instance.InfoFormat("Title:   {0}", ua.UserTitle);
             MainConsole.Instance.InfoFormat("E-mail:  {0}", ua.Email);
             MainConsole.Instance.InfoFormat("Created: {0}", Utils.UnixTimeToDateTime(ua.Created));
             MainConsole.Instance.InfoFormat("Level:   {0}", ua.UserLevel);

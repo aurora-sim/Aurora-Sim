@@ -82,7 +82,19 @@ namespace Aurora.Services.DataService
                 where[fields[i]] = values[i];
             }
 
-            List<string> query = GD.Query(new[] {"*"}, m_realm, new QueryFilter
+            List<string> query = GD.Query(new[]
+                                               {
+                                                   "PrincipalID",
+                                                   "ScopeID",
+                                                   "FirstName",
+                                                   "LastName",
+                                                   "Email",
+                                                   "Created",
+                                                   "UserLevel",
+                                                   "UserFlags",
+                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) +
+                                                   ") as Name"
+                                               }, m_realm, new QueryFilter
                                                                     {
                                                                         andFilters = where
                                                                     }, null, null, null);
@@ -92,10 +104,7 @@ namespace Aurora.Services.DataService
 
         public bool Store(UserAccount data)
         {
-            if (data.UserTitle == null)
-                data.UserTitle = "";
-
-            Dictionary<string, object> row = new Dictionary<string, object>(11);
+            Dictionary<string, object> row = new Dictionary<string, object>(9);
             row["PrincipalID"] = data.PrincipalID;
             row["ScopeID"] = data.ScopeID;
             row["FirstName"] = data.FirstName;
@@ -104,7 +113,6 @@ namespace Aurora.Services.DataService
             row["Created"] = data.Created;
             row["UserLevel"] = data.UserLevel;
             row["UserFlags"] = data.UserFlags;
-            row["UserTitle"] = data.UserTitle;
             row["Name"] = data.Name;
 
             return GD.Replace(m_realm, row);
@@ -178,11 +186,9 @@ namespace Aurora.Services.DataService
                                                    "FirstName",
                                                    "LastName",
                                                    "Email",
-                                                   "ServiceURLs",
                                                    "Created",
                                                    "UserLevel",
                                                    "UserFlags",
-                                                   "UserTitle",
                                                    "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) +
                                                    ") as Name"
                                                }, m_realm, filter, sort, start, count);
@@ -209,11 +215,9 @@ namespace Aurora.Services.DataService
                                                    "FirstName",
                                                    "LastName",
                                                    "Email",
-                                                   "ServiceURLs",
                                                    "Created",
                                                    "UserLevel",
                                                    "UserFlags",
-                                                   "UserTitle",
                                                    "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) +
                                                    ") as Name"
                                                }, m_realm, filter, sort, null, null);
@@ -235,7 +239,7 @@ namespace Aurora.Services.DataService
         private List<UserAccount> ParseQuery(List<UUID> scopeIDs, List<string> query)
         {
             List<UserAccount> list = new List<UserAccount>();
-            for (int i = 0; i < query.Count; i += 11)
+            for (int i = 0; i < query.Count; i += 9)
             {
                 UserAccount data = new UserAccount
                                        {
@@ -246,11 +250,10 @@ namespace Aurora.Services.DataService
                 string FirstName = query[i + 2];
                 string LastName = query[i + 3];
                 data.Email = query[i + 4];
-                data.Created = Int32.Parse(query[i + 6]);
-                data.UserLevel = Int32.Parse(query[i + 7]);
-                data.UserFlags = Int32.Parse(query[i + 8]);
-                data.UserTitle = query[i + 9];
-                data.Name = query[i + 10];
+                data.Created = Int32.Parse(query[i + 5]);
+                data.UserLevel = Int32.Parse(query[i + 6]);
+                data.UserFlags = Int32.Parse(query[i + 7]);
+                data.Name = query[i + 8];
                 if (string.IsNullOrEmpty(data.Name))
                 {
                     data.Name = FirstName + " " + LastName;

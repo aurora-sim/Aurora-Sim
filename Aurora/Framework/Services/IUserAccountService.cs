@@ -40,7 +40,6 @@ namespace Aurora.Framework.Services
         public UUID PrincipalID { get; set; }
         public int UserFlags;
         public int UserLevel;
-        public string UserTitle;
 
         public UserAccount()
         {
@@ -98,7 +97,6 @@ namespace Aurora.Framework.Services
             result["Created"] = Created;
             result["UserLevel"] = UserLevel;
             result["UserFlags"] = UserFlags;
-            result["UserTitle"] = UserTitle;
 
             return result;
         }
@@ -119,9 +117,6 @@ namespace Aurora.Framework.Services
                 UserLevel = map["UserLevel"];
             if (map.ContainsKey("UserFlags"))
                 UserFlags = map["UserFlags"];
-            if (map.ContainsKey("UserTitle"))
-                UserTitle = map["UserTitle"];
-
             if (map.ContainsKey("Created"))
                 Created = map["Created"];
         }

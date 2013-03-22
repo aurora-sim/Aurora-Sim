@@ -69,12 +69,12 @@ namespace Aurora.Modules.Web
                 return vars;
 
             vars.Add("UserName", account.Name);
-            vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
             IProfileConnector profileConnector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             IUserProfileInfo profile = profileConnector == null
                                            ? null
                                            : profileConnector.GetUserProfile(account.PrincipalID);
+            vars.Add("UserType", profile.MembershipGroup == "" ? "Resident" : profile.MembershipGroup);
             IWebHttpTextureService webhttpService =
                 webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
             if (profile != null)
