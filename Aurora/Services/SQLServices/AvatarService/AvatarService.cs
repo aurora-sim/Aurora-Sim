@@ -145,8 +145,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("SetAppearance",
                                                                                                       new object[2]
                                                                                                           {
-                                                                                                              principalID
-                                                                                                              ,
+                                                                                                              principalID,
                                                                                                               appearance
                                                                                                           });
             RemoveOldBaked(principalID, appearance);

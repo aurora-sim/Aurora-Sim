@@ -114,6 +114,8 @@ namespace Aurora.Services.SQLServices.AssetService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase Get(string id)
         {
+            if (id == UUID.Zero.ToString()) return null;
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (doDatabaseCaching && cache != null)
             {

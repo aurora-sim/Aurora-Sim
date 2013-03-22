@@ -1238,11 +1238,7 @@ namespace Aurora.Framework.PresenceInfo
         /// <summary>
         ///     Send information about the given agent's appearance to another client.
         /// </summary>
-        /// <param name="agentID">The id of the agent associated with the appearance</param>
-        /// <param name="visualParams"></param>
-        /// <param name="textureEntry"></param>
-        void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry);
-
+        void SendAppearance(AvatarAppearance app);
         void SendStartPingCheck(byte seq);
 
         /// <summary>

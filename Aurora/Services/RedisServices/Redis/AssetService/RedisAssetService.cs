@@ -116,6 +116,8 @@ namespace Aurora.RedisServices.AssetService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase Get(string id)
         {
+            if (id == UUID.Zero.ToString()) return null;
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (doDatabaseCaching && cache != null)
             {
@@ -329,6 +331,8 @@ namespace Aurora.RedisServices.AssetService
 
                                               MemoryStream memStream = new MemoryStream(data);
                                               asset = ProtoBuf.Serializer.Deserialize<AssetBase>(memStream);
+                                              if (asset.Type == -1)
+                                                  asset.Type = 0;
                                               memStream.Close();
                                               byte[] assetdata = conn.Get(DATA_PREFIX + asset.HashCode);
                                               if (assetdata == null || asset.HashCode == "")

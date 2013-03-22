@@ -2016,7 +2016,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
         }
 

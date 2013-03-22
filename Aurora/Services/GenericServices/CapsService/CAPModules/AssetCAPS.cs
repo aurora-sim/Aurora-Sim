@@ -34,6 +34,7 @@ using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
@@ -568,26 +569,38 @@ namespace Aurora.Services
                 bool success = false;
                 string error = "";
                 IAvatarService avatarService = m_service.Registry.RequestModuleInterface<IAvatarService>();
+                IInventoryService inventoryService = m_service.Registry.RequestModuleInterface<IInventoryService>();
                 ISyncMessagePosterService syncMessage = m_service.Registry.RequestModuleInterface<ISyncMessagePosterService>();
                 if (avatarService != null)
                 {
                     List<BakeType> pendingBakes = new List<BakeType>();
                     AvatarAppearance appearance = avatarService.GetAppearance(m_service.AgentID);
-                    // We will refresh the textures (zero out all non bake textures)
-                    for (int i = 0; i < Textures.Length; i++)
+                    List<InventoryItemBase> items = inventoryService.GetFolderItems(m_service.AgentID, inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Unknown, AssetType.CurrentOutfitFolder).ID);
+                    foreach (InventoryItemBase itm in items)
                     {
-                        Textures[i] = new OpenMetaverse.AppearanceManager.TextureData();
-                    }
-                    foreach(AvatarWearable itm in appearance.Wearables)
+                        MainConsole.Instance.Warn("[SSB]: Baking " + itm.Name);
+                    } 
+                    foreach (InventoryItemBase itm in items)
                     {
-                        OpenMetaverse.AppearanceManager.WearableData wearable = new OpenMetaverse.AppearanceManager.WearableData();
-                        AssetBase asset = m_assetService.Get(itm[0].AssetID.ToString());
-                        wearable.Asset = new AssetClothing(itm[0].AssetID, asset.Data);
-                        if (wearable.Asset.Decode())
+                        if (itm.AssetType == (int)AssetType.Link)
                         {
-                            DecodeWearableParams(wearable);
+                            UUID assetID = inventoryService.GetItemAssetID(m_service.AgentID, itm.AssetID);
+                            OpenMetaverse.AppearanceManager.WearableData wearable = new OpenMetaverse.AppearanceManager.WearableData();
+                            AssetBase asset = m_assetService.Get(assetID.ToString());
+                            if (asset != null && asset.TypeAsset != AssetType.Object)
+                            {
+                                wearable.Asset = new AssetClothing(assetID, asset.Data);
+                                if (wearable.Asset.Decode())
+                                    DecodeWearableParams(wearable);
+                            }
                         }
                     }
+                    for (int i = 0; i < appearance.Texture.FaceTextures.Length; i++)
+                    {
+                        if (appearance.Texture.FaceTextures[i] != null && Textures[i].TextureID != UUID.Zero)
+                            appearance.Texture.FaceTextures[i].TextureID = Textures[i].TextureID;
+                    }
+
                     for (int bakedIndex = 0; bakedIndex < AppearanceManager.BAKED_TEXTURE_COUNT; bakedIndex++)
                     {
                         AvatarTextureIndex textureIndex = AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)bakedIndex);
@@ -602,6 +615,7 @@ namespace Aurora.Services
                         }
                     }
 
+                    int start = Environment.TickCount;
                     foreach (BakeType bakeType in pendingBakes)
                     {
                         List<AvatarTextureIndex> textureIndices = OpenMetaverse.AppearanceManager.BakeTypeToTextures(bakeType);
@@ -616,20 +630,25 @@ namespace Aurora.Services
                             oven.AddTexture(texture);
                         }
 
-                        int start = Environment.TickCount;
                         oven.Bake();
-                        MainConsole.Instance.Error("[SSB]: Baking " + bakeType + " took " + (Environment.TickCount - start) + "ms");
+
                         byte[] assetData = oven.BakedTexture.AssetData;
                         AssetBase newBakedAsset = new AssetBase(UUID.Random());
                         newBakedAsset.Data = assetData;
                         newBakedAsset.TypeAsset = AssetType.Texture;
                         newBakedAsset.Name = "SSB Texture";
                         newBakedAsset.Flags = AssetFlags.Deletable | AssetFlags.Collectable | AssetFlags.Rewritable | AssetFlags.Temporary;
+                        if (appearance.Texture.FaceTextures[(int)AppearanceManager.BakeTypeToAgentTextureIndex(bakeType)].TextureID != UUID.Zero)
+                            m_assetService.Delete(appearance.Texture.FaceTextures[(int)AppearanceManager.BakeTypeToAgentTextureIndex(bakeType)].TextureID);
                         UUID assetID = m_assetService.Store(newBakedAsset);
-                        AvatarTextureIndex bakedIndex = AppearanceManager.BakeTypeToAgentTextureIndex(bakeType);
-
-                        appearance.Texture.FaceTextures[(int)bakedIndex].TextureID = assetID;
+                        MainConsole.Instance.WarnFormat("[SSB]: Baked {0}", assetID);
+                        int place = (int)AppearanceManager.BakeTypeToAgentTextureIndex(bakeType);
+                        appearance.Texture.FaceTextures[place].TextureID = assetID;
                     }
+
+                    MainConsole.Instance.ErrorFormat("[SSB]: Baking took {0} ms", (Environment.TickCount - start));
+
+                    appearance.Serial = cof_version+1;
                     avatarService.SetAppearance(m_service.AgentID, appearance);
                     OSDMap uaamap = new OSDMap();
                     uaamap["Method"] = "UpdateAvatarAppearance";

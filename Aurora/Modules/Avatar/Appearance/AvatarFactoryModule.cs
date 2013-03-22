@@ -862,8 +862,7 @@ textures 1
             /// <param name="avatar"></param>
             public void SendAppearanceToAgent(IScenePresence avatar)
             {
-                avatar.ControllingClient.SendAppearance(
-                    Appearance.Owner, Appearance.VisualParams, Appearance.Texture.GetBytes());
+                avatar.ControllingClient.SendAppearance(Appearance);
             }
 
             public AvatarAppearance Appearance

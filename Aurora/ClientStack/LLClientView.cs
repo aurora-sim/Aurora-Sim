@@ -3611,30 +3611,31 @@ namespace Aurora.ClientStack
             OutPacket(aw, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
             AvatarAppearancePacket avp =
                 (AvatarAppearancePacket) PacketPool.Instance.GetPacket(PacketType.AvatarAppearance);
             // TODO: don't create new blocks if recycling an old packet
             avp.VisualParam = new AvatarAppearancePacket.VisualParamBlock[218];
-            avp.ObjectData.TextureEntry = textureEntry;
-
-            for (int i = 0; i < visualParams.Length; i++)
+            avp.ObjectData.TextureEntry = app.Texture.GetBytes();
+            for (int i = 0; i < app.VisualParams.Length; i++)
             {
                 AvatarAppearancePacket.VisualParamBlock avblock = new AvatarAppearancePacket.VisualParamBlock
                                                                       {
-                                                                          ParamValue
-                                                                              =
-                                                                              visualParams
-                                                                              [i
-                                                                              ]
+                                                                          ParamValue = app.VisualParams[i]
                                                                       };
                 avp.VisualParam[i] = avblock;
             }
             avp.AppearanceData = new AvatarAppearancePacket.AppearanceDataBlock[1]
-                                     {new AvatarAppearancePacket.AppearanceDataBlock()};
+                                     {
+                                         new AvatarAppearancePacket.AppearanceDataBlock() 
+                                         {  
+                                             CofVersion = app.Serial,
+                                             AppearanceVersion = 0
+                                         }
+                                     };
             avp.Sender.IsTrial = false;
-            avp.Sender.ID = agentID;
+            avp.Sender.ID = app.Owner;
             //MainConsole.Instance.InfoFormat("[LLClientView]: Sending appearance for {0} to {1}", agentID.ToString(), AgentId.ToString());
             //            OutPacket(avp, ThrottleOutPacketType.Texture);
             OutPacket(avp, ThrottleOutPacketType.AvatarInfo);

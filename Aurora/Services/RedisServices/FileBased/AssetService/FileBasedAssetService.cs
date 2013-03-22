@@ -98,6 +98,8 @@ namespace Aurora.FileBasedServices.AssetService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual AssetBase Get(string id)
         {
+            if (id == UUID.Zero.ToString()) return null;
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (doDatabaseCaching && cache != null)
             {
@@ -298,6 +300,8 @@ namespace Aurora.FileBasedServices.AssetService
                     FileStream openStream = File.OpenRead(GetPathForID(id));
                     asset = ProtoBuf.Serializer.Deserialize<AssetBase>(openStream);
                     openStream.Close();
+                    if (asset.Type == -1)
+                        asset.Type = 0;
                     asset.Data = File.ReadAllBytes(GetDataPathForID(asset.HashCode));
                 }
             }
