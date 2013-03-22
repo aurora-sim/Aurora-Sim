@@ -1968,7 +1968,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Format(Level.All, "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
+                MainConsole.Instance.Format(Level.Off, "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
                     ex.ToString());
             }
             try
@@ -1978,7 +1978,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Format(Level.All, "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
+                MainConsole.Instance.Format(Level.Off, "[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " +
                     ex.ToString());
             }
         }

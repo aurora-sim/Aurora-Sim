@@ -116,7 +116,7 @@ namespace Aurora.Services
 
             MainConsole.Instance.Threshold = (Level)Enum.Parse(typeof(Level), rawLevel, true);
 
-            MainConsole.Instance.Format(Level.All, "Console log level is {0}", MainConsole.Instance.Threshold);
+            MainConsole.Instance.Format(Level.Off, "Console log level is {0}", MainConsole.Instance.Threshold);
         }
 
         #endregion

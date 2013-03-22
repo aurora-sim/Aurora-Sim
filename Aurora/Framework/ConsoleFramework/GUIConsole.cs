@@ -69,7 +69,7 @@ namespace Aurora.Framework.ConsoleFramework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-                Output(s, Level.All);
+                Output(s, Level.Off);
         }
 
         /// <summary>

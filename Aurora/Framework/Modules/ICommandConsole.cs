@@ -169,13 +169,13 @@ namespace Aurora.Framework.Modules
 
     public enum Level
     {
-        Off = 0,
+        All = 0,
         Trace = 1,
         Debug = 2,
         Info = 3,
         Warn = 4,
         Error = 5,
         Fatal = 6,
-        All = 7
+        Off = 7
     }
 }

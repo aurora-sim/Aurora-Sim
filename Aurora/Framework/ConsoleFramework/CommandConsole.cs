@@ -236,7 +236,7 @@ namespace Aurora.Framework.ConsoleFramework
 
                                 foreach (string s in help)
                                 {
-                                    MainConsole.Instance.Format(Level.All, s);
+                                    MainConsole.Instance.Format(Level.Off, s);
                                 }
                                 return new string[0];
                             }
@@ -509,7 +509,7 @@ namespace Aurora.Framework.ConsoleFramework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-                Output(s, Level.All);
+                Output(s, Level.Off);
         }
 
         /// <summary>

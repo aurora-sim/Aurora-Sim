@@ -493,7 +493,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
         {
             if (cmdparams.Length != 4)
             {
-                MainConsole.Instance.Format(Level.All, "Usage: show account <first-name> <last-name>");
+                MainConsole.Instance.Format(Level.Off, "Usage: show account <first-name> <last-name>");
                 return;
             }
 

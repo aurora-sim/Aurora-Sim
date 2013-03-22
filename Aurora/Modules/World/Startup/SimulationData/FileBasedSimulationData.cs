@@ -30,6 +30,7 @@ using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Utilities;
 using Aurora.Region;
 using Nini.Config;
@@ -140,7 +141,7 @@ namespace Aurora.Modules
             info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: ", info.RegionSizeY.ToString()));
             
             if (info.InternalEndPoint == null)
-                info.InternalEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse("0.0.0.0"), 9000);
+                info.InternalEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse("0.0.0.0"), (int)MainServer.Instance.Port);
             System.Net.IPAddress intAdd =
                 System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: ",
                                                                        info.InternalEndPoint.Address.ToString()));

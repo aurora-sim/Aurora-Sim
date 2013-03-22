@@ -67,7 +67,7 @@ namespace Aurora.Modules.WorldShader
         {
             if (MainConsole.Instance.ConsoleScene == null)
             {
-                MainConsole.Instance.Format(Level.All, "Select a scene first");
+                MainConsole.Instance.Format(Level.Off, "Select a scene first");
                 return;
             }
             ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities();
@@ -95,7 +95,7 @@ namespace Aurora.Modules.WorldShader
         {
             if (MainConsole.Instance.ConsoleScene == null)
             {
-                MainConsole.Instance.Format(Level.All, "Select a scene first");
+                MainConsole.Instance.Format(Level.Off, "Select a scene first");
                 return;
             }
             bool greyScale = MainConsole.Instance.Prompt("Greyscale (yes or no)?").ToLower() == "yes";
