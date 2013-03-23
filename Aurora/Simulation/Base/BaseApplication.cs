@@ -493,23 +493,10 @@ namespace Aurora.Simulation.Base
             }
             catch (Exception ex)
             {
-                if (ex.Message != "Restart") //Internal needs a restart message
-                {
-                    UnhandledException(false, ex);
-                    //Just clean it out as good as we can
-                    simBase.Shutdown(false);
-                    IRegionLoader[] regionLoaders = simBase.ApplicationRegistry.RequestModuleInterfaces<IRegionLoader>();
-
-                    foreach (IRegionLoader loader in regionLoaders.Where(loader => loader != null && loader.Default))
-                    {
-                        loader.FailedToStartRegions(ex.Message);
-                    }
-                }
-                //Then let it restart if it needs by sending it back up to 'while (AutoRestart || Running)' above
-                return;
+                UnhandledException(false, ex);
+                //Just clean it out as good as we can
+                simBase.Shutdown(false);
             }
-            //If it didn't throw an error, it wants to quit
-            Environment.Exit(0);
         }
 
         /// <summary>

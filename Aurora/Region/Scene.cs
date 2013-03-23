@@ -907,8 +907,7 @@ namespace Aurora.Region
         {
             IConfig startupConfig = m_config.Configs["Startup"];
             bool add = startupConfig.GetBoolean("CompleteStartupAfterAllModulesLoad", true);
-            if ((add) ||
-                name == "Startup")
+            if ((add) || name == "Startup")
                 //We allow startup through to allow for normal starting up, even if all module loading is disabled
             {
                 StartupCallbacks.Add(name);

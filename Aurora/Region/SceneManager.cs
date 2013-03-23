@@ -282,36 +282,23 @@ namespace Aurora.Region
         public void RestartRegion()
         {
             CloseRegion(ShutdownType.Immediate, 0);
-            bool newRegion;
-            StartRegion(out newRegion);
+
+            IConfig startupConfig = m_config.Configs["Startup"];
+            if (startupConfig == null || !startupConfig.GetBoolean("RegionRestartCausesShutdown", false))
+            {
+                bool newRegion;
+                StartRegion(out newRegion);
+            }
+            else
+            {
+                //Kill us now
+                m_OpenSimBase.Shutdown(true);
+            }
         }
 
         #endregion
 
         #region Shutdown regions
-
-        /// <summary>
-        ///     Shuts down and permanently removes all info associated with the region
-        /// </summary>
-        /// <param name="cleanup"></param>
-        public void RemoveRegion(bool cleanup)
-        {
-            IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-            if (backup != null)
-                backup.DeleteAllSceneObjects();
-
-            m_scene.RegionInfo.HasBeenDeleted = true;
-            CloseRegion(ShutdownType.Immediate, 0);
-
-            if (!cleanup)
-                return;
-
-            IRegionLoader[] loaders = m_OpenSimBase.ApplicationRegistry.RequestModuleInterfaces<IRegionLoader>();
-            foreach (IRegionLoader loader in loaders)
-            {
-                loader.DeleteRegion(m_scene.RegionInfo);
-            }
-        }
 
         /// <summary>
         ///     Shuts down a region and removes it from all running modules
@@ -327,6 +314,7 @@ namespace Aurora.Region
                 if (OnCloseScene != null)
                     OnCloseScene(m_scene);
                 CloseModules();
+                m_scene = null;
             }
             else
             {

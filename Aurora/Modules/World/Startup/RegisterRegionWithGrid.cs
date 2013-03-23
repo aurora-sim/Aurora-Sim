@@ -115,12 +115,6 @@ namespace Aurora.Modules.Startup
 
                 scene.RegionInfo.RegionLocX = X*Constants.RegionSize;
                 scene.RegionInfo.RegionLocY = Y*Constants.RegionSize;
-
-                IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
-                foreach (IRegionLoader loader in loaders)
-                {
-                    loader.UpdateRegionInfo(scene.RegionInfo.RegionName, scene.RegionInfo);
-                }
             }
             else if (error.Error == "Region overlaps another region")
             {

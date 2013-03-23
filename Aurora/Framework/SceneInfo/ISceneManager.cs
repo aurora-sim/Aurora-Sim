@@ -43,8 +43,6 @@ namespace Aurora.Framework.SceneInfo
 
         IConfigSource ConfigSource { get; }
 
-        void RemoveRegion(bool cleanup);
-
         IScene Scene { get; }
 
         event NewScene OnCloseScene;
