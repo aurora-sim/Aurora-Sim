@@ -599,7 +599,7 @@ namespace Aurora.Services
                 }
 
                 //Makes sure that all links are properly placed in the current outfit folder for v2 viewers
-                avappearance = FixCurrentOutFitFolder(account.PrincipalID, avappearance);
+                FixCurrentOutFitFolder(account.PrincipalID, ref avappearance);
 
                 #endregion
 
@@ -1270,11 +1270,11 @@ namespace Aurora.Services
             return avappearance;
         }
 
-        public AvatarAppearance FixCurrentOutFitFolder(UUID user, AvatarAppearance avappearance)
+        public void FixCurrentOutFitFolder(UUID user, ref AvatarAppearance avappearance)
         {
             InventoryFolderBase CurrentOutFitFolder = m_InventoryService.GetFolderForType(user, 0,
                                                                                           AssetType.CurrentOutfitFolder);
-            if (CurrentOutFitFolder == null) return avappearance;
+            if (CurrentOutFitFolder == null) return;
             List<InventoryItemBase> ic = m_InventoryService.GetFolderItems(user, CurrentOutFitFolder.ID);
             List<UUID> brokenLinks = new List<UUID>();
             List<UUID> OtherStuff = new List<UUID>();
@@ -1354,8 +1354,6 @@ namespace Aurora.Services
 
             if (brokenLinks.Count != 0)
                 m_InventoryService.DeleteItems(user, brokenLinks);
-
-            return avappearance;
         }
 
         #endregion
