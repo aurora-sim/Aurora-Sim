@@ -577,7 +577,11 @@ namespace Aurora.Services
                 foreach (InventoryItemBase itm in items)
                 {
                     MainConsole.Instance.Warn("[SSB]: Baking " + itm.Name);
-                } 
+                }
+                for (int i = 0; i < Textures.Length; i++)
+                {
+                    Textures[i] = new AppearanceManager.TextureData();
+                }
                 foreach (InventoryItemBase itm in items)
                 {
                     if (itm.AssetType == (int)AssetType.Link)
@@ -589,7 +593,13 @@ namespace Aurora.Services
                         {
                             wearable.Asset = new AssetClothing(assetID, asset.Data);
                             if (wearable.Asset.Decode())
+                            {
+                                wearable.AssetID = assetID;
+                                wearable.AssetType = wearable.Asset.AssetType;
+                                wearable.WearableType = wearable.Asset.WearableType;
+                                wearable.ItemID = itm.AssetID;
                                 DecodeWearableParams(wearable);
+                            }
                         }
                     }
                 }
@@ -645,7 +655,6 @@ namespace Aurora.Services
                     if (appearance.Texture.FaceTextures[(int)AppearanceManager.BakeTypeToAgentTextureIndex(bakeType)].TextureID != UUID.Zero)
                         m_assetService.Delete(appearance.Texture.FaceTextures[(int)AppearanceManager.BakeTypeToAgentTextureIndex(bakeType)].TextureID);
                     UUID assetID = m_assetService.Store(newBakedAsset);
-                    File.WriteAllBytes(assetID.ToString() + ".tga", oven.BakedTexture.Image.ExportTGA());
                     newBakeIDs.Add(assetID);
                     MainConsole.Instance.WarnFormat("[SSB]: Baked {0}", assetID);
                     int place = (int)AppearanceManager.BakeTypeToAgentTextureIndex(bakeType);
