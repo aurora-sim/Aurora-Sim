@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework.Modules;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework.ClientInterfaces
@@ -33,43 +34,59 @@ namespace Aurora.Framework.ClientInterfaces
     public class AvatarArchive : IDataTransferable
     {
         /// <summary>
-        ///     XML of the archive
+        ///     Appearance in the archive
         /// </summary>
-        public string ArchiveXML;
+        public AvatarAppearance Appearance;
 
         /// <summary>
-        ///     1 or 0 if its public
+        ///     true/false if its public
         /// </summary>
-        public int IsPublic;
+        public bool IsPublic;
 
         /// <summary>
         ///     Name of the archive
         /// </summary>
-        public string Name;
+        public string FileName;
+
+        /// <summary>
+        ///     Folder to load this archive into
+        /// </summary>
+        public string FolderName;
 
         /// <summary>
         ///     uuid of a text that shows off this archive
         /// </summary>
-        public string Snapshot;
+        public UUID Snapshot;
+
+        public OSDMap AssetsMap;
+
+        public OSDMap ItemsMap;
+
+        public OSDMap BodyMap;
+
+        public override void FromOSD(OSDMap map)
+        {
+            AssetsMap = ((OSDMap)map["Assets"]);
+            ItemsMap = ((OSDMap)map["Items"]);
+            BodyMap = ((OSDMap)map["Body"]);
+
+            FolderName = map["FolderName"];
+            Snapshot = map["SnapshotUUID"];
+            IsPublic = map["Public"];
+        }
 
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
 
-            map["ArchiveXML"] = ArchiveXML;
-            map["IsPublic"] = IsPublic;
-            map["Name"] = Name;
+            map["Assets"] = AssetsMap;
+            map["Items"] = ItemsMap;
+            map["Body"] = BodyMap;
+            map["FolderName"] = FolderName;
             map["Snapshot"] = Snapshot;
+            map["Public"] = IsPublic;
 
             return map;
-        }
-
-        public override void FromOSD(OSDMap map)
-        {
-            ArchiveXML = map["ArchiveXML"];
-            IsPublic = map["IsPublic"];
-            Name = map["Name"];
-            Snapshot = map["Snapshot"];
         }
     }
 }

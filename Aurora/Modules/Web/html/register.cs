@@ -137,8 +137,7 @@ namespace Aurora.Modules.Web
             vars.Add("Months", monthsArgs);
             vars.Add("Years", yearsArgs);
 
-            List<AvatarArchive> archives =
-                Framework.Utilities.DataManager.RequestPlugin<IAvatarArchiverConnector>().GetAvatarArchives(true);
+            List<AvatarArchive> archives = webInterface.Registry.RequestModuleInterface<IAvatarAppearanceArchiver>().GetAvatarArchives();
 
             List<Dictionary<string, object>> avatarArchives = new List<Dictionary<string, object>>();
             IWebHttpTextureService webTextureService = webInterface.Registry.
@@ -146,11 +145,11 @@ namespace Aurora.Modules.Web
             foreach (var archive in archives)
                 avatarArchives.Add(new Dictionary<string, object>
                                        {
-                                           {"AvatarArchiveName", archive.Name},
+                                           {"AvatarArchiveName", archive.FileName },
                                            {"AvatarArchiveSnapshotID", archive.Snapshot},
                                            {
                                                "AvatarArchiveSnapshotURL",
-                                               webTextureService.GetTextureURL(UUID.Parse(archive.Snapshot))
+                                               webTextureService.GetTextureURL(archive.Snapshot)
                                            }
                                        });
 

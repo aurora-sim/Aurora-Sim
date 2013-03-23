@@ -112,8 +112,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             return m_Database.Get(principalID);
         }
 
-        public AvatarAppearance GetAndEnsureAppearance(UUID principalID, string avatarName,
-                                                       string defaultUserAvatarArchive, out bool loadedArchive)
+        public AvatarAppearance GetAndEnsureAppearance(UUID principalID, string defaultUserAvatarArchive, out bool loadedArchive)
         {
             loadedArchive = false;
             AvatarAppearance avappearance = GetAppearance(principalID);
@@ -122,11 +121,15 @@ namespace Aurora.Services.SQLServices.AvatarService
                 //Create an appearance for the user if one doesn't exist
                 if (defaultUserAvatarArchive != "")
                 {
-                    avappearance = m_ArchiveService.LoadAvatarArchive(defaultUserAvatarArchive, avatarName);
-                    SetAppearance(principalID, avappearance);
-                    loadedArchive = true;
+                    AvatarArchive arch = m_ArchiveService.LoadAvatarArchive(defaultUserAvatarArchive, principalID);
+                    if (arch != null)
+                    {
+                        avappearance = arch.Appearance;
+                        SetAppearance(principalID, avappearance);
+                        loadedArchive = true;
+                    }
                 }
-                else
+                if(avappearance == null)//Set as ruth
                 {
                     avappearance = new AvatarAppearance(principalID);
                     SetAppearance(principalID, avappearance);

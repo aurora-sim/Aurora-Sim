@@ -26,16 +26,21 @@
  */
 
 using Aurora.Framework.ClientInterfaces;
+using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Framework.Modules
 {
     public interface IAvatarAppearanceArchiver
     {
+        AvatarArchive LoadAvatarArchive(string FileName, UUID principalID);
+
+        bool SaveAvatarArchive(string fileName, UUID principalID, string folderName, UUID snapshotUUID, bool isPublic);
+
         /// <summary>
-        ///     Updates an avatars appearance from the saved AvatarArchive in the database.
+        /// Gets all public avatar archives
         /// </summary>
-        /// <param name="FileName"></param>
-        /// <param name="Name"></param>
-        AvatarAppearance LoadAvatarArchive(string FileName, string Name);
+        /// <returns></returns>
+        List<AvatarArchive> GetAvatarArchives();
     }
 }

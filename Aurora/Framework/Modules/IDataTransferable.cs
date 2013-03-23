@@ -58,22 +58,5 @@ namespace Aurora.Framework.Modules
         public virtual void FromOSD(OSDMap map)
         {
         }
-
-        /// <summary>
-        ///     Serialize the module to a Dictionary
-        /// </summary>
-        /// <param name="KVP"></param>
-        public virtual void FromKVP(Dictionary<string, object> KVP)
-        {
-        }
-
-        /// <summary>
-        ///     Deserialize this module from a Dictionary
-        /// </summary>
-        /// <returns></returns>
-        public virtual Dictionary<string, object> ToKVP()
-        {
-            return null;
-        }
     }
 }

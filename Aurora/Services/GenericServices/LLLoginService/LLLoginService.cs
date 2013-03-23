@@ -454,11 +454,15 @@ namespace Aurora.Services
                                              : m_DefaultUserAvatarArchive;
                     if (UPI.IsNewUser && archiveName != "")
                     {
-                        avappearance = m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
+                        AvatarArchive arch = m_ArchiveService.LoadAvatarArchive(archiveName, account.PrincipalID);
                         UPI.AArchiveName = "";
-                        m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
-                        //Must reload this, as we created a new folder
-                        inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
+                        if (arch != null)
+                        {
+                            avappearance = arch.Appearance;
+                            m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
+                            //Must reload this, as we created a new folder
+                            inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
+                        }
                     }
                     if (UPI.IsNewUser)
                     {
@@ -577,8 +581,7 @@ namespace Aurora.Services
                 if (m_AvatarService != null)
                 {
                     bool loadedArchive;
-                    avappearance = m_AvatarService.GetAndEnsureAppearance(account.PrincipalID, account.Name,
-                                                                          m_DefaultUserAvatarArchive, out loadedArchive);
+                    avappearance = m_AvatarService.GetAndEnsureAppearance(account.PrincipalID, m_DefaultUserAvatarArchive, out loadedArchive);
                     if (loadedArchive)
                         //Must reload this, as we created a new folder
                         inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
