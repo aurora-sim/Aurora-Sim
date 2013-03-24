@@ -359,13 +359,13 @@ namespace Aurora.Framework.ClientInterfaces
             args["active_group_id"] = OSD.FromUUID(ActiveGroupID);
             args["IsCrossing"] = IsCrossing;
 
-            args["SittingObjects"] = SittingObjects.PackUpdateMessage();
+            args["SittingObjects"] = SittingObjects.ToOSD();
 
             if ((Anims != null) && (Anims.Length > 0))
             {
                 OSDArray anims = new OSDArray(Anims.Length);
                 foreach (Animation aanim in Anims)
-                    anims.Add(aanim.PackUpdateMessage());
+                    anims.Add(aanim.ToOSD());
                 args["animations"] = anims;
             }
 
@@ -376,7 +376,7 @@ namespace Aurora.Framework.ClientInterfaces
             {
                 OSDArray controls = new OSDArray(Controllers.Length);
                 foreach (ControllerData ctl in Controllers)
-                    controls.Add(ctl.PackUpdateMessage());
+                    controls.Add(ctl.ToOSD());
                 args["controllers"] = controls;
             }
 

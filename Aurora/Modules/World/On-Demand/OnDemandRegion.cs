@@ -58,7 +58,6 @@ namespace Aurora.Modules.OnDemand
         private bool m_isShuttingDown;
         private bool m_isStartingUp;
         private IScene m_scene;
-        private int m_waitTime = 0;
 
         #endregion
 
