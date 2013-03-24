@@ -58,6 +58,14 @@
     SyncMessagePosterServiceOpenServerHandler = false
     SyncMessagePosterServiceServerHandlerPort = 0
     SyncMessagePosterServiceDoRemote = false
+	
+[SSAService]
+    ;; This controls options about the v3 Server Side Appearance, which allows v3 viewers to have an appearance
+    ;; Should we allow the use of this service?
+    Enabled = true
+    ;; The port to run the SSAService on
+    ;; Default is 8005
+    Port = 8005
 
 [MapService]
     ;; This controls options about the v2 MapService, which allows v2 viewers to see the map

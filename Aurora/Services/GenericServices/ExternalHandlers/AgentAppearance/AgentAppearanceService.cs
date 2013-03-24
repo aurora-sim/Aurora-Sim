@@ -27,7 +27,17 @@ namespace Aurora.Services
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(8005);
+            IConfig ssaConfig = config.Configs["SSAService"];
+            uint port = 8005;
+            bool enabled = false;
+            if (ssaConfig != null)
+            {
+                enabled = ssaConfig.GetBoolean("Enabled", enabled);
+                port = ssaConfig.GetUInt("Port", port);
+            }
+            if (!enabled)
+                return;
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             ServiceURI = server.ServerURI + "/";
             server.AddHTTPHandler(new GenericStreamHandler("GET", "/texture/", GetBakedTexture));
             registry.RegisterModuleInterface<IAgentAppearanceService>(this);
