@@ -38,15 +38,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-//using System.Data.Sqlite;
-
 namespace Aurora.DataManager.SQLite
 {
     public class SQLiteLoader : DataManagerBase
     {
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
         protected string _connectionString;
-        protected static bool _hadToConvert = false;
         protected static Dictionary<string, object> _locks = new Dictionary<string, object>();
         protected string _fileName;
 
@@ -71,89 +68,19 @@ namespace Aurora.DataManager.SQLite
         {
             _connectionString = connectionString;
             string[] s1 = _connectionString.Split(new[] {"Data Source=", ","}, StringSplitOptions.RemoveEmptyEntries);
-            bool needsUTFConverted = false;
+
+            s1[0] = s1[0].Remove(0, 7);
+
             _fileName = Path.GetFileName(s1[0]);
-            if (s1[0].EndsWith(";"))
-            {
-                _fileName = Path.GetFileNameWithoutExtension(s1[1].Substring(7, s1[1].Length - 7)) + "utf8.db";
-                _connectionString = "Data Source=file://" + _fileName;
-                s1 = new string[1] {"file://" + _fileName};
-                needsUTFConverted = true;
-                _hadToConvert = true;
-            }
             if (_fileName == s1[0]) //Only add this if we arn't an absolute path already
-                _connectionString = _connectionString.Replace("Data Source=",
-                                                              "Data Source=" + Util.BasePathCombine("") + "\\");
+                _connectionString = string.Format("Data Source=file://{0}", Path.Combine(Util.BasePathCombine(""), _fileName));
+
             SqliteConnection connection = new SqliteConnection(_connectionString);
             connection.Open();
             var migrationManager = new MigrationManager(this, migratorName, validateTables);
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();
             connection.Close();
-
-            if (needsUTFConverted && _hadToConvert)
-            {
-                string file =
-                    connectionString.Split(new[] {"Data Source=", ","}, StringSplitOptions.RemoveEmptyEntries)[1]
-                        .Substring(7);
-                if (File.Exists(file))
-                {
-                    //UTF16 db, gotta convert it
-                    System.Data.SQLite.SQLiteConnection conn =
-                        new System.Data.SQLite.SQLiteConnection("Data Source=" + file +
-                                                                ";version=3;UseUTF16Encoding=True");
-                    conn.Open();
-                    var RetVal = new List<string>();
-                    using (var cmd = new System.Data.SQLite.SQLiteCommand("SELECT name FROM Sqlite_master", conn))
-                    {
-                        using (IDataReader rdr = cmd.ExecuteReader())
-                        {
-                            while (rdr.Read())
-                            {
-                                for (int i = 0; i < rdr.FieldCount; i++)
-                                {
-                                    RetVal.Add(rdr.GetValue(i).ToString());
-                                }
-                            }
-                        }
-                    }
-                    foreach (string table in RetVal)
-                    {
-                        if (TableExists(table) && !table.StartsWith("sqlite") && !table.StartsWith("idx_") &&
-                            table != "aurora_migrator_version")
-                        {
-                            var retVal = new List<object[]>();
-                            using (var cmd = new System.Data.SQLite.SQLiteCommand("SELECT * FROM " + table, conn))
-                            {
-                                using (IDataReader reader = cmd.ExecuteReader())
-                                {
-                                    while (reader.Read())
-                                    {
-                                        List<object> obs = new List<object>();
-                                        for (int i = 0; i < reader.FieldCount; i++)
-                                        {
-                                            Type r = reader[i].GetType();
-                                            if (r == typeof (DBNull))
-                                                obs.Add(null);
-                                            else
-                                                obs.Add(reader[i].ToString());
-                                        }
-                                        retVal.Add(obs.ToArray());
-                                    }
-                                }
-                            }
-                            try
-                            {
-                                if (retVal.Count > 0)
-                                    InsertMultiple(table, retVal);
-                            }
-                            catch
-                            {
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         public override void CloseDatabase(DataReaderConnection conn)
@@ -375,9 +302,12 @@ namespace Aurora.DataManager.SQLite
 
         private IDataReader QueryData2(string query, out SqliteConnection conn)
         {
-            var cmd = PrepReader(query);
-            conn = cmd.Connection;
-            return cmd.ExecuteReader();
+            lock (GetLock())
+            {
+                var cmd = PrepReader(query);
+                conn = cmd.Connection;
+                return cmd.ExecuteReader();
+            }
         }
 
 
