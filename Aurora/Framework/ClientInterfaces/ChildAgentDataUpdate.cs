@@ -132,11 +132,16 @@ namespace Aurora.Framework.ClientInterfaces
         #endregion
     }
 
-    public class ControllerData
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class ControllerData : IDataTransferable
     {
+        [ProtoMember(1)]
         public uint EventControls;
+        [ProtoMember(2)]
         public uint IgnoreControls;
+        [ProtoMember(3)]
         public UUID ItemID;
+        [ProtoMember(4)]
         public UUID ObjectID;
 
         public ControllerData(UUID item, UUID objID, uint ignore, uint ev)
@@ -149,10 +154,10 @@ namespace Aurora.Framework.ClientInterfaces
 
         public ControllerData(OSDMap args)
         {
-            UnpackUpdateMessage(args);
+            FromOSD(args);
         }
 
-        public OSDMap PackUpdateMessage()
+        public override OSDMap ToOSD()
         {
             OSDMap controldata = new OSDMap();
             controldata["item"] = OSD.FromUUID(ItemID);
@@ -164,7 +169,7 @@ namespace Aurora.Framework.ClientInterfaces
         }
 
 
-        public void UnpackUpdateMessage(OSDMap args)
+        public override void FromOSD(OSDMap args)
         {
             if (args["item"] != null)
                 ItemID = args["item"].AsUUID();
@@ -177,12 +182,18 @@ namespace Aurora.Framework.ClientInterfaces
         }
     }
 
-    public class SittingObjectData
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class SittingObjectData : IDataTransferable
     {
+        [ProtoMember(1)]
         public string m_animation = "";
+        [ProtoMember(2)]
         public UUID m_objectID = UUID.Zero;
+        [ProtoMember(3)]
         public Vector3 m_sitTargetPos = Vector3.Zero;
+        [ProtoMember(4)]
         public Quaternion m_sitTargetRot = Quaternion.Identity;
+        [ProtoMember(5)]
         public string m_sittingObjectXML = "";
 
         public SittingObjectData()
@@ -200,10 +211,10 @@ namespace Aurora.Framework.ClientInterfaces
 
         public SittingObjectData(OSDMap args)
         {
-            UnpackUpdateMessage(args);
+            FromOSD(args);
         }
 
-        public OSDMap PackUpdateMessage()
+        public override OSDMap ToOSD()
         {
             OSDMap controldata = new OSDMap();
             controldata["sittingObjectXML"] = m_sittingObjectXML;
@@ -215,7 +226,7 @@ namespace Aurora.Framework.ClientInterfaces
         }
 
 
-        public void UnpackUpdateMessage(OSDMap args)
+        public override void FromOSD(OSDMap args)
         {
             if (args["sittingObjectXML"] != null)
                 m_sittingObjectXML = args["sittingObjectXML"];
@@ -228,47 +239,75 @@ namespace Aurora.Framework.ClientInterfaces
         }
     }
 
+    [ProtoContract(UseProtoMembersOnly = true)]
     public class AgentData : IDataTransferable, IAgentData
     {
+        [ProtoMember(1)]
         public UUID ActiveGroupID;
+        [ProtoMember(2)]
         public Byte AgentAccess;
+        [ProtoMember(3)]
         public bool AlwaysRun;
+        [ProtoMember(4)]
         public Animation[] Anims;
+        [ProtoMember(5)]
         public AvatarAppearance Appearance;
 
+        [ProtoMember(6)]
         public float Aspect;
+        [ProtoMember(7)]
         public Vector3 AtAxis;
-        //public int[] Throttles;
+        [ProtoMember(8)]
         public Quaternion BodyRotation;
-        public string CallbackURI;
+        [ProtoMember(9)]
         public Vector3 Center;
+        [ProtoMember(10)]
         public uint CircuitCode;
+        [ProtoMember(11)]
         public uint ControlFlags;
+        [ProtoMember(12)]
         public ControllerData[] Controllers;
+        [ProtoMember(13)]
         public float DrawDistance;
+        [ProtoMember(14)]
         public float EnergyLevel;
+        [ProtoMember(15)]
         public float Far;
+        [ProtoMember(16)]
         public Byte GodLevel;
-
+        [ProtoMember(17)]
         public UUID GranterID;
+        [ProtoMember(18)]
         public Quaternion HeadRotation;
+        [ProtoMember(19)]
         public bool IsCrossing;
+        [ProtoMember(20)]
         public Vector3 LeftAxis;
+        [ProtoMember(21)]
         public uint LocomotionState;
+        [ProtoMember(22)]
         public Vector3 Position;
+        [ProtoMember(23)]
         public UUID PreyAgent;
+        [ProtoMember(24)]
         public UUID RegionID;
+        [ProtoMember(25)]
         public bool SentInitialWearables;
+        [ProtoMember(26)]
         public UUID SessionID;
-
-        // Appearance
-
+        [ProtoMember(27)]
         public SittingObjectData SittingObjects;
+        [ProtoMember(28)]
         public Vector3 Size;
+        [ProtoMember(29)]
         public float Speed;
+        [ProtoMember(30)]
         public byte[] Throttles;
+        [ProtoMember(31)]
         public Vector3 UpAxis;
+        [ProtoMember(32)]
         public Vector3 Velocity;
+        [ProtoMember(33)]
         public UUID AgentID { get; set; }
 
         #region IAgentData Members
@@ -428,9 +467,6 @@ namespace Aurora.Framework.ClientInterfaces
 
             if (args["prey_agent"] != null)
                 PreyAgent = args["prey_agent"].AsUUID();
-
-            if (args["callback_uri"] != null)
-                CallbackURI = args["callback_uri"].AsString();
 
             if (args["agent_access"] != null)
                 Byte.TryParse(args["agent_access"].AsString(), out AgentAccess);

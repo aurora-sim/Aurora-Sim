@@ -196,17 +196,6 @@ namespace Aurora.Region
 
         protected const int NumMovementsBetweenRayCast = 5;
 
-        /// <summary>
-        ///     ONLY HERE FOR OPENSIM COMPATIBILITY
-        /// </summary>
-        protected string m_callbackURI = null;
-
-        public string CallbackURI
-        {
-            get { return m_callbackURI; }
-            set { m_callbackURI = value; }
-        }
-
         protected bool CameraConstraintActive;
         //private int m_moveToPositionStateStatus;
         //*****************************************************
@@ -2657,7 +2646,6 @@ namespace Aurora.Region
         {
             try
             {
-                m_callbackURI = cAgent.CallbackURI;
                 m_pos = cAgent.Position;
                 if (PhysicsActor != null)
                 {

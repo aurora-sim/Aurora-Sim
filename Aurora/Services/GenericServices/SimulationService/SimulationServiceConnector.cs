@@ -61,9 +61,8 @@ namespace Aurora.Services
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
-            {
                 registry.RegisterModuleInterface<ISimulationService>(this);
-            }
+
             m_registry = registry;
             m_syncMessagePoster = registry.RequestModuleInterface<ISyncMessagePosterService>();
         }

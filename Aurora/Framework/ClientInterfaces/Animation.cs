@@ -28,19 +28,31 @@
 using System;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
 namespace Aurora.Framework.ClientInterfaces
 {
     /// <summary>
     ///     Information about an Animation
     /// </summary>
-    [Serializable]
+    [Serializable, ProtoContract(UseProtoMembersOnly = true)]
     public class Animation
     {
-        private UUID animID;
+        /// <summary>
+        ///     ID of Animation
+        /// </summary>
+        [ProtoMember(1)]
+        public UUID AnimID { get; set; }
 
-        private UUID objectID;
-        private int sequenceNum;
+        [ProtoMember(2)]
+        public int SequenceNum { get; set; }
+
+        /// <summary>
+        ///     Unique ID of object that is being animated
+        /// </summary>
+        [ProtoMember(3)]
+        public UUID ObjectID { get; set; }
+
 
         public Animation()
         {
@@ -54,9 +66,9 @@ namespace Aurora.Framework.ClientInterfaces
         /// <param name="objectID">ID of object to be animated</param>
         public Animation(UUID animID, int sequenceNum, UUID objectID)
         {
-            this.animID = animID;
-            this.sequenceNum = sequenceNum;
-            this.objectID = objectID;
+            this.AnimID = animID;
+            this.SequenceNum = sequenceNum;
+            this.ObjectID = objectID;
         }
 
         /// <summary>
@@ -65,44 +77,19 @@ namespace Aurora.Framework.ClientInterfaces
         /// <param name="args"></param>
         public Animation(OSDMap args)
         {
-            UnpackUpdateMessage(args);
+            FromOSD(args);
         }
-
-        /// <summary>
-        ///     ID of Animation
-        /// </summary>
-        public UUID AnimID
-        {
-            get { return animID; }
-            set { animID = value; }
-        }
-
-        public int SequenceNum
-        {
-            get { return sequenceNum; }
-            set { sequenceNum = value; }
-        }
-
-        /// <summary>
-        ///     Unique ID of object that is being animated
-        /// </summary>
-        public UUID ObjectID
-        {
-            get { return objectID; }
-            set { objectID = value; }
-        }
-
 
         /// <summary>
         ///     Pack this object up as an OSDMap for transferring via LLSD XML or LLSD json
         /// </summary>
         /// <returns></returns>
-        public OSDMap PackUpdateMessage()
+        public OSDMap ToOSD()
         {
             OSDMap anim = new OSDMap();
-            anim["animation"] = OSD.FromUUID(animID);
-            anim["object_id"] = OSD.FromUUID(objectID);
-            anim["seq_num"] = OSD.FromInteger(sequenceNum);
+            anim["animation"] = OSD.FromUUID(AnimID);
+            anim["object_id"] = OSD.FromUUID(ObjectID);
+            anim["seq_num"] = OSD.FromInteger(SequenceNum);
             return anim;
         }
 
@@ -110,14 +97,14 @@ namespace Aurora.Framework.ClientInterfaces
         ///     Fill object with data from OSDMap
         /// </summary>
         /// <param name="args"></param>
-        public void UnpackUpdateMessage(OSDMap args)
+        public void FromOSD(OSDMap args)
         {
             if (args["animation"] != null)
-                animID = args["animation"].AsUUID();
+                AnimID = args["animation"].AsUUID();
             if (args["object_id"] != null)
-                objectID = args["object_id"].AsUUID();
+                ObjectID = args["object_id"].AsUUID();
             if (args["seq_num"] != null)
-                sequenceNum = args["seq_num"].AsInteger();
+                SequenceNum = args["seq_num"].AsInteger();
         }
     }
 }

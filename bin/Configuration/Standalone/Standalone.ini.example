@@ -51,7 +51,7 @@
     GridHandler = GridService
     InventoryHandler = InventoryService
     LoginHandler = LLLoginService
-    SimulationHandler = LocalSimulationServiceConnector
+    SimulationHandler = SimulationServiceConnector
     SyncMessagePosterServiceHandler = SyncMessagePosterService
     UserAccountHandler = UserAccountService
 

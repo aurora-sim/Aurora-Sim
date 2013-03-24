@@ -32,8 +32,6 @@ namespace Aurora.Framework.PresenceInfo
 
         IScene Scene { get; set; }
 
-        string CallbackURI { get; set; }
-
         /// <summary>
         ///     The actual client base (it sends and recieves packets)
         /// </summary>
