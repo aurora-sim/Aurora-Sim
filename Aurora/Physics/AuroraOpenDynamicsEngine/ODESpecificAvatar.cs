@@ -258,9 +258,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
+            #region Auto Fly Height
             if (Flying)
-
-                #region Auto Fly Height
+            {
 
                 //Added for auto fly height. Kitto Flora
                 //Changed to only check if the avatar is flying around,
@@ -281,29 +281,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         _parent_scene.GetTerrainHeightAtXY(tempPos.X + forwardVel.X, tempPos.Y + forwardVel.Y)
                         + MinimumGroundFlightOffset)
                         if (_target_velocity.Z < 0)
-                            vec.Z += (target_altitude - tempPos.Z)*PID_D*0.5f; //Don't apply so much
+                            vec.Z += (target_altitude - tempPos.Z) * PID_D * 0.5f; //Don't apply so much
                         else if ((tempPos.Z - CAPSULE_LENGTH) + 5 < target_altitude)
-                            vec.Z += (target_altitude - tempPos.Z)*PID_D*3.05f;
+                            vec.Z += (target_altitude - tempPos.Z) * PID_D * 3.05f;
                         else
-                            vec.Z += (target_altitude - tempPos.Z)*PID_D*1.75f;
+                            vec.Z += (target_altitude - tempPos.Z) * PID_D * 1.75f;
                 }
                 else
                 {
                     //Straight up and down, only apply when they are very close to the ground
                     float target_altitude = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
 
-                    if ((tempPos.Z - CAPSULE_LENGTH + (MinimumGroundFlightOffset/1.5)) <
+                    if ((tempPos.Z - CAPSULE_LENGTH + (MinimumGroundFlightOffset / 1.5)) <
                         target_altitude + MinimumGroundFlightOffset)
                     {
                         if ((tempPos.Z - CAPSULE_LENGTH) < target_altitude + 1)
                         {
-                            vec.Z += ((target_altitude + 4) - (tempPos.Z - CAPSULE_LENGTH))*PID_D;
+                            vec.Z += ((target_altitude + 4) - (tempPos.Z - CAPSULE_LENGTH)) * PID_D;
                         }
                         else
-                            vec.Z += ((target_altitude + MinimumGroundFlightOffset) - (tempPos.Z - CAPSULE_LENGTH))*
-                                     PID_D*0.5f;
+                            vec.Z += ((target_altitude + MinimumGroundFlightOffset) - (tempPos.Z - CAPSULE_LENGTH)) *
+                                     PID_D * 0.5f;
                     }
                 }
+            }
 
             #endregion
 

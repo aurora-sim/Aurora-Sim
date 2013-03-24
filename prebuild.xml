@@ -619,8 +619,6 @@
       <Reference name="Aurora.Framework"/>
 
       <Reference name="Community.CsharpSqlite.SQLiteClient" path="../../../bin/"/>
-      <Reference name="System.Data.SQLite" path="../../../bin/"/>
-      <Reference name="Community.CsharpSqlite.SQLiteClient" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
