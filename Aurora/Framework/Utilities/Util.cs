@@ -3007,10 +3007,13 @@ namespace Aurora.Framework.Utilities
         }
     }
 
+    [ProtoContract(UseProtoMembersOnly = true)]
     public class AllScopeIDImpl : IDataTransferable
     {
+        [ProtoMember(1)]
         public UUID ScopeID = UUID.Zero;
 
+        [ProtoMember(2)]
         public List<UUID> AllScopeIDs
         {
             get

@@ -336,10 +336,10 @@ namespace Aurora.Region
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
         /// <returns>null if the presence was not found</returns>
-        public IScenePresence GetScenePresence(string firstName, string lastName)
+        public IScenePresence GetScenePresence(string Name)
         {
             List<IScenePresence> presences = GetScenePresences();
-            return presences.FirstOrDefault(presence => presence.Firstname == firstName && presence.Lastname == lastName);
+            return presences.FirstOrDefault(presence => presence.Name == Name);
         }
 
         /// <summary>

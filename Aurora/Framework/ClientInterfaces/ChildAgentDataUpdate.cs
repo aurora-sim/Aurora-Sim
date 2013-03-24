@@ -31,43 +31,47 @@ using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
 namespace Aurora.Framework.ClientInterfaces
 {
     public interface IAgentData
     {
         UUID AgentID { get; set; }
-
-        OSDMap Pack();
-        void Unpack(OSDMap map);
     }
 
     /// <summary>
-    ///     Replacement for ChildAgentDataUpdate. Used over RESTComms and LocalComms.
+    /// Replacement for ChildAgentDataUpdate
     /// </summary>
+    [ProtoContract(UseProtoMembersOnly=true)]
     public class AgentPosition : IDataTransferable, IAgentData
     {
+        [ProtoMember(1)]
         public Vector3 AtAxis;
+        [ProtoMember(2)]
         public Vector3 Center;
+        [ProtoMember(3)]
         public float Far;
+        [ProtoMember(4)]
         public Vector3 LeftAxis;
+        [ProtoMember(5)]
         public Vector3 Position;
+        [ProtoMember(6)]
         public ulong RegionHandle;
+        [ProtoMember(7)]
         public Vector3 Size;
+        [ProtoMember(8)]
         public Vector3 UpAxis;
+        [ProtoMember(9)]
         public bool UserGoingOffline;
+        [ProtoMember(10)]
         public Vector3 Velocity;
+        [ProtoMember(11)]
+        public UUID AgentID { get; set; }
 
         #region IAgentData Members
 
-        public UUID AgentID { get; set; }
-
         public override OSDMap ToOSD()
-        {
-            return Pack();
-        }
-
-        public OSDMap Pack()
         {
             OSDMap args = new OSDMap();
             args["message_type"] = OSD.FromString("AgentPosition");
@@ -89,12 +93,7 @@ namespace Aurora.Framework.ClientInterfaces
             return args;
         }
 
-        public override void FromOSD(OSDMap map)
-        {
-            Unpack(map);
-        }
-
-        public void Unpack(OSDMap args)
+        public override void FromOSD(OSDMap args)
         {
             if (args.ContainsKey("region_handle"))
                 UInt64.TryParse(args["region_handle"].AsString(), out RegionHandle);
@@ -270,19 +269,13 @@ namespace Aurora.Framework.ClientInterfaces
         public byte[] Throttles;
         public Vector3 UpAxis;
         public Vector3 Velocity;
+        public UUID AgentID { get; set; }
 
         #region IAgentData Members
-
-        public UUID AgentID { get; set; }
 
         // Scripted
 
         public override OSDMap ToOSD()
-        {
-            return Pack();
-        }
-
-        public virtual OSDMap Pack()
         {
             // DEBUG ON
             //MainConsole.Instance.WarnFormat("[CHILDAGENTDATAUPDATE] Pack data");
@@ -351,22 +344,8 @@ namespace Aurora.Framework.ClientInterfaces
             return args;
         }
 
-        public override void FromOSD(OSDMap map)
+        public override void FromOSD(OSDMap args)
         {
-            Unpack(map);
-        }
-
-        /// <summary>
-        ///     Deserialization of agent data.
-        ///     Avoiding reflection makes it painful to write, but that's the price!
-        /// </summary>
-        /// <param name="args"></param>
-        public virtual void Unpack(OSDMap args)
-        {
-            // DEBUG ON
-            //MainConsole.Instance.WarnFormat("[CHILDAGENTDATAUPDATE] Unpack data");
-            // DEBUG OFF
-
             if (args.ContainsKey("region_id"))
                 UUID.TryParse(args["region_id"].AsString(), out RegionID);
 

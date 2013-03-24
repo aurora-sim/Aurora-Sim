@@ -1476,8 +1476,7 @@ namespace Aurora.Modules.Groups
             }
 
             //Gotta tell the client about their groups
-            remoteClient.SendAgentDataUpdate(dataForAgentID, activeGroupID, remoteClient.FirstName,
-                                             remoteClient.LastName, activeGroupPowers, activeGroupName,
+            remoteClient.SendAgentDataUpdate(dataForAgentID, activeGroupID, remoteClient.Name, activeGroupPowers, activeGroupName,
                                              activeGroupTitle);
 
             if (sendToAll)

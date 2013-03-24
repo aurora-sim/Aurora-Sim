@@ -607,7 +607,7 @@ namespace Aurora.Services
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
                 string reason = "", seedCap = "";
-                AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, tpFlags, account, avappearance, session,
+                AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, tpFlags, account, session,
                                                               secureSession, position, where,
                                                               clientIP, out where, out reason, out seedCap,
                                                               out destination);
@@ -946,7 +946,6 @@ namespace Aurora.Services
         }
 
         protected AgentCircuitData LaunchAgentAtGrid(GridRegion destination, TeleportFlags tpFlags, UserAccount account,
-                                                     AvatarAppearance appearance,
                                                      UUID session, UUID secureSession, Vector3 position,
                                                      string currentWhere,
                                                      IPEndPoint clientIP, out string where, out string reason,
@@ -961,13 +960,12 @@ namespace Aurora.Services
             #region Launch Agent
 
             circuitCode = (uint) Util.RandomClass.Next();
-            aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position,
+            aCircuit = MakeAgent(destination, account, session, secureSession, circuitCode, position,
                                  clientIP);
-            aCircuit.teleportFlags = (uint) tpFlags;
+            aCircuit.TeleportFlags = (uint) tpFlags;
             LoginAgentArgs args = m_registry.RequestModuleInterface<IAgentProcessing>().
                                              LoginAgent(destination, aCircuit);
-            aCircuit.OtherInformation = args.CircuitData.OtherInformation;
-            aCircuit.CapsPath = args.CircuitData.CapsPath;
+            aCircuit.CachedUserInfo = args.CircuitData.CachedUserInfo;
             aCircuit.RegionUDPPort = args.CircuitData.RegionUDPPort;
 
             reason = args.Reason;
@@ -977,7 +975,7 @@ namespace Aurora.Services
             if (!success && m_GridService != null)
             {
                 //Remove the landmark flag (landmark is used for ignoring the landing points in the region)
-                aCircuit.teleportFlags &= ~(uint) TeleportFlags.ViaLandmark;
+                aCircuit.TeleportFlags &= ~(uint) TeleportFlags.ViaLandmark;
                 m_GridService.SetRegionUnsafe(destination.RegionID);
 
                 // Make sure the client knows this isn't where they wanted to land
@@ -988,7 +986,7 @@ namespace Aurora.Services
                 if (defaultRegions != null)
                 {
                     success = TryFindGridRegionForAgentLogin(defaultRegions, account,
-                                                             appearance, session, secureSession, circuitCode, position,
+                                                             session, secureSession, circuitCode, position,
                                                              clientIP, aCircuit, out seedCap, out reason, out dest);
                 }
                 if (!success)
@@ -1000,7 +998,7 @@ namespace Aurora.Services
                     if (fallbacks != null)
                     {
                         success = TryFindGridRegionForAgentLogin(fallbacks, account,
-                                                                 appearance, session, secureSession, circuitCode,
+                                                                 session, secureSession, circuitCode,
                                                                  position,
                                                                  clientIP, aCircuit, out seedCap, out reason, out dest);
                     }
@@ -1013,7 +1011,7 @@ namespace Aurora.Services
                         if (safeRegions != null)
                         {
                             success = TryFindGridRegionForAgentLogin(safeRegions, account,
-                                                                     appearance, session, secureSession, circuitCode,
+                                                                     session, secureSession, circuitCode,
                                                                      position,
                                                                      clientIP, aCircuit, out seedCap, out reason,
                                                                      out dest);
@@ -1036,7 +1034,7 @@ namespace Aurora.Services
         }
 
         protected bool TryFindGridRegionForAgentLogin(List<GridRegion> regions, UserAccount account,
-                                                      AvatarAppearance appearance, UUID session, UUID secureSession,
+                                                      UUID session, UUID secureSession,
                                                       uint circuitCode, Vector3 position,
                                                       IPEndPoint clientIP, AgentCircuitData aCircuit, out string seedCap,
                                                       out string reason, out GridRegion destination)
@@ -1048,7 +1046,7 @@ namespace Aurora.Services
                                   LoginAgent(r, aCircuit);
                 if (args.Success)
                 {
-                    aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP);
+                    aCircuit = MakeAgent(r, account, session, secureSession, circuitCode, position, clientIP);
                     destination = r;
                     reason = args.Reason;
                     seedCap = args.SeedCap;
@@ -1071,22 +1069,18 @@ namespace Aurora.Services
         }
 
         protected AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
-                                             AvatarAppearance appearance, UUID session, UUID secureSession, uint circuit,
-                                             Vector3 position,
-                                             IPEndPoint clientIP)
+                                             UUID session, UUID secureSession, uint circuit,
+                                             Vector3 position, IPEndPoint clientIP)
         {
             AgentCircuitData aCircuit = new AgentCircuitData
                                             {
                                                 AgentID = account.PrincipalID,
-                                                Appearance = appearance ?? new AvatarAppearance(account.PrincipalID),
-                                                CapsPath = CapsUtil.GetRandomCapsObjectPath(),
-                                                child = false,
-                                                circuitcode = circuit,
+                                                IsChildAgent = false,
+                                                CircuitCode = circuit,
                                                 SecureSessionID = secureSession,
                                                 SessionID = session,
-                                                startpos = position,
-                                                IPAddress = clientIP.Address.ToString(),
-                                                ClientIPEndPoint = clientIP
+                                                StartingPosition = position,
+                                                IPAddress = clientIP.Address.ToString()
                                             };
 
 

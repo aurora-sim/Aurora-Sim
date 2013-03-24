@@ -36,18 +36,98 @@ using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {
-    public class LocalSimulationServiceConnector : IService, ISimulationService
+    public class LocalSimulationServiceConnector : IService
     {
+        #region Declares
+
         private IRegistryCore m_registry;
 
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += LocalSimulationServiceConnector_OnMessageReceived;
+        }
+
+        OSDMap LocalSimulationServiceConnector_OnMessageReceived(OSDMap message)
+        {
+            if (!message.ContainsKey("Method"))
+                return null;
+            switch (message["Method"].AsString())
+            {
+                case "CreateAgentRequest":
+                    CreateAgentRequest createAgentRequest = new CreateAgentRequest();
+                    createAgentRequest.FromOSD(message);
+                    CreateAgentResponse createAgentResponse = new CreateAgentResponse();
+                    createAgentResponse.Success = CreateAgent(createAgentRequest.Destination, createAgentRequest.CircuitData, createAgentRequest.TeleportFlags, out createAgentResponse);
+                    return createAgentResponse.ToOSD();
+                case "UpdateAgentPositionRequest":
+                    UpdateAgentPositionRequest updateAgentPositionRequest = new UpdateAgentPositionRequest();
+                    updateAgentPositionRequest.FromOSD(message);
+                    return new OSDMap() { new KeyValuePair<string, OSD>("Success", UpdateAgent(updateAgentPositionRequest.Destination, updateAgentPositionRequest.Update)) };
+                case "UpdateAgentDataRequest":
+                    UpdateAgentDataRequest updateAgentDataRequest = new UpdateAgentDataRequest();
+                    updateAgentDataRequest.FromOSD(message);
+                    return new OSDMap() { new KeyValuePair<string, OSD>("Success", UpdateAgent(updateAgentDataRequest.Destination, updateAgentDataRequest.Update)) };
+                case "FailedToMoveAgentIntoNewRegionRequest":
+                    FailedToMoveAgentIntoNewRegionRequest failedToMoveAgentIntoNewRegionRequest = new FailedToMoveAgentIntoNewRegionRequest();
+                    failedToMoveAgentIntoNewRegionRequest.FromOSD(message);
+                    FailedToMoveAgentIntoNewRegion(failedToMoveAgentIntoNewRegionRequest.AgentID, failedToMoveAgentIntoNewRegionRequest.RegionID);
+                    break;
+                case "CloseAgentRequest":
+                    CloseAgentRequest closeAgentRequest = new CloseAgentRequest();
+                    closeAgentRequest.FromOSD(message);
+                    CloseAgent(closeAgentRequest.Destination, closeAgentRequest.AgentID);
+                    break;
+                case "MakeChildAgentRequest":
+                    MakeChildAgentRequest makeChildAgentRequest = new MakeChildAgentRequest();
+                    makeChildAgentRequest.FromOSD(message);
+                    MakeChildAgent(makeChildAgentRequest.AgentID, makeChildAgentRequest.Destination, makeChildAgentRequest.IsCrossing);
+                    break;
+                case "FailedToTeleportAgentRequest":
+                    FailedToTeleportAgentRequest failedToTeleportAgentRequest = new FailedToTeleportAgentRequest();
+                    failedToTeleportAgentRequest.FromOSD(message);
+                    FailedToTeleportAgent(failedToTeleportAgentRequest.Destination, failedToTeleportAgentRequest.FailedRegionID,
+                        failedToTeleportAgentRequest.AgentID, failedToTeleportAgentRequest.Reason, failedToTeleportAgentRequest.IsCrossing);
+                    break;
+                case "RetrieveAgentRequest":
+                    RetrieveAgentRequest retrieveAgentRequest = new RetrieveAgentRequest();
+                    retrieveAgentRequest.FromOSD(message);
+                    RetrieveAgentResponse retrieveAgentResponse = new RetrieveAgentResponse();
+                    retrieveAgentResponse.Success = RetrieveAgent(retrieveAgentRequest.Destination, retrieveAgentRequest.AgentID, retrieveAgentRequest.AgentIsLeaving,
+                        out retrieveAgentResponse.AgentData, out retrieveAgentResponse.CircuitData);
+                    return retrieveAgentResponse.ToOSD();
+                case "CreateObjectRequest":
+                    CreateObjectRequest createObjectRequest = new CreateObjectRequest();
+                    createObjectRequest.Scene = Scene;
+                    createObjectRequest.FromOSD(message);
+                    return new OSDMap() { new KeyValuePair<string, OSD>("Success", CreateObject(createObjectRequest.Destination, createObjectRequest.Object)) };
+            }
+            return null;
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
 
         #region ISimulation
 
@@ -62,82 +142,60 @@ namespace Aurora.Services
             }
         }
 
-        public ISimulationService InnerService
-        {
-            get { return this; }
-        }
-
         /**
          * Agent-related communications
          */
 
-        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags,
-                                AgentData data, out int requestedUDPPort, out string reason)
+        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, out CreateAgentResponse response)
         {
-            OSDMap map = new OSDMap();
-            requestedUDPPort = 0;
+            response = new CreateAgentResponse();
             if (destination == null || Scene == null)
             {
-                map["Reason"] = "Given destination was null";
-                map["Success"] = false;
-                reason = OSDParser.SerializeJsonString(map);
+                response.Reason = "Given destination was null";
+                response.Success = false;
                 return false;
             }
-            if (destination.ExternalEndPoint != null) requestedUDPPort = destination.ExternalEndPoint.Port;
-
-            //MainConsole.Instance.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Found region {0} to send SendCreateChildAgent", destination.RegionName);
 
             if (Scene.RegionInfo.RegionID != destination.RegionID)
             {
-                map["Reason"] = "Did not find region " + destination.RegionName;
-                map["Success"] = false;
-                reason = OSDParser.SerializeJsonString(map);
+                response.Reason = "Did not find region " + destination.RegionName;;
+                response.Success = false;
                 return false;
             }
-            if (data != null)
-                UpdateAgent(destination, data);
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
-                return transferModule.NewUserConnection(Scene, aCircuit, teleportFlags, out requestedUDPPort,
-                                                        out reason);
+                return transferModule.NewUserConnection(Scene, aCircuit, teleportFlags, out response);
 
-            MainConsole.Instance.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Did not find region {0} for CreateAgent",
-                                             destination.RegionName);
-            map["Reason"] = "Did not find region " + destination.RegionName;
-            map["Success"] = false;
-            reason = OSDParser.SerializeJsonString(map);
+            response.Reason = "Did not find region " + destination.RegionName;
+            response.Success = false;
             return false;
         }
 
-        public bool UpdateAgent(GridRegion destination, AgentData cAgentData)
+        public bool UpdateAgent(GridRegion destination, AgentData agentData)
         {
-            if (destination == null || Scene == null || cAgentData == null)
+            if (destination == null || Scene == null || agentData == null)
                 return false;
 
             bool retVal = false;
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
-                retVal = transferModule.IncomingChildAgentDataUpdate(Scene, cAgentData);
+                retVal = transferModule.IncomingChildAgentDataUpdate(Scene, agentData);
 
             //            MainConsole.Instance.DebugFormat("[LOCAL COMMS]: Did not find region {0} for ChildAgentUpdate", regionHandle);
             return retVal;
         }
 
-        public bool UpdateAgent(GridRegion destination, AgentPosition cAgentData)
+        public bool UpdateAgent(GridRegion destination, AgentPosition agentData)
         {
             if (Scene == null || destination == null)
                 return false;
 
-            bool retVal = false;
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
-                if (retVal)
-                    transferModule.IncomingChildAgentDataUpdate(Scene, cAgentData);
-                else
-                    retVal = transferModule.IncomingChildAgentDataUpdate(Scene, cAgentData);
-            //MainConsole.Instance.Debug("[LOCAL COMMS]: region not found for ChildAgentUpdate");
-            return retVal;
+                return transferModule.IncomingChildAgentDataUpdate(Scene, agentData);
+
+            return false;
         }
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
@@ -147,18 +205,15 @@ namespace Aurora.Services
 
             IScenePresence sp = Scene.GetScenePresence(AgentID);
             if (sp != null)
-            {
                 sp.AgentFailedToLeave();
-            }
-            return false;
+            return true;
         }
 
-        public bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion destination, bool isCrossing)
+        public bool MakeChildAgent(UUID AgentID, GridRegion destination, bool isCrossing)
         {
             if (Scene == null)
                 return false;
 
-            //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule == null) return false;
             transferModule.MakeChildAgent(Scene.GetScenePresence(AgentID), destination, isCrossing);
@@ -171,18 +226,16 @@ namespace Aurora.Services
             if (Scene == null)
                 return false;
 
-            //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send FailedToTeleportAgent");
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule == null) return false;
-            transferModule.FailedToTeleportAgent(new GridRegion() {RegionID = failedRegionID},
-                                                 agentID, reason, isCrossing);
+            transferModule.FailedToTeleportAgent(destination, agentID, reason, isCrossing);
             return true;
         }
 
-        public bool RetrieveAgent(GridRegion destination, UUID id, bool agentIsLeaving, out AgentData agent,
+        public bool RetrieveAgent(GridRegion destination, UUID agentID, bool agentIsLeaving, out AgentData agentData,
                                   out AgentCircuitData circuitData)
         {
-            agent = null;
+            agentData = null;
             circuitData = null;
 
             if (Scene == null || destination == null)
@@ -191,22 +244,20 @@ namespace Aurora.Services
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
-                return transferModule.IncomingRetrieveRootAgent(Scene, id, agentIsLeaving, out agent,
+                return transferModule.IncomingRetrieveRootAgent(Scene, agentID, agentIsLeaving, out agentData,
                                                                 out circuitData);
             return false;
             //MainConsole.Instance.Debug("[LOCAL COMMS]: region not found for ChildAgentUpdate");
         }
 
-        public bool CloseAgent(GridRegion destination, UUID id)
+        public bool CloseAgent(GridRegion destination, UUID agentID)
         {
             if (Scene == null || destination == null)
                 return false;
 
-            //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to SendCloseAgent");
             IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
-                return transferModule.IncomingCloseAgent(Scene, id);
-            MainConsole.Instance.Debug("[LOCAL SIMULATION COMMS]: region not found in CloseAgent");
+                return transferModule.IncomingCloseAgent(Scene, agentID);
             return false;
         }
 
@@ -222,52 +273,9 @@ namespace Aurora.Services
             //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to SendCreateObject");
             IEntityTransferModule AgentTransferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
             if (AgentTransferModule != null)
-            {
                 return AgentTransferModule.IncomingCreateObject(Scene.RegionInfo.RegionID, sog);
-            }
-            MainConsole.Instance.Warn("[LOCAL SIMULATION COMMS]: region not found in CreateObject");
+
             return false;
-        }
-
-        public bool CreateObject(GridRegion destination, UUID userID, UUID itemID)
-        {
-            if (Scene == null || destination == null)
-                return false;
-
-            IEntityTransferModule AgentTransferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
-            if (AgentTransferModule != null)
-            {
-                return AgentTransferModule.IncomingCreateObject(Scene.RegionInfo.RegionID, userID, itemID);
-            }
-            return false;
-        }
-
-        public bool IsLocalRegion(ulong handle)
-        {
-            if (Scene == null)
-                return false;
-
-            return Scene.RegionInfo.RegionHandle == handle;
-        }
-
-        #endregion /* ISimulationService */
-
-        #region IService Members
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("SimulationHandler", "") == Name)
-                registry.RegisterModuleInterface<ISimulationService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-            m_registry = registry;
-        }
-
-        public void FinishedStartup()
-        {
         }
 
         #endregion

@@ -44,7 +44,6 @@ namespace Aurora.Modules.Startup
     {
         #region Declares
 
-        private readonly Dictionary<string, string> genericInfo = new Dictionary<string, string>();
         private readonly Dictionary<UUID, List<GridRegion>> m_knownNeighbors = new Dictionary<UUID, List<GridRegion>>();
         private readonly List<IScene> m_scenes = new List<IScene>();
         private IConfigSource m_config;
@@ -60,8 +59,7 @@ namespace Aurora.Modules.Startup
         /// <param name="scene"></param>
         public void UpdateGridRegion(IScene scene)
         {
-            IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            GridService.UpdateMap(BuildGridRegion(scene.RegionInfo), true);
+            scene.GridService.UpdateMap(new GridRegion(scene.RegionInfo), true);
         }
 
         /// <summary>
@@ -74,7 +72,7 @@ namespace Aurora.Modules.Startup
         public bool RegisterRegionWithGrid(IScene scene, bool returnResponseFirstTime, bool continueTrying,
                                            string password)
         {
-            GridRegion region = BuildGridRegion(scene.RegionInfo);
+            GridRegion region = new GridRegion(scene.RegionInfo);
 
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
 
@@ -222,11 +220,6 @@ namespace Aurora.Modules.Startup
             return new List<GridRegion>(m_knownNeighbors[scene.RegionInfo.RegionID]);
         }
 
-        public void AddGenericInfo(string key, string value)
-        {
-            genericInfo[key] = value;
-        }
-
         #endregion
 
         #region ISharedRegionStartupModule Members
@@ -275,13 +268,12 @@ namespace Aurora.Modules.Startup
                                             scene.RegionInfo.RegionName);
 
             //Deregister from the grid server
-            IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            GridRegion r = BuildGridRegion(scene.RegionInfo);
+            GridRegion r = new GridRegion(scene.RegionInfo);
             r.IsOnline = false;
             string error = "";
             if (scene.RegionInfo.HasBeenDeleted)
-                GridService.DeregisterRegion(r);
-            else if ((error = GridService.UpdateMap(r, false)) != "")
+                scene.GridService.DeregisterRegion(r);
+            else if ((error = scene.GridService.UpdateMap(r, false)) != "")
                 MainConsole.Instance.WarnFormat(
                     "[RegisterRegionWithGrid]: Deregister from grid failed for region {0}, {1}",
                     scene.RegionInfo.RegionName, error);
@@ -289,8 +281,7 @@ namespace Aurora.Modules.Startup
 
         public void DeleteRegion(IScene scene)
         {
-            IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            if (!GridService.DeregisterRegion(BuildGridRegion(scene.RegionInfo)))
+            if (!scene.GridService.DeregisterRegion(new GridRegion(scene.RegionInfo)))
                 MainConsole.Instance.WarnFormat("[RegisterRegionWithGrid]: Deregister from grid failed for region {0}",
                                                 scene.RegionInfo.RegionName);
         }
@@ -336,18 +327,6 @@ namespace Aurora.Modules.Startup
                 }
             }
             return null;
-        }
-
-        private GridRegion BuildGridRegion(RegionInfo regionInfo)
-        {
-            GridRegion region = new GridRegion(regionInfo);
-            OSDMap map = new OSDMap();
-            foreach (KeyValuePair<string, string> kvp in genericInfo)
-            {
-                map[kvp.Key] = kvp.Value;
-            }
-            region.GenericMap = map;
-            return region;
         }
     }
 }

@@ -50,13 +50,6 @@ namespace Aurora.Framework.Modules
         bool RegisterRegionWithGrid(IScene scene, bool returnResultImmediately, bool continueTrying, string password);
 
         /// <summary>
-        ///     Add this generic info to all registering regions
-        /// </summary>
-        /// <param name="key"> </param>
-        /// <param name="value"> </param>
-        void AddGenericInfo(string key, string value);
-
-        /// <summary>
         ///     Get the neighbors of the given region
         /// </summary>
         /// <param name="scene"></param>

@@ -66,11 +66,10 @@ namespace Aurora.Framework.Modules
         /// <summary>
         ///     Send an alert message to a particular user.
         /// </summary>
-        /// <param name="firstName"></param>
-        /// <param name="lastName"></param>
+        /// <param name="Name"></param>
         /// <param name="message"></param>
         /// <param name="modal"></param>
-        void SendAlertToUser(string firstName, string lastName, string message, bool modal);
+        void SendAlertToUser(string Name, string message, bool modal);
 
         /// <summary>
         ///     Send an alert message to all users in the scene.

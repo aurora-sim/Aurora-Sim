@@ -558,12 +558,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     ts.host.ParentEntity.Scene.ForEachScenePresence(
                         delegate(IScenePresence ssp)
                             {
-                                if (ssp.Lastname == "Resident")
-                                {
-                                    if (ssp.Firstname.ToLower() == ts.name)
-                                        senseEntity(ssp);
-                                    return;
-                                }
                                 if (ssp.Name.Replace(" ", ".").ToLower() == ts.name)
                                     senseEntity(ssp);
                             }

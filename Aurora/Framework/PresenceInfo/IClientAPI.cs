@@ -921,10 +921,6 @@ namespace Aurora.Framework.PresenceInfo
 
         ulong ActiveGroupPowers { get; }
 
-        string FirstName { get; }
-
-        string LastName { get; }
-
         IScene Scene { get; }
 
         IPAddress EndPoint { get; }
@@ -1366,7 +1362,7 @@ namespace Aurora.Framework.PresenceInfo
 
         void SendAvatarPickerReply(AvatarPickerReplyAgentDataArgs AgentData, List<AvatarPickerReplyDataArgs> Data);
 
-        void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string firstname, string lastname, ulong grouppowers,
+        void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string name, ulong grouppowers,
                                  string groupname, string grouptitle);
 
         void SendPreLoadSound(UUID objectID, UUID ownerID, UUID soundID);
@@ -1377,7 +1373,7 @@ namespace Aurora.Framework.PresenceInfo
 
         void SendAttachedSoundGainChange(UUID objectID, float gain);
 
-        void SendNameReply(UUID profileId, string firstname, string lastname);
+        void SendNameReply(UUID profileId, string name);
         void SendAlertMessage(string message);
 
         void SendAgentAlertMessage(string message, bool modal);

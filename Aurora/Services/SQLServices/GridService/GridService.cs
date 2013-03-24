@@ -601,7 +601,6 @@ namespace Aurora.Services.SQLServices.GridService
                 region.HttpPort = gregion.HttpPort;
                 region.RegionName = gregion.RegionName;
                 region.RegionType = gregion.RegionType;
-                region.ServerURI = gregion.ServerURI;
 
                 try
                 {

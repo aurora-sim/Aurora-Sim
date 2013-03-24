@@ -448,7 +448,7 @@ namespace Aurora.Region
                                                      "  <permissions> can contain one or more of these characters: \"C\" = Copy, \"T\" = Transfer" +
                                                      Environment.NewLine, SaveOar);
 
-            MainConsole.Instance.Commands.AddCommand("kick user", "kick user [first] [last] [message]",
+            MainConsole.Instance.Commands.AddCommand("kick user", "kick user [all]",
                                                      "Kick a user off the simulator", KickUserCommand);
 
             MainConsole.Instance.Commands.AddCommand("reset region", "reset region",
@@ -475,68 +475,15 @@ namespace Aurora.Region
         /// <param name="cmdparams">name of avatar to kick</param>
         private void KickUserCommand(string[] cmdparams)
         {
-            string alert = null;
             IList agents = new List<IScenePresence>(m_scene.GetScenePresences());
 
-            if (cmdparams.Length < 4)
+            if (cmdparams.Length > 2 && cmdparams[2] == "all")
             {
-                if (cmdparams.Length < 3)
-                    return;
-                UUID avID = UUID.Zero;
-                if (cmdparams[2] == "all")
+                string alert = MainConsole.Instance.Prompt("Alert message: ", "");
+                foreach (IScenePresence presence in agents)
                 {
-                    foreach (IScenePresence presence in agents)
-                    {
-                        RegionInfo regionInfo = presence.Scene.RegionInfo;
+                    RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-                        MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}",
-                                                                presence.Name, presence.UUID, regionInfo.RegionName));
-
-                        // kick client...
-                        presence.ControllingClient.Kick(alert ?? "\nThe Aurora manager kicked you out.\n");
-
-                        // ...and close on our side
-                        IEntityTransferModule transferModule =
-                            presence.Scene.RequestModuleInterface<IEntityTransferModule>();
-                        if (transferModule != null)
-                            transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
-                    }
-                }
-                else if (UUID.TryParse(cmdparams[2], out avID))
-                {
-                    foreach (IScenePresence presence in agents)
-                    {
-                        if (presence.UUID == avID)
-                        {
-                            RegionInfo regionInfo = presence.Scene.RegionInfo;
-
-                            MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}",
-                                                                    presence.Name, presence.UUID, regionInfo.RegionName));
-
-                            // kick client...
-                            presence.ControllingClient.Kick(alert ?? "\nThe Aurora manager kicked you out.\n");
-
-                            // ...and close on our side
-                            IEntityTransferModule transferModule =
-                                presence.Scene.RequestModuleInterface<IEntityTransferModule>();
-                            if (transferModule != null)
-                                transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
-                        }
-                    }
-                }
-            }
-
-            if (cmdparams.Length > 4)
-                alert = String.Format("\n{0}\n", String.Join(" ", cmdparams, 4, cmdparams.Length - 4));
-
-            foreach (IScenePresence presence in agents)
-            {
-                RegionInfo regionInfo = presence.Scene.RegionInfo;
-                string param = Util.CombineParams(cmdparams, 2);
-                if (presence.Name.ToLower().Contains(param.ToLower()) ||
-                    (presence.Firstname.ToLower().Contains(cmdparams[2].ToLower()) &&
-                     presence.Lastname.ToLower().Contains(cmdparams[3].ToLower())))
-                {
                     MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}",
                                                             presence.Name, presence.UUID, regionInfo.RegionName));
 
@@ -549,8 +496,31 @@ namespace Aurora.Region
                     if (transferModule != null)
                         transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
                 }
+                return;
             }
-            MainConsole.Instance.Info("");
+            else
+            {
+                string username = MainConsole.Instance.Prompt("User to kick: ", "");
+                string alert = MainConsole.Instance.Prompt("Alert message: ", "");
+
+                foreach (IScenePresence presence in agents)
+                {
+                    if (presence.Name.ToLower().Contains(username.ToLower()))
+                    {
+                        MainConsole.Instance.Info(String.Format("Kicking user: {0} in region: {1}",
+                                                                presence.Name, presence.Scene.RegionInfo.RegionName));
+
+                        // kick client...
+                        presence.ControllingClient.Kick(alert ?? "\nThe Aurora manager kicked you out.\n");
+
+                        // ...and close on our side
+                        IEntityTransferModule transferModule =
+                            presence.Scene.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
+                    }
+                }
+            }
         }
 
         /// <summary>

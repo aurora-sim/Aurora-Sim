@@ -32,6 +32,7 @@ using Aurora.Framework.SceneInfo.Entities;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -115,9 +116,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             stateSave.TargetOmegaWasSet = script.TargetOmegaWasSet;
 
             //Vars
-            string vars = "";
+            Dictionary<string, object> vars = new Dictionary<string, object>();
             if (script.Script != null)
-                vars = WebUtils.BuildXmlResponse(script.Script.GetStoreVars());
+                vars = script.Script.GetStoreVars();
             stateSave.Variables = vars;
 
             //Plugins
@@ -147,8 +148,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.InventoryItem.PermsMask = save.PermsMask;
             instance.TargetOmegaWasSet = save.TargetOmegaWasSet;
 
-            if (!string.IsNullOrEmpty(save.Variables) && instance.Script != null)
-                instance.Script.SetStoreVars(WebUtils.ParseXmlResponse(save.Variables));
+            if (save.Variables != null && instance.Script != null)
+                instance.Script.SetStoreVars(save.Variables);
         }
 
         public StateSave FindScriptStateSave(ScriptData script)

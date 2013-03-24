@@ -70,7 +70,7 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
         ///     PreRegisterRegion - A region is about to be registered
         ///     param is a GridRegion
         ///     NewUserConnection - A new user has been added to the scene (child or root)
-        ///     param is an object[], with o[0] OSDMap that will be returned to the server, and o[1] the AgentCircuitData that will be added to the region
+        ///     param is an object[], with o[0] the AgentCircuitData that will be added to the region
         ///     EstateUpdated - An estate has been updated
         ///     param is the EstateSettings of the changed estate
         ///     ObjectAddedFlag - An object in the Scene has added a prim flag

@@ -728,72 +728,47 @@ namespace Aurora.Region
         public void AddNewClient(IClientAPI client, BlankHandler completed)
         {
             AddAsyncEvent(delegate
-                              {
-                                  try
-                                  {
-                                      System.Net.IPEndPoint ep = (System.Net.IPEndPoint) client.GetClientEP();
-                                      AgentCircuitData aCircuit =
-                                          AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId,
-                                                                                  client.CircuitCode, ep);
+            {
+                try
+                {
+                    AgentCircuitData aCircuit = AuthenticateHandler.GetAgentCircuitData(client.AgentId);
 
-                                      if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
-                                      {
-                                          completed();
-                                          return;
-                                      }
+                    m_clientManager.Add(client);
 
-                                      m_clientManager.Add(client);
+                    //Create the scenepresence
+                    IScenePresence sp = CreateAndAddChildScenePresence(client);
+                    sp.IsChildAgent = aCircuit.IsChildAgent;
 
-                                      //Create the scenepresence
-                                      IScenePresence sp = CreateAndAddChildScenePresence(client);
-                                      sp.IsChildAgent = aCircuit.child;
-                                      sp.RootAgentHandle = aCircuit.roothandle;
-                                      sp.DrawDistance = aCircuit.DrawDistance;
+                    //Trigger events
+                    m_eventManager.TriggerOnNewPresence(sp);
 
-                                      //Trigger events
-                                      m_eventManager.TriggerOnNewPresence(sp);
+                    if (GetScenePresence(client.AgentId) != null)
+                    {
+                        EventManager.TriggerOnNewClient(client);
+                        if ((aCircuit.TeleportFlags & (uint)TeleportFlags.ViaLogin) != 0)
+                            EventManager.TriggerOnClientLogin(client);
+                    }
 
-                                      //Make sure the appearanace is updated
-                                      IAvatarAppearanceModule appearance =
-                                          sp.RequestModuleInterface<IAvatarAppearanceModule>();
-                                      if (appearance != null)
-                                      {
-                                          appearance.Appearance = aCircuit.Appearance ??
-                                                                  sp.Scene.AvatarService.GetAppearance(sp.UUID);
-                                          if (appearance.Appearance == null)
-                                          {
-                                              MainConsole.Instance.Error(
-                                                  "[AsyncScene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
-                                              appearance.Appearance = new AvatarAppearance(sp.UUID);
-                                          }
-                                      }
+                    //Add the client to login stats
+                    ILoginMonitor monitor3 =
+                        (ILoginMonitor)
+                        RequestModuleInterface<IMonitorModule>()
+                            .GetMonitor("", MonitorModuleHelper.LoginMonitor);
+                    if ((aCircuit.TeleportFlags & (uint)TeleportFlags.ViaLogin) != 0 &&
+                        monitor3 != null)
+                        monitor3.AddSuccessfulLogin();
 
-                                      if (GetScenePresence(client.AgentId) != null)
-                                      {
-                                          EventManager.TriggerOnNewClient(client);
-                                          if ((aCircuit.teleportFlags & (uint) TeleportFlags.ViaLogin) != 0)
-                                              EventManager.TriggerOnClientLogin(client);
-                                      }
-
-                                      //Add the client to login stats
-                                      ILoginMonitor monitor3 =
-                                          (ILoginMonitor)
-                                          RequestModuleInterface<IMonitorModule>()
-                                              .GetMonitor("", MonitorModuleHelper.LoginMonitor);
-                                      if ((aCircuit.teleportFlags & (uint) TeleportFlags.ViaLogin) != 0 &&
-                                          monitor3 != null)
-                                          monitor3.AddSuccessfulLogin();
-
-                                      if (sp.IsChildAgent)
-                                          //If we're a child, trigger this so that we get updated in the modules
-                                          sp.TriggerSignificantClientMovement();
-                                      completed();
-                                  }
-                                  catch (Exception ex)
-                                  {
-                                      MainConsole.Instance.Warn("[Scene]: Error in AddNewClient: " + ex);
-                                  }
-                              });
+                    if (sp.IsChildAgent)
+                        //If we're a child, trigger this so that we get updated in the modules
+                        sp.TriggerSignificantClientMovement();
+                    if (completed != null)
+                        completed();
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.Warn("[Scene]: Error in AddNewClient: " + ex);
+                }
+            });
         }
 
         protected internal IScenePresence CreateAndAddChildScenePresence(IClientAPI client)
@@ -861,7 +836,7 @@ namespace Aurora.Region
                                   //Remove any interfaces it might have stored
                                   presence.RemoveAllInterfaces();
 
-                                  AuthenticateHandler.RemoveCircuit(presence.ControllingClient.CircuitCode);
+                                  AuthenticateHandler.RemoveCircuit(presence.UUID);
                                   //MainConsole.Instance.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
                                   //MainConsole.Instance.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
                               });

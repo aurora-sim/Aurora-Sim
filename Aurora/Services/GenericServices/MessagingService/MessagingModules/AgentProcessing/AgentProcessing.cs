@@ -143,7 +143,7 @@ namespace Aurora.Services
                 int DrawDistance = body["DrawDistance"].AsInteger();
 
                 AgentCircuitData circuitData = new AgentCircuitData();
-                circuitData.UnpackAgentCircuitData((OSDMap) body["Circuit"]);
+                circuitData.FromOSD((OSDMap)body["Circuit"]);
 
                 //Now do the creation
                 EnableChildAgents(AgentID, requestingRegion, DrawDistance, circuitData);
@@ -169,7 +169,7 @@ namespace Aurora.Services
                     OSDMap body = ((OSDMap) message["Message"]);
 
                     AgentPosition pos = new AgentPosition();
-                    pos.Unpack((OSDMap) body["AgentPos"]);
+                    pos.FromOSD((OSDMap)body["AgentPos"]);
 
                     regionCaps.Disabled = true;
 
@@ -190,7 +190,7 @@ namespace Aurora.Services
                     OSDMap body = ((OSDMap) message["Message"]);
 
                     AgentPosition pos = new AgentPosition();
-                    pos.Unpack((OSDMap) body["AgentPos"]);
+                    pos.FromOSD((OSDMap) body["AgentPos"]);
 
                     SendChildAgentUpdate(pos, regionCaps);
                     regionCaps.Disabled = false;
@@ -212,17 +212,17 @@ namespace Aurora.Services
                     int DrawDistance = body["DrawDistance"].AsInteger();
 
                     AgentCircuitData Circuit = new AgentCircuitData();
-                    Circuit.UnpackAgentCircuitData((OSDMap) body["Circuit"]);
+                    Circuit.FromOSD((OSDMap)body["Circuit"]);
 
                     AgentData AgentData = new AgentData();
-                    AgentData.Unpack((OSDMap) body["AgentData"]);
+                    AgentData.FromOSD((OSDMap)body["AgentData"]);
                     regionCaps.Disabled = false;
 
                     //Don't need to wait for this to finish on the main http thread
                     Util.FireAndForget((o) =>
                                            {
                                                string reason = "";
-                                               TeleportAgent(ref destination, TeleportFlags, DrawDistance,
+                                               TeleportAgent(ref destination, TeleportFlags,
                                                              Circuit, AgentData, AgentID, requestingRegion, out reason);
                                            });
                     return null;
@@ -243,9 +243,9 @@ namespace Aurora.Services
                     GridRegion Region = new GridRegion();
                     Region.FromOSD((OSDMap) body["Region"]);
                     AgentCircuitData Circuit = new AgentCircuitData();
-                    Circuit.UnpackAgentCircuitData((OSDMap) body["Circuit"]);
+                    Circuit.FromOSD((OSDMap)body["Circuit"]);
                     AgentData AgentData = new AgentData();
-                    AgentData.Unpack((OSDMap) body["AgentData"]);
+                    AgentData.FromOSD((OSDMap)body["AgentData"]);
                     regionCaps.Disabled = false;
 
                     Util.FireAndForget((o) =>
@@ -353,9 +353,7 @@ namespace Aurora.Services
                         continue;
 
                     AgentCircuitData regionCircuitData = regionClientCaps.CircuitData.Copy();
-                    regionCircuitData.child = true; //Fix child agent status
-                    regionCircuitData.roothandle = requestingRegion.RegionHandle;
-                    regionCircuitData.reallyischild = true;
+                    regionCircuitData.IsChildAgent = true;
                     string reason; //Tell the region about it
                     if (!InformClientOfNeighbor(regionClientCaps.AgentID, regionClientCaps.Region.RegionID,
                                                 regionCircuitData, ref requestingRegion, (uint) TeleportFlags.Default,
@@ -369,8 +367,7 @@ namespace Aurora.Services
             return informed;
         }
 
-        public virtual void EnableChildAgents(UUID AgentID, UUID requestingRegion, int DrawDistance,
-                                              AgentCircuitData circuit)
+        public virtual void EnableChildAgents(UUID AgentID, UUID requestingRegion, int DrawDistance, AgentCircuitData circuit)
         {
             Util.FireAndForget((o) =>
                                    {
@@ -388,7 +385,6 @@ namespace Aurora.Services
                                        List<GridRegion> neighbors = GetNeighbors(clientCaps.AccountInfo.AllScopeIDs,
                                                                                  ourRegion, DrawDistance);
 
-                                       clientCaps.GetRootCapsService().CircuitData.DrawDistance = DrawDistance;
                                        //Fix the root agents dd
                                        foreach (GridRegion neighbor in neighbors)
                                        {
@@ -399,10 +395,7 @@ namespace Aurora.Services
                                                AgentCircuitData regionCircuitData =
                                                    clientCaps.GetRootCapsService().CircuitData.Copy();
                                                GridRegion nCopy = neighbor;
-                                               regionCircuitData.child = true; //Fix child agent status
-                                               regionCircuitData.roothandle = ourRegion.RegionHandle;
-                                               regionCircuitData.reallyischild = true;
-                                               regionCircuitData.DrawDistance = DrawDistance;
+                                               regionCircuitData.IsChildAgent = true;
                                                InformClientOfNeighbor(AgentID, requestingRegion, regionCircuitData,
                                                                       ref nCopy,
                                                                       (uint) TeleportFlags.Default, null, out reason);
@@ -491,33 +484,21 @@ namespace Aurora.Services
                     return result;
                 }
 
-                circuitData.CapsPath = CapsUtil.GetCapsPathFromCapsSeed(otherRegionService.CapsUrl); //For OpenSim
-                circuitData.firstname = clientCaps.AccountInfo.FirstName;
-                circuitData.lastname = clientCaps.AccountInfo.LastName;
-
                 int requestedPort = 0;
-                if (circuitData.child)
-                    circuitData.reallyischild = true;
+                CreateAgentResponse createAgentResponse;
                 bool regionAccepted = CreateAgent(neighbor, otherRegionService, ref circuitData, SimulationService,
-                                                  ref requestedPort, out reason);
+                                                  out createAgentResponse);
+                reason = createAgentResponse.Reason;
                 if (regionAccepted)
                 {
                     IPAddress ipAddress = neighbor.ExternalEndPoint.Address;
                     //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
-                    if (reason != "" && reason != "authorized")
-                    {
-                        OSDMap responseMap = (OSDMap) OSDParser.DeserializeJson(reason);
-                        OSDMap SimSeedCaps = (OSDMap) responseMap["CapsUrls"];
-                        if (responseMap.ContainsKey("OurIPForClient"))
-                        {
-                            string ip = responseMap["OurIPForClient"].AsString();
-                            if (!IPAddress.TryParse(ip, out ipAddress))
+                    string ip = createAgentResponse.OurIPForClient;
+                    if (!IPAddress.TryParse(ip, out ipAddress))
 #pragma warning disable 618
-                                ipAddress = Dns.GetHostByName(ip).AddressList[0];
+                        ipAddress = Dns.GetHostByName(ip).AddressList[0];
 #pragma warning restore 618
-                        }
-                        otherRegionService.AddCAPS(SimSeedCaps);
-                    }
+                    otherRegionService.AddCAPS(createAgentResponse.CapsURIs);
 
                     if (ipAddress == null)
                         ipAddress = neighbor.ExternalEndPoint.Address;
@@ -573,7 +554,7 @@ namespace Aurora.Services
 
         private int CloseNeighborCall;
 
-        public virtual bool TeleportAgent(ref GridRegion destination, uint TeleportFlags, int DrawDistance,
+        public virtual bool TeleportAgent(ref GridRegion destination, uint TeleportFlags,
                                           AgentCircuitData circuit, AgentData agentData, UUID AgentID,
                                           UUID requestingRegion,
                                           out string reason)
@@ -609,8 +590,7 @@ namespace Aurora.Services
                     if (GridService != null)
                     {
                         //Inform the client of the neighbor if needed
-                        circuit.child = false; //Force child status to the correct type
-                        circuit.roothandle = destination.RegionHandle;
+                        circuit.IsChildAgent = false; //Force child status to the correct type
                         if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref destination, TeleportFlags,
                                                     agentData, out reason))
                         {
@@ -679,7 +659,7 @@ namespace Aurora.Services
                             agentInfoService.SetLastPosition(AgentID.ToString(), destination.RegionID,
                                                              agentData.Position, Vector3.Zero, destination.ServerURI);
 
-                        SimulationService.MakeChildAgent(AgentID, regionCaps.Region.RegionID, regionCaps.Region, false);
+                        SimulationService.MakeChildAgent(AgentID, regionCaps.Region, false);
                         reason = "";
                     }
                 }
@@ -978,8 +958,7 @@ namespace Aurora.Services
                             if (agentInfoService != null)
                                 agentInfoService.SetLastPosition(AgentID.ToString(), crossingRegion.RegionID,
                                                                  pos, Vector3.Zero, crossingRegion.ServerURI);
-                            SimulationService.MakeChildAgent(AgentID, requestingRegionCaps.Region.RegionID,
-                                                             requestingRegionCaps.Region, true);
+                            SimulationService.MakeChildAgent(AgentID, requestingRegionCaps.Region, true);
                         }
                     }
 
@@ -1079,7 +1058,7 @@ namespace Aurora.Services
                 {
                     //Remove any previous users
                     seedCap = m_capsService.CreateCAPS(aCircuit.AgentID,
-                                                       CapsUtil.GetCapsSeedPath(aCircuit.CapsPath),
+                                                       CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()),
                                                        region.RegionID, true, aCircuit, 0);
 
                     clientCaps = m_capsService.GetClientCapsService(aCircuit.AgentID);
@@ -1093,28 +1072,14 @@ namespace Aurora.Services
                 //Make sure that we make userURLs if we need to
 
                 int requestedUDPPort = 0;
+                CreateAgentResponse createAgentResponse;
                 // As we are creating the agent, we must also initialize the CapsService for the agent
-                success = CreateAgent(region, regionClientCaps, ref aCircuit, SimulationService, ref requestedUDPPort,
-                                      out reason);
-                if (requestedUDPPort == 0)
-                    requestedUDPPort = region.ExternalEndPoint.Port;
-                aCircuit.RegionUDPPort = requestedUDPPort;
+                success = CreateAgent(region, regionClientCaps, ref aCircuit, SimulationService,
+                                      out createAgentResponse);
 
+                reason = createAgentResponse.Reason;
                 if (!success) // If it failed, do not set up any CapsService for the client
                 {
-                    if (reason != "")
-                    {
-                        try
-                        {
-                            OSDMap reasonMap = OSDParser.DeserializeJson(reason) as OSDMap;
-                            if (reasonMap != null && reasonMap.ContainsKey("Reason"))
-                                reason = reasonMap["Reason"].AsString();
-                        }
-                        catch
-                        {
-                            //If its already not JSON, it'll throw an exception, catch it
-                        }
-                    }
                     //Delete the Caps!
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
                     if (agentProcessor != null && m_capsService != null)
@@ -1129,47 +1094,34 @@ namespace Aurora.Services
                                    SeedCap = seedCap
                                };
                 }
+                requestedUDPPort = createAgentResponse.RequestedUDPPort;
+                if (requestedUDPPort == 0)
+                    requestedUDPPort = region.ExternalEndPoint.Port;
+                aCircuit.RegionUDPPort = requestedUDPPort;
 
                 IPAddress ipAddress = regionClientCaps.Region.ExternalEndPoint.Address;
-                if (m_capsService != null && reason != "")
+                if (m_capsService != null)
                 {
-                    try
-                    {
-                        OSDMap responseMap = (OSDMap) OSDParser.DeserializeJson(reason);
-                        OSDMap SimSeedCaps = (OSDMap) responseMap["CapsUrls"];
-                        if (responseMap.ContainsKey("OurIPForClient"))
-                        {
-                            string ip = responseMap["OurIPForClient"].AsString();
-                            if (!IPAddress.TryParse(ip, out ipAddress))
+                    //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
+                    string ip = createAgentResponse.OurIPForClient;
+                    if (!IPAddress.TryParse(ip, out ipAddress))
 #pragma warning disable 618
-                                ipAddress = Dns.GetHostByName(ip).AddressList[0];
+                        ipAddress = Dns.GetHostByName(ip).AddressList[0];
 #pragma warning restore 618
-                        }
-                        region.ExternalEndPoint.Address = ipAddress;
-                        //Fix this so that it gets sent to the client that way
-                        regionClientCaps.AddCAPS(SimSeedCaps);
-                        regionClientCaps = clientCaps.GetCapsService(region.RegionID);
-                        regionClientCaps.LoopbackRegionIP = ipAddress;
-                        regionClientCaps.CircuitData.RegionUDPPort = requestedUDPPort;
-                        regionClientCaps.RootAgent = true;
-                    }
-                    catch
-                    {
-                        //Delete the Caps!
-                        IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
-                        if (agentProcessor != null && m_capsService != null)
-                            agentProcessor.LogoutAgent(regionClientCaps, true);
-                        else if (m_capsService != null)
-                            m_capsService.RemoveCAPS(aCircuit.AgentID);
-                        success = false;
-                    }
+                    region.ExternalEndPoint.Address = ipAddress;
+                    //Fix this so that it gets sent to the client that way
+                    regionClientCaps.AddCAPS(createAgentResponse.CapsURIs);
+                    regionClientCaps = clientCaps.GetCapsService(region.RegionID);
+                    regionClientCaps.LoopbackRegionIP = ipAddress;
+                    regionClientCaps.CircuitData.RegionUDPPort = requestedUDPPort;
+                    regionClientCaps.RootAgent = true;
                 }
             }
             return new LoginAgentArgs {Success = success, CircuitData = aCircuit, Reason = reason, SeedCap = seedCap};
         }
 
         private bool CreateAgent(GridRegion region, IRegionClientCapsService regionCaps, ref AgentCircuitData aCircuit,
-                                 ISimulationService SimulationService, ref int requestedUDPPort, out string reason)
+                                 ISimulationService SimulationService, out CreateAgentResponse response)
         {
             CachedUserInfo info = new CachedUserInfo();
             IAgentConnector con = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
@@ -1193,9 +1145,13 @@ namespace Aurora.Services
             if (muteConn != null)
                 info.MuteList = muteConn.GetMuteList(aCircuit.AgentID);
 
-            aCircuit.OtherInformation["CachedUserInfo"] = info.ToOSD();
-            return SimulationService.CreateAgent(region, aCircuit, aCircuit.teleportFlags, null,
-                                                 out requestedUDPPort, out reason);
+            IAvatarService avatarService = m_registry.RequestModuleInterface<IAvatarService>();
+            if (avatarService != null)
+                info.Appearance = avatarService.GetAppearance(aCircuit.AgentID);
+
+            aCircuit.CachedUserInfo = info;
+            return SimulationService.CreateAgent(region, aCircuit, aCircuit.TeleportFlags,
+                                                 out response);
         }
 
         #endregion

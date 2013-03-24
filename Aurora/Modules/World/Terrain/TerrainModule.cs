@@ -835,18 +835,14 @@ namespace Aurora.Modules.Terrain
                     //Need to make sure we don't send the same ones over and over
                     if (!terrainarray[x, y])
                     {
-                        Vector3 posToCheckFrom = new Vector3(presence.AbsolutePosition.X%m_scene.RegionInfo.RegionSizeX,
-                                                             presence.AbsolutePosition.Y%m_scene.RegionInfo.RegionSizeY,
+                        Vector3 posToCheckFrom = new Vector3(presence.AbsolutePosition.X % m_scene.RegionInfo.RegionSizeX,
+                                                             presence.AbsolutePosition.Y % m_scene.RegionInfo.RegionSizeY,
                                                              presence.AbsolutePosition.Z);
-                        int xx, yy;
-                        Util.UlongToInts(presence.RootAgentHandle, out xx, out yy);
-                        int xOffset = m_scene.RegionInfo.RegionLocX - xx;
-                        int yOffset = m_scene.RegionInfo.RegionLocY - yy;
                         //Check which has less distance, camera or avatar position, both have to be done
                         if (Util.DistanceLessThan(posToCheckFrom,
                                                   new Vector3(
-                                                      x*Constants.TerrainPatchSize + (xOffset > 0 ? -xOffset : xOffset),
-                                                      y*Constants.TerrainPatchSize + (yOffset > 0 ? -yOffset : yOffset),
+                                                      x*Constants.TerrainPatchSize,
+                                                      y*Constants.TerrainPatchSize,
                                                       0), presence.DrawDistance + 50) ||
                             Util.DistanceLessThan(presence.CameraPosition,
                                                   new Vector3(x*Constants.TerrainPatchSize, y*Constants.TerrainPatchSize,

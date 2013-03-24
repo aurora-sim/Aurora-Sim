@@ -72,9 +72,9 @@ namespace Aurora.Modules.Chat
                 sp.ControllingClient.SendAgentAlertMessage(message, modal);
         }
 
-        public void SendAlertToUser(string firstName, string lastName, string message, bool modal)
+        public void SendAlertToUser(string Name, string message, bool modal)
         {
-            IScenePresence presence = m_scene.SceneGraph.GetScenePresence(firstName, lastName);
+            IScenePresence presence = m_scene.SceneGraph.GetScenePresence(Name);
             if (presence != null && !presence.IsChildAgent)
                 presence.ControllingClient.SendAgentAlertMessage(message, modal);
         }
@@ -286,7 +286,7 @@ namespace Aurora.Modules.Chat
                 MainConsole.Instance.InfoFormat(
                     "[DIALOG]: Sending alert in region {0} to {1} {2} with message {3}",
                     m_scene.RegionInfo.RegionName, firstName, lastName, message);
-                SendAlertToUser(firstName, lastName, message, false);
+                SendAlertToUser(firstName + " " + lastName, message, false);
             }
         }
     }

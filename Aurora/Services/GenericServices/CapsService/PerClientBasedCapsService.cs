@@ -49,7 +49,6 @@ namespace Aurora.Services
         protected UserAccount m_account;
         protected UUID m_agentID;
         protected bool m_callbackHasCome;
-        protected IPEndPoint m_clientEndPoint;
         protected bool m_inTeleport;
         protected bool m_requestToCancelTeleport;
 
@@ -58,11 +57,6 @@ namespace Aurora.Services
         public UUID AgentID
         {
             get { return m_agentID; }
-        }
-
-        public IPEndPoint ClientEndPoint
-        {
-            get { return m_clientEndPoint; }
         }
 
         public UserAccount AccountInfo
@@ -207,15 +201,6 @@ namespace Aurora.Services
         protected void AddCapsServiceForRegion(UUID regionID, string CAPSBase, AgentCircuitData circuitData,
                                                uint port)
         {
-            if (m_clientEndPoint == null && circuitData.ClientIPEndPoint != null)
-                m_clientEndPoint = circuitData.ClientIPEndPoint;
-            if (m_clientEndPoint == null)
-            {
-                //Should only happen in grid HG/OpenSim situtations
-                IPAddress test = null;
-                if (IPAddress.TryParse(circuitData.IPAddress, out test))
-                    m_clientEndPoint = new IPEndPoint(test, 0); //Dunno the port, so leave it alone
-            }
             if (!m_RegionCapsServices.ContainsKey(regionID))
             {
                 //Now add this client to the region caps

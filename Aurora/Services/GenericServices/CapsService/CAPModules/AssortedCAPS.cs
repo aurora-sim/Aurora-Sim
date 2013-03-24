@@ -255,7 +255,7 @@ namespace Aurora.Services
                 {
                     ad.Position = position;
                     ad.Center = position;
-                    circuitData.startpos = position;
+                    circuitData.StartingPosition = position;
                 }
             }
             if (destination == null || circuitData == null)
@@ -264,10 +264,9 @@ namespace Aurora.Services
                 retVal.Add("success", OSD.FromBoolean(false));
                 return OSDParser.SerializeLLSDXmlBytes(retVal);
             }
-            circuitData.reallyischild = false;
-            circuitData.child = false;
+            circuitData.IsChildAgent = false;
 
-            if (m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int) ad.Far, circuitData, ad,
+            if (m_agentProcessing.TeleportAgent(ref destination, tpFlags, circuitData, ad,
                                                 m_service.AgentID, m_service.RegionID, out reason) || reason == "")
             {
                 retVal.Add("success", OSD.FromBoolean(true));
@@ -276,7 +275,7 @@ namespace Aurora.Services
             {
                 if (reason != "Already in a teleport")
                     //If this error occurs... don't kick them out of their current region
-                    simService.FailedToMoveAgentIntoNewRegion(m_service.AgentID, destination.RegionID);
+                    simService.FailedToMoveAgentIntoNewRegion(m_service.AgentID, destination);
                 retVal.Add("reason", reason);
                 retVal.Add("success", OSD.FromBoolean(false));
             }

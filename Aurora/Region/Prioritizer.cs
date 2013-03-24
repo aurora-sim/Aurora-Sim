@@ -155,29 +155,6 @@ namespace Aurora.Region
                 DD > scene.RegionInfo.RegionSizeY)
                 return true; //Its larger than the region, no culling check even necessary
             Vector3 posToCheckFrom = client.GetAbsolutePosition();
-            if (client.IsChildAgent)
-            {
-                /*if (m_cachedXOffset == 0 && m_cachedYOffset == 0) //Not found yet
-                {
-                    int RegionLocX, RegionLocY;
-                    Util.UlongToInts(client.RootAgentHandle, out RegionLocX, out RegionLocY);
-                    m_cachedXOffset = scene.RegionInfo.RegionLocX - RegionLocX;
-                    m_cachedYOffset = scene.RegionInfo.RegionLocY - RegionLocY;
-                }
-                //We need to add the offset so that we can check from the right place in child regions
-                if (m_cachedXOffset < 0)
-                    posToCheckFrom.X = scene.RegionInfo.RegionSizeX -
-                                       (scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X + m_cachedXOffset);
-                if (m_cachedYOffset < 0)
-                    posToCheckFrom.Y = scene.RegionInfo.RegionSizeY -
-                                       (scene.RegionInfo.RegionSizeY + client.AbsolutePosition.Y + m_cachedYOffset);
-                if (m_cachedXOffset > scene.RegionInfo.RegionSizeX)
-                    posToCheckFrom.X = scene.RegionInfo.RegionSizeX -
-                                       (scene.RegionInfo.RegionSizeX - (client.AbsolutePosition.X + m_cachedXOffset));
-                if (m_cachedYOffset > scene.RegionInfo.RegionSizeY)
-                    posToCheckFrom.Y = scene.RegionInfo.RegionSizeY -
-                                       (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));*/
-            }
             Vector3 entityPosToCheckFrom = Vector3.Zero;
             bool doHeavyCulling = false;
             if (entity is ISceneEntity)

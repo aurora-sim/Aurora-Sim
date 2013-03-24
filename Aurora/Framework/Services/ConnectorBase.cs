@@ -66,7 +66,6 @@ namespace Aurora.Framework.Services
         protected bool m_doRemoteCalls = false;
         protected string m_name;
         protected bool m_doRemoteOnly = false;
-        protected int m_OSDRequestTimeout = 10000;
         protected int m_OSDRequestTryCount = 7;
         protected string m_password = "";
 
@@ -103,10 +102,7 @@ namespace Aurora.Framework.Services
                     }
                 }
                 if ((config = source.Configs["Configuration"]) != null)
-                {
-                    m_OSDRequestTimeout = config.GetInt("OSDRequestTimeout", m_OSDRequestTimeout);
                     m_OSDRequestTryCount = config.GetInt("OSDRequestTryCount", m_OSDRequestTryCount);
-                }
             }
             if (m_doRemoteCalls)
                 m_doRemoteOnly = true; //Lock out local + remote for now
@@ -251,9 +247,9 @@ namespace Aurora.Framework.Services
         public bool GetOSDMap(string url, OSDMap map, out OSDMap response)
         {
             response = null;
-            string resp = WebUtils.ServiceOSDRequest(url, map, "POST", m_OSDRequestTimeout);
+            string resp = WebUtils.PostToService(url, map);
 
-            if (resp == "" || resp.StartsWith("<"))
+            if (resp == null || resp == "" || resp.StartsWith("<"))
                 return false;
             try
             {

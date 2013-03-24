@@ -99,31 +99,24 @@ namespace Aurora.BotManager
                                  UUID creatorID, Vector3 startPos)
         {
             AgentCircuitData m_aCircuitData = new AgentCircuitData
-                                                  {
-                                                      child = false,
-                                                      circuitcode = (uint) Util.RandomClass.Next(),
-                                                      Appearance = GetAppearance(cloneAppearanceFrom, scene)
-                                                  };
+            {
+                IsChildAgent = false,
+                CircuitCode = (uint) Util.RandomClass.Next()
+            };
 
             //Add the circuit data so they can login
 
             //Sets up appearance
-            if (m_aCircuitData.Appearance == null)
-            {
-                m_aCircuitData.Appearance = new AvatarAppearance {Wearables = AvatarWearable.DefaultWearables};
-            }
+            AvatarAppearance app = GetAppearance(cloneAppearanceFrom, scene) ?? new AvatarAppearance { Wearables = AvatarWearable.DefaultWearables };
             //Create the new bot data
-            BotClientAPI m_character = new BotClientAPI(scene, m_aCircuitData)
-                                           {
-                                               FirstName = firstName,
-                                               LastName = lastName
-                                           };
+            BotClientAPI m_character = new BotClientAPI(scene, m_aCircuitData);
 
+            m_character.Name = firstName + " " + lastName;
             m_aCircuitData.AgentID = m_character.AgentId;
-            m_aCircuitData.Appearance.Owner = m_character.AgentId;
-            List<AvatarAttachment> attachments = m_aCircuitData.Appearance.GetAttachments();
+            app.Owner = m_character.AgentId;
+            List<AvatarAttachment> attachments = app.GetAttachments();
 
-            m_aCircuitData.Appearance.ClearAttachments();
+            app.ClearAttachments();
             foreach (AvatarAttachment t in attachments)
             {
                 InventoryItemBase item = scene.InventoryService.GetItem(UUID.Zero, t.ItemID);
@@ -134,7 +127,7 @@ namespace Aurora.BotManager
                     item.Folder = UUID.Zero;
                     scene.InventoryService.AddItemAsync(item, null);
                     //Now fix the ItemID
-                    m_aCircuitData.Appearance.SetAttachment(t.AttachPoint, item.ID, t.AssetID);
+                    app.SetAttachment(t.AttachPoint, item.ID, t.AssetID);
                 }
             }
 
@@ -159,6 +152,7 @@ namespace Aurora.BotManager
                     attModule.RezSingleAttachmentFromInventory(SP.ControllingClient, att.ItemID, att.AssetID, 0, true);
 
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
+            appearance.Appearance = app;
             appearance.InitialHasWearablesBeenSent = true;
 
             //Save them in the bots list

@@ -969,8 +969,7 @@ namespace Aurora.ClientStack
             UUID sessionID = useCircuitCode.CircuitCode.SessionID;
             uint circuitCode = useCircuitCode.CircuitCode.Code;
 
-            sessionInfo = m_circuitManager.AuthenticateSession(sessionID, agentID, circuitCode, remoteEndPoint);
-            return sessionInfo != null;
+            return (sessionInfo = m_circuitManager.AuthenticateSession(sessionID, agentID, circuitCode, remoteEndPoint)) != null;
         }
 
         private void ForEachInternalClient(Action<IClientAPI> action)
@@ -998,7 +997,7 @@ namespace Aurora.ClientStack
                 client.OnLogout += LogoutHandler;
 
                 // Start the IClientAPI
-                m_scene.AddNewClient(client, BlankDelegate);
+                m_scene.AddNewClient(client, null);
                 m_currentClients.Add(client);
             }
             else
@@ -1008,10 +1007,6 @@ namespace Aurora.ClientStack
                     circuitCode, agentID, remoteEndPoint);
             }
             return true;
-        }
-
-        private void BlankDelegate()
-        {
         }
 
         private void RemoveClient(LLUDPClient udpClient)

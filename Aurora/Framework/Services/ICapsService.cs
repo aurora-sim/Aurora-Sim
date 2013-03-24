@@ -157,11 +157,6 @@ namespace Aurora.Framework.Services
         UUID AgentID { get; }
 
         /// <summary>
-        ///     The Clients ExternalIP
-        /// </summary>
-        IPEndPoint ClientEndPoint { get; }
-
-        /// <summary>
         ///     Whether the user is currently teleporting/crossings
         /// </summary>
         bool InTeleport { get; set; }

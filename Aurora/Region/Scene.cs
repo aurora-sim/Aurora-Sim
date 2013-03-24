@@ -655,43 +655,21 @@ namespace Aurora.Region
         {
             try
             {
-                System.Net.IPEndPoint ep = (System.Net.IPEndPoint) client.GetClientEP();
-                AgentCircuitData aCircuit = AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId,
-                                                                                    client.CircuitCode, ep);
-
-                if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
-                {
-                    completed();
-                    return;
-                }
+                AgentCircuitData aCircuit = AuthenticateHandler.GetAgentCircuitData(client.AgentId);
 
                 m_clientManager.Add(client);
 
                 //Create the scenepresence
                 IScenePresence sp = CreateAndAddChildScenePresence(client);
-                sp.IsChildAgent = aCircuit.child;
-                sp.RootAgentHandle = aCircuit.roothandle;
-                sp.DrawDistance = aCircuit.DrawDistance;
+                sp.IsChildAgent = aCircuit.IsChildAgent;
 
                 //Trigger events
                 m_eventManager.TriggerOnNewPresence(sp);
 
-                //Make sure the appearanace is updated
-                IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-                if (appearance != null)
-                {
-                    appearance.Appearance = aCircuit.Appearance ?? sp.Scene.AvatarService.GetAppearance(sp.UUID);
-                    if (appearance.Appearance == null)
-                    {
-                        MainConsole.Instance.Error("[Scene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
-                        appearance.Appearance = new AvatarAppearance(sp.UUID);
-                    }
-                }
-
                 if (GetScenePresence(client.AgentId) != null)
                 {
                     EventManager.TriggerOnNewClient(client);
-                    if ((aCircuit.teleportFlags & (uint) TeleportFlags.ViaLogin) != 0)
+                    if ((aCircuit.TeleportFlags & (uint) TeleportFlags.ViaLogin) != 0)
                         EventManager.TriggerOnClientLogin(client);
                 }
 
@@ -699,12 +677,13 @@ namespace Aurora.Region
                 ILoginMonitor monitor3 =
                     (ILoginMonitor)
                     RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
-                if ((aCircuit.teleportFlags & (uint) TeleportFlags.ViaLogin) != 0 && monitor3 != null)
+                if ((aCircuit.TeleportFlags & (uint) TeleportFlags.ViaLogin) != 0 && monitor3 != null)
                     monitor3.AddSuccessfulLogin();
 
                 if (sp.IsChildAgent) //If we're a child, trigger this so that we get updated in the modules
                     sp.TriggerSignificantClientMovement();
-                completed();
+                if (completed != null)
+                    completed();
             }
             catch (Exception ex)
             {
@@ -774,7 +753,7 @@ namespace Aurora.Region
             //Remove any interfaces it might have stored
             presence.RemoveAllInterfaces();
 
-            AuthenticateHandler.RemoveCircuit(presence.ControllingClient.CircuitCode);
+            AuthenticateHandler.RemoveCircuit(presence.UUID);
             //MainConsole.Instance.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
             //MainConsole.Instance.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
             return true;

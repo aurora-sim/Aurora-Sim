@@ -2338,8 +2338,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             World.ForEachScenePresence(delegate(IScenePresence sp)
                                            {
                                                if (!sp.IsChildAgent &&
-                                                   sp.Firstname == FirstName &&
-                                                   sp.Lastname == SurName)
+                                                   sp.Name == FirstName + " " + SurName)
                                                {
                                                    // kick client...
                                                    sp.ControllingClient.Kick(alert);

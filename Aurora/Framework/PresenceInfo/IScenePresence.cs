@@ -35,16 +35,6 @@ namespace Aurora.Framework.PresenceInfo
         string CallbackURI { get; set; }
 
         /// <summary>
-        ///     First name of the client
-        /// </summary>
-        string Firstname { get; }
-
-        /// <summary>
-        ///     Last name of the client
-        /// </summary>
-        string Lastname { get; }
-
-        /// <summary>
         ///     The actual client base (it sends and recieves packets)
         /// </summary>
         IClientAPI ControllingClient { get; }
@@ -59,11 +49,6 @@ namespace Aurora.Framework.PresenceInfo
         ///     Is this client really in this region?
         /// </summary>
         bool IsChildAgent { get; set; }
-
-        /// <summary>
-        ///     Gets the region handle of the region the root agent is in
-        /// </summary>
-        ulong RootAgentHandle { get; set; }
 
         /// <summary>
         ///     Where this client is looking

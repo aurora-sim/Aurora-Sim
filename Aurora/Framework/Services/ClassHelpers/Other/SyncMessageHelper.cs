@@ -43,7 +43,7 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
                                   {
                                       {"AgentID", AgentID},
                                       {"DrawDistance", DrawDistance},
-                                      {"Circuit", circuit.PackAgentCircuitData()}
+                                      {"Circuit", circuit.ToOSD()}
                                   };
 
             return buildEvent("ArrivedAtDestination", llsdBody, AgentID, requestingRegion);
@@ -114,8 +114,8 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
                                       {"Pos", pos},
                                       {"Vel", velocity},
                                       {"Region", crossingRegion.ToOSD()},
-                                      {"Circuit", circuit.PackAgentCircuitData()},
-                                      {"AgentData", cAgent.Pack()}
+                                      {"Circuit", circuit.ToOSD()},
+                                      {"AgentData", cAgent.ToOSD()}
                                   };
 
             return buildEvent("CrossAgent", llsdBody, circuit.AgentID, RequestingRegion);
@@ -128,9 +128,9 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
             OSDMap llsdBody = new OSDMap
                                   {
                                       {"DrawDistance", DrawDistance},
-                                      {"Circuit", circuit.PackAgentCircuitData()},
+                                      {"Circuit", circuit.ToOSD()},
                                       {"TeleportFlags", TeleportFlags},
-                                      {"AgentData", data.Pack()},
+                                      {"AgentData", data.ToOSD()},
                                       {"Region", destination.ToOSD()}
                                   };
 
@@ -139,7 +139,7 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
 
         public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, UUID requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap {{"AgentPos", agentpos.Pack()}};
+            OSDMap llsdBody = new OSDMap { { "AgentPos", agentpos.ToOSD() } };
 
             return buildEvent("SendChildAgentUpdate", llsdBody, agentpos.AgentID, requestingRegion);
         }
@@ -156,7 +156,7 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
             OSDMap llsdBody = new OSDMap
                                   {
                                       {"AgentID", AgentID},
-                                      {"AgentPos", agentpos.Pack()},
+                                      {"AgentPos", agentpos.ToOSD()},
                                       {"RequestingRegion", requestingRegion}
                                   };
 

@@ -147,7 +147,7 @@ namespace Aurora.Modules.Chat
             {
                 //God tp them
                 m = new GridInstantMessage(client.Scene, client.AgentId,
-                                           client.FirstName + " " + client.LastName, targetid,
+                                           client.Name, targetid,
                                            (byte) InstantMessageDialog.GodLikeRequestTeleport, false,
                                            "", dest, false, presence.AbsolutePosition,
                                            new Byte[0]);
@@ -156,7 +156,7 @@ namespace Aurora.Modules.Chat
             {
                 //Not a god, so no god tp
                 m = new GridInstantMessage(client.Scene, client.AgentId,
-                                           client.FirstName + " " + client.LastName, targetid,
+                                           client.Name, targetid,
                                            (byte) InstantMessageDialog.RequestTeleport, false,
                                            message, dest, false, presence.AbsolutePosition,
                                            new Byte[0]);

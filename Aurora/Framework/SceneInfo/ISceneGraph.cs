@@ -15,7 +15,7 @@ namespace Aurora.Framework.SceneInfo
                                   byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter);
 
         bool GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations);
-        IScenePresence GetScenePresence(string firstName, string lastName);
+        IScenePresence GetScenePresence(string Name);
         IScenePresence GetScenePresence(uint localID);
         void ForEachScenePresence(Action<IScenePresence> action);
         bool LinkPartToSOG(ISceneEntity grp, ISceneChildEntity part, int linkNum);

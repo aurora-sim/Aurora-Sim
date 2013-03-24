@@ -731,6 +731,17 @@ textures 1
             {
                 m_sp = sp;
                 m_sp.Scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
+
+                AgentCircuitData circuitInfo = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID);
+                if (circuitInfo.CachedUserInfo != null)
+                    Appearance = circuitInfo.CachedUserInfo.Appearance;
+                if (Appearance == null)
+                    Appearance = sp.Scene.AvatarService.GetAppearance(sp.UUID);
+                if (Appearance == null)
+                {
+                    MainConsole.Instance.Error("[Scene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
+                    Appearance = new AvatarAppearance(sp.UUID);
+                }
             }
 
             #region IAvatarAppearanceModule Members

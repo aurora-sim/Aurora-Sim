@@ -172,7 +172,7 @@ namespace Aurora.Framework.Services
         /// <param name="requestingRegion"></param>
         /// <param name="reason"></param>
         /// <returns></returns>
-        bool TeleportAgent(ref GridRegion destination, uint TeleportFlags, int DrawDistance,
+        bool TeleportAgent(ref GridRegion destination, uint TeleportFlags,
                            AgentCircuitData circuit, AgentData agentData, UUID AgentID, UUID requestingRegion,
                            out string reason);
 

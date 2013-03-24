@@ -115,10 +115,6 @@ namespace Aurora.Modules.OnDemand
                 if (!m_isRunning)
                 {
                     m_isRunning = true;
-                    object[] obj = (object[]) parameters;
-                    OSDMap responseMap = (OSDMap) obj[0];
-                    //Tell the caller that we will have to wait a bit possibly
-                    responseMap["WaitTime"] = m_waitTime;
                     if (m_scene.RegionInfo.Startup == StartupType.Medium)
                     {
                         m_scene.AuroraEventManager.FireGenericEventHandler("MediumStartup", m_scene);

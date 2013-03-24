@@ -314,22 +314,7 @@ namespace Aurora.Modules.EntityTransfer
         private AgentCircuitData BuildCircuitDataForPresence(IScenePresence sp, Vector3 position)
         {
             AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
-            agentCircuit.startpos = position;
-            //The agent will be a root agent
-            agentCircuit.child = false;
-            //Make sure the appearnace is right
-            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-            if (appearance != null && appearance.Appearance != null)
-                agentCircuit.Appearance = appearance.Appearance;
-            else
-                MainConsole.Instance.Error(
-                    "[EntityTransferModule]: No appearance is being packed as we could not find the appearance ? " +
-                    appearance == null);
-            AgentCircuitData oldCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID);
-            agentCircuit.ServiceURLs = oldCircuit.ServiceURLs;
-            agentCircuit.firstname = oldCircuit.firstname;
-            agentCircuit.lastname = oldCircuit.lastname;
-            agentCircuit.ServiceSessionID = oldCircuit.ServiceSessionID;
+            agentCircuit.StartingPosition = position;
             return agentCircuit;
         }
 
@@ -504,24 +489,15 @@ namespace Aurora.Modules.EntityTransfer
 
             UserInfo uinfo =
                 client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(client.AgentId.ToString());
-            IUserAgentService uas = client.Scene.RequestModuleInterface<IUserAgentService>();
-
+            
             if (uinfo != null)
             {
                 GridRegion regionInfo = client.Scene.GridService.GetRegionByUUID(client.AllScopeIDs, uinfo.HomeRegionID);
                 if (regionInfo == null)
                 {
-                    Vector3 position = Vector3.Zero, lookAt = Vector3.Zero;
-                    if (uas != null)
-                        regionInfo =
-                            uas.GetHomeRegion(client.Scene.AuthenticateHandler.GetAgentCircuitData(client.AgentId),
-                                              out position, out lookAt);
-                    if (regionInfo == null)
-                    {
-                        //can't find the Home region: Tell viewer and abort
-                        client.SendTeleportFailed("Your home region could not be found.");
-                        return false;
-                    }
+                    //can't find the Home region: Tell viewer and abort
+                    client.SendTeleportFailed("Your home region could not be found.");
+                    return false;
                 }
                 MainConsole.Instance.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region is {0} {1} ({2}-{3})",
                                                  regionInfo.RegionName, regionInfo.RegionID,
@@ -593,7 +569,7 @@ namespace Aurora.Modules.EntityTransfer
                     cAgent.ControlFlags |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
                 AgentCircuitData agentCircuit = BuildCircuitDataForPresence(agent, attemptedPos);
-                agentCircuit.teleportFlags = (uint) TeleportFlags.ViaRegionID;
+                agentCircuit.TeleportFlags = (uint) TeleportFlags.ViaRegionID;
 
                 //This does UpdateAgent and closing of child agents
                 //  messages if they need to be called
@@ -775,33 +751,6 @@ namespace Aurora.Modules.EntityTransfer
         #region Incoming Object Transfers
 
         /// <summary>
-        ///     Attachment rezzing
-        /// </summary>
-        /// <param name="regionID"></param>
-        /// <param name="userID">Agent Unique ID</param>
-        /// <param name="itemID">Inventory Item ID to rez</param>
-        /// <returns>False</returns>
-        public virtual bool IncomingCreateObject(UUID regionID, UUID userID, UUID itemID)
-        {
-            /*//MainConsole.Instance.DebugFormat(" >>> IncomingCreateObject(userID, itemID) <<< {0} {1}", userID, itemID);
-            Scene scene = GetScene(regionID);
-            if (scene == null)
-                return false;
-            ScenePresence sp = scene.GetScenePresence(userID);
-            IAttachmentsModule attachMod = scene.RequestModuleInterface<IAttachmentsModule>();
-            if (sp != null && attachMod != null)
-            {
-                MainConsole.Instance.DebugFormat(
-                        "[EntityTransferModule]: Received attachment via new attachment method {0} for agent {1}", itemID, sp.Name);
-                int attPt = sp.Appearance.GetAttachpoint(itemID);
-                attachMod.RezSingleAttachmentFromInventory(sp.ControllingClient, itemID, attPt, true);
-                return true;
-            }*/
-
-            return false;
-        }
-
-        /// <summary>
         ///     Called when objects or attachments cross the border, or teleport, between regions.
         /// </summary>
         /// <param name="regionID"></param>
@@ -894,27 +843,26 @@ namespace Aurora.Modules.EntityTransfer
         ///     True if the region accepts this agent.  False if it does not.  False will
         ///     also return a reason.
         /// </returns>
-        public bool NewUserConnection(IScene scene, AgentCircuitData agent, uint teleportFlags, out int UDPPort,
-                                      out string reason)
+        public bool NewUserConnection(IScene scene, AgentCircuitData agent, uint teleportFlags, out CreateAgentResponse response)
         {
-            reason = String.Empty;
-            UDPPort = scene.RegionInfo.InternalEndPoint.Port;
+            response = new CreateAgentResponse();
+            response.RequestedUDPPort = scene.RegionInfo.InternalEndPoint.Port;
             IScenePresence sp = scene.GetScenePresence(agent.AgentID);
 
             // Don't disable this log message - it's too helpful
             MainConsole.Instance.TraceFormat(
                 "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
-                scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
-                agent.circuitcode, teleportFlags);
+                scene.RegionInfo.RegionName, agent.IsChildAgent ? "child" : "root", agent.AgentID,
+                agent.CircuitCode, teleportFlags);
 
-            CacheUserInfo(scene, agent.OtherInformation);
+            CacheUserInfo(scene, agent.CachedUserInfo);
 
+            string reason;
             if (!AuthorizeUser(scene, agent, out reason))
             {
                 OSDMap map = new OSDMap();
-                map["Reason"] = reason;
-                map["success"] = false;
-                reason = OSDParser.SerializeJsonString(map);
+                response.Reason = reason;
+                response.Success = false;
                 return false;
             }
 
@@ -932,48 +880,32 @@ namespace Aurora.Modules.EntityTransfer
                 sp = null;
             }
 
-            OSDMap responseMap = new OSDMap();
-            responseMap["CapsUrls"] = scene.EventManager.TriggerOnRegisterCaps(agent.AgentID);
-            responseMap["OurIPForClient"] = MainServer.Instance.HostName;
+            response.CapsURIs = scene.EventManager.TriggerOnRegisterCaps(agent.AgentID);
+            response.OurIPForClient = MainServer.Instance.HostName;
 
-            // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
-            agent.teleportFlags = teleportFlags;
-
-            responseMap["Agent"] = agent.PackAgentCircuitData();
-
-            object[] obj = new object[2];
-            obj[0] = responseMap;
-            obj[1] = agent;
-            scene.AuroraEventManager.FireGenericEventHandler("NewUserConnection", obj);
+            scene.AuroraEventManager.FireGenericEventHandler("NewUserConnection", agent);
 
             //Add the circuit at the end
-            scene.AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
+            scene.AuthenticateHandler.AddNewCircuit(agent.CircuitCode, agent);
 
             MainConsole.Instance.InfoFormat(
                 "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",
-                scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
-                agent.circuitcode);
+                scene.RegionInfo.RegionName, agent.IsChildAgent ? "child" : "root", agent.AgentID,
+                agent.CircuitCode);
 
-            responseMap["success"] = true;
-            reason = OSDParser.SerializeJsonString(responseMap);
+            response.Success = true;
             return true;
         }
 
-        private void CacheUserInfo(IScene scene, OSDMap map)
+        private void CacheUserInfo(IScene scene, CachedUserInfo cache)
         {
-            if (map.ContainsKey("CachedUserInfo"))
-            {
-                //OpenSim does not contain this, only check if it is there
-                // We do this caching so that we don't pull down all of this info as the user is trying to login, which causes major lag, and slows down the sim for people already in the sim
-                CachedUserInfo cache = new CachedUserInfo();
-                cache.FromOSD((OSDMap) map["CachedUserInfo"]);
-                IAgentConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
-                if (conn != null)
-                    conn.CacheAgent(cache.AgentInfo);
-                scene.UserAccountService.CacheAccount(cache.UserAccount);
+            if (cache == null) return;
+            IAgentConnector conn = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
+            if (conn != null)
+                conn.CacheAgent(cache.AgentInfo);
+            scene.UserAccountService.CacheAccount(cache.UserAccount);
 
-                scene.EventManager.TriggerOnUserCachedData(cache.UserAccount.PrincipalID, cache);
-            }
+            scene.EventManager.TriggerOnUserCachedData(cache.UserAccount.PrincipalID, cache);
         }
 
         /// <summary>
@@ -994,7 +926,7 @@ namespace Aurora.Modules.EntityTransfer
             if (AuthorizationService != null)
             {
                 GridRegion ourRegion = new GridRegion(scene.RegionInfo);
-                if (!AuthorizationService.IsAuthorizedForRegion(ourRegion, agent, !agent.child, out reason))
+                if (!AuthorizationService.IsAuthorizedForRegion(ourRegion, agent, !agent.IsChildAgent, out reason))
                 {
                     MainConsole.Instance.WarnFormat(
                         "[ConnectionBegin]: Denied access to {0} at {1} because the user does not have access to the region, reason: {2}",

@@ -1531,8 +1531,6 @@ namespace Aurora.BotManager
             m_controller = controller;
         }
 
-        public string m_firstName = "";
-        public string m_lastName = "";
         public readonly Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
 
         public Vector3 StartPos
@@ -1546,18 +1544,6 @@ namespace Aurora.BotManager
             get { return m_myID; }
         }
 
-        public string FirstName
-        {
-            get { return m_firstName; }
-            set { m_firstName = value; }
-        }
-
-        public string LastName
-        {
-            get { return m_lastName; }
-            set { m_lastName = value; }
-        }
-
         private uint m_circuitCode;
 
         public uint CircuitCode
@@ -1568,7 +1554,8 @@ namespace Aurora.BotManager
 
         public String Name
         {
-            get { return FirstName + " " + LastName; }
+            get;
+            set;
         }
 
         public IScene Scene
@@ -2186,7 +2173,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string firstname, string lastname,
+        public void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string name,
                                         ulong grouppowers, string groupname, string grouptitle)
         {
         }
@@ -2208,7 +2195,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendNameReply(UUID profileId, string firstname, string lastname)
+        public void SendNameReply(UUID profileId, string name)
         {
         }
 

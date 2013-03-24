@@ -201,9 +201,9 @@ namespace Aurora.Modules.CallingCards
         private void OnAcceptCallingCard(IClientAPI client, UUID transactionID, UUID folderID)
         {
             MainConsole.Instance.DebugFormat(
-                "[AURORA CALLING CARD MODULE]: User {0} ({1} {2}) accepted tid {3}, folder {4}",
+                "[AURORA CALLING CARD MODULE]: User {0} ({1}) accepted tid {2}, folder {3}",
                 client.AgentId,
-                client.FirstName, client.LastName,
+                client.Name,
                 transactionID, folderID);
             UUID destID;
             lock (m_pendingCallingcardRequests)

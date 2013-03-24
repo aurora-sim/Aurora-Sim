@@ -329,20 +329,6 @@ namespace Aurora.Region
             }
         }
 
-        private readonly string m_firstname;
-
-        public string Firstname
-        {
-            get { return m_firstname; }
-        }
-
-        private readonly string m_lastname;
-
-        public string Lastname
-        {
-            get { return m_lastname; }
-        }
-
         public override string Name
         {
             get { return m_name; }
@@ -601,8 +587,6 @@ namespace Aurora.Region
             set { m_isChildAgent = value; }
         }
 
-        public ulong RootAgentHandle { get; set; }
-
         protected UUID m_parentID;
 
         public UUID ParentID
@@ -683,8 +667,6 @@ namespace Aurora.Region
             : this()
         {
             m_controllingClient = client;
-            m_firstname = m_controllingClient.FirstName;
-            m_lastname = m_controllingClient.LastName;
             m_name = m_controllingClient.Name;
             m_scene = world;
             m_uuid = client.AgentId;
@@ -795,7 +777,6 @@ namespace Aurora.Region
             Vector3 look = new Vector3(0.99f*xmult, 0.99f*ymult, 0);
 
             IsChildAgent = false;
-            RootAgentHandle = Scene.RegionInfo.RegionHandle;
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(Scene.RegionInfo, AbsolutePosition, look);
@@ -834,27 +815,21 @@ namespace Aurora.Region
 
             SuccessfullyMadeRootAgent = true;
 
-            //Tell the grid that we successfully got here
-
-            AgentCircuitData agent = ControllingClient.RequestClientInfo();
-            agent.startpos = AbsolutePosition;
-            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule>();
-            if (appearance != null)
+            if (makePhysicalActor) //Send out updates to all other users in the region
             {
-                if (makePhysicalActor) //Someone else will deal with this
+                //Send updates to everyone about us
+                //Do us first though, we're the most important
+                SceneViewer.QueuePresenceForFullUpdate(this, true);
+                foreach (IScenePresence sp in m_scene.GetScenePresences())
                 {
-                    //Send updates to everyone about us
-                    //Do us first though, we're the most important
-                    SceneViewer.QueuePresenceForFullUpdate(this, true);
-                    foreach (IScenePresence sp in m_scene.GetScenePresences())
-                    {
-                        if (sp.UUID != UUID)
-                            sp.SceneViewer.QueuePresenceForFullUpdate(this, true);
-                    }
+                    if (sp.UUID != UUID)
+                        sp.SceneViewer.QueuePresenceForFullUpdate(this, true);
                 }
-                if (appearance.Appearance != null)
-                    agent.Appearance = appearance.Appearance;
             }
+
+            //Tell the grid that we successfully got here
+            AgentCircuitData agent = ControllingClient.RequestClientInfo();
+            agent.StartingPosition = AbsolutePosition;
 
             ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncPoster != null)
@@ -884,7 +859,6 @@ namespace Aurora.Region
                 "[SCENEPRESENCE]: Downgrading root agent {0}, {1} to a child agent in {2}",
                 Name, UUID, m_scene.RegionInfo.RegionName);
 
-            RootAgentHandle = destination.RegionHandle;
             RemoveFromPhysicalScene();
             m_sceneViewer.Reset();
 
@@ -1063,14 +1037,14 @@ namespace Aurora.Region
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, uuid);
             if (account != null)
             {
-                remote_client.SendNameReply(uuid, account.FirstName, account.LastName);
+                remote_client.SendNameReply(uuid, account.Name);
             }
             else
             {
                 IScenePresence presence;
                 if ((presence = Scene.GetScenePresence(uuid)) != null)
                 {
-                    remote_client.SendNameReply(uuid, presence.Firstname, presence.Lastname);
+                    remote_client.SendNameReply(uuid, presence.Name);
                 }
             }
         }
@@ -1106,7 +1080,7 @@ namespace Aurora.Region
             AgentCircuitData agent = m_scene.AuthenticateHandler.GetAgentCircuitData(UUID);
 
             if (agent == null ||
-                !Scene.Permissions.AllowedIncomingTeleport(UUID, AbsolutePosition, agent.teleportFlags, out pos,
+                !Scene.Permissions.AllowedIncomingTeleport(UUID, AbsolutePosition, agent.TeleportFlags, out pos,
                                                            out reason))
             {
                 MainConsole.Instance.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
@@ -2712,9 +2686,9 @@ namespace Aurora.Region
                 m_setAlwaysRun = cAgent.AlwaysRun;
                 if (cAgent.IsCrossing)
                 {
-                    m_scene.AuthenticateHandler.GetAgentCircuitData(UUID).teleportFlags |=
+                    m_scene.AuthenticateHandler.GetAgentCircuitData(UUID).TeleportFlags |=
                         (uint) TeleportFlags.ViaRegionID;
-                    m_scene.AuthenticateHandler.GetAgentCircuitData(UUID).reallyischild = false;
+                    m_scene.AuthenticateHandler.GetAgentCircuitData(UUID).IsChildAgent = false;
                         //We're going to be a root
                 }
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule>();

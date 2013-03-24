@@ -29,6 +29,7 @@ using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services;
 using OpenMetaverse;
 using GridRegion = Aurora.Framework.Services.GridRegion;
 
@@ -114,17 +115,6 @@ namespace Aurora.Framework.Modules
                                      uint teleportFlags);
 
         /// <summary>
-        ///     A new object (attachment) has come in from the SimulationHandlers, add it to the scene if we are able to
-        /// </summary>
-        /// <param name="regionID">The UUID of the region this object will be added to</param>
-        /// <param name="userID">The user who will have this object attached to them</param>
-        /// <param name="itemID">The itemID to attach to the user</param>
-        /// <returns>
-        ///     True if the object was added, false if not
-        /// </returns>
-        bool IncomingCreateObject(UUID regionID, UUID userID, UUID itemID);
-
-        /// <summary>
         ///     A new object has come in from the SimulationHandlers, add it to the scene if we are able to
         /// </summary>
         /// <param name="regionID">The UUID of the region this object will be added to</param>
@@ -145,8 +135,7 @@ namespace Aurora.Framework.Modules
         /// <returns>
         ///     True if the user can enter, false if not
         /// </returns>
-        bool NewUserConnection(IScene scene, AgentCircuitData agent, uint teleportFlags, out int UDPPort,
-                               out string reason);
+        bool NewUserConnection(IScene scene, AgentCircuitData agent, uint teleportFlags, out CreateAgentResponse response);
 
         /// <summary>
         ///     New data has come in about one of our child agents, update them with the new information

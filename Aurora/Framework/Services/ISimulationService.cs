@@ -34,10 +34,12 @@ using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 using System.Collections.Generic;
 
 namespace Aurora.Framework.Services
 {
+    [ProtoContract(UseProtoMembersOnly = true)]
     public class CachedUserInfo : IDataTransferable
     {
         public IAgentInfo AgentInfo;
@@ -46,6 +48,7 @@ namespace Aurora.Framework.Services
         public List<GroupMembershipData> GroupMemberships = new List<GroupMembershipData>();
         public List<GridInstantMessage> OfflineMessages = new List<GridInstantMessage>();
         public List<MuteList> MuteList = new List<MuteList>();
+        public AvatarAppearance Appearance = null;
 
         public override void FromOSD(OSDMap map)
         {
@@ -88,6 +91,9 @@ namespace Aurora.Framework.Services
                                                                                  group.FromOSD((OSDMap) o);
                                                                                  return group;
                                                                              });
+
+            Appearance = new AvatarAppearance();
+            Appearance.FromOSD((OSDMap)map["Appearance"]);
         }
 
         public override OSDMap ToOSD()
@@ -100,19 +106,13 @@ namespace Aurora.Framework.Services
             map["GroupMemberships"] = GroupMemberships.ToOSDArray();
             map["OfflineMessages"] = OfflineMessages.ToOSDArray();
             map["MuteList"] = MuteList.ToOSDArray();
+            map["Appearance"] = Appearance.ToOSD();
             return map;
         }
     }
 
     public interface ISimulationService
     {
-        #region Local
-
-        IScene Scene { get; }
-        ISimulationService InnerService { get; }
-
-        #endregion
-
         #region Agents
 
         /// <summary>
@@ -126,8 +126,8 @@ namespace Aurora.Framework.Services
         /// <param name="requestedUDPPort"></param>
         /// <param name="reason"></param>
         /// <returns></returns>
-        bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data,
-                         out int requestedUDPPort, out string reason);
+        bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags,
+                         out CreateAgentResponse response);
 
         /// <summary>
         ///     Full child agent update.
@@ -174,10 +174,9 @@ namespace Aurora.Framework.Services
         ///     DOES mark the agent as leaving (removes attachments among other things)
         /// </summary>
         /// <param name="AgentID"></param>
-        /// <param name="leavingRegion"></param>
         /// <param name="Region"></param>
         /// <param name="markAgentAsLeaving"></param>
-        bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion Region, bool markAgentAsLeaving);
+        bool MakeChildAgent(UUID AgentID, GridRegion Region, bool markAgentAsLeaving);
 
         /// <summary>
         ///     Sends that a teleport failed to the given user
@@ -195,7 +194,7 @@ namespace Aurora.Framework.Services
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="RegionID"></param>
-        bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID);
+        bool FailedToMoveAgentIntoNewRegion(UUID AgentID, GridRegion destination);
 
         #endregion Agents
 
@@ -209,16 +208,338 @@ namespace Aurora.Framework.Services
         /// <returns></returns>
         bool CreateObject(GridRegion destination, ISceneEntity sog);
 
-        /// <summary>
-        ///     Create an object from the user's inventory in the destination region.
-        ///     This message is used primarily by clients for attachments.
-        /// </summary>
-        /// <param name="destination"></param>
-        /// <param name="userID"></param>
-        /// <param name="itemID"></param>
-        /// <returns></returns>
-        bool CreateObject(GridRegion destination, UUID userID, UUID itemID);
-
         #endregion Objects
     }
+
+    #region Simulation Transfer Classes
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class CreateAgentRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public GridRegion Destination;
+        [ProtoMember(2)]
+        public uint TeleportFlags;
+        [ProtoMember(3)]
+        public AgentCircuitData CircuitData;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "CreateAgentRequest";
+            map["Destination"] = Destination.ToOSD();
+            map["TeleportFlags"] = TeleportFlags;
+            map["CircuitData"] = CircuitData.ToOSD();
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Destination = new GridRegion();
+            Destination.FromOSD((OSDMap)map["Destination"]);
+            TeleportFlags = map["TeleportFlags"];
+            CircuitData = new AgentCircuitData();
+            CircuitData.FromOSD((OSDMap)map["CircuitData"]);
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class CreateAgentResponse : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public bool Success;
+        [ProtoMember(2)]
+        public string Reason;
+        [ProtoMember(3)]
+        public int RequestedUDPPort;
+        [ProtoMember(4)]
+        public OSDMap CapsURIs;
+        [ProtoMember(5)]
+        public string OurIPForClient;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "CreateAgentResponse";
+            map["Success"] = Success;
+            map["Reason"] = Reason;
+            map["RequestedUDPPort"] = RequestedUDPPort;
+            map["CapsURIs"] = CapsURIs;
+            map["OurIPForClient"] = OurIPForClient;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Success = map["Success"];
+            Reason = map["Reason"];
+            RequestedUDPPort = map["RequestedUDPPort"];
+            if(map.ContainsKey("CapsURIs"))
+                CapsURIs = (OSDMap)map["CapsURIs"];
+            OurIPForClient = map["OurIPForClient"];
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class UpdateAgentPositionRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public GridRegion Destination;
+        [ProtoMember(2)]
+        public AgentPosition Update;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "UpdateAgentPositionRequest";
+            map["Destination"] = Destination.ToOSD();
+            map["Update"] = Update.ToOSD();
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Destination = new GridRegion();
+            Destination.FromOSD((OSDMap)map["Destination"]);
+            Update = new AgentPosition();
+            Update.FromOSD((OSDMap)map["Update"]);
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class UpdateAgentDataRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public GridRegion Destination;
+        [ProtoMember(2)]
+        public AgentData Update;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "UpdateAgentDataRequest";
+            map["Destination"] = Destination.ToOSD();
+            map["Update"] = Update.ToOSD();
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Destination = new GridRegion();
+            Destination.FromOSD((OSDMap)map["Destination"]);
+            Update = new AgentData();
+            Update.FromOSD((OSDMap)map["Update"]);
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class FailedToMoveAgentIntoNewRegionRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public UUID AgentID;
+        [ProtoMember(2)]
+        public UUID RegionID;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "FailedToMoveAgentIntoNewRegionRequest";
+            map["AgentID"] = AgentID;
+            map["RegionID"] = RegionID;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            AgentID = map["AgentID"];
+            RegionID = map["RegionID"];
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class CloseAgentRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public UUID AgentID;
+        [ProtoMember(2)]
+        public GridRegion Destination;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "CloseAgentRequest";
+            map["AgentID"] = AgentID;
+            map["Destination"] = Destination.ToOSD();
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            AgentID = map["AgentID"];
+            Destination = new GridRegion();
+            Destination.FromOSD((OSDMap)map["Destination"]);
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class MakeChildAgentRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public UUID AgentID;
+        [ProtoMember(2)]
+        public GridRegion Destination;
+        [ProtoMember(3)]
+        public bool IsCrossing;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "MakeChildAgentRequest";
+            map["AgentID"] = AgentID;
+            map["Destination"] = Destination.ToOSD();
+            map["IsCrossing"] = IsCrossing;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            AgentID = map["AgentID"];
+            Destination = new GridRegion();
+            Destination.FromOSD((OSDMap)map["Destination"]);
+            IsCrossing = map["IsCrossing"];
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class FailedToTeleportAgentRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public UUID AgentID;
+        [ProtoMember(2)]
+        public GridRegion Destination;
+        [ProtoMember(3)]
+        public bool IsCrossing;
+        [ProtoMember(4)]
+        public string Reason;
+        [ProtoMember(5)]
+        public UUID FailedRegionID;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "FailedToTeleportAgentRequest";
+            map["AgentID"] = AgentID;
+            map["Destination"] = Destination.ToOSD();
+            map["IsCrossing"] = IsCrossing;
+            map["Reason"] = Reason;
+            map["FailedRegionID"] = FailedRegionID;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            AgentID = map["AgentID"];
+            Destination = new GridRegion();
+            Destination.FromOSD((OSDMap)map["Destination"]);
+            IsCrossing = map["IsCrossing"];
+            Reason = map["Reason"];
+            FailedRegionID = map["FailedRegionID"];
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class RetrieveAgentRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public UUID AgentID;
+        [ProtoMember(2)]
+        public GridRegion Destination;
+        [ProtoMember(3)]
+        public bool AgentIsLeaving;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "RetrieveAgentRequest";
+            map["AgentID"] = AgentID;
+            map["Destination"] = Destination.ToOSD();
+            map["AgentIsLeaving"] = AgentIsLeaving;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            AgentID = map["AgentID"];
+            Destination = new GridRegion();
+            Destination.FromOSD((OSDMap)map["Destination"]);
+            AgentIsLeaving = map["AgentIsLeaving"];
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class RetrieveAgentResponse : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public bool Success;
+        [ProtoMember(2)]
+        public AgentData AgentData;
+        [ProtoMember(3)]
+        public AgentCircuitData CircuitData;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "RetrieveAgentResponse";
+            map["Success"] = Success;
+            map["AgentData"] = AgentData.ToOSD();
+            map["CircuitData"] = CircuitData.ToOSD();
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Success = map["Success"];
+            if (map.ContainsKey("AgentData"))
+            {
+                AgentData = new AgentData();
+                AgentData.FromOSD((OSDMap)map["AgentData"]);
+            }
+            if (map.ContainsKey("CircuitData"))
+            {
+                CircuitData = new AgentCircuitData();
+                CircuitData.FromOSD((OSDMap)map["CircuitData"]);
+            }
+        }
+    }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class CreateObjectRequest : IDataTransferable
+    {
+        [ProtoMember(1)]
+        public ISceneEntity Object;
+        [ProtoMember(3)]
+        public GridRegion Destination;
+
+        public IScene Scene;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "CreateObjectRequest";
+            map["Destination"] = Destination.ToOSD();
+            map["Object"] = Object.ToBinaryXml2();
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Destination = new GridRegion();
+            Destination.FromOSD((OSDMap)map["Destination"]);
+            System.IO.MemoryStream stream = new System.IO.MemoryStream(map["Object"].AsBinary());
+            Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer.FromXml2Format(ref stream, Scene);
+            stream.Close();
+        }
+    }
+
+    #endregion
 }

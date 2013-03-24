@@ -362,8 +362,6 @@ namespace Aurora.ClientStack
 
         private readonly IScene m_scene;
         private readonly LLImageManager m_imageManager;
-        private readonly string m_firstName;
-        private readonly string m_lastName;
         private readonly string m_Name;
         private readonly EndPoint m_userEndPoint;
         private UUID m_activeGroupID;
@@ -432,22 +430,6 @@ namespace Aurora.ClientStack
         }
 
         /// <summary>
-        ///     First name of the agent/avatar represented by the client
-        /// </summary>
-        public string FirstName
-        {
-            get { return m_firstName; }
-        }
-
-        /// <summary>
-        ///     Last name of the agent/avatar represented by the client
-        /// </summary>
-        public string LastName
-        {
-            get { return m_lastName; }
-        }
-
-        /// <summary>
         ///     Full name of the client (first name and last name)
         /// </summary>
         public string Name
@@ -511,18 +493,9 @@ namespace Aurora.ClientStack
             m_userEndPoint = remoteEP;
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, m_agentId);
             if (account != null)
-            {
-                m_firstName = account.FirstName;
-                m_lastName = account.LastName;
                 m_Name = account.Name;
-            }
-            else
-            {
-                m_firstName = sessionInfo.firstname;
-                m_lastName = sessionInfo.lastname;
-                m_Name = sessionInfo.firstname + " " + sessionInfo.lastname;
-            }
-            StartPos = sessionInfo.startpos;
+
+            StartPos = sessionInfo.StartingPosition;
 
             m_udpServer = udpServer;
             m_udpClient = udpClient;
@@ -1398,20 +1371,17 @@ namespace Aurora.ClientStack
         public AgentCircuitData RequestClientInfo()
         {
             AgentCircuitData agentData = new AgentCircuitData
-                                             {
-                                                 AgentID = AgentId,
-                                                 SessionID = m_sessionId,
-                                                 SecureSessionID = SecureSessionId,
-                                                 circuitcode = m_circuitCode,
-                                                 child = false
-                                             };
-
-            AgentCircuitData currentAgentCircuit = this.m_udpServer.m_circuitManager.GetAgentCircuitData(CircuitCode);
-            if (currentAgentCircuit != null)
             {
+                IsChildAgent = false,
+                AgentID = AgentId,
+                SessionID = m_sessionId,
+                SecureSessionID = SecureSessionId,
+                CircuitCode = m_circuitCode
+            };
+
+            AgentCircuitData currentAgentCircuit = this.m_udpServer.m_circuitManager.GetAgentCircuitData(AgentId);
+            if (currentAgentCircuit != null)
                 agentData.IPAddress = currentAgentCircuit.IPAddress;
-                agentData.ServiceURLs = currentAgentCircuit.ServiceURLs;
-            }
 
             return agentData;
         }
@@ -2337,7 +2307,7 @@ namespace Aurora.ClientStack
             OutPacket(replyPacket, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string firstname, string lastname,
+        public void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string name,
                                         ulong grouppowers, string groupname, string grouptitle)
         {
             m_activeGroupID = activegroupid;
@@ -2348,11 +2318,13 @@ namespace Aurora.ClientStack
                 (AgentDataUpdatePacket) PacketPool.Instance.GetPacket(PacketType.AgentDataUpdate);
             sendAgentDataUpdate.AgentData.ActiveGroupID = activegroupid;
             sendAgentDataUpdate.AgentData.AgentID = agentid;
-            sendAgentDataUpdate.AgentData.FirstName = Util.StringToBytes256(firstname);
+            string[] spl = name.Split(' ');
+            string first = spl[0], last = (spl.Length == 1 ? "" : Util.CombineParams(spl, 1));
+            sendAgentDataUpdate.AgentData.FirstName = Util.StringToBytes256(first);
             sendAgentDataUpdate.AgentData.GroupName = Util.StringToBytes256(groupname);
             sendAgentDataUpdate.AgentData.GroupPowers = grouppowers;
             sendAgentDataUpdate.AgentData.GroupTitle = Util.StringToBytes256(grouptitle);
-            sendAgentDataUpdate.AgentData.LastName = Util.StringToBytes256(lastname);
+            sendAgentDataUpdate.AgentData.LastName = Util.StringToBytes256(last);
             OutPacket(sendAgentDataUpdate, ThrottleOutPacketType.AvatarInfo);
         }
 
@@ -5031,6 +5003,8 @@ namespace Aurora.ClientStack
             //data.Acceleration.ToBytes(objectData, 40);
             data.Rotation.ToBytes(objectData, 52);
             //data.AngularVelocity.ToBytes(objectData, 64);
+            string[] spl = data.Name.Split(' ');
+            string first = spl[0], last = (spl.Length == 1 ? "" : Util.CombineParams(spl, 1));
 
             ObjectUpdatePacket.ObjectDataBlock update = new ObjectUpdatePacket.ObjectDataBlock
                                                             {
@@ -5042,9 +5016,9 @@ namespace Aurora.ClientStack
                                                                 MediaURL = Utils.EmptyBytes,
                                                                 NameValue =
                                                                     Utils.StringToBytes("FirstName STRING RW SV " +
-                                                                                        data.Firstname +
+                                                                                        first +
                                                                                         "\nLastName STRING RW SV " +
-                                                                                        data.Lastname +
+                                                                                        last +
                                                                                         "\nTitle STRING RW SV " +
                                                                                         (m_GroupsModule == null
                                                                                              ? ""
@@ -5458,16 +5432,18 @@ namespace Aurora.ClientStack
             return update;
         }
 
-        public void SendNameReply(UUID profileId, string firstname, string lastname)
+        public void SendNameReply(UUID profileId, string name)
         {
             UUIDNameReplyPacket packet = (UUIDNameReplyPacket) PacketPool.Instance.GetPacket(PacketType.UUIDNameReply);
             // TODO: don't create new blocks if recycling an old packet
             packet.UUIDNameBlock = new UUIDNameReplyPacket.UUIDNameBlockBlock[1];
+            string[] spl = name.Split(' ');
+            string first = spl[0], last = (spl.Length == 1 ? "" : Util.CombineParams(spl, 1));
             packet.UUIDNameBlock[0] = new UUIDNameReplyPacket.UUIDNameBlockBlock
                                           {
                                               ID = profileId,
-                                              FirstName = Util.StringToBytes256(firstname),
-                                              LastName = Util.StringToBytes256(lastname)
+                                              FirstName = Util.StringToBytes256(first),
+                                              LastName = Util.StringToBytes256(last)
                                           };
 
             OutPacket(packet, ThrottleOutPacketType.Asset);

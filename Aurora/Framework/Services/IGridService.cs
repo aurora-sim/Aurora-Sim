@@ -32,6 +32,7 @@ using Aurora.Framework.Servers;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -271,6 +272,7 @@ namespace Aurora.Framework.Services
         }
     }
 
+    [ProtoContract(UseProtoMembersOnly = true)]
     public class GridRegion : AllScopeIDImpl
     {
         #region GridRegion
@@ -278,125 +280,49 @@ namespace Aurora.Framework.Services
         /// <summary>
         ///     The port by which http communication occurs with the region
         /// </summary>
-        public uint HttpPort
-        {
-            get { return m_httpPort; }
-            set { m_httpPort = value; }
-        }
+        [ProtoMember(3)]
+        public uint HttpPort { get; set; }
 
-        protected uint m_httpPort;
+        [ProtoMember(4)]
+        public string RegionName { get; set; }
 
-        /// <summary>
-        ///     A well-formed URI for the host region server (namely "http://" + ExternalHostName + : + HttpPort)
-        /// </summary>
-        public string ServerURI
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(m_serverURI))
-                    return "http://" + ExternalHostName + ":" + HttpPort;
-                return m_serverURI;
-            }
-            set { m_serverURI = value; }
-        }
+        [ProtoMember(5)]
+        public string RegionType { get; set; }
 
-        protected string m_serverURI;
-
-        public string RegionName
-        {
-            get { return m_regionName; }
-            set { m_regionName = value; }
-        }
-
-        protected string m_regionName = String.Empty;
-
-        public string RegionType
-        {
-            get { return m_regionType; }
-            set { m_regionType = value; }
-        }
-
-        protected string m_regionType = String.Empty;
-
-        public int RegionLocX
-        {
-            get { return m_regionLocX; }
-            set { m_regionLocX = value; }
-        }
-
-        protected int m_regionLocX;
-
-        public int RegionLocY
-        {
-            get { return m_regionLocY; }
-            set { m_regionLocY = value; }
-        }
-
-        protected int m_regionLocY;
-
-        public int RegionLocZ
-        {
-            get { return m_regionLocZ; }
-            set { m_regionLocZ = value; }
-        }
-
-        protected int m_regionLocZ;
-
-        protected UUID m_estateOwner;
-
-        public UUID EstateOwner
-        {
-            get { return m_estateOwner; }
-            set { m_estateOwner = value; }
-        }
-
-        public int RegionSizeX
-        {
-            get { return m_RegionSizeX; }
-            set { m_RegionSizeX = value; }
-        }
-
-        public int RegionSizeY
-        {
-            get { return m_RegionSizeY; }
-            set { m_RegionSizeY = value; }
-        }
-
-        public int RegionSizeZ
-        {
-            get { return m_RegionSizeZ; }
-        }
-
+        [ProtoMember(6)]
+        public int RegionLocX { get; set; }
+        [ProtoMember(7)]
+        public int RegionLocY { get; set; }
+        [ProtoMember(8)]
+        public int RegionLocZ { get; set; }
+        [ProtoMember(9)]
+        public UUID EstateOwner { get; set; }
+        [ProtoMember(10)]
+        public int RegionSizeX { get; set; }
+        [ProtoMember(11)]
+        public int RegionSizeY { get; set; }
+        [ProtoMember(12)]
+        public int RegionSizeZ { get; set; }
+        [ProtoMember(13)]
         public int Flags { get; set; }
-
-        public UUID SessionID
-        {
-            get { return m_SessionID; }
-            set { m_SessionID = value; }
-        }
-
-        private int m_RegionSizeX = 256;
-        private int m_RegionSizeY = 256;
-        private int m_RegionSizeZ = 256;
-        public UUID RegionID = UUID.Zero;
-        private UUID m_SessionID = UUID.Zero;
-
-        public UUID TerrainImage = UUID.Zero;
-        public UUID TerrainMapImage = UUID.Zero;
-        public UUID ParcelMapImage = UUID.Zero;
-        public byte Access;
-        public string AuthToken = string.Empty;
-        private IPEndPoint m_remoteEndPoint = null;
-        protected string m_externalHostName;
-        protected IPEndPoint m_internalEndPoint;
-        public int LastSeen = 0;
-        protected OSDMap m_genericMap = new OSDMap();
-
-        public OSDMap GenericMap
-        {
-            get { return m_genericMap; }
-            set { m_genericMap = value; }
-        }
+        [ProtoMember(14)]
+        public UUID SessionID { get; set; }
+        [ProtoMember(15)]
+        public UUID RegionID { get; set; }
+        [ProtoMember(16)]
+        public UUID TerrainImage { get; set; }
+        [ProtoMember(17)]
+        public UUID TerrainMapImage { get; set; }
+        [ProtoMember(18)]
+        public UUID ParcelMapImage { get; set; }
+        [ProtoMember(19)]
+        public byte Access { get; set; }
+        [ProtoMember(20)]
+        public int LastSeen { get; set; }
+        [ProtoMember(21)]
+        public string ExternalHostName { get; set; }
+        [ProtoMember(22)]
+        public int InternalPort { get; set; }
 
         public bool IsOnline
         {
@@ -410,6 +336,11 @@ namespace Aurora.Framework.Services
             }
         }
 
+        /// <summary>
+        ///     A well-formed URI for the host region server (namely "http://" + ExternalHostName + : + HttpPort)
+        /// </summary>
+        public string ServerURI { get { return "http://" + ExternalHostName + ":" + HttpPort; } }
+
         public GridRegion()
         {
             Flags = 0;
@@ -418,27 +349,24 @@ namespace Aurora.Framework.Services
         public GridRegion(RegionInfo ConvertFrom)
         {
             Flags = 0;
-            m_regionName = ConvertFrom.RegionName;
-            m_regionType = ConvertFrom.RegionType;
-            m_regionLocX = ConvertFrom.RegionLocX;
-            m_regionLocY = ConvertFrom.RegionLocY;
-            m_regionLocZ = ConvertFrom.RegionLocZ;
-            m_internalEndPoint = ConvertFrom.InternalEndPoint;
-            m_externalHostName = MainServer.Instance.HostName;
-            m_externalHostName = m_externalHostName.Replace("https://", "");
-            m_externalHostName = m_externalHostName.Replace("http://", "");
-            m_httpPort = MainServer.Instance.Port;
+            RegionName = ConvertFrom.RegionName;
+            RegionType = ConvertFrom.RegionType;
+            RegionLocX = ConvertFrom.RegionLocX;
+            RegionLocY = ConvertFrom.RegionLocY;
+            RegionLocZ = ConvertFrom.RegionLocZ;
+            InternalPort = ConvertFrom.InternalEndPoint.Port;
+            ExternalHostName = MainServer.Instance.HostName.Replace("https://", "").Replace("http://", "");
+            HttpPort = MainServer.Instance.Port;
             RegionID = ConvertFrom.RegionID;
-            ServerURI = MainServer.Instance.ServerURI;
             TerrainImage = ConvertFrom.RegionSettings.TerrainImageID;
             TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
             ParcelMapImage = ConvertFrom.RegionSettings.ParcelMapImageID;
             Access = ConvertFrom.AccessLevel;
             if (ConvertFrom.EstateSettings != null)
                 EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
-            m_RegionSizeX = ConvertFrom.RegionSizeX;
-            m_RegionSizeY = ConvertFrom.RegionSizeY;
-            m_RegionSizeZ = ConvertFrom.RegionSizeZ;
+            RegionSizeX = ConvertFrom.RegionSizeX;
+            RegionSizeY = ConvertFrom.RegionSizeY;
+            RegionSizeZ = ConvertFrom.RegionSizeZ;
             ScopeID = ConvertFrom.ScopeID;
             AllScopeIDs = ConvertFrom.AllScopeIDs;
             SessionID = ConvertFrom.GridSecureSessionID;
@@ -480,29 +408,17 @@ namespace Aurora.Framework.Services
         {
             get
             {
-                if (m_remoteEndPoint == null && m_externalHostName != null && m_internalEndPoint != null)
-                    m_remoteEndPoint = NetworkUtils.ResolveEndPoint(m_externalHostName, m_internalEndPoint.Port);
+                if (m_remoteEndPoint == null && ExternalHostName != null)
+                    m_remoteEndPoint = NetworkUtils.ResolveEndPoint(ExternalHostName, InternalPort);
 
                 return m_remoteEndPoint;
             }
         }
-
-        public string ExternalHostName
-        {
-            get { return m_externalHostName; }
-            set { m_externalHostName = value; }
-        }
-
-        public IPEndPoint InternalEndPoint
-        {
-            get { return m_internalEndPoint; }
-            set { m_internalEndPoint = value; }
-        }
+        private IPEndPoint m_remoteEndPoint = null;
 
         public ulong RegionHandle
         {
             get { return Util.IntsToUlong(RegionLocX, RegionLocY); }
-            set { Util.UlongToInts(value, out m_regionLocX, out m_regionLocY); }
         }
 
         /// <summary>
@@ -535,15 +451,12 @@ namespace Aurora.Framework.Services
             map["regionType"] = RegionType;
             map["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
             map["serverHttpPort"] = HttpPort;
-            map["serverURI"] = ServerURI;
-            if (InternalEndPoint != null)
-                map["serverPort"] = InternalEndPoint.Port;
+            map["serverPort"] = InternalPort;
             map["regionMapTexture"] = TerrainImage;
             map["regionTerrainTexture"] = TerrainMapImage;
             map["ParcelMapImage"] = ParcelMapImage;
             map["access"] = (int) Access;
             map["owner_uuid"] = EstateOwner;
-            map["AuthToken"] = AuthToken;
             map["sizeX"] = RegionSizeX;
             map["sizeY"] = RegionSizeY;
             map["sizeZ"] = RegionSizeZ;
@@ -552,7 +465,6 @@ namespace Aurora.Framework.Services
             map["ScopeID"] = ScopeID;
             map["AllScopeIDs"] = AllScopeIDs.ToOSDArray();
             map["Flags"] = Flags;
-            map["GenericMap"] = GenericMap;
             map["EstateOwner"] = EstateOwner;
 
             // We send it along too so that it doesn't need resolved on the other end
@@ -587,20 +499,13 @@ namespace Aurora.Framework.Services
 
             ExternalHostName = map.ContainsKey("serverIP") ? map["serverIP"].AsString() : "127.0.0.1";
 
-            if (map.ContainsKey("serverPort"))
-            {
-                Int32 port = map["serverPort"].AsInteger();
-                InternalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port);
-            }
+            InternalPort = map["serverPort"].AsInteger();
 
             if (map.ContainsKey("serverHttpPort"))
             {
                 UInt32 port = map["serverHttpPort"].AsUInteger();
                 HttpPort = port;
             }
-
-            if (map.ContainsKey("serverURI"))
-                ServerURI = map["serverURI"];
 
             if (map.ContainsKey("regionMapTexture"))
                 TerrainImage = map["regionMapTexture"].AsUUID();
@@ -620,17 +525,14 @@ namespace Aurora.Framework.Services
             if (map.ContainsKey("EstateOwner"))
                 EstateOwner = map["EstateOwner"].AsUUID();
 
-            if (map.ContainsKey("AuthToken"))
-                AuthToken = map["AuthToken"].AsString();
-
             if (map.ContainsKey("sizeX"))
-                m_RegionSizeX = map["sizeX"].AsInteger();
+                RegionSizeX = map["sizeX"].AsInteger();
 
             if (map.ContainsKey("sizeY"))
-                m_RegionSizeY = map["sizeY"].AsInteger();
+                RegionSizeY = map["sizeY"].AsInteger();
 
             if (map.ContainsKey("sizeZ"))
-                m_RegionSizeZ = map["sizeZ"].AsInteger();
+                RegionSizeZ = map["sizeZ"].AsInteger();
 
             if (map.ContainsKey("LastSeen"))
                 LastSeen = map["LastSeen"].AsInteger();
@@ -646,9 +548,6 @@ namespace Aurora.Framework.Services
 
             if (map.ContainsKey("AllScopeIDs"))
                 AllScopeIDs = ((OSDArray) map["AllScopeIDs"]).ConvertAll<UUID>(o => o);
-
-            if (map.ContainsKey("GenericMap"))
-                GenericMap = (OSDMap) map["GenericMap"];
 
             if (map.ContainsKey("remoteEndPointIP"))
             {

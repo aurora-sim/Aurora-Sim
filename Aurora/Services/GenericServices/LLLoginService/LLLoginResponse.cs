@@ -119,7 +119,7 @@ namespace Aurora.Services
 
             FillOutActiveGestures(gestures);
 
-            CircuitCode = (int) aCircuit.circuitcode;
+            CircuitCode = (int) aCircuit.CircuitCode;
             Lastname = account.LastName;
             Firstname = account.FirstName;
             this.DisplayName = DisplayName;

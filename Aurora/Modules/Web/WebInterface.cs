@@ -17,6 +17,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 using System.Xml;
 using System.Xml.Xsl;
 
@@ -149,7 +150,7 @@ namespace Aurora.Modules.Web
                     text = File.ReadAllText(filename);
 
                 var requestParameters = request != null
-                                            ? WebUtils.ParseQueryString(request.ReadUntilEnd())
+                                            ? ParseQueryString(request.ReadUntilEnd())
                                             : new Dictionary<string, object>();
                 if (filename.EndsWith(".xsl"))
                 {
@@ -490,6 +491,56 @@ namespace Aurora.Modules.Web
             {
                 return null;
             }
+        }
+
+
+        public static Dictionary<string, object> ParseQueryString(string query)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            string[] terms = query.Split(new[] { '&' });
+
+            if (terms.Length == 0)
+                return result;
+
+            foreach (string t in terms)
+            {
+                string[] elems = t.Split(new[] { '=' });
+                if (elems.Length == 0)
+                    continue;
+
+                string name = HttpUtility.UrlDecode(elems[0]);
+                string value = String.Empty;
+
+                if (elems.Length > 1)
+                    value = HttpUtility.UrlDecode(elems[1]);
+
+                if (name.EndsWith("[]"))
+                {
+                    string cleanName = name.Substring(0, name.Length - 2);
+                    if (result.ContainsKey(cleanName))
+                    {
+                        if (!(result[cleanName] is List<string>))
+                            continue;
+
+                        List<string> l = (List<string>)result[cleanName];
+
+                        l.Add(value);
+                    }
+                    else
+                    {
+                        List<string> newList = new List<string> { value };
+
+                        result[cleanName] = newList;
+                    }
+                }
+                else
+                {
+                    if (!result.ContainsKey(name))
+                        result[name] = value;
+                }
+            }
+
+            return result;
         }
 
         #endregion

@@ -109,18 +109,14 @@ namespace Aurora.Modules.Estate
 
         protected void BanUser(string[] cmdparams)
         {
-            if (cmdparams.Length < 4)
-            {
-                MainConsole.Instance.Warn("Not enough parameters!");
-                return;
-            }
-
-            IScenePresence SP = MainConsole.Instance.ConsoleScene.SceneGraph.GetScenePresence(cmdparams[2], cmdparams[3]);
+            string userName = MainConsole.Instance.Prompt("User name:", "");
+            IScenePresence SP = MainConsole.Instance.ConsoleScene.SceneGraph.GetScenePresence(userName);
             if (SP == null)
             {
                 MainConsole.Instance.Warn("Could not find user");
                 return;
             }
+            string alert = MainConsole.Instance.Prompt("Alert message:", "");
             EstateSettings ES = MainConsole.Instance.ConsoleScene.RegionInfo.EstateSettings;
             AgentCircuitData circuitData =
                 MainConsole.Instance.ConsoleScene.AuthenticateHandler.GetAgentCircuitData(SP.UUID);
@@ -134,11 +130,7 @@ namespace Aurora.Modules.Estate
                               EstateID = ES.EstateID
                           });
             ES.Save();
-            string alert = null;
-            if (cmdparams.Length > 4)
-                alert = String.Format("\n{0}\n", String.Join(" ", cmdparams, 4, cmdparams.Length - 4));
-
-            if (alert != null)
+            if (alert != "")
                 SP.ControllingClient.Kick(alert);
             else
                 SP.ControllingClient.Kick("\nThe Aurora manager banned and kicked you out.\n");
@@ -151,14 +143,8 @@ namespace Aurora.Modules.Estate
 
         protected void UnBanUser(string[] cmdparams)
         {
-            if (cmdparams.Length < 4)
-            {
-                MainConsole.Instance.Warn("Not enough parameters!");
-                return;
-            }
-            UserAccount account = MainConsole.Instance.ConsoleScene.UserAccountService.GetUserAccount(null,
-                                                                                                      Util.CombineParams
-                                                                                                          (cmdparams, 2));
+            string userName = MainConsole.Instance.Prompt("User name:", "");
+            UserAccount account = MainConsole.Instance.ConsoleScene.UserAccountService.GetUserAccount(null, userName);
             if (account == null)
             {
                 MainConsole.Instance.Warn("Could not find user");
@@ -384,15 +370,8 @@ namespace Aurora.Modules.Estate
             IScenePresence Sp = scene.GetScenePresence(userID);
             if (account == null)
             {
-                IUserAgentService uas = scene.RequestModuleInterface<IUserAgentService>();
-                AgentCircuitData circuit;
-                if (uas == null ||
-                    (circuit = scene.AuthenticateHandler.GetAgentCircuitData(userID)) != null ||
-                    !uas.VerifyAgent(circuit))
-                {
-                    reason = "Failed authentication.";
-                    return false; //NO!
-                }
+                reason = "Failed authentication.";
+                return false; //NO!
             }
 
 
@@ -691,6 +670,11 @@ namespace Aurora.Modules.Estate
             #region Incoming Agent Checks
 
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.AllScopeIDs, agent.AgentID);
+            if (account == null)
+            {
+                reason = "No account exists";
+                return false;
+            }
             IScenePresence Sp = scene.GetScenePresence(agent.AgentID);
 
             if (LoginsDisabled)
@@ -750,7 +734,7 @@ namespace Aurora.Modules.Estate
 
                 UserInfo pinfo = presence.GetUserInfo(agent.AgentID.ToString());
 
-                if (pinfo == null || (!pinfo.IsOnline && ((agent.teleportFlags & (uint) TeleportFlags.ViaLogin) == 0)))
+                if (pinfo == null || (!pinfo.IsOnline && ((agent.TeleportFlags & (uint) TeleportFlags.ViaLogin) == 0)))
                 {
                     reason =
                         String.Format(
@@ -846,7 +830,7 @@ namespace Aurora.Modules.Estate
                 return true;
             }
 
-            if (account != null && ES.DenyAnonymous &&
+            if (ES.DenyAnonymous &&
                 ((account.UserFlags & (int) IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) ==
                  (int) IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile))
             {
@@ -854,7 +838,7 @@ namespace Aurora.Modules.Estate
                 return false;
             }
 
-            if (account != null && ES.DenyIdentified &&
+            if (ES.DenyIdentified &&
                 ((account.UserFlags & (int) IUserProfileInfo.ProfileFlags.PaymentInfoOnFile) ==
                  (int) IUserProfileInfo.ProfileFlags.PaymentInfoOnFile))
             {
@@ -862,7 +846,7 @@ namespace Aurora.Modules.Estate
                 return false;
             }
 
-            if (account != null && ES.DenyTransacted &&
+            if (ES.DenyTransacted &&
                 ((account.UserFlags & (int) IUserProfileInfo.ProfileFlags.PaymentInfoInUse) ==
                  (int) IUserProfileInfo.ProfileFlags.PaymentInfoInUse))
             {
@@ -871,7 +855,7 @@ namespace Aurora.Modules.Estate
             }
 
             const long m_Day = 25*60*60; //Find out day length in seconds
-            if (account != null && scene.RegionInfo.RegionSettings.MinimumAge != 0 &&
+            if (scene.RegionInfo.RegionSettings.MinimumAge != 0 &&
                 (account.Created - Util.UnixTimeSinceEpoch()) < (scene.RegionInfo.RegionSettings.MinimumAge*m_Day))
             {
                 reason = "You may not enter this region.";
