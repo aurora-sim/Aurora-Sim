@@ -31,7 +31,7 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class PhysicsFrameMonitor : IMonitor, IPhysicsFrameMonitor
+    public class PhysicsFrameMonitor : IPhysicsFrameMonitor
     {
         private float physicsFPS;
 
@@ -49,6 +49,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "Total Physics Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IPhysicsFrameMonitor";
         }
 
         public string GetFriendlyValue()

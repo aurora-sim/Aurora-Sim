@@ -52,6 +52,11 @@ namespace Aurora.Modules.Monitoring.Monitors
             return "Child Agent Count";
         }
 
+        public string GetInterfaceName()
+        {
+            return "";
+        }
+
         public string GetFriendlyValue()
         {
             return m_scene.RequestModuleInterface<IEntityCountModule>().ChildAgents + " child agent(s)";

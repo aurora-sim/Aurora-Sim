@@ -31,7 +31,7 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class ImageFrameTimeMonitor : IMonitor, IImageFrameTimeMonitor
+    public class ImageFrameTimeMonitor : IImageFrameTimeMonitor
     {
         private int MonitorImageFrameTick;
 
@@ -49,6 +49,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "Images Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IImageFrameTimeMonitor";
         }
 
         public string GetFriendlyValue()

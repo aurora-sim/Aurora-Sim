@@ -31,7 +31,7 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class SleepFrameMonitor : ITimeMonitor
+    public class SleepFrameMonitor : ISleepFrameMonitor
     {
         private int SleepFrame;
 
@@ -49,6 +49,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "Sleep Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "ISleepFrameMonitor";
         }
 
         public string GetFriendlyValue()

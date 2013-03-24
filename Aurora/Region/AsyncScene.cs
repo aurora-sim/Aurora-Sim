@@ -427,14 +427,15 @@ namespace Aurora.Region
 
         private bool PhysUpdate()
         {
-            IPhysicsFrameMonitor physicsFrameMonitor =
-                (IPhysicsFrameMonitor)
-                RequestModuleInterface<IMonitorModule>()
-                    .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.TotalPhysicsFrameTime);
-            ITimeMonitor physicsFrameTimeMonitor =
-                (ITimeMonitor)
-                RequestModuleInterface<IMonitorModule>()
-                    .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.PhysicsUpdateFrameTime);
+            IMonitorModule monitorModule = RequestModuleInterface<IMonitorModule>();
+            ISimFrameMonitor simFrameMonitor = monitorModule.GetMonitor<ISimFrameMonitor>();
+            ITotalFrameTimeMonitor totalFrameMonitor = monitorModule.GetMonitor<ITotalFrameTimeMonitor>();
+            ILastFrameTimeMonitor lastFrameMonitor = monitorModule.GetMonitor<ILastFrameTimeMonitor>();
+            IOtherFrameMonitor otherFrameMonitor = monitorModule.GetMonitor<IOtherFrameMonitor>();
+            ISleepFrameMonitor sleepFrameMonitor = monitorModule.GetMonitor<ISleepFrameMonitor>();
+            IPhysicsFrameMonitor physicsFrameMonitor = monitorModule.GetMonitor<IPhysicsFrameMonitor>();
+            IPhysicsUpdateFrameMonitor physicsFrameTimeMonitor = monitorModule.GetMonitor<IPhysicsUpdateFrameMonitor>();
+
             IPhysicsMonitor monitor2 = RequestModuleInterface<IPhysicsMonitor>();
             ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
             while (true)
@@ -517,26 +518,15 @@ namespace Aurora.Region
 
         private bool Update()
         {
-            ISimFrameMonitor simFrameMonitor =
-                (ISimFrameMonitor)
-                RequestModuleInterface<IMonitorModule>()
-                    .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
-            ITotalFrameTimeMonitor totalFrameMonitor =
-                (ITotalFrameTimeMonitor)
-                RequestModuleInterface<IMonitorModule>()
-                    .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.TotalFrameTime);
-            ISetMonitor lastFrameMonitor =
-                (ISetMonitor)
-                RequestModuleInterface<IMonitorModule>()
-                    .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.LastCompletedFrameAt);
-            ITimeMonitor otherFrameMonitor =
-                (ITimeMonitor)
-                RequestModuleInterface<IMonitorModule>()
-                    .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.OtherFrameTime);
-            ITimeMonitor sleepFrameMonitor =
-                (ITimeMonitor)
-                RequestModuleInterface<IMonitorModule>()
-                    .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SleepFrameTime);
+            IMonitorModule monitorModule = RequestModuleInterface<IMonitorModule>();
+            ISimFrameMonitor simFrameMonitor = monitorModule.GetMonitor<ISimFrameMonitor>();
+            ITotalFrameTimeMonitor totalFrameMonitor = monitorModule.GetMonitor<ITotalFrameTimeMonitor>();
+            ILastFrameTimeMonitor lastFrameMonitor = monitorModule.GetMonitor<ILastFrameTimeMonitor>();
+            IOtherFrameMonitor otherFrameMonitor = monitorModule.GetMonitor<IOtherFrameMonitor>();
+            ISleepFrameMonitor sleepFrameMonitor = monitorModule.GetMonitor<ISleepFrameMonitor>();
+            IPhysicsFrameMonitor physicsFrameMonitor = monitorModule.GetMonitor<IPhysicsFrameMonitor>();
+            IPhysicsUpdateFrameMonitor physicsFrameTimeMonitor = monitorModule.GetMonitor<IPhysicsUpdateFrameMonitor>();
+
             while (true)
             {
                 if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
@@ -591,35 +581,9 @@ namespace Aurora.Region
                     int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
                     int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
 
-                    if (simFrameMonitor != null)
-                    {
-                        simFrameMonitor.AddFPS(1);
-                        lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
-                        otherFrameMonitor.AddTime(MonitorOtherFrameTime);
-                    }
-                    else
-                    {
-                        simFrameMonitor =
-                            (ISimFrameMonitor)
-                            RequestModuleInterface<IMonitorModule>()
-                                .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
-                        totalFrameMonitor =
-                            (ITotalFrameTimeMonitor)
-                            RequestModuleInterface<IMonitorModule>()
-                                .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.TotalFrameTime);
-                        lastFrameMonitor =
-                            (ISetMonitor)
-                            RequestModuleInterface<IMonitorModule>()
-                                .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.LastCompletedFrameAt);
-                        otherFrameMonitor =
-                            (ITimeMonitor)
-                            RequestModuleInterface<IMonitorModule>()
-                                .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.OtherFrameTime);
-                        sleepFrameMonitor =
-                            (ITimeMonitor)
-                            RequestModuleInterface<IMonitorModule>()
-                                .GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SleepFrameTime);
-                    }
+                    simFrameMonitor.AddFPS(1);
+                    lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
+                    otherFrameMonitor.AddTime(MonitorOtherFrameTime);
                 }
                 catch (Exception e)
                 {
@@ -750,10 +714,7 @@ namespace Aurora.Region
                     }
 
                     //Add the client to login stats
-                    ILoginMonitor monitor3 =
-                        (ILoginMonitor)
-                        RequestModuleInterface<IMonitorModule>()
-                            .GetMonitor("", MonitorModuleHelper.LoginMonitor);
+                    ILoginMonitor monitor3 = RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>();
                     if ((aCircuit.TeleportFlags & (uint)TeleportFlags.ViaLogin) != 0 &&
                         monitor3 != null)
                         monitor3.AddSuccessfulLogin();

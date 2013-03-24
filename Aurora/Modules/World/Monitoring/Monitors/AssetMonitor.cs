@@ -33,7 +33,7 @@ using Aurora.Framework;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class AssetMonitor : IMonitor, IAssetMonitor
+    public class AssetMonitor : IAssetMonitor
     {
         #region Declares
 
@@ -177,6 +177,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "AssetMonitor";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IAssetMonitor";
         }
 
         public string GetFriendlyValue()

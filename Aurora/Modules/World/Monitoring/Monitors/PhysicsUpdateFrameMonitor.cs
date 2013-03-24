@@ -31,7 +31,7 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class PhysicsUpdateFrameMonitor : ITimeMonitor
+    public class PhysicsUpdateFrameMonitor : IPhysicsUpdateFrameMonitor
     {
         private int MonitorPhysicsUpdateTime;
 
@@ -49,6 +49,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "Physics Update Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IPhysicsUpdateFrameMonitor";
         }
 
         public string GetFriendlyValue()

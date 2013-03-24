@@ -2287,7 +2287,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IMonitorModule mod = World.RequestModuleInterface<IMonitorModule>();
             if (mod != null)
             {
-                float[] stats = mod.GetRegionStats(World.RegionInfo.RegionID.ToString());
+                float[] stats = mod.GetRegionStats();
 
                 for (int i = 0; i < 21; i++)
                 {

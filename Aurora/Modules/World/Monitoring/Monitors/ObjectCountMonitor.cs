@@ -52,6 +52,11 @@ namespace Aurora.Modules.Monitoring.Monitors
             return "Total Objects Count";
         }
 
+        public string GetInterfaceName()
+        {
+            return "";
+        }
+
         public string GetFriendlyValue()
         {
             return m_scene.RequestModuleInterface<IEntityCountModule>().Objects + " Object(s), " +

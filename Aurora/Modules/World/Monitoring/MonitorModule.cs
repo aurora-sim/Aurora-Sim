@@ -57,7 +57,7 @@ namespace Aurora.Modules.Monitoring
     {
         #region Declares
 
-        protected Dictionary<string, MonitorRegistry> m_registry = new Dictionary<string, MonitorRegistry>();
+        protected MonitorRegistry m_registry;
         protected ISimulationBase m_simulationBase;
 
         #region Enums
@@ -147,6 +147,9 @@ namespace Aurora.Modules.Monitoring
                 {
                     sb[i] = new SimStatsPacket.StatBlock();
                 }
+
+                //As we arn't a scene, we add all of the monitors that do not need the scene and run for the entire instance
+                AddDefaultMonitors();
             }
 
             #endregion
@@ -179,9 +182,6 @@ namespace Aurora.Modules.Monitoring
                     m_report.Elapsed += statsHeartBeat;
                     m_report.Enabled = true;
                 }
-                else
-                    //As we arn't a scene, we add all of the monitors that do not need the scene and run for the entire instance
-                    AddDefaultMonitors();
             }
 
             public void Close()
@@ -238,7 +238,7 @@ namespace Aurora.Modules.Monitoring
                 AddMonitor(new TimeDilationMonitor(scene));
                 AddMonitor(new TotalFrameMonitor(scene));
 
-                AddAlert(new DeadlockAlert(GetMonitor("Last Completed Frame At") as LastFrameTimeMonitor));
+                AddAlert(new DeadlockAlert(GetMonitor<ILastFrameTimeMonitor>()));
             }
 
             #endregion
@@ -251,7 +251,10 @@ namespace Aurora.Modules.Monitoring
             /// <param name="monitor"></param>
             public void AddMonitor(IMonitor monitor)
             {
-                m_monitors.Add(monitor.GetName(), monitor);
+                if (monitor.GetInterfaceName() == "")
+                    m_monitors.Add(monitor.GetName(), monitor);
+                else
+                    m_monitors.Add(monitor.GetInterfaceName(), monitor);
             }
 
             /// <summary>
@@ -287,12 +290,12 @@ namespace Aurora.Modules.Monitoring
             /// </summary>
             /// <param name="Name"></param>
             /// <returns></returns>
-            public IMonitor GetMonitor(string Name)
+            public T GetMonitor<T>() where T : IMonitor
             {
                 IMonitor m;
-                if (m_monitors.TryGetValue(Name, out m))
-                    return m;
-                return null;
+                if (m_monitors.TryGetValue(typeof(T).Name, out m))
+                    return (T)m;
+                return default(T);
             }
 
             /// <summary>
@@ -442,26 +445,19 @@ namespace Aurora.Modules.Monitoring
                 // Know what's not thread safe in Mono... modifying timers.
                 lock (m_report)
                 {
-                    ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor) GetMonitor(MonitorModuleHelper.SimFrameStats);
-                    ITimeDilationMonitor timeDilationMonitor =
-                        (ITimeDilationMonitor) GetMonitor(MonitorModuleHelper.TimeDilation);
-                    ITotalFrameTimeMonitor totalFrameMonitor =
-                        (ITotalFrameTimeMonitor) GetMonitor(MonitorModuleHelper.TotalFrameTime);
-                    ITimeMonitor sleepFrameMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.SleepFrameTime);
-                    ITimeMonitor otherFrameMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.OtherFrameTime);
-                    IPhysicsFrameMonitor physicsFrameMonitor =
-                        (IPhysicsFrameMonitor) GetMonitor(MonitorModuleHelper.TotalPhysicsFrameTime);
-                    ITimeMonitor physicsSyncFrameMonitor =
-                        (ITimeMonitor) GetMonitor(MonitorModuleHelper.PhysicsSyncFrameTime);
-                    ITimeMonitor physicsTimeFrameMonitor =
-                        (ITimeMonitor) GetMonitor(MonitorModuleHelper.PhysicsUpdateFrameTime);
-                    IAgentUpdateMonitor agentUpdateFrameMonitor =
-                        (IAgentUpdateMonitor) GetMonitor(MonitorModuleHelper.AgentUpdateCount);
-                    INetworkMonitor networkMonitor = (INetworkMonitor) GetMonitor(MonitorModuleHelper.NetworkMonitor);
-                    IMonitor imagesMonitor = GetMonitor(MonitorModuleHelper.ImagesFrameTime);
-                    ITimeMonitor scriptMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.ScriptFrameTime);
-                    IScriptCountMonitor totalScriptMonitor =
-                        (IScriptCountMonitor) GetMonitor(MonitorModuleHelper.TotalScriptCount);
+                    ISimFrameMonitor simFrameMonitor = GetMonitor<ISimFrameMonitor>();
+                    ITimeDilationMonitor timeDilationMonitor = GetMonitor<ITimeDilationMonitor>();
+                    ITotalFrameTimeMonitor totalFrameMonitor = GetMonitor<ITotalFrameTimeMonitor>();
+                    ISleepFrameMonitor sleepFrameMonitor = GetMonitor<ISleepFrameMonitor>();
+                    IOtherFrameMonitor otherFrameMonitor = GetMonitor<IOtherFrameMonitor>();
+                    IPhysicsFrameMonitor physicsFrameMonitor = GetMonitor<IPhysicsFrameMonitor>();
+                    IPhysicsSyncFrameMonitor physicsSyncFrameMonitor = GetMonitor<IPhysicsSyncFrameMonitor>();
+                    IPhysicsUpdateFrameMonitor physicsTimeFrameMonitor = GetMonitor<IPhysicsUpdateFrameMonitor>();
+                    IAgentUpdateMonitor agentUpdateFrameMonitor = GetMonitor<IAgentUpdateMonitor>();
+                    INetworkMonitor networkMonitor = GetMonitor<INetworkMonitor>();
+                    IImageFrameTimeMonitor imagesMonitor = GetMonitor<IImageFrameTimeMonitor>();
+                    IScriptFrameTimeMonitor scriptMonitor = GetMonitor<IScriptFrameTimeMonitor>();
+                    IScriptCountMonitor totalScriptMonitor = GetMonitor<IScriptCountMonitor>();
 
                     #region various statistic googly moogly
 
@@ -625,8 +621,7 @@ namespace Aurora.Modules.Monitoring
                     m_module.SendStatsResults(simStats);
 
                     //Tell all the scene presences about the new stats
-                    foreach (
-                        IScenePresence agent in m_currentScene.GetScenePresences().Where(agent => !agent.IsChildAgent))
+                    foreach ( IScenePresence agent in m_currentScene.GetScenePresences().Where(agent => !agent.IsChildAgent))
                     {
                         agent.ControllingClient.SendSimStats(simStats);
                     }
@@ -673,13 +668,9 @@ namespace Aurora.Modules.Monitoring
         /// <param name="Key"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public IMonitor GetMonitor(string Key, string Name)
+        public T GetMonitor<T>() where T : IMonitor
         {
-            if (m_registry.ContainsKey(Key))
-            {
-                return m_registry[Key].GetMonitor(Name);
-            }
-            return null;
+            return (T)m_registry.GetMonitor<T>();
         }
 
         /// <summary>
@@ -687,13 +678,9 @@ namespace Aurora.Modules.Monitoring
         /// </summary>
         /// <param name="Key"></param>
         /// <returns></returns>
-        public float[] GetRegionStats(string Key)
+        public float[] GetRegionStats()
         {
-            if (m_registry.ContainsKey(Key))
-            {
-                return m_registry[Key].LastReportedSimStats;
-            }
-            return new float[0];
+            return m_registry.LastReportedSimStats;
         }
 
         #endregion
@@ -707,11 +694,8 @@ namespace Aurora.Modules.Monitoring
         protected void DebugMonitors(string[] args)
         {
             //Dump all monitors to the console
-            foreach (MonitorRegistry registry in m_registry.Values)
-            {
-                MainConsole.Instance.Info("[Stats] " + registry.Report());
-                MainConsole.Instance.Info("");
-            }
+            MainConsole.Instance.Info("[Stats] " + m_registry.Report());
+            MainConsole.Instance.Info("");
         }
 
         /// <summary>
@@ -723,11 +707,7 @@ namespace Aurora.Modules.Monitoring
             ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                //Dump the all instance one first
-                MainConsole.Instance.Info("[Stats] " + m_registry[""].Report());
-                MainConsole.Instance.Info("");
-
-                MainConsole.Instance.Info("[Stats] " + m_registry[manager.Scene.RegionInfo.RegionID.ToString()].Report());
+                MainConsole.Instance.Info("[Stats] " + m_registry.Report());
                 MainConsole.Instance.Info("");
             }
             else
@@ -868,10 +848,7 @@ namespace Aurora.Modules.Monitoring
             StringBuilder sb = new StringBuilder("DIAGNOSTICS\n\n");
             sb.Append(GetUptimeReport());
 
-            foreach (MonitorRegistry registry in m_registry.Values)
-            {
-                sb.Append(registry.Report());
-            }
+            sb.Append(m_registry.Report());
 
             sb.Append(Environment.NewLine);
             sb.Append(GetThreadsReport());
@@ -969,12 +946,8 @@ namespace Aurora.Modules.Monitoring
                                                          DebugMonitors);
             }
 
-            MonitorRegistry reg = new MonitorRegistry(this);
-            //This registers the default commands, but not region specific ones
-            reg.AddScene(null);
-            m_registry.Add("", reg);
-
             m_simulationBase.ApplicationRegistry.RegisterModuleInterface<IMonitorModule>(this);
+            m_registry = new MonitorRegistry(this);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -1025,22 +998,14 @@ namespace Aurora.Modules.Monitoring
 
         public void OnAddedScene(IScene scene)
         {
-            if (m_registry.ContainsKey(scene.RegionInfo.RegionID.ToString()))
-            {
-                //Kill the old!
-                m_registry[scene.RegionInfo.RegionID.ToString()].Close();
-                m_registry.Remove(scene.RegionInfo.RegionID.ToString());
-            }
             //Register all the commands for this region
-            MonitorRegistry reg = new MonitorRegistry(this);
-            reg.AddScene(scene);
-            m_registry[scene.RegionInfo.RegionID.ToString()] = reg;
+            m_registry.AddScene(scene);
             scene.RegisterModuleInterface<IMonitorModule>(this);
         }
 
         public void OnCloseScene(IScene scene)
         {
-            m_registry.Remove(scene.RegionInfo.RegionID.ToString());
+            m_registry.Close();
         }
 
         public void Dispose()

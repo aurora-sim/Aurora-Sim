@@ -1526,9 +1526,7 @@ namespace Aurora.Region
 
 
             IAgentUpdateMonitor reporter =
-                (IAgentUpdateMonitor)
-                m_scene.RequestModuleInterface<IMonitorModule>()
-                       .GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
+                m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<IAgentUpdateMonitor>();
             if (reporter != null)
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
@@ -2197,9 +2195,7 @@ namespace Aurora.Region
             m_scene.ForEachScenePresence(SendTerseUpdateToClient);
 
             IAgentUpdateMonitor reporter =
-                (IAgentUpdateMonitor)
-                m_scene.RequestModuleInterface<IMonitorModule>()
-                       .GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
+                m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<IAgentUpdateMonitor>();
             if (reporter != null)
             {
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
@@ -2218,9 +2214,7 @@ namespace Aurora.Region
             m_perfMonMS = Util.EnvironmentTickCount();
             m_controllingClient.SendCoarseLocationUpdate(avatarUUIDs, coarseLocations);
             IAgentUpdateMonitor reporter =
-                (IAgentUpdateMonitor)
-                m_scene.RequestModuleInterface<IMonitorModule>()
-                       .GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
+                m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<IAgentUpdateMonitor>();
             if (reporter != null)
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }

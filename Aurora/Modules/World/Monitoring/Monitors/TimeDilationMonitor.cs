@@ -54,6 +54,11 @@ namespace Aurora.Modules.Monitoring.Monitors
             return "Time Dilation";
         }
 
+        public string GetInterfaceName()
+        {
+            return "ITimeDilationMonitor";
+        }
+
         public string GetFriendlyValue()
         {
             return (100*GetValue()) + "%";

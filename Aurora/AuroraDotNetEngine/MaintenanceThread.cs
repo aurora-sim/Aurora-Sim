@@ -209,14 +209,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                ITimeMonitor scriptMonitor =
-                    (ITimeMonitor)
-                    module.GetMonitor(m_ScriptEngine.Scene.RegionInfo.RegionID.ToString(),
-                                      MonitorModuleHelper.ScriptFrameTime);
+                IScriptFrameTimeMonitor scriptMonitor = module.GetMonitor<IScriptFrameTimeMonitor>();
                 if (scriptMonitor != null)
-                {
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
-                }
             }
         }
 
@@ -288,14 +283,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                ITimeMonitor scriptMonitor =
-                    (ITimeMonitor)
-                    module.GetMonitor(m_ScriptEngine.Scene.RegionInfo.RegionID.ToString(),
-                                      MonitorModuleHelper.ScriptFrameTime);
+                IScriptFrameTimeMonitor scriptMonitor = module.GetMonitor<IScriptFrameTimeMonitor>();
                 if (scriptMonitor != null)
-                {
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
-                }
             }
 
             if (didAnything) //If we did something, run us again soon

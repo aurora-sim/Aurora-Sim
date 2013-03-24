@@ -31,7 +31,7 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class ScriptFrameTimeMonitor : ITimeMonitor
+    public class ScriptFrameTimeMonitor : IScriptFrameTimeMonitor
     {
         private int MonitorScriptFrameTime;
 
@@ -49,6 +49,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "Script Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IScriptFrameTimeMonitor";
         }
 
         public string GetFriendlyValue()

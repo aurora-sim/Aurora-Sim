@@ -32,7 +32,7 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class NetworkMonitor : IMonitor, INetworkMonitor
+    public class NetworkMonitor : INetworkMonitor
     {
         private volatile float inPacketsPerSecond;
         private volatile float outPacketsPerSecond;
@@ -69,6 +69,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "Network Monitor";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "INetworkMonitor";
         }
 
         public string GetFriendlyValue()

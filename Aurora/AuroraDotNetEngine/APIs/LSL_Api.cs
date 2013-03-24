@@ -7182,10 +7182,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
                 return new LSL_Float();
 
-            ISimFrameMonitor reporter =
-                (ISimFrameMonitor)
-                World.RequestModuleInterface<IMonitorModule>()
-                     .GetMonitor(World.RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
+            ISimFrameMonitor reporter = World.RequestModuleInterface<IMonitorModule>().GetMonitor<ISimFrameMonitor>();
             if (reporter != null)
                 return reporter.LastReportedSimFPS;
             return 0;

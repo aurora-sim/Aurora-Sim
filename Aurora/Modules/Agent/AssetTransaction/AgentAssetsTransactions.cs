@@ -87,9 +87,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_Scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 

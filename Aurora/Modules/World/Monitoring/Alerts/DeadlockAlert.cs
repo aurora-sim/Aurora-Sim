@@ -33,9 +33,9 @@ namespace Aurora.Modules.Monitoring.Alerts
 {
     internal class DeadlockAlert : IAlert
     {
-        private readonly LastFrameTimeMonitor m_monitor;
+        private readonly ILastFrameTimeMonitor m_monitor;
 
-        public DeadlockAlert(LastFrameTimeMonitor m_monitor)
+        public DeadlockAlert(ILastFrameTimeMonitor m_monitor)
         {
             this.m_monitor = m_monitor;
         }

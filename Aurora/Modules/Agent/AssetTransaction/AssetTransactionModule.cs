@@ -166,9 +166,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 
@@ -197,9 +195,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 
@@ -228,9 +224,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 
@@ -316,9 +310,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 

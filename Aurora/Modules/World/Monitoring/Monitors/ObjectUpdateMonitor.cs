@@ -31,7 +31,7 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class ObjectUpdateMonitor : IMonitor, IObjectUpdateMonitor
+    public class ObjectUpdateMonitor : IObjectUpdateMonitor
     {
         #region Declares
 
@@ -63,6 +63,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "PrimUpdates";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IObjectUpdateMonitor";
         }
 
         public string GetFriendlyValue()

@@ -51,6 +51,11 @@ namespace Aurora.Modules.Monitoring.Monitors
             return "Total Frame Time";
         }
 
+        public string GetInterfaceName()
+        {
+            return "ITotalFrameTimeMonitor";
+        }
+
         public string GetFriendlyValue()
         {
             return (int) GetValue() + "ms";

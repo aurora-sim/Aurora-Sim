@@ -53,6 +53,11 @@ namespace Aurora.Modules.Monitoring.Monitors
             return "Total Script Count";
         }
 
+        public string GetInterfaceName()
+        {
+            return "IScriptCountMonitor";
+        }
+
         public string GetFriendlyValue()
         {
             return ActiveScripts + " active script(s), " + ScriptEPS + " event(s) per second";

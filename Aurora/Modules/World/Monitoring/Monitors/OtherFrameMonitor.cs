@@ -31,7 +31,7 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class OtherFrameMonitor : IMonitor, ITimeMonitor
+    public class OtherFrameMonitor : IMonitor, IOtherFrameMonitor
     {
         private int MonitorOtherFrameTime;
 
@@ -49,6 +49,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "Other Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IOtherFrameMonitor";
         }
 
         public string GetFriendlyValue()

@@ -46,27 +46,6 @@ namespace Aurora.Framework.Modules
 
     public delegate void SendStatResult(SimStats stats);
 
-    public class MonitorModuleHelper
-    {
-        public static string SimFrameStats = "SimFrameStats";
-        public static string TimeDilation = "Time Dilation";
-        public static string TotalFrameTime = "Total Frame Time";
-        public static string SleepFrameTime = "Sleep Frame Time";
-        public static string OtherFrameTime = "Other Frame Time";
-        public static string TotalPhysicsFrameTime = "Total Physics Frame Time";
-        public static string PhysicsSyncFrameTime = "Physics Sync Frame Time";
-        public static string PhysicsUpdateFrameTime = "Physics Update Frame Time";
-        public static string AgentUpdateCount = "Agent Update Count";
-        public static string NetworkMonitor = "Network Monitor";
-        public static string ImagesFrameTime = "Images Frame Time";
-        public static string ScriptFrameTime = "Script Frame Time";
-        public static string TotalScriptCount = "Total Script Count";
-        public static string LoginMonitor = "LoginMonitor";
-        public static string AssetMonitor = "AssetMonitor";
-        public static string LastCompletedFrameAt = "Last Completed Frame At";
-        public static string PrimUpdates = "PrimUpdates";
-    }
-
     public interface IMonitorModule
     {
         /// <summary>
@@ -74,20 +53,13 @@ namespace Aurora.Framework.Modules
         /// </summary>
         event SendStatResult OnSendStatsResult;
 
-        /// <summary>
-        ///     Get a monitor module by the RegionID (key parameter, can be "" to get the base monitors) and Name of the monitor
-        /// </summary>
-        /// <param name="Key"></param>
-        /// <param name="Name"></param>
-        /// <returns></returns>
-        IMonitor GetMonitor(string Key, string Name);
+        T GetMonitor<T>() where T : IMonitor;
 
         /// <summary>
         ///     Get the latest stats
         /// </summary>
-        /// <param name="key">The RegionID of the region</param>
         /// <returns></returns>
-        float[] GetRegionStats(string key);
+        float[] GetRegionStats();
     }
 
     public interface IMonitor
@@ -103,6 +75,12 @@ namespace Aurora.Framework.Modules
         /// </summary>
         /// <returns></returns>
         string GetName();
+
+        /// <summary>
+        /// Gets the name of the interface this monitor implements
+        /// </summary>
+        /// <returns></returns>
+        string GetInterfaceName();
 
         /// <summary>
         ///     Get the nice looking value of GetValue()
@@ -137,12 +115,18 @@ namespace Aurora.Framework.Modules
         event Alert OnTriggerAlert;
     }
 
+    public interface IOtherFrameMonitor : ITimeMonitor { }
+    public interface IPhysicsUpdateFrameMonitor : ITimeMonitor { }
+    public interface IPhysicsSyncFrameMonitor : ITimeMonitor { }
+    public interface IScriptFrameTimeMonitor : ITimeMonitor { }
+    public interface ISleepFrameMonitor : ITimeMonitor { }
+
     public interface ITimeMonitor : IMonitor
     {
         void AddTime(int time);
     }
 
-    public interface IAssetMonitor
+    public interface IAssetMonitor : IMonitor
     {
         /// <summary>
         ///     Add a failure to ask the asset service
@@ -178,7 +162,7 @@ namespace Aurora.Framework.Modules
         void AddBlockedMissingTextureRequest();
     }
 
-    public interface INetworkMonitor
+    public interface INetworkMonitor : IMonitor
     {
         /// <summary>
         ///     The number of packets coming in per second
@@ -249,6 +233,8 @@ namespace Aurora.Framework.Modules
         int ScriptEPS { get; }
     }
 
+    public interface ILastFrameTimeMonitor : ISetMonitor { }
+
     public interface ISetMonitor : IMonitor
     {
         /// <summary>
@@ -267,7 +253,7 @@ namespace Aurora.Framework.Modules
         void SetPhysicsFPS(float value);
     }
 
-    public interface IPhysicsFrameMonitor
+    public interface IPhysicsFrameMonitor : IMonitor
     {
         /// <summary>
         ///     The last reported PhysicsSim FPS
@@ -286,7 +272,7 @@ namespace Aurora.Framework.Modules
         void AddFPS(int frames);
     }
 
-    public interface ISimFrameMonitor
+    public interface ISimFrameMonitor : IMonitor
     {
         /// <summary>
         ///     The last reported Sim FPS (for llGetRegionFPS())
@@ -305,7 +291,7 @@ namespace Aurora.Framework.Modules
         void AddFPS(int frames);
     }
 
-    public interface IImageFrameTimeMonitor
+    public interface IImageFrameTimeMonitor : IMonitor
     {
         /// <summary>
         ///     Add the time it took to process sending of images to the client
@@ -323,7 +309,7 @@ namespace Aurora.Framework.Modules
         void AddFrameTime(int time);
     }
 
-    public interface IObjectUpdateMonitor
+    public interface IObjectUpdateMonitor : IMonitor
     {
         /// <summary>
         ///     The current number of prims that were not sent to the client
@@ -337,7 +323,7 @@ namespace Aurora.Framework.Modules
         void AddLimitedPrims(int prims);
     }
 
-    public interface IAgentUpdateMonitor
+    public interface IAgentUpdateMonitor : IMonitor
     {
         /// <summary>
         ///     The time it takes to update the agent with info
@@ -362,7 +348,7 @@ namespace Aurora.Framework.Modules
         void AddAgentTime(int value);
     }
 
-    public interface ILoginMonitor
+    public interface ILoginMonitor : IMonitor
     {
         /// <summary>
         ///     Add a successful login to the stats

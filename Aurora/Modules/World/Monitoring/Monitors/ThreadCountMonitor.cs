@@ -45,6 +45,11 @@ namespace Aurora.Modules.Monitoring.Monitors
             return "Total Threads";
         }
 
+        public string GetInterfaceName()
+        {
+            return "";
+        }
+
         public string GetFriendlyValue()
         {
             return (int) GetValue() + " Thread(s) (Global)";

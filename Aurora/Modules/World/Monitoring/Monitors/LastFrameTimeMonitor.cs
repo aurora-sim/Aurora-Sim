@@ -32,7 +32,7 @@ using Aurora.Framework.Utilities;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class LastFrameTimeMonitor : IMonitor, ISetMonitor
+    public class LastFrameTimeMonitor : IMonitor, ILastFrameTimeMonitor
     {
         private int MonitorLastFrameTick;
 
@@ -52,6 +52,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "Last Completed Frame At";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "ILastFrameTimeMonitor";
         }
 
         public string GetFriendlyValue()

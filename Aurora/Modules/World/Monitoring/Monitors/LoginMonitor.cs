@@ -31,7 +31,7 @@ using Aurora.Framework.Modules;
 
 namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class LoginMonitor : IMonitor, ILoginMonitor
+    public class LoginMonitor : ILoginMonitor
     {
         #region Declares
 
@@ -135,6 +135,11 @@ namespace Aurora.Modules.Monitoring.Monitors
         public string GetName()
         {
             return "LoginMonitor";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "ILoginMonitor";
         }
 
         public string GetFriendlyValue()

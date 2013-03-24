@@ -114,10 +114,7 @@ namespace Aurora.Modules.SimProtection
                 return;
             m_scene = scene;
             BaseRateFramesPerSecond = scene.BaseSimFPS;
-            m_statsReporter =
-                (ISimFrameMonitor)
-                m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(),
-                                                                            MonitorModuleHelper.SimFrameStats);
+            m_statsReporter = m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<ISimFrameMonitor>();
             if (m_statsReporter == null)
             {
                 MainConsole.Instance.Warn("[SimProtection]: Cannot be used as SimStatsReporter does not exist.");
@@ -170,8 +167,7 @@ namespace Aurora.Modules.SimProtection
             else if (SimZeroFPSStartTime != DateTime.MinValue)
                 SimZeroFPSStartTime = DateTime.MinValue;
 
-            float[] stats =
-                m_scene.RequestModuleInterface<IMonitorModule>().GetRegionStats(m_scene.RegionInfo.RegionID.ToString());
+            float[] stats = m_scene.RequestModuleInterface<IMonitorModule>().GetRegionStats();
             if (stats[2] /*PhysicsFPS*/< BaseRateFramesPerSecond*(PercentToBeginShutDownOfServices/100) &&
                 stats[2] != 0 &&
                 AllowDisablePhysics &&

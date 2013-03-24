@@ -580,9 +580,7 @@ namespace Aurora.ClientStack
             {
                 MainConsole.Instance.Warn("[LLUDPSERVER]: Ack timeout, disconnecting " + udpClient.AgentID);
 
-                ILoginMonitor monitor =
-                    (ILoginMonitor)
-                    m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
+                ILoginMonitor monitor = m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>();
                 if (monitor != null)
                     monitor.AddAbnormalClientThreadTermination();
 
@@ -1027,14 +1025,11 @@ namespace Aurora.ClientStack
         {
             client.SendLogoutPacket();
             if (client.IsActive)
-                RemoveClient(((LLClientView) client).UDPClient);
-            ILoginMonitor monitor =
-                (ILoginMonitor)
-                m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
+                RemoveClient(((LLClientView)client).UDPClient);
+
+            ILoginMonitor monitor = m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>();
             if (monitor != null)
-            {
                 monitor.AddLogout();
-            }
         }
 
         private bool OutgoingPacketHandlerLoop()

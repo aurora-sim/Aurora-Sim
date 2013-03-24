@@ -258,7 +258,7 @@ namespace Aurora.Services
         {
             IMonitorModule monitor = m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>();
             if (monitor != null)
-                _assetMonitor = (IAssetMonitor) monitor.GetMonitor("", MonitorModuleHelper.AssetMonitor);
+                _assetMonitor = monitor.GetMonitor<IAssetMonitor>();
         }
 
         #endregion
@@ -653,16 +653,8 @@ namespace Aurora.Services
             if (m_MemoryCacheEnabled)
                 m_MemoryCache.Clear();
 
-            IAssetMonitor monitor =
-                (IAssetMonitor)
-                m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("",
-                                                                                                         MonitorModuleHelper
-                                                                                                             .
-                                                                                                             AssetMonitor);
-            if (monitor != null)
-            {
-                monitor.ClearAssetCacheStatistics();
-            }
+            if (_assetMonitor != null)
+                _assetMonitor.ClearAssetCacheStatistics();
         }
 
         public bool Contains(string id)

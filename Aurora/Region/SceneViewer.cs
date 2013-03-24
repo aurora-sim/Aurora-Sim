@@ -746,9 +746,7 @@ namespace Aurora.Region
 
             //Add the time to the stats tracker
             IAgentUpdateMonitor reporter =
-                (IAgentUpdateMonitor)
-                m_presence.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(
-                    m_presence.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
+                m_presence.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor<IAgentUpdateMonitor>();
             if (reporter != null)
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(AgentMS));
 

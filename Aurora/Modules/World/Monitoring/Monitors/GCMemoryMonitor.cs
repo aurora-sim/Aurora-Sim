@@ -45,6 +45,11 @@ namespace Aurora.Modules.Monitoring.Monitors
             return "GC Reported Memory";
         }
 
+        public string GetInterfaceName()
+        {
+            return "";
+        }
+
         public string GetFriendlyValue()
         {
             return (int) (GetValue()/(1024*1024)) + "MB (Global)";

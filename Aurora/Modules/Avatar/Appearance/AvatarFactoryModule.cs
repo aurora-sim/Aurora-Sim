@@ -726,6 +726,7 @@ textures 1
             private bool m_InitialHasWearablesBeenSent;
             protected AvatarAppearance m_appearance;
             public IScenePresence m_sp;
+            protected IAgentUpdateMonitor _updateMonitor;
 
             public AvatarApperanceModule(IScenePresence sp)
             {
@@ -742,6 +743,7 @@ textures 1
                     MainConsole.Instance.Error("[Scene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
                     Appearance = new AvatarAppearance(sp.UUID);
                 }
+                _updateMonitor = m_sp.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor<IAgentUpdateMonitor>();
             }
 
             #region IAvatarAppearanceModule Members
@@ -775,14 +777,8 @@ textures 1
                                                         }
                                                     });
 
-                IAgentUpdateMonitor reporter =
-                    (IAgentUpdateMonitor)
-                    m_sp.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(
-                        m_sp.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
-                if (reporter != null)
-                {
-                    reporter.AddAgentUpdates(count);
-                }
+                if (_updateMonitor != null)
+                    _updateMonitor.AddAgentUpdates(count);
             }
 
             /// <summary>
@@ -822,14 +818,8 @@ textures 1
                                                         count++;
                                                     });
 
-                IAgentUpdateMonitor reporter =
-                    (IAgentUpdateMonitor)
-                    m_sp.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(
-                        m_sp.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
-                if (reporter != null)
-                {
-                    reporter.AddAgentUpdates(count);
-                }
+                if (_updateMonitor != null)
+                    _updateMonitor.AddAgentUpdates(count);
             }
 
             /// <summary>
@@ -857,14 +847,8 @@ textures 1
                                                         count++;
                                                     });
 
-                IAgentUpdateMonitor reporter =
-                    (IAgentUpdateMonitor)
-                    m_sp.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(
-                        m_sp.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
-                if (reporter != null)
-                {
-                    reporter.AddAgentUpdates(count);
-                }
+                if (_updateMonitor != null)
+                    _updateMonitor.AddAgentUpdates(count);
             }
 
             /// <summary>
@@ -929,14 +913,8 @@ textures 1
                                                         count++;
                                                     });
 
-                IAgentUpdateMonitor reporter =
-                    (IAgentUpdateMonitor)
-                    m_sp.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(
-                        m_sp.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
-                if (reporter != null)
-                {
-                    reporter.AddAgentUpdates(count);
-                }
+                if (_updateMonitor != null)
+                    _updateMonitor.AddAgentUpdates(count);
             }
 
             /// <summary>
