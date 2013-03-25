@@ -35,7 +35,6 @@ using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    [Serializable]
     public class EventAbortException : Exception
     {
         public EventAbortException()
@@ -49,7 +48,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
     }
 
-    [Serializable]
     public class MinEventDelayException : Exception
     {
         public MinEventDelayException()
@@ -63,7 +61,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
     }
 
-    [Serializable]
     public class SelfDeleteException : Exception
     {
         public SelfDeleteException()
@@ -77,7 +74,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
     }
 
-    [Serializable]
     public class ScriptDeleteException : Exception
     {
         public ScriptDeleteException()
@@ -91,7 +87,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
     }
 
-    [Serializable]
     public class ScriptPermissionsException : Exception
     {
         public ScriptPermissionsException(string message)

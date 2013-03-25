@@ -50,7 +50,6 @@ using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
-    [Serializable]
     public class AA_Api : MarshalByRefObject, IAA_Api, IScriptApi
     {
         internal IAssetConnector AssetConnector;

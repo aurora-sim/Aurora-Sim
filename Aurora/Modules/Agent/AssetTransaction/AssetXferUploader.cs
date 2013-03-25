@@ -274,7 +274,6 @@ namespace Aurora.Modules.Agent.AssetTransaction
             BinaryWriter bw = new BinaryWriter(fs);
             bw.Write(data);
             bw.Close();
-            fs.Close();
         }
 
         public void RequestCreateInventoryItem(IClientAPI remoteClient,

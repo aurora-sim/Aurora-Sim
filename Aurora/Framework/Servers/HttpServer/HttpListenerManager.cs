@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public class HttpListenerManager : IDisposable
+    public sealed class HttpListenerManager : IDisposable
     {
         private readonly HttpListener _listener;
         private readonly Thread _listenerThread;
@@ -15,6 +15,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private ConcurrentQueue<HttpListenerContext> _queue;
         public event Action<HttpListenerContext> ProcessRequest;
         private bool _isSecure = false;
+        private bool _isRunning = false;
 
         public HttpListenerManager(int maxThreads, bool isSecure)
         {
@@ -29,6 +30,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public void Start(uint port)
         {
+            _isRunning = true;
             _listener.Prefixes.Add(String.Format(@"http{0}://+:{1}/", _isSecure ? "s" : "", port));
             _listener.Start();
             _listenerThread.Start();
@@ -47,11 +49,15 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public void Stop()
         {
+            if (!_isRunning)
+                return;
+            _isRunning = false;
             _stop.Set();
             _listenerThread.Join();
             foreach (Thread worker in _workers)
                 worker.Join();
             _listener.Stop();
+            _listener.Close();
         }
 
         private void HandleRequests()

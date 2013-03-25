@@ -65,7 +65,7 @@ namespace Aurora.Modules.WorldMap
         public face[] trns;
     }
 
-    public class MapImageModule : IMapImageGenerator, INonSharedRegionModule
+    public class MapImageModule : IMapImageGenerator, INonSharedRegionModule, IDisposable
     {
         private IConfigSource m_config;
         private Dictionary<UUID, Color> m_mapping;
@@ -518,7 +518,7 @@ namespace Aurora.Modules.WorldMap
         {
             MemoryStream imgstream = new MemoryStream();
             Bitmap mapTexture = new Bitmap(1, 1);
-            Image image = mapTexture;
+            Image image = null;
 
             try
             {
@@ -1064,6 +1064,12 @@ namespace Aurora.Modules.WorldMap
             returnpt.X /= m_scene.RegionInfo.RegionSizeX/Constants.RegionSize;
             returnpt.Y /= m_scene.RegionInfo.RegionSizeY/Constants.RegionSize;
             return returnpt;
+        }
+
+        public void Dispose()
+        {
+            UpdateMapImage.Close();
+            UpdateOnlineStatus.Close();
         }
     }
 }

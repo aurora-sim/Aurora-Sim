@@ -101,7 +101,7 @@ namespace Aurora.Framework.Utilities
     ///     List that has an expiring built in
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
-    public sealed class ExpiringList<TKey>
+    public sealed class ExpiringList<TKey> : IDisposable
     {
         private const double CACHE_PURGE_HZ = 1.0;
         private const int MAX_LOCK_WAIT = 5000; // milliseconds
@@ -512,5 +512,10 @@ namespace Aurora.Framework.Utilities
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            timer.Close();
+        }
     }
 }

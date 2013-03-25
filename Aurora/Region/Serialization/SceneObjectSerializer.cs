@@ -117,7 +117,6 @@ namespace Aurora.Region.Serialization
                 sceneObject = new SceneObjectGroup(FromXml(reader), m_sceneForGroup, false);
                 sceneObject.RootChild.FromUserInventoryItemID = fromUserInventoryItemID;
                 reader.Close();
-                sr.Close();
 
                 parts = doc.GetElementsByTagName("Part");
 
@@ -130,7 +129,6 @@ namespace Aurora.Region.Serialization
                     part.TrimPermissions();
                     part.StoreUndoState();
                     reader.Close();
-                    sr.Close();
                 }
 
                 return sceneObject;
@@ -273,7 +271,6 @@ namespace Aurora.Region.Serialization
                 XmlTextReader reader = new XmlTextReader(sr);
                 SceneObjectGroup sceneObject = new SceneObjectGroup(FromXml(reader), scene);
                 reader.Close();
-                sr.Close();
 
                 // Then deal with the rest
                 for (int i = 1; i < parts.Count; i++)
@@ -285,7 +282,6 @@ namespace Aurora.Region.Serialization
 
                     part.StoreUndoState();
                     reader.Close();
-                    sr.Close();
                 }
                 parts = null;
                 doc = null;
@@ -313,13 +309,9 @@ namespace Aurora.Region.Serialization
                 using (XmlTextWriter writer = new XmlTextWriter(sw))
                 {
                     SOGToXml2(writer, sceneObject as SceneObjectGroup, new Dictionary<string, object>());
-                    writer.Close();
                 }
 
-                string str = sw.ToString();
-                sw.Flush();
-                sw.Close();
-                return str;
+                return sw.ToString();
             }
         }
 

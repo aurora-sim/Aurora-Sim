@@ -558,7 +558,7 @@ namespace Aurora.Simulation.Base
         /// <param name="ex"></param>
         public static void handleException(string msg, Exception ex)
         {
-            if (m_saveCrashDumps)
+            if (m_saveCrashDumps && Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
                 // Log exception to disk
                 try

@@ -36,7 +36,6 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {
-    [Serializable]
     public partial class ScriptBaseClass : MarshalByRefObject, IScript, IDisposable
     {
         private readonly ScriptSponsor m_sponser;
@@ -105,16 +104,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 return null;
             }
         }
-
-#if DEBUG
-        // For tracing GC while debugging
-        public static bool GCDummy;
-
-        ~ScriptBaseClass()
-        {
-            GCDummy = true;
-        }
-#endif
 
         public ScriptBaseClass()
         {

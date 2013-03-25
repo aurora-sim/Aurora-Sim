@@ -34,7 +34,6 @@ using Aurora.Framework.SceneInfo;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    [Serializable]
     public class EnumeratorInfo
     {
         public Guid Key = Guid.Empty;

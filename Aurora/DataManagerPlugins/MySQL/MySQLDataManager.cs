@@ -142,7 +142,7 @@ namespace Aurora.DataManager.MySQL
             catch (Exception e)
             {
                 if (spamConsole)
-                    MainConsole.Instance.Error("[MySQLDataLoader] ExecuteNonQuery(" + sql + "), " + e);
+                    MainConsole.Instance.ErrorFormat("[MySQLDataLoader] ExecuteNonQuery({0}), {1}", sql, e.ToString());
                 else
                     throw e;
             }
@@ -182,21 +182,6 @@ namespace Aurora.DataManager.MySQL
             {
                 MainConsole.Instance.Error("[MySQLDataLoader] QueryFullData(" + query + "), " + e);
                 return null;
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                    {
-                        reader.Close();
-                        //reader.Dispose ();
-                    }
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
-                }
             }
         }
 
@@ -285,21 +270,6 @@ namespace Aurora.DataManager.MySQL
                 MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 return null;
             }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                    {
-                        reader.Close();
-                        //reader.Dispose ();
-                    }
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
-                }
-            }
         }
 
         /*public override Dictionary<string, List<string>> QueryNames(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
@@ -354,21 +324,6 @@ namespace Aurora.DataManager.MySQL
             {
                 MainConsole.Instance.Error("[MySQLDataLoader] QueryNames(" + query + "), " + e);
                 return null;
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                    {
-                        reader.Close();
-                        //reader.Dispose ();
-                    }
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.Error("[MySQLDataLoader] QueryNames(" + query + "), " + e);
-                }
             }
         }
 
@@ -1040,21 +995,6 @@ namespace Aurora.DataManager.MySQL
             catch (Exception e)
             {
                 MainConsole.Instance.ErrorFormat("[MySQLDataLoader] TableExists: {0}", e.ToString());
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                    {
-                        reader.Close();
-                        //reader.Dispose ();
-                    }
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.ErrorFormat("[MySQLDataLoader] TableExists: {0}", e.ToString());
-                }
             }
             return retVal.Contains(table.ToLower());
         }

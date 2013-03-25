@@ -48,8 +48,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float ODE_STEPSIZE = 0.020f;
         protected float m_timeDilation = 1.0f;
 
-        protected int framecount;
-
         public float gravityx;
         public float gravityy;
         public float gravityz = -9.8f;
@@ -1436,10 +1434,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <returns></returns>
         public override void Simulate(float timeElapsed)
         {
-            if (framecount >= int.MaxValue)
-                framecount = 0;
-
-            framecount++;
             step_time += timeElapsed;
             IsLocked = true;
             int nodesteps = 0;

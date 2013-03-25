@@ -40,7 +40,6 @@ using System.Net;
 
 namespace Aurora.Modules.Ban
 {
-
     #region Grid BanCheck
 
     public class LoginBanCheck : ILoginModule

@@ -113,14 +113,13 @@ namespace Aurora.Region
 
         // Central Update Loop
 
-        protected uint m_frame;
-
         /// <summary>
         ///     The current frame #
         /// </summary>
         public uint Frame
         {
-            get { return m_frame; }
+            get;
+            protected set;
         }
 
         private float m_basesimfps = 45f;
@@ -279,9 +278,7 @@ namespace Aurora.Region
             //Set up the clientServer
             m_clientServers = clientServers;
             foreach (IClientNetworkServer clientServer in clientServers)
-            {
                 clientServer.AddScene(this);
-            }
 
             m_sceneManager = RequestModuleInterface<ISceneManager>();
             m_simDataStore = m_sceneManager.GetSimulationDataStore();
@@ -310,10 +307,9 @@ namespace Aurora.Region
             m_basesimphysfps = 45f;
 
             m_basesimphysfps = Config.Configs["Physics"].GetFloat("BasePhysicsFPS", 45f);
+            m_basesimfps = Config.Configs["Protection"].GetFloat("BaseRateFramesPerSecond", 45f);
             if (m_basesimphysfps > 45f)
                 m_basesimphysfps = 45f;
-
-            m_basesimfps = Config.Configs["Protection"].GetFloat("BaseRateFramesPerSecond", 45f);
             if (m_basesimfps > 45f)
                 m_basesimfps = 45f;
 
@@ -382,9 +378,7 @@ namespace Aurora.Region
 
             m_sceneGraph.Close();
             foreach (IClientNetworkServer clientServer in m_clientServers)
-            {
                 clientServer.Stop();
-            }
         }
 
         #endregion
@@ -400,12 +394,9 @@ namespace Aurora.Region
                 return;
 
             foreach (IClientNetworkServer clientServer in m_clientServers)
-            {
                 clientServer.Start();
-            }
 
-            Thread t = new Thread(Heartbeat);
-            t.Start();
+            new Thread(Heartbeat).Start();
         }
 
         #endregion
@@ -435,7 +426,7 @@ namespace Aurora.Region
                 int maintc = Util.EnvironmentTickCount();
                 int BeginningFrameTime = maintc;
                 // Increment the frame counter
-                ++m_frame;
+                ++Frame;
 
                 try
                 {
@@ -452,16 +443,16 @@ namespace Aurora.Region
                     if (entities != null && inventoryModule != null)
                         inventoryModule.ReturnObjects(entities, UUID.Zero);
 
-                    if (m_frame%m_update_entities == 0)
+                    if (Frame % m_update_entities == 0)
                         m_sceneGraph.UpdateEntities();
 
-                    if (m_frame%m_update_events == 0)
+                    if (Frame % m_update_events == 0)
                         m_sceneGraph.PhysicsScene.UpdatesLoop();
 
-                    if (m_frame%m_update_events == 0)
+                    if (Frame % m_update_events == 0)
                         m_eventManager.TriggerOnFrame();
 
-                    if (m_frame%m_update_coarse_locations == 0)
+                    if (Frame % m_update_coarse_locations == 0)
                     {
                         List<Vector3> coarseLocations;
                         List<UUID> avatarUUIDs;
@@ -477,7 +468,7 @@ namespace Aurora.Region
 
                     int PhysicsUpdateTime = Util.EnvironmentTickCount();
 
-                    if (m_frame%m_update_physics == 0)
+                    if (Frame % m_update_physics == 0)
                     {
                         TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
                         if (!RegionInfo.RegionSettings.DisablePhysics &&
@@ -485,7 +476,7 @@ namespace Aurora.Region
                                          m_updatetimespan, 3))
                         {
                             m_sceneGraph.UpdatePreparePhysics();
-                            m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
+                            m_sceneGraph.UpdatePhysics((float)SinceLastFrame.TotalSeconds);
                             m_lastphysupdate = DateTime.UtcNow;
                             int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime);
 

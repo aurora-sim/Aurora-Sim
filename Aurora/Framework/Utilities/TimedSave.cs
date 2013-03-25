@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace Aurora.Framework.Utilities
 {
-    public class TimedSaving<T>
+    public sealed class TimedSaving<T> : IDisposable
     {
         public delegate void TimeElapsed(UUID agentID, T data);
 
@@ -70,9 +70,14 @@ namespace Aurora.Framework.Utilities
                 }
             }
         }
+
+        public void Dispose()
+        {
+            _updateTimer.Close();
+        }
     }
 
-    public class ListCombiningTimedSaving<T>
+    public sealed class ListCombiningTimedSaving<T> : IDisposable
     {
         public delegate void TimeElapsed(UUID agentID, List<T> data);
 
@@ -151,6 +156,11 @@ namespace Aurora.Framework.Utilities
                         _queue.Remove(kvp.Key);
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            _updateTimer.Close();
         }
     }
 }

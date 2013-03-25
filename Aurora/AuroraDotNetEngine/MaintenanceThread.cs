@@ -192,14 +192,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     m_ScriptEngine.Scene.EventManager.TriggerModuleFinishedStartup("ScriptEngine", new List<string>
                                                                                                        {
-                                                                                                           m_ScriptEngine
-                                                                                                               .
-                                                                                                               ScriptFailCount
-                                                                                                               .
-                                                                                                               ToString(),
-                                                                                                           m_ScriptEngine
-                                                                                                               .
-                                                                                                               ScriptErrorMessages
+                                                                                                           m_ScriptEngine.ScriptFailCount.ToString(),
+                                                                                                           m_ScriptEngine.ScriptErrorMessages
                                                                                                        });
                         //Tell that we are done
                 }

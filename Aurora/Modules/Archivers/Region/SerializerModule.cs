@@ -65,7 +65,6 @@ namespace Aurora.Modules.Archivers
             XmlTextReader reader = new XmlTextReader(stream) {WhitespaceHandling = WhitespaceHandling.None};
             doc.Load(reader);
             reader.Close();
-            stream.Close();
             XmlNode rootNode = doc.FirstChild;
 
             return SceneEntitySerializer.SceneObjectSerializer.FromXml2Format(rootNode.OuterXml, scene);

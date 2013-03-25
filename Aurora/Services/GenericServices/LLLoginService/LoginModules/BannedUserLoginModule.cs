@@ -80,13 +80,7 @@ namespace Aurora.Services
                 }
             }
             if (!AcceptedNewTOS && !agentInfo.AcceptTOS && m_UseTOS)
-            {
-                StreamReader reader = new StreamReader(Path.Combine(Environment.CurrentDirectory, m_TOSLocation));
-                string TOS = reader.ReadToEnd();
-                reader.Close();
-                reader.Dispose();
-                return new LLFailedLoginResponse(LoginResponseEnum.ToSNeedsSent, TOS, false);
-            }
+                return new LLFailedLoginResponse(LoginResponseEnum.ToSNeedsSent, File.ReadAllText(Path.Combine(Environment.CurrentDirectory, m_TOSLocation)), false);
 
             if ((agentInfo.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan)
             {

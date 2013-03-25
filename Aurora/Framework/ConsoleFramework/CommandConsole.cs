@@ -476,7 +476,7 @@ namespace Aurora.Framework.ConsoleFramework
     /// <summary>
     ///     A console that processes commands internally
     /// </summary>
-    public class CommandConsole : ICommandConsole
+    public class CommandConsole : ICommandConsole, IDisposable
     {
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
@@ -501,6 +501,11 @@ namespace Aurora.Framework.ConsoleFramework
         protected void InitializeLog(string filename)
         {
             m_logFile = new System.IO.StreamWriter(filename ?? System.IO.Path.ChangeExtension(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName, ".log"), true);
+        }
+
+        public void Dispose()
+        {
+            m_logFile.Close();
         }
 
         public void Help(string[] cmd)
@@ -706,10 +711,6 @@ namespace Aurora.Framework.ConsoleFramework
         public bool HasProcessedCurrentCommand { get; set; }
 
         public IScene m_ConsoleScene;
-
-        public void Dispose()
-        {
-        }
 
         /// <summary>
         ///     Starts the prompt for the console. This will never stop until the region is closed.

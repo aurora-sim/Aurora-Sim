@@ -72,7 +72,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     /// <summary>
     ///     Contains all LSL ll-functions. This class will be in Default AppDomain.
     /// </summary>
-    [Serializable]
     public class LSL_Api : MarshalByRefObject, ILSL_Api, IScriptApi
     {
         protected IScriptModulePlugin m_ScriptEngine;

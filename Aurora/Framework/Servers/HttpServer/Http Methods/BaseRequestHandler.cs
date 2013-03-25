@@ -97,13 +97,5 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public abstract byte[] Handle(string path, Stream request,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-
-        #region Implementation of IDisposable
-
-        public void Dispose()
-        {
-        }
-
-        #endregion
     }
 }

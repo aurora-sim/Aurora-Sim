@@ -111,24 +111,24 @@ namespace Aurora.DataManager.SQLite
             catch (SqliteBusyException ex)
             {
                 if (retries++ > 5)
-                    MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText +
-                                              ", Exception: " +
-                                              ex);
+                    MainConsole.Instance.WarnFormat("[SqliteDataManager]: Exception processing command: {0}, Exception: {1}",
+                                            cmd.CommandText,
+                                            ex.ToString());
                 else
                     goto restart;
             }
             catch (SqliteException ex)
             {
-                MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText +
-                                          ", Exception: " +
-                                          ex);
+                MainConsole.Instance.WarnFormat("[SqliteDataManager]: Exception processing command: {0}, Exception: {1}",
+                                        cmd.CommandText,
+                                        ex.ToString());
                 //throw ex;
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText +
-                                          ", Exception: " +
-                                          ex);
+                MainConsole.Instance.WarnFormat("[SqliteDataManager]: Exception processing command: {0}, Exception: {1}",
+                                        cmd.CommandText,
+                                        ex.ToString());
                 throw ex;
             }
         }
@@ -172,24 +172,24 @@ namespace Aurora.DataManager.SQLite
             catch (SqliteBusyException ex)
             {
                 if (retries++ > 5)
-                    MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText +
-                                              ", Exception: " +
-                                              ex);
+                    MainConsole.Instance.WarnFormat("[SqliteDataManager]: Exception processing command: {0}, Exception: {1}",
+                                            cmd.CommandText,
+                                            ex.ToString());
                 else
                     goto restart;
                 return 0;
             }
             catch (SqliteException ex)
             {
-                MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText +
-                                          ", Exception: " +
-                                          ex);
+                MainConsole.Instance.WarnFormat("[SqliteDataManager]: Exception processing command: {0}, Exception: {1}",
+                                        cmd.CommandText,
+                                        ex.ToString());
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText +
-                                          ", Exception: " +
-                                          ex);
+                MainConsole.Instance.WarnFormat("[SqliteDataManager]: Exception processing command: {0}, Exception: {1}",
+                                        cmd.CommandText,
+                                        ex.ToString());
                 throw ex;
             }
             return 0;
@@ -1154,7 +1154,6 @@ namespace Aurora.DataManager.SQLite
                                          });
                         }
                     }
-                    rdr.Close();
                 }
             }
             CloseReaderCommand(cmd);
@@ -1198,7 +1197,6 @@ namespace Aurora.DataManager.SQLite
                             }
                         }
                     }
-                    rdr.Close();
                 }
             }
             CloseReaderCommand(cmd);
@@ -1215,7 +1213,6 @@ namespace Aurora.DataManager.SQLite
                         if (rdr.HasRows)
                             indices[rdr["name"].ToString()] = (uint.Parse(rdr["unique"].ToString()) > 0);
                     }
-                    rdr.Close();
                 }
             }
             CloseReaderCommand(cmd);
@@ -1238,7 +1235,6 @@ namespace Aurora.DataManager.SQLite
                             if (rdr.HasRows)
                                 fields.Add(rdr["name"].ToString());
                         }
-                        rdr.Close();
                     }
                 }
                 defs[index.Key].Fields = fields.ToArray();

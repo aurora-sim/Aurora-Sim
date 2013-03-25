@@ -45,15 +45,5 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             m_closed = true;
         }
-
-#if DEBUG
-        // For tracing GC while debugging
-        public static bool GCDummy;
-
-        ~ScriptSponsor()
-        {
-            GCDummy = true;
-        }
-#endif
     }
 }

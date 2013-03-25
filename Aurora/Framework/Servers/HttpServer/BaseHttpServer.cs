@@ -42,7 +42,7 @@ using System.Xml;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public class BaseHttpServer : IHttpServer
+    public class BaseHttpServer : IHttpServer, IDisposable
     {
         public volatile bool HTTPDRunning = false;
 
@@ -899,7 +899,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
             string requestBody = reader.ReadToEnd();
             reader.Close();
-            requestStream.Close();
 
             //MainConsole.Instance.DebugFormat("[OGP]: {0}:{1}", request.RawUrl, requestBody);
             response.KeepAlive = true;
@@ -1245,5 +1244,10 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            m_internalServer.Dispose();
+        }
     }
 }

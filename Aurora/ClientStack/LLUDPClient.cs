@@ -400,26 +400,6 @@ namespace Aurora.ClientStack
             OnQueueEmpty = null;
         }
 
-        public string GetStats()
-        {
-            return string.Format(
-                "{0,7} {1,7} {2,7} {3,9} {4,7} {5,7} {6,7} {7,7} {8,7} {9,8} {10,7} {11,7}",
-                PacketsReceived,
-                PacketsSent,
-                PacketsResent,
-                UnackedBytes,
-                PacketsCounts[(int) ThrottleOutPacketType.Resend],
-                PacketsCounts[(int) ThrottleOutPacketType.Land],
-                PacketsCounts[(int) ThrottleOutPacketType.Wind],
-                PacketsCounts[(int) ThrottleOutPacketType.Cloud],
-                PacketsCounts[(int) ThrottleOutPacketType.Task],
-                PacketsCounts[(int) ThrottleOutPacketType.Texture],
-                PacketsCounts[(int) ThrottleOutPacketType.Asset],
-                PacketsCounts[(int) ThrottleOutPacketType.State],
-                PacketsCounts[(int) ThrottleOutPacketType.OutBand]
-                );
-        }
-
         public void SendPacketStats()
         {
             PacketStats callback = OnPacketStats;

@@ -118,7 +118,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
     }
 
-    public class CSCodeGenerator : IDisposable
+    public sealed class CSCodeGenerator : IDisposable
     {
         private readonly List<string> AfterFuncCalls = new List<string>();
         private readonly HashSet<string> DTFunctions = new HashSet<string>();

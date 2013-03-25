@@ -129,7 +129,6 @@ namespace Aurora.Framework.Serialization.External
             xtr.ReadEndElement();
 
             xtr.Close();
-            sr.Close();
 
             return item;
         }
@@ -203,7 +202,6 @@ namespace Aurora.Framework.Serialization.External
             writer.WriteEndElement();
 
             writer.Close();
-            sw.Close();
 
             return sw.ToString();
         }

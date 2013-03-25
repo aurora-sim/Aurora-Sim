@@ -57,7 +57,7 @@ namespace Aurora.ClientStack
     ///     Handles new client connections
     ///     Constructor takes a single Packet and authenticates everything
     /// </summary>
-    public sealed class LLClientView : IClientAPI, IStatsCollector
+    public sealed class LLClientView : IClientAPI
     {
         /// <value>
         ///     Debug packet level.  See OpenSim.RegisterConsoleCommands() for more details.
@@ -13009,11 +13009,6 @@ namespace Aurora.ClientStack
         }
 
         #endregion
-
-        public string Report()
-        {
-            return m_udpClient.GetStats();
-        }
 
         private readonly List<UUID> m_transfersToAbort = new List<UUID>();
 

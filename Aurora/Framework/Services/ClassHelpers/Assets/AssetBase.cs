@@ -196,7 +196,7 @@ namespace Aurora.Framework.Services.ClassHelpers.Assets
         }
 
         [ProtoMember(1)]
-        public virtual byte[] Data
+        public byte[] Data
         {
             get { return myData; }
             set

@@ -2579,7 +2579,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 float maxVel = Velocity.Z < -1f ? -1f : Velocity.Z > 1f ? 1f : Velocity.Z;
                 contact.surface.bounce = (maxVel*-(restSquared));
                     //Its about 1:1 surprisingly, even though this constant was for havok
-                if (contact.surface.bounce > 1.5f)
+                if (contact.surface.bounce > 0.5f)
                     contact.surface.bounce = 0.5f; //Limit the bouncing please...
                 if (contact.surface.bounce <= 0)
                 {

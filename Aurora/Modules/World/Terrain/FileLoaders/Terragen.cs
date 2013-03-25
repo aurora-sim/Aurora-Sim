@@ -147,7 +147,6 @@ namespace Aurora.Modules.Terrain.FileLoaders
             }
 
             bs.Close();
-            s.Close();
 
             return retval;
         }

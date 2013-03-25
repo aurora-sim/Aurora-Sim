@@ -48,7 +48,6 @@ using System.Threading;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    [Serializable]
     public class ScriptEngine : INonSharedRegionModule, IScriptModulePlugin
     {
         #region Declares

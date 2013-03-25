@@ -253,7 +253,7 @@ namespace Aurora.Framework.Services
         string ConCat(string[] toConCat);
     }
 
-    public class DataReaderConnection : System.IDisposable
+    public sealed class DataReaderConnection : System.IDisposable
     {
         public IDataReader DataReader;
         public object Connection;

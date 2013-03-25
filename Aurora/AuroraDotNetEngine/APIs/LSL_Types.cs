@@ -34,12 +34,10 @@ using Aurora.Framework.Utilities;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    [Serializable]
     public partial class LSL_Types
     {
         // Types are kept is separate .dll to avoid having to add whatever .dll it is in it to script AppDomain
 
-        [Serializable]
         public struct Vector3
         {
             public LSLFloat x;
@@ -297,7 +295,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
         }
 
-        [Serializable]
         public struct Quaternion
         {
             public double x;
@@ -464,7 +461,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        [Serializable]
         public class list : IEnumerator
         {
             private object[] m_data;
@@ -1386,7 +1382,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
         }
 
-        [Serializable]
         public struct key
         {
             public string value;
@@ -1502,7 +1497,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
         }
 
-        [Serializable]
         public struct LSLString
         {
             public string m_string;
@@ -1741,7 +1735,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
         }
 
-        [Serializable]
         public struct LSLInteger
         {
             public int value;
@@ -2048,7 +2041,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
         }
 
-        [Serializable]
         public struct LSLFloat
         {
             public double value;

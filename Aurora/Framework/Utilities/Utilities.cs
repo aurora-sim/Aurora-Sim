@@ -183,7 +183,6 @@ namespace Aurora.Framework.Utilities
             byte[] cipherTextBytes = memoryStream.ToArray();
 
             // Close both streams.
-            memoryStream.Close();
             cryptoStream.Close();
 
             // Convert encrypted data into a base64-encoded string.
@@ -288,7 +287,6 @@ namespace Aurora.Framework.Utilities
             }
 
             // Close both streams.
-            memoryStream.Close();
             cryptoStream.Close();
 
             // Convert decrypted data into a string. 

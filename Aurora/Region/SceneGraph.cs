@@ -159,7 +159,7 @@ namespace Aurora.Region
             }
         }
 
-        protected internal void UpdatePhysics(double elapsed)
+        protected internal void UpdatePhysics(float elapsed)
         {
             if (_PhyScene == null)
                 return;
@@ -168,7 +168,7 @@ namespace Aurora.Region
                 // Update DisableCollisions 
                 _PhyScene.DisableCollisions = m_regInfo.RegionSettings.DisableCollisions;
 
-                _PhyScene.Simulate((float) elapsed);
+                _PhyScene.Simulate(elapsed);
             }
         }
 

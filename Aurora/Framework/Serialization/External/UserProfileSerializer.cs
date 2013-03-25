@@ -60,7 +60,6 @@ namespace Aurora.Framework.Serialization.External
             xtw.WriteEndElement();
 
             xtw.Close();
-            sw.Close();
 
             return sw.ToString();
         }

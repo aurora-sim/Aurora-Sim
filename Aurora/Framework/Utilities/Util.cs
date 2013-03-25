@@ -2705,7 +2705,7 @@ namespace Aurora.Framework.Utilities
             catch (Exception e)
             {
                 MainConsole.Instance.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}",
-                                                dnsAddress, e);
+                                                dnsAddress, e.ToString());
 
                 InternetFailure();
                 // Still going to throw the exception on for now, since this was what was happening in the first place

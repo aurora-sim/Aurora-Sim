@@ -48,7 +48,7 @@ namespace Aurora.Modules
     /// <summary>
     ///     FileBased DataStore, do not store anything in any databases, instead save .abackup files for it
     /// </summary>
-    public class FileBasedSimulationData : ISimulationDataStore
+    public class FileBasedSimulationData : ISimulationDataStore, IDisposable
     {
         protected Timer m_backupSaveTimer;
 
@@ -594,6 +594,12 @@ namespace Aurora.Modules
             short[] sdata = new short[data.Length/2];
             Buffer.BlockCopy(data, 0, sdata, 0, data.Length);
             return new TerrainChannel(sdata, scene);
+        }
+
+        public void Dispose()
+        {
+            m_backupSaveTimer.Close();
+            m_saveTimer.Close();
         }
     }
 

@@ -467,7 +467,7 @@ namespace Aurora.Region
                                      m_updatetimespan, 3))
                     {
                         m_sceneGraph.UpdatePreparePhysics();
-                        m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
+                        m_sceneGraph.UpdatePhysics((float)SinceLastFrame.TotalSeconds);
                         m_lastphysupdate = DateTime.UtcNow;
                         int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime);
 

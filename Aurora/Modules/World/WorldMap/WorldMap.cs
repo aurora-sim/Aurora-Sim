@@ -698,7 +698,7 @@ namespace Aurora.Modules.WorldMap
 
             MemoryStream imgstream = new MemoryStream();
             Bitmap mapTexture = new Bitmap(1, 1);
-            Image image = (Image) mapTexture;
+            Image image = null;
 
             try
             {
@@ -744,7 +744,6 @@ namespace Aurora.Modules.WorldMap
                     image.Dispose();
 
                 imgstream.Close();
-                imgstream.Dispose();
             }
 
             httpResponse.ContentType = "image/jpeg";

@@ -143,11 +143,10 @@ namespace Aurora.Modules.Startup
                     scene.RegionInfo.RegionLocX = int.Parse(position[1])*Constants.RegionSize;
                     scene.RegionInfo.RegionLocY = int.Parse(position[2])*Constants.RegionSize;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    MainConsole.Instance.Error(
-                        "Unable to move the region back to its original position, is this an opensim server? Please manually move the region back.");
-                    throw e;
+                    MainConsole.Instance.Error("Unable to move the region back to its original position, is this an opensim server? Please manually move the region back.");
+                    throw;
                 }
             }
             else if (error.Error == "Duplicate region name")

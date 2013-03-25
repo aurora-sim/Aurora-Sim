@@ -63,7 +63,6 @@ using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
-    [Serializable]
     public class OSSL_Api : MarshalByRefObject, IOSSL_Api, IScriptApi
     {
         internal ScriptProtectionModule ScriptProtection;

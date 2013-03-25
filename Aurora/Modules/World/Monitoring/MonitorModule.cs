@@ -109,7 +109,7 @@ namespace Aurora.Modules.Monitoring
 
         #endregion
 
-        public class MonitorRegistry
+        public sealed class MonitorRegistry : IDisposable
         {
             #region Declares
 
@@ -437,8 +437,7 @@ namespace Aurora.Modules.Monitoring
             {
                 if (m_currentScene.PhysicsScene == null)
                     return;
-                lock (m_report)
-                    m_report.Stop();
+                m_report.Stop();
                 if (rb == null)
                     buildInitialRegionBlock();
 
@@ -629,8 +628,7 @@ namespace Aurora.Modules.Monitoring
                     //Now fix any values that require reseting
                     ResetValues();
                 }
-                lock (m_report)
-                    m_report.Start();
+                m_report.Start();
             }
 
             /// <summary>
@@ -653,6 +651,15 @@ namespace Aurora.Modules.Monitoring
                 statsUpdatesEveryMS = ms;
                 statsUpdateFactor = (statsUpdatesEveryMS/1000);
                 m_report.Interval = statsUpdatesEveryMS;
+            }
+
+            #endregion
+
+            #region IDisposable
+
+            public void Dispose()
+            {
+                m_report.Close();
             }
 
             #endregion
@@ -792,41 +799,6 @@ namespace Aurora.Modules.Monitoring
                 "Texture",
                 "Asset",
                 "State");
-
-            ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
-            if (manager != null)
-            {
-                manager.Scene.ForEachClient(
-                    delegate(IClientAPI client)
-                        {
-                            if (client is IStatsCollector)
-                            {
-                                IScenePresence SP = manager.Scene.GetScenePresence(client.AgentId);
-                                if (SP == null || (SP.IsChildAgent && !showChildren))
-                                    return;
-
-                                string name = client.Name;
-                                string regionName = manager.Scene.RegionInfo.RegionName;
-
-                                report.AppendFormat(
-                                    "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
-                                    name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name,
-                                    "");
-                                report.AppendFormat(
-                                    "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
-                                    regionName.Length > maxRegionNameLength
-                                        ? regionName.Substring(0, maxRegionNameLength)
-                                        : regionName, "");
-                                report.AppendFormat(
-                                    "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
-                                    SP.IsChildAgent ? "Child" : "Root", "");
-
-                                IStatsCollector stats = (IStatsCollector) client;
-
-                                report.AppendLine(stats.Report());
-                            }
-                        });
-            }
 
             return report.ToString();
         }

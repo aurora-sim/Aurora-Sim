@@ -44,7 +44,7 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
         protected HttpListenerContext _context = null;
         protected Dictionary<string, HttpFile> _files = new Dictionary<string, HttpFile>();
 
-        public class HttpFile : IDisposable
+        public sealed class HttpFile : IDisposable
         {
             /// <summary>
             ///     Gets or sets form element name

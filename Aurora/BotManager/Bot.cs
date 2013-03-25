@@ -238,7 +238,7 @@ namespace Aurora.BotManager
 
     #endregion
 
-    public sealed class Bot
+    public sealed class Bot : IDisposable
     {
         #region Declares
 
@@ -1498,6 +1498,12 @@ namespace Aurora.BotManager
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            if (m_frames != null)
+                m_frames.Close();
+        }
     }
 
     public class BotClientAPI : IClientAPI

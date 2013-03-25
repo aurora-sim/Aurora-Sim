@@ -32,18 +32,6 @@ using OpenMetaverse;
 
 namespace Aurora.Framework.Modules
 {
-    /// <summary>
-    ///     Implemented by classes which collect up non-viewer statistical information
-    /// </summary>
-    public interface IStatsCollector
-    {
-        /// <summary>
-        ///     Report back collected statistical information.
-        /// </summary>
-        /// <returns></returns>
-        string Report();
-    }
-
     public delegate void SendStatResult(SimStats stats);
 
     public interface IMonitorModule

@@ -96,12 +96,9 @@ namespace Aurora.Modules.Scripting
         {
             Font myFont = new Font(fontName, fontSize);
             SizeF stringSize = new SizeF();
-            lock (m_graph)
-            {
-                stringSize = m_graph.MeasureString(text, myFont);
-                xSize = stringSize.Width;
-                ySize = stringSize.Height;
-            }
+            stringSize = m_graph.MeasureString(text, myFont);
+            xSize = stringSize.Width;
+            ySize = stringSize.Height;
         }
 
         #endregion
