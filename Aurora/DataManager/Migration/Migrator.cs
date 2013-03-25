@@ -111,133 +111,110 @@ namespace Aurora.DataManager.Migration
 
         protected ColumnDefinition ColDef(string name, ColumnTypes columnType)
         {
-            ColumnTypeDef type = new ColumnTypeDef();
+            ColumnTypeDef type;
             switch (columnType)
             {
                 case ColumnTypes.Blob:
-                    type.Type = ColumnType.Blob;
+                    type = ColumnTypeDef.Blob;
                     break;
                 case ColumnTypes.Char32:
-                    type.Type = ColumnType.Char;
-                    type.Size = 32;
+                    type = ColumnTypeDef.Char32;
                     break;
                 case ColumnTypes.Char36:
-                    type.Type = ColumnType.Char;
-                    type.Size = 36;
+                    type = ColumnTypeDef.Char36;
                     break;
                 case ColumnTypes.Char5:
-                    type.Type = ColumnType.Char;
-                    type.Size = 5;
+                    type = ColumnTypeDef.Char5;
                     break;
                 case ColumnTypes.Date:
-                    type.Type = ColumnType.Date;
+                    type = ColumnTypeDef.Date;
                     break;
                 case ColumnTypes.DateTime:
-                    type.Type = ColumnType.DateTime;
+                    type = ColumnTypeDef.DateTime;
                     break;
                 case ColumnTypes.Double:
-                    type.Type = ColumnType.Double;
+                    type = ColumnTypeDef.Double;
                     break;
                 case ColumnTypes.Float:
-                    type.Type = ColumnType.Float;
+                    type = ColumnTypeDef.Float;
                     break;
                 case ColumnTypes.Integer11:
-                    type.Type = ColumnType.Integer;
-                    type.Size = 11;
+                    type = ColumnTypeDef.Integer11;
                     break;
                 case ColumnTypes.Integer30:
-                    type.Type = ColumnType.Integer;
-                    type.Size = 30;
+                    type = ColumnTypeDef.Integer30;
                     break;
                 case ColumnTypes.LongBlob:
-                    type.Type = ColumnType.LongBlob;
+                    type = ColumnTypeDef.LongBlob;
                     break;
                 case ColumnTypes.LongText:
-                    type.Type = ColumnType.LongText;
+                    type = ColumnTypeDef.LongText;
                     break;
                 case ColumnTypes.MediumText:
-                    type.Type = ColumnType.MediumText;
+                    type = ColumnTypeDef.MediumText;
                     break;
                 case ColumnTypes.String:
-                    type.Type = ColumnType.Text;
+                    type = ColumnTypeDef.Text;
                     break;
                 case ColumnTypes.String1:
-                    type.Type = ColumnType.String;
-                    type.Size = 1;
+                    type = ColumnTypeDef.String1;
                     break;
                 case ColumnTypes.String10:
-                    type.Type = ColumnType.String;
-                    type.Size = 10;
+                    type = ColumnTypeDef.String10;
                     break;
                 case ColumnTypes.String100:
-                    type.Type = ColumnType.String;
-                    type.Size = 100;
+                    type = ColumnTypeDef.String100;
                     break;
                 case ColumnTypes.String1024:
-                    type.Type = ColumnType.String;
-                    type.Size = 1024;
+                    type = ColumnTypeDef.String1024;
                     break;
                 case ColumnTypes.String128:
-                    type.Type = ColumnType.String;
-                    type.Size = 128;
+                    type = ColumnTypeDef.String128;
                     break;
                 case ColumnTypes.String16:
-                    type.Type = ColumnType.String;
-                    type.Size = 16;
+                    type = ColumnTypeDef.String16;
                     break;
                 case ColumnTypes.String2:
-                    type.Type = ColumnType.String;
-                    type.Size = 2;
+                    type = ColumnTypeDef.String2;
                     break;
                 case ColumnTypes.String255:
-                    type.Type = ColumnType.String;
-                    type.Size = 255;
+                    type = ColumnTypeDef.String255;
                     break;
                 case ColumnTypes.String30:
-                    type.Type = ColumnType.String;
-                    type.Size = 30;
+                    type = ColumnTypeDef.String30;
                     break;
                 case ColumnTypes.String32:
-                    type.Type = ColumnType.String;
-                    type.Size = 32;
+                    type = ColumnTypeDef.String32;
                     break;
                 case ColumnTypes.String36:
-                    type.Type = ColumnType.String;
-                    type.Size = 36;
+                    type = ColumnTypeDef.String36;
                     break;
                 case ColumnTypes.String45:
-                    type.Type = ColumnType.String;
-                    type.Size = 45;
+                    type = ColumnTypeDef.String45;
                     break;
                 case ColumnTypes.String50:
-                    type.Type = ColumnType.String;
-                    type.Size = 50;
+                    type = ColumnTypeDef.String50;
                     break;
                 case ColumnTypes.String512:
-                    type.Type = ColumnType.String;
-                    type.Size = 512;
+                    type = ColumnTypeDef.String512;
                     break;
                 case ColumnTypes.String64:
-                    type.Type = ColumnType.String;
-                    type.Size = 64;
+                    type = ColumnTypeDef.String64;
                     break;
                 case ColumnTypes.String8196:
-                    type.Type = ColumnType.String;
-                    type.Size = 8196;
+                    type = ColumnTypeDef.String8196;
                     break;
                 case ColumnTypes.Text:
-                    type.Type = ColumnType.Text;
+                    type = ColumnTypeDef.Text;
                     break;
                 case ColumnTypes.TinyInt1:
-                    type.Type = ColumnType.TinyInt;
-                    type.Size = 1;
+                    type = ColumnTypeDef.TinyInt1;
                     break;
                 case ColumnTypes.TinyInt4:
-                    type.Type = ColumnType.TinyInt;
-                    type.Size = 4;
+                    type = ColumnTypeDef.TinyInt4;
                     break;
                 default:
-                    type.Type = ColumnType.Unknown;
+                    type = ColumnTypeDef.Unknown;
                     break;
             }
             return new ColumnDefinition {Name = name, Type = type};

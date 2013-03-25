@@ -243,12 +243,54 @@ namespace Aurora.Framework.Utilities
 
     public class ColumnTypeDef
     {
+        #region Const Types
+
+        public static readonly ColumnTypeDef Blob = new ColumnTypeDef(ColumnType.Blob);
+        public static readonly ColumnTypeDef Char32 = new ColumnTypeDef(ColumnType.Char, 32);
+        public static readonly ColumnTypeDef Char36 = new ColumnTypeDef(ColumnType.Char, 36);
+        public static readonly ColumnTypeDef Char5 = new ColumnTypeDef(ColumnType.Char, 5);
+        public static readonly ColumnTypeDef Date = new ColumnTypeDef(ColumnType.Date);
+        public static readonly ColumnTypeDef DateTime = new ColumnTypeDef(ColumnType.DateTime);
+        public static readonly ColumnTypeDef Double = new ColumnTypeDef(ColumnType.Double);
+        public static readonly ColumnTypeDef Float = new ColumnTypeDef(ColumnType.Float);
+        public static readonly ColumnTypeDef Integer11 = new ColumnTypeDef(ColumnType.Integer, 11);
+        public static readonly ColumnTypeDef Integer30 = new ColumnTypeDef(ColumnType.Integer, 30);
+        public static readonly ColumnTypeDef LongBlob = new ColumnTypeDef(ColumnType.LongBlob);
+        public static readonly ColumnTypeDef LongText = new ColumnTypeDef(ColumnType.LongText);
+        public static readonly ColumnTypeDef MediumText = new ColumnTypeDef(ColumnType.MediumText);
+        public static readonly ColumnTypeDef Text = new ColumnTypeDef(ColumnType.Text);
+        public static readonly ColumnTypeDef String1 = new ColumnTypeDef(ColumnType.String, 1);
+        public static readonly ColumnTypeDef String10 = new ColumnTypeDef(ColumnType.String, 10);
+        public static readonly ColumnTypeDef String100 = new ColumnTypeDef(ColumnType.String, 100);
+        public static readonly ColumnTypeDef String1024 = new ColumnTypeDef(ColumnType.String, 1024);
+        public static readonly ColumnTypeDef String128 = new ColumnTypeDef(ColumnType.String, 128);
+        public static readonly ColumnTypeDef String16 = new ColumnTypeDef(ColumnType.String, 16);
+        public static readonly ColumnTypeDef String2 = new ColumnTypeDef(ColumnType.String, 2);
+        public static readonly ColumnTypeDef String255 = new ColumnTypeDef(ColumnType.String, 255);
+        public static readonly ColumnTypeDef String30 = new ColumnTypeDef(ColumnType.String, 30);
+        public static readonly ColumnTypeDef String32 = new ColumnTypeDef(ColumnType.String, 32);
+        public static readonly ColumnTypeDef String36 = new ColumnTypeDef(ColumnType.String, 36);
+        public static readonly ColumnTypeDef String45 = new ColumnTypeDef(ColumnType.String, 45);
+        public static readonly ColumnTypeDef String50 = new ColumnTypeDef(ColumnType.String, 50);
+        public static readonly ColumnTypeDef String512 = new ColumnTypeDef(ColumnType.String, 512);
+        public static readonly ColumnTypeDef String64 = new ColumnTypeDef(ColumnType.String, 64);
+        public static readonly ColumnTypeDef String8196 = new ColumnTypeDef(ColumnType.String, 8196);
+        public static readonly ColumnTypeDef TinyInt1 = new ColumnTypeDef(ColumnType.TinyInt, 1);
+        public static readonly ColumnTypeDef TinyInt4 = new ColumnTypeDef(ColumnType.TinyInt, 4);
+        public static readonly ColumnTypeDef Unknown = new ColumnTypeDef(ColumnType.Unknown);
+
+        #endregion
+
         public ColumnType Type { get; set; }
         public uint Size { get; set; }
         public string defaultValue { get; set; }
         public bool isNull { get; set; }
         public bool unsigned { get; set; }
         public bool auto_increment { get; set; }
+
+        public ColumnTypeDef() { }
+        public ColumnTypeDef(ColumnType type) { Type = type; }
+        public ColumnTypeDef(ColumnType type, uint size) { Type = type; Size = size; }
 
         public override bool Equals(object obj)
         {

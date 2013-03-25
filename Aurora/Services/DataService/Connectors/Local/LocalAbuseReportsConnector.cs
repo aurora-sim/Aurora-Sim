@@ -40,7 +40,6 @@ namespace Aurora.Services.DataService
     public class LocalAbuseReportsConnector : IAbuseReportsConnector
     {
         private IGenericData GD;
-        private string WebPassword = "";
         private string m_abuseReportsTable = "abusereports";
 
         #region IAbuseReportsConnector Members
@@ -60,17 +59,7 @@ namespace Aurora.Services.DataService
             Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
             if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
                 "LocalConnector")
-            {
-                WebPassword = Util.Md5Hash(source.Configs["Handlers"].GetString("WebUIHandlerPassword", String.Empty));
-
-                //List<string> Results = GD.Query("Method", "abusereports", "passwords", "Password");
-                //if (Results.Count == 0)
-                //{
-                //    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
-                //    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
-                //}
                 Framework.Utilities.DataManager.RegisterPlugin(this);
-            }
         }
 
         public string Name
@@ -86,7 +75,7 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
-            return (!CheckPassword(Password)) ? null : GetAbuseReport(Number);
+            return GetAbuseReport(Number);
         }
 
         /// <summary>
@@ -213,11 +202,6 @@ namespace Aurora.Services.DataService
         /// <param name="Password"></param>
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
-            if (!CheckPassword(Password))
-            {
-                return;
-            }
-
             UpdateAbuseReport(report);
         }
 
@@ -253,32 +237,6 @@ namespace Aurora.Services.DataService
 
         public void Dispose()
         {
-        }
-
-        /// <summary>
-        ///     Check the user's password, not currently used
-        /// </summary>
-        /// <param name="Password"></param>
-        /// <returns></returns>
-        private bool CheckPassword(string Password)
-        {
-            if (Password == WebPassword)
-            {
-                return true;
-            }
-            string OtherPass = Util.Md5Hash(Password);
-            if (OtherPass == WebPassword)
-            {
-                return true;
-            }
-            QueryFilter filter = new QueryFilter();
-            filter.andFilters["Method"] = "abusereports";
-            List<string> TruePassword = GD.Query(new string[] {"Password"}, "passwords", filter, null, null, null);
-
-            return !(
-                        TruePassword.Count == 0 ||
-                        OtherPass == TruePassword[0]
-                    );
         }
     }
 }
