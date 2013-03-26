@@ -44,6 +44,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using RegionSettings = Aurora.Framework.SceneInfo.RegionSettings;
 using WarpRenderer = Warp3D.Warp3D;
 
@@ -58,13 +59,14 @@ namespace Aurora.Modules.WorldMap
         private IRendering m_primMesher;
         private IScene m_scene;
         private bool m_texturePrims;
-        private bool m_useAntiAliasing = false; // TODO: Make this a config option
+        private IJ2KDecoder m_imgDecoder;
 
         #region IMapTileTerrainRenderer Members
 
         public void Initialise(IScene scene, IConfigSource config)
         {
             m_scene = scene;
+            m_imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
             m_config = config;
             ReadCacheMap();
         }
@@ -110,12 +112,6 @@ namespace Aurora.Modules.WorldMap
             int width = viewport.Width;
             int height = viewport.Height;
 
-            if (m_useAntiAliasing)
-            {
-                width *= 2;
-                height *= 2;
-            }
-
             WarpRenderer renderer = new WarpRenderer();
             warp_Object terrainObj = null;
             renderer.CreateScene(width, height);
@@ -155,14 +151,8 @@ namespace Aurora.Modules.WorldMap
                 terrainObj = CreateTerrain(renderer, textureTerrain);
                 if (drawPrimVolume && m_primMesher != null)
                 {
-//#if (!ISWIN)
-                    foreach (ISceneEntity ent in m_scene.Entities.GetEntities())
-                        foreach (ISceneChildEntity part in ent.ChildrenEntities())
-                            CreatePrim(renderer, part);
-//#else
-//                    foreach (ISceneChildEntity part in m_scene.Entities.GetEntities().SelectMany(ent => ent.ChildrenEntities()))
-//                        CreatePrim(renderer, part);
-//#endif
+                    foreach (ISceneChildEntity part in m_scene.Entities.GetEntities().SelectMany(ent => ent.ChildrenEntities()))
+                        CreatePrim(renderer, part);
                 }
             }
             catch (Exception ex)
@@ -190,7 +180,7 @@ namespace Aurora.Modules.WorldMap
             m_colors.Clear();
 
             //Force GC to try to clean this mess up
-            GC.GetTotalMemory(true);
+            GC.Collect();
 
             return bitmap;
         }
@@ -345,8 +335,7 @@ namespace Aurora.Modules.WorldMap
                         }
                         else // It's sculptie
                         {
-                            IJ2KDecoder imgDecoder = m_scene.RequestModuleInterface<IJ2KDecoder>();
-                            Image sculpt = imgDecoder.DecodeToImage(sculptAsset);
+                            Image sculpt = m_imgDecoder.DecodeToImage(sculptAsset);
                             if (sculpt != null)
                             {
                                 renderMesh = m_primMesher.GenerateFacetedSculptMesh(omvPrim, (Bitmap) sculpt,
