@@ -671,9 +671,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //return;
             }
 
-            MainConsole.Instance.Trace("[ADNE]: Running Event " + QIS.functionName + " in object " +
-                                       QIS.ID.Part.ToString() + " in region " +
-                                       QIS.ID.Part.ParentEntity.Scene.RegionInfo.RegionName);
+            if(MainConsole.Instance.IsTraceEnabled)
+                MainConsole.Instance.TraceFormat("[ADNE]: Running Event {0} in object {1} in region {2}",
+                                           QIS.functionName, QIS.ID.Part.ToString(),
+                                           QIS.ID.Part.ParentEntity.Scene.RegionInfo.RegionName);
             if (!EventSchProcessQIS(ref QIS)) //Execute the event
             {
                 //All done
