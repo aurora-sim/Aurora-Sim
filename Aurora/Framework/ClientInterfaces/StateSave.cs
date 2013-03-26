@@ -47,6 +47,6 @@ namespace Aurora.Framework.ClientInterfaces
         [ProtoMember(11)] public string State;
         [ProtoMember(12)] public bool TargetOmegaWasSet;
         [ProtoMember(13)] public UUID UserInventoryID;
-        [ProtoMember(15)] public Dictionary<string, object> Variables;
+        [ProtoMember(14)] public string Variables;
     }
 }

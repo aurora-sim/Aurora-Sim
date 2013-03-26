@@ -31,6 +31,7 @@ using System.Drawing;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
+    [Serializable]
     public class TouchEventArgs : EventArgs
     {
         public IAvatar Avatar;

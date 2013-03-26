@@ -520,4 +520,123 @@ namespace Aurora.Framework.Utilities
             return resp;
         }
     }
+
+    public static class XMLUtils
+    {
+        public static string BuildXmlResponse(Dictionary<string, object> data)
+        {
+            XmlDocument doc = new XmlDocument();
+
+            XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
+                                             "", "");
+            // Set the encoding declaration.
+            ((XmlDeclaration)xmlnode).Encoding = "UTF-8";
+            doc.AppendChild(xmlnode);
+
+            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
+                                                       "");
+
+            doc.AppendChild(rootElement);
+
+            BuildXmlData(rootElement, data);
+
+            return doc.InnerXml;
+        }
+
+        private static void BuildXmlData(XmlElement parent, Dictionary<string, object> data)
+        {
+            foreach (KeyValuePair<string, object> kvp in data)
+            {
+                if (kvp.Value == null)
+                    continue;
+
+                if (parent.OwnerDocument != null)
+                {
+                    XmlElement elem = parent.OwnerDocument.CreateElement("",
+                                                                         kvp.Key, "");
+
+                    if (kvp.Value is Dictionary<string, object>)
+                    {
+                        XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
+                                                                                 "type", "");
+                        type.Value = "List";
+
+                        elem.Attributes.Append(type);
+
+                        BuildXmlData(elem, (Dictionary<string, object>)kvp.Value);
+                    }
+                    else if (kvp.Value is Dictionary<string, string>)
+                    {
+                        XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
+                                                                                 "type", "");
+                        type.Value = "List";
+
+                        elem.Attributes.Append(type);
+#if (!ISWIN)
+                        Dictionary<string, object> value = new Dictionary<string, object>();
+                        foreach (KeyValuePair<string, string> pair in ((Dictionary<string, string>) kvp.Value))
+                            value.Add(pair.Key, pair.Value);
+#else
+                        Dictionary<string, object> value = ((Dictionary<string, string>)kvp.Value).ToDictionary<KeyValuePair<string, string>, string, object>(pair => pair.Key, pair => pair.Value);
+#endif
+                        BuildXmlData(elem, value);
+                    }
+                    else
+                    {
+                        elem.AppendChild(parent.OwnerDocument.CreateTextNode(
+                            kvp.Value.ToString()));
+                    }
+
+                    parent.AppendChild(elem);
+                }
+            }
+        }
+
+        public static Dictionary<string, object> ParseXmlResponse(string data)
+        {
+            //MainConsole.Instance.DebugFormat("[XXX]: received xml string: {0}", data);
+
+            Dictionary<string, object> ret = new Dictionary<string, object>();
+
+            XmlDocument doc = new XmlDocument();
+
+            doc.LoadXml(data);
+
+            XmlNodeList rootL = doc.GetElementsByTagName("ServerResponse");
+
+            if (rootL.Count != 1)
+                return ret;
+
+            XmlNode rootNode = rootL[0];
+
+            ret = ParseElement(rootNode);
+
+            return ret;
+        }
+
+        private static Dictionary<string, object> ParseElement(XmlNode element)
+        {
+            Dictionary<string, object> ret = new Dictionary<string, object>();
+
+            XmlNodeList partL = element.ChildNodes;
+
+            foreach (XmlNode part in partL)
+            {
+                if (part.Attributes != null)
+                {
+                    XmlNode type = part.Attributes.GetNamedItem("type");
+                    if (type == null || type.Value != "List")
+                    {
+                        ret[part.Name] = part.InnerText;
+                    }
+                    else
+                    {
+                        ret[part.Name] = ParseElement(part);
+                    }
+                }
+            }
+
+            return ret;
+        }
+    }
 }

@@ -119,7 +119,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Dictionary<string, object> vars = new Dictionary<string, object>();
             if (script.Script != null)
                 vars = script.Script.GetStoreVars();
-            stateSave.Variables = vars;
+            stateSave.Variables = XMLUtils.BuildXmlResponse(vars);
 
             //Plugins
             stateSave.Plugins =
@@ -149,7 +149,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.TargetOmegaWasSet = save.TargetOmegaWasSet;
 
             if (save.Variables != null && instance.Script != null)
-                instance.Script.SetStoreVars(save.Variables);
+                instance.Script.SetStoreVars(XMLUtils.ParseXmlResponse(save.Variables));
         }
 
         public StateSave FindScriptStateSave(ScriptData script)
