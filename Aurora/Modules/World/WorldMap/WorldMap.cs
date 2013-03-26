@@ -716,7 +716,7 @@ namespace Aurora.Modules.WorldMap
                     if (image != null)
                     {
                         // Save to bitmap
-                        mapTexture = new Bitmap(image);
+                        mapTexture = (Bitmap)image;
 
                         EncoderParameters myEncoderParameters = new EncoderParameters();
                         myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
@@ -738,8 +738,6 @@ namespace Aurora.Modules.WorldMap
             {
                 // Reclaim memory, these are unmanaged resources
                 // If we encountered an exception, one or more of these will be null
-                mapTexture.Dispose();
-
                 if (image != null)
                     image.Dispose();
 
