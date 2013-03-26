@@ -264,7 +264,7 @@ namespace Aurora.Framework.Services
             map["Success"] = Success;
             map["Reason"] = Reason;
             map["RequestedUDPPort"] = RequestedUDPPort;
-            map["CapsURIs"] = CapsURIs;
+            map["CapsURIs"] = CapsURIs ?? new OSDMap();
             map["OurIPForClient"] = OurIPForClient;
             return map;
         }
@@ -491,8 +491,10 @@ namespace Aurora.Framework.Services
             OSDMap map = new OSDMap();
             map["Method"] = "RetrieveAgentResponse";
             map["Success"] = Success;
-            map["AgentData"] = AgentData.ToOSD();
-            map["CircuitData"] = CircuitData.ToOSD();
+            if (AgentData != null)
+                map["AgentData"] = AgentData.ToOSD();
+            if (CircuitData != null)
+                map["CircuitData"] = CircuitData.ToOSD();
             return map;
         }
 
