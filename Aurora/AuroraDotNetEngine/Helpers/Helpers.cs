@@ -297,7 +297,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     /// <summary>
     ///     Queue item structure
     /// </summary>
-    public class QueueItemStruct
+    public struct QueueItemStruct
     {
         public EnumeratorInfo CurrentlyAt;
         public ScriptEventsProcData EventsProcData;
@@ -313,9 +313,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         //Parameters to fire the function
         public object[] param;
 
-        public bool Done = false;
-        public bool InProgress = false;
-        public int EventNumber = 0;
+        public bool Done;
+        public bool InProgress;
+        public int EventNumber;
     }
 
     public struct StateQueueItem

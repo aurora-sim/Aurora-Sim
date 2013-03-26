@@ -519,7 +519,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 int numSleepScriptsProcessed = 0;
                 //const int minNumScriptsToProcess = 1;
                 //processMoreScripts:
-                QueueItemStruct QIS = null;
+                QueueItemStruct QIS = new QueueItemStruct();
+                bool found = false;
 
                 //Check whether it is time, and then do the thread safety piece
                 if (Interlocked.CompareExchange(ref m_CheckingSleepers, 1, 0) == 0)
@@ -528,20 +529,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         if (SleepingScriptEvents.Count > 0)
                         {
-                            QIS = SleepingScriptEvents.Dequeue().Value;
                             restart:
+                            QIS = SleepingScriptEvents.Dequeue().Value;
+                            found = true;
                             if (QIS.RunningNumber > 2 && SleepingScriptEventCount > 0 &&
                                 numSleepScriptsProcessed < SleepingScriptEventCount)
                             {
                                 QIS.RunningNumber = 1;
                                 SleepingScriptEvents.Enqueue(QIS, QIS.EventsProcData.TimeCheck.Ticks);
                                 QIS = SleepingScriptEvents.Dequeue().Value;
-                                numSleepScriptsProcessed++;
+                                numSleepScriptsProcessed++;found = false;
+                                found = false;
                                 goto restart;
                             }
                         }
                     }
-                    if (QIS != null)
+                    if (found)
                     {
                         if (QIS.EventsProcData.TimeCheck.Ticks < DateTime.Now.Ticks)
                         {
@@ -584,7 +587,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         }
                     }
                 }
-                QIS = null;
                 int timeToSleep = 5;
                 //If we can, get the next event
                 if (Interlocked.CompareExchange(ref m_CheckingEvents, 1, 0) == 0)

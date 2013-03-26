@@ -54,6 +54,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             m_ScriptEngine = engine;
 
+            NextEventDelay = new Dictionary<string, long>();
             NextEventDelay.Add("at_rot_target", 0);
             NextEventDelay.Add("at_target", 0);
             NextEventDelay.Add("attach", 0);
@@ -89,21 +90,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             NextEventDelay.Add("touch", 0);
             NextEventDelay.Add("touch_end", 0);
             NextEventDelay.Add("touch_start", 0);
+
+            ChangedInQueue = new List<Changed>();
+            CollisionEventDelayTicks = 0.13;
+            DefaultEventDelayTicks = 0.05;
+            PluginData = null;
+            ScriptEventLock = new object();
+            TimerEventDelayTicks = 0.01;
+            TouchEventDelayTicks = 0.1;
+            Loading = true;
+            Running = true;
         }
 
         #endregion
 
         #region Declares
 
-        private readonly Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
+        private Dictionary<string, long> NextEventDelay;
 
         //This is the UUID of the actual script.
         private readonly ScriptEngine m_ScriptEngine;
-        public Dictionary<string, IScriptApi> Apis = new Dictionary<string, IScriptApi>();
+        public Dictionary<string, IScriptApi> Apis;
         public AppDomain AppDomain;
         public string AssemblyName;
-        public List<Changed> ChangedInQueue = new List<Changed>();
-        private double CollisionEventDelayTicks = 0.13;
+        public List<Changed> ChangedInQueue;
+        private double CollisionEventDelayTicks;
         public bool CollisionInQueue;
         public bool TimerInQueue;
         public bool TouchInQueue;
@@ -120,8 +131,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool RemoveTouchEvents;
         public bool Compiled;
         public int ControlEventsInQueue;
-        private double DefaultEventDelayTicks = 0.05;
-        private string DefaultState = "";
+        private double DefaultEventDelayTicks;
+        private string DefaultState;
         public bool Disabled;
 
 
@@ -131,24 +142,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public UUID ItemID;
         public int LastControlLevel;
         public DetectParams[] LastDetectParams;
-        public bool Loading = true;
+        public bool Loading;
         public long NextEventTimeTicks;
         public ISceneChildEntity Part;
-        public OSDMap PluginData = new OSDMap();
+        public OSDMap PluginData;
         public bool PostOnRez;
-        public UUID RezzedFrom = UUID.Zero; // If rezzed from llRezObject, this is not Zero
-        public bool Running = true;
+        public UUID RezzedFrom; // If rezzed from llRezObject, this is not Zero
+        public bool Running;
         public IScript Script;
-        public object ScriptEventLock = new object();
+        public object ScriptEventLock;
         public int ScriptScore;
-        public string Source = "";
+        public string Source;
         public int StartParam;
         public bool StartedFromSavedState;
         public string State;
         public bool Suspended;
         public bool TargetOmegaWasSet;
-        private double TimerEventDelayTicks = 0.01;
-        private double TouchEventDelayTicks = 0.1;
+        private double TimerEventDelayTicks;
+        private double TouchEventDelayTicks;
         private const long TicksPerMillisecond = 1000;
         public UUID UserInventoryItemID;
 

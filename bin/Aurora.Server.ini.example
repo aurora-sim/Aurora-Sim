@@ -91,6 +91,21 @@
 
     InstantMessagingServiceOpenServerHandler = true
     InstantMessagingServiceServerHandlerPort = 8014
+	
+	
+	;; Stuff to set up Aurora-Server to run all of the services
+	;; Just uncomment all of these to have everything run in Aurora.Server
+	;;  such that you don't have to run any of the other server.exe files.
+    ;AssetServiceOpenServerHandler = true
+    ;AssetServiceServerHandlerPort = 8010
+    ;AvatarServiceOpenServerHandler = true
+    ;AvatarServiceServerHandlerPort = 8011
+    ;GridServiceOpenServerHandler = true
+    ;GridServiceServerHandlerPort = 8012
+    ;InventoryServiceOpenServerHandler = true
+    ;InventoryServiceServerHandlerPort = 8013
+    ;UserAccountServiceOpenServerHandler = true
+    ;UserAccountServiceServerHandlerPort = 8015
 
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector
@@ -146,31 +161,6 @@
     CacheEnabled = true
     ;; The time for cached images to expire (in hours)
     CacheExpires = 24
-
-[RegionPermissions]
-    ;; The time before handlers will need to reregister so that they do not get killed (in hours)
-    DefaultTimeout = 24
-    ;; The default threat level for regions, can be None, Low, Medium, High (the default), or Full (not recommended, unless you are in a secure environment)
-    DefaultRegionThreatLevel = High
-
-    ;; Definitions for threat levels
-    ;Threat_Level_None =""
-    ;Threat_Level_Low = ""
-    ;Threat_Level_Medium = ""
-    ;Threat_Level_High = ""
-    ;Threat_Level_Full = ""
-
-    Threat_Level_None = 
-    Threat_Level_Low = 
-    Threat_Level_Medium = 
-    Threat_Level_High = 
-    Threat_Level_Full = 
-
-[BlackHole]
-    CacheDirector = "C:\aurora\admin\BHAssets\"
-    BackupCacheDirector = "C:\aurora\admin\BHAssetsBackup\"
-    AssetsAreOldAfterHowManyDays = 30
-    PointInventoryToParentAssets = true
     
 [VoiceIncludes]
     ;; If you would like to set up voice for the entire grid, select one of these includes depending on which voice module you wish to set up
