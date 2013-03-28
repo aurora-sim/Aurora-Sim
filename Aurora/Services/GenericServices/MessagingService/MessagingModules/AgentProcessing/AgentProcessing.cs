@@ -480,6 +480,10 @@ namespace Aurora.Services
                     }
                     if (result)
                         oldRegionService.Disabled = false;
+                    else
+                    {
+                        clientCaps.RemoveCAPS(neighbor.RegionID);//Kill the bad client!
+                    }
                     reason = "";
                     return result;
                 }
