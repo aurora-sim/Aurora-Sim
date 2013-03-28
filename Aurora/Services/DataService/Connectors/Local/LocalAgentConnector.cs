@@ -85,7 +85,7 @@ namespace Aurora.Services.DataService
             else
                 agent = new IAgentInfo();
 
-            object remoteValue = DoRemoteForUser(agentID, agentID);
+            object remoteValue = DoRemote(agentID);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 m_cache.Cache(agentID, (IAgentInfo) remoteValue);

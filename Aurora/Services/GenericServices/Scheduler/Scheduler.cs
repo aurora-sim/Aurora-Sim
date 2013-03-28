@@ -122,7 +122,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteCalls)
             {
-                DoRemote(id);
+                DoRemotePost(id);
                 return;
             }
             m_database.SchedulerRemove(id);

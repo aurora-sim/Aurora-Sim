@@ -316,7 +316,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteOnly)
             {
-                DoRemoteByURLForced("InstantMessageServerURI", groupID);
+                DoRemoteCallGet(true, "InstantMessageServerURI", groupID);
                 return;
             }
 
@@ -358,7 +358,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteOnly)
             {
-                DoRemoteByURLForced("InstantMessageServerURI", AgentID, im);
+                DoRemoteCallGet(true, "InstantMessageServerURI", AgentID, im);
                 return;
             }
 
@@ -510,7 +510,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteOnly)
             {
-                DoRemoteByURLForced("InstantMessageServerURI", agentID, im);
+                DoRemoteCallGet(true, "InstantMessageServerURI", agentID, im);
                 return;
             }
 
@@ -571,7 +571,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteOnly)
             {
-                DoRemoteByURLForced("InstantMessageServerURI", agentID, im);
+                DoRemoteCallGet(true, "InstantMessageServerURI", agentID, im);
                 return;
             }
 

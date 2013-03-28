@@ -1257,7 +1257,7 @@ namespace Aurora.Services.DataService
         {
             if (m_doRemoteOnly)
             {
-                DoRemote(user, EventID);
+                DoRemotePost(user, EventID);
                 return;
             }
 
@@ -1269,7 +1269,7 @@ namespace Aurora.Services.DataService
         {
             if (m_doRemoteOnly)
             {
-                DoRemote(user, EventID);
+                DoRemotePost(user, EventID);
                 return;
             }
 

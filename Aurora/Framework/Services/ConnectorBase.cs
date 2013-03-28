@@ -132,45 +132,69 @@ namespace Aurora.Framework.Services
 
         public object DoRemote(params object[] o)
         {
-            return DoRemoteCall(false, "ServerURI", o);
-        }
-
-        public object DoRemoteForced(params object[] o)
-        {
-            return DoRemoteCall(true, "ServerURI", o);
-        }
-
-        public object DoRemoteForUser(UUID userID, params object[] o)
-        {
-            return DoRemoteCall(false, "ServerURI", o);
+            return DoRemoteCallGet(false, "ServerURI", o);
         }
 
         public object DoRemoteByURL(string url, params object[] o)
         {
-            return DoRemoteCall(false, url, o);
+            return DoRemoteCallGet(false, url, o);
         }
 
-        public object DoRemoteByURLForced(string url, params object[] o)
+        public void DoRemotePost(params object[] o)
         {
-            return DoRemoteCall(true, url, o);
+            DoRemoteCallPost(false, "ServerURI", o);
         }
 
-        public object DoRemoteCall(bool forced, string url, params object[] o)
+        public void DoRemotePostByURL(string url, params object[] o)
+        {
+            DoRemoteCallPost(false, url, o);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="forced">Whether this remote call is forced (if false, it will only call if m_doRemoteCalls is true)</param>
+        /// <param name="url">The URL to call</param>
+        /// <param name="o">The objects to send</param>
+        /// <returns></returns>
+        public object DoRemoteCallGet(bool forced, string url, params object[] o)
         {
             if (!m_doRemoteCalls && !forced)
                 return null;
-            StackTrace stackTrace = new StackTrace();
-            int upStack = 1;
-            StackFrame frame = stackTrace.GetFrame(1);
-            if (frame.GetMethod().Name.Contains("DoRemote"))
-                upStack = 2;
             MethodInfo method;
+            OSDMap map;
+            string serverURL;
+            if (!PrepRemoteCall(url, o, out method, out map, out serverURL))
+                return null;
+
+            return GetResponse(method, map, serverURL);
+        }
+        
+        public void DoRemoteCallPost(bool forced, string url, params object[] o)
+        {
+            MethodInfo method;
+            OSDMap map;
+            string serverURL;
+            if (!PrepRemoteCall(url, o, out method, out map, out serverURL))
+                return;
+
+            WebUtils.PostToService(serverURL, map);
+        }
+
+        private bool PrepRemoteCall(string url, object[] o, out MethodInfo method, out OSDMap map, out string serverURL)
+        {
+            StackTrace stackTrace = new StackTrace();
+            int upStack = 2;
+            StackFrame frame = stackTrace.GetFrame(2);
+            if (frame.GetMethod().Name.Contains("DoRemote"))
+                upStack = 3;
+
             CanBeReflected reflection;
             GetReflection(upStack, stackTrace, out method, out reflection);
             string methodName = reflection != null && reflection.RenamedMethod != ""
                                     ? reflection.RenamedMethod
                                     : method.Name;
-            OSDMap map = new OSDMap();
+            map = new OSDMap();
             map["Method"] = methodName;
             if (reflection != null && reflection.UsePassword)
                 map["Password"] = m_password;
@@ -181,7 +205,8 @@ namespace Aurora.Framework.Services
                 MainConsole.Instance.ErrorFormat(
                     "FAILED TO GET VALID NUMBER OF PARAMETERS TO SEND REMOTELY FOR {0}, EXPECTED {1}, GOT {2}",
                     methodName, parameters.Length, o.Length);
-                return null;
+                serverURL = "";
+                return false;
             }
             foreach (ParameterInfo info in parameters)
             {
@@ -193,9 +218,14 @@ namespace Aurora.Framework.Services
                 i++;
             }
 
-            string serverURL = m_configService.FindValueOf(url);
+            serverURL = m_configService.FindValueOf(url);
             if (serverURL == "")
                 serverURL = url;
+            return true;
+        }
+
+        private object GetResponse(MethodInfo method, OSDMap map, string serverURL)
+        {
             OSDMap response = null;
 
             for (int index = 0; index < m_OSDRequestTryCount; index++)
@@ -208,20 +238,20 @@ namespace Aurora.Framework.Services
             object inst = null;
             try
             {
-                if (method.ReturnType == typeof (string))
+                if (method.ReturnType == typeof(string))
                     inst = string.Empty;
-                else if (method.ReturnType == typeof (void))
+                else if (method.ReturnType == typeof(void))
                     return null;
-                else if (method.ReturnType == typeof (System.Drawing.Image))
+                else if (method.ReturnType == typeof(System.Drawing.Image))
                     inst = null;
-                else if (method.ReturnType == typeof (byte[]))
+                else if (method.ReturnType == typeof(byte[]))
                     return response["Value"].AsBinary();
                 else
                     inst = Activator.CreateInstance(method.ReturnType);
             }
             catch
             {
-                if (method.ReturnType == typeof (string))
+                if (method.ReturnType == typeof(string))
                     inst = string.Empty;
             }
             if (response["Value"] == "null")
@@ -229,7 +259,7 @@ namespace Aurora.Framework.Services
             var instance = inst as IDataTransferable;
             if (instance != null)
             {
-                instance.FromOSD((OSDMap) response["Value"]);
+                instance.FromOSD((OSDMap)response["Value"]);
                 return instance;
             }
             return Util.OSDToObject(response["Value"], method.ReturnType);
@@ -244,7 +274,7 @@ namespace Aurora.Framework.Services
                 GetReflection(upStack + 1, stackTrace, out method, out reflection);
         }
 
-        public bool GetOSDMap(string url, OSDMap map, out OSDMap response)
+        private bool GetOSDMap(string url, OSDMap map, out OSDMap response)
         {
             response = null;
             string resp = WebUtils.PostToService(url, map);

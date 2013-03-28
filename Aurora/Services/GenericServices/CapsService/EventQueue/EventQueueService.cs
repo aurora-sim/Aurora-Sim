@@ -98,7 +98,7 @@ namespace Aurora.Services
         public virtual void EnqueueInternal(string o, UUID agentID, UUID regionID)
         {
             if (m_doRemoteCalls && m_doRemoteOnly)
-                DoRemote(o, agentID, regionID);
+                DoRemotePost(o, agentID, regionID);
             else
                 Enqueue(o, agentID, regionID);
         }
