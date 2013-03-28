@@ -119,7 +119,7 @@ namespace Aurora.BotManager
             app.ClearAttachments();
             foreach (AvatarAttachment t in attachments)
             {
-                InventoryItemBase item = scene.InventoryService.GetItem(UUID.Zero, t.ItemID);
+                InventoryItemBase item = scene.InventoryService.GetItem(cloneAppearanceFrom, t.ItemID);
                 if (item != null)
                 {
                     item.ID = UUID.Random();
@@ -144,6 +144,10 @@ namespace Aurora.BotManager
             //Move them
             SP.Teleport(startPos);
 
+            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
+            appearance.Appearance = app;
+            appearance.InitialHasWearablesBeenSent = true;
+
             foreach (var presence in scene.GetScenePresences())
                 presence.SceneViewer.QueuePresenceForUpdate(SP, PrimUpdateFlags.ForcedFullUpdate);
             IAttachmentsModule attModule = SP.Scene.RequestModuleInterface<IAttachmentsModule>();
@@ -151,15 +155,11 @@ namespace Aurora.BotManager
                 foreach (AvatarAttachment att in attachments)
                     attModule.RezSingleAttachmentFromInventory(SP.ControllingClient, att.ItemID, att.AssetID, 0, true);
 
-            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
-            appearance.Appearance = app;
-            appearance.InitialHasWearablesBeenSent = true;
-
             //Save them in the bots list
             m_bots.Add(m_character.AgentId, bot);
             AddTagToBot(m_character.AgentId, "AllBots", bot.AvatarCreatorID);
 
-            MainConsole.Instance.Info("[RexBotManager]: Added bot " + m_character.Name + " to scene.");
+            MainConsole.Instance.Info("[BotManager]: Added bot " + m_character.Name + " to scene.");
             //Return their UUID
             return m_character.AgentId;
         }

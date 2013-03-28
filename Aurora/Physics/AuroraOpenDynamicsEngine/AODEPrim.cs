@@ -153,7 +153,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public AuroraODEPrim(ISceneChildEntity entity, AuroraODEPhysicsScene parent_scene, bool pisPhysical)
         {
             m_vehicle = new AuroraODEDynamics();
-            //gc = GCHandle.Alloc(prim_geom, GCHandleType.Pinned);
 
             // correct for changed timestep
             PID_D /= (parent_scene.ODE_STEPSIZE*50f); // original ode fps of 50

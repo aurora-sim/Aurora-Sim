@@ -119,8 +119,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         protected readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
 
-        protected readonly Dictionary<UUID, PhysicsActor> _collisionEventDictionary =
-            new Dictionary<UUID, PhysicsActor>();
+        protected readonly ConcurrentDictionary<UUID, PhysicsActor> _collisionEventDictionary =
+            new ConcurrentDictionary<UUID, PhysicsActor>();
 
         protected readonly object _collisionEventListLock = new object();
 
@@ -189,8 +189,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected bool IsLocked;
         protected ConcurrentQueue<PhysicsObject> RemoveQueue = new ConcurrentQueue<PhysicsObject>();
         protected ConcurrentQueue<PhysicsObject> DeleteQueue = new ConcurrentQueue<PhysicsObject>();
-        protected readonly HashSet<PhysicsActor> ActiveAddCollisionQueue = new HashSet<PhysicsActor>();
-        protected readonly HashSet<PhysicsActor> ActiveRemoveCollisionQueue = new HashSet<PhysicsActor>();
 
         internal float AvDecayTime = 0.95f;
 
@@ -910,27 +908,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void addCollisionEventReporting(PhysicsActor obj)
         {
-            if (IsLocked)
-                ActiveAddCollisionQueue.Add(obj);
-            else
-            {
-                lock (_collisionEventListLock)
-                {
-                    if (!_collisionEventDictionary.ContainsKey(obj.UUID))
-                        _collisionEventDictionary.Add(obj.UUID, obj);
-                }
-            }
+            if (!_collisionEventDictionary.ContainsKey(obj.UUID))
+                _collisionEventDictionary.TryAdd(obj.UUID, obj);
         }
 
         public void remCollisionEventReporting(PhysicsActor obj)
         {
-            if (IsLocked)
-                ActiveRemoveCollisionQueue.Add(obj);
-            else
-            {
-                lock (_collisionEventListLock)
-                    _collisionEventDictionary.Remove(obj.UUID);
-            }
+            _collisionEventDictionary.TryRemove(obj.UUID, out obj);
         }
 
         #endregion
@@ -1447,13 +1431,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     NoParam del;
                     while (SimulationChangesQueue.TryDequeue(out del) && m_scene.ShouldRunHeartbeat)
-                        try
-                        {
-                            del();
-                        }
-                        catch
-                        {
-                        }
+                        try {  del(); } catch { }
 
                     if (SimulationChangesQueue.Count == 0 && !m_hasSetUpPrims)
                     {
@@ -1507,27 +1485,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 p.setPrimForDeletion();
             }
 
-            if (ActiveAddCollisionQueue.Count > 0)
-            {
-                lock (_collisionEventListLock)
-                {
-                    foreach (
-                        PhysicsActor obj in
-                            ActiveAddCollisionQueue.Where(obj => !_collisionEventDictionary.ContainsKey(obj.UUID)))
-                        _collisionEventDictionary.Add(obj.UUID, obj);
-                }
-                ActiveAddCollisionQueue.Clear();
-            }
-            if (ActiveRemoveCollisionQueue.Count > 0)
-            {
-                lock (_collisionEventListLock)
-                {
-                    foreach (PhysicsActor obj in ActiveRemoveCollisionQueue)
-                        _collisionEventDictionary.Remove(obj.UUID);
-                }
-                ActiveRemoveCollisionQueue.Clear();
-            }
-
             if (!DisableCollisions)
             {
                 foreach (AuroraODECharacter av in _characters.Where(av => av != null))
@@ -1547,13 +1504,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
                     actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
             }
-        }
-
-        private int CollectTime(NoParam del)
-        {
-            int time = Util.EnvironmentTickCount();
-            del();
-            return Util.EnvironmentTickCountSubtract(time);
         }
 
         #endregion

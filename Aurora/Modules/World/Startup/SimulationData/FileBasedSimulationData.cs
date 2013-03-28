@@ -168,11 +168,11 @@ namespace Aurora.Modules
             {
                 IGridRegisterModule gridRegister = m_scene.RequestModuleInterface<IGridRegisterModule>();
                 gridRegister.UpdateGridRegion(m_scene);
+
+                ForceBackup();
+
+                MainConsole.Instance.Info("[FileBasedSimulationData]: Save completed.");
             }
-
-            ForceBackup();
-
-            MainConsole.Instance.Info("[FileBasedSimulationData]: Save completed.");
 
             return info;
         }
@@ -417,7 +417,7 @@ namespace Aurora.Modules
         /// <param name="isOldSave"></param>
         protected virtual void SaveBackup(bool isOldSave)
         {
-            if (m_scene.RegionInfo.HasBeenDeleted)
+            if (m_scene == null || m_scene.RegionInfo.HasBeenDeleted)
                 return;
             IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule>();
             if (backupModule != null && backupModule.LoadingPrims) //Something is changing lots of prims
