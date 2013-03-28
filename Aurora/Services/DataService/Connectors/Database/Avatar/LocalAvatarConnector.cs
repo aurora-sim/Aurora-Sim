@@ -96,8 +96,10 @@ namespace Aurora.Services.DataService
             {
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["PrincipalID"] = PrincipalID;
-                GD.Delete(m_realm, filter);
-                GD.Insert(m_realm, new[] {PrincipalID.ToString(), OSDParser.SerializeJsonString(data.ToOSD())});
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values.Add("PrincipalID", PrincipalID);
+                values.Add("Appearance", OSDParser.SerializeJsonString(data.ToOSD()));
+                GD.Replace(m_realm, values);
             }
             return true;
         }
