@@ -658,8 +658,11 @@ namespace Aurora.Framework.ConsoleFramework
                     (DateTime.Now.Second < 10 ? "0" + DateTime.Now.Second : DateTime.Now.Second.ToString()), text);
 
                 Console.WriteLine(text);
-                m_logFile.WriteLine(text);
-                m_logFile.Flush();
+                if (m_logFile != null)
+                {
+                    m_logFile.WriteLine(text);
+                    m_logFile.Flush();
+                }
             }
         }
 
@@ -729,32 +732,32 @@ namespace Aurora.Framework.ConsoleFramework
 
         public bool IsDebugEnabled
         {
-            get { return Threshold < Level.Debug; }
+            get { return Threshold <= Level.Debug; }
         }
 
         public bool IsErrorEnabled
         {
-            get { return Threshold < Level.Error; }
+            get { return Threshold <= Level.Error; }
         }
 
         public bool IsFatalEnabled
         {
-            get { return Threshold < Level.Fatal; }
+            get { return Threshold <= Level.Fatal; }
         }
 
         public bool IsInfoEnabled
         {
-            get { return Threshold < Level.Info; }
+            get { return Threshold <= Level.Info; }
         }
 
         public bool IsWarnEnabled
         {
-            get { return Threshold < Level.Warn; }
+            get { return Threshold <= Level.Warn; }
         }
 
         public bool IsTraceEnabled
         {
-            get { return Threshold < Level.Trace; }
+            get { return Threshold <= Level.Trace; }
         }
 
         public void Debug(object message)

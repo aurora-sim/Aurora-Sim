@@ -302,32 +302,32 @@ namespace Aurora.Framework.ConsoleFramework
 
         public bool IsDebugEnabled
         {
-            get { return Threshold < Level.Debug; }
+            get { return Threshold <= Level.Debug; }
         }
 
         public bool IsErrorEnabled
         {
-            get { return Threshold < Level.Error; }
+            get { return Threshold <= Level.Error; }
         }
 
         public bool IsFatalEnabled
         {
-            get { return Threshold < Level.Fatal; }
+            get { return Threshold <= Level.Fatal; }
         }
 
         public bool IsInfoEnabled
         {
-            get { return Threshold < Level.Info; }
+            get { return Threshold <= Level.Info; }
         }
 
         public bool IsWarnEnabled
         {
-            get { return Threshold < Level.Warn; }
+            get { return Threshold <= Level.Warn; }
         }
 
         public bool IsTraceEnabled
         {
-            get { return Threshold < Level.Trace; }
+            get { return Threshold <= Level.Trace; }
         }
 
         public void Debug(object message)

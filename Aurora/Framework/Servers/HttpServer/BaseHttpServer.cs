@@ -60,6 +60,7 @@ namespace Aurora.Framework.Servers.HttpServer
         protected Dictionary<string, PollServiceEventArgs> m_pollHandlers =
             new Dictionary<string, PollServiceEventArgs>();
 
+        public Action<HttpListenerContext> OnOverrideRequest = null;
         protected bool m_isSecure;
         protected uint m_port;
         protected string m_hostName;
@@ -1146,7 +1147,10 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 NotSocketErrors = 0;
                 m_internalServer = new HttpListenerManager(1, Secure);
-                m_internalServer.ProcessRequest += OnRequest;
+                if (OnOverrideRequest != null)
+                    m_internalServer.ProcessRequest += OnOverrideRequest;
+                else
+                    m_internalServer.ProcessRequest += OnRequest;
 
                 m_internalServer.Start(m_port);
 

@@ -52,7 +52,6 @@ namespace Aurora.Framework.Physics
         void releaseSourceMeshData();
         void releasePinned();
         void Append(IMesh newMesh);
-        void TransformLinear(float[,] matrix, float[] offset);
         Vector3 GetCentroid();
 
         OpenMetaverse.StructuredData.OSD Serialize();

@@ -92,8 +92,11 @@ namespace Aurora.Framework.Services
                                                                                  return group;
                                                                              });
 
-            Appearance = new AvatarAppearance();
-            Appearance.FromOSD((OSDMap)map["Appearance"]);
+            if (map.ContainsKey("Appearance"))
+            {
+                Appearance = new AvatarAppearance();
+                Appearance.FromOSD((OSDMap)map["Appearance"]);
+            }
         }
 
         public override OSDMap ToOSD()
@@ -106,7 +109,8 @@ namespace Aurora.Framework.Services
             map["GroupMemberships"] = GroupMemberships.ToOSDArray();
             map["OfflineMessages"] = OfflineMessages.ToOSDArray();
             map["MuteList"] = MuteList.ToOSDArray();
-            map["Appearance"] = Appearance.ToOSD();
+            if(Appearance != null)
+                map["Appearance"] = Appearance.ToOSD();
             return map;
         }
     }
