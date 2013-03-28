@@ -599,6 +599,8 @@ namespace Aurora.Services
                                                     agentData, out reason))
                         {
                             ResetFromTransit(AgentID);
+                            SimulationService.FailedToTeleportAgent(regionCaps.Region, destination.RegionID,
+                                                                    AgentID, reason, false);
                             return false;
                         }
                     }
@@ -886,6 +888,24 @@ namespace Aurora.Services
 
                     bool result = false;
 
+                    IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionID);
+
+                    if (otherRegion == null)
+                    {
+                        //If we failed before, attempt again
+                        if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref crossingRegion, 0,
+                                                    cAgent, out reason))
+                        {
+                            ResetFromTransit(AgentID);
+                            SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region,
+                                                                    crossingRegion.RegionID,
+                                                                    AgentID, reason, true);
+                            return false;
+                        }
+                        else
+                            otherRegion = clientCaps.GetCapsService(crossingRegion.RegionID);
+                    }
+
                     //We need to get it from the grid service again so that we can get the simulation service urls correctly
                     // as regions don't get that info
                     crossingRegion = GridService.GetRegionByUUID(clientCaps.AccountInfo.AllScopeIDs,
@@ -909,24 +929,6 @@ namespace Aurora.Services
 
                         int YOffset = crossingRegion.RegionLocY - requestingRegionCaps.RegionY;
                         pos.Y += YOffset;
-
-                        IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionID);
-
-                        if (otherRegion == null)
-                        {
-                            if (
-                                !InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref crossingRegion, 0,
-                                                        cAgent, out reason))
-                            {
-                                ResetFromTransit(AgentID);
-                                SimulationService.FailedToTeleportAgent(requestingRegionCaps.Region,
-                                                                        crossingRegion.RegionID,
-                                                                        AgentID, reason, true);
-                                return false;
-                            }
-                            else
-                                otherRegion = clientCaps.GetCapsService(crossingRegion.RegionID);
-                        }
 
                         //Tell the client about the transfer
                         EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity,

@@ -95,7 +95,13 @@ namespace Aurora.Services
                 resetEvent.Set();
             });
             bool success = resetEvent.WaitOne(10000);
-            if (!success) return false;
+            if (!success || result == null)
+            {
+                response = new CreateAgentResponse();
+                response.Reason = "Could not connect to destination";
+                response.Success = false;
+                return false;
+            }
 
             response = new CreateAgentResponse();
             response.FromOSD(result);
