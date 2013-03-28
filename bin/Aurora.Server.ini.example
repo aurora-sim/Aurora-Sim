@@ -81,7 +81,7 @@
     AvatarServiceOpenServerHandler = false
     GridServiceOpenServerHandler = false
     InventoryServiceOpenServerHandler = false
-    UserAccountServiceOpenServerHandler = false
+    ;UserAccountServiceOpenServerHandler = false
 
     LLLoginHandlerPort = 8002
 
@@ -91,6 +91,9 @@
 
     InstantMessagingServiceOpenServerHandler = true
     InstantMessagingServiceServerHandlerPort = 8014
+	
+    UserAccountServiceOpenServerHandler = true
+    UserAccountServiceServerHandlerPort = 8015
 	
 	
 	;; Stuff to set up Aurora-Server to run all of the services
