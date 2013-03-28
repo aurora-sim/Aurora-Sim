@@ -52,111 +52,12 @@ namespace Aurora.Simulation.Base
             return true;
         }
 
-        public void RunMigration1()
+        //Next: 9
+
+        public void RunMigration9()
         {
-            if (File.Exists("Physics//OpenSim.Region.Physics.BasicPhysicsPlugin.dll"))
-                File.Delete("Physics//OpenSim.Region.Physics.BasicPhysicsPlugin.dll");
-            if (File.Exists("Physics//OpenSim.Region.Physics.Meshing.dll"))
-                File.Delete("Physics//OpenSim.Region.Physics.Meshing.dll");
-            if (File.Exists("OpenSim.Framework.dll"))
-                File.Delete("OpenSim.Framework.dll");
-            if (File.Exists("OpenSim.Region.CoreModules.dll"))
-                File.Delete("OpenSim.Region.CoreModules.dll");
-            //rsmythe: djphil, this line is for you!
-            if (File.Exists("Aurora.Protection.dll"))
-                File.Delete("Aurora.Protection.dll");
-
-            foreach (string path in Directory.GetDirectories("ScriptEngines//"))
-            {
-                Directory.Delete(path, true);
-            }
-        }
-
-        public void RunMigration2()
-        {
-            // Asset format changed, broke existing cached assets
-            if (!Directory.Exists("assetcache//")) return;
-            foreach (string path in Directory.GetDirectories("assetcache//"))
-            {
-                Directory.Delete(path, true);
-            }
-        }
-
-        public void RunMigration3()
-        {
-            IniMigrator.UpdateIniFile("Configuration/Standalone/Standalone.ini", "AuroraConnectors",
-                                      new[] {"DoRemoteCalls", "AllowRemoteCalls"}, new[] {"False", "False"},
-                                      new[] {MigratorAction.Add, MigratorAction.Add});
-
-            IniMigrator.UpdateIniFile("Configuration/Standalone/StandaloneIWC.ini", "AuroraConnectors",
-                                      new[] {"DoRemoteCalls", "AllowRemoteCalls"}, new[] {"False", "False"},
-                                      new[] {MigratorAction.Add, MigratorAction.Add});
-
-            IniMigrator.UpdateIniFile("Configuration/Grid/Grid.ini", "AuroraConnectors",
-                                      new[] {"DoRemoteCalls", "AllowRemoteCalls"}, new[] {"True", "False"},
-                                      new[] {MigratorAction.Add, MigratorAction.Add});
-
-            IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "AuroraConnectors",
-                                      new[] {"DoRemoteCalls", "AllowRemoteCalls"}, new[] {"False", "True"},
-                                      new[] {MigratorAction.Add, MigratorAction.Add});
-        }
-
-        public void RunMigration4()
-        {
-            IniMigrator.UpdateIniFile("Configuration/Grid/Grid.ini", "AuroraConnectors",
-                                      new[] {"EstateConnector"}, new[] {"LocalConnector"},
-                                      new[] {MigratorAction.Add, MigratorAction.Add});
-            IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "RegionPermissions",
-                                      new[] {"DefaultRegionThreatLevel"}, new[] {"High"},
-                                      new[] {MigratorAction.Add, MigratorAction.Add});
-        }
-
-        public void RunMigration5()
-        {
-            IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "RegionPermissions",
-                                      new[]
-                                          {
-                                              "Threat_Level_None", "Threat_Level_Low", "Threat_Level_Medium",
-                                              "Threat_Level_High", "Threat_Level_Full"
-                                          },
-                                      new[] {"", "", "", "", ""},
-                                      new[]
-                                          {
-                                              MigratorAction.Add, MigratorAction.Add, MigratorAction.Add,
-                                              MigratorAction.Add, MigratorAction.Add
-                                          });
-        }
-
-        public void RunMigration6()
-        {
-            // Asset format changed to protobuf, broke existing cached assets
-            if (!Directory.Exists("assetcache//")) return;
-            foreach (string path in Directory.GetDirectories("assetcache//"))
-            {
-                Directory.Delete(path, true);
-            }
-        }
-
-        public void RunMigration7()
-        {
-            // Asset type was wrong, need to nuke
-            if (!Directory.Exists("assetcache//")) return;
-            foreach (string path in Directory.GetDirectories("assetcache//"))
-            {
-                Directory.Delete(path, true);
-            }
-        }
-
-        public void RunMigration8()
-        {
-            if (!File.Exists("AuroraServer.ini")) return;
-            try
-            {
-                File.Move("AuroraServer.ini", "Aurora.Server.ini");
-            }
-            catch
-            {
-            }
+            if (File.Exists("Aurora.UserServer.exe"))
+                File.Delete("Aurora.UserServer.exe");
         }
     }
 
