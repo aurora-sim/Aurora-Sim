@@ -64,6 +64,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                                      );
 
         private static readonly Dictionary<ulong, IntPtr> m_MeshToTriMeshMap = new Dictionary<ulong, IntPtr>();
+        private static readonly Dictionary<ulong, Vector3> m_MeshToCentroidMap = new Dictionary<ulong, Vector3>();
         private readonly AuroraODEPhysicsScene _parent_scene;
 
         private readonly Vector3 _torque = Vector3.Zero;
@@ -77,7 +78,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float PID_G = 25f;
         private Vector3 _acceleration;
         private float _mass; // prim or object mass
-        private IMesh _mesh;
         private Quaternion _orientation;
         private PhysicsObject _parent;
         private ISceneChildEntity _parent_entity;
@@ -843,83 +843,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_disabled = true;
         }
 
-        public bool setMesh(AuroraODEPhysicsScene parent_scene, IMesh mesh)
-        {
-            // This sleeper is there to moderate how long it takes between
-            // setting up the mesh and pre-processing it when we get rapid fire mesh requests on a single object
-
-            //Thread.Sleep(10);
-
-            //Kill Body so that mesh can re-make the geom
-            if (IsPhysical && Body != IntPtr.Zero)
-            {
-                if (childPrim)
-                {
-                    if (_parent != null)
-                    {
-                        AuroraODEPrim parent = (AuroraODEPrim) _parent;
-                        parent.ChildDelink(this);
-                    }
-                }
-                else
-                {
-                    DestroyBody();
-                }
-            }
-
-            IntPtr vertices, indices;
-            int vertexCount, indexCount;
-            int vertexStride, triStride;
-            mesh.getVertexListAsPtrToFloatArray(out vertices, out vertexStride, out vertexCount);
-            // Note, that vertices are fixed in unmanaged heap
-            mesh.getIndexListAsPtrToIntArray(out indices, out triStride, out indexCount);
-            // Also fixed, needs release after usage
-
-            if (vertexCount == 0 || indexCount == 0)
-            {
-                MainConsole.Instance.WarnFormat(
-                    "[PHYSICS]: Got invalid mesh on prim at <{0},{1},{2}>. It can be a sculpt with alpha channel in map. Replacing it by a small box.",
-                    _position.X, _position.Y, _position.Z);
-                _size.X = 0.01f;
-                _size.Y = 0.01f;
-                _size.Z = 0.01f;
-                return false;
-            }
-
-            primOOBoffset = mesh.GetCentroid();
-            hasOOBoffsetFromMesh = true;
-
-            mesh.releaseSourceMeshData(); // free up the original mesh data to save memory
-            if (m_MeshToTriMeshMap.ContainsKey(mesh.Key))
-            {
-                _triMeshData = m_MeshToTriMeshMap[mesh.Key];
-            }
-            else
-            {
-                _triMeshData = d.GeomTriMeshDataCreate();
-
-                d.GeomTriMeshDataBuildSimple(_triMeshData, vertices, vertexStride, vertexCount, indices, indexCount,
-                                             triStride);
-                d.GeomTriMeshDataPreprocess(_triMeshData);
-                m_MeshToTriMeshMap[mesh.Key] = _triMeshData;
-            }
-
-            try
-            {
-                if (prim_geom == IntPtr.Zero)
-                {
-                    SetGeom(d.CreateTriMesh(m_targetSpace, _triMeshData, null, null, null));
-                }
-            }
-            catch (AccessViolationException)
-            {
-                MainConsole.Instance.Error("[PHYSICS]: MESH LOCKED");
-                return false;
-            }
-
-            return true;
-        }
-
         private void changeAngularLock(Vector3 newlock)
         {
             // do we have a Physical object?
@@ -1226,15 +1149,107 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         //end changeSelectedStatus
 
-        public void CreateGeom(IntPtr m_targetSpace, IMesh _mesh)
+        public void CreateGeom(IntPtr m_targetSpace)
         {
             hasOOBoffsetFromMesh = false;
 
             bool havemesh = false;
             //Console.WriteLine("CreateGeom:");
-            if (_mesh != null)
+            if (_parent_scene.needsMeshing(_parent_entity))
             {
-                havemesh = setMesh(_parent_scene, _mesh); // this will give a mesh to non trivial known prims
+                havemesh = true;
+                Vector3 centroid = Vector3.Zero;
+                ulong key = _parent_scene.mesher.GetMeshKey(_pbs, _size, _parent_scene.meshSculptLOD);
+                if (m_MeshToTriMeshMap.ContainsKey(key))
+                {
+                    _triMeshData = m_MeshToTriMeshMap[key];
+                    centroid = m_MeshToCentroidMap[key];
+                }
+                else
+                {
+                    IntPtr vertices, indices;
+                    int vertexCount, indexCount;
+                    int vertexStride, triStride;
+
+                    // Don't need to re-enable body..   it's done in SetMesh
+                    IMesh mesh = _parent_scene.mesher.CreateMesh(_parent_entity.Name, _pbs, _size,
+                                                            _parent_scene.meshSculptLOD, true);
+
+                    //Tell things above if they want to cache it or something
+                    if (mesh != null)
+                    {
+                        _parent_entity.ParentEntity.GeneratedMesh(_parent_entity, mesh);
+                        // createmesh returns null when it's a shape that isn't a cube.
+                        // MainConsole.Instance.Debug(m_localID);
+
+                        // Remove the reference to any JPEG2000 sculpt data so it can be GCed
+                        _pbs.SculptData = null;
+
+                        //Kill Body so that mesh can re-make the geom
+                        if (IsPhysical && Body != IntPtr.Zero)
+                        {
+                            if (childPrim)
+                            {
+                                if (_parent != null)
+                                {
+                                    AuroraODEPrim parent = (AuroraODEPrim)_parent;
+                                    parent.ChildDelink(this);
+                                }
+                            }
+                            else
+                            {
+                                DestroyBody();
+                            }
+                        }
+
+                        mesh.getVertexListAsPtrToFloatArray(out vertices, out vertexStride, out vertexCount);
+                        // Note, that vertices are fixed in unmanaged heap
+                        mesh.getIndexListAsPtrToIntArray(out indices, out triStride, out indexCount);
+                        // Also fixed, needs release after usage
+
+                        if (vertexCount == 0 || indexCount == 0)
+                        {
+                            MainConsole.Instance.WarnFormat(
+                                "[PHYSICS]: Got invalid mesh on prim at <{0},{1},{2}>. It can be a sculpt with alpha channel in map. Replacing it by a small box.",
+                                _position.X, _position.Y, _position.Z);
+                            _size.X = 0.01f;
+                            _size.Y = 0.01f;
+                            _size.Z = 0.01f;
+                            havemesh = false;
+                        }
+                        else
+                        {
+                            centroid = mesh.GetCentroid();
+                            _triMeshData = d.GeomTriMeshDataCreate();
+
+                            d.GeomTriMeshDataBuildSimple(_triMeshData, vertices, vertexStride, vertexCount, indices, indexCount,
+                                                         triStride);
+                            d.GeomTriMeshDataPreprocess(_triMeshData);
+                            m_MeshToTriMeshMap[mesh.Key] = _triMeshData;
+                            m_MeshToCentroidMap[mesh.Key] = centroid;
+                        }
+                        mesh.releaseSourceMeshData(); // free up the original mesh data to save memory
+                    }
+                    else
+                        havemesh = false;
+                }
+                if (havemesh)
+                {
+                    primOOBoffset = centroid;
+                    hasOOBoffsetFromMesh = true;
+
+                    try
+                    {
+                        if (prim_geom == IntPtr.Zero)
+                        {
+                            SetGeom(d.CreateTriMesh(m_targetSpace, _triMeshData, null, null, null));
+                        }
+                    }
+                    catch (AccessViolationException)
+                    {
+                        MainConsole.Instance.Error("[PHYSICS]: MESH LOCKED");
+                    }
+                }
             }
 
             if (!havemesh)
@@ -1307,28 +1322,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             IntPtr targetspace = _parent_scene.calculateSpaceForGeom(_position);
             m_targetSpace = targetspace;
 
-            if (_mesh == null)
-            {
-                if (_parent_scene.needsMeshing(_parent_entity))
-                {
-                    // Don't need to re-enable body..   it's done in SetMesh
-                    _mesh = _parent_scene.mesher.CreateMesh(_parent_entity.Name, _pbs, _size,
-                                                            _parent_scene.meshSculptLOD, true);
-
-                    //Tell things above if they want to cache it or something
-                    if (_mesh != null)
-                        _parent_entity.ParentEntity.GeneratedMesh(_parent_entity, _mesh);
-                    // createmesh returns null when it's a shape that isn't a cube.
-                    // MainConsole.Instance.Debug(m_localID);
-
-                    // Remove the reference to any JPEG2000 sculpt data so it can be GCed
-                    _pbs.SculptData = null;
-                }
-            }
-
-
             //Console.WriteLine("changeadd 1");
-            CreateGeom(m_targetSpace, _mesh);
+            CreateGeom(m_targetSpace);
             CalcPrimBodyData();
 
             if (prim_geom != IntPtr.Zero)
@@ -1961,22 +1956,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _size.Y = 0.01f;
             if (_size.Z <= 0)
                 _size.Z = 0.01f;
-            // Construction of new prim
 
-
-            if (_parent_scene.needsMeshing(_parent_entity))
-            {
-                float meshlod = _parent_scene.meshSculptLOD;
-                IMesh mesh = _parent_scene.mesher.CreateMesh(_parent_entity.Name, _pbs, _size, meshlod, true);
-                // createmesh returns null when it doesn't mesh.
-                CreateGeom(m_targetSpace, mesh);
-            }
-            else
-            {
-                _mesh = null;
-                //Console.WriteLine("changeshape");
-                CreateGeom(m_targetSpace, null);
-            }
+            CreateGeom(m_targetSpace);
 
             CalcPrimBodyData();
 
@@ -2914,8 +2895,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (primMass <= 0)
                 primMass = 0.0001f; //ckrinke: Mass must be greater then zero.
-            //            else if (returnMass > _parent_scene.maximumMassObject)
-            //                returnMass = _parent_scene.maximumMassObject;
 
             if (primMass > _parent_scene.maximumMassObject)
                 primMass = _parent_scene.maximumMassObject;

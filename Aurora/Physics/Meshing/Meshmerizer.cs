@@ -35,6 +35,11 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenMetaverse.StructuredData;
+#if DEBUGING
+using PrimMesher;
+#else
+using Aurora.Physics.PrimMesher;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -81,8 +86,6 @@ namespace Aurora.Physics.Meshing
         private float minSizeForComplexMesh = 0.2f;
         // prims with all dimensions smaller than this will have a bounding box mesh
 
-        private readonly Dictionary<ulong, Mesh> m_uniqueMeshes = new Dictionary<ulong, Mesh>();
-
         public Meshmerizer(IConfigSource config)
         {
             IConfig start_config = config.Configs["Meshing"];
@@ -122,41 +125,49 @@ namespace Aurora.Physics.Meshing
                                                 ulong key)
         {
             Mesh box = new Mesh(key);
-            List<Vertex> vertices = new List<Vertex>
+            List<Coord> vertices = new List<Coord>
                                         {
-                                            new Vertex(minX, maxY, minZ),
-                                            new Vertex(maxX, maxY, minZ),
-                                            new Vertex(maxX, minY, minZ),
-                                            new Vertex(minX, minY, minZ)
+                                            new Coord(minX, maxY, minZ),
+                                            new Coord(maxX, maxY, minZ),
+                                            new Coord(maxX, minY, minZ),
+                                            new Coord(minX, minY, minZ)
                                         };
             // bottom
 
-            box.Add(new Triangle(vertices[0], vertices[1], vertices[2]));
-            box.Add(new Triangle(vertices[0], vertices[2], vertices[3]));
+            List<Face> faces = new List<Face>();
+            faces.Add(new Face(0, 1, 2));
+            faces.Add(new Face(0, 1, 3));
 
             // top
 
-            vertices.Add(new Vertex(maxX, maxY, maxZ));
-            vertices.Add(new Vertex(minX, maxY, maxZ));
-            vertices.Add(new Vertex(minX, minY, maxZ));
-            vertices.Add(new Vertex(maxX, minY, maxZ));
+            vertices.Add(new Coord(maxX, maxY, maxZ));
+            vertices.Add(new Coord(minX, maxY, maxZ));
+            vertices.Add(new Coord(minX, minY, maxZ));
+            vertices.Add(new Coord(maxX, minY, maxZ));
 
-            box.Add(new Triangle(vertices[4], vertices[5], vertices[6]));
-            box.Add(new Triangle(vertices[4], vertices[6], vertices[7]));
+            faces.Add(new Face(4, 5, 6));
+            faces.Add(new Face(4, 5, 7));
 
             // sides
 
-            box.Add(new Triangle(vertices[5], vertices[0], vertices[3]));
-            box.Add(new Triangle(vertices[5], vertices[3], vertices[6]));
+            faces.Add(new Face(5, 0, 3));
+            faces.Add(new Face(5, 3, 6));
 
-            box.Add(new Triangle(vertices[1], vertices[0], vertices[5]));
-            box.Add(new Triangle(vertices[1], vertices[5], vertices[4]));
+            faces.Add(new Face(1, 0, 5));
+            faces.Add(new Face(1, 5, 4));
 
-            box.Add(new Triangle(vertices[7], vertices[1], vertices[4]));
-            box.Add(new Triangle(vertices[7], vertices[2], vertices[1]));
+            faces.Add(new Face(7, 1, 4));
+            faces.Add(new Face(7, 2, 1));
 
-            box.Add(new Triangle(vertices[3], vertices[2], vertices[7]));
-            box.Add(new Triangle(vertices[3], vertices[7], vertices[6]));
+            faces.Add(new Face(3, 2, 7));
+            faces.Add(new Face(3, 7, 6));
+
+            box.Set(vertices, faces);
+
+            vertices.Clear();
+            faces.Clear();
+            vertices = null;
+            faces = null;
 
             return box;
         }
@@ -168,27 +179,9 @@ namespace Aurora.Physics.Meshing
         /// <param name="meshIn"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        private static Mesh CreateBoundingBoxMesh(Mesh meshIn, ulong key)
+        private static Mesh CreateBoundingBoxMesh(Vector3 size, ulong key)
         {
-            float minX = float.MaxValue;
-            float maxX = float.MinValue;
-            float minY = float.MaxValue;
-            float maxY = float.MinValue;
-            float minZ = float.MaxValue;
-            float maxZ = float.MinValue;
-
-            foreach (Vector3 v in meshIn.getVertexList())
-            {
-                if (v.X < minX) minX = v.X;
-                if (v.Y < minY) minY = v.Y;
-                if (v.Z < minZ) minZ = v.Z;
-
-                if (v.X > maxX) maxX = v.X;
-                if (v.Y > maxY) maxY = v.Y;
-                if (v.Z > maxZ) maxZ = v.Z;
-            }
-
-            return CreateSimpleBoxMesh(minX, maxX, minY, maxY, minZ, maxZ, key);
+            return CreateSimpleBoxMesh(0, size.X,0, size.Y, 0, size.Z, key);
         }
 
         private void ReportPrimError(string message, string primName, PrimMesh primMesh)
@@ -198,7 +191,7 @@ namespace Aurora.Physics.Meshing
             MainConsole.Instance.Error("****** PrimMesh Parameters ******\n" + primMesh.ParamsToDisplayString());
         }
 
-        private ulong GetMeshKey(PrimitiveBaseShape pbs, Vector3 size, float lod)
+        public ulong GetMeshKey(PrimitiveBaseShape pbs, Vector3 size, float lod)
         {
             ulong hash = 5381;
 
@@ -664,24 +657,11 @@ namespace Aurora.Physics.Meshing
                 primMesh = null;
             }
 
-            int numCoords = coords.Count;
-            int numFaces = faces.Count;
-
-            // Create the list of vertices
-            List<Vertex> vertices = new List<Vertex>();
-            for (int i = 0; i < numCoords; i++)
-            {
-                Coord c = coords[i];
-                vertices.Add(new Vertex(c.X, c.Y, c.Z));
-            }
-
             Mesh mesh = new Mesh(key);
+            //mesh.m_triangles = faces;
+            //mesh.m_vertices = coords;
             // Add the corresponding triangles to the mesh
-            for (int i = 0; i < numFaces; i++)
-            {
-                Face f = faces[i];
-                mesh.Add(new Triangle(vertices[f.v1], vertices[f.v2], vertices[f.v3]));
-            }
+            mesh.Set(coords, faces);
             coords.Clear();
             faces.Clear();
             coords = null;
@@ -691,29 +671,16 @@ namespace Aurora.Physics.Meshing
 
         public void FinishedMeshing()
         {
-            foreach (Mesh mesh in m_uniqueMeshes.Values)
-            {
-                mesh.releaseSourceMeshData();
-            }
-            m_uniqueMeshes.Clear();
         }
 
         public void RemoveMesh(ulong key)
         {
-            m_uniqueMeshes.Remove(key);
         }
 
         public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical)
         {
             Mesh mesh = null;
-            ulong key = 0;
-
-            // If this mesh has been created already, return it instead of creating another copy
-            // For large regions with 100k+ prims and hundreds of copies of each, this can save a GB or more of memory
-
-            key = GetMeshKey(primShape, size, lod);
-            if (m_uniqueMeshes.TryGetValue(key, out mesh))
-                return mesh;
+            ulong key = GetMeshKey(primShape, size, lod);
 
             if (size.X < 0.01f) size.X = 0.01f;
             if (size.Y < 0.01f) size.Y = 0.01f;
@@ -721,24 +688,9 @@ namespace Aurora.Physics.Meshing
 
             if ((!isPhysical) && size.X < minSizeForComplexMesh && size.Y < minSizeForComplexMesh &&
                 size.Z < minSizeForComplexMesh)
-            {
-#if SPAM
-                MainConsole.Instance.Debug("Meshmerizer: prim " + primName + " has a size of " + size.ToString() + " which is below threshold of " + 
-                            minSizeForComplexMesh.ToString() + " - creating simple bounding box");
-#endif
-                mesh = CreateBoundingBoxMesh(mesh, key);
-                mesh.DumpRaw(baseDir, primName, "Z extruded");
-            }
+                mesh = CreateBoundingBoxMesh(size, key);
             else
                 mesh = CreateMeshFromPrimMesher(primName, primShape, size, lod, key);
-
-            if (mesh != null)
-            {
-                // trim the vertex and triangle lists to free up memory
-                mesh.TrimExcess();
-
-                m_uniqueMeshes.Add(key, mesh);
-            }
 
             return mesh;
         }

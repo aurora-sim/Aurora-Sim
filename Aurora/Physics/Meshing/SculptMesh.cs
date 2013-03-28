@@ -40,7 +40,7 @@ using Aurora.Framework.Utilities;
 
 #endif
 
-namespace Aurora.Physics.Meshing
+namespace Aurora.Physics.PrimMesher
 {
     public class SculptMesh
     {

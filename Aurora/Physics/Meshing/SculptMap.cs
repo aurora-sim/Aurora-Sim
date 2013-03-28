@@ -37,7 +37,7 @@ using System.Drawing.Imaging;
 
 #if SYSTEM_DRAWING
 
-namespace Aurora.Physics.Meshing
+namespace Aurora.Physics.PrimMesher
 {
     public class SculptMap
     {

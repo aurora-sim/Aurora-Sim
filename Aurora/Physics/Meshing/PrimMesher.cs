@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Aurora.Physics.Meshing
+namespace Aurora.Physics.PrimMesher
 {
     public struct Quat
     {
@@ -134,6 +134,13 @@ namespace Aurora.Physics.Meshing
             X = x;
             Y = y;
             Z = z;
+        }
+
+        public Coord(OpenMetaverse.Vector3 vec)
+        {
+            X = vec.X;
+            Y = vec.Y;
+            Z = vec.Z;
         }
 
         public float Length()
@@ -244,6 +251,13 @@ namespace Aurora.Physics.Meshing
         {
             U = u;
             V = v;
+        }
+
+        public UVCoord Flip()
+        {
+            this.U = 1.0f - this.U;
+            this.V = 1.0f - this.V;
+            return this;
         }
     }
 
@@ -659,7 +673,6 @@ namespace Aurora.Physics.Meshing
             faceNumbers = new List<int>();
 
             Coord center = new Coord(0.0f, 0.0f, 0.0f);
-            //bool hasCenter = false;
 
             List<Coord> hollowCoords = new List<Coord>();
             List<Coord> hollowNormals = new List<Coord>();
@@ -830,9 +843,6 @@ namespace Aurora.Physics.Meshing
 
                 if (createFaces)
                 {
-                    //int numOuterVerts = this.coords.Count;
-                    //numOuterVerts = this.coords.Count;
-                    //int numHollowVerts = hollowCoords.Count;
                     int numTotalVerts = numOuterVerts + numHollowVerts;
 
                     if (numOuterVerts == numHollowVerts)
@@ -1258,6 +1268,15 @@ namespace Aurora.Physics.Meshing
 
         public void Create(PathType pathType, int steps)
         {
+            if (this.taperX > 0.999f)
+                this.taperX = 0.999f;
+            if (this.taperX < -0.999f)
+                this.taperX = -0.999f;
+            if (this.taperY > 0.999f)
+                this.taperY = 0.999f;
+            if (this.taperY < -0.999f)
+                this.taperY = -0.999f;
+
             if (pathType == PathType.Linear || pathType == PathType.Flexible)
             {
                 int step = 0;
@@ -1569,13 +1588,6 @@ namespace Aurora.Physics.Meshing
                 this.hollow = 0.99f;
             if (hollow < 0.0f)
                 this.hollow = 0.0f;
-
-            //if (sphereMode)
-            //    this.hasProfileCut = this.profileEnd - this.profileStart < 0.4999f;
-            //else
-            //    //this.hasProfileCut = (this.profileStart > 0.0f || this.profileEnd < 1.0f);
-            //    this.hasProfileCut = this.profileEnd - this.profileStart < 0.9999f;
-            //this.hasHollow = (this.hollow > 0.001f);
         }
 
         /// <summary>
@@ -1613,9 +1625,8 @@ namespace Aurora.Physics.Meshing
             if (sphereMode)
                 hasProfileCut = profileEnd - profileStart < 0.4999f;
             else
-                //hasProfileCut = (profileStart > 0.0f || profileEnd < 1.0f);
-                hasProfileCut = profileEnd - profileStart < 0.9999f;
-            hasHollow = (hollow > 0.001f);
+                this.hasProfileCut = this.profileEnd - this.profileStart < 0.9999f;
+            this.hasHollow = (this.hollow > 0.001f);
 
             float twistBegin2 = twistBegin/360.0f*twoPi;
             float twistEnd2 = twistEnd/360.0f*twoPi;
@@ -1685,21 +1696,6 @@ namespace Aurora.Physics.Meshing
             errorMessage = profile.errorMessage;
 
             numPrimFaces = profile.numPrimFaces;
-
-            //profileOuterFaceNumber = profile.faceNumbers[0];
-            //if (!needEndFaces)
-            //    profileOuterFaceNumber--;
-            //profileOuterFaceNumber = needEndFaces ? 1 : 0;
-
-
-            //if (hasHollow)
-            //{
-            //    if (needEndFaces)
-            //        profileHollowFaceNumber = profile.faceNumbers[profile.numOuterVerts + 1];
-            //    else
-            //        profileHollowFaceNumber = profile.faceNumbers[profile.numOuterVerts] - 1;
-            //}
-
 
             profileOuterFaceNumber = profile.outerFaceNumber;
             //this is always true
@@ -1835,10 +1831,10 @@ namespace Aurora.Physics.Meshing
                 // fill faces between layers
 
                 int numVerts = newLayer.coords.Count;
-                Face newFace = new Face();
-
                 if (nodeIndex > 0)
                 {
+                    Face newFace = new Face();
+
                     int startVert = coordsLen + 1;
                     int endVert = coords.Count;
 
@@ -1895,13 +1891,28 @@ namespace Aurora.Physics.Meshing
                                     u1 -= (int) u1;
                                     if (u2 < 0.1f)
                                         u2 = 1.0f;
-                                    //this.profileOuterFaceNumber = primFaceNum;
                                 }
                                 else if (whichVert > profile.coords.Count - profile.numHollowVerts - 1)
                                 {
                                     u1 *= 2.0f;
                                     u2 *= 2.0f;
                                     //this.profileHollowFaceNumber = primFaceNum;
+                                }
+                            }
+
+                            if (this.sphereMode)
+                            {
+                                if (whichVert != cut1Vert && whichVert != cut2Vert)
+                                {
+                                    u1 = u1 * 2.0f - 1.0f;
+                                    u2 = u2 * 2.0f - 1.0f;
+
+                                    if (whichVert >= newLayer.numOuterVerts)
+                                    {
+                                        u1 -= hollow;
+                                        u2 -= hollow;
+                                    }
+
                                 }
                             }
 
