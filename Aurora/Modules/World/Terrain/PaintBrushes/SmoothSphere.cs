@@ -38,7 +38,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
         #region ITerrainPaintableEffect Members
 
         public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
-                                float duration, float BrushSize, List<IScene> scenes)
+                                float duration, float BrushSize)
         {
             int n = (int) (BrushSize + 0.5f);
             if (BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down
@@ -78,7 +78,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                                 for (l = 0 - area; l < area; l += step)
                                 {
                                     avgsteps++;
-                                    average += TerrainUtil.GetBilinearInterpolate(x + nn, y + l, map, scenes);
+                                    average += TerrainUtil.GetBilinearInterpolate(x + nn, y + l, map);
                                 }
                             }
                             float da = z;

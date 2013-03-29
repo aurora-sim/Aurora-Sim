@@ -39,7 +39,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
         #region ITerrainPaintableEffect Members
 
         public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
-                                float duration, float BrushSize, List<IScene> scene)
+                                float duration, float BrushSize)
         {
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
 

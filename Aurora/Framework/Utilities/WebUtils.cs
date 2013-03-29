@@ -48,14 +48,6 @@ namespace Aurora.Framework.Utilities
 {
     public static class WebUtils
     {
-        // this is the header field used to communicate the local request id
-        // used for performance and debugging
-        public const string OSHeaderRequestID = "opensim-request-id";
-
-        // number of milliseconds a call can take before it is considered
-        // a "long" call for warning & debugging purposes
-        public const int LongCallTime = 500;
-
         private const int m_defaultTimeout = 10000;
 
 #if NET_4_5
@@ -102,8 +94,6 @@ namespace Aurora.Framework.Utilities
             t.Wait();
         }
 
-        public delegate void FinishedRequest(string response);
-        
         public static async Task<string> ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
         {
             string errorMessage = "", response = null;
@@ -364,11 +354,6 @@ namespace Aurora.Framework.Utilities
             return new string[0];
         }
 
-        public static OSDMap GetOSDMap(string data)
-        {
-            return GetOSDMap(data, true);
-        }
-
         public static OSDMap GetOSDMap(string data, bool doLogMessages)
         {
             if (data == "")
@@ -442,83 +427,6 @@ namespace Aurora.Framework.Utilities
         }
 
         #endregion
-    }
-
-    /// <summary>
-    ///     Class supporting the request side of an XML-RPC transaction.
-    /// </summary>
-    public sealed class ConfigurableKeepAliveXmlRpcRequest : XmlRpcRequest
-    {
-        private readonly XmlRpcResponseDeserializer _deserializer = new XmlRpcResponseDeserializer();
-        private readonly bool _disableKeepAlive = true;
-        private readonly Encoding _encoding = new ASCIIEncoding();
-        private readonly XmlRpcRequestSerializer _serializer = new XmlRpcRequestSerializer();
-
-        public string RequestResponse = String.Empty;
-
-        /// <summary>
-        ///     Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.
-        /// </summary>
-        /// <param name="methodName">
-        ///     <c>String</c> designating the <i>object.method</i> on the server the request
-        ///     should be directed to.
-        /// </param>
-        /// <param name="parameters">
-        ///     <c>ArrayList</c> of XML-RPC type parameters to invoke the request with.
-        /// </param>
-        /// <param name="disableKeepAlive"></param>
-        public ConfigurableKeepAliveXmlRpcRequest(String methodName, IList parameters, bool disableKeepAlive)
-        {
-            MethodName = methodName;
-            _params = parameters;
-            _disableKeepAlive = disableKeepAlive;
-        }
-
-        /// <summary>
-        ///     Send the request to the server.
-        /// </summary>
-        /// <param name="url">
-        ///     <c>String</c> The url of the XML-RPC server.
-        /// </param>
-        /// <returns>
-        ///     <c>XmlRpcResponse</c> The response generated.
-        /// </returns>
-        public XmlRpcResponse Send(String url)
-        {
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-            if (request == null)
-                throw new XmlRpcException(XmlRpcErrorCodes.TRANSPORT_ERROR,
-                                          XmlRpcErrorCodes.TRANSPORT_ERROR_MSG + ": Could not create request with " +
-                                          url);
-            request.Method = "POST";
-            request.ContentType = "text/xml";
-            request.AllowWriteStreamBuffering = true;
-            request.KeepAlive = !_disableKeepAlive;
-
-            Stream stream = request.GetRequestStream();
-            XmlTextWriter xml = new XmlTextWriter(stream, _encoding);
-            _serializer.Serialize(xml, this);
-            xml.Flush();
-            xml.Close();
-
-            HttpWebResponse response = (HttpWebResponse) request.GetResponse();
-            StreamReader input = new StreamReader(response.GetResponseStream());
-
-            string inputXml = input.ReadToEnd();
-            XmlRpcResponse resp;
-            try
-            {
-                resp = (XmlRpcResponse) _deserializer.Deserialize(inputXml);
-            }
-            catch (Exception)
-            {
-                RequestResponse = inputXml;
-                throw;
-            }
-            input.Close();
-            response.Close();
-            return resp;
-        }
     }
 
     public static class XMLUtils

@@ -45,61 +45,19 @@ namespace Aurora.Framework.SceneInfo
             return size*size - ((x - rx)*(x - rx) + (y - ry)*(y - ry));
         }
 
-        public static float GetBilinearInterpolate(float x, float y, ITerrainChannel map, List<IScene> scenes)
+        public static float GetBilinearInterpolate(float x, float y, ITerrainChannel map)
         {
             int w = map.Width;
             int h = map.Height;
 
-            IScene scene = null;
-
             if (x > w - 2)
-            {
-                scene = FindScene(map, scenes, map.Scene.RegionInfo.RegionSizeX, 0);
-                if (scene != null)
-                {
-                    //Fix this position in the new heightmap
-                    x -= w;
-                    map = scene.RequestModuleInterface<ITerrainChannel>();
-                }
-                else //1 away from the edge if we don't have a sim on this instance
-                    x = w - 2;
-            }
+                x = w - 2;
             if (y > h - 2)
-            {
-                scene = FindScene(map, scenes, 0, map.Scene.RegionInfo.RegionSizeY);
-                if (scene != null)
-                {
-                    //Fix this position in the new heightmap
-                    y -= h;
-                    map = scene.RequestModuleInterface<ITerrainChannel>();
-                }
-                else //1 away from the edge if we don't have a sim on this instance
-                    y = h - 2;
-            }
+                y = h - 2;
             if (x < 0.0)
-            {
-                scene = FindScene(map, scenes, -map.Scene.RegionInfo.RegionSizeX, 0);
-                if (scene != null)
-                {
-                    //Fix this position in the new heightmap
-                    x += w;
-                    map = scene.RequestModuleInterface<ITerrainChannel>();
-                }
-                else //1 away from the edge if we don't have a sim on this instance
-                    x = 0;
-            }
+                x = 1.0f;
             if (y < 0.0)
-            {
-                scene = FindScene(map, scenes, 0, -map.Scene.RegionInfo.RegionSizeY);
-                if (scene != null)
-                {
-                    //Fix this position in the new heightmap
-                    y += h;
-                    map = scene.RequestModuleInterface<ITerrainChannel>();
-                }
-                else //1 away from the edge if we don't have a sim on this instance
-                    y = 0;
-            }
+                y = 1.0f;
 
             if (x > map.Width - 2)
                 x = map.Width - 2;
@@ -127,16 +85,6 @@ namespace Aurora.Framework.SceneInfo
             float partialz = y - (int) y;
             float hi = a00 + (a10*partialx) + (a01*partialz) + (a11*partialx*partialz);
             return hi;
-        }
-
-        private static IScene FindScene(ITerrainChannel map, List<IScene> scenes, int X, int Y)
-        {
-            int RegX = map.Scene.RegionInfo.RegionLocX + X;
-            int RegY = map.Scene.RegionInfo.RegionLocY + Y;
-
-            return
-                scenes.FirstOrDefault(
-                    scene => scene.RegionInfo.RegionLocX == RegX && scene.RegionInfo.RegionLocY == RegY);
         }
 
         private static float Noise(float x, float y)

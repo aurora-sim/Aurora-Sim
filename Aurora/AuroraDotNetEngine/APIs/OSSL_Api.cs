@@ -60,6 +60,7 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using Aurora.Framework.DatabaseInterfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
@@ -2444,7 +2445,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAddAgentToGroup", m_host, "OSSL", m_itemID))
                 return new LSL_Integer();
 
-            IGroupsServicesConnector m_groupData = World.RequestModuleInterface<IGroupsServicesConnector>();
+            IGroupsServiceConnector m_groupData = Aurora.Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
 
             // No groups module, no functionality
             if (m_groupData == null)

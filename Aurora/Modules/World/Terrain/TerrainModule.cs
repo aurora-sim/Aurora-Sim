@@ -74,7 +74,6 @@ namespace Aurora.Modules.Terrain
         private const int MAX_HEIGHT = 250;
         private const int MIN_HEIGHT = 0;
 
-        private static readonly List<IScene> m_scenes = new List<IScene>();
         private static readonly List<TerrainModule> m_terrainModules = new List<TerrainModule>();
 
         private readonly Dictionary<StandardTerrainEffects, ITerrainFloodEffect> m_floodeffects =
@@ -121,15 +120,12 @@ namespace Aurora.Modules.Terrain
 
         public void AddRegion(IScene scene)
         {
-            bool firstScene = m_scenes.Count == 0;
             m_scene = scene;
-            m_scenes.Add(scene);
             m_terrainModules.Add(this);
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
 
-            if (firstScene)
-                AddConsoleCommands();
+            AddConsoleCommands();
 
             InstallDefaultEffects();
             LoadPlugins();
@@ -162,22 +158,18 @@ namespace Aurora.Modules.Terrain
 
         public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove(scene);
-            lock (m_scene)
-            {
-                // remove the event-handlers
-                m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
-                m_scene.EventManager.OnClosingClient -= OnClosingClient;
-                m_scene.EventManager.OnSignificantClientMovement -= EventManager_OnSignificantClientMovement;
-                m_scene.AuroraEventManager.UnregisterEventHandler("DrawDistanceChanged",
-                                                                  AuroraEventManager_OnGenericEvent);
-                m_scene.AuroraEventManager.UnregisterEventHandler("SignficantCameraMovement",
-                                                                  AuroraEventManager_OnGenericEvent);
-                m_scene.EventManager.OnNewPresence -= OnNewPresence;
+            // remove the event-handlers
+            m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
+            m_scene.EventManager.OnClosingClient -= OnClosingClient;
+            m_scene.EventManager.OnSignificantClientMovement -= EventManager_OnSignificantClientMovement;
+            m_scene.AuroraEventManager.UnregisterEventHandler("DrawDistanceChanged",
+                                                              AuroraEventManager_OnGenericEvent);
+            m_scene.AuroraEventManager.UnregisterEventHandler("SignficantCameraMovement",
+                                                              AuroraEventManager_OnGenericEvent);
+            m_scene.EventManager.OnNewPresence -= OnNewPresence;
 
-                // remove the interface
-                m_scene.UnregisterModuleInterface<ITerrainModule>(this);
-            }
+            // remove the interface
+            m_scene.UnregisterModuleInterface<ITerrainModule>(this);
         }
 
         public void Close()
@@ -1434,7 +1426,7 @@ namespace Aurora.Modules.Terrain
                 {
                     StoreUndoState();
                     m_painteffects[(StandardTerrainEffects) action].PaintEffect(
-                        m_channel, user, west, south, height, size, seconds, BrushSize, m_scenes);
+                        m_channel, user, west, south, height, size, seconds, BrushSize);
 
                     //revert changes outside estate limits
                     CheckForTerrainUpdates(!god, false, false);
@@ -1445,7 +1437,7 @@ namespace Aurora.Modules.Terrain
                     {
                         StoreUndoState();
                         m_painteffects[(StandardTerrainEffects) action - WATER_CONST].PaintEffect(
-                            m_waterChannel, user, west, south, height, size, seconds, BrushSize, m_scenes);
+                            m_waterChannel, user, west, south, height, size, seconds, BrushSize);
 
                         //revert changes outside estate limits
                         CheckForTerrainUpdates(!god, false, true);

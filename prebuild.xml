@@ -299,7 +299,7 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v4_0" name="Aurora.Services.RedisServices" path="Aurora/Services/RedisServices" type="Library">
+    <Project frameworkVersion="v4_0" name="Aurora.Services.NoSQLServices" path="Aurora/Services/NoSQLServices" type="Library">
       <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../../bin/</OutputPath>

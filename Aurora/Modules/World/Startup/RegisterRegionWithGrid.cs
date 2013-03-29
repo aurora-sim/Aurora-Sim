@@ -45,7 +45,7 @@ namespace Aurora.Modules.Startup
         #region Declares
 
         private readonly Dictionary<UUID, List<GridRegion>> m_knownNeighbors = new Dictionary<UUID, List<GridRegion>>();
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_scene;
         private IConfigSource m_config;
         private string m_RegisterRegionPassword = "";
 
@@ -225,7 +225,7 @@ namespace Aurora.Modules.Startup
 
         public void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            m_scenes.Add(scene);
+            m_scene = scene;
             //Register the interface
             m_config = source;
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
@@ -261,7 +261,7 @@ namespace Aurora.Modules.Startup
         {
             //Deregister the interface
             scene.UnregisterModuleInterface<IGridRegisterModule>(this);
-            m_scenes.Remove(scene);
+            m_scene = null;
 
             MainConsole.Instance.InfoFormat("[RegisterRegionWithGrid]: Deregistering region {0} from the grid...",
                                             scene.RegionInfo.RegionName);
@@ -320,7 +320,7 @@ namespace Aurora.Modules.Startup
                                                                               return true;
                                                                           return false;
                                                                       }) == null)
-                            m_knownNeighbors[targetregionID].Add(m_scenes[0].GridService.GetRegionByUUID(null,
+                            m_knownNeighbors[targetregionID].Add(m_scene.GridService.GetRegionByUUID(null,
                                                                                                          regionID));
                     }
                 }

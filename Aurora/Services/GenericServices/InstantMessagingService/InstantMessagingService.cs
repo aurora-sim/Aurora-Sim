@@ -12,7 +12,7 @@ using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 using System.Collections.Generic;
 using System.Linq;
-using ChatSessionMember = Aurora.Framework.Services.ChatSessionMember;
+using ChatSessionMember = Aurora.Framework.DatabaseInterfaces.ChatSessionMember;
 
 namespace Aurora.Services
 {
@@ -316,7 +316,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteOnly)
             {
-                DoRemoteCallGet(true, "InstantMessageServerURI", groupID);
+                DoRemoteCallPost(true, "InstantMessageServerURI", groupID);
                 return;
             }
 
@@ -358,7 +358,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteOnly)
             {
-                DoRemoteCallGet(true, "InstantMessageServerURI", AgentID, im);
+                DoRemoteCallPost(true, "InstantMessageServerURI", AgentID, im);
                 return;
             }
 
@@ -510,7 +510,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteOnly)
             {
-                DoRemoteCallGet(true, "InstantMessageServerURI", agentID, im);
+                DoRemoteCallPost(true, "InstantMessageServerURI", agentID, im);
                 return;
             }
 
@@ -571,7 +571,7 @@ namespace Aurora.Services
         {
             if (m_doRemoteOnly)
             {
-                DoRemoteCallGet(true, "InstantMessageServerURI", agentID, im);
+                DoRemoteCallPost(true, "InstantMessageServerURI", agentID, im);
                 return;
             }
 

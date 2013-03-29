@@ -83,7 +83,7 @@ namespace Aurora.Services
         public void PostInternal(bool remote, string url, OSDMap request)
         {
             if (remote)
-                DoRemoteCallGet(true, url + "/syncmessage/", false, url + "/syncmessage/", request);
+                DoRemoteCallPost(true, url + "/syncmessage/", false, url + "/syncmessage/", request);
             else
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
@@ -102,7 +102,7 @@ namespace Aurora.Services
         public void PostToServerInternal(bool remote, OSDMap request)
         {
             if (remote)
-                DoRemoteCallGet(true, "SyncMessageServerURI", false, request);
+                DoRemoteCallPost(true, "SyncMessageServerURI", false, request);
             else
                 m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }

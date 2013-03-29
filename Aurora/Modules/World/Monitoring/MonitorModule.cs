@@ -116,11 +116,11 @@ namespace Aurora.Modules.Monitoring
             private readonly float[] lastReportedSimStats = new float[35];
             private readonly MonitorModule m_module;
             private readonly Timer m_report = new Timer();
-            protected Dictionary<string, IAlert> m_alerts = new Dictionary<string, IAlert>();
-            protected IScene m_currentScene;
+            private Dictionary<string, IAlert> m_alerts = new Dictionary<string, IAlert>();
+            private IScene m_currentScene;
             //The estate module to pull out the region flags
             private IEstateModule m_estateModule;
-            protected Dictionary<string, IMonitor> m_monitors = new Dictionary<string, IMonitor>();
+            private Dictionary<string, IMonitor> m_monitors = new Dictionary<string, IMonitor>();
             private float statsUpdateFactor = 2;
             private int statsUpdatesEveryMS = 2000;
 
@@ -204,7 +204,7 @@ namespace Aurora.Modules.Monitoring
             /// <summary>
             ///     Add the monitors that are for the entire instance
             /// </summary>
-            protected void AddDefaultMonitors()
+            private void AddDefaultMonitors()
             {
                 AddMonitor(new AssetMonitor());
                 AddMonitor(new GCMemoryMonitor());
@@ -217,7 +217,7 @@ namespace Aurora.Modules.Monitoring
             ///     Add the monitors that are for each scene
             /// </summary>
             /// <param name="scene"></param>
-            protected void AddRegionMonitors(IScene scene)
+            private void AddRegionMonitors(IScene scene)
             {
                 AddMonitor(new AgentCountMonitor(scene));
                 AddMonitor(new AgentUpdateMonitor(scene));
@@ -405,7 +405,7 @@ namespace Aurora.Modules.Monitoring
             private readonly SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[35];
             private SimStatsPacket.RegionBlock rb;
 
-            protected void buildInitialRegionBlock()
+            private void buildInitialRegionBlock()
             {
                 rb = new SimStatsPacket.RegionBlock();
                 uint regionFlags = 0;
@@ -433,7 +433,7 @@ namespace Aurora.Modules.Monitoring
             /// </summary>
             /// <param name="sender"></param>
             /// <param name="e"></param>
-            protected void statsHeartBeat(object sender, EventArgs e)
+            private void statsHeartBeat(object sender, EventArgs e)
             {
                 if (m_currentScene.PhysicsScene == null)
                     return;

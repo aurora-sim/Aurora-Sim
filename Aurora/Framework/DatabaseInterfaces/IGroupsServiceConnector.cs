@@ -30,6 +30,9 @@ using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.Services;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using System;
+using Aurora.Framework.Modules;
 
 namespace Aurora.Framework.DatabaseInterfaces
 {
@@ -120,5 +123,191 @@ namespace Aurora.Framework.DatabaseInterfaces
         List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID);
         void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote);
         void AddGroupProposal(UUID agentID, GroupProposalInfo info);
+    }
+
+    /// <summary>
+    ///     Internal class for chat sessions
+    /// </summary>
+    public class ChatSession
+    {
+        public List<ChatSessionMember> Members;
+        public string Name;
+        public UUID SessionID;
+    }
+
+    //Pulled from OpenMetaverse
+    // Summary:
+    //     Struct representing a member of a group chat session and their settings
+    public class ChatSessionMember
+    {
+        // Summary:
+        //     The OpenMetaverse.UUID of the Avatar
+        public UUID AvatarKey;
+        //
+        // Summary:
+        //     True if user has voice chat enabled
+        public bool CanVoiceChat;
+
+        /// <summary>
+        ///     Whether the user has accepted being added to the group chat
+        /// </summary>
+        public bool HasBeenAdded;
+
+        /// <summary>
+        ///     Whether the user has asked to be removed from the chat
+        /// </summary>
+        public bool RequestedRemoval;
+
+        //
+        // Summary:
+        //     True of Avatar has moderator abilities
+        public bool IsModerator;
+        //
+        // Summary:
+        //     True if a moderator has muted this avatars chat
+        public bool MuteText;
+        //
+        // Summary:
+        //     True if a moderator has muted this avatars voice
+        public bool MuteVoice;
+        //
+        // Summary:
+        //     True if they have been requested to join the session
+    }
+
+    public class GroupInviteInfo : IDataTransferable
+    {
+        public UUID AgentID = UUID.Zero;
+        public string FromAgentName = "";
+        public UUID GroupID = UUID.Zero;
+        public UUID InviteID = UUID.Zero;
+        public UUID RoleID = UUID.Zero;
+
+        public GroupInviteInfo()
+        {
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap values = new OSDMap();
+            values["GroupID"] = GroupID;
+            values["RoleID"] = RoleID;
+            values["AgentID"] = AgentID;
+            values["InviteID"] = InviteID;
+            values["FromAgentName"] = FromAgentName;
+            return values;
+        }
+
+        public override void FromOSD(OSDMap values)
+        {
+            GroupID = values["GroupID"];
+            RoleID = values["RoleID"];
+            AgentID = values["AgentID"];
+            InviteID = values["InviteID"];
+            FromAgentName = values["FromAgentName"];
+        }
+    }
+
+    public class GroupNoticeInfo : IDataTransferable
+    {
+        public byte[] BinaryBucket = new byte[0];
+        public UUID GroupID = UUID.Zero;
+        public string Message = string.Empty;
+        public GroupNoticeData noticeData = new GroupNoticeData();
+
+        public GroupNoticeInfo()
+        {
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap values = new OSDMap();
+            values["noticeData"] = noticeData.ToOSD();
+            values["GroupID"] = GroupID;
+            values["Message"] = Message;
+            values["BinaryBucket"] = BinaryBucket;
+            return values;
+        }
+
+        public override void FromOSD(OSDMap values)
+        {
+            noticeData = new GroupNoticeData();
+            noticeData.FromOSD((OSDMap)values["noticeData"]);
+            GroupID = values["GroupID"];
+            Message = values["Message"];
+            BinaryBucket = values["BinaryBucket"];
+        }
+    }
+
+    public class GroupProposalInfo : IDataTransferable
+    {
+        public int Duration;
+        public UUID GroupID = UUID.Zero;
+        public float Majority;
+        public int Quorum;
+        public UUID Session = UUID.Zero;
+        public string Text = string.Empty;
+        public UUID BallotInitiator = UUID.Zero;
+        public DateTime Created = DateTime.Now;
+        public DateTime Ending = DateTime.Now;
+        public UUID VoteID = UUID.Random();
+
+        /// <summary>
+        ///     Only set when a user is calling to find out proposal info, it is what said user voted
+        /// </summary>
+        public string VoteCast = "";
+
+        /// <summary>
+        ///     The result of the proposal (success or failure)
+        /// </summary>
+        public bool Result = false;
+
+        /// <summary>
+        ///     The number of votes cast (so far if the proposal is still open)
+        /// </summary>
+        public int NumVotes = 0;
+
+        /// <summary>
+        ///     If this is false, the result of the proposal has not been calculated and should be when it is retrieved next
+        /// </summary>
+        public bool HasCalculatedResult = false;
+
+        public override void FromOSD(OSDMap map)
+        {
+            GroupID = map["GroupID"].AsUUID();
+            Duration = map["Duration"].AsInteger();
+            Majority = (float)map["Majority"].AsReal();
+            Text = map["Text"].AsString();
+            Quorum = map["Quorum"].AsInteger();
+            Session = map["Session"].AsUUID();
+            BallotInitiator = map["BallotInitiator"];
+            Created = map["Created"];
+            Ending = map["Ending"];
+            VoteID = map["VoteID"];
+            VoteCast = map["VoteCast"];
+            Result = map["Result"];
+            NumVotes = map["NumVotes"];
+            HasCalculatedResult = map["HasCalculatedResult"];
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["GroupID"] = GroupID;
+            map["Duration"] = Duration;
+            map["Majority"] = Majority;
+            map["Text"] = Text;
+            map["Quorum"] = Quorum;
+            map["Session"] = Session;
+            map["BallotInitiator"] = BallotInitiator;
+            map["Created"] = Created;
+            map["Ending"] = Ending;
+            map["VoteID"] = VoteID;
+            map["VoteCast"] = VoteCast;
+            map["Result"] = Result;
+            map["NumVotes"] = NumVotes;
+            map["HasCalculatedResult"] = HasCalculatedResult;
+            return map;
+        }
     }
 }

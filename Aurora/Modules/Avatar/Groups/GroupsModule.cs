@@ -28,6 +28,7 @@
 using Aurora.Framework;
 using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
@@ -79,7 +80,7 @@ namespace Aurora.Modules.Groups
 
         // Configuration settings
         private bool m_debugEnabled = true;
-        private IGroupsServicesConnector m_groupData;
+        private IGroupsServiceConnector m_groupData;
         private bool m_groupNoticesEnabled = true;
         private bool m_groupsEnabled;
         private IMessageTransferModule m_msgTransferModule;
@@ -104,8 +105,7 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled)
                 MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            string title = m_groupData.SetAgentActiveGroup(GetRequestingAgentID(remoteClient),
-                                                           GetRequestingAgentID(remoteClient), groupID);
+            string title = m_groupData.SetAgentActiveGroup(GetRequestingAgentID(remoteClient), groupID);
             m_cachedGroupTitles.Remove(remoteClient.AgentId);
             // Changing active group changes title, active powers, all kinds of things
             // anyone who is in any region that can see this client, should probably be 
@@ -203,8 +203,8 @@ namespace Aurora.Modules.Groups
                 MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
             // Note: Permissions checking for modification rights is handled by the Groups Server/Service
-            m_groupData.UpdateGroup(GetRequestingAgentID(remoteClient), groupID, charter, showInList, insigniaID,
-                                    membershipFee, openEnrollment, allowPublish, maturePublish);
+            m_groupData.UpdateGroup(GetRequestingAgentID(remoteClient), groupID, charter, showInList ? 1 : 0, insigniaID,
+                membershipFee, openEnrollment ? 1 : 0, allowPublish ? 1 : 0, maturePublish ? 1 : 0);
             NullCacheInfos(groupID);
         }
 
@@ -215,7 +215,7 @@ namespace Aurora.Modules.Groups
                 MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
             m_groupData.SetAgentGroupInfo(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient),
-                                          groupID, acceptNotices, listInProfile);
+                                          groupID, acceptNotices ? 1 : 0, listInProfile ? 1 : 0);
             NullCacheInfos(remoteClient.AgentId, groupID);
         }
 
@@ -264,9 +264,10 @@ namespace Aurora.Modules.Groups
                     return UUID.Zero;
                 }
             }
-            UUID groupID = m_groupData.CreateGroup(GetRequestingAgentID(remoteClient), name, charter, showInList,
-                                                   insigniaID, membershipFee, openEnrollment, allowPublish,
-                                                   maturePublish, GetRequestingAgentID(remoteClient));
+            UUID groupID = UUID.Random();
+            m_groupData.CreateGroup(groupID, name, charter, showInList,
+                                                    insigniaID, membershipFee, openEnrollment, allowPublish,
+                                                    maturePublish, GetRequestingAgentID(remoteClient), UUID.Random());
 
             remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
             m_cachedGroupTitles[remoteClient.AgentId] =
@@ -284,7 +285,7 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled)
                 MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            return m_groupData.GetGroupNotices(GetRequestingAgentID(remoteClient), groupID).ToArray();
+            return m_groupData.GetGroupNotices(GetRequestingAgentID(remoteClient), 0,0, groupID).ToArray();
         }
 
         /// <summary>
@@ -300,7 +301,7 @@ namespace Aurora.Modules.Groups
             if (m_cachedGroupTitles.ContainsKey(avatarID))
                 membership = m_cachedGroupTitles[avatarID];
             else
-                membership = m_groupData.GetAgentActiveMembership(avatarID, avatarID);
+                membership = m_groupData.GetGroupMembershipData(avatarID, UUID.Zero, avatarID);
 
             if (membership != null)
             {
@@ -319,8 +320,7 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled)
                 MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            string title = m_groupData.SetAgentActiveGroupRole(GetRequestingAgentID(remoteClient),
-                                                               GetRequestingAgentID(remoteClient), groupID, titleRoleID);
+            string title = m_groupData.SetAgentGroupSelectedRole(GetRequestingAgentID(remoteClient), groupID, titleRoleID);
             m_cachedGroupTitles.Remove(remoteClient.AgentId);
             // TODO: Not sure what all is needed here, but if the active group role change is for the group
             // the client currently has set active, then we need to do a scene presence update too
@@ -355,12 +355,12 @@ namespace Aurora.Modules.Groups
             switch ((GroupRoleUpdate) updateType)
             {
                 case OpenMetaverse.GroupRoleUpdate.Create:
-                    m_groupData.AddGroupRole(GetRequestingAgentID(remoteClient), groupID, UUID.Random(), name,
+                    m_groupData.AddRoleToGroup(GetRequestingAgentID(remoteClient), groupID, UUID.Random(), name,
                                              description, title, powers);
                     break;
 
                 case OpenMetaverse.GroupRoleUpdate.Delete:
-                    m_groupData.RemoveGroupRole(GetRequestingAgentID(remoteClient), groupID, roleID);
+                    m_groupData.RemoveRoleFromGroup(GetRequestingAgentID(remoteClient), roleID, groupID);
                     break;
 
                 case OpenMetaverse.GroupRoleUpdate.UpdateAll:
@@ -372,7 +372,7 @@ namespace Aurora.Modules.Groups
                         MainConsole.Instance.DebugFormat("[GROUPS]: Role ({0}) updated with Powers ({1}) ({2})", name,
                                                          powers.ToString(), gp.ToString());
                     }
-                    m_groupData.UpdateGroupRole(GetRequestingAgentID(remoteClient), groupID, roleID, name, description,
+                    m_groupData.UpdateRole(GetRequestingAgentID(remoteClient), groupID, roleID, name, description,
                                                 title, powers);
                     RemoveFromGroupPowersCache(groupID);
                     break;
@@ -407,12 +407,12 @@ namespace Aurora.Modules.Groups
             {
                 case 0:
                     // Add
-                    m_groupData.AddAgentToGroupRole(GetRequestingAgentID(remoteClient), memberID, groupID, roleID);
+                    m_groupData.AddAgentToRole(GetRequestingAgentID(remoteClient), memberID, groupID, roleID);
 
                     break;
                 case 1:
                     // Remove
-                    m_groupData.RemoveAgentFromGroupRole(GetRequestingAgentID(remoteClient), memberID, groupID, roleID);
+                    m_groupData.RemoveAgentFromRole(GetRequestingAgentID(remoteClient), memberID, groupID, roleID);
 
                     break;
                 default:
@@ -717,7 +717,7 @@ namespace Aurora.Modules.Groups
 
             UUID InviteID = UUID.Random();
 
-            m_groupData.AddAgentToGroupInvite(GetRequestingAgentID(remoteClient), InviteID, groupID, roleID,
+            m_groupData.AddAgentGroupInvite(GetRequestingAgentID(remoteClient), InviteID, groupID, roleID,
                                               invitedAgentID, remoteClient.Name);
 
             // Check to see if the invite went through, if it did not then it's possible
@@ -1113,7 +1113,7 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled)
                 MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            m_groupData = scene.RequestModuleInterface<IGroupsServicesConnector>();
+            m_groupData = Aurora.Framework.Utilities.DataManager.RequestPlugin<IGroupsServiceConnector>();
 
             // No Groups Service Connector, then nothing works...
             if (m_groupData == null)
@@ -1463,8 +1463,9 @@ namespace Aurora.Modules.Groups
 
             GroupMembershipData membership = m_cachedGroupTitles.ContainsKey(dataForAgentID)
                                                  ? m_cachedGroupTitles[dataForAgentID]
-                                                 : m_groupData.GetAgentActiveMembership(
+                                                 : m_groupData.GetGroupMembershipData(
                                                      GetRequestingAgentID(remoteClient),
+                                                     UUID.Zero,
                                                      dataForAgentID);
             m_cachedGroupTitles[dataForAgentID] = membership;
             if (membership != null)
@@ -1569,7 +1570,7 @@ namespace Aurora.Modules.Groups
                             UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, gmd.GroupTitle);
                             SendAgentGroupDataUpdate(remoteClient);
 
-                            m_groupData.RemoveAgentToGroupInvite(GetRequestingAgentID(remoteClient), inviteID);
+                            m_groupData.RemoveAgentInvite(GetRequestingAgentID(remoteClient), inviteID);
                         }
                     }
 
@@ -1578,7 +1579,7 @@ namespace Aurora.Modules.Groups
                     {
                         if (m_debugEnabled)
                             MainConsole.Instance.DebugFormat("[GROUPS]: Received a reject invite notice.");
-                        m_groupData.RemoveAgentToGroupInvite(GetRequestingAgentID(remoteClient), inviteID);
+                        m_groupData.RemoveAgentInvite(GetRequestingAgentID(remoteClient), inviteID);
                     }
                     RemoveFromGroupPowersCache(remoteClient.AgentId, inviteInfo.GroupID);
                 }
@@ -1785,7 +1786,7 @@ namespace Aurora.Modules.Groups
                         from d in m_cachedGroupMemberships[agentID] where d.GroupID == groupID select d)
                     return data;
             }
-            return m_groupData.GetAgentGroupMembership(requestingAgentID, agentID, groupID);
+            return m_groupData.GetGroupMembershipData(requestingAgentID, groupID, agentID);
         }
 
         private void OnGridInstantMessage(GridInstantMessage msg)

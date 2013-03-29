@@ -332,6 +332,7 @@ namespace Aurora.Modules.WorldMap
                         {
                             AssetMesh meshAsset = new AssetMesh(omvPrim.Sculpt.SculptTexture, sculptAsset);
                             FacetedMesh.TryDecodeFromAsset(omvPrim, meshAsset, DetailLevel.Highest, out renderMesh);
+                            meshAsset = null;
                         }
                         else // It's sculptie
                         {

@@ -52,9 +52,8 @@ namespace Aurora.Modules.Estate
         #region Declares
 
         private readonly Dictionary<UUID, int> LastTelehub = new Dictionary<UUID, int>();
-
         private readonly Dictionary<UUID, int> TimeSinceLastTeleport = new Dictionary<UUID, int>();
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_scene;
         private string[] BanCriteria = new string[0];
         private bool ForceLandingPointsOnCrossing;
         private bool LoginsDisabled = true;
@@ -157,10 +156,6 @@ namespace Aurora.Modules.Estate
 
         protected void SetRegionInfoOption(string[] cmdparams)
         {
-            IScene scene = MainConsole.Instance.ConsoleScene;
-            if (scene == null)
-                scene = m_scenes[0];
-
             #region 3 Params needed
 
             if (cmdparams.Length < 4)
@@ -173,13 +168,13 @@ namespace Aurora.Modules.Estate
                 switch (cmdparams[3])
                 {
                     case "PG":
-                        scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(0);
+                        m_scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(0);
                         break;
                     case "Mature":
-                        scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(1);
+                        m_scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(1);
                         break;
                     case "Adult":
-                        scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(2);
+                        m_scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(2);
                         break;
                     default:
                         MainConsole.Instance.Warn(
@@ -187,9 +182,9 @@ namespace Aurora.Modules.Estate
                         return;
                 }
                 //Tell the grid about the changes
-                IGridRegisterModule gridRegModule = scene.RequestModuleInterface<IGridRegisterModule>();
+                IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
                 if (gridRegModule != null)
-                    gridRegModule.UpdateGridRegion(scene);
+                    gridRegModule.UpdateGridRegion(m_scene);
             }
 
             #endregion
@@ -206,40 +201,40 @@ namespace Aurora.Modules.Estate
                 EstateBan EB = new EstateBan
                                    {
                                        BannedUserID =
-                                           m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3],
+                                           m_scene.UserAccountService.GetUserAccount(null, cmdparams[3],
                                                                                          cmdparams[4]).PrincipalID
                                    };
-                scene.RegionInfo.EstateSettings.AddBan(EB);
+                m_scene.RegionInfo.EstateSettings.AddBan(EB);
             }
             if (cmdparams[2] == "AddEstateManager".ToLower())
             {
-                scene.RegionInfo.EstateSettings.AddEstateManager(
-                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
+                m_scene.RegionInfo.EstateSettings.AddEstateManager(
+                    m_scene.UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "AddEstateAccess".ToLower())
             {
-                scene.RegionInfo.EstateSettings.AddEstateUser(
-                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
+                m_scene.RegionInfo.EstateSettings.AddEstateUser(
+                    m_scene.UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateBan".ToLower())
             {
-                scene.RegionInfo.EstateSettings.RemoveBan(
-                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
+                m_scene.RegionInfo.EstateSettings.RemoveBan(
+                    m_scene.UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateManager".ToLower())
             {
-                scene.RegionInfo.EstateSettings.RemoveEstateManager(
-                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
+                m_scene.RegionInfo.EstateSettings.RemoveEstateManager(
+                    m_scene.UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateAccess".ToLower())
             {
-                scene.RegionInfo.EstateSettings.RemoveEstateUser(
-                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
+                m_scene.RegionInfo.EstateSettings.RemoveEstateUser(
+                    m_scene.UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
 
             #endregion
 
-            scene.RegionInfo.EstateSettings.Save();
+            m_scene.RegionInfo.EstateSettings.Save();
         }
 
         #endregion
@@ -904,7 +899,7 @@ namespace Aurora.Modules.Estate
 
         private bool CheckEstateGroups(EstateSettings ES, AgentCircuitData agent)
         {
-            IGroupsModule gm = m_scenes.Count == 0 ? null : m_scenes[0].RequestModuleInterface<IGroupsModule>();
+            IGroupsModule gm = m_scene.RequestModuleInterface<IGroupsModule>();
             if (gm != null && ES.EstateGroups.Count > 0)
             {
                 GroupMembershipData[] gmds = gm.GetMembershipData(agent.AgentID);
@@ -984,10 +979,9 @@ namespace Aurora.Modules.Estate
             if (!m_enabled)
                 return;
 
-            m_scenes.Add(scene);
-
             RegionConnector = Framework.Utilities.DataManager.RequestPlugin<IRegionConnector>();
 
+            m_scene = scene;
             scene.EventManager.OnNewClient += OnNewClient;
             scene.Permissions.OnAllowIncomingAgent += OnAllowedIncomingAgent;
             scene.Permissions.OnAllowedIncomingTeleport += OnAllowedIncomingTeleport;
@@ -1058,7 +1052,7 @@ namespace Aurora.Modules.Estate
             if (!m_enabled)
                 return;
 
-            m_scenes.Remove(scene);
+            m_scene = null;
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.Permissions.OnAllowIncomingAgent -= OnAllowedIncomingAgent;
             scene.Permissions.OnAllowedIncomingTeleport -= OnAllowedIncomingTeleport;

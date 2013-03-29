@@ -60,7 +60,7 @@ namespace Aurora.Modules.Terrain.FloodBrushes
                         for (l = 0 - area; l < area; l += step)
                         {
                             avgsteps++;
-                            average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map, new List<IScene>());
+                            average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map);
                         }
                     }
 
