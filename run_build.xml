@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<project name="Build Project" default="build">
-    <target name="build">
-	    <echo>Preparing build</echo>
-	    <exec program="prebuild.bat"/>
-	    <echo>Starting build</echo>
-	    <nant buildfile="OpenSim.build"/>
-    </target>
-</project>

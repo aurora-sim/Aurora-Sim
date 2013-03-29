@@ -1,0 +1,18 @@
+Adding, Updating, and Removing Regions
+
+How to add another region in grid mode:
+
+    To add another region, you'll have to copy the bin folder to another location, making sure to remove the
+	sim.sim file (as that contains the region info from the old bin folder) and configure it to have a different
+	http port (in Aurora.ini [Network] section), as well as configuring the new region that you'll set up to
+	have a different internal port (set up when adding a region).
+	
+How to remove a region in grid mode:
+    
+	To remove a region, simply don't start that region's Aurora.exe file, and to remove it from the map, switch to
+	Aurora.Server.exe and type 'grid remove region <name>'.
+	
+How to update a region:
+
+    To update region information such as Name, Position, etc, type 'update region info' on the region console.
+	To update estate information, such as the estate you are in, type 'change estate' on the region console.
