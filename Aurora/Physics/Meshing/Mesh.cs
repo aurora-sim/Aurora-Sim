@@ -161,6 +161,8 @@ namespace Aurora.Physics.Meshing
                 Marshal.FreeHGlobal(m_indicesPtr);
                 m_indicesPtr = IntPtr.Zero;
             }
+            GC.RemoveMemoryPressure(m_indexCount * sizeof(int));
+            GC.RemoveMemoryPressure(m_vertexCount * 3 * sizeof(float));
         }
 
         /// <summary>
@@ -170,7 +172,6 @@ namespace Aurora.Physics.Meshing
         {
             m_triangles = null;
             m_vertices = null;
-            releasePinned();
         }
 
         #endregion
