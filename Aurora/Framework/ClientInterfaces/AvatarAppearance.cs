@@ -588,6 +588,7 @@ namespace Aurora.Framework.ClientInterfaces
             OSDMap data = new OSDMap();
 
             data["serial"] = OSD.FromInteger(m_serial);
+            data["owner"] = Owner;
             data["height"] = OSD.FromReal(m_avatarHeight);
 
             // Wearables
@@ -635,6 +636,8 @@ namespace Aurora.Framework.ClientInterfaces
             if ((data != null) && (data["height"] != null))
                 m_avatarHeight = (float) data["height"].AsReal();
 
+            if ((data != null) && (data["owner"] != null))
+                m_owner = data["owner"].AsUUID();
             try
             {
                 // Wearables

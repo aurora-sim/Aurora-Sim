@@ -857,6 +857,7 @@ textures 1
             /// <param name="avatar"></param>
             public void SendAppearanceToAgent(IScenePresence avatar)
             {
+                Appearance.Owner = m_sp.UUID;
                 avatar.ControllingClient.SendAppearance(Appearance);
             }
 
