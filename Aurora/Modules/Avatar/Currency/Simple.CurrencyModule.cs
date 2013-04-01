@@ -16,7 +16,10 @@ namespace Simple.Currency
     {
         #region Declares
 
-        private SimpleCurrencyConfig m_config;
+        private SimpleCurrencyConfig Config
+        {
+            get { return m_connector.GetConfig(); }
+        }
         private IScene m_scene;
         private ISimpleCurrencyConnector m_connector;
         private IRegistryCore m_registry;
@@ -63,10 +66,6 @@ namespace Simple.Currency
                                                 scene.EventManager.OnValidateBuyLand += EventManager_OnValidateBuyLand;
                                                 scene.RegisterModuleInterface<IMoneyModule>(this);
                                             };
-                manager.OnFinishedAddingScene += (scene) =>
-                    {
-                        m_config = m_connector.GetConfig();
-                    };
                 manager.OnCloseScene += (scene) =>
                                             {
                                                 m_scene.EventManager.OnNewClient -= OnNewClient;
@@ -122,17 +121,17 @@ namespace Simple.Currency
 
         public int UploadCharge
         {
-            get { return m_config.PriceUpload; }
+            get { return Config.PriceUpload; }
         }
 
         public int GroupCreationCharge
         {
-            get { return m_config.PriceGroupCreate; }
+            get { return Config.PriceGroupCreate; }
         }
 
         public int ClientPort
         {
-            get { return m_config.ClientPort; }
+            get { return Config.ClientPort; }
         }
 
         public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)
@@ -254,7 +253,7 @@ namespace Simple.Currency
 
         private void EconomyDataRequestHandler(IClientAPI remoteClient)
         {
-            if (m_config == null)
+            if (Config == null)
             {
                 remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity,
                                              remoteClient.Scene.RegionInfo.ObjectCapacity,
@@ -270,13 +269,13 @@ namespace Simple.Currency
             else
                 remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity,
                                              remoteClient.Scene.RegionInfo.ObjectCapacity,
-                                             0, m_config.PriceGroupCreate,
+                                             0, Config.PriceGroupCreate,
                                              0, 0,
                                              0, 0,
                                              0,
                                              0, 0,
                                              0, 0,
-                                             m_config.PriceUpload,
+                                             Config.PriceUpload,
                                              0, 0);
         }
 

@@ -418,23 +418,6 @@ namespace Aurora.Services
                             account.Name);
                         return LLFailedLoginResponse.InventoryProblem;
                     }
-                    if (defaultItems.Count > 0)
-                    {
-                        avappearance = new AvatarAppearance(account.PrincipalID);
-                        avappearance.SetWearable((int) WearableType.Shape,
-                                                 new AvatarWearable(defaultItems[0].ID, defaultItems[0].AssetID));
-                        avappearance.SetWearable((int) WearableType.Skin,
-                                                 new AvatarWearable(defaultItems[1].ID, defaultItems[1].AssetID));
-                        avappearance.SetWearable((int) WearableType.Hair,
-                                                 new AvatarWearable(defaultItems[2].ID, defaultItems[2].AssetID));
-                        avappearance.SetWearable((int) WearableType.Eyes,
-                                                 new AvatarWearable(defaultItems[3].ID, defaultItems[3].AssetID));
-                        avappearance.SetWearable((int) WearableType.Shirt,
-                                                 new AvatarWearable(defaultItems[4].ID, defaultItems[4].AssetID));
-                        avappearance.SetWearable((int) WearableType.Pants,
-                                                 new AvatarWearable(defaultItems[5].ID, defaultItems[5].AssetID));
-                        m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
-                    }
                 }
 
                 if (profileData != null)
@@ -554,7 +537,7 @@ namespace Aurora.Services
                                                        guinfo.HomeLookAt);
 
                     MainConsole.Instance.Info("[LLLoginService]: User did not have a home, set to " +
-                                              (DefaultRegion == null ? "(no region found)" : DefaultRegion.RegionName));
+                                              (guinfo.HomeRegionID == UUID.Zero ? "(no region found)" : guinfo.HomeRegionID.ToString()));
                 }
 
                 //

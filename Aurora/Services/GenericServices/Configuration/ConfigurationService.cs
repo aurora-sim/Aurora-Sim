@@ -56,7 +56,9 @@ namespace Aurora.Services
 
         public string FindValueOf(string key)
         {
-            return m_urls[key];
+            if(m_urls.ContainsKey(key))
+                return m_urls[key];
+            return "";
         }
 
         public Dictionary<string, string> GetURIs()

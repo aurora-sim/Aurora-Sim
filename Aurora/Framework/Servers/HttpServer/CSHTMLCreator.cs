@@ -90,7 +90,7 @@ namespace Aurora.Framework.Servers.HttpServer
             foreach (KeyValuePair<string, object> kvp in vars)
             {
                 if (!(kvp.Value is IList))
-                    html = html.Replace("{" + kvp.Key + "}", kvp.Value.ToString());
+                    html = html.Replace("{" + kvp.Key + "}", (kvp.Value ?? "").ToString());
             }
             return html;
         }
