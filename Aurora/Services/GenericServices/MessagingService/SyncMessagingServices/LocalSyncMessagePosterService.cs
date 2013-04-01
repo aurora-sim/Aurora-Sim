@@ -54,7 +54,7 @@ namespace Aurora.Services
 
             m_doRemote = handlerConfig.GetBoolean("SyncMessagePosterServiceDoRemote", false);
             registry.RegisterModuleInterface<ISyncMessagePosterService>(this);
-            Init(registry, Name, serverPath: "/syncmessage/");
+            Init(registry, Name, serverPath: "/syncmessage/", serverHandlerName: "SyncMessageServerURI");
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

@@ -526,9 +526,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     lock (SleepingScriptEvents)
                     {
+                    restart:
                         if (SleepingScriptEvents.Count > 0)
                         {
-                            restart:
                             QIS = SleepingScriptEvents.Dequeue().Value;
                             found = true;
                             if (QIS.RunningNumber > 2 && SleepingScriptEventCount > 0 &&

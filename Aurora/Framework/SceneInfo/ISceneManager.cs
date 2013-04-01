@@ -47,5 +47,6 @@ namespace Aurora.Framework.SceneInfo
 
         event NewScene OnCloseScene;
         event NewScene OnAddedScene;
+        event NewScene OnFinishedAddingScene;
     }
 }

@@ -33,7 +33,7 @@ namespace Aurora.Services
             m_registry = registry;
             registry.RegisterModuleInterface<IInstantMessagingService>(this);
 
-            Init(registry, "InstantMessagingService", "", "/im/");
+            Init(registry, "InstantMessagingService", "", "/im/", "InstantMessageServerURI");
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

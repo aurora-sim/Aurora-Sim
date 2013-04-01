@@ -43,7 +43,7 @@ namespace Aurora.RedisServices.AssetService
                 return;
             m_enabled = true;
             Configure(config, registry);
-            Init(registry, Name, serverPath: "/asset/");
+            Init(registry, Name, serverPath: "/asset/", serverHandlerName: "AssetServerURI");
         }
 
         public virtual void Configure(IConfigSource config, IRegistryCore registry)
@@ -170,7 +170,7 @@ namespace Aurora.RedisServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
             {
                 byte[] data = (byte[]) remoteValue;
-                if (doDatabaseCaching && cache != null)
+                if (doDatabaseCaching && cache != null && data != null)
                     cache.CacheData(id, data);
                 return data;
             }

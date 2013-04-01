@@ -52,6 +52,11 @@ namespace Aurora.Framework.Services
         {
             Connectors.Add(con);
         }
+        public static List<ConnectorBase> ServerHandlerConnectors = new List<ConnectorBase>();
+        public static void RegisterServerHandlerConnector(ConnectorBase con)
+        {
+            ServerHandlerConnectors.Add(con);
+        }
     }
 
     public class ConnectorBase
@@ -69,6 +74,18 @@ namespace Aurora.Framework.Services
         protected int m_OSDRequestTryCount = 7;
         protected string m_password = "";
 
+        public string ServerHandlerName
+        {
+            get;
+            private set;
+        }
+
+        public uint ServerHandlerPort
+        {
+            get;
+            private set;
+        }
+
         public string PluginName
         {
             get { return m_name; }
@@ -76,7 +93,7 @@ namespace Aurora.Framework.Services
 
         public bool Enabled { get; set; }
 
-        public void Init(IRegistryCore registry, string name, string password = "", string serverPath = "")
+        public void Init(IRegistryCore registry, string name, string password = "", string serverPath = "", string serverHandlerName = "")
         {
             Enabled = true;
             m_registry = registry;
@@ -109,14 +126,17 @@ namespace Aurora.Framework.Services
             ConnectorRegistry.RegisterConnector(this);
 
             if (openServerHandler)
-                CreateServerHandler(serverHandlerPort, serverPath);
+                CreateServerHandler(serverHandlerPort, serverPath, serverHandlerName);
         }
 
-        protected void CreateServerHandler(uint port, string urlPath)
+        protected void CreateServerHandler(uint port, string urlPath, string serverHandlerName)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler(new ServerHandler(urlPath, m_registry, this));
+            ServerHandlerName = serverHandlerName;
+            ServerHandlerPort = port;
+            ConnectorRegistry.RegisterServerHandlerConnector(this);
         }
 
         public void SetPassword(string password)
@@ -129,6 +149,8 @@ namespace Aurora.Framework.Services
             m_doRemoteCalls = doRemoteCalls;
             m_doRemoteOnly = doRemoteCalls;
         }
+
+        #region OSD Sending
 
         public object DoRemote(params object[] o)
         {
@@ -297,6 +319,8 @@ namespace Aurora.Framework.Services
         {
             return password == m_password;
         }
+
+        #endregion
     }
 
     public class ServerHandler : BaseRequestHandler

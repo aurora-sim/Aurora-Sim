@@ -66,10 +66,6 @@
     ;; Example "Linden,Admin"
     BannedUserNames = "Linden"
 	
-[AssetService]
-    ;; Whether or not we should do conversion from an older SQL asset database
-	DoConversion = true
-	
 [Handlers]
     ;; Add any handlers here that you want to use
 

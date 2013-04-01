@@ -63,6 +63,7 @@ namespace Aurora.Region
 
         public event NewScene OnCloseScene;
         public event NewScene OnAddedScene;
+        public event NewScene OnFinishedAddingScene;
 
         protected ISimulationBase m_OpenSimBase;
         protected IScene m_scene;
@@ -238,6 +239,9 @@ namespace Aurora.Region
                 OnAddedScene(m_scene);
 
             StartModules(m_scene);
+
+            if (OnFinishedAddingScene != null)
+                OnFinishedAddingScene(m_scene);
 
             //Start the heartbeats
             m_scene.StartHeartbeat();

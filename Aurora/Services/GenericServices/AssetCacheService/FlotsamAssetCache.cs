@@ -535,29 +535,6 @@ namespace Aurora.Services
                 }
             }
 
-
-#if WAIT_ON_INPROGRESS_REQUESTS
-    // Check if we're already downloading this asset.  If so, try to wait for it to 
-    // download.
-            if (m_WaitOnInprogressTimeout > 0)
-            {
-                m_RequestsForInprogress++;
-
-                ManualResetEvent waitEvent;
-                if (m_CurrentlyWriting.TryGetValue(filename, out waitEvent))
-                {
-                    waitEvent.WaitOne(m_WaitOnInprogressTimeout);
-                    return Get(id);
-                }
-            }
-#else
-            // Track how often we have the problem that an asset is requested while
-            // it is still being downloaded by a previous request.
-            if (m_CurrentlyWriting.Contains(filename))
-            {
-                m_RequestsForInprogress++;
-            }
-#endif
             return data;
         }
 

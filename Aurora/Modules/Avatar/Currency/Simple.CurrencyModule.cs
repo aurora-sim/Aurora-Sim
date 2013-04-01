@@ -33,7 +33,6 @@ namespace Simple.Currency
 
             m_registry = registry;
             m_connector = DataManager.RequestPlugin<ISimpleCurrencyConnector>();
-            m_config = m_connector.GetConfig();
 
             registry.RegisterModuleInterface<IMoneyModule>(this);
         }
@@ -56,7 +55,7 @@ namespace Simple.Currency
             if (manager != null)
             {
                 manager.OnAddedScene += (scene) =>
-                                            {
+                {
                                                 m_scene = scene;
                                                 scene.EventManager.OnNewClient += OnNewClient;
                                                 scene.EventManager.OnClosingClient += OnClosingClient;
@@ -64,6 +63,10 @@ namespace Simple.Currency
                                                 scene.EventManager.OnValidateBuyLand += EventManager_OnValidateBuyLand;
                                                 scene.RegisterModuleInterface<IMoneyModule>(this);
                                             };
+                manager.OnFinishedAddingScene += (scene) =>
+                    {
+                        m_config = m_connector.GetConfig();
+                    };
                 manager.OnCloseScene += (scene) =>
                                             {
                                                 m_scene.EventManager.OnNewClient -= OnNewClient;

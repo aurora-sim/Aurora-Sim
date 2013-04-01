@@ -232,13 +232,21 @@ namespace Aurora.Framework.Services
         void FinishedStartup();
     }
 
+    [ProtoContract()]
     public class RegisterRegion : IDataTransferable
     {
+        [ProtoMember(1)]
         public string Error;
+        [ProtoMember(2)]
         public List<GridRegion> Neighbors = new List<GridRegion>();
+        [ProtoMember(3)]
         public UUID SessionID;
+        [ProtoMember(4)]
         public int RegionFlags = 0;
+        [ProtoMember(5)]
         public GridRegion Region;
+        [ProtoMember(6)]
+        public Dictionary<string, string> URIs = new Dictionary<string, string>();
 
         public override OSDMap ToOSD()
         {
@@ -249,6 +257,8 @@ namespace Aurora.Framework.Services
             map["RegionFlags"] = RegionFlags;
             if (Region != null)
                 map["Region"] = Region.ToOSD();
+            if (URIs != null)
+                map["URIs"] = URIs.ToOSDMap();
             return map;
         }
 
@@ -267,8 +277,10 @@ namespace Aurora.Framework.Services
             if (map.ContainsKey("Region"))
             {
                 Region = new GridRegion();
-                Region.FromOSD((OSDMap) map["Region"]);
+                Region.FromOSD((OSDMap)map["Region"]);
             }
+            if (map.ContainsKey("URIs"))
+                URIs = ((OSDMap)map["URIs"]).ConvertMap<string>((o)=>o);
         }
     }
 

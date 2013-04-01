@@ -39,9 +39,16 @@ namespace Aurora.FileBasedServices.AssetService
                 return;
             m_enabled = true;
             Configure(config, registry);
-            Init(registry, Name, serverPath: "/asset/");
+            Init(registry, Name, serverPath: "/asset/", serverHandlerName: "AssetServerURI");
 
-            SetUpFileBase(Path.GetPathRoot(Environment.CurrentDirectory));
+            IConfig fileConfig = config.Configs["FileBasedAssetService"];
+            if (fileConfig != null)
+            {
+                if (fileConfig.GetString("AssetFolderPath", "") == "")
+                    SetUpFileBase(Path.Combine(Path.GetPathRoot(Environment.CurrentDirectory), "assets"));
+                else
+                    SetUpFileBase(fileConfig.GetString("AssetFolderPath"));
+            }
 
             IConfig assetConfig = config.Configs["AssetService"];
             if (assetConfig != null)
@@ -152,7 +159,7 @@ namespace Aurora.FileBasedServices.AssetService
             if (remoteValue != null || m_doRemoteOnly)
             {
                 byte[] data = (byte[]) remoteValue;
-                if (doDatabaseCaching && cache != null)
+                if (doDatabaseCaching && cache != null && data != null)
                     cache.CacheData(id, data);
                 return data;
             }
@@ -238,7 +245,7 @@ namespace Aurora.FileBasedServices.AssetService
 
         private void SetUpFileBase(string path)
         {
-            m_assetsDirectory = Path.Combine(path, "assets");
+            m_assetsDirectory = path;
             if (!Directory.Exists(m_assetsDirectory))
                 Directory.CreateDirectory(m_assetsDirectory);
             if (!Directory.Exists(Path.Combine(m_assetsDirectory, "data")))

@@ -30,78 +30,43 @@ using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Aurora.Services
 {
     /// <summary>
     ///     This is an application plugin so that it loads asap as it is used by many things (IService modules especially)
     /// </summary>
-    public class ConfigurationService : IConfigurationService, IApplicationPlugin
+    public class ConfigurationService : IConfigurationService, IService
     {
         #region Declares
 
-        protected OSDMap m_urls = new OSDMap();
+        protected Dictionary<string, string> m_urls = new Dictionary<string, string>();
         protected IConfigSource m_config;
 
         #endregion
-
-        #region IApplicationPlugin Members
-
-        public void PreStartup(ISimulationBase simBase)
-        {
-        }
-
-        public void Initialize(ISimulationBase openSim)
-        {
-            m_config = openSim.ConfigSource;
-
-            IConfig handlerConfig = m_config.Configs["Handlers"];
-            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
-                return;
-
-            //Register us
-            openSim.ApplicationRegistry.RegisterModuleInterface<IConfigurationService>(this);
-
-            FindConfiguration(m_config.Configs["Configuration"]);
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Start()
-        {
-        }
-
-        public void PostStart()
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        public void ReloadConfiguration(IConfigSource m_config)
-        {
-            IConfig handlerConfig = m_config.Configs["Handlers"];
-            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
-                return;
-
-            FindConfiguration(m_config.Configs["Configuration"]);
-        }
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        #endregion
-
         #region IConfigurationService Members
 
         public string FindValueOf(string key)
         {
-            return m_urls[key].AsString();
+            return m_urls[key];
+        }
+
+        public Dictionary<string, string> GetURIs()
+        {
+            return new Dictionary<string, string>(m_urls);
+        }
+
+        public void SetURIs(Dictionary<string, string> uris)
+        {
+            m_urls = uris;
         }
 
         #endregion
@@ -115,23 +80,31 @@ namespace Aurora.Services
             if (autoConfig == null)
                 return;
 
-            OSDMap request = new OSDMap();
             //Get the urls from the config
-            GetConfigFor("AssetServerURI", request);
-            GetConfigFor("AvatarServerURI", request);
-            GetConfigFor("GridServerURI", request);
-            GetConfigFor("InventoryServerURI", request);
-            GetConfigFor("ServerURI", request);
-            GetConfigFor("SyncMessageServerURI", request);
-            GetConfigFor("InstantMessageServerURI", request);
-            GetConfigFor("UserAccountServerURI", request);
-            GetConfigFor("CurrencyServerURI", request);
-            m_urls = request;
+            foreach (string key in m_config.Configs["Configuration"].GetKeys().Where((k) => k.EndsWith("URI")))
+                m_urls[key] = m_config.Configs["Configuration"].GetString(key);
         }
 
-        private void GetConfigFor(string name, OSDMap request)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            request[name] = m_config.Configs["Configuration"].GetString(name, "");
+            m_config = config;
+
+            IConfig handlerConfig = m_config.Configs["Handlers"];
+            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
+                return;
+
+            //Register us
+            registry.RegisterModuleInterface<IConfigurationService>(this);
+
+            FindConfiguration(m_config.Configs["Configuration"]);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void FinishedStartup()
+        {
         }
     }
 }

@@ -57,8 +57,8 @@ namespace Aurora.Services.SQLServices.GridService
         protected int m_maxRegionSize = 8192;
         protected int m_cachedMaxRegionSize = 0;
         protected int m_cachedRegionViewSize = 0;
-        protected IRegistryCore m_registryCore;
         protected IAgentInfoService m_agentInfoService;
+        protected ISyncMessagePosterService m_syncPosterService;
         private readonly Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
 
         #endregion
@@ -136,14 +136,14 @@ namespace Aurora.Services.SQLServices.GridService
                                                          HandleRegionRegistration);
             }
             registry.RegisterModuleInterface<IGridService>(this);
-            Init(registry, Name, serverPath: "/grid/");
+            Init(registry, Name, serverPath: "/grid/", serverHandlerName: "GridServerURI");
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_registryCore = registry;
             m_Database = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
-            m_agentInfoService = m_registryCore.RequestModuleInterface<IAgentInfoService>();
+            m_agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+            m_syncPosterService = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
         }
 
         public virtual void FinishedStartup()
@@ -545,7 +545,8 @@ namespace Aurora.Services.SQLServices.GridService
                                    Neighbors = neighbors,
                                    RegionFlags = regionInfos.Flags,
                                    SessionID = SessionID,
-                                   Region = regionInfos
+                                   Region = regionInfos,
+                                   URIs = m_configService.GetURIs()
                                };
                 }
             }
@@ -1068,7 +1069,6 @@ namespace Aurora.Services.SQLServices.GridService
 
         private void FixNeighbors(GridRegion regionInfos, List<GridRegion> neighbors, bool down)
         {
-            ISyncMessagePosterService postService = m_registryCore.RequestModuleInterface<ISyncMessagePosterService>();
             foreach (GridRegion r in neighbors)
             {
                 if (m_KnownNeighbors.ContainsKey(r.RegionID))
@@ -1085,8 +1085,8 @@ namespace Aurora.Services.SQLServices.GridService
                         m_KnownNeighbors[r.RegionID].Add(regionInfos);
                 }
 
-                if (postService != null)
-                    postService.Post(r.ServerURI,
+                if (m_syncPosterService != null)
+                    m_syncPosterService.Post(r.ServerURI,
                                      SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
             }
 

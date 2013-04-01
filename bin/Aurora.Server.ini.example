@@ -177,4 +177,5 @@
     Include-Data = AuroraServerConfiguration/Data/Data.ini
 	Include-Protection = AuroraServerConfiguration/Protection.ini
 	Include-Services = AuroraServerConfiguration/Services.ini
+    Include-Setup = AuroraServerConfiguration/GridSetup.ini
 	Include-Modules = AuroraServerConfiguration/Modules/*.ini

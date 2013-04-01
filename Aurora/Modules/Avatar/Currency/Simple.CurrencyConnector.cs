@@ -61,7 +61,7 @@ namespace Simple.Currency
 
             m_config = new SimpleCurrencyConfig(config);
 
-            Init(m_registry, Name, "", "/currency/");
+            Init(m_registry, Name, "", "/currency/", "CurrencyServerURI");
 
             if (!m_doRemoteCalls)
             {

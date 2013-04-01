@@ -37,7 +37,7 @@ namespace Aurora.Framework.Utilities
         /// <summary>
         ///     The current minor protocol version of this version of Aurora
         /// </summary>
-        public const int MINOR_PROTOCOL_VERSION = 1;
+        public const int MINOR_PROTOCOL_VERSION = 2;
 
         /// <summary>
         ///     The minimum major protocol version allowed to connect to this version of Aurora
@@ -49,4 +49,8 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public const int MINIMUM_MINOR_PROTOCOL_VERSION = 1;
     }
+    /// Changes:
+    /// Major 1
+    ///   Minor 1 - Initial bump
+    ///   Minor 2 - Added sending of URIs back to the region on registration
 }

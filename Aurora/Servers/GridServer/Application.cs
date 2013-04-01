@@ -50,7 +50,8 @@ namespace Aurora.Servers.AssetServer
                                                                new List<Type>
                                                                    {
                                                                        typeof (IGridService),
-                                                                       typeof (IAgentInfoService)
+                                                                       typeof (IAgentInfoService),
+                                                                       typeof (IConfigurationService)
                                                                    }));
         }
     }

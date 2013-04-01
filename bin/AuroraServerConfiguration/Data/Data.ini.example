@@ -18,6 +18,19 @@
 	
 	DoConversion = true
 	
+[FileBasedAssetService]
+	;; The path to where the assets will be stored on the hard drive
+	;;  for file based assets (if enabled)
+	;; The default path is the root of the hard drive that this is running on
+	;;  in a folder called assets (e.g. C:/assets/)
+	;; If you want to set this, set the full path to the folder you want to
+	;;  have assets be stored in.
+	;AssetFolderPath = 
+	
+[AssetService]
+    ;; Whether or not we should do conversion from an older SQL asset database
+	DoConversion = true
+	
 [AuroraConnectors]
     ;; If you want to disable the verification and backup of tables before running migrations, set this to false
     ;; Default is true

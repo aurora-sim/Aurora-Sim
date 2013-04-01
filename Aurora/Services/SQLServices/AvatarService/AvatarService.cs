@@ -76,7 +76,7 @@ namespace Aurora.Services.SQLServices.AvatarService
                 MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]",
                                                          "Resets the given avatar's appearance to the default",
                                                          ResetAvatarAppearance);
-            Init(registry, Name, serverPath: "/avatar/");
+            Init(registry, Name, serverPath: "/avatar/", serverHandlerName: "AvatarServerURI");
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

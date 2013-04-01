@@ -6,15 +6,11 @@
     Include-Grid = Configuration/Grid/Grid.ini
 
 [Configuration]
-    ;;
-    ;; Change this to your grid-wide grid server
-    ServerURI = "http://127.0.0.1:8003/server/"
+    GridServerURI = "http://127.0.0.1:8012/grid/"
 	
-    AssetServerURI = "http://127.0.0.1:8010/asset/"
-	AvatarServerURI = "http://127.0.0.1:8011/avatar/"
-    GridServerURI = "http://127.0.0.1:8012/grid/" 
-    InventoryServerURI = "http://127.0.0.1:8013/inventory/"
-    SyncMessageServerURI = "http://127.0.0.1:8014/syncmessage/"
-    InstantMessageServerURI = "http://127.0.0.1:8014/im/"  
-    UserAccountServerURI = "http://127.0.0.1:8015/user/"
-    CurrencyServerURI = "http://127.0.0.1:8002/currency/"
+	;; If regions should be marked as offline on the map
+	;;  instead of being removed on shutdown.
+	MarkRegionsAsOffline = true
+	
+	;; For setting a password for this region
+    ;RegisterRegionPassword = 

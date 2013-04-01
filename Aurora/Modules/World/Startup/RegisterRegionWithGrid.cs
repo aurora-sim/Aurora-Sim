@@ -48,6 +48,7 @@ namespace Aurora.Modules.Startup
         private IScene m_scene;
         private IConfigSource m_config;
         private string m_RegisterRegionPassword = "";
+        private bool m_markRegionsAsOffline = true;
 
         #endregion
 
@@ -91,7 +92,7 @@ namespace Aurora.Modules.Startup
                 scene.RegionInfo.RegionFlags = error.RegionFlags;
                 scene.RegionInfo.ScopeID = error.Region.ScopeID;
                 scene.RegionInfo.AllScopeIDs = error.Region.AllScopeIDs;
-
+                scene.RequestModuleInterface<IConfigurationService>().SetURIs(error.URIs);
                 m_knownNeighbors[scene.RegionInfo.RegionID] = error.Neighbors;
                 return true; //Success
             }
@@ -232,8 +233,11 @@ namespace Aurora.Modules.Startup
 
             IConfig gridConfig = m_config.Configs["Configuration"];
             if (gridConfig != null)
+            {
                 m_RegisterRegionPassword =
                     Util.Md5Hash(gridConfig.GetString("RegisterRegionPassword", m_RegisterRegionPassword));
+                m_markRegionsAsOffline = gridConfig.GetBoolean("MarkRegionsAsOffline", true);
+            }
 
             //Now register our region with the grid
             RegisterRegionWithGrid(scene, false, true, m_RegisterRegionPassword);
@@ -270,7 +274,7 @@ namespace Aurora.Modules.Startup
             GridRegion r = new GridRegion(scene.RegionInfo);
             r.IsOnline = false;
             string error = "";
-            if (scene.RegionInfo.HasBeenDeleted)
+            if (scene.RegionInfo.HasBeenDeleted || !m_markRegionsAsOffline)
                 scene.GridService.DeregisterRegion(r);
             else if ((error = scene.GridService.UpdateMap(r, false)) != "")
                 MainConsole.Instance.WarnFormat(

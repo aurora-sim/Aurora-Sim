@@ -79,7 +79,7 @@ namespace Aurora.Services.SQLServices.InventoryService
                                                          "If the user's inventory has been corrupted, this function will attempt to fix it",
                                                          FixInventory);
             registry.RegisterModuleInterface<IInventoryService>(this);
-            Init(registry, Name, serverPath: "/inventory/");
+            Init(registry, Name, serverPath: "/inventory/", serverHandlerName: "InventoryServerURI");
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
