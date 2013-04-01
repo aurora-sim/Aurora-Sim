@@ -1,0 +1,13 @@
+[Configuration]
+    ;; This allows for only local (this computer) regions to connecto
+	;; If you want to allow remote regions, change the 127.0.0.1
+	;;  below to your external IP or DNS name
+    ServerURI = "http://127.0.0.1:8003/server/"
+    AssetServerURI = "http://127.0.0.1:8010/asset/"
+	AvatarServerURI = "http://127.0.0.1:8011/avatar/"
+    GridServerURI = "http://127.0.0.1:8012/grid/" 
+    InventoryServerURI = "http://127.0.0.1:8013/inventory/"
+    SyncMessageServerURI = "http://127.0.0.1:8014/syncmessage/"
+    InstantMessageServerURI = "http://127.0.0.1:8014/im/"  
+    UserAccountServerURI = "http://127.0.0.1:8015/user/"
+    CurrencyServerURI = "http://127.0.0.1:8002/currency/"
