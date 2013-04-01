@@ -75,6 +75,10 @@ namespace Aurora.Services.SQLServices.UserAccountService
                         "create user",
                         "create user [<first> [<last> [<pass> [<email>]]]]",
                         "Create a new user", HandleCreateUser);
+                    MainConsole.Instance.Commands.AddCommand(
+                        "delete user",
+                        "delete user",
+                        "Deletes an existing user", HandleDeleteUser);
                     MainConsole.Instance.Commands.AddCommand("reset user password",
                                                              "reset user password [<first> [<last> [<password>]]]",
                                                              "Reset a user password", HandleResetUserPassword);
@@ -374,10 +378,10 @@ namespace Aurora.Services.SQLServices.UserAccountService
             }
         }
 
-        public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
+        public void DeleteUser(UUID userID, string name, string password, bool archiveInformation, bool wipeFromDatabase)
         {
-            if (password != "" && m_AuthenticationService.Authenticate(userID, "UserAccount", password, 0) == "")
-                return; //Not authed
+            //if (password != "" && m_AuthenticationService.Authenticate(userID, "UserAccount", password, 0) == "")
+            //    return; //Not authed
 
             if (!m_Database.DeleteAccount(userID, archiveInformation))
             {
@@ -390,6 +394,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             if (wipeFromDatabase)
                 m_registry.RequestModuleInterface<ISimulationBase>()
                           .EventManager.FireGenericEventHandler("DeleteUserInformation", userID);
+            m_cache.Remove(userID, name);
         }
 
         #endregion
@@ -533,6 +538,21 @@ namespace Aurora.Services.SQLServices.UserAccountService
                                                   UUID.Zero.ToString());
 
             CreateUser(UUID.Parse(uuid), UUID.Parse(scopeID), name, Util.Md5Hash(password), email);
+        }
+
+        protected void HandleDeleteUser(string[] cmd)
+        {
+            string name = MainConsole.Instance.Prompt("Name", "");
+            if (name == "")
+                return;
+            string pass = MainConsole.Instance.Prompt("Password", "");
+            if (pass == "")
+                return;
+            bool archive = MainConsole.Instance.Prompt("Archive Information (just disable their login, but keep their information)", "false").ToLower() == "true";
+            bool all = MainConsole.Instance.Prompt("Remove all user information", "false").ToLower() == "true";
+
+            UserAccount account = GetUserAccount(null, name);
+            DeleteUser(account.PrincipalID, account.Name, pass, archive, all);
         }
 
         protected void HandleResetUserPassword(string[] cmdparams)

@@ -82,6 +82,12 @@ namespace Aurora.Framework.Utilities
             //MainConsole.Instance.DebugFormat("[USER CACHE]: cached user {0}", userID);
         }
 
+        public void Remove(UUID userID, string name)
+        {
+            m_UUIDCache.Remove(userID);
+            m_NameCache.Remove(name);
+        }
+
         public bool Get(UUID userID, out T account)
         {
             if (m_UUIDCache.TryGetValue(userID, out account))

@@ -90,7 +90,7 @@ namespace Aurora.Modules.Web
                         webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                     if (userService != null)
                     {
-                        userService.DeleteUser(user.PrincipalID, password, true, false);
+                        userService.DeleteUser(user.PrincipalID, user.Name, password, true, false);
                         response = "Successfully deleted account.";
                     }
                     else

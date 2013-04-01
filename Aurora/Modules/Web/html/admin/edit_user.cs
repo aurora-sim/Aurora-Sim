@@ -92,7 +92,7 @@ namespace Aurora.Modules.Web
                 string username = requestParameters["username"].ToString();
                 response = "Deleted user successfully";
                 if (username == account.Name)
-                    userService.DeleteUser(user, "", false, false);
+                    userService.DeleteUser(account.PrincipalID, account.Name, "", false, false);
                 else
                     response = "The user name did not match";
                 return null;
