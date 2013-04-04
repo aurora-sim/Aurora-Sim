@@ -65,9 +65,6 @@
 	
     UserAccountServiceOpenServerHandler = true
     UserAccountServiceServerHandlerPort = 8003
-
-    ExternalCapsHandlerOpenServerHandler = true
-    ExternalCapsHandlerServerHandlerPort = 8003
 	
 	;; Stuff to set up Aurora-Server to run all of the services
 	;; Just uncomment this line to have everything run in Aurora.Server
