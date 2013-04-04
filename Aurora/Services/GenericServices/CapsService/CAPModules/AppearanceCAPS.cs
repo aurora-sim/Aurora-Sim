@@ -90,6 +90,8 @@ namespace Aurora.Services
         #region Server Side Baked Textures
 
         private OpenMetaverse.AppearanceManager.TextureData[] Textures = new OpenMetaverse.AppearanceManager.TextureData[(int)AvatarTextureIndex.NumberOfEntries];
+        private List<UUID> m_lastInventoryItemIDs = new List<UUID>();
+
         public byte[] UpdateAvatarAppearance(string path, Stream request, OSHttpRequest httpRequest,
                                              OSHttpResponse httpResponse)
         {
@@ -106,16 +108,18 @@ namespace Aurora.Services
                 foreach (InventoryItemBase itm in items)
                     MainConsole.Instance.Warn("[SSB]: Baking " + itm.Name);
 
-                for (int i = 0; i < Textures.Length; i++)
-                    Textures[i] = new AppearanceManager.TextureData();
+                //for (int i = 0; i < Textures.Length; i++)
+                //    Textures[i] = new AppearanceManager.TextureData();
 
+                List<UUID> currentItemIDs = new List<UUID>();
                 foreach (InventoryItemBase itm in items)
                 {
                     if (itm.AssetType == (int)AssetType.Link)
                     {
                         UUID assetID = m_inventoryService.GetItemAssetID(m_agentID, itm.AssetID);
-                        //if (assetID == Textures[itm.InvType].TextureID)
-                        //    continue;
+                        currentItemIDs.Add(assetID);
+                        if (m_lastInventoryItemIDs.Contains(assetID))
+                            continue;
                         OpenMetaverse.AppearanceManager.WearableData wearable = new OpenMetaverse.AppearanceManager.WearableData();
                         AssetBase asset = m_assetService.Get(assetID.ToString());
                         if (asset != null && asset.TypeAsset != AssetType.Object)
@@ -132,6 +136,7 @@ namespace Aurora.Services
                         }
                     }
                 }
+                m_lastInventoryItemIDs = currentItemIDs;
                 for (int i = 0; i < Textures.Length; i++)
                 {
                     if (Textures[i].TextureID == UUID.Zero)
