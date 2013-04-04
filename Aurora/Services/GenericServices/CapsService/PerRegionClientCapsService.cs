@@ -195,8 +195,7 @@ namespace Aurora.Services
 
         public string CreateCAPS(string method, string appendedPath)
         {
-            string caps = "/CAPS/" + method + "/" + UUID.Random() + appendedPath + "/";
-            return caps;
+            return "/CAPS/" + method + "/" + UUID.Random() + appendedPath + "/";
         }
 
         public void AddCAPS(string method, string caps)
@@ -289,6 +288,13 @@ namespace Aurora.Services
             {
                 connector.RegisterCaps(this);
             }
+
+            IExternalCapsHandler externalService = Registry.RequestModuleInterface<IExternalCapsHandler>();
+            if (externalService != null)
+            {
+                foreach (KeyValuePair<string, OSD> kvp in externalService.GetExternalCaps(AgentID, Region))
+                    registeredCAPS.Add(kvp.Key, kvp.Value);
+            }
         }
 
         protected void RemoveCAPS()
@@ -298,6 +304,10 @@ namespace Aurora.Services
             {
                 connector.DeregisterCaps();
             }
+
+            IExternalCapsHandler externalService = Registry.RequestModuleInterface<IExternalCapsHandler>();
+            if (externalService != null)
+                externalService.RemoveExternalCaps(AgentID, Region);
         }
 
         public void InformModulesOfRequest()

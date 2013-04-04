@@ -30,6 +30,7 @@ using Aurora.Framework.Configuration;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services;
@@ -282,7 +283,8 @@ namespace Aurora.Simulation.Base
                 //Then pass the exception upwards
                 throw;
             }
-
+            if (m_Servers.Count == 0)
+                MainServer.Instance = server;
             return (m_Servers[port] = server);
         }
 
@@ -299,11 +301,20 @@ namespace Aurora.Simulation.Base
             }
 
             foreach (dynamic service in modules)
-                ((IService) service).Initialize(ConfigSource, ApplicationRegistry);
+            {
+                if (!(service is IService)) continue;
+                ((IService)service).Initialize(ConfigSource, ApplicationRegistry);
+            }
             foreach (dynamic service in modules)
+            {
+                if (!(service is IService)) continue;
                 ((IService) service).Start(ConfigSource, ApplicationRegistry);
+            }
             foreach (dynamic service in modules)
-                ((IService) service).FinishedStartup();
+            {
+                if (!(service is IService)) continue;
+                ((IService)service).FinishedStartup();
+            }
         }
 
         /// <summary>

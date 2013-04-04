@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Aurora.Simulation.Base;
 using System;
@@ -53,7 +54,13 @@ namespace Aurora.Servers.InventoryServer
                                                                        typeof (IInventoryService),
                                                                        typeof (ILibraryService),
                                                                        typeof (IUserAccountService),
-                                                                       typeof (IAssetService)
+                                                                       typeof (IAssetService),
+                                                                       typeof (IMoneyModule),
+                                                                       typeof (ISyncMessagePosterService),
+                                                                       typeof (ISyncMessageRecievedService),
+                                                                       typeof (IExternalCapsHandler),
+                                                                       typeof (IConfigurationService),
+                                                                       typeof (IGridServerInfoService)
                                                                    }));
         }
     }

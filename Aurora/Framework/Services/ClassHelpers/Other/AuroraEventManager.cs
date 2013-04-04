@@ -83,8 +83,6 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
         ///     param is an object[], with o[0] the OSDMap which will be sent to the new region, o[1] the SessionID, o[2] the GridRegion that registered
         ///     Backup - The 'backup' console command was triggered, everything should backup
         ///     no params
-        ///     AssetRequested - This is fired when the asset is requested by the client
-        ///     params are IClientAPI and TransferRequestPacket
         ///     DeleteUserInformation - The user is being deleted, remove all of their information from all databases
         ///     params are the user's UUID
         ///     CreateUserInformation - The user account is being created

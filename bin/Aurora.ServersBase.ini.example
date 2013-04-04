@@ -46,6 +46,10 @@
     ;; Should we restart Aurora if the sim crashes?
     AutoRestartOnCrash = false
 	
+[GridServerInfoService]
+	Enabled = true
+	DoRemote = true
+	
 [Includes]
     ;;Other .ini files to add...
     Include-Login = AuroraServerConfiguration/Login.ini

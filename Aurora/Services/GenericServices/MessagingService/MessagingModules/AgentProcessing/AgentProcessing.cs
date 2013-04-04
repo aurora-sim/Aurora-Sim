@@ -1029,7 +1029,7 @@ namespace Aurora.Services
                     foreach (
                         GridRegion region in
                             ourNeighbors.Where(
-                                region => region != null && !SimulationService.UpdateAgent(region, agentpos)))
+                                region => region != null && region.RegionID != regionCaps.RegionID && !SimulationService.UpdateAgent(region, agentpos)))
                     {
                         MainConsole.Instance.Info("[AgentProcessing]: Failed to inform " + region.RegionName +
                                                   " about updating agent. ");

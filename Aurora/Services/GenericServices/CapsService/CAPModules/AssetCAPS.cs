@@ -53,42 +53,40 @@ using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Aurora.Services
 {
-    public class AssetCAPS : ICapsServiceConnector
+    public class AssetCAPS : IExternalCapsRequestHandler
     {
-        private const string m_uploadBakedTexturePath = "0010";
         protected IAssetService m_assetService;
-        protected IRegionClientCapsService m_service;
+        protected UUID m_AgentID;
         public const string DefaultFormat = "x-j2c";
         // TODO: Change this to a config option
         protected string REDIRECT_URL = null;
+        private string m_getTextureURI;
+        private string m_getMeshURI;
+        private string m_bakedTextureURI;
 
-        public void RegisterCaps(IRegionClientCapsService service)
+        public string Name { get { return GetType().Name; } }
+
+        public void IncomingCapsRequest(UUID agentID, Aurora.Framework.Services.GridRegion region, ISimulationBase simbase, ref OSDMap capURLs)
         {
-            m_service = service;
-            m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
+            m_AgentID = agentID;
+            m_assetService = simbase.ApplicationRegistry.RequestModuleInterface<IAssetService>();
 
-            service.AddStreamHandler("GetTexture",
-                                     new GenericStreamHandler("GET", service.CreateCAPS("GetTexture", ""),
-                                                              ProcessGetTexture));
-            service.AddStreamHandler("UploadBakedTexture",
-                                     new GenericStreamHandler("POST",
-                                                              service.CreateCAPS("UploadBakedTexture",
-                                                                                 m_uploadBakedTexturePath),
-                                                              UploadBakedTexture));
-            service.AddStreamHandler("GetMesh",
-                                     new GenericStreamHandler("GET", service.CreateCAPS("GetMesh", ""),
-                                                              ProcessGetMesh));
+            m_getTextureURI = "/CAPS/GetTexture/" + UUID.Random() + "/";
+            capURLs["GetTexture"] = MainServer.Instance.ServerURI + m_getTextureURI;
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("GET", m_getTextureURI, ProcessGetTexture));
+            m_bakedTextureURI = "/CAPS/UploadBakedTexture/" + UUID.Random() + "/";
+            capURLs["UploadBakedTexture"] = MainServer.Instance.ServerURI + m_bakedTextureURI;
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", m_bakedTextureURI, UploadBakedTexture));
+            m_getMeshURI = "/CAPS/GetMesh/" + UUID.Random() + "/";
+            capURLs["GetMesh"] = MainServer.Instance.ServerURI + m_getMeshURI;
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("GET", m_getMeshURI, ProcessGetMesh));
         }
 
-        public void EnteringRegion()
+        public void IncomingCapsDestruction()
         {
-        }
-
-        public void DeregisterCaps()
-        {
-            m_service.RemoveStreamHandler("GetTexture", "GET");
-            m_service.RemoveStreamHandler("UploadBakedTexture", "POST");
-            m_service.RemoveStreamHandler("GetMesh", "GET");
+            MainServer.Instance.RemoveStreamHandler("GET", m_getTextureURI);
+            MainServer.Instance.RemoveStreamHandler("POST", m_bakedTextureURI);
+            MainServer.Instance.RemoveStreamHandler("GET", m_getMeshURI);
         }
 
         #region Get Texture
@@ -250,9 +248,6 @@ namespace Aurora.Services
 
         private byte[] WriteTextureData(OSHttpRequest request, OSHttpResponse response, AssetBase texture, string format)
         {
-            m_service.Registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                "AssetRequested", new object[] {m_service.Registry, texture, m_service.AgentID});
-
             string range = request.Headers.GetOne("Range");
             //MainConsole.Instance.DebugFormat("[GETTEXTURE]: Range {0}", range);
             if (!String.IsNullOrEmpty(range)) // JP2's only
@@ -405,18 +400,14 @@ namespace Aurora.Services
                 //MainConsole.Instance.Debug("[CAPS]: UploadBakedTexture Request in region: " +
                 //        m_regionName);
 
-                string uploaderPath = UUID.Random().ToString();
-                string uploadpath = m_service.CreateCAPS("Upload" + uploaderPath, uploaderPath);
-                BakedTextureUploader uploader =
-                    new BakedTextureUploader(uploadpath, "Upload" + uploaderPath,
-                                             m_service);
+                string uploadpath = "/CAPS/Upload/" + UUID.Random() + "/";
+                BakedTextureUploader uploader = new BakedTextureUploader(uploadpath);
                 uploader.OnUpLoad += BakedTextureUploaded;
 
-                m_service.AddStreamHandler(uploadpath,
-                                           new GenericStreamHandler("POST", uploadpath,
+                MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uploadpath,
                                                                     uploader.uploaderCaps));
 
-                string uploaderURL = m_service.HostUri + uploadpath;
+                string uploaderURL = MainServer.Instance.ServerURI + uploadpath;
                 OSDMap map = new OSDMap();
                 map["uploader"] = uploaderURL;
                 map["state"] = "upload";
@@ -438,14 +429,10 @@ namespace Aurora.Services
             private UploadedBakedTexture handlerUpLoad = null;
 
             private readonly string uploaderPath = String.Empty;
-            private readonly string uploadMethod = "";
-            private readonly IRegionClientCapsService clientCaps;
 
-            public BakedTextureUploader(string path, string method, IRegionClientCapsService caps)
+            public BakedTextureUploader(string path)
             {
                 uploaderPath = path;
-                uploadMethod = method;
-                clientCaps = caps;
             }
 
             /// <summary>
@@ -466,7 +453,7 @@ namespace Aurora.Services
                 map["new_asset"] = newAssetID.ToString();
                 map["item_id"] = UUID.Zero;
                 map["state"] = "complete";
-                clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
+                MainServer.Instance.RemoveStreamHandler("POST", uploaderPath);
 
                 return OSDParser.SerializeLLSDXmlBytes(map);
             }
@@ -475,7 +462,7 @@ namespace Aurora.Services
         public void BakedTextureUploaded(byte[] data, out UUID newAssetID)
         {
             //MainConsole.Instance.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
-            AssetBase asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_service.AgentID)
+            AssetBase asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_AgentID)
                                   {Data = data, Flags = AssetFlags.Deletable | AssetFlags.Temporary};
             newAssetID = asset.ID = m_assetService.Store(asset);
             MainConsole.Instance.DebugFormat("[AssetCAPS]: Baked texture new id {0}", newAssetID.ToString());

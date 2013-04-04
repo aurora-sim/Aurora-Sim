@@ -6574,7 +6574,6 @@ namespace Aurora.ClientStack
         /// <returns></returns>
         private bool HandleAgentTextureCached(IClientAPI simclient, Packet packet)
         {
-            //MainConsole.Instance.Debug("texture cached: " + packet.ToString());
             AgentCachedTexturePacket cachedtex = (AgentCachedTexturePacket) packet;
 
             if (cachedtex.AgentData.SessionID != SessionId) return false;

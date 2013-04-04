@@ -28,6 +28,7 @@
 using Aurora.Framework;
 using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Services;
@@ -41,47 +42,48 @@ using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {
-    public class MapCAPS : ICapsServiceConnector
+    public class MapCAPS : IExternalCapsRequestHandler
     {
         private const int m_mapDistance = 100;
         private readonly List<MapBlockData> m_mapLayer = new List<MapBlockData>();
         private bool m_allowCapsMessage = true;
         private IGridService m_gridService;
-        private IRegionClientCapsService m_service;
+        private UUID m_agentID;
+        private Aurora.Framework.Services.GridRegion m_region;
+        private string m_uri;
+        private List<UUID> m_userScopeIDs = new List<UUID>();
 
         #region ICapsServiceConnector Members
 
-        public void RegisterCaps(IRegionClientCapsService service)
+        public string Name { get { return GetType().Name; } }
+
+        public void IncomingCapsRequest(UUID agentID, Aurora.Framework.Services.GridRegion region, ISimulationBase simbase, ref OSDMap capURLs)
         {
-            m_service = service;
-            m_gridService = service.Registry.RequestModuleInterface<IGridService>();
+            m_agentID = agentID;
+            m_region = region;
+            m_userScopeIDs = simbase.ApplicationRegistry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, m_agentID).AllScopeIDs;
+
+            m_gridService = simbase.ApplicationRegistry.RequestModuleInterface<IGridService>();
             IConfig config =
-                service.ClientCaps.Registry.RequestModuleInterface<ISimulationBase>().ConfigSource.Configs["MapCaps"];
+                simbase.ConfigSource.Configs["MapCaps"];
             if (config != null)
                 m_allowCapsMessage = config.GetBoolean("AllowCapsMessage", m_allowCapsMessage);
 
             HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                OSHttpResponse httpResponse)
                                           {
-                                              return MapLayerRequest(request.ReadUntilEnd(), httpRequest, httpResponse,
-                                                                     m_service.AgentID);
+                                              return MapLayerRequest(request.ReadUntilEnd(), httpRequest, httpResponse);
                                           };
-            m_service.AddStreamHandler("MapLayer",
-                                       new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayer", ""),
-                                                                method));
-            m_service.AddStreamHandler("MapLayerGod",
-                                       new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", ""),
-                                                                method));
+            m_uri = "/CAPS/MapLayer/" + UUID.Random() + "/";
+            capURLs["MapLayer"] = MainServer.Instance.ServerURI + m_uri;
+            capURLs["MapLayerGod"] = MainServer.Instance.ServerURI + m_uri;
+
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", m_uri, method));
         }
 
-        public void EnteringRegion()
+        public void IncomingCapsDestruction()
         {
-            m_mapLayer.Clear();
-        }
-
-        public void DeregisterCaps()
-        {
-            m_service.RemoveStreamHandler("MapLayer", "POST");
+            MainServer.Instance.RemoveStreamHandler("POST", m_uri);
             m_mapLayer.Clear();
         }
 
@@ -95,13 +97,12 @@ namespace Aurora.Services
         /// <param name="httpResponse"></param>
         /// <param name="agentID"></param>
         /// <returns></returns>
-        public byte[] MapLayerRequest(string request, OSHttpRequest httpRequest, OSHttpResponse httpResponse,
-                                      UUID agentID)
+        public byte[] MapLayerRequest(string request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            int bottom = (m_service.RegionY/Constants.RegionSize) - m_mapDistance;
-            int top = (m_service.RegionY/Constants.RegionSize) + m_mapDistance;
-            int left = (m_service.RegionX/Constants.RegionSize) - m_mapDistance;
-            int right = (m_service.RegionX/Constants.RegionSize) + m_mapDistance;
+            int bottom = (m_region.RegionLocY / Constants.RegionSize) - m_mapDistance;
+            int top = (m_region.RegionLocY / Constants.RegionSize) + m_mapDistance;
+            int left = (m_region.RegionLocX / Constants.RegionSize) - m_mapDistance;
+            int right = (m_region.RegionLocX / Constants.RegionSize) + m_mapDistance;
 
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
@@ -119,7 +120,7 @@ namespace Aurora.Services
                 if (m_mapLayer == null || m_mapLayer.Count == 0)
                 {
                     List<GridRegion> regions = m_gridService.GetRegionRange(
-                        m_service.ClientCaps.AccountInfo.AllScopeIDs,
+                        m_userScopeIDs,
                         left*Constants.RegionSize,
                         right*Constants.RegionSize,
                         bottom*Constants.RegionSize,

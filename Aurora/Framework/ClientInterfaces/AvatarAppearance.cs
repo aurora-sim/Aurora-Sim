@@ -31,6 +31,7 @@ using System.Linq;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -53,6 +54,12 @@ namespace Aurora.Framework.ClientInterfaces
         private Primitive.TextureEntry m_texture;
         private byte[] m_visualparams;
         private AvatarWearable[] m_wearables;
+        private Dictionary<string, UUID> m_wearableCache = new Dictionary<string, UUID>();
+
+        public Dictionary<string, UUID> WearableCache
+        {
+            get { return m_wearableCache; }
+        }
 
         public AvatarAppearance() : this(UUID.Zero)
         {
@@ -369,9 +376,6 @@ namespace Aurora.Framework.ClientInterfaces
 
         public void SetWearable(int wearableId, AvatarWearable wearable)
         {
-            // DEBUG ON
-            //          MainConsole.Instance.WarnFormat("[AVATARAPPEARANCE] set wearable {0} --> {1}:{2}",wearableId,wearable.ItemID,wearable.AssetID);
-            // DEBUG OFF
             m_wearables[wearableId].Clear();
             for (int i = 0; i < wearable.Count; i++)
                 m_wearables[wearableId].Add(wearable[i].ItemID, wearable[i].AssetID);
@@ -573,6 +577,13 @@ namespace Aurora.Framework.ClientInterfaces
                 m_attachments.Clear();
         }
 
+        public void SetCachedWearables(PresenceInfo.WearableCache[] wearables)
+        {
+            m_wearableCache.Clear();
+            foreach (var w in wearables)
+                m_wearableCache.Add(w.TextureIndex.ToString(), w.CacheID);
+        }
+
         #region Packing Functions
 
         public override OSDMap ToOSD()
@@ -594,7 +605,7 @@ namespace Aurora.Framework.ClientInterfaces
             // Wearables
             OSDArray wears = new OSDArray(AvatarWearable.MAX_WEARABLES);
             for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
-                wears.Add(m_wearables[i].Pack());
+                wears.Add(m_wearables[i].ToOSD());
             data["wearables"] = wears;
 
             // Avatar Textures
@@ -616,6 +627,8 @@ namespace Aurora.Framework.ClientInterfaces
             foreach (AvatarAttachment attach in GetAttachments())
                 attachs.Add(attach.Pack());
             data["attachments"] = attachs;
+
+            data["wearableCache"] = m_wearableCache.ToOSDMap();
 
             return data;
         }
@@ -692,6 +705,8 @@ namespace Aurora.Framework.ClientInterfaces
                     foreach (OSD t in attachs)
                         AppendAttachment(new AvatarAttachment((OSDMap) t));
                 }
+                if (data != null && data["wearableCache"] != null && data["wearableCache"] is OSDMap)
+                    m_wearableCache = ((OSDMap)data["wearableCache"]).ConvertMap<UUID>((o) => o);
                 SetHeight();
             }
             catch (Exception e)

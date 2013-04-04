@@ -462,4 +462,17 @@ namespace Aurora.Framework.Services
         /// <returns></returns>
         List<IRegionClientCapsService> GetClients();
     }
+
+    public interface IExternalCapsHandler
+    {
+        OSDMap GetExternalCaps(UUID agentID, GridRegion region);
+        void RemoveExternalCaps(UUID agentID, GridRegion region);
+    }
+
+    public interface IExternalCapsRequestHandler
+    {
+        string Name { get; }
+        void IncomingCapsRequest(UUID agentID, GridRegion region, ISimulationBase simbase, ref OSDMap capURLs);
+        void IncomingCapsDestruction();
+    }
 }

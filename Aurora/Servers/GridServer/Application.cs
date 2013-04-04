@@ -45,13 +45,19 @@ namespace Aurora.Servers.AssetServer
                                                                new List<Type>
                                                                    {
                                                                        typeof (IRegionData),
-                                                                       typeof (IAgentInfoConnector)
+                                                                       typeof (IAgentInfoConnector),
+                                                                       typeof (IUserAccountData)
                                                                    },
                                                                new List<Type>
                                                                    {
                                                                        typeof (IGridService),
                                                                        typeof (IAgentInfoService),
-                                                                       typeof (IConfigurationService)
+                                                                       typeof (IConfigurationService),
+                                                                       typeof (ISyncMessagePosterService),
+                                                                       typeof (ISyncMessageRecievedService),
+                                                                       typeof (IExternalCapsHandler),
+                                                                       typeof (IUserAccountService),
+                                                                       typeof (IGridServerInfoService)
                                                                    }));
         }
     }

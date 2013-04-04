@@ -47,114 +47,88 @@ using System.Text;
 
 namespace Aurora.Services
 {
-    public class InventoryCAPS : ICapsServiceConnector
+    public class InventoryCAPS : IExternalCapsRequestHandler
     {
         private IAssetService m_assetService;
         private IInventoryService m_inventoryService;
         private ILibraryService m_libraryService;
-        private IRegionClientCapsService m_service;
+        private IMoneyModule m_moneyModule;
+        private UUID m_agentID;
         private IInventoryData m_inventoryData;
+        private List<string> m_uris = new List<string>();
 
         #region ICapsServiceConnector Members
 
-        public void RegisterCaps(IRegionClientCapsService service)
+        public string Name { get { return GetType().Name; } }
+
+        public void IncomingCapsRequest(UUID agentID, Aurora.Framework.Services.GridRegion region, ISimulationBase simbase, ref OSDMap capURLs)
         {
-            m_service = service;
-            m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
-            m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
-            m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
+            m_agentID = agentID;
+            m_moneyModule = simbase.ApplicationRegistry.RequestModuleInterface<IMoneyModule>();
+            m_assetService = simbase.ApplicationRegistry.RequestModuleInterface<IAssetService>();
+            m_inventoryService = simbase.ApplicationRegistry.RequestModuleInterface<IInventoryService>();
+            m_libraryService = simbase.ApplicationRegistry.RequestModuleInterface<ILibraryService>();
             m_inventoryData = Framework.Utilities.DataManager.RequestPlugin<IInventoryData>();
 
             HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                OSHttpResponse httpResponse)
-                                          { return HandleWebFetchInventoryDescendents(request, m_service.AgentID); };
-            service.AddStreamHandler("WebFetchInventoryDescendents",
-                                     new GenericStreamHandler("POST",
-                                                              service.CreateCAPS("WebFetchInventoryDescendents", ""),
-                                                              method));
-            service.AddStreamHandler("FetchInventoryDescendents",
-                                     new GenericStreamHandler("POST",
-                                                              service.CreateCAPS("FetchInventoryDescendents", ""),
-                                                              method));
-            service.AddStreamHandler("FetchInventoryDescendents2",
-                                     new GenericStreamHandler("POST",
-                                                              service.CreateCAPS("FetchInventoryDescendents2", ""),
-                                                              method));
+            { return HandleWebFetchInventoryDescendents(request, m_agentID); };
+
+            string uri = "/CAPS/FetchInventoryDescendents/" + UUID.Random() + "/";
+            capURLs["WebFetchInventoryDescendents"] = MainServer.Instance.ServerURI + uri;
+            capURLs["FetchInventoryDescendents"] = MainServer.Instance.ServerURI + uri;
+            capURLs["FetchInventoryDescendents2"] = MainServer.Instance.ServerURI + uri;
+            m_uris.Add(uri);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uri, method));
 
             method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                               OSHttpResponse httpResponse)
-                         { return HandleFetchLibDescendents(request, m_service.AgentID); };
-            service.AddStreamHandler("FetchLibDescendents",
-                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
-                                                              method));
-            service.AddStreamHandler("FetchLibDescendents2",
-                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchLibDescendents2", ""),
-                                                              method));
+            { return HandleFetchLibDescendents(request, m_agentID); };
+            uri = "/CAPS/FetchLibDescendents/" + UUID.Random() + "/";
+            capURLs["FetchLibDescendents"] = MainServer.Instance.ServerURI + uri;
+            capURLs["FetchLibDescendents2"] = MainServer.Instance.ServerURI + uri;
+            m_uris.Add(uri);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uri, method));
 
             method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                               OSHttpResponse httpResponse)
-                         { return HandleFetchInventory(request, m_service.AgentID); };
-            service.AddStreamHandler("FetchInventory",
-                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
-                                                              method));
-            service.AddStreamHandler("FetchInventory2",
-                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchInventory2", ""),
-                                                              method));
+            { return HandleFetchInventory(request, m_agentID); };
+            uri = "/CAPS/FetchInventory/" + UUID.Random() + "/";
+            capURLs["FetchInventory"] = MainServer.Instance.ServerURI + uri;
+            capURLs["FetchInventory2"] = MainServer.Instance.ServerURI + uri;
+            m_uris.Add(uri);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uri, method));
 
             method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                               OSHttpResponse httpResponse)
-                         { return HandleFetchLib(request, m_service.AgentID); };
-            service.AddStreamHandler("FetchLib",
-                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
-                                                              method));
-            service.AddStreamHandler("FetchLib2",
-                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchLib2", ""),
-                                                              method));
-
-            service.AddStreamHandler("NewFileAgentInventory",
-                                     new GenericStreamHandler("POST",
-                                                              service.CreateCAPS("NewFileAgentInventory", ""),
-                                                              NewAgentInventoryRequest));
-            service.AddStreamHandler("NewFileAgentInventoryVariablePrice",
-                                     new GenericStreamHandler("POST",
-                                                              service.CreateCAPS("NewFileAgentInventoryVariablePrice",
-                                                                                 ""),
-                                                              NewAgentInventoryRequestVariablePrice));
-
-            service.AddStreamHandler("CreateInventoryCategory",
-                                     new GenericStreamHandler("POST",
-                                                              service.CreateCAPS("CreateInventoryCategory", ""),
-                                                              CreateInventoryCategory));
+            { return HandleFetchLib(request, m_agentID); };
+            uri = "/CAPS/FetchLib/" + UUID.Random() + "/";
+            capURLs["FetchLib"] = MainServer.Instance.ServerURI + uri;
+            capURLs["FetchLib2"] = MainServer.Instance.ServerURI + uri;
+            m_uris.Add(uri);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uri, method));
 
 
-            /*method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleInventoryItemCreate(request, m_service.AgentID);
-            };
-            service.AddStreamHandler("InventoryItemCreate",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("InventoryItemCreate", ""),
-                                                      method));*/
+            uri = "/CAPS/NewFileAgentInventory/" + UUID.Random() + "/";
+            capURLs["NewFileAgentInventory"] = MainServer.Instance.ServerURI + uri;
+            m_uris.Add(uri);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uri, NewAgentInventoryRequest));
+
+            uri = "/CAPS/NewFileAgentInventoryVariablePrice/" + UUID.Random() + "/";
+            capURLs["NewFileAgentInventoryVariablePrice"] = MainServer.Instance.ServerURI + uri;
+            m_uris.Add(uri);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uri, NewAgentInventoryRequestVariablePrice));
+
+            uri = "/CAPS/CreateInventoryCategory/" + UUID.Random() + "/";
+            capURLs["CreateInventoryCategory"] = MainServer.Instance.ServerURI + uri;
+            m_uris.Add(uri);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uri, CreateInventoryCategory));
         }
 
-        public void EnteringRegion()
+        public void IncomingCapsDestruction()
         {
-        }
-
-        public void DeregisterCaps()
-        {
-            m_service.RemoveStreamHandler("WebFetchInventoryDescendents", "POST");
-            m_service.RemoveStreamHandler("FetchInventoryDescendents", "POST");
-            m_service.RemoveStreamHandler("FetchInventoryDescendents2", "POST");
-            m_service.RemoveStreamHandler("FetchLibDescendents", "POST");
-            m_service.RemoveStreamHandler("FetchLibDescendents2", "POST");
-            m_service.RemoveStreamHandler("FetchInventory", "POST");
-            m_service.RemoveStreamHandler("FetchInventory2", "POST");
-            m_service.RemoveStreamHandler("FetchLib", "POST");
-            m_service.RemoveStreamHandler("FetchLib2", "POST");
-            m_service.RemoveStreamHandler("NewFileAgentInventory", "POST");
-            m_service.RemoveStreamHandler("NewFileAgentInventoryVariablePrice", "POST");
-            m_service.RemoveStreamHandler("InventoryItemCreate", "POST");
+            foreach (string uri in m_uris)
+                MainServer.Instance.RemoveStreamHandler("POST", uri);
         }
 
         #endregion
@@ -228,7 +202,7 @@ namespace Aurora.Services
                     OSDArray item in
                         foldersrequested.Cast<OSDMap>()
                                         .Select(requestedFolders => requestedFolders["item_id"].AsUUID())
-                                        .Select(item_id => m_inventoryService.GetOSDItem(m_service.AgentID, item_id))
+                                        .Select(item_id => m_inventoryService.GetOSDItem(m_agentID, item_id))
                                         .Where(item => item != null && item.Count > 0))
                 {
                     items.Add(item[0]);
@@ -342,17 +316,16 @@ namespace Aurora.Services
 
         private bool ChargeUser(string asset_type, OSDMap map, out int charge, out int resourceCost)
         {
-            IMoneyModule mm = m_service.Registry.RequestModuleInterface<IMoneyModule>();
             charge = 0;
             resourceCost = 0;
 
-            if (mm != null)
+            if (m_moneyModule != null)
             {
                 if (asset_type == "texture" ||
                     asset_type == "animation" ||
                     asset_type == "snapshot" ||
                     asset_type == "sound")
-                    charge = mm.UploadCharge;
+                    charge = m_moneyModule.UploadCharge;
                 else if (asset_type == "mesh" ||
                          asset_type == "object")
                 {
@@ -364,12 +337,12 @@ namespace Aurora.Services
                                            : 1;
                     if (texture_list == 0) texture_list = 1;
                     if (mesh_list == 0) mesh_list = 1;
-                    charge = texture_list*mm.UploadCharge +
-                             mesh_list*mm.UploadCharge;
-                    resourceCost = mesh_list*mm.UploadCharge;
+                    charge = texture_list * m_moneyModule.UploadCharge +
+                             mesh_list * m_moneyModule.UploadCharge;
+                    resourceCost = mesh_list * m_moneyModule.UploadCharge;
                 }
                 if (charge > 0 &&
-                    !mm.Charge(m_service.AgentID, mm.UploadCharge, "Upload Charge"))
+                    !m_moneyModule.Charge(m_agentID, m_moneyModule.UploadCharge, "Upload Charge"))
                     return false;
             }
             return true;
@@ -392,17 +365,15 @@ namespace Aurora.Services
 
             UUID newAsset = UUID.Random();
             UUID newInvItem = UUID.Random();
-            string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
-            string uploadpath = m_service.CreateCAPS("Upload" + uploaderPath, uploaderPath);
+            string uploadpath = "/CAPS/Upload/" + UUID.Random() + "/";
 
             AssetUploader uploader =
                 new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service, this, everyone_mask,
-                                  group_mask, next_owner_mask);
-            m_service.AddStreamHandler("Upload" + uploaderPath,
-                                       new GenericStreamHandler("POST", uploadpath, uploader.uploaderCaps));
+                                  asset_type, uploadpath, everyone_mask,
+                                  group_mask, next_owner_mask, UploadCompleteHandler);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
-            string uploaderURL = m_service.HostUri + uploadpath;
+            string uploaderURL = MainServer.Instance.ServerURI + uploadpath;
             map = new OSDMap();
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
@@ -421,7 +392,7 @@ namespace Aurora.Services
             UUID newFolderId = UUID.Random();
             InventoryFolderBase newFolder
                 = new InventoryFolderBase(
-                    newFolderId, name, m_service.AgentID, (short) type, parent_id, 1);
+                    newFolderId, name, m_agentID, (short)type, parent_id, 1);
             m_inventoryService.AddFolder(newFolder);
             OSDMap resp = new OSDMap();
             resp["folder_id"] = folder_id;
@@ -455,17 +426,15 @@ namespace Aurora.Services
 
             UUID newAsset = UUID.Random();
             UUID newInvItem = UUID.Random();
-            string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
-            string uploadpath = m_service.CreateCAPS("Upload" + uploaderPath, uploaderPath);
+            string uploadpath = "/CAPS/Upload/" + UUID.Random() + "/";
 
             AssetUploader uploader =
                 new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service, this, everyone_mask,
-                                  group_mask, next_owner_mask);
-            m_service.AddStreamHandler("Upload" + uploaderPath,
-                                       new GenericStreamHandler("POST", uploadpath, uploader.uploaderCaps));
+                                  asset_type, uploadpath, everyone_mask,
+                                  group_mask, next_owner_mask, UploadCompleteHandler);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
-            string uploaderURL = m_service.HostUri + uploadpath;
+            string uploaderURL = MainServer.Instance.ServerURI + uploadpath;
             map = new OSDMap();
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
@@ -535,13 +504,13 @@ namespace Aurora.Services
                         foreach (
                             AssetBase textureAsset in
                                 texture_list.Select(t => new AssetBase(UUID.Random(), assetName, AssetType.Texture,
-                                                                       m_service.AgentID) {Data = t.AsBinary()}))
+                                                                       m_agentID) { Data = t.AsBinary() }))
                         {
                             textureAsset.ID = m_assetService.Store(textureAsset);
                             textures.Add(textureAsset.ID);
                         }
 
-                        InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID,
+                        InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_agentID,
                                                                                              InventoryType.Mesh,
                                                                                              AssetType.Mesh);
                         for (int i = 0; i < mesh_list.Count; i++)
@@ -586,23 +555,22 @@ namespace Aurora.Services
                             }
                             pbs.TextureEntry = textureEntry.GetBytes();
 
-                            AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, AssetType.Mesh,
-                                                                m_service.AgentID)
+                            AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, AssetType.Mesh, m_agentID)
                                                       {Data = mesh_list[i].AsBinary()};
                             meshAsset.ID = m_assetService.Store(meshAsset);
 
                             if (meshFolder == null)
                             {
-                                m_inventoryService.CreateUserInventory(m_service.AgentID, false);
-                                meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Mesh,
+                                m_inventoryService.CreateUserInventory(m_agentID, false);
+                                meshFolder = m_inventoryService.GetFolderForType(m_agentID, InventoryType.Mesh,
                                                                                  AssetType.Mesh);
                             }
 
-                            InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_service.AgentID)
+                            InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_agentID)
                                                              {
                                                                  AssetType = (sbyte) AssetType.Mesh,
                                                                  AssetID = meshAsset.ID,
-                                                                 CreatorId = m_service.AgentID.ToString(),
+                                                                 CreatorId = m_agentID.ToString(),
                                                                  Folder = meshFolder.ID,
                                                                  InvType = (int) InventoryType.Texture,
                                                                  Name = "(Mesh) - " + assetName,
@@ -628,19 +596,17 @@ namespace Aurora.Services
                             int material = inner_instance_list["material"].AsInteger();
                             int mesh = inner_instance_list["mesh"].AsInteger();
 
-                            UUID owner_id = m_service.AgentID;
-
-                            SceneObjectPart prim = new SceneObjectPart(owner_id, pbs, position, Quaternion.Identity,
+                            SceneObjectPart prim = new SceneObjectPart(m_agentID, pbs, position, Quaternion.Identity,
                                                                        Vector3.Zero, assetName)
                                                        {Scale = scale, AbsolutePosition = position};
 
                             rotations.Add(rotation);
                             positions.Add(position);
                             prim.UUID = UUID.Random();
-                            prim.CreatorID = owner_id;
-                            prim.OwnerID = owner_id;
+                            prim.CreatorID = m_agentID;
+                            prim.OwnerID = m_agentID;
                             prim.GroupID = UUID.Zero;
-                            prim.LastOwnerID = prim.OwnerID;
+                            prim.LastOwnerID = m_agentID;
                             prim.CreationDate = Util.UnixTimeSinceEpoch();
                             prim.Name = assetName;
                             prim.Description = "";
@@ -681,14 +647,14 @@ namespace Aurora.Services
                     }
                     break;
             }
-            AssetBase asset = new AssetBase(assetID, assetName, (AssetType) assType, m_service.AgentID) {Data = data};
+            AssetBase asset = new AssetBase(assetID, assetName, (AssetType)assType, m_agentID) { Data = data };
             asset.ID = m_assetService.Store(asset);
             assetID = asset.ID;
 
             InventoryItemBase item = new InventoryItemBase
                                          {
-                                             Owner = m_service.AgentID,
-                                             CreatorId = m_service.AgentID.ToString(),
+                                             Owner = m_agentID,
+                                             CreatorId = m_agentID.ToString(),
                                              ID = inventoryItem,
                                              AssetID = asset.ID,
                                              Description = assetDescription,
@@ -711,7 +677,6 @@ namespace Aurora.Services
 
         public class AssetUploader
         {
-            private readonly IRegionClientCapsService clientCaps;
             private readonly UUID inventoryItemID;
 
 
@@ -722,18 +687,19 @@ namespace Aurora.Services
 
             private readonly uint m_everyone_mask;
             private readonly uint m_group_mask;
-            private readonly InventoryCAPS m_invCaps;
             private readonly string m_invType = String.Empty;
             private readonly uint m_next_owner_mask;
             private readonly UUID parentFolder;
-            private readonly string uploadMethod = String.Empty;
             private readonly string uploaderPath = String.Empty;
             private UUID newAssetID;
+            private UploadHandler m_uploadCompleteHandler;
+            public delegate UUID UploadHandler(string assetName, string description, UUID assetID, UUID inventoryItem,
+                                 UUID parentFolderID, byte[] data, string invType, string assetType,
+                                 uint everyone_mask, uint group_mask, uint next_owner_mask);
 
             public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
                                  UUID parentFolderID, string invType, string assetType, string path,
-                                 string method, IRegionClientCapsService caps, InventoryCAPS invCaps,
-                                 uint everyone_mask, uint group_mask, uint next_owner_mask)
+                                 uint everyone_mask, uint group_mask, uint next_owner_mask, UploadHandler action)
             {
                 m_assetName = assetName;
                 m_assetDes = description;
@@ -743,12 +709,10 @@ namespace Aurora.Services
                 parentFolder = parentFolderID;
                 m_assetType = assetType;
                 m_invType = invType;
-                clientCaps = caps;
-                uploadMethod = method;
-                m_invCaps = invCaps;
                 m_everyone_mask = everyone_mask;
                 m_group_mask = group_mask;
                 m_next_owner_mask = next_owner_mask;
+                m_uploadCompleteHandler = action;
             }
 
             /// <summary>
@@ -763,9 +727,9 @@ namespace Aurora.Services
             {
                 UUID inv = inventoryItemID;
                 byte[] data = HttpServerHandlerHelpers.ReadFully(request);
-                clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
+                MainServer.Instance.RemoveStreamHandler("POST", uploaderPath);
 
-                newAssetID = m_invCaps.UploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder,
+                newAssetID = m_uploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder,
                                                              data, m_invType, m_assetType, m_everyone_mask, m_group_mask,
                                                              m_next_owner_mask);
 

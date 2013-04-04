@@ -1,4 +1,5 @@
-﻿namespace Aurora.Framework.Services
+﻿using System.Collections.Generic;
+namespace Aurora.Framework.Services
 {
     public interface IGridInfo
     {
@@ -19,5 +20,10 @@
         string GridMarketplaceURI { get; }
         string GridTutorialURI { get; }
         string GridSnapshotConfigURI { get; }
+    }
+
+    public interface IGridServerInfoService
+    {
+        List<string> GetGridURIs(string key);
     }
 }

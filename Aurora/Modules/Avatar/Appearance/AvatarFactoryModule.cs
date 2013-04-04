@@ -265,6 +265,7 @@ textures 1
                     List<UUID> ChangedTextures = new List<UUID>();
                     texturesChanged = appearance.Appearance.SetTextureEntries(textureEntry, out ChangedTextures);
                 }
+                appearance.Appearance.SetCachedWearables(wearables);
                 // Process the visual params, this may change height as well
                 if (visualParams != null)
                 {
@@ -290,15 +291,20 @@ textures 1
         /// </summary>
         /// <param name="client"></param>
         /// <param name="args"></param>
-        public void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
+        private void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
         {
+            IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
+            IAvatarAppearanceModule app = sp.RequestModuleInterface<IAvatarAppearanceModule>();
+            // Look up hashes to make sure that the request is valid
             List<CachedAgentArgs> resp =
                 (from arg in args
-                 let cachedID = UUID.Zero
-                 select new CachedAgentArgs {ID = cachedID, TextureIndex = arg.TextureIndex}).ToList();
-
-            //AvatarData ad = m_scene.AvatarService.GetAvatar(client.AgentId);
-            //Send all with UUID zero for now so that we don't confuse the client about baked textures...
+                 select new CachedAgentArgs 
+                 {
+                     ID = app.Appearance.Texture.FaceTextures[arg.TextureIndex] == null ||
+                          app.Appearance.WearableCache[arg.TextureIndex.ToString()] != arg.ID ?
+                          UUID.Zero : app.Appearance.Texture.FaceTextures[arg.TextureIndex].TextureID, 
+                     TextureIndex = arg.TextureIndex
+                 }).ToList();
 
             client.SendAgentCachedTexture(resp);
         }
@@ -313,17 +319,15 @@ textures 1
         /// </summary>
         public void QueueAppearanceSend(UUID agentid)
         {
-            // MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue appearance send for {0}", agentid);
+            MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue appearance send for {0}", agentid);
 
-            // 10000 ticks per millisecond, 1000 milliseconds per second
             _sendQueue.Add(agentid);
         }
 
         public void QueueAppearanceSave(UUID agentid)
         {
-            // MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue appearance save for {0}", agentid);
+            MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue appearance save for {0}", agentid);
 
-            // 10000 ticks per millisecond, 1000 milliseconds per second
             IScenePresence sp = m_scene.GetScenePresence(agentid);
             if (sp == null)
             {
@@ -336,9 +340,18 @@ textures 1
 
         public void QueueInitialAppearanceSend(UUID agentid)
         {
-            // MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue initial appearance send for {0}", agentid);
+            MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue initial appearance send for {0}", agentid);
 
-            // 10000 ticks per millisecond, 1000 milliseconds per second
+            IScenePresence sp = m_scene.GetScenePresence(agentid);
+            if (sp == null)
+            {
+                MainConsole.Instance.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
+                return;
+            }
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
+            //We're waiting to send them, so mark it as true
+            appearance.InitialHasWearablesBeenSent = true;
+
             _initialSendQueue.Add(agentid);
         }
 
@@ -346,7 +359,7 @@ textures 1
         ///     Sends an avatars appearance (only called by the TimeSender)
         /// </summary>
         /// <param name="agentid"></param>
-        /// <param name="app">ALWAYS NULL</param>
+        /// <param name="app"></param>
         private void HandleAppearanceSend(UUID agentid, AvatarAppearance app)
         {
             IScenePresence sp = m_scene.GetScenePresence(agentid);
@@ -392,7 +405,7 @@ textures 1
         ///     a root agent.
         /// </summary>
         /// <param name="agentid">Agent to send appearance for</param>
-        /// <param name="app">ALWAYS NULL</param>
+        /// <param name="app"></param>
         private void HandleInitialAppearanceSend(UUID agentid, AvatarAppearance app)
         {
             IScenePresence sp = m_scene.GetScenePresence(agentid);
@@ -405,9 +418,6 @@ textures 1
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
 
             MainConsole.Instance.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
-
-            //Only set this if we actually have sent the wearables
-            appearance.InitialHasWearablesBeenSent = true;
 
             // This agent just became root. We are going to tell everyone about it.
             appearance.SendAvatarDataToAllAgents(true);

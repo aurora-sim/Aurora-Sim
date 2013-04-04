@@ -13,5 +13,13 @@
     AvatarServiceOpenServerHandler = true
     AvatarServiceServerHandlerPort = 8011
 
+	SyncMessagePosterServiceHandler = SyncMessagePosterService
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8011
+	SyncMessagePosterServiceDoRemote = true
+	
+[ExternalCaps]
+	CapsHandlers = AppearanceCAPS
+
 [Includes]
 	Include-Base = Aurora.ServersBase.ini

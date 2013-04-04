@@ -76,12 +76,10 @@ namespace Aurora.Services
             m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
 
             string post = CapsUtil.CreateCAPS("SetDisplayName", "");
-            service.AddCAPS("SetDisplayName", post);
             service.AddStreamHandler("SetDisplayName", new GenericStreamHandler("POST", post,
                                                                                 ProcessSetDisplayName));
 
             post = CapsUtil.CreateCAPS("GetDisplayNames", "");
-            service.AddCAPS("GetDisplayNames", post);
             service.AddStreamHandler("GetDisplayNames", new GenericStreamHandler("GET", post,
                                                                                  ProcessGetDisplayName));
         }

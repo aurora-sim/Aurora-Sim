@@ -13,5 +13,13 @@
     InventoryServiceOpenServerHandler = true
     InventoryServiceServerHandlerPort = 8013
 
+	SyncMessagePosterServiceHandler = SyncMessagePosterService
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8013
+	SyncMessagePosterServiceDoRemote = true
+	
+[ExternalCaps]
+	CapsHandlers = InventoryCAPS
+
 [Includes]
 	Include-Base = Aurora.ServersBase.ini

@@ -69,12 +69,19 @@ namespace Aurora.Framework.Services
         }
 
         protected bool m_doRemoteCalls = false;
+        protected bool m_startedServer = false;
         protected string m_name;
         protected bool m_doRemoteOnly = false;
         protected int m_OSDRequestTryCount = 7;
         protected string m_password = "";
 
         public string ServerHandlerName
+        {
+            get;
+            private set;
+        }
+
+        public string ServerHandlerPath
         {
             get;
             private set;
@@ -125,6 +132,10 @@ namespace Aurora.Framework.Services
                 m_doRemoteOnly = true; //Lock out local + remote for now
             ConnectorRegistry.RegisterConnector(this);
 
+            ServerHandlerName = serverHandlerName;
+            ServerHandlerPort = serverHandlerPort == 0 ? MainServer.Instance.Port : serverHandlerPort;
+            ServerHandlerPath = serverPath;
+
             if (openServerHandler)
                 CreateServerHandler(serverHandlerPort, serverPath, serverHandlerName);
         }
@@ -134,9 +145,8 @@ namespace Aurora.Framework.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
             server.AddStreamHandler(new ServerHandler(urlPath, m_registry, this));
-            ServerHandlerName = serverHandlerName;
-            ServerHandlerPort = port;
             ConnectorRegistry.RegisterServerHandlerConnector(this);
+            m_startedServer = true;
         }
 
         public void SetPassword(string password)
@@ -240,7 +250,7 @@ namespace Aurora.Framework.Services
                 i++;
             }
 
-            serverURL = m_configService.FindValueOf(url);
+            serverURL = m_configService == null ? "" : m_configService.FindValueOf(url);
             if (serverURL == "")
                 serverURL = url;
             return true;

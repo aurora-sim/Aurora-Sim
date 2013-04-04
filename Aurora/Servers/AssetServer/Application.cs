@@ -43,7 +43,15 @@ namespace Aurora.Servers.AssetServer
             BaseApplication.BaseMain(args, "Aurora.AssetServer.ini",
                                      new MinimalSimulationBase("Aurora.AssetServer ",
                                                                new List<Type> {typeof (IAssetDataPlugin)},
-                                                               new List<Type> {typeof (IAssetService)}));
+                                                               new List<Type> 
+                                                               {
+                                                                    typeof (IAssetService),
+                                                                    typeof (ISyncMessagePosterService),
+                                                                    typeof (ISyncMessageRecievedService),
+                                                                    typeof (IExternalCapsHandler),
+                                                                    typeof (IConfigurationService),
+                                                                    typeof (IGridServerInfoService)
+                                                               }));
         }
     }
 }

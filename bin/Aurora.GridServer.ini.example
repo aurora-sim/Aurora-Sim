@@ -13,5 +13,13 @@
     GridServiceOpenServerHandler = true
     GridServiceServerHandlerPort = 8012
 
+	SyncMessagePosterServiceHandler = SyncMessagePosterService
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8012
+	SyncMessagePosterServiceDoRemote = true
+	
+[ExternalCaps]
+	CapsHandlers = MapCAPS
+
 [Includes]
 	Include-Base = Aurora.ServersBase.ini

@@ -50,37 +50,41 @@ using System.Linq;
 using System.Text;
 using System.Web;
 using Encoder = System.Drawing.Imaging.Encoder;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Services
 {
-    public class AppearanceCAPS : ICapsServiceConnector
+    public class AppearanceCAPS : IExternalCapsRequestHandler
     {
         protected IAssetService m_assetService;
         protected IAvatarService m_avatarService;
         protected IInventoryService m_inventoryService;
         protected ISyncMessagePosterService m_syncMessage;
-        protected IRegionClientCapsService m_service;
+        protected UUID m_agentID;
+        protected GridRegion m_region;
+        protected string m_uri;
 
-        public void RegisterCaps(IRegionClientCapsService service)
+        public string Name { get { return GetType().Name; } }
+
+        public void IncomingCapsRequest(UUID agentID, GridRegion region, ISimulationBase simbase, ref OSDMap capURLs)
         {
-            m_service = service;
-            m_syncMessage = m_service.Registry.RequestModuleInterface<ISyncMessagePosterService>();
-            m_inventoryService = m_service.Registry.RequestModuleInterface<IInventoryService>();
-            m_avatarService = service.Registry.RequestModuleInterface<IAvatarService>();
-            m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
+            m_syncMessage = simbase.ApplicationRegistry.RequestModuleInterface<ISyncMessagePosterService>();
+            m_inventoryService = simbase.ApplicationRegistry.RequestModuleInterface<IInventoryService>();
+            m_avatarService = simbase.ApplicationRegistry.RequestModuleInterface<IAvatarService>();
+            m_assetService = simbase.ApplicationRegistry.RequestModuleInterface<IAssetService>();
+            m_region = region;
+            m_agentID = agentID;
 
-            service.AddStreamHandler("UpdateAvatarAppearance",
-                                     new GenericStreamHandler("POST", service.CreateCAPS("UpdateAvatarAppearance", ""),
-                                                              UpdateAvatarAppearance));
+            m_uri = "/CAPS/UpdateAvatarAppearance/" + UUID.Random() + "/";
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST",
+                                                    m_uri,
+                                                    UpdateAvatarAppearance));
+            capURLs["UpdateAvatarAppearance"] = MainServer.Instance.ServerURI + m_uri;
         }
 
-        public void EnteringRegion()
+        public void IncomingCapsDestruction()
         {
-        }
-
-        public void DeregisterCaps()
-        {
-            m_service.RemoveStreamHandler("UpdateAvatarAppearance", "POST");
+            MainServer.Instance.RemoveStreamHandler("POST", m_uri);
         }
 
         #region Server Side Baked Textures
@@ -96,22 +100,20 @@ namespace Aurora.Services
 
                 bool success = false;
                 string error = "";
-                AvatarAppearance appearance = m_avatarService.GetAppearance(m_service.AgentID);
+                AvatarAppearance appearance = m_avatarService.GetAppearance(m_agentID);
                 List<BakeType> pendingBakes = new List<BakeType>();
-                List<InventoryItemBase> items = m_inventoryService.GetFolderItems(m_service.AgentID, m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Unknown, AssetType.CurrentOutfitFolder).ID);
+                List<InventoryItemBase> items = m_inventoryService.GetFolderItems(m_agentID, m_inventoryService.GetFolderForType(m_agentID, InventoryType.Unknown, AssetType.CurrentOutfitFolder).ID);
                 foreach (InventoryItemBase itm in items)
-                {
                     MainConsole.Instance.Warn("[SSB]: Baking " + itm.Name);
-                }
+
                 for (int i = 0; i < Textures.Length; i++)
-                {
                     Textures[i] = new AppearanceManager.TextureData();
-                }
+
                 foreach (InventoryItemBase itm in items)
                 {
                     if (itm.AssetType == (int)AssetType.Link)
                     {
-                        UUID assetID = m_inventoryService.GetItemAssetID(m_service.AgentID, itm.AssetID);
+                        UUID assetID = m_inventoryService.GetItemAssetID(m_agentID, itm.AssetID);
                         OpenMetaverse.AppearanceManager.WearableData wearable = new OpenMetaverse.AppearanceManager.WearableData();
                         AssetBase asset = m_assetService.Get(assetID.ToString());
                         if (asset != null && asset.TypeAsset != AssetType.Object)
@@ -189,24 +191,24 @@ namespace Aurora.Services
                 MainConsole.Instance.ErrorFormat("[SSB]: Baking took {0} ms", (Environment.TickCount - start));
 
                 appearance.Serial = cof_version+1;
-                m_avatarService.SetAppearance(m_service.AgentID, appearance);
+                m_avatarService.SetAppearance(m_agentID, appearance);
                 OSDMap uaamap = new OSDMap();
                 uaamap["Method"] = "UpdateAvatarAppearance";
-                uaamap["AgentID"] = m_service.AgentID;
+                uaamap["AgentID"] = m_agentID;
                 uaamap["Appearance"] = appearance.ToOSD();
-                m_syncMessage.Post(m_service.Region.ServerURI, uaamap);
+                m_syncMessage.Post(m_region.ServerURI, uaamap);
                 success = true;
 
                 OSDMap map = new OSDMap();
                 map["success"] = success;
                 map["error"] = error;
-                map["agent_id"] = m_service.AgentID;
-                map["avatar_scale"] = appearance.AvatarHeight;
+                map["agent_id"] = m_agentID;
+                /*map["avatar_scale"] = appearance.AvatarHeight;
                 map["textures"] = newBakeIDs.ToOSDArray();
                 OSDArray visualParams = new OSDArray();
                 foreach(byte b in appearance.VisualParams)
                     visualParams.Add((int)b);
-                map["visual_params"] = visualParams;
+                map["visual_params"] = visualParams;*/
                 return OSDParser.SerializeLLSDXmlBytes(map);
             }
             catch (Exception e)

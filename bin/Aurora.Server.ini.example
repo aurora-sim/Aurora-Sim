@@ -22,7 +22,9 @@
     ;RemoteConsoleUser =
     ;RemoteConsolePass =
     ;remote_console_port = 0
-
+	
+[ExternalCaps]
+	CapsHandlers = 
 	
 [Startup]
     ;; Set this to true if you want to log crashes to disk
@@ -49,6 +51,10 @@
 
     ;; Should we restart Aurora if the sim crashes?
     AutoRestartOnCrash = false
+	
+[GridServerInfoService]
+	Enabled = true
+	DoRemote = false
 	
 [Handlers]
     ;; Add any handlers here that you want to use
@@ -80,20 +86,22 @@
     LLLoginHandlerPort = 8002
 
     SyncMessagePosterServiceOpenServerHandler = true
-    SyncMessagePosterServiceServerHandlerPort = 8014
+    SyncMessagePosterServiceServerHandlerPort = 8003
 	SyncMessagePosterServiceDoRemote = true
 
     InstantMessagingServiceOpenServerHandler = true
-    InstantMessagingServiceServerHandlerPort = 8014
+    InstantMessagingServiceServerHandlerPort = 8003
 	
     UserAccountServiceOpenServerHandler = true
-    UserAccountServiceServerHandlerPort = 8015
+    UserAccountServiceServerHandlerPort = 8003
+
+    ExternalCapsHandlerOpenServerHandler = true
+    ExternalCapsHandlerServerHandlerPort = 8003
 
     AssetServiceOpenServerHandler = false
     AvatarServiceOpenServerHandler = false
     GridServiceOpenServerHandler = false
     InventoryServiceOpenServerHandler = false
-	
 	
 	;; Stuff to set up Aurora-Server to run all of the services
 	;; Just uncomment all of these to have everything run in Aurora.Server
