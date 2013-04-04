@@ -56,7 +56,7 @@ namespace Aurora.Modules.Appearance
         private readonly object m_setAppearanceLock = new object();
         private int m_initialsendtime = 1; // seconds to wait before sending the initial appearance
         private int m_savetime = 5; // seconds to wait before saving changed appearance
-        private int m_sendtime = 2; // seconds to wait before sending appearances
+        private int m_sendtime = 1; // seconds to wait before sending appearances
         private IScene m_scene;
 
         #endregion
@@ -300,9 +300,9 @@ textures 1
                 (from arg in args
                  select new CachedAgentArgs 
                  {
-                     ID = app.Appearance.Texture.FaceTextures[arg.TextureIndex] == null ||
-                          app.Appearance.WearableCache[arg.TextureIndex.ToString()] != arg.ID ?
-                          UUID.Zero : app.Appearance.Texture.FaceTextures[arg.TextureIndex].TextureID, 
+                     ID = app.Appearance.Texture.FaceTextures[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex))] == null ||
+                          app.Appearance.WearableCache[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex)).ToString()] != arg.ID ?
+                          UUID.Zero : app.Appearance.Texture.FaceTextures[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex))].TextureID, 
                      TextureIndex = arg.TextureIndex
                  }).ToList();
 
