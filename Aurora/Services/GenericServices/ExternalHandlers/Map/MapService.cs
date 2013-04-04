@@ -90,12 +90,20 @@ namespace Aurora.Services
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            if (!m_enabled) return;
             m_assetService = m_registry.RequestModuleInterface<IAssetService>();
             m_gridService = m_registry.RequestModuleInterface<IGridService>();
         }
 
         public void FinishedStartup()
         {
+            if (!m_enabled) return;
+            IGridServerInfoService serverInfo = m_registry.RequestModuleInterface<IGridServerInfoService>();
+            if (serverInfo != null)
+            {
+                serverInfo.AddURI("MapService", MapServiceURL);
+                serverInfo.AddURI("MapAPIService", MapServiceAPIURL);
+            }
         }
 
         public string MapServiceURL

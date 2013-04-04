@@ -46,18 +46,21 @@ namespace Aurora.Servers.AssetServer
                                                                    {
                                                                        typeof (IRegionData),
                                                                        typeof (IAgentInfoConnector),
-                                                                       typeof (IUserAccountData)
+                                                                       typeof (IUserAccountData),
+                                                                       typeof (IAssetDataPlugin)
                                                                    },
                                                                new List<Type>
                                                                    {
                                                                        typeof (IGridService),
+                                                                       typeof (IAssetService),
                                                                        typeof (IAgentInfoService),
                                                                        typeof (IConfigurationService),
                                                                        typeof (ISyncMessagePosterService),
                                                                        typeof (ISyncMessageRecievedService),
                                                                        typeof (IExternalCapsHandler),
                                                                        typeof (IUserAccountService),
-                                                                       typeof (IGridServerInfoService)
+                                                                       typeof (IGridServerInfoService),
+                                                                       typeof (IMapService)
                                                                    }));
         }
     }

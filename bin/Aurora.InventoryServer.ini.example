@@ -1,14 +1,3 @@
-[RedisConnection]
-	;; If you're running this on the same computer as Aurora.Server, 
-	;;  and you haven't changed the port for it, leave this alone
-	ConnectionString = localhost:6379
-	
-	;; If you've set a password (which is recommended) on Redis server, 
-	;;  set it here
-	;ConnectionPassword =
-	
-	DoConversion = true
-
 [Handlers]
     InventoryServiceOpenServerHandler = true
     InventoryServiceServerHandlerPort = 8013

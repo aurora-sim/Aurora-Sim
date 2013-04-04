@@ -79,6 +79,7 @@ namespace Aurora.Services
         private string seedCapability;
         private string startLocation;
         private string udpBlackList;
+        private IGridInfo m_gridInfo;
 
         public LLLoginResponse()
         {
@@ -109,10 +110,11 @@ namespace Aurora.Services
                                GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating,
                                ArrayList eventValues, ArrayList eventNotificationValues, ArrayList classifiedValues,
                                string seedCap, IConfigSource source,
-                               string DisplayName, string cofversion)
+                               string DisplayName, string cofversion, IGridInfo info)
             : this()
         {
             m_source = source;
+            m_gridInfo = info;
             SeedCapability = seedCap;
 
             FillOutInventoryData(invSkel, libService, invService);
@@ -260,15 +262,6 @@ namespace Aurora.Services
             InitialOutfitHash["folder_name"] = "Nightclub Female";
             InitialOutfitHash["gender"] = "female";
             initialOutfit.Add(InitialOutfitHash);
-
-            Hashtable TutorialHash = new Hashtable();
-            TutorialHash["tutorial_url"] = TutorialURL;
-
-            if (TutorialURL != "")
-                TutorialHash["use_tutorial"] = "Y";
-            else
-                TutorialHash["use_tutorial"] = "";
-            tutorial.Add(TutorialHash);
         }
 
         #endregion
@@ -327,6 +320,16 @@ namespace Aurora.Services
                 responseData["gestures"] = activeGestures;
                 responseData["inventory-lib-owner"] = InventoryLibraryOwner;
                 responseData["initial-outfit"] = initialOutfit;
+
+                Hashtable TutorialHash = new Hashtable();
+                TutorialHash["tutorial_url"] = TutorialURL;
+
+                if (TutorialURL != "")
+                    TutorialHash["use_tutorial"] = "Y";
+                else
+                    TutorialHash["use_tutorial"] = "";
+                tutorial.Add(TutorialHash);
+
                 responseData["tutorial_setting"] = tutorial;
                 responseData["start_location"] = startLocation;
                 responseData["home"] = home;
@@ -525,6 +528,16 @@ namespace Aurora.Services
                 map["gestures"] = ArrayListToOSDArray(activeGestures);
 
                 map["initial-outfit"] = ArrayListToOSDArray(initialOutfit);
+
+                Hashtable TutorialHash = new Hashtable();
+                TutorialHash["tutorial_url"] = TutorialURL;
+
+                if (TutorialURL != "")
+                    TutorialHash["use_tutorial"] = "Y";
+                else
+                    TutorialHash["use_tutorial"] = "";
+                tutorial.Add(TutorialHash);
+
                 map["tutorial_setting"] = ArrayListToOSDArray(tutorial);
                 map["start_location"] = OSD.FromString(startLocation);
                 map["udp_blacklist"] = OSD.FromString(udpBlackList);
@@ -876,17 +889,17 @@ namespace Aurora.Services
 
         public string OpenIDURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("OpenIDURL"); }
+            get { return ""; }
         }
 
         public string SnapshotConfigURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("SnapshotConfigURL"); }
+            get { return m_gridInfo.GridSnapshotConfigURI; }
         }
 
         public string HelpURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("HelpURL"); }
+            get { return m_gridInfo.GridHelpURI; }
         }
 
         public int MaxAgentGroups
@@ -901,37 +914,37 @@ namespace Aurora.Services
 
         public string TutorialURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("TutorialURL"); }
+            get { return m_gridInfo.GridTutorialURI; }
         }
 
         public string MapTileURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("MapTileURL"); }
+            get { return m_gridInfo.GridMapTileURI; }
         }
 
         public string AgentAppearanceURL
         {
-            get { return (string)LLLoginResponseRegister.GetValue("AgentAppearanceURL"); }
+            get { return m_gridInfo.AgentAppearanceURI; }
         }
 
         public string SearchURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("SearchURL"); }
+            get { return m_gridInfo.GridSearchURI; }
         }
 
         public string WebProfileURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("WebProfileURL"); }
+            get { return m_gridInfo.GridWebProfileURI; }
         }
 
         public string DestinationURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("DestinationURL"); }
+            get { return m_gridInfo.GridDestinationURI; }
         }
 
         public string MarketPlaceURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("MarketPlaceURL"); }
+            get { return m_gridInfo.GridMarketplaceURI; }
         }
 
         public string Message

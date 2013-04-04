@@ -20,11 +20,15 @@ namespace Aurora.Framework.Services
         string GridMarketplaceURI { get; }
         string GridTutorialURI { get; }
         string GridSnapshotConfigURI { get; }
+
+        void UpdateGridInfo();
     }
 
     public interface IGridServerInfoService
     {
         List<string> GetGridURIs(string key);
+        string GetGridURI(string key);
         Dictionary<string, List<string>> RetrieveAllGridURIs(bool secure);
+        void AddURI(string key, string value);
     }
 }

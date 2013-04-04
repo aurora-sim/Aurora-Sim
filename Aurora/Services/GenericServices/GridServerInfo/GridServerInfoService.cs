@@ -19,17 +19,17 @@ namespace Aurora.Services.GenericServices
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            Init(registry, GetType().Name);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
             IConfig conf = config.Configs["GridServerInfoService"];
             if (conf == null || !conf.GetBoolean("Enabled"))
                 return;
             m_enabled = true;
             registry.RegisterModuleInterface<IGridServerInfoService>(this);
             m_remoteCalls = conf.GetBoolean("DoRemote");
+            Init(registry, GetType().Name);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void FinishedStartup()
@@ -54,6 +54,13 @@ namespace Aurora.Services.GenericServices
             if (!m_gridURIs.ContainsKey(key))
                 return new List<string>();
             return m_gridURIs[key];
+        }
+
+        public string GetGridURI(string key)
+        {
+            if (!m_gridURIs.ContainsKey(key))
+                return "";
+            return m_gridURIs[key][0];
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.High)]
@@ -89,6 +96,35 @@ namespace Aurora.Services.GenericServices
                     m_gridURIs.Add(kvp.Key, new List<string>());
                 m_gridURIs[kvp.Key].Add(kvp.Value);
             }
+
+            m_registry.RequestModuleInterface<IGridInfo>().UpdateGridInfo();
+            IGridInfo info = m_registry.RequestModuleInterface<IGridInfo>();
+        }
+
+        public void AddURI(string key, string value)
+        {
+            if (m_remoteCalls)
+            {
+                new Timer((o) => AddURIInternal(key, value), null, 2000, System.Threading.Timeout.Infinite);
+                return;
+            }
+
+            AddURIInternal(key, value);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
+        public void AddURIInternal(string key, string value)
+        {
+            if (m_remoteCalls)
+            {
+                base.DoRemoteCallPost(true, "ServerURI", key, value);
+                return;
+            }
+
+            if (!m_gridURIs.ContainsKey(key))
+                m_gridURIs.Add(key, new List<string>());
+            m_gridURIs[key].Add(value);
+            m_registry.RequestModuleInterface<IGridInfo>().UpdateGridInfo();
         }
     }
 }

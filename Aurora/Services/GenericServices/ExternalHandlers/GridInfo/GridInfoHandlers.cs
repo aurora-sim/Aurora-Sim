@@ -63,6 +63,8 @@ namespace Aurora.Services
         public string GridMarketplaceURI { get; protected set; }
         public string GridTutorialURI { get; protected set; }
         public string GridSnapshotConfigURI { get; protected set; }
+        protected IConfigSource m_config;
+        protected IRegistryCore m_registry;
 
         /// <summary>
         ///     Instantiate a GridInfoService object.
@@ -77,17 +79,25 @@ namespace Aurora.Services
         /// </remarks>
         public GridInfoHandlers(IConfigSource configSource, IRegistryCore registry)
         {
-            IConfig gridCfg = configSource.Configs["GridInfoService"];
+            m_config = configSource;
+            m_registry = registry;
+            UpdateGridInfo();
+        }
+
+        public void UpdateGridInfo()
+        {
+            IConfig gridCfg = m_config.Configs["GridInfoService"];
             if (gridCfg == null)
                 return;
             _info["platform"] = "Aurora";
             try
             {
-                IConfig configCfg = configSource.Configs["Handlers"];
-                IWebInterfaceModule webInterface = registry.RequestModuleInterface<IWebInterfaceModule>();
-                IMoneyModule moneyModule = registry.RequestModuleInterface<IMoneyModule>();
+                IConfig configCfg = m_config.Configs["Handlers"];
+                IWebInterfaceModule webInterface = m_registry.RequestModuleInterface<IWebInterfaceModule>();
+                IMoneyModule moneyModule = m_registry.RequestModuleInterface<IMoneyModule>();
+                IGridServerInfoService serverInfoService = m_registry.RequestModuleInterface<IGridServerInfoService>();
 
-                GridEconomyURI = GetConfig(configSource, "economy");
+                GridEconomyURI = GetConfig(m_config, "economy");
                 if (GridEconomyURI == "")
                 {
                     if (moneyModule != null)
@@ -99,7 +109,7 @@ namespace Aurora.Services
                     GridEconomyURI += "/";
                 _info["economy"] = _info["helperuri"] = GridEconomyURI;
 
-                GridLoginURI = GetConfig(configSource, "login");
+                GridLoginURI = GetConfig(m_config, "login");
                 if (GridLoginURI == "")
                 {
                     if (configCfg != null && configCfg.GetString("LLLoginHandlerPort", "") != "")
@@ -119,36 +129,35 @@ namespace Aurora.Services
                     GridLoginURI += "/";
                 _info["login"] = GridLoginURI;
 
-                _info["welcome"] = GridWelcomeURI = GetConfig(configSource, "welcome");
+                _info["welcome"] = GridWelcomeURI = GetConfig(m_config, "welcome");
                 if (GridWelcomeURI == "" && webInterface != null)
                     _info["welcome"] = GridWelcomeURI = webInterface.LoginScreenURL;
 
-                _info["register"] = GridRegisterURI = GetConfig(configSource, "register");
+                _info["register"] = GridRegisterURI = GetConfig(m_config, "register");
                 if (GridRegisterURI == "" && webInterface != null)
                     _info["register"] = GridRegisterURI = webInterface.RegistrationScreenURL;
 
-                _info["gridname"] = GridName = GetConfig(configSource, "gridname");
-                _info["gridnick"] = GridNick = GetConfig(configSource, "gridnick");
+                _info["gridname"] = GridName = GetConfig(m_config, "gridname");
+                _info["gridnick"] = GridNick = GetConfig(m_config, "gridnick");
 
-                _info["about"] = GridAboutURI = GetConfig(configSource, "about");
-                _info["help"] = GridHelpURI = GetConfig(configSource, "help");
-                _info["password"] = GridForgotPasswordURI = GetConfig(configSource, "forgottenpassword");
-                GridMapTileURI = GetConfig(configSource, "map");
-                IMapService mapService = registry.RequestModuleInterface<IMapService>();
-                if (GridMapTileURI == "" && mapService != null)
-                    GridMapTileURI = mapService.MapServiceURL;
-                AgentAppearanceURI = GetConfig(configSource, "AgentAppearanceURI");
-                IAgentAppearanceService agentAppearanceService = registry.RequestModuleInterface<IAgentAppearanceService>();
-                if (AgentAppearanceURI == "" && agentAppearanceService != null)
-                    AgentAppearanceURI = agentAppearanceService.ServiceURI;
-                GridWebProfileURI = GetConfig(configSource, "webprofile");
+                _info["about"] = GridAboutURI = GetConfig(m_config, "about");
+                _info["help"] = GridHelpURI = GetConfig(m_config, "help");
+                _info["password"] = GridForgotPasswordURI = GetConfig(m_config, "forgottenpassword");
+                GridMapTileURI = GetConfig(m_config, "map");
+
+                if (GridMapTileURI == "" && serverInfoService != null)
+                    GridMapTileURI = serverInfoService.GetGridURI("MapService");
+                AgentAppearanceURI = GetConfig(m_config, "AgentAppearanceURI");
+                if (AgentAppearanceURI == "" && serverInfoService != null)
+                    AgentAppearanceURI = serverInfoService.GetGridURI("SSAService");
+                GridWebProfileURI = GetConfig(m_config, "webprofile");
                 if (GridWebProfileURI == "" && webInterface != null)
                     GridWebProfileURI = webInterface.WebProfileURL;
-                GridSearchURI = GetConfig(configSource, "search");
-                GridDestinationURI = GetConfig(configSource, "destination");
-                GridMarketplaceURI = GetConfig(configSource, "marketplace");
-                GridTutorialURI = GetConfig(configSource, "tutorial");
-                GridSnapshotConfigURI = GetConfig(configSource, "snapshotconfig");
+                GridSearchURI = GetConfig(m_config, "search");
+                GridDestinationURI = GetConfig(m_config, "destination");
+                GridMarketplaceURI = GetConfig(m_config, "marketplace");
+                GridTutorialURI = GetConfig(m_config, "tutorial");
+                GridSnapshotConfigURI = GetConfig(m_config, "snapshotconfig");
             }
             catch (Exception)
             {
@@ -184,6 +193,7 @@ namespace Aurora.Services
             Hashtable responseData = new Hashtable();
 
             MainConsole.Instance.Debug("[GRID INFO SERVICE]: Request for grid info");
+            UpdateGridInfo();
 
             foreach (string k in _info.Keys)
             {
@@ -198,6 +208,7 @@ namespace Aurora.Services
                                             OSHttpResponse httpResponse)
         {
             StringBuilder sb = new StringBuilder();
+            UpdateGridInfo();
 
             sb.Append("<gridinfo>\n");
             foreach (string k in _info.Keys)

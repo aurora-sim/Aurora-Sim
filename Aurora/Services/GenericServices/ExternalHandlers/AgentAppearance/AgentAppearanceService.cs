@@ -15,27 +15,23 @@ using System.Text;
 
 namespace Aurora.Services
 {
-    public interface IAgentAppearanceService
-    {
-        string ServiceURI { get; }
-    }
     public class AgentAppearanceService : IService, IAgentAppearanceService
     {
         public string ServiceURI { get; protected set; }
         protected IRegistryCore m_registry;
         protected IAssetService m_assetService;
+        protected bool m_enabled = false;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig ssaConfig = config.Configs["SSAService"];
-            uint port = 8005;
-            bool enabled = false;
+            uint port = 8011;
             if (ssaConfig != null)
             {
-                enabled = ssaConfig.GetBoolean("Enabled", enabled);
+                m_enabled = ssaConfig.GetBoolean("Enabled", m_enabled);
                 port = ssaConfig.GetUInt("Port", port);
             }
-            if (!enabled)
+            if (!m_enabled)
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             ServiceURI = server.ServerURI + "/";
@@ -46,11 +42,16 @@ namespace Aurora.Services
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            if (!m_enabled) return;
             m_assetService = registry.RequestModuleInterface<IAssetService>();
         }
 
         public void FinishedStartup()
         {
+            if (!m_enabled) return;
+            IGridServerInfoService serverInfo = m_registry.RequestModuleInterface<IGridServerInfoService>();
+            if (serverInfo != null)
+                serverInfo.AddURI("SSAService", ServiceURI);
         }
 
 

@@ -59,7 +59,8 @@ namespace Aurora.Servers.AvatarServer
                                                                        typeof (ISyncMessageRecievedService),
                                                                        typeof (IExternalCapsHandler),
                                                                        typeof (IConfigurationService),
-                                                                       typeof (IGridServerInfoService)
+                                                                       typeof (IGridServerInfoService),
+                                                                       typeof (IAgentAppearanceService)
                                                                    }));
         }
     }

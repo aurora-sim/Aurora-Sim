@@ -1,14 +1,3 @@
-[RedisConnection]
-	;; If you're running this on the same computer as Aurora.Server, 
-	;;  and you haven't changed the port for it, leave this alone
-	ConnectionString = localhost:6379
-	
-	;; If you've set a password (which is recommended) on Redis server, 
-	;;  set it here
-	;ConnectionPassword =
-	
-	DoConversion = true
-
 [Handlers]
     GridServiceOpenServerHandler = true
     GridServiceServerHandlerPort = 8012
@@ -17,6 +6,19 @@
     SyncMessagePosterServiceOpenServerHandler = true
     SyncMessagePosterServiceServerHandlerPort = 8012
 	SyncMessagePosterServiceDoRemote = true
+	
+[MapService]
+    ;; This controls options about the v2 MapService, which allows v2 viewers to see the map
+    ;; Should we allow the use of this service?
+    Enabled = true
+    ;; The port to run the MapService on
+    ;; Default is 8012
+    Port = 8012
+    ;; Should we build up an expiring cache of the map tiles?
+    ;; Highly recommended, otherwise, many tiles will be generated more than once, which wastes CPU
+    CacheEnabled = true
+    ;; The time for cached images to expire (in hours)
+    CacheExpires = 24
 	
 [ExternalCaps]
 	CapsHandlers = MapCAPS

@@ -176,23 +176,6 @@ namespace Aurora.Services
 
         public void FinishedStartup()
         {
-            IConfig handlersConfig = m_config.Configs["Handlers"];
-            if (handlersConfig == null || handlersConfig.GetString("LoginHandler", "") != "LLLoginService")
-                return;
-            IGridInfo gridInfo = m_registry.RequestModuleInterface<IGridInfo>();
-            if (gridInfo != null)
-            {
-                LLLoginResponseRegister.RegisterValue("TutorialURL", gridInfo.GridTutorialURI);
-                //LLLoginResponseRegister.RegisterValue("OpenIDURL", gridInfo.GridOpenIDURI);
-                LLLoginResponseRegister.RegisterValue("SnapshotConfigURL", gridInfo.GridSnapshotConfigURI);
-                LLLoginResponseRegister.RegisterValue("HelpURL", gridInfo.GridHelpURI);
-                LLLoginResponseRegister.RegisterValue("MapTileURL", gridInfo.GridMapTileURI);
-                LLLoginResponseRegister.RegisterValue("AgentAppearanceURL", gridInfo.AgentAppearanceURI);
-                LLLoginResponseRegister.RegisterValue("WebProfileURL", gridInfo.GridWebProfileURI);
-                LLLoginResponseRegister.RegisterValue("SearchURL", gridInfo.GridSearchURI);
-                LLLoginResponseRegister.RegisterValue("DestinationURL", gridInfo.GridDestinationURI);
-                LLLoginResponseRegister.RegisterValue("MarketPlaceURL", gridInfo.GridMarketplaceURI);
-            }
         }
 
         public void ReadEventValues(IConfig config)
@@ -655,7 +638,7 @@ namespace Aurora.Services
                                                where, startLocation, position, lookAt, gestures, home, clientIP,
                                                MaxMaturity, MaturityRating,
                                                eventCategories, eventNotifications, classifiedCategories, seedCap,
-                                               m_config, DisplayName, avappearance.Serial.ToString());
+                                               m_config, DisplayName, avappearance.Serial.ToString(), m_registry.RequestModuleInterface<IGridInfo>());
 
                 MainConsole.Instance.InfoFormat(
                     "[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " +

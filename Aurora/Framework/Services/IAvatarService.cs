@@ -69,6 +69,11 @@ namespace Aurora.Framework.Services
         AvatarAppearance GetAndEnsureAppearance(UUID userID, string defaultUserAvatarArchive, out bool loadedArchive);
     }
 
+    public interface IAgentAppearanceService
+    {
+        string ServiceURI { get; }
+    }
+    
     public interface IAvatarData : IAuroraDataPlugin
     {
         AvatarAppearance Get(UUID PrincipalID);
