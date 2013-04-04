@@ -62,7 +62,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
             Configure(config, registry);
-            Init(registry, Name, serverPath: "/user/", serverHandlerName: "UserServerURI");
+            Init(registry, Name, serverPath: "/user/", serverHandlerName: "UserAccountServerURI");
         }
 
         public void Configure(IConfigSource config, IRegistryCore registry)

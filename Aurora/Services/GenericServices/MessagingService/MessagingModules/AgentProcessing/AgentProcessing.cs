@@ -100,6 +100,14 @@ namespace Aurora.Services
             if (m_capsService == null)
                 return null;
 
+            string method = message["Method"].AsString();
+            if (method != "RegionIsOnline" && method != "LogoutRegionAgents" &&
+                method != "ArrivedAtDestination" && method != "CancelTeleport" &&
+                method != "AgentLoggedOut" && method != "SendChildAgentUpdate" &&
+                method != "TeleportAgent" && method != "CrossAgent")
+                return null;
+
+
             UUID AgentID = message["AgentID"].AsUUID();
             UUID requestingRegion = message["RequestingRegion"].AsUUID();
 

@@ -25,6 +25,6 @@ namespace Aurora.Framework.Services
     public interface IGridServerInfoService
     {
         List<string> GetGridURIs(string key);
-        Dictionary<string, List<string>> RetrieveAllGridURIs();
+        Dictionary<string, List<string>> RetrieveAllGridURIs(bool secure);
     }
 }

@@ -145,11 +145,11 @@ namespace Aurora.Services.SQLServices.GridService
             m_Database = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             m_agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
             m_syncPosterService = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
-            m_gridServerInfo = m_registry.RequestModuleInterface<IGridServerInfoService>();
         }
 
         public virtual void FinishedStartup()
         {
+            m_gridServerInfo = m_registry.RequestModuleInterface<IGridServerInfoService>();
         }
 
         public virtual string Name
@@ -548,7 +548,7 @@ namespace Aurora.Services.SQLServices.GridService
                                    RegionFlags = regionInfos.Flags,
                                    SessionID = SessionID,
                                    Region = regionInfos,
-                                   URIs = m_gridServerInfo.RetrieveAllGridURIs()
+                                   URIs = m_gridServerInfo.RetrieveAllGridURIs(false)
                                };
                 }
             }

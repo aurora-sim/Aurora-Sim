@@ -175,8 +175,6 @@ namespace Aurora.Services
             //Fix the root agent status
             clientService.RootAgent = IsRootAgent;
 
-            m_registry.RequestModuleInterface<ISimulationBase>()
-                      .EventManager.FireGenericEventHandler("UserLogin", AgentID);
             MainConsole.Instance.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " for agent " +
                                        AgentID);
             return clientService.CapsUrl;

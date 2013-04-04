@@ -114,6 +114,8 @@ namespace Aurora.Services
                     if (itm.AssetType == (int)AssetType.Link)
                     {
                         UUID assetID = m_inventoryService.GetItemAssetID(m_agentID, itm.AssetID);
+                        //if (assetID == Textures[itm.InvType].TextureID)
+                        //    continue;
                         OpenMetaverse.AppearanceManager.WearableData wearable = new OpenMetaverse.AppearanceManager.WearableData();
                         AssetBase asset = m_assetService.Get(assetID.ToString());
                         if (asset != null && asset.TypeAsset != AssetType.Object)
