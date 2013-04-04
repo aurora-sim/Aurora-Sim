@@ -187,7 +187,7 @@ namespace Aurora.Services
                 result = response;
                 resetEvent.Set();
             });
-            bool success = resetEvent.WaitOne(10000);
+            bool success = resetEvent.WaitOne(10000) && result != null;
             if (!success)
             {
                 if (m_blackListedRegions.ContainsKey(destination.ServerURI))

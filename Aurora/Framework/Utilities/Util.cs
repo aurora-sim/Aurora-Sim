@@ -380,6 +380,7 @@ namespace Aurora.Framework.Utilities
 
         public static List<string> ConvertToList(string listAsString)
         {
+            if (listAsString == null) return new List<string>();
             //Do both , and " " so that it removes any annoying spaces in the string added by users
             List<string> value =
                 new List<string>(listAsString.Split(new[] { ",", " " }, StringSplitOptions.RemoveEmptyEntries));

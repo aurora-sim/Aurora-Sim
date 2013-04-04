@@ -54,32 +54,6 @@
 	DoRemote = false
 	
 [Handlers]
-    ;; Add any handlers here that you want to use
-
-    FreeswitchInHandler = FreeswitchServerConnector
-    GridInfoInHandler = GridInfoServerInConnector
-    GridInHandler = GridServiceConnector
-    LLLoginHandler = LLLoginServiceInConnector
-    EventQueueInHandler = EventQueueHandler
-
-    AgentInfoHandler = AgentInfoService
-    AssetHandler = AssetService
-    AssetHandlerUseCache = false
-    AuthenticationHandler = PasswordAuthenticationService
-    AvatarHandler = AvatarService
-    CapsHandler = CapsService
-    ConfigurationHandler = ConfigurationService
-    EventQueueHandler = EventQueueService
-    FreeSwitchHandler = FreeswitchService
-    FriendsHandler = FriendsService
-    GridHandler = GridService
-    GridWideMessage = GridWideMessageModule
-    InventoryHandler = InventoryService
-    LoginHandler = LLLoginService
-    SimulationHandler = SimulationServiceConnector
-    SyncMessagePosterServiceHandler = SyncMessagePosterService
-    UserAccountHandler = UserAccountService
-
     LLLoginHandlerPort = 8002
 
     SyncMessagePosterServiceOpenServerHandler = true
@@ -99,10 +73,9 @@
 	;; Just uncomment this line to have everything run in Aurora.Server
 	;;  such that you don't have to run any of the other server.exe files.
     ;Include-Single = AuroraServerConfiguration/SingleServerInstance.ini
-	
-[ExternalCaps]
-	;CapsHandlers = AssetCAPS, AppearanceCAPS, InventoryCAPS, MapCAPS
 
+[ExternalCaps]
+	
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector
     AssetConnector = LocalConnector
@@ -136,7 +109,7 @@
 [ApplicationPlugins]
     ServicesLoader = ServicesLoader
     StatsHandler = StatsHandler
-    
+
 [VoiceIncludes]
     ;; If you would like to set up voice for the entire grid, select one of these includes depending on which voice module you wish to set up
     ;Include-Murmur = AuroraServerConfiguration/Murmur.ini
