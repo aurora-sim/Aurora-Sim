@@ -41,12 +41,12 @@
 ##
 
   To combine all of the Aurora.*Server.exe back into Aurora.Server.exe, open
-    AuroraServerConfiguration/Services.ini
+    Aurora.Server.ini
     and look for [Handlers] and go to the bottom of that config.
 	You'll see an area that is commented out that says that it is the area to
-	set up Aurora.Server to run all of the services. Uncomment all of the lines there
-	starting with 
-	AssetServiceOpenServerHandler
+	set up Aurora.Server to run all of the services. 
+	Uncomment 
+	Include-Single = AuroraServerConfiguration/SingleServerInstance.ini
 	Now you only have to run Aurora.Server.exe.
 	
 ##

@@ -1,0 +1,33 @@
+[Handlers]
+	AssetServiceOpenServerHandler = true
+    AssetServiceServerHandlerPort = 8010
+    AvatarServiceOpenServerHandler = true
+    AvatarServiceServerHandlerPort = 8011
+    GridServiceOpenServerHandler = true
+    GridServiceServerHandlerPort = 8012
+    InventoryServiceOpenServerHandler = true
+    InventoryServiceServerHandlerPort = 8013
+	
+[ExternalCaps]
+	CapsHandlers = AssetCAPS, AppearanceCAPS, InventoryCAPS, MapCAPS
+	
+[SSAService]
+    ;; This controls options about the v3 Server Side Appearance, which allows v3 viewers to have an appearance
+    ;; Should we allow the use of this service?
+    Enabled = true
+    ;; The port to run the SSAService on
+    ;; Default is 8011
+    Port = 8011
+	
+[MapService]
+    ;; This controls options about the v2 MapService, which allows v2 viewers to see the map
+    ;; Should we allow the use of this service?
+    Enabled = true
+    ;; The port to run the MapService on
+    ;; Default is 8012
+    Port = 8012
+    ;; Should we build up an expiring cache of the map tiles?
+    ;; Highly recommended, otherwise, many tiles will be generated more than once, which wastes CPU
+    CacheEnabled = true
+    ;; The time for cached images to expire (in hours)
+    CacheExpires = 24

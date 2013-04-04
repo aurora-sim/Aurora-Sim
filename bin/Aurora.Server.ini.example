@@ -23,9 +23,6 @@
     ;RemoteConsolePass =
     ;remote_console_port = 0
 	
-[ExternalCaps]
-	CapsHandlers = 
-	
 [Startup]
     ;; Set this to true if you want to log crashes to disk
     ;; this can be useful when submitting bug reports.
@@ -97,25 +94,14 @@
 
     ExternalCapsHandlerOpenServerHandler = true
     ExternalCapsHandlerServerHandlerPort = 8003
-
-    AssetServiceOpenServerHandler = false
-    AvatarServiceOpenServerHandler = false
-    GridServiceOpenServerHandler = false
-    InventoryServiceOpenServerHandler = false
 	
 	;; Stuff to set up Aurora-Server to run all of the services
-	;; Just uncomment all of these to have everything run in Aurora.Server
+	;; Just uncomment this line to have everything run in Aurora.Server
 	;;  such that you don't have to run any of the other server.exe files.
-	;;  You also need to remove the previous four lines that set all of the
-	;;  server handlers to false (AssetServiceOpenServerHandler, etc).
-    ;AssetServiceOpenServerHandler = true
-    ;AssetServiceServerHandlerPort = 8010
-    ;AvatarServiceOpenServerHandler = true
-    ;AvatarServiceServerHandlerPort = 8011
-    ;GridServiceOpenServerHandler = true
-    ;GridServiceServerHandlerPort = 8012
-    ;InventoryServiceOpenServerHandler = true
-    ;InventoryServiceServerHandlerPort = 8013
+    ;Include-Single = AuroraServerConfiguration/SingleServerInstance.ini
+	
+[ExternalCaps]
+	;CapsHandlers = AssetCAPS, AppearanceCAPS, InventoryCAPS, MapCAPS
 
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector
