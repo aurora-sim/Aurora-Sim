@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 namespace Aurora.Framework.Services
 {
     /// <summary>
@@ -42,12 +43,12 @@ namespace Aurora.Framework.Services
         /// Gets the list of all URIs for this grid
         /// </summary>
         /// <returns></returns>
-        System.Collections.Generic.Dictionary<string, string> GetURIs();
+        Dictionary<string, string> GetURIs();
 
         /// <summary>
         /// Set the list of URIs for this grid
         /// </summary>
         /// <param name="uris"></param>
-        void SetURIs(System.Collections.Generic.Dictionary<string, string> uris);
+        void SetURIs(Dictionary<string, List<string>> uris);
     }
 }

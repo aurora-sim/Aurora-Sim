@@ -246,7 +246,7 @@ namespace Aurora.Framework.Services
         [ProtoMember(5)]
         public GridRegion Region;
         [ProtoMember(6)]
-        public Dictionary<string, string> URIs = new Dictionary<string, string>();
+        public Dictionary<string, List<string>> URIs = new Dictionary<string, List<string>>();
 
         public override OSDMap ToOSD()
         {
@@ -280,7 +280,7 @@ namespace Aurora.Framework.Services
                 Region.FromOSD((OSDMap)map["Region"]);
             }
             if (map.ContainsKey("URIs"))
-                URIs = ((OSDMap)map["URIs"]).ConvertMap<string>((o)=>o);
+                URIs = ((OSDMap)map["URIs"]).ConvertMap<List<string>>((o)=>((OSDArray)o).ConvertAll<string>((oo)=>oo));
         }
     }
 

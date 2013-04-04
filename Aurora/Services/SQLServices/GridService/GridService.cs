@@ -59,6 +59,7 @@ namespace Aurora.Services.SQLServices.GridService
         protected int m_cachedRegionViewSize = 0;
         protected IAgentInfoService m_agentInfoService;
         protected ISyncMessagePosterService m_syncPosterService;
+        protected IGridServerInfoService m_gridServerInfo;
         private readonly Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
 
         #endregion
@@ -144,6 +145,7 @@ namespace Aurora.Services.SQLServices.GridService
             m_Database = Framework.Utilities.DataManager.RequestPlugin<IRegionData>();
             m_agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
             m_syncPosterService = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+            m_gridServerInfo = m_registry.RequestModuleInterface<IGridServerInfoService>();
         }
 
         public virtual void FinishedStartup()
@@ -546,7 +548,7 @@ namespace Aurora.Services.SQLServices.GridService
                                    RegionFlags = regionInfos.Flags,
                                    SessionID = SessionID,
                                    Region = regionInfos,
-                                   URIs = m_configService.GetURIs()
+                                   URIs = m_gridServerInfo.RetrieveAllGridURIs()
                                };
                 }
             }

@@ -66,9 +66,11 @@ namespace Aurora.Services
             return new Dictionary<string, string>(m_urls);
         }
 
-        public void SetURIs(Dictionary<string, string> uris)
+        public void SetURIs(Dictionary<string, List<string>> uris)
         {
-            m_urls = uris;
+            m_urls = new Dictionary<string,string>();
+            foreach(KeyValuePair<string, List<string>> kvp in uris)
+                m_urls.Add(kvp.Key, kvp.Value[0]);
         }
 
         #endregion
