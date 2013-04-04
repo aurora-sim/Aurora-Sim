@@ -79,7 +79,7 @@ namespace Aurora.Framework.Servers.HttpServer.Interfaces
         /// </returns>
         bool AddHTTPHandler(IStreamedRequestHandler handler);
 
-        bool AddPollServiceHTTPHandler(string methodName, GenericHTTPMethod handler, PollServiceEventArgs args);
+        bool AddPollServiceHTTPHandler(string methodName, PollServiceEventArgs args);
 
         /// <summary>
         ///     Adds a LLSD handler
@@ -114,8 +114,6 @@ namespace Aurora.Framework.Servers.HttpServer.Interfaces
         void RemoveHttpStreamHandler(string path);
 
         void RemoveXmlRPCHandler(string method);
-
-        byte[] DoHTTPGruntWork(System.Collections.Hashtable responsedata, OSHttpResponse response);
 
         void Start();
 

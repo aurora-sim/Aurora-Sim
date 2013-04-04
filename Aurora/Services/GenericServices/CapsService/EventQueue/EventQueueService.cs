@@ -44,6 +44,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 
 namespace Aurora.Services
 {
@@ -282,7 +283,6 @@ namespace Aurora.Services
         private readonly Queue<OSD> queue = new Queue<OSD>();
         private string m_capsPath;
         private int m_ids;
-        private bool _isValid = false;
         private IRegionClientCapsService m_service;
 
         #endregion
@@ -335,7 +335,7 @@ namespace Aurora.Services
             }
         }
 
-        public Hashtable GetEvents(UUID requestID, UUID pAgentId, string request)
+        public byte[] GetEvents(UUID requestID, UUID pAgentId, string req, OSHttpResponse response)
         {
             OSDMap events = new OSDMap();
             try
@@ -344,7 +344,7 @@ namespace Aurora.Services
                 lock (queue)
                 {
                     if (queue.Count == 0)
-                        return NoEvents(requestID, pAgentId);
+                        return NoEvents(requestID, pAgentId, response);
 
                     while (queue.Count > 0)
                     {
@@ -361,44 +361,18 @@ namespace Aurora.Services
             {
                 MainConsole.Instance.Warn("[EQS]: Exception! " + ex);
             }
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200;
-            responsedata["content_type"] = "application/xml";
-            responsedata["keepalive"] = false;
-            responsedata["reusecontext"] = false;
-            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(events);
-            //MainConsole.Instance.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", pAgentId, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
-            return responsedata;
+
+            response.StatusCode = 200;
+            response.ContentType = "application/xml";
+            return OSDParser.SerializeLLSDXmlBytes(events);
         }
 
-        public Hashtable NoEvents(UUID requestID, UUID agentID)
+        public byte[] NoEvents(UUID requestID, UUID agentID, OSHttpResponse response)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 502;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = true;
-            responsedata["str_response_string"] = "Upstream error: ";
-            responsedata["error_status_text"] = "Upstream error:";
-            responsedata["http_protocol_version"] = "1.1";
-            return responsedata;
-        }
-
-        public byte[] NoEvents(OSHttpResponse response)
-        {
-            response.StatusCode = 502;
+            response.KeepAlive = true;
             response.ContentType = "text/plain";
-            response.StatusDescription = "Upstream error:";
-            return System.Text.Encoding.UTF8.GetBytes("Upstream error: ");
-        }
-
-        public Hashtable EventQueuePoll(Hashtable request)
-        {
-            return new Hashtable();
-        }
-
-        public bool Valid()
-        {
-            return _isValid;
+            response.StatusCode = 502;
+            return Encoding.UTF8.GetBytes("Upstream error: ");
         }
 
         #endregion
@@ -423,11 +397,8 @@ namespace Aurora.Services
                                                                                           OSHttpResponse httpResponse)
                                                                                      { return new byte[0]; }));
 
-            // This will persist this beyond the expiry of the caps handlers
-            _isValid = true;
             MainServer.Instance.AddPollServiceHTTPHandler(
-                m_capsPath, EventQueuePoll,
-                new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, Valid, service.AgentID));
+                m_capsPath, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, m_service.AgentID));
 
             Random rnd = new Random(Environment.TickCount);
             m_ids = rnd.Next(30000000);
@@ -440,7 +411,6 @@ namespace Aurora.Services
 
         public void DeregisterCaps()
         {
-            _isValid = false;
             m_service.RemoveStreamHandler("EventQueueGet", "POST", m_capsPath);
             MainServer.Instance.RemovePollServiceHTTPHandler("POST", m_capsPath);
         }

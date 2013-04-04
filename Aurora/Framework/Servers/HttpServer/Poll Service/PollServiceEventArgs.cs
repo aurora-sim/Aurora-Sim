@@ -28,18 +28,17 @@
 using System;
 using System.Collections;
 using OpenMetaverse;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public delegate void RequestMethod(UUID requestID, Hashtable request);
+    public delegate void RequestMethod(UUID requestID, OSHttpRequest request);
 
     public delegate bool HasEventsMethod(UUID requestID, UUID pId);
 
-    public delegate Hashtable GetEventsMethod(UUID requestID, UUID pId, string request);
+    public delegate byte[] GetEventsMethod(UUID requestID, UUID pId, string request, OSHttpResponse response);
 
-    public delegate Hashtable NoEventsMethod(UUID requestID, UUID pId);
-
-    public delegate bool IsValid();
+    public delegate byte[] NoEventsMethod(UUID requestID, UUID pId, OSHttpResponse response);
 
     public class PollServiceEventArgs : EventArgs
     {
@@ -47,17 +46,15 @@ namespace Aurora.Framework.Servers.HttpServer
         public HasEventsMethod HasEvents;
         public UUID Id;
         public NoEventsMethod NoEvents;
-        public IsValid Valid;
         public RequestMethod Request;
 
         public PollServiceEventArgs(RequestMethod pRequest, HasEventsMethod pHasEvents, GetEventsMethod pGetEvents,
-                                    NoEventsMethod pNoEvents, IsValid isValid, UUID pId)
+                                    NoEventsMethod pNoEvents, UUID pId)
         {
             Request = pRequest;
             HasEvents = pHasEvents;
             GetEvents = pGetEvents;
             NoEvents = pNoEvents;
-            Valid = isValid;
             Id = pId;
         }
     }

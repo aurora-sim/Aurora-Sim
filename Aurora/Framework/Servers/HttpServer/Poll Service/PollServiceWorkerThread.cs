@@ -83,18 +83,76 @@ namespace Aurora.Framework.Servers.HttpServer
                             continue;
                         }
 
-                        Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
-                                                                               str.ReadToEnd());
-                        DoHTTPGruntWork(m_server, req, responsedata);
+                        OSHttpResponse response = new OSHttpResponse(req.Context);
+
+                        byte[] buffer = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
+                                                                               str.ReadToEnd(), response);
+
+                        response.SendChunked = false;
+                        response.ContentLength64 = buffer.Length;
+                        response.ContentEncoding = Encoding.UTF8;
+
+                        try
+                        {
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                        }
+                        catch (Exception ex)
+                        {
+                            MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
+                        }
+                        finally
+                        {
+                            //response.OutputStream.Close();
+                            try
+                            {
+                                response.OutputStream.Close();
+                                response.Send();
+
+                                //if (!response.KeepAlive && response.ReuseContext)
+                                //    response.FreeContext();
+                            }
+                            catch (Exception e)
+                            {
+                                MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
+                            }
+                        }
                     }
                     else
                     {
                         if ((Environment.TickCount - req.RequestTime) > m_timeout)
                         {
-                            DoHTTPGruntWork(
-                                m_server,
-                                req,
-                                req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id));
+                            OSHttpResponse response = new OSHttpResponse(req.Context);
+
+                            byte[] buffer = req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id, response);
+
+                            response.SendChunked = false;
+                            response.ContentLength64 = buffer.Length;
+                            response.ContentEncoding = Encoding.UTF8;
+
+                            try
+                            {
+                                response.OutputStream.Write(buffer, 0, buffer.Length);
+                            }
+                            catch (Exception ex)
+                            {
+                                MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
+                            }
+                            finally
+                            {
+                                //response.OutputStream.Close();
+                                try
+                                {
+                                    response.OutputStream.Close();
+                                    response.Send();
+
+                                    //if (!response.KeepAlive && response.ReuseContext)
+                                    //    response.FreeContext();
+                                }
+                                catch (Exception e)
+                                {
+                                    MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
+                                }
+                            }
                         }
                         else
                         {
@@ -114,45 +172,6 @@ namespace Aurora.Framework.Servers.HttpServer
         internal void Enqueue(PollServiceHttpRequest pPollServiceHttpRequest)
         {
             m_request.Enqueue(pPollServiceHttpRequest);
-        }
-
-        /// <summary>
-        ///     FIXME: This should be part of BaseHttpServer
-        /// </summary>
-        internal static void DoHTTPGruntWork(IHttpServer server, PollServiceHttpRequest req, Hashtable responsedata)
-        {
-            OSHttpResponse response = new OSHttpResponse(req.Context);
-
-            byte[] buffer = server.DoHTTPGruntWork(responsedata, response);
-
-            response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
-            response.ContentEncoding = Encoding.UTF8;
-
-            try
-            {
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
-            }
-            finally
-            {
-                //response.OutputStream.Close();
-                try
-                {
-                    response.OutputStream.Close();
-                    response.Send();
-
-                    //if (!response.KeepAlive && response.ReuseContext)
-                    //    response.FreeContext();
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
-                }
-            }
         }
     }
 }

@@ -208,8 +208,7 @@ namespace Aurora.Framework.ConsoleFramework
 
             string uri = "/ReadResponses/" + sessionID.ToString() + "/";
 
-            m_Server.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
-                                               new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, Valid,
+            m_Server.AddPollServiceHTTPHandler(uri, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents,
                                                                         sessionID));
 
             XmlDocument xmldoc = new XmlDocument();
@@ -235,16 +234,6 @@ namespace Aurora.Framework.ConsoleFramework
             httpResponse.StatusCode = 200;
             httpResponse.ContentType = "text/xml";
             return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
-        }
-
-        private bool Valid()
-        {
-            return true;
-        }
-
-        private Hashtable HandleHttpPoll(Hashtable request)
-        {
-            return new Hashtable();
         }
 
         private byte[] HandleHttpCloseSession(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -395,21 +384,19 @@ namespace Aurora.Framework.ConsoleFramework
             return false;
         }
 
-        private Hashtable GetEvents(UUID RequestID, UUID sessionID, string request)
+        private byte[] GetEvents(UUID RequestID, UUID sessionID, string req, OSHttpResponse response)
         {
             ConsoleConnection c = null;
 
             lock (m_Connections)
             {
                 if (!m_Connections.ContainsKey(sessionID))
-                    return NoEvents(RequestID, UUID.Zero);
+                    return NoEvents(RequestID, UUID.Zero, response);
                 c = m_Connections[sessionID];
             }
             c.last = Environment.TickCount;
             if (c.lastLineSeen >= m_LineNumber)
-                return NoEvents(RequestID, UUID.Zero);
-
-            Hashtable result = new Hashtable();
+                return NoEvents(RequestID, UUID.Zero, response);
 
             XmlDocument xmldoc = new XmlDocument();
             XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
@@ -446,19 +433,15 @@ namespace Aurora.Framework.ConsoleFramework
 
             xmldoc.AppendChild(rootElement);
 
-            result["str_response_string"] = xmldoc.InnerXml;
-            result["int_response_code"] = 200;
-            result["content_type"] = "application/xml";
-            result["keepalive"] = false;
-            result["reusecontext"] = false;
 
-            return result;
+            response.StatusCode = 200;
+            response.ContentType = "application/xml";
+
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
 
-        private Hashtable NoEvents(UUID RequestID, UUID id)
+        private byte[] NoEvents(UUID RequestID, UUID id, OSHttpResponse response)
         {
-            Hashtable result = new Hashtable();
-
             XmlDocument xmldoc = new XmlDocument();
             XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
                                                 "", "");
@@ -469,13 +452,9 @@ namespace Aurora.Framework.ConsoleFramework
 
             xmldoc.AppendChild(rootElement);
 
-            result["str_response_string"] = xmldoc.InnerXml;
-            result["int_response_code"] = 200;
-            result["content_type"] = "text/xml";
-            result["keepalive"] = false;
-            result["reusecontext"] = false;
-
-            return result;
+            response.StatusCode = 200;
+            response.ContentType = "text/xml";
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
     }
 }

@@ -176,24 +176,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
             get { return _request.Url; }
         }
 
-        public string UserAgent
-        {
-            get { return _userAgent; }
-        }
-
-        private string _userAgent;
-
-        /// <summary>
-        ///     Internal whiteboard for handlers to store temporary stuff
-        ///     into.
-        /// </summary>
-        internal Dictionary<string, object> Whiteboard
-        {
-            get { return _whiteboard; }
-        }
-
-        private Dictionary<string, object> _whiteboard = new Dictionary<string, object>();
-
         public OSHttpRequest()
         {
         }
@@ -207,8 +189,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
                 _contentEncoding = Encoding.GetEncoding(_request.Headers["content-encoding"]);
             if (null != _request.Headers["content-type"])
                 _contentType = _request.Headers["content-type"];
-            if (null != _request.Headers["user-agent"])
-                _userAgent = _request.Headers["user-agent"];
             _queryString = new NameValueCollection();
             _query = new Hashtable();
             try

@@ -189,7 +189,7 @@ namespace Aurora.Framework.Servers.HttpServer
             return false;
         }
 
-        public bool AddPollServiceHTTPHandler(string methodName, GenericHTTPMethod handler, PollServiceEventArgs args)
+        public bool AddPollServiceHTTPHandler(string methodName, PollServiceEventArgs args)
         {
             lock (m_pollHandlers)
             {
@@ -515,39 +515,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     if (psEvArgs.Request != null)
                     {
                         OSHttpRequest req = new OSHttpRequest(context);
-
-                        Stream requestStream = req.InputStream;
-
-                        Encoding encoding = Encoding.UTF8;
-                        StreamReader reader = new StreamReader(requestStream, encoding);
-
-                        string requestBody = reader.ReadToEnd();
-
-                        Hashtable keysvals = new Hashtable();
-                        Hashtable headervals = new Hashtable();
-
-                        string[] querystringkeys = req.QueryString.AllKeys;
-                        string[] rHeaders = req.Headers.AllKeys;
-
-                        keysvals.Add("body", requestBody);
-                        keysvals.Add("uri", req.RawUrl);
-                        keysvals.Add("content-type", req.ContentType);
-                        keysvals.Add("http-method", req.HttpMethod);
-
-                        foreach (string queryname in querystringkeys)
-                        {
-                            keysvals.Add(queryname, req.QueryString[queryname]);
-                        }
-
-                        foreach (string headername in rHeaders)
-                        {
-                            headervals[headername] = req.Headers[headername];
-                        }
-
-                        keysvals.Add("headers", headervals);
-                        keysvals.Add("querystringkeys", querystringkeys);
-
-                        psEvArgs.Request(psreq.RequestID, keysvals);
+                        psEvArgs.Request(psreq.RequestID, req);
                     }
 
                     m_PollServiceManager.Enqueue(psreq);
@@ -1025,78 +993,6 @@ namespace Aurora.Framework.Servers.HttpServer
             // return Util.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
             response.ContentType = "application/llsd+xml";
             return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
-        }
-
-        public byte[] DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response)
-        {
-            //MainConsole.Instance.Info("[BASE HTTP SERVER]: Doing HTTP Grunt work with response");
-            int responsecode = (int) responsedata["int_response_code"];
-            string responseString = (string) responsedata["str_response_string"];
-            string contentType = (string) responsedata["content_type"];
-
-            if (responsedata.ContainsKey("error_status_text"))
-            {
-                response.StatusDescription = (string) responsedata["error_status_text"];
-            }
-            if (responsedata.ContainsKey("http_protocol_version"))
-            {
-                response.ProtocolVersion = (string) responsedata["http_protocol_version"];
-            }
-
-            if (responsedata.ContainsKey("keepalive"))
-            {
-                bool keepalive = (bool) responsedata["keepalive"];
-                response.KeepAlive = keepalive;
-            }
-
-            //if (responsedata.ContainsKey("reusecontext"))
-            //    response.ReuseContext = (bool)responsedata["reusecontext"];
-
-            // Cross-Origin Resource Sharing with simple requests
-            if (responsedata.ContainsKey("access_control_allow_origin"))
-                response.AddHeader("Access-Control-Allow-Origin", (string) responsedata["access_control_allow_origin"]);
-
-            //Even though only one other part of the entire code uses HTTPHandlers, we shouldn't expect this
-            //and should check for NullReferenceExceptions
-
-            if (string.IsNullOrEmpty(contentType))
-            {
-                contentType = "text/html";
-            }
-
-            // The client ignores anything but 200 here for web login, so ensure that this is 200 for that
-
-            response.StatusCode = responsecode;
-
-            if (responsecode == (int) OSHttpStatusCode.RedirectMovedPermanently)
-            {
-                response.RedirectLocation = (string) responsedata["str_redirect_location"];
-                response.StatusCode = responsecode;
-            }
-
-            response.AddHeader("Content-Type", contentType);
-
-            byte[] buffer;
-
-            if (!(contentType.Contains("image")
-                  || contentType.Contains("x-shockwave-flash")
-                  || contentType.Contains("application/x-oar")
-                  || contentType.Contains("application/vnd.ll.mesh")))
-            {
-                // Text
-                buffer = Encoding.UTF8.GetBytes(responseString);
-            }
-            else
-            {
-                // Binary!
-                buffer = Convert.FromBase64String(responseString);
-            }
-
-            response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
-            response.ContentEncoding = Encoding.UTF8;
-
-            return buffer;
         }
 
         public byte[] SendHTML404(OSHttpResponse response)

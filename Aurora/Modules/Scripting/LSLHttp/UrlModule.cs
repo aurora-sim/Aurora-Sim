@@ -31,11 +31,13 @@ using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using Nini.Config;
 using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Aurora.Modules.Scripting
 {
@@ -82,11 +84,6 @@ namespace Aurora.Modules.Scripting
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        private Hashtable HandleHttpPoll(Hashtable request)
-        {
-            return new Hashtable();
         }
 
         public string Name
@@ -143,9 +140,8 @@ namespace Aurora.Modules.Scripting
                 m_UrlMap[url] = urlData;
 
                 string uri = "/lslhttp/" + urlcode.ToString() + "/";
-                MainServer.Instance.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
-                                                              new PollServiceEventArgs(HttpRequestHandler, HasEvents,
-                                                                                       GetEvents, NoEvents, Valid,
+                MainServer.Instance.AddPollServiceHTTPHandler(uri, new PollServiceEventArgs(HttpRequestHandler, HasEvents,
+                                                                                       GetEvents, NoEvents,
                                                                                        urlcode));
 
                 engine.PostScriptEvent(itemID, host.UUID, "http_request",
@@ -153,11 +149,6 @@ namespace Aurora.Modules.Scripting
             }
 
             return urlcode;
-        }
-
-        private bool Valid()
-        {
-            return true;
         }
 
         public UUID RequestSecureURL(IScriptModule engine, ISceneChildEntity host, UUID itemID)
@@ -286,24 +277,20 @@ namespace Aurora.Modules.Scripting
             MainServer.Instance.RemovePollServiceHTTPHandler("", "/lslhttp/" + data.urlcode.ToString() + "/");
         }
 
-        private Hashtable NoEvents(UUID requestID, UUID sessionID)
+        private byte[] NoEvents(UUID requestID, UUID sessionID, OSHttpResponse response)
         {
-            Hashtable response = new Hashtable();
             UrlData url;
             lock (m_RequestMap)
             {
                 if (!m_RequestMap.ContainsKey(requestID))
-                    return response;
+                    return MainServer.BlankResponse;
                 url = m_RequestMap[requestID];
             }
 
             if (Environment.TickCount - url.requests[requestID].startTime > 25000)
             {
-                response["int_response_code"] = 500;
-                response["str_response_string"] = "Script timeout";
-                response["content_type"] = "text/plain";
-                response["keepalive"] = false;
-                response["reusecontext"] = false;
+                response.StatusCode = 500;
+                response.ContentType = "text/plain";
 
                 //remove from map
                 lock (url)
@@ -312,11 +299,11 @@ namespace Aurora.Modules.Scripting
                     m_RequestMap.Remove(requestID);
                 }
 
-                return response;
+                return Encoding.UTF8.GetBytes("Script timeout");
             }
 
 
-            return response;
+            return MainServer.BlankResponse;
         }
 
         private bool HasEvents(UUID requestID, UUID sessionID)
@@ -346,7 +333,7 @@ namespace Aurora.Modules.Scripting
             return false;
         }
 
-        private Hashtable GetEvents(UUID requestID, UUID sessionID, string request)
+        private byte[] GetEvents(UUID requestID, UUID sessionID, string req, OSHttpResponse response)
         {
             UrlData url = null;
             RequestData requestData = null;
@@ -354,32 +341,23 @@ namespace Aurora.Modules.Scripting
             lock (m_RequestMap)
             {
                 if (!m_RequestMap.ContainsKey(requestID))
-                    return NoEvents(requestID, sessionID);
+                    return NoEvents(requestID, sessionID, response);
                 url = m_RequestMap[requestID];
                 requestData = url.requests[requestID];
             }
 
             if (!requestData.requestDone)
-                return NoEvents(requestID, sessionID);
-
-            Hashtable response = new Hashtable();
+                return NoEvents(requestID, sessionID, response);
 
             if (Environment.TickCount - requestData.startTime > 25000)
             {
-                response["int_response_code"] = 500;
-                response["str_response_string"] = "Script timeout";
-                response["content_type"] = "text/plain";
-                response["keepalive"] = false;
-                response["reusecontext"] = false;
-                return response;
+                response.ContentType = "text/plain";
+                response.StatusCode = 500;
+                return Encoding.UTF8.GetBytes("Script timeout");
             }
             //put response
-            response["int_response_code"] = requestData.responseCode;
-            response["str_response_string"] = requestData.responseBody;
-            response["content_type"] = requestData.contentType;
-            response["keepalive"] = false;
-            response["reusecontext"] = false;
-
+            response.StatusCode = requestData.responseCode;
+            response.ContentType = requestData.contentType;
             //remove from map
             lock (url)
             {
@@ -387,26 +365,22 @@ namespace Aurora.Modules.Scripting
                 m_RequestMap.Remove(requestID);
             }
 
-            return response;
+            return Encoding.UTF8.GetBytes(requestData.responseBody);
         }
 
-        public void HttpRequestHandler(UUID requestID, Hashtable request)
+        public void HttpRequestHandler(UUID requestID, OSHttpRequest request)
         {
             lock (request)
             {
-                string uri = request["uri"].ToString();
+                string uri = request.RawUrl;
 
                 try
                 {
-                    Hashtable headers = (Hashtable) request["headers"];
-
                     int pos1 = uri.IndexOf("/"); // /lslhttp
                     int pos2 = uri.IndexOf("/", pos1 + 1); // /lslhttp/
                     int pos3 = uri.IndexOf("/", pos2 + 1); // /lslhttp/<UUID>/
                     string uri_tmp = uri.Substring(0, pos3 + 1);
-                    //HTTP server code doesn't provide us with QueryStrings
-                    string queryString = "";
-
+                    
                     string pathInfo = uri.Substring(pos3);
 
                     UrlData url = m_UrlMap[MainServer.Instance.ServerURI + uri_tmp];
@@ -425,35 +399,18 @@ namespace Aurora.Modules.Scripting
                     if (requestData.headers == null)
                         requestData.headers = new Dictionary<string, string>();
 
-                    foreach (DictionaryEntry header in headers)
+                    foreach (KeyValuePair<string, string> header in request.Headers)
                     {
-                        string key = (string) header.Key;
-                        string value = (string) header.Value;
+                        string key = header.Key;
+                        string value = header.Value;
                         requestData.headers.Add(key, value);
-                    }
-                    foreach (DictionaryEntry de in request)
-                    {
-                        if (de.Key.ToString() == "querystringkeys")
-                        {
-                            String[] keys = (String[]) de.Value;
-                            foreach (String key in keys)
-                            {
-                                if (request.ContainsKey(key))
-                                {
-                                    string val = (String) request[key];
-                                    queryString = queryString + key + "=" + val + "&";
-                                }
-                            }
-                            if (queryString.Length > 1)
-                                queryString = queryString.Substring(0, queryString.Length - 1);
-                        }
                     }
 
                     //if this machine is behind DNAT/port forwarding, currently this is being
                     //set to address of port forwarding router
                     requestData.headers["x-remote-ip"] = requestData.headers["remote_addr"];
                     requestData.headers["x-path-info"] = pathInfo;
-                    requestData.headers["x-query-string"] = queryString;
+                    requestData.headers["x-query-string"] = request.QueryString.ToString();
                     requestData.headers["x-script-url"] = url.url;
 
                     //requestData.ev = new ManualResetEvent(false);
@@ -470,14 +427,9 @@ namespace Aurora.Modules.Scripting
                     url.engine.PostScriptEvent(url.itemID, url.hostID, "http_request",
                                                new Object[]
                                                    {
-                                                       requestID.ToString(), request["http-method"].ToString(),
-                                                       request["body"].ToString()
+                                                       requestID.ToString(), request.HttpMethod,
+                                                       request.InputStream.ReadUntilEnd()
                                                    });
-
-                    //send initial response?
-//                    Hashtable response = new Hashtable();
-
-                    return;
                 }
                 catch (Exception we)
                 {
