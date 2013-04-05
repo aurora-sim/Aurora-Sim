@@ -140,7 +140,9 @@
       <Reference name="XMLRPC" path="../../bin/"/>
       
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -186,7 +188,9 @@
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -237,7 +241,67 @@
       <Reference name="zlib.net" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
+      </Files>
+    </Project>
+
+    <Project frameworkVersion="v3_5" name="Aurora.Physics.BulletSPlugin" path="Aurora/Physics/BulletSPlugin" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+          <AllowUnsafe>true</AllowUnsafe>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+          <AllowUnsafe>true</AllowUnsafe>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+      <Reference name="System.Xml"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="Nini.dll"  path="../../../bin/"/>
+      <Reference name="Aurora.Framework"/>
+      <Reference name="Aurora.Region"/>
+      <Reference name="Aurora.Physics.Meshing"/>
+      <Reference name="OpenSim.Region.Physics.ConvexDecompositionDotNet"/>
+      <Reference name="BulletXNA.dll" path="../../../bin/"/>
+
+      <Files>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
+      </Files>
+    </Project>
+
+    <Project frameworkVersion="v3_5" name="Aurora.Physics.ConvexDecompositionDotNet" path="Aurora/Physics/ConvexDecompositionDotNet" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Xml"/>
+
+      <Files>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -294,7 +358,7 @@
 
       <Files>
         <Match pattern="*.cs" recurse="true">
-          <Exclude name="Tests" pattern="Tests"/>
+          <Exclude name="obj" pattern="obj"/>
         </Match>
       </Files>
     </Project>
@@ -353,7 +417,9 @@
       <Reference name="XMLRPC" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -410,7 +476,9 @@
       <Reference name="XMLRPC" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 	
@@ -469,7 +537,9 @@
       <Reference name="XMLRPC" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -519,7 +589,9 @@
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -572,7 +644,9 @@
 	  <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -626,7 +700,9 @@
       <Reference name="XMLRPC" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -682,7 +758,9 @@
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
   
@@ -733,7 +811,9 @@
       <Reference name="XMLRPC" path="../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="false"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 	  
@@ -777,8 +857,10 @@
 	  <Reference name="Aurora.Simulation.Base"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
-        <Match pattern="*.manifest" buildAction="None"  recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
+        <Match pattern="*.manifest" buildAction="None"  recurse="false"/>
       </Files>
     </Project>
 	
@@ -826,7 +908,9 @@
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
         <Match pattern="*.manifest" buildAction="None"  recurse="true"/>
       </Files>
     </Project>
@@ -875,7 +959,9 @@
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
         <Match pattern="*.manifest" buildAction="None"  recurse="true"/>
       </Files>
     </Project>
@@ -924,7 +1010,9 @@
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
         <Match pattern="*.manifest" buildAction="None"  recurse="true"/>
       </Files>
     </Project>
@@ -973,7 +1061,9 @@
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
         <Match pattern="*.manifest" buildAction="None"  recurse="true"/>
       </Files>
     </Project>
@@ -1022,7 +1112,9 @@
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
         <Match pattern="*.manifest" buildAction="None"  recurse="true"/>
       </Files>
     </Project>
@@ -1071,7 +1163,9 @@
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
         <Match pattern="*.manifest" buildAction="None"  recurse="true"/>
       </Files>
     </Project>
@@ -1126,7 +1220,9 @@
       <Reference name="XMLRPC" path="../../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -1181,7 +1277,9 @@
       <Reference name="XMLRPC" path="../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
     
@@ -1242,7 +1340,9 @@
       <Reference name="zlib.net" path="../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -1289,7 +1389,7 @@
 
       <Files>
         <Match pattern="*.cs" recurse="true">
-          <Exclude name="Tests" pattern="Tests"/>
+          <Exclude name="obj" pattern="obj"/>
         </Match>
       </Files>
     </Project>
@@ -1346,7 +1446,9 @@
       <Reference name="Tools" path="../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
@@ -1400,7 +1502,9 @@
       <Reference name="Tools" path="../../bin/"/>
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="obj" pattern="obj"/>
+        </Match>
       </Files>
     </Project>
 
