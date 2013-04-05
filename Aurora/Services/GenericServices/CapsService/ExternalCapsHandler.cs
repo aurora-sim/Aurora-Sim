@@ -53,29 +53,32 @@ namespace Aurora.Services.GenericServices.CapsService
 
         public OSDMap GetExternalCaps(UUID agentID, GridRegion region)
         {
-            if (m_registry == null || m_registry.RequestModuleInterface<IGridServerInfoService>() == null) return new OSDMap();
-            m_servers = m_registry.RequestModuleInterface<IGridServerInfoService>().GetGridURIs("SyncMessageServerURI");
-            OSDMap req = new OSDMap();
-            req["AgentID"] = agentID;
-            req["Region"] = region.ToOSD();
-            req["Method"] = "GetCaps";
-
-            List<ManualResetEvent> events = new List<ManualResetEvent>();
+            if (m_registry == null) return new OSDMap();
             OSDMap resp = new OSDMap();
-            foreach (string uri in m_servers)
+            if (m_registry.RequestModuleInterface<IGridServerInfoService>() != null)
             {
-                ManualResetEvent even = new ManualResetEvent(false);
-                m_syncPoster.Get(uri, req, (r) =>
+                m_servers = m_registry.RequestModuleInterface<IGridServerInfoService>().GetGridURIs("SyncMessageServerURI");
+                OSDMap req = new OSDMap();
+                req["AgentID"] = agentID;
+                req["Region"] = region.ToOSD();
+                req["Method"] = "GetCaps";
+
+                List<ManualResetEvent> events = new List<ManualResetEvent>();
+                foreach (string uri in m_servers)
                 {
-                    if (r == null)
-                        return;
-                    foreach (KeyValuePair<string, OSD> kvp in r)
-                        resp.Add(kvp.Key, kvp.Value);
-                    even.Set();
-                });
-                events.Add(even);
+                    ManualResetEvent even = new ManualResetEvent(false);
+                    m_syncPoster.Get(uri, req, (r) =>
+                    {
+                        if (r == null)
+                            return;
+                        foreach (KeyValuePair<string, OSD> kvp in r)
+                            resp.Add(kvp.Key, kvp.Value);
+                        even.Set();
+                    });
+                    events.Add(even);
+                }
+                ManualResetEvent.WaitAll(events.ToArray());
             }
-            ManualResetEvent.WaitAll(events.ToArray());
             foreach (var h in GetHandlers(agentID, region.RegionID))
             {
                 if (m_allowedCapsModules.Contains(h.Name))

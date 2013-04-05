@@ -422,15 +422,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///     This adds to the force that will be used for moving the avatar in the next physics heartbeat iteration.
-        /// </summary>
-        /// <param name="force"></param>
-        public override void AddMovementForce(Vector3 force)
-        {
-            _target_velocity += force;
-        }
-
-        /// <summary>
         ///     This sets the force that will be used for moving the avatar in the next physics heartbeat iteration.
         ///     Note: we do accept Vector3.Zero here as that is an overriding stop for the physics engine.
         /// </summary>

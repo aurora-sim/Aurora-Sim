@@ -30,6 +30,9 @@
 
     DoRemoteCalls = False
     AllowRemoteCalls = False
+	
+[ExternalCaps]
+	CapsHandlers = AssetCAPS, AppearanceCAPS, InventoryCAPS, MapCAPS
 
 [Handlers]
     ;;Add any handlers here that you do not want to use

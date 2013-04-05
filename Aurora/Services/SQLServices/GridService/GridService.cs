@@ -548,7 +548,7 @@ namespace Aurora.Services.SQLServices.GridService
                                    RegionFlags = regionInfos.Flags,
                                    SessionID = SessionID,
                                    Region = regionInfos,
-                                   URIs = m_gridServerInfo.RetrieveAllGridURIs(false)
+                                   URIs = m_gridServerInfo == null ? null : m_gridServerInfo.RetrieveAllGridURIs(false)
                                };
                 }
             }

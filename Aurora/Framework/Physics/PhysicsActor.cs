@@ -140,10 +140,6 @@ namespace Aurora.Framework.Physics
         public abstract bool Flying { get; set; }
         public abstract bool SetAlwaysRun { get; set; }
 
-        public virtual void AddMovementForce(Vector3 force)
-        {
-        }
-
         public virtual void SetMovementForce(Vector3 force)
         {
         }

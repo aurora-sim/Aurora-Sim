@@ -2060,15 +2060,6 @@ namespace Aurora.Region
             PhysicsCharacter actor = m_physicsActor;
             if (actor != null)
             {
-                /*Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
-                Rotation = rotation;
-                if (direc == Vector3.Zero)
-                    PhysicsActor.Velocity = Vector3.Zero;
-                else
-                {
-                    direc.Normalize();
-                    PhysicsActor.SetMovementForce(direc * 1.5f);
-                }*/
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec*rotation));
                 Rotation = rotation;
                 direc.Normalize();

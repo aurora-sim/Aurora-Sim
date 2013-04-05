@@ -3665,17 +3665,6 @@ namespace Aurora.Region
 
                 HasGroupChanged = true;
                 ScheduleGroupUpdate(PrimUpdateFlags.Shape);
-
-
-                //if (part.UUID == m_rootPart.UUID)
-                //{
-                //if (m_rootPart.PhysActor != null)
-                //{
-                //m_rootPart.PhysActor.Size =
-                //new PhysicsVector(m_rootPart.Scale.X, m_rootPart.Scale.Y, m_rootPart.Scale.Z);
-                //m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
-                //}
-                //}
             }
         }
 
@@ -3836,13 +3825,13 @@ namespace Aurora.Region
                 if ((val.X < 0f || val.Y < 0f || val.Z < 0f ||
                      val.X > Scene.RegionInfo.RegionSizeX || val.Y > Scene.RegionInfo.RegionSizeY)
                     && !IsAttachmentCheckFull() && (backup != null && !backup.LoadingPrims))
-                    //Don't do it when backup is loading prims, otherwise it lags the region out
+                //Don't do it when backup is loading prims, otherwise it lags the region out
                 {
                     if (Scene.RegionInfo.InfiniteRegion && !IsInTransit)
                     {
                         IsInTransit = true;
-                        double TargetX = Scene.RegionInfo.RegionLocX + (double) val.X;
-                        double TargetY = Scene.RegionInfo.RegionLocY + (double) val.Y;
+                        double TargetX = Scene.RegionInfo.RegionLocX + (double)val.X;
+                        double TargetY = Scene.RegionInfo.RegionLocY + (double)val.Y;
                         if (m_lastSigInfiniteRegionPos.X - AbsolutePosition.X > 256 ||
                             m_lastSigInfiniteRegionPos.X - AbsolutePosition.X < -256 ||
                             m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y > 256 ||
@@ -3854,12 +3843,12 @@ namespace Aurora.Region
                                                                                        (TargetX -
                                                                                         Scene.GridService
                                                                                              .GetMaxRegionSize()),
-                                                                                       (int) (TargetX + 256),
+                                                                                       (int)(TargetX + 256),
                                                                                        (int)
                                                                                        (TargetY -
                                                                                         Scene.GridService
                                                                                              .GetMaxRegionSize()),
-                                                                                       (int) (TargetY + 256));
+                                                                                       (int)(TargetY + 256));
                         }
 
                         GridRegion neighborRegion =
@@ -3946,7 +3935,7 @@ namespace Aurora.Region
                                                   " because it has gone out of bounds.");
                         ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
-                            inventoryModule.ReturnObjects(new ISceneEntity[] {this}, UUID.Zero);
+                            inventoryModule.ReturnObjects(new ISceneEntity[] { this }, UUID.Zero);
                         return;
                     }
                 }
@@ -3973,14 +3962,6 @@ namespace Aurora.Region
             {
                 part.FixGroupPositionComum(UpdatePrimActor, val, false);
             }
-
-            //if (m_rootPart.PhysActor != null)
-            //{
-            //m_rootPart.PhysActor.Position =
-            //new PhysicsVector(m_rootPart.GroupPosition.X, m_rootPart.GroupPosition.Y,
-            //m_rootPart.GroupPosition.Z);
-            //m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
-            //}
         }
 
         /// <summary>
