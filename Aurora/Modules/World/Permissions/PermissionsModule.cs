@@ -185,12 +185,6 @@ namespace Aurora.Modules.Permissions
                     if (sp.UserLevel > 0)
                         return !checkGodStatus || CheckIsInGodMode(user);
                 }
-                UserAccount account = m_scene.UserAccountService.GetUserAccount(null, user);
-                if (account != null)
-                {
-                    if (account.UserLevel > 0)
-                        return !checkGodStatus || CheckIsInGodMode(user);
-                }
             }
 
             return false;

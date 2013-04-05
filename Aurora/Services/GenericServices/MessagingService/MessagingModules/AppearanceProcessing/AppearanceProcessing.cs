@@ -87,7 +87,7 @@ namespace Aurora.Services
                     IScenePresence sp = manager.Scene.GetScenePresence(appearance.Owner);
                     sp.RequestModuleInterface<IAvatarAppearanceModule>().Appearance = appearance;
                     sp.RequestModuleInterface<IAvatarAppearanceModule>().SendAppearanceToAgent(sp);
-                    factory.QueueAppearanceSend(sp.UUID);
+                    sp.RequestModuleInterface<IAvatarAppearanceModule>().SendAppearanceToAllOtherAgents();
                 }
             }
             return null;

@@ -753,11 +753,6 @@ namespace Aurora.Modules.Monitoring
         /// <returns></returns>
         protected string GetQueuesReport(string[] showParams)
         {
-            bool showChildren = false;
-
-            if (showParams.Length > 1 && showParams[1] == "full")
-                showChildren = true;
-
             StringBuilder report = new StringBuilder();
 
             int columnPadding = 2;

@@ -139,11 +139,13 @@ namespace Aurora.Services.SQLServices.AvatarService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public bool SetAppearance(UUID principalID, AvatarAppearance appearance)
+        public void SetAppearance(UUID principalID, AvatarAppearance appearance)
         {
-            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID, appearance);
-            if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool) remoteValue;
+            if (m_doRemoteOnly)
+            {
+                DoRemotePostByURL("AvatarServerURI", principalID, appearance);
+                return;
+            }
 
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("SetAppearance",
                                                                                                       new object[2]
@@ -151,17 +153,19 @@ namespace Aurora.Services.SQLServices.AvatarService
                                                                                                               principalID,
                                                                                                               appearance
                                                                                                           });
-            return m_Database.Store(principalID, appearance);
+            m_Database.Store(principalID, appearance);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public bool ResetAvatar(UUID principalID)
+        public void ResetAvatar(UUID principalID)
         {
-            object remoteValue = DoRemoteByURL("AvatarServerURI", principalID);
-            if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool) remoteValue;
+            if (m_doRemoteOnly)
+            {
+                DoRemotePostByURL("AvatarServerURI", principalID);
+                return;
+            }
 
-            return m_Database.Delete(principalID);
+            m_Database.Delete(principalID);
         }
 
         private object DeleteUserInformation(string name, object param)

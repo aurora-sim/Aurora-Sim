@@ -27,6 +27,7 @@
 
 using System.Collections.Generic;
 using OpenMetaverse;
+using Aurora.Framework.ConsoleFramework;
 
 namespace Aurora.Framework.Utilities
 {

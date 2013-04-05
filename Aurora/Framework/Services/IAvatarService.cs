@@ -50,14 +50,14 @@ namespace Aurora.Framework.Services
         /// <param name="userID"></param>
         /// <param name="appearance"></param>
         /// <returns></returns>
-        bool SetAppearance(UUID userID, AvatarAppearance appearance);
+        void SetAppearance(UUID userID, AvatarAppearance appearance);
 
         /// <summary>
         ///     Not sure if it's needed
         /// </summary>
         /// <param name="userID"></param>
         /// <returns></returns>
-        bool ResetAvatar(UUID userID);
+        void ResetAvatar(UUID userID);
 
         /// <summary>
         ///     Gets a user's appearance, and if it does not exist, create it

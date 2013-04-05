@@ -134,19 +134,15 @@ namespace Aurora.Framework.Utilities
                     if (errorMessage == "")//No error
                     {
                         // This just dumps a warning for any operation that takes more than 500 ms
-                        if (MainConsole.Instance.IsTraceEnabled)
+                        if (MainConsole.Instance.IsDebugEnabled)
                         {
                             System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
 
-                            MainConsole.Instance.Trace(
+                            MainConsole.Instance.Debug(
                                 string.Format("[WebUtils]: osd request (URI:{0}, METHOD:{1}, UPSTACK(4):{3}) took {2}ms",
                                 url, method, tickelapsed,
-                                stackTrace.GetFrame(4).GetMethod().Name));
+                                stackTrace.GetFrame(3).GetMethod().Name));
                         }
-                        else if (MainConsole.Instance.IsDebugEnabled)
-                            MainConsole.Instance.Debug(
-                                string.Format("[WebUtils]: osd request (URI:{0}, METHOD:{1}) took {2}ms",
-                                url, method, tickelapsed));
                         if (tickelapsed > 5000)
                             MainConsole.Instance.Info(
                                 string.Format("[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms",
