@@ -169,7 +169,7 @@ namespace Aurora.Simulation.Base
                     string dbSchema = "aurora";
                     string dbUser = "aurora";
                     string gridIPAddress = Utilities.GetExternalIp();
-                    string mode = "1";
+                    bool isStandalone = true;
                     string dbType = "1";
                     string gridName = "Aurora-Sim Grid";
                     string welcomeMessage = "";
@@ -187,7 +187,7 @@ namespace Aurora.Simulation.Base
                         Console.ForegroundColor = ConsoleColor.Cyan;
                         Console.WriteLine("[1] Standalone Mode \n[2] Grid Mode");
                         Console.ResetColor();
-                        mode = ReadLine("Choose 1 or 2", mode);
+                        isStandalone = ReadLine("Choose 1 or 2", "1") == "1";
 
 
                         Console.WriteLine("Http Port for the server");
@@ -197,7 +197,7 @@ namespace Aurora.Simulation.Base
                         port = uint.Parse(ReadLine("Choose the port", "9000"));
                     }
 
-                    if (mode == "1")
+                    if (isStandalone)
                     {
                         Console.WriteLine("Which database do you want to use?");
                         Console.ForegroundColor = ConsoleColor.Cyan;
@@ -219,7 +219,7 @@ namespace Aurora.Simulation.Base
                         }
                     }
 
-                    if (mode == "1")
+                    if (isStandalone)
                     {
                         gridName = ReadLine("Name of your Aurora-Sim Grid", gridName);
 
@@ -232,13 +232,13 @@ namespace Aurora.Simulation.Base
                                                   allowAnonLogin);
                     }
 
-                    if (mode == "2")
+                    if (!isStandalone)
                         gridIPAddress =
                             ReadLine("The external domain name or IP address of the grid server you wish to connect to",
                                      gridIPAddress);
 
                     //Data.ini setup
-                    if (mode == "1")
+                    if (isStandalone)
                     {
                         string folder = isAuroraExe ? "Configuration/" : "AuroraServerConfiguration/";
                         MakeSureExists(folder + "Data/Data.ini");
@@ -300,7 +300,6 @@ namespace Aurora.Simulation.Base
                             IConfig newConfig = aurora_ini.AddConfig(config.Name);
                             foreach (string key in config.GetKeys())
                             {
-                                //No GUI for mono
                                 if (key == "http_listener_port")
                                     newConfig.Set(key, port);
                                 else
@@ -318,7 +317,7 @@ namespace Aurora.Simulation.Base
                                                                        Nini.Ini.IniFileType.AuroraStyle);
 
                         IConfig conf = main_ini.AddConfig("Architecture");
-                        if (mode == "1")
+                        if (isStandalone)
                             conf.Set("Include-Standalone", "Configuration/Standalone/StandaloneCommon.ini");
                         else
                             conf.Set("Include-Grid", "Configuration/Grid/AuroraGridCommon.ini");
@@ -329,7 +328,7 @@ namespace Aurora.Simulation.Base
                         Console.WriteLine("Your Main.ini has been successfully configured");
                         Console.ResetColor();
 
-                        if (mode == "1")
+                        if (isStandalone)
                         {
                             MakeSureExists("Configuration/Standalone/StandaloneCommon.ini");
                             IniConfigSource standalone_ini =
@@ -376,15 +375,7 @@ namespace Aurora.Simulation.Base
                             conf = grid_ini.AddConfig("Includes");
                             conf.Set("Include-Grid", "Configuration/Grid/Grid.ini");
                             conf = grid_ini.AddConfig("Configuration");
-                            conf.Set("ServerURI", "http://" + gridIPAddress + ":8003/server/");
-                            conf.Set("AssetServerURI", "http://" + gridIPAddress + ":8010/asset/");
-                            conf.Set("AvatarServerURI", "http://" + gridIPAddress + ":8011/avatar/");
                             conf.Set("GridServerURI", "http://" + gridIPAddress + ":8012/grid/");
-                            conf.Set("InventoryServerURI", "http://" + gridIPAddress + ":8013/inventory/");
-                            conf.Set("SyncMessageServerURI", "http://" + gridIPAddress + ":8014/syncmessage/");
-                            conf.Set("InstantMessageServerURI", "http://" + gridIPAddress + ":8014/im/");
-                            conf.Set("UserAccountServerURI", "http://" + gridIPAddress + ":8015/user/");
-                            conf.Set("CurrencyServerURI", "http://" + gridIPAddress + ":8002/currency/");
 
                             grid_ini.Save();
                             Console.ForegroundColor = ConsoleColor.Green;
@@ -440,7 +431,7 @@ namespace Aurora.Simulation.Base
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine(gridName);
                     Console.ResetColor();
-                    if (mode == "1")
+                    if (isStandalone)
                     {
                         Console.WriteLine("\nYour loginuri is ");
                         Console.ForegroundColor = ConsoleColor.Cyan;
@@ -451,7 +442,7 @@ namespace Aurora.Simulation.Base
                     {
                         Console.WriteLine("\nConnected Grid URL: ");
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine("http://" + gridIPAddress + ":8003/");
+                        Console.WriteLine("http://" + gridIPAddress + ":8002/");
                         Console.ResetColor();
                     }
                     Console.WriteLine("\n====================================================================\n");
