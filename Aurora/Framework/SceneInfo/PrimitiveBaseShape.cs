@@ -1380,5 +1380,63 @@ namespace Aurora.Framework.SceneInfo
         }
 
         #endregion
+
+        public ulong GetMeshKey (Vector3 size, float lod)
+        {
+            ulong hash = 5381;
+
+            hash = djb2(hash, PathCurve);
+            hash = djb2(hash, (byte)((byte)HollowShape | (byte)ProfileShape));
+            hash = djb2(hash, PathBegin);
+            hash = djb2(hash, PathEnd);
+            hash = djb2(hash, PathScaleX);
+            hash = djb2(hash, PathScaleY);
+            hash = djb2(hash, PathShearX);
+            hash = djb2(hash, PathShearY);
+            hash = djb2(hash, (byte)PathTwist);
+            hash = djb2(hash, (byte)PathTwistBegin);
+            hash = djb2(hash, (byte)PathRadiusOffset);
+            hash = djb2(hash, (byte)PathTaperX);
+            hash = djb2(hash, (byte)PathTaperY);
+            hash = djb2(hash, PathRevolutions);
+            hash = djb2(hash, (byte)PathSkew);
+            hash = djb2(hash, ProfileBegin);
+            hash = djb2(hash, ProfileEnd);
+            hash = djb2(hash, ProfileHollow);
+
+            // TODO: Separate scale out from the primitive shape data (after
+            // scaling is supported at the physics engine level)
+            byte[] scaleBytes = size.GetBytes();
+            hash = scaleBytes.Aggregate(hash, djb2);
+
+            // Include LOD in hash, accounting for endianness
+            byte[] lodBytes = new byte[4];
+            Buffer.BlockCopy(BitConverter.GetBytes(lod), 0, lodBytes, 0, 4);
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(lodBytes, 0, 4);
+            }
+            hash = lodBytes.Aggregate(hash, djb2);
+
+            // include sculpt UUID
+            if (SculptEntry)
+            {
+                scaleBytes = SculptTexture.GetBytes();
+                hash = scaleBytes.Aggregate(hash, djb2);
+            }
+
+            return hash;
+        }
+
+        private ulong djb2(ulong hash, byte c)
+        {
+            return ((hash << 5) + hash) + c;
+        }
+
+        private ulong djb2(ulong hash, ushort c)
+        {
+            hash = ((hash << 5) + hash) + ((byte)c);
+            return ((hash << 5) + hash) + (ulong)(c >> 8);
+        }
     }
 }

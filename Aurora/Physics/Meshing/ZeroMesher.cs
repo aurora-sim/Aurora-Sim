@@ -80,64 +80,6 @@ namespace Aurora.Physics.Meshing
         {
         }
 
-        public ulong GetMeshKey(PrimitiveBaseShape pbs, Vector3 size, float lod)
-        {
-            ulong hash = 5381;
-
-            hash = djb2(hash, pbs.PathCurve);
-            hash = djb2(hash, (byte)((byte)pbs.HollowShape | (byte)pbs.ProfileShape));
-            hash = djb2(hash, pbs.PathBegin);
-            hash = djb2(hash, pbs.PathEnd);
-            hash = djb2(hash, pbs.PathScaleX);
-            hash = djb2(hash, pbs.PathScaleY);
-            hash = djb2(hash, pbs.PathShearX);
-            hash = djb2(hash, pbs.PathShearY);
-            hash = djb2(hash, (byte)pbs.PathTwist);
-            hash = djb2(hash, (byte)pbs.PathTwistBegin);
-            hash = djb2(hash, (byte)pbs.PathRadiusOffset);
-            hash = djb2(hash, (byte)pbs.PathTaperX);
-            hash = djb2(hash, (byte)pbs.PathTaperY);
-            hash = djb2(hash, pbs.PathRevolutions);
-            hash = djb2(hash, (byte)pbs.PathSkew);
-            hash = djb2(hash, pbs.ProfileBegin);
-            hash = djb2(hash, pbs.ProfileEnd);
-            hash = djb2(hash, pbs.ProfileHollow);
-
-            // TODO: Separate scale out from the primitive shape data (after
-            // scaling is supported at the physics engine level)
-            byte[] scaleBytes = size.GetBytes();
-            hash = scaleBytes.Aggregate(hash, djb2);
-
-            // Include LOD in hash, accounting for endianness
-            byte[] lodBytes = new byte[4];
-            Buffer.BlockCopy(BitConverter.GetBytes(lod), 0, lodBytes, 0, 4);
-            if (!BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(lodBytes, 0, 4);
-            }
-            hash = lodBytes.Aggregate(hash, djb2);
-
-            // include sculpt UUID
-            if (pbs.SculptEntry)
-            {
-                scaleBytes = pbs.SculptTexture.GetBytes();
-                hash = scaleBytes.Aggregate(hash, djb2);
-            }
-
-            return hash;
-        }
-
-        private ulong djb2(ulong hash, byte c)
-        {
-            return ((hash << 5) + hash) + c;
-        }
-
-        private ulong djb2(ulong hash, ushort c)
-        {
-            hash = ((hash << 5) + hash) + ((byte)c);
-            return ((hash << 5) + hash) + (ulong)(c >> 8);
-        }
-
         #endregion
     }
 }

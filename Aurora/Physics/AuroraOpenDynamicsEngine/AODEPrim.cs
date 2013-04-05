@@ -1158,7 +1158,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 havemesh = true;
                 Vector3 centroid = Vector3.Zero;
-                ulong key = _parent_scene.mesher.GetMeshKey(_pbs, _size, _parent_scene.meshSculptLOD);
+                ulong key = _pbs.GetMeshKey(_size, _parent_scene.meshSculptLOD);
                 if (m_MeshToTriMeshMap.ContainsKey(key))
                 {
                     _triMeshData = m_MeshToTriMeshMap[key];
