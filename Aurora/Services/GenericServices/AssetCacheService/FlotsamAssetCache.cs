@@ -511,7 +511,7 @@ namespace Aurora.Services
 
             AssetBase asset = Get(id, out found);
             if (found)
-                return asset.Data;
+                return asset == null ? null : asset.Data;
 
             byte[] data = null;
 

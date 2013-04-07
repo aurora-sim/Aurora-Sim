@@ -508,6 +508,8 @@ public sealed class BSScene : PhysicsScene
 
         InTaintTime = true; // Only used for debugging so locking is not necessary.
 
+        beforeTime = Util.EnvironmentTickCount();
+
         ProcessTaints();
 
         // Some of the physical objects requre individual, pre-step calls
@@ -518,6 +520,7 @@ public sealed class BSScene : PhysicsScene
         numTaints += _taintOperations.Count;
         ProcessTaints();
 
+        StatPhysicsTaintTime = Util.EnvironmentTickCountSubtract(beforeTime);
         InTaintTime = false; // Only used for debugging so locking is not necessary.
 
         // The following causes the unmanaged code to output ALL the values found in ALL the objects in the world.
@@ -530,16 +533,15 @@ public sealed class BSScene : PhysicsScene
         int numSubSteps = 0;
         try
         {
-            //if (PhysicsLogging.Enabled)
-                beforeTime = Util.EnvironmentTickCount();
+            beforeTime = Util.EnvironmentTickCount();
 
             numSubSteps = PE.PhysicsStep(World, timeStep, m_maxSubSteps, m_fixedTimeStep, out updatedEntityCount, out collidersCount);
 
             //if (PhysicsLogging.Enabled)
             {
-                simTime = Util.EnvironmentTickCountSubtract(beforeTime);
+                StatContactLoopTime = Util.EnvironmentTickCountSubtract(beforeTime);
                 DetailLog("{0},Simulate,call, frame={1}, nTaints={2}, simTime={3}, substeps={4}, updates={5}, colliders={6}, objWColl={7}",
-                                        DetailLogZero, m_simulationStep, numTaints, simTime, numSubSteps,
+                                        DetailLogZero, m_simulationStep, numTaints, StatContactLoopTime, numSubSteps,
                                         updatedEntityCount, collidersCount, ObjectsWithCollisions.Count);
             }
         }
@@ -558,6 +560,8 @@ public sealed class BSScene : PhysicsScene
 
         // Get a value for 'now' so all the collision and update routines don't have to get their own.
         SimulationNowTime = Util.EnvironmentTickCount();
+
+        beforeTime = Util.EnvironmentTickCount();
 
         // If there were collisions, process them by sending the event to the prim.
         // Collisions must be processed before updates.
@@ -621,6 +625,8 @@ public sealed class BSScene : PhysicsScene
                 }
             }
         }
+
+        StatPhysicsMoveTime = Util.EnvironmentTickCountSubtract(beforeTime);
 
         TriggerPostStepEvent(timeStep);
 

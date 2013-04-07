@@ -687,7 +687,7 @@ public sealed class BSShapeCollection : IDisposable
                 if (realIndicesIndex != 0)
                 {
                     newShape = PhysicsScene.PE.CreateMeshShape(PhysicsScene.World,
-                                        realIndicesIndex, indices, verticesAsFloats.Length, verticesAsFloats);
+                                        realIndicesIndex, indices, verticesAsFloats.Length / 3, verticesAsFloats);
                 }
                 else
                 {
