@@ -224,20 +224,18 @@ namespace Aurora.Physics.Meshing
             }*/
         }
 
-
         public int[] getIndexListAsInt()
         {
-            throw new NotImplementedException();
+            if (m_triangles == null)
+                throw new NotSupportedException();
+            return m_triangles;
         }
 
         public float[] getVertexListAsFloat()
         {
-            throw new NotImplementedException();
-        }
-
-        public List<Vector3> getVertexList()
-        {
-            throw new NotImplementedException();
+            if (m_vertices == null)
+                throw new NotSupportedException();
+            return m_vertices;
         }
     }
 }

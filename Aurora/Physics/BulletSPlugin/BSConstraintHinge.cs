@@ -1,15 +1,15 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
+ * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
+ *     * Redistributions in binary form must reproduce the above copyrightD
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Aurora-Sim Project nor the
+ *     * Neither the name of the OpenSimulator Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
  *
@@ -24,33 +24,32 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 using System;
 using System.Collections.Generic;
-using Aurora.Framework.SceneInfo;
+using System.Text;
 using OpenMetaverse;
 
-namespace Aurora.Framework.Physics
+namespace OpenSim.Region.Physics.BulletSPlugin
 {
-    public interface IMesher
+
+public sealed class BSConstraintHinge : BSConstraint
+{
+    public override ConstraintType Type { get { return ConstraintType.HINGE_CONSTRAINT_TYPE; } }
+
+    public BSConstraintHinge(BulletWorld world, BulletBody obj1, BulletBody obj2,
+                    Vector3 pivotInA, Vector3 pivotInB,
+                    Vector3 axisInA, Vector3 axisInB,
+                    bool useLinearReferenceFrameA, bool disableCollisionsBetweenLinkedBodies)
+        : base(world)
     {
-        IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical);
-        void RemoveMesh(ulong key);
+        m_body1 = obj1;
+        m_body2 = obj2;
+        m_constraint = PhysicsScene.PE.CreateHingeConstraint(world, obj1, obj2,
+                                pivotInA, pivotInB, axisInA, axisInB, 
+                                useLinearReferenceFrameA, disableCollisionsBetweenLinkedBodies);
+        m_enabled = true;
     }
 
-    public interface IMesh
-    {
-        bool WasCached { get; set; }
-        ulong Key { get; }
-        void getIndexListAsPtrToIntArray(out IntPtr indices, out int triStride, out int indexCount);
-        void getVertexListAsPtrToFloatArray(out IntPtr vertexList, out int vertexStride, out int vertexCount);
-        void releaseSourceMeshData();
-        void releasePinned();
-        Vector3 GetCentroid();
+}
 
-        OpenMetaverse.StructuredData.OSD Serialize();
-
-        int[] getIndexListAsInt();
-        float[] getVertexListAsFloat();
-    }
 }

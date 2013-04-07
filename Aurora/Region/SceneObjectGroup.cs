@@ -2656,29 +2656,15 @@ namespace Aurora.Region
                 RootPart.Shape, RootPart.AbsolutePosition, RootPart.Scale, RootPart.GetWorldRotation(), physical);
             if (RootPart.PhysActor == null)
                 return;
-            //                    RootPart.PhysActor.BuildingRepresentation = true;
             RootPart.PhysActor.BlockPhysicalReconstruction = true;
             //Don't let it rebuild it until we have all the links done
 
-            //Fix the localID!
-            RootPart.PhysActor.LocalID = RootPart.LocalId;
-            RootPart.PhysActor.UUID = RootPart.UUID;
             RootPart.PhysActor.VolumeDetect = RootPart.VolumeDetectActive;
 
             //Force deselection here so that it isn't stuck forever
             RootPart.PhysActor.Selected = keepSelectedStatuses && RootPart.IsSelected;
 
             RootPart.PhysActor.SetMaterial(RootPart.Material, RootPart.Friction, RootPart.Restitution, RootPart.GravityMultiplier, RootPart.Density);
-
-            //            bool rootIsPhysical;
-
-            if ((RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
-            {
-                //                rootIsPhysical = true;
-                RootPart.PhysActor.IsPhysical = true;
-            }
-            //            else
-            //                rootIsPhysical = false;
 
             //Add collision updates
             //part.PhysActor.OnCollisionUpdate += RootPart.PhysicsCollision;
@@ -2713,9 +2699,6 @@ namespace Aurora.Region
                 part.PhysActor.BlockPhysicalReconstruction = true;
                 //Don't let it rebuild it until we have all the links done
 
-                //Fix the localID!
-                part.PhysActor.LocalID = part.LocalId;
-                part.PhysActor.UUID = part.UUID;
                 part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
                 //Force deselection here so that it isn't stuck forever
@@ -3210,7 +3193,7 @@ namespace Aurora.Region
                 linkPart.CreateSelected = true;
                 linkPart.FixOffsetPosition(linkPart.OffsetPosition, true); // nasty let all know about where this is
                 // let physics link it
-                if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
+                if (linkPart.PhysActor != null && m_rootPart.PhysActor != null && (linkPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                 {
                     if (linkPart.PhysicsType != (byte) PhysicsShapeType.None)
                         linkPart.PhysActor.link(m_rootPart.PhysActor);
