@@ -25,12 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Physics;
 using OpenMetaverse;
-using Aurora.Framework;
 
-namespace OpenSim.Region.Physics.BasicPhysicsPlugin
+namespace Aurora.Physics.BasicPhysicsPlugin
 {
-    public class BasicCharacterActor : PhysicsCharacter
+    public class BasicCharacterActor : PhysicsActor
     {
         private Vector3 _size;
 
@@ -137,8 +137,9 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return false;
         }
 
-        public override void SendCollisions()
+        public override bool SendCollisions()
         {
+            return false;
         }
 
         public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
@@ -146,7 +147,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         }
     }
 
-    public class BasicObjectActor : PhysicsObject
+    public class BasicObjectActor : PhysicsActor
     {
         private Vector3 _size;
 
@@ -272,8 +273,9 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return false;
         }
 
-        public override void SendCollisions()
+        public override bool SendCollisions()
         {
+            return false;
         }
 
         public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)

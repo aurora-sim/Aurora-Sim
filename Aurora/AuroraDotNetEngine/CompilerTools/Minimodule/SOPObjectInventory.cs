@@ -29,8 +29,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using OpenMetaverse;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -58,18 +59,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get
             {
-#if (!ISWIN)
-                foreach (TaskInventoryItem i in m_privateInventory.Values)
-                {
-                    if (i.Name == name)
-                        if (!m_publicInventory.ContainsKey(i.ItemID))
-                            m_publicInventory.Add(i.ItemID, new InventoryItem(m_rootScene, i));
-                }
-#else
                 foreach (TaskInventoryItem i in m_privateInventory.Values.Where(i => i.Name == name))
                     if (!m_publicInventory.ContainsKey(i.ItemID))
                         m_publicInventory.Add(i.ItemID, new InventoryItem(m_rootScene, i));
-#endif
+
                 throw new KeyNotFoundException();
             }
         }
@@ -77,24 +70,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         #endregion
 
         /// <summary>
-        ///   Fully populate the public dictionary with the contents of the private dictionary
+        ///     Fully populate the public dictionary with the contents of the private dictionary
         /// </summary>
         /// <description>
-        ///   This will only convert those items which hasn't already been converted. ensuring that
-        ///   no items are converted twice, and that any references already in use are maintained.
+        ///     This will only convert those items which hasn't already been converted. ensuring that
+        ///     no items are converted twice, and that any references already in use are maintained.
         /// </description>
         private void SynchronizeDictionaries()
         {
-#if (!ISWIN)
-            foreach (TaskInventoryItem privateItem in m_privateInventory.Values)
-            {
-                if (!m_publicInventory.ContainsKey(privateItem.ItemID))
-                    m_publicInventory.Add(privateItem.ItemID, new InventoryItem(m_rootScene, privateItem));
-            }
-#else
-            foreach (TaskInventoryItem privateItem in m_privateInventory.Values.Where(privateItem => !m_publicInventory.ContainsKey(privateItem.ItemID)))
+            foreach (
+                TaskInventoryItem privateItem in
+                    m_privateInventory.Values.Where(privateItem => !m_publicInventory.ContainsKey(privateItem.ItemID)))
                 m_publicInventory.Add(privateItem.ItemID, new InventoryItem(m_rootScene, privateItem));
-#endif
         }
 
         #region IDictionary<UUID, IInventoryItem> implementation

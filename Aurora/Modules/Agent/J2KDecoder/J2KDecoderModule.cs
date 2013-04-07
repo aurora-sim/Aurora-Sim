@@ -25,19 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
+using CSJ2K;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using Aurora.Simulation.Base;
-using CSJ2K;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Agent.J2KDecoder
 {
@@ -46,19 +49,19 @@ namespace Aurora.Modules.Agent.J2KDecoder
     public class J2KDecoderModule : IService, IJ2KDecoder
     {
         /// <summary>
-        ///   Temporarily holds deserialized layer data information in memory
+        ///     Temporarily holds deserialized layer data information in memory
         /// </summary>
         private readonly ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]> m_decodedCache =
             new ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]>();
 
         /// <summary>
-        ///   List of client methods to notify of results of decode
+        ///     List of client methods to notify of results of decode
         /// </summary>
         private readonly Dictionary<UUID, List<DecodedCallback>> m_notifyList =
             new Dictionary<UUID, List<DecodedCallback>>();
 
         /// <summary>
-        ///   Cache that will store decoded JPEG2000 layer boundary data
+        ///     Cache that will store decoded JPEG2000 layer boundary data
         /// </summary>
         private IImprovedAssetCache m_cache;
 
@@ -104,10 +107,10 @@ namespace Aurora.Modules.Agent.J2KDecoder
         }
 
         /// <summary>
-        ///   Provides a synchronous decode so that caller can be assured that this executes before the next line
+        ///     Provides a synchronous decode so that caller can be assured that this executes before the next line
         /// </summary>
-        /// <param name = "assetID"></param>
-        /// <param name = "j2kData"></param>
+        /// <param name="assetID"></param>
+        /// <param name="j2kData"></param>
         public bool Decode(UUID assetID, byte[] j2kData)
         {
             return DoJ2KDecode(assetID, j2kData);
@@ -138,10 +141,10 @@ namespace Aurora.Modules.Agent.J2KDecoder
         #endregion
 
         /// <summary>
-        ///   Decode Jpeg2000 Asset Data
+        ///     Decode Jpeg2000 Asset Data
         /// </summary>
-        /// <param name = "assetID">UUID of Asset</param>
-        /// <param name = "j2kData">JPEG2000 data</param>
+        /// <param name="assetID">UUID of Asset</param>
+        /// <param name="j2kData">JPEG2000 data</param>
         private bool DoJ2KDecode(UUID assetID, byte[] j2kData)
         {
             return DoJ2KDecode(assetID, j2kData, m_useCSJ2K);
@@ -155,6 +158,23 @@ namespace Aurora.Modules.Agent.J2KDecoder
 
             if (!TryLoadCacheForAsset(assetID, out layers))
             {
+                if (j2kData == null || j2kData.Length == 0)
+                {
+                    // Layer decoding completely failed. Guess at sane defaults for the layer boundaries
+                    layers = CreateDefaultLayers(j2kData.Length);
+                    // Notify Interested Parties
+                    lock (m_notifyList)
+                    {
+                        if (m_notifyList.ContainsKey(assetID))
+                        {
+                            foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
+                                d.DynamicInvoke(assetID, layers);
+
+                            m_notifyList.Remove(assetID);
+                        }
+                    }
+                    return false;
+                }
                 if (m_useCSJ2K)
                 {
                     try
@@ -182,8 +202,9 @@ namespace Aurora.Modules.Agent.J2KDecoder
                     }
                     catch (Exception ex)
                     {
-                        MainConsole.Instance.Warn("[J2KDecoderModule]: CSJ2K threw an exception decoding texture " + assetID + ": " +
-                                   ex.Message);
+                        MainConsole.Instance.Warn("[J2KDecoderModule]: CSJ2K threw an exception decoding texture " +
+                                                  assetID + ": " +
+                                                  ex.Message);
                     }
                 }
                 else
@@ -200,16 +221,18 @@ namespace Aurora.Modules.Agent.J2KDecoder
                     if (m_useCSJ2K == this.m_useCSJ2K)
                     {
                         MainConsole.Instance.Warn("[J2KDecoderModule]: Failed to decode layer data with (" +
-                                   (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " +
-                                   j2kData.Length + " trying " + (!m_useCSJ2K ? "CSJ2K" : "OpenJPEG"));
+                                                  (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID +
+                                                  ", length " +
+                                                  j2kData.Length + " trying " + (!m_useCSJ2K ? "CSJ2K" : "OpenJPEG"));
                         DoJ2KDecode(assetID, j2kData, !m_useCSJ2K);
                     }
                     else
                     {
                         //Second attempt at decode with the other j2k decoder, give up
                         MainConsole.Instance.Warn("[J2KDecoderModule]: Failed to decode layer data (" +
-                                   (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " +
-                                   j2kData.Length + " guessing sane defaults");
+                                                  (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID +
+                                                  ", length " +
+                                                  j2kData.Length + " guessing sane defaults");
                         // Layer decoding completely failed. Guess at sane defaults for the layer boundaries
                         layers = CreateDefaultLayers(j2kData.Length);
                         // Notify Interested Parties
@@ -217,20 +240,10 @@ namespace Aurora.Modules.Agent.J2KDecoder
                         {
                             if (m_notifyList.ContainsKey(assetID))
                             {
-#if (!ISWIN)
-                                foreach (DecodedCallback d in m_notifyList[assetID])
-                                {
-                                    if (d != null)
-                                    {
-                                        d.DynamicInvoke(assetID, layers);
-                                    }
-                                }
-#else
                                 foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
                                 {
                                     d.DynamicInvoke(assetID, layers);
                                 }
-#endif
                                 m_notifyList.Remove(assetID);
                             }
                         }
@@ -249,20 +262,10 @@ namespace Aurora.Modules.Agent.J2KDecoder
             {
                 if (m_notifyList.ContainsKey(assetID))
                 {
-#if (!ISWIN)
-                    foreach (DecodedCallback d in m_notifyList[assetID])
-                    {
-                        if (d != null)
-                        {
-                            d.DynamicInvoke(assetID, layers);
-                        }
-                    }
-#else
                     foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
                     {
                         d.DynamicInvoke(assetID, layers);
                     }
-#endif
                     m_notifyList.Remove(assetID);
                 }
             }
@@ -369,7 +372,8 @@ namespace Aurora.Modules.Agent.J2KDecoder
                             }
                             catch (FormatException)
                             {
-                                MainConsole.Instance.Warn("[J2KDecodeCache]: Expiring corrupted layer data (format) " + assetName);
+                                MainConsole.Instance.Warn("[J2KDecodeCache]: Expiring corrupted layer data (format) " +
+                                                          assetName);
                                 m_cache.Expire(assetName);
                                 return false;
                             }
@@ -378,7 +382,8 @@ namespace Aurora.Modules.Agent.J2KDecoder
                         }
                         else
                         {
-                            MainConsole.Instance.Warn("[J2KDecodeCache]: Expiring corrupted layer data (layout) " + assetName);
+                            MainConsole.Instance.Warn("[J2KDecodeCache]: Expiring corrupted layer data (layout) " +
+                                                      assetName);
                             m_cache.Expire(assetName);
                             return false;
                         }

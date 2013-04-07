@@ -25,19 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Serialization;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Xml;
-
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
-using OpenSim.Services.Interfaces;
-using OpenMetaverse.StructuredData;
-using OpenMetaverse;
-using Nini.Config;
 
 namespace Aurora.Modules.InventoryAccess
 {
@@ -77,7 +81,7 @@ namespace Aurora.Modules.InventoryAccess
         {
         }
 
-        public virtual void AddRegion (IScene scene)
+        public virtual void AddRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -103,14 +107,14 @@ namespace Aurora.Modules.InventoryAccess
         {
         }
 
-        public virtual void RemoveRegion (IScene scene)
+        public virtual void RemoveRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
             m_scene = null;
         }
 
-        public virtual void RegionLoaded (IScene scene)
+        public virtual void RegionLoaded(IScene scene)
         {
             m_LLCLientInventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
         }
@@ -122,15 +126,15 @@ namespace Aurora.Modules.InventoryAccess
         #region Client methods
 
         /// <summary>
-        /// The only difference between this and the other RezObject method is the return value...
-        /// The client needs this method
+        ///     The only difference between this and the other RezObject method is the return value...
+        ///     The client needs this method
         /// </summary>
         private void ClientRezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
-                                    UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
-                                    bool RezSelected, bool RemoveItem, UUID fromTaskID)
+                                     UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
+                                     bool RezSelected, bool RemoveItem, UUID fromTaskID)
         {
             RezObject(remoteClient, itemID, RayEnd, RayStart, RayTargetID, BypassRayCast,
-                RayEndIsIntersection, RezSelected, RemoveItem, fromTaskID);
+                      RayEndIsIntersection, RezSelected, RemoveItem, fromTaskID);
         }
 
         #endregion
@@ -138,7 +142,7 @@ namespace Aurora.Modules.InventoryAccess
         #region CAPS update
 
         /// <summary>
-        /// Capability originating call to update the asset of an item in an agent's inventory
+        ///     Capability originating call to update the asset of an item in an agent's inventory
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="itemID"></param>
@@ -146,12 +150,11 @@ namespace Aurora.Modules.InventoryAccess
         /// <returns></returns>
         public virtual string CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data)
         {
-            InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem(item);
+            InventoryItemBase item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
 
             if (item != null)
             {
-                if ((InventoryType)item.InvType == InventoryType.Notecard)
+                if ((InventoryType) item.InvType == InventoryType.Notecard)
                 {
                     if (!m_scene.Permissions.CanEditNotecard(itemID, UUID.Zero, remoteClient.AgentId))
                     {
@@ -169,7 +172,7 @@ namespace Aurora.Modules.InventoryAccess
 
                     return SuccessNotecardCAPSUpdate(item.AssetID, itemID);
                 }
-                if ((InventoryType)item.InvType == InventoryType.Gesture)
+                if ((InventoryType) item.InvType == InventoryType.Gesture)
                 {
                     if (!m_scene.Permissions.CanEditNotecard(itemID, UUID.Zero, remoteClient.AgentId))
                     {
@@ -187,7 +190,7 @@ namespace Aurora.Modules.InventoryAccess
 
                     return SuccessNotecardCAPSUpdate(item.AssetID, itemID);
                 }
-                if ((InventoryType)item.InvType == InventoryType.LSL)
+                if ((InventoryType) item.InvType == InventoryType.LSL)
                 {
                     if (!m_scene.Permissions.CanEditScript(itemID, UUID.Zero, remoteClient.AgentId))
                         return FailedPermissionsScriptCAPSUpdate(UUID.Zero, itemID);
@@ -227,7 +230,7 @@ namespace Aurora.Modules.InventoryAccess
             map["state"] = "complete";
             map["compiled"] = false;
             map["errors"] = new OSDArray();
-            ((OSDArray)map["errors"]).Add(error);
+            ((OSDArray) map["errors"]).Add(error);
             return OSDParser.SerializeLLSDXmlString(map);
         }
 
@@ -239,7 +242,7 @@ namespace Aurora.Modules.InventoryAccess
             map["state"] = "complete";
             map["compiled"] = false;
             map["errors"] = new OSDArray();
-            ((OSDArray)map["errors"]).Add("Insufficient permissions to edit script");
+            ((OSDArray) map["errors"]).Add("Insufficient permissions to edit script");
             return OSDParser.SerializeLLSDXmlString(map);
         }
 
@@ -275,8 +278,8 @@ namespace Aurora.Modules.InventoryAccess
         #endregion
 
         /// <summary>
-        /// Delete a scene object from a scene and place in the given avatar's inventory.
-        /// Returns the UUID of the newly created asset.
+        ///     Delete a scene object from a scene and place in the given avatar's inventory.
+        ///     Returns the UUID of the newly created asset.
         /// </summary>
         /// <param name="action"></param>
         /// <param name="folderID"></param>
@@ -284,7 +287,7 @@ namespace Aurora.Modules.InventoryAccess
         /// <param name="agentId"></param>
         /// <param name="itemID"></param>
         public virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
-                List<ISceneEntity> objectGroups, UUID agentId, out UUID itemID)
+                                              List<ISceneEntity> objectGroups, UUID agentId, out UUID itemID)
         {
             itemID = UUID.Zero;
             if (objectGroups.Count == 0)
@@ -292,7 +295,7 @@ namespace Aurora.Modules.InventoryAccess
 
             // Get the user info of the item destination
             //
-            IScenePresence SP = m_scene.GetScenePresence (agentId);
+            IScenePresence SP = m_scene.GetScenePresence(agentId);
             UUID userID = UUID.Zero;
 
             if (action == DeRezAction.Take || action == DeRezAction.AcquireToUserInventory ||
@@ -327,11 +330,10 @@ namespace Aurora.Modules.InventoryAccess
 
             InventoryFolderBase folder = null;
             InventoryItemBase item = null;
-                    
+
             if (DeRezAction.SaveToExistingUserInventoryItem == action)
             {
-                item = new InventoryItemBase(objectGroups[0].RootChild.FromUserInventoryItemID, userID);
-                item = m_scene.InventoryService.GetItem(item);
+                item = m_scene.InventoryService.GetItem(userID, objectGroups[0].RootChild.FromUserInventoryItemID);
 
                 //item = userInfo.RootFolder.FindItem(
                 //        objectGroup.RootPart.FromUserInventoryItemID);
@@ -356,20 +358,21 @@ namespace Aurora.Modules.InventoryAccess
                     if (SP == null || SP.ControllingClient == null ||
                         objectGroups[0].OwnerID != agentId)
                     {
-
-                        folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown, AssetType.LostAndFoundFolder);
+                        folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown,
+                                                                           AssetType.LostAndFoundFolder);
                     }
                     else
                     {
-                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.TrashFolder);
+                        folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown,
+                                                                           AssetType.TrashFolder);
                     }
                 }
                 else if (action == DeRezAction.Return)
                 {
-
                     // Dump to lost + found unconditionally
                     //
-                    folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.LostAndFoundFolder);
+                    folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown,
+                                                                       AssetType.LostAndFoundFolder);
                 }
 
                 if (folderID == UUID.Zero && folder == null)
@@ -378,19 +381,21 @@ namespace Aurora.Modules.InventoryAccess
                     {
                         // Deletes go to trash by default
                         //
-                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.TrashFolder);
+                        folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown,
+                                                                           AssetType.TrashFolder);
                     }
                     else
                     {
                         if (SP == null || SP.ControllingClient == null ||
                             objectGroups[0].OwnerID != agentId)
                         {
-
-                            folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.LostAndFoundFolder);
+                            folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown,
+                                                                               AssetType.LostAndFoundFolder);
                         }
                         else
                         {
-                            folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown, AssetType.TrashFolder);
+                            folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Unknown,
+                                                                               AssetType.TrashFolder);
                         }
                     }
                 }
@@ -398,16 +403,19 @@ namespace Aurora.Modules.InventoryAccess
                 // Override and put into where it came from, if it came
                 // from anywhere in inventory
                 //
-                if (action == DeRezAction.Attachment || action == DeRezAction.Take || action == DeRezAction.AcquireToUserInventory)
+                if (action == DeRezAction.Attachment || action == DeRezAction.Take ||
+                    action == DeRezAction.AcquireToUserInventory)
                 {
                     if (objectGroups[0].RootChild.FromUserInventoryItemID != UUID.Zero)
                     {
-                        InventoryFolderBase f = new InventoryFolderBase(objectGroups[0].RootChild.FromUserInventoryItemID, userID);
+                        InventoryFolderBase f =
+                            new InventoryFolderBase(objectGroups[0].RootChild.FromUserInventoryItemID, userID);
                         folder = m_scene.InventoryService.GetFolder(f);
                     }
                     else
                     {
-                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Object, AssetType.Object);
+                        folder = m_scene.InventoryService.GetFolderForType(userID, InventoryType.Object,
+                                                                           AssetType.Object);
                     }
                 }
 
@@ -442,35 +450,37 @@ namespace Aurora.Modules.InventoryAccess
             }
             else
             {
-                if (SP != null && SP.ControllingClient != null && (SP.ControllingClient.AgentId != objectGroups[0].OwnerID) && m_scene.Permissions.PropagatePermissions())
+                if (SP != null && SP.ControllingClient != null &&
+                    (SP.ControllingClient.AgentId != objectGroups[0].OwnerID) &&
+                    m_scene.Permissions.PropagatePermissions())
                 {
-                    foreach (SceneObjectGroup group in objectGroups)
+                    foreach (ISceneEntity group in objectGroups)
                     {
                         uint perms = group.GetEffectivePermissions();
                         uint nextPerms = (perms & 7) << 13;
-                        if ((nextPerms & (uint)PermissionMask.Copy) == 0)
-                            perms &= ~(uint)PermissionMask.Copy;
-                        if ((nextPerms & (uint)PermissionMask.Transfer) == 0)
-                            perms &= ~(uint)PermissionMask.Transfer;
-                        if ((nextPerms & (uint)PermissionMask.Modify) == 0)
-                            perms &= ~(uint)PermissionMask.Modify;
+                        if ((nextPerms & (uint) PermissionMask.Copy) == 0)
+                            perms &= ~(uint) PermissionMask.Copy;
+                        if ((nextPerms & (uint) PermissionMask.Transfer) == 0)
+                            perms &= ~(uint) PermissionMask.Transfer;
+                        if ((nextPerms & (uint) PermissionMask.Modify) == 0)
+                            perms &= ~(uint) PermissionMask.Modify;
 
                         // Make sure all bits but the ones we want are clear
                         // on take.
                         // This will be applied to the current perms, so
                         // it will do what we want.
-                        group.RootPart.NextOwnerMask &=
-                                ((uint)PermissionMask.Copy |
-                                 (uint)PermissionMask.Transfer |
-                                 (uint)PermissionMask.Modify);
-                        group.RootPart.NextOwnerMask |=
-                                (uint)PermissionMask.Move;
+                        group.RootChild.NextOwnerMask &=
+                            ((uint) PermissionMask.Copy |
+                             (uint) PermissionMask.Transfer |
+                             (uint) PermissionMask.Modify);
+                        group.RootChild.NextOwnerMask |=
+                            (uint) PermissionMask.Move;
 
-                        item.BasePermissions = perms & group.RootPart.NextOwnerMask;
+                        item.BasePermissions = perms & group.RootChild.NextOwnerMask;
                         item.CurrentPermissions = item.BasePermissions;
-                        item.NextPermissions = group.RootPart.NextOwnerMask;
-                        item.EveryOnePermissions = group.RootPart.EveryoneMask & group.RootPart.NextOwnerMask;
-                        item.GroupPermissions = group.RootPart.GroupMask & group.RootPart.NextOwnerMask;
+                        item.NextPermissions = group.RootChild.NextOwnerMask;
+                        item.EveryOnePermissions = group.RootChild.EveryoneMask & group.RootChild.NextOwnerMask;
+                        item.GroupPermissions = group.RootChild.GroupMask & group.RootChild.NextOwnerMask;
 
                         // Magic number badness. Maybe this deserves an enum.
                         // bit 4 (16) is the "Slam" bit, it means treat as passed
@@ -483,29 +493,28 @@ namespace Aurora.Modules.InventoryAccess
                 }
                 else
                 {
-                    foreach (SceneObjectGroup group in objectGroups)
+                    foreach (ISceneEntity group in objectGroups)
                     {
                         item.BasePermissions = group.GetEffectivePermissions();
                         item.CurrentPermissions = group.GetEffectivePermissions();
-                        item.NextPermissions = group.RootPart.NextOwnerMask;
-                        item.EveryOnePermissions = group.RootPart.EveryoneMask;
-                        item.GroupPermissions = group.RootPart.GroupMask;
+                        item.NextPermissions = group.RootChild.NextOwnerMask;
+                        item.EveryOnePermissions = group.RootChild.EveryoneMask;
+                        item.GroupPermissions = group.RootChild.GroupMask;
 
                         item.SalePrice = group.RootChild.SalePrice;
                         item.SaleType = group.RootChild.ObjectSaleType;
 
                         item.CurrentPermissions &=
-                                ((uint)PermissionMask.Copy |
-                                 (uint)PermissionMask.Transfer |
-                                 (uint)PermissionMask.Modify |
-                                 (uint)PermissionMask.Move |
-                                 7); // Preserve folded permissions
-
+                            ((uint) PermissionMask.Copy |
+                             (uint) PermissionMask.Transfer |
+                             (uint) PermissionMask.Modify |
+                             (uint) PermissionMask.Move |
+                             7); // Preserve folded permissions
                     }
                 }
 
-                if(objectGroups.Count != 1)
-                    item.Flags |= (uint)InventoryItemFlags.ObjectHasMultipleItems;
+                if (objectGroups.Count != 1)
+                    item.Flags |= (uint) InventoryItemFlags.ObjectHasMultipleItems;
                 item.CreationDate = Util.UnixTimeSinceEpoch();
 
                 m_LLCLientInventoryModule.AddInventoryItem(item);
@@ -516,7 +525,7 @@ namespace Aurora.Modules.InventoryAccess
                 }
                 else
                 {
-                    IScenePresence notifyUser = m_scene.GetScenePresence (item.Owner);
+                    IScenePresence notifyUser = m_scene.GetScenePresence(item.Owner);
                     if (notifyUser != null)
                     {
                         notifyUser.ControllingClient.SendInventoryItemCreateUpdate(item, 0);
@@ -535,28 +544,28 @@ namespace Aurora.Modules.InventoryAccess
             if (objectGroups.Count == 1)
             {
                 m_scene.AuroraEventManager.FireGenericEventHandler("DeleteToInventory", objectGroups[0]);
-                AssetXML = ((ISceneObject)objectGroups[0]).ToXml2();
+                AssetXML = objectGroups[0].ToXml2();
             }
             else
             {
                 foreach (ISceneEntity objectGroup in objectGroups)
                 {
                     Vector3 inventoryStoredPosition = new Vector3
-                                (((objectGroup.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX)
-                                      ? m_scene.RegionInfo.RegionSizeX - 1
-                                      : objectGroup.AbsolutePosition.X)
-                                 ,
-                                 (objectGroup.AbsolutePosition.Y > m_scene.RegionInfo.RegionSizeY)
-                                     ? m_scene.RegionInfo.RegionSizeY - 1
-                                     : objectGroup.AbsolutePosition.Y,
-                                 objectGroup.AbsolutePosition.Z);
+                        (((objectGroup.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX)
+                              ? m_scene.RegionInfo.RegionSizeX - 1
+                              : objectGroup.AbsolutePosition.X)
+                         ,
+                         (objectGroup.AbsolutePosition.Y > m_scene.RegionInfo.RegionSizeY)
+                             ? m_scene.RegionInfo.RegionSizeY - 1
+                             : objectGroup.AbsolutePosition.Y,
+                         objectGroup.AbsolutePosition.Z);
                     GroupMiddle += inventoryStoredPosition;
                     Vector3 originalPosition = objectGroup.AbsolutePosition;
 
                     objectGroup.AbsolutePosition = inventoryStoredPosition;
 
                     m_scene.AuroraEventManager.FireGenericEventHandler("DeleteToInventory", objectGroup);
-                    AssetXML += ((ISceneObject)objectGroup).ToXml2();
+                    AssetXML += objectGroup.ToXml2();
 
                     objectGroup.AbsolutePosition = originalPosition;
                 }
@@ -572,7 +581,7 @@ namespace Aurora.Modules.InventoryAccess
             asset = CreateAsset(
                 objectGroups[0].Name,
                 objectGroups[0].RootChild.Description,
-                (sbyte)AssetType.Object,
+                (sbyte) AssetType.Object,
                 Utils.StringToBytes(AssetXML),
                 objectGroups[0].OwnerID.ToString());
             asset.ID = m_scene.AssetService.Store(asset);
@@ -580,17 +589,18 @@ namespace Aurora.Modules.InventoryAccess
             return asset.ID;
         }
 
-        public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, out InventoryItemBase item)
+        public virtual ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID,
+                                                              out InventoryItemBase item)
         {
             XmlDocument doc;
-            item = m_scene.InventoryService.GetItem(new InventoryItemBase(itemID, remoteClient.AgentId));
+            item = m_scene.InventoryService.GetItem(remoteClient.AgentId, itemID);
             UUID itemId = UUID.Zero;
 
             // If we have permission to copy then link the rezzed object back to the user inventory
             // item that it came from.  This allows us to enable 'save object to inventory'
             if (!m_scene.Permissions.BypassPermissions())
             {
-                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
+                if ((item.CurrentPermissions & (uint) PermissionMask.Copy) == (uint) PermissionMask.Copy)
                 {
                     itemId = item.ID;
                 }
@@ -604,13 +614,14 @@ namespace Aurora.Modules.InventoryAccess
             return CreateObjectFromInventory(remoteClient, itemId, item.AssetID, out doc);
         }
 
-        public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID)
+        public virtual ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID)
         {
             XmlDocument doc;
             return CreateObjectFromInventory(remoteClient, itemID, assetID, out doc);
         }
 
-        protected virtual SceneObjectGroup CreateObjectFromInventory(InventoryItemBase item, IClientAPI remoteClient, UUID itemID, out XmlDocument doc)
+        protected virtual ISceneEntity CreateObjectFromInventory(InventoryItemBase item, IClientAPI remoteClient,
+                                                                 UUID itemID, out XmlDocument doc)
         {
             UUID itemId = UUID.Zero;
 
@@ -618,7 +629,7 @@ namespace Aurora.Modules.InventoryAccess
             // item that it came from.  This allows us to enable 'save object to inventory'
             if (!m_scene.Permissions.BypassPermissions())
             {
-                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
+                if ((item.CurrentPermissions & (uint) PermissionMask.Copy) == (uint) PermissionMask.Copy)
                 {
                     itemId = item.ID;
                 }
@@ -632,13 +643,14 @@ namespace Aurora.Modules.InventoryAccess
             return CreateObjectFromInventory(remoteClient, itemId, item.AssetID, out doc);
         }
 
-        protected virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID, out XmlDocument doc)
+        protected virtual ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID,
+                                                                 out XmlDocument doc)
         {
-            AssetBase rezAsset = m_scene.AssetService.Get(assetID.ToString());
+            byte[] rezAsset = m_scene.AssetService.GetData(assetID.ToString());
 
             if (rezAsset != null)
             {
-                string xmlData = Utils.BytesToString(rezAsset.Data);
+                string xmlData = Utils.BytesToString(rezAsset);
                 doc = new XmlDocument();
                 try
                 {
@@ -651,7 +663,7 @@ namespace Aurora.Modules.InventoryAccess
 
                 if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
                     (doc.FirstChild.NextSibling != null &&
-                    doc.FirstChild.NextSibling.OuterXml.StartsWith("<groups>")))
+                     doc.FirstChild.NextSibling.OuterXml.StartsWith("<groups>")))
                 {
                     //We don't do multiple objects here
                     return null;
@@ -663,14 +675,13 @@ namespace Aurora.Modules.InventoryAccess
                 }
                 else
                     xml = doc.FirstChild.OuterXml;
-                SceneObjectGroup group
-                            = SceneObjectSerializer.FromOriginalXmlFormat(itemID, xml, m_scene);
+                ISceneEntity group
+                    = SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(itemID, xml, m_scene);
                 if (group == null)
                     return null;
 
                 group.IsDeleted = false;
-                group.m_isLoaded = true;
-                foreach (SceneObjectPart part in group.ChildrenList)
+                foreach (ISceneChildEntity part in group.ChildrenEntities())
                 {
                     part.IsLoading = false;
                 }
@@ -682,7 +693,7 @@ namespace Aurora.Modules.InventoryAccess
 
 
         /// <summary>
-        /// Rez an object into the scene from the user's inventory
+        ///     Rez an object into the scene from the user's inventory
         /// </summary>
         /// FIXME: It would be really nice if inventory access modules didn't also actually do the work of rezzing
         /// things to the scene.  The caller should be doing that, I think.
@@ -697,33 +708,38 @@ namespace Aurora.Modules.InventoryAccess
         /// <param name="RemoveItem"></param>
         /// <param name="fromTaskID"></param>
         /// <returns>The SceneObjectGroup rezzed or null if rez was unsuccessful.</returns>
-        public virtual SceneObjectGroup RezObject (IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
-                                    UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
-                                    bool RezSelected, bool RemoveItem, UUID fromTaskID)
+        public virtual ISceneEntity RezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
+                                              UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
+                                              bool RezSelected, bool RemoveItem, UUID fromTaskID)
         {
             // Work out position details
-            byte bRayEndIsIntersection = (byte)0;
+            byte bRayEndIsIntersection = (byte) 0;
 
             bRayEndIsIntersection = (byte) (RayEndIsIntersection ? 1 : 0);
 
             XmlDocument doc;
-            InventoryItemBase item = new InventoryItemBase (itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem (item);
-            SceneObjectGroup group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
+            //It might be a library item, send UUID.Zero
+            InventoryItemBase item = m_scene.InventoryService.GetItem(UUID.Zero, itemID);
+            if (item == null)
+            {
+                remoteClient.SendAlertMessage("Failed to find the item you requested.");
+                return null;
+            }
+            ISceneEntity group = CreateObjectFromInventory(item, remoteClient, itemID, out doc);
 
-            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation (
-                      RayStart, RayEnd, RayTargetID, Quaternion.Identity,
-                      BypassRayCast, bRayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false);
+            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation(
+                RayStart, RayEnd, RayTargetID, Quaternion.Identity,
+                BypassRayCast, bRayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false);
 
             if (doc == null)
             {
                 //No asset, check task inventory
                 IEntity e;
-                m_scene.SceneGraph.TryGetEntity (fromTaskID, out e);
-                if (e != null && e is SceneObjectGroup)
+                m_scene.SceneGraph.TryGetEntity(fromTaskID, out e);
+                if (e != null && e is ISceneEntity)
                 {
-                    SceneObjectGroup grp = (SceneObjectGroup)e;
-                    TaskInventoryItem taskItem = grp.RootPart.Inventory.GetInventoryItem (itemID);
+                    ISceneEntity grp = (ISceneEntity) e;
+                    TaskInventoryItem taskItem = grp.RootChild.Inventory.GetInventoryItem(itemID);
                     item = new InventoryItemBase
                                {
                                    ID = UUID.Random(),
@@ -740,17 +756,21 @@ namespace Aurora.Modules.InventoryAccess
                                };
 
 
-                    if (m_scene.Permissions.PropagatePermissions ())
+                    if (m_scene.Permissions.PropagatePermissions())
                     {
-                        item.BasePermissions = taskItem.BasePermissions & (taskItem.NextPermissions | (uint)PermissionMask.Move);
-                        if (taskItem.InvType == (int)InventoryType.Object)
-                            item.CurrentPermissions = item.BasePermissions & (((taskItem.CurrentPermissions & 7) << 13) | (taskItem.CurrentPermissions & (uint)PermissionMask.Move));
+                        item.BasePermissions = taskItem.BasePermissions &
+                                               (taskItem.NextPermissions | (uint) PermissionMask.Move);
+                        if (taskItem.InvType == (int) InventoryType.Object)
+                            item.CurrentPermissions = item.BasePermissions &
+                                                      (((taskItem.CurrentPermissions & 7) << 13) |
+                                                       (taskItem.CurrentPermissions & (uint) PermissionMask.Move));
                         else
                             item.CurrentPermissions = item.BasePermissions & taskItem.CurrentPermissions;
 
                         item.CurrentPermissions |= 16; // Slam
                         item.NextPermissions = taskItem.NextPermissions;
-                        item.EveryOnePermissions = taskItem.EveryonePermissions & (taskItem.NextPermissions | (uint)PermissionMask.Move);
+                        item.EveryOnePermissions = taskItem.EveryonePermissions &
+                                                   (taskItem.NextPermissions | (uint) PermissionMask.Move);
                         item.GroupPermissions = taskItem.GroupPermissions & taskItem.NextPermissions;
                     }
                     else
@@ -761,61 +781,65 @@ namespace Aurora.Modules.InventoryAccess
                         item.EveryOnePermissions = taskItem.EveryonePermissions;
                         item.GroupPermissions = taskItem.GroupPermissions;
                     }
-                    group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
+                    group = CreateObjectFromInventory(item, remoteClient, itemID, out doc);
                 }
             }
-            if (group == null && doc != null && doc.FirstChild != null && (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
-                (doc.FirstChild.NextSibling != null &&
-                doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))))
+            if (group == null && doc != null && doc.FirstChild != null &&
+                (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
+                 (doc.FirstChild.NextSibling != null &&
+                  doc.FirstChild.NextSibling.OuterXml.StartsWith("<groups>"))))
             {
-                    XmlNodeList nodes;
-                    if (doc.FirstChild.OuterXml.StartsWith("<groups>")) nodes = doc.FirstChild.ChildNodes;
-                    else if (doc.FirstChild.NextSibling != null) nodes = doc.FirstChild.NextSibling.ChildNodes;
-                    else
-                    {
-                        remoteClient.SendAlertMessage("Failed to find the item you requested.");
-                        return null;
-                    }
-                    List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (nodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
-                    if (Groups.Count != 0)
-                        return Groups[0];
-                    remoteClient.SendAlertMessage ("Failed to rez the item you requested.");
+                XmlNodeList nodes;
+                if (doc.FirstChild.OuterXml.StartsWith("<groups>")) nodes = doc.FirstChild.ChildNodes;
+                else if (doc.FirstChild.NextSibling != null) nodes = doc.FirstChild.NextSibling.ChildNodes;
+                else
+                {
+                    remoteClient.SendAlertMessage("Failed to find the item you requested.");
                     return null;
+                }
+                List<ISceneEntity> Groups = RezMultipleObjectsFromInventory(nodes, itemID, remoteClient, pos,
+                                                                            RezSelected, item, RayTargetID,
+                                                                            BypassRayCast, RayEndIsIntersection, RayEnd,
+                                                                            RayStart, bRayEndIsIntersection);
+                if (Groups.Count != 0)
+                    return Groups[0];
+                remoteClient.SendAlertMessage("Failed to rez the item you requested.");
+                return null;
             }
-            if(group == null)
+            if (group == null)
             {
                 remoteClient.SendAlertMessage("Failed to find the item you requested.");
                 return null;
             }
 
             string reason;
-            if (!m_scene.Permissions.CanRezObject (
-                    group.ChildrenList.Count, remoteClient.AgentId, pos, out reason))
+            if (!m_scene.Permissions.CanRezObject(
+                group.ChildrenEntities().Count, remoteClient.AgentId, pos, out reason))
             {
                 // The client operates in no fail mode. It will
                 // have already removed the item from the folder
                 // if it's no copy.
                 // Put it back if it's not an attachment
                 //
-                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
-                    remoteClient.SendBulkUpdateInventory (item);
-                remoteClient.SendAlertMessage ("You do not have permission to rez objects here.");
+                if ((item.CurrentPermissions & (uint) PermissionMask.Copy) == 0)
+                    remoteClient.SendBulkUpdateInventory(item);
+                remoteClient.SendAlertMessage("You do not have permission to rez objects here.");
                 return null;
             }
 
             if (RezSelected)
-                group.RootPart.AddFlag (PrimFlags.CreateSelected);
+                group.RootChild.AddFlag(PrimFlags.CreateSelected);
             // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
             // we'll be doing that later on.  Scheduling more than one full update during the attachment
             // process causes some clients to fail to display the attachment properly.
-            m_scene.SceneGraph.AddPrimToScene (group);
+            m_scene.SceneGraph.AddPrimToScene(group);
 
             //  MainConsole.Instance.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
             //  Set it's position in world.
             const float offsetHeight = 0;
             //The OOBsize is only half the size, x2
-            Vector3 newSize = (group.OOBsize * 2) * Quaternion.Inverse (group.GroupRotation);
-            pos = m_scene.SceneGraph.GetNewRezLocation (
+            Vector3 newSize = (group.OOBsize*2)*Quaternion.Inverse(group.GroupRotation);
+            pos = m_scene.SceneGraph.GetNewRezLocation(
                 RayStart, RayEnd, RayTargetID, Quaternion.Identity,
                 BypassRayCast, bRayEndIsIntersection, true, newSize, false);
             pos.Z += offsetHeight;
@@ -825,7 +849,8 @@ namespace Aurora.Modules.InventoryAccess
             ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
             if (rootPart == null)
             {
-                MainConsole.Instance.Error ("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart.");
+                MainConsole.Instance.Error("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID +
+                                           " object has no rootpart.");
                 return null;
             }
 
@@ -835,9 +860,9 @@ namespace Aurora.Modules.InventoryAccess
             rootPart.Name = item.Name;
             rootPart.Description = item.Description;
 
-            List<SceneObjectPart> partList = new List<SceneObjectPart> (group.ChildrenList);
+            List<ISceneChildEntity> partList = group.ChildrenEntities();
 
-            group.SetGroup (remoteClient.ActiveGroupId, remoteClient.AgentId, false);
+            group.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId, false);
             item.Owner = remoteClient.AgentId;
             if (rootPart.OwnerID != item.Owner)
             {
@@ -845,11 +870,11 @@ namespace Aurora.Modules.InventoryAccess
                 rootPart.ObjectSaleType = 0;
                 rootPart.SalePrice = 10;
 
-                if (m_scene.Permissions.PropagatePermissions ())
+                if (m_scene.Permissions.PropagatePermissions())
                 {
                     if ((item.CurrentPermissions & 8) != 0)
                     {
-                        foreach (SceneObjectPart part in partList)
+                        foreach (ISceneChildEntity part in partList)
                         {
                             part.EveryoneMask = item.EveryOnePermissions;
                             part.NextOwnerMask = item.NextPermissions;
@@ -857,17 +882,17 @@ namespace Aurora.Modules.InventoryAccess
                         }
                     }
 
-                    group.ApplyNextOwnerPermissions ();
+                    group.ApplyNextOwnerPermissions();
                 }
             }
 
-            foreach (SceneObjectPart part in partList)
+            foreach (ISceneChildEntity part in partList)
             {
                 if (part.OwnerID != item.Owner)
                 {
                     part.LastOwnerID = part.OwnerID;
                     part.OwnerID = item.Owner;
-                    part.Inventory.ChangeInventoryOwner (item.Owner);
+                    part.Inventory.ChangeInventoryOwner(item.Owner);
                 }
                 else if ((item.CurrentPermissions & 8) != 0) // Slam!
                 {
@@ -878,33 +903,38 @@ namespace Aurora.Modules.InventoryAccess
                 }
             }
 
-            rootPart.TrimPermissions ();
+            rootPart.TrimPermissions();
 
-            if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
+            if (group.RootChild.Shape.PCode == (byte) PCode.Prim)
             {
-                group.ClearPartAttachmentData ();
+                group.ClearPartAttachmentData();
             }
 
             // Fire on_rez
             group.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero, false);
 
-            group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
-            if (!m_scene.Permissions.BypassPermissions ())
+            group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+            if (!m_scene.Permissions.BypassPermissions())
             {
-                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                if ((item.CurrentPermissions & (uint) PermissionMask.Copy) == 0)
                 {
                     List<UUID> uuids = new List<UUID> {item.ID};
-                    m_scene.InventoryService.DeleteItems (item.Owner, uuids);
+                    m_scene.InventoryService.DeleteItems(item.Owner, uuids);
                 }
             }
             return group;
         }
 
-        private List<SceneObjectGroup> RezMultipleObjectsFromInventory(XmlNodeList nodes, UUID itemId, IClientAPI remoteClient, Vector3 pos, bool RezSelected,
-            InventoryItemBase item, UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection, Vector3 RayEnd, Vector3 RayStart, byte bRayEndIsIntersection)
+        private List<ISceneEntity> RezMultipleObjectsFromInventory(XmlNodeList nodes, UUID itemId,
+                                                                   IClientAPI remoteClient, Vector3 pos,
+                                                                   bool RezSelected,
+                                                                   InventoryItemBase item, UUID RayTargetID,
+                                                                   byte BypassRayCast, bool RayEndIsIntersection,
+                                                                   Vector3 RayEnd, Vector3 RayStart,
+                                                                   byte bRayEndIsIntersection)
         {
             Vector3 OldMiddlePos = Vector3.Zero;
-            List<SceneObjectGroup> NewGroup = new List<SceneObjectGroup>();
+            List<ISceneEntity> NewGroup = new List<ISceneEntity>();
 
             foreach (XmlNode aPrimNode in nodes)
             {
@@ -916,14 +946,13 @@ namespace Aurora.Modules.InventoryAccess
                     OldMiddlePos = new Vector3(float.Parse(XYZ[0]), float.Parse(XYZ[1]), float.Parse(XYZ[2]));
                     continue;
                 }
-                SceneObjectGroup group
-                       = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, m_scene);
+                ISceneEntity group
+                    = SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, m_scene);
                 if (group == null)
                     return null;
 
                 group.IsDeleted = false;
-                group.m_isLoaded = true;
-                foreach (SceneObjectPart part in group.ChildrenList)
+                foreach (ISceneChildEntity part in group.ChildrenEntities())
                 {
                     part.IsLoading = false;
                 }
@@ -931,20 +960,20 @@ namespace Aurora.Modules.InventoryAccess
 
                 string reason;
                 if (!m_scene.Permissions.CanRezObject(
-                    group.ChildrenList.Count, remoteClient.AgentId, pos, out reason))
+                    group.ChildrenEntities().Count, remoteClient.AgentId, pos, out reason))
                 {
                     // The client operates in no fail mode. It will
                     // have already removed the item from the folder
                     // if it's no copy.
                     // Put it back if it's not an attachment
                     //
-                    if (((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0))
+                    if (((item.CurrentPermissions & (uint) PermissionMask.Copy) == 0))
                         remoteClient.SendBulkUpdateInventory(item);
                     return null;
                 }
 
                 if (RezSelected)
-                    group.RootPart.AddFlag(PrimFlags.CreateSelected);
+                    group.RootChild.AddFlag(PrimFlags.CreateSelected);
                 // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
                 // we'll be doing that later on.  Scheduling more than one full update during the attachment
                 // process causes some clients to fail to display the attachment properly.
@@ -961,7 +990,7 @@ namespace Aurora.Modules.InventoryAccess
                 //group.AbsolutePosition = pos;
                 //   MainConsole.Instance.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
 
-                SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart (group.UUID);
+                ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
 
                 // Since renaming the item in the inventory does not affect the name stored
                 // in the serialization, transfer the correct name from the inventory to the
@@ -973,7 +1002,7 @@ namespace Aurora.Modules.InventoryAccess
                     rootPart.Description = item.Description;
                 }
 
-                List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
+                List<ISceneChildEntity> partList = group.ChildrenEntities();
 
                 group.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId, false);
                 item.Owner = remoteClient.AgentId;
@@ -987,7 +1016,7 @@ namespace Aurora.Modules.InventoryAccess
                     {
                         if ((item.CurrentPermissions & 8) != 0)
                         {
-                            foreach (SceneObjectPart part in partList)
+                            foreach (ISceneChildEntity part in partList)
                             {
                                 part.EveryoneMask = item.EveryOnePermissions;
                                 part.NextOwnerMask = item.NextPermissions;
@@ -999,7 +1028,7 @@ namespace Aurora.Modules.InventoryAccess
                     }
                 }
 
-                foreach (SceneObjectPart part in partList)
+                foreach (ISceneChildEntity part in partList)
                 {
                     if (part.OwnerID != item.Owner)
                     {
@@ -1018,17 +1047,15 @@ namespace Aurora.Modules.InventoryAccess
 
                 rootPart.TrimPermissions();
 
-                if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
-                {
+                if (group.RootChild.Shape.PCode == (byte) PCode.Prim)
                     group.ClearPartAttachmentData();
-                }
 
                 // Fire on_rez
                 group.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero, false);
 
                 if (!m_scene.Permissions.BypassPermissions())
                 {
-                    if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                    if ((item.CurrentPermissions & (uint) PermissionMask.Copy) == 0)
                     {
                         // If this is done on attachments, no
                         // copy ones will be lost, so avoid it
@@ -1038,7 +1065,7 @@ namespace Aurora.Modules.InventoryAccess
                     }
                 }
             }
-            foreach (SceneObjectGroup group in NewGroup)
+            foreach (ISceneEntity group in NewGroup)
             {
                 if (OldMiddlePos != Vector3.Zero)
                 {
@@ -1048,14 +1075,15 @@ namespace Aurora.Modules.InventoryAccess
                     NewPosOffset.Z = group.AbsolutePosition.Z - OldMiddlePos.Z;
                     group.AbsolutePosition = pos + NewPosOffset;
                 }
-                group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
             return NewGroup;
         }
 
         public virtual bool GetAgentInventoryItem(IClientAPI remoteClient, UUID itemID, UUID requestID)
         {
-            InventoryItemBase assetRequestItem = GetItem(remoteClient.AgentId, itemID);
+            //Attempt to just get the item with no owner, as it might be a library item
+            InventoryItemBase assetRequestItem = GetItem(UUID.Zero, itemID);
             if (assetRequestItem == null)
             {
                 return false;
@@ -1065,7 +1093,7 @@ namespace Aurora.Modules.InventoryAccess
             // only to notecards and scripts. All
             // other asset types are always available
             //
-            if (assetRequestItem.AssetType == (int)AssetType.LSLText)
+            if (assetRequestItem.AssetType == (int) AssetType.LSLText)
             {
                 if (!m_scene.Permissions.CanViewScript(itemID, UUID.Zero, remoteClient.AgentId))
                 {
@@ -1073,7 +1101,7 @@ namespace Aurora.Modules.InventoryAccess
                     return false;
                 }
             }
-            else if (assetRequestItem.AssetType == (int)AssetType.Notecard)
+            else if (assetRequestItem.AssetType == (int) AssetType.Notecard)
             {
                 if (!m_scene.Permissions.CanViewNotecard(itemID, UUID.Zero, remoteClient.AgentId))
                 {
@@ -1105,7 +1133,7 @@ namespace Aurora.Modules.InventoryAccess
         #region Misc
 
         /// <summary>
-        /// Create a new asset data structure.
+        ///     Create a new asset data structure.
         /// </summary>
         /// <param name="name"></param>
         /// <param name="description"></param>
@@ -1123,19 +1151,8 @@ namespace Aurora.Modules.InventoryAccess
 
         protected virtual InventoryItemBase GetItem(UUID agentID, UUID itemID)
         {
-            IInventoryService invService = m_scene.RequestModuleInterface<IInventoryService> ();
-            InventoryItemBase assetRequestItem = new InventoryItemBase (itemID, agentID);
-            assetRequestItem = invService.GetItem (assetRequestItem);
-
-            if (assetRequestItem != null &&
-                assetRequestItem.CreatorData != null && 
-                assetRequestItem.CreatorData != string.Empty)
-            {
-                IUserFinder userManagement = m_scene.RequestModuleInterface<IUserFinder>();
-                if (userManagement != null)
-                    userManagement.AddUser (assetRequestItem.CreatorIdAsUuid, assetRequestItem.CreatorData);
-            }
-            return assetRequestItem;
+            IInventoryService invService = m_scene.RequestModuleInterface<IInventoryService>();
+            return invService.GetItem(agentID, itemID);
         }
 
         #endregion

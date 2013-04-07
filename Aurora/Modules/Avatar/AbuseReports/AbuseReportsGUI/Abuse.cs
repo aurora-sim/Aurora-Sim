@@ -29,8 +29,11 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.AbuseReportsGUI
 {
@@ -48,7 +51,7 @@ namespace Aurora.Modules.AbuseReportsGUI
             InitializeComponent();
             m_decoder = j2k;
             m_assetService = assetService;
-            AbuseReportsConnector = DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            AbuseReportsConnector = Framework.Utilities.DataManager.RequestPlugin<IAbuseReportsConnector>();
             Password = "";
             Utilities.InputBox("Password Input Required", "Password for abuse reports database", ref Password);
         }
@@ -152,10 +155,10 @@ namespace Aurora.Modules.AbuseReportsGUI
             if (TextureID == UUID.Zero) //Send white instead of null
                 TextureID = Util.BLANK_TEXTURE_UUID;
 
-            AssetBase asset = m_assetService.Get(TextureID.ToString());
+            byte[] asset = m_assetService.GetData(TextureID.ToString());
             if (asset == null || m_decoder == null)
                 return new Bitmap(1, 1);
-            Image image = m_decoder.DecodeToImage(asset.Data);
+            Image image = m_decoder.DecodeToImage(asset);
             if (image != null)
                 return image;
             else

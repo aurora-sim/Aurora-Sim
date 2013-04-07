@@ -25,30 +25,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using Aurora.Framework;
-using Nini.Config;
-using Nini.Ini;
-using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Gods
 {
-    public class GodModifiers : ISharedRegionModule
+    public class GodModifiers : INonSharedRegionModule
     {
         #region Declares 
 
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_Scene;
         private bool m_Enabled = true;
         private IConfigSource m_config;
         private string m_oar_directory = "";
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
         {
@@ -71,7 +75,7 @@ namespace Aurora.Modules.Gods
             if (!m_Enabled)
                 return;
 
-            m_scenes.Add(scene);
+            m_Scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -82,7 +86,7 @@ namespace Aurora.Modules.Gods
             if (!m_Enabled)
                 return;
 
-            m_scenes.Remove(scene);
+            m_Scene = null;
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -95,10 +99,6 @@ namespace Aurora.Modules.Gods
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public string Name
@@ -129,12 +129,12 @@ namespace Aurora.Modules.Gods
         }
 
         /// <summary>
-        ///   The user requested something from god tools
+        ///     The user requested something from god tools
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "requester"></param>
-        /// <param name = "Method"></param>
-        /// <param name = "Parameter"></param>
+        /// <param name="client"></param>
+        /// <param name="requester"></param>
+        /// <param name="Method"></param>
+        /// <param name="Parameter"></param>
         private void onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
         {
             //Just rebuild the map
@@ -144,17 +144,17 @@ namespace Aurora.Modules.Gods
                 {
                     //Rebuild the map tile
                     IMapImageGenerator mapModule = client.Scene.RequestModuleInterface<IMapImageGenerator>();
-                    if(mapModule != null)
+                    if (mapModule != null)
                         mapModule.CreateTerrainTexture();
                 }
             }
         }
 
         /// <summary>
-        ///   Save the state of the region
+        ///     Save the state of the region
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "agentID"></param>
+        /// <param name="client"></param>
+        /// <param name="agentID"></param>
         public void GodSaveState(IClientAPI client, UUID agentID)
         {
             //Check for god perms
@@ -172,16 +172,16 @@ namespace Aurora.Modules.Gods
         }
 
         /// <summary>
-        ///   The god has requested that we update something in the region configs
+        ///     The god has requested that we update something in the region configs
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "BillableFactor"></param>
-        /// <param name = "PricePerMeter"></param>
-        /// <param name = "EstateID"></param>
-        /// <param name = "RegionFlags"></param>
-        /// <param name = "SimName"></param>
-        /// <param name = "RedirectX"></param>
-        /// <param name = "RedirectY"></param>
+        /// <param name="client"></param>
+        /// <param name="BillableFactor"></param>
+        /// <param name="PricePerMeter"></param>
+        /// <param name="EstateID"></param>
+        /// <param name="RegionFlags"></param>
+        /// <param name="SimName"></param>
+        /// <param name="RedirectX"></param>
+        /// <param name="RedirectY"></param>
         public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID,
                                               ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
@@ -202,13 +202,13 @@ namespace Aurora.Modules.Gods
             //Update the estate ID
             if (client.Scene.RegionInfo.EstateSettings.EstateID != EstateID)
             {
-                bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
-                            client.Scene.RegionInfo.RegionID, (int)EstateID);
+                bool changed = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
+                    client.Scene.RegionInfo.RegionID, (int) EstateID);
                 if (!changed)
                     client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                 else
                 {
-                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint) EstateID;
                     client.Scene.RegionInfo.EstateSettings.Save();
                 }
             }
@@ -242,21 +242,6 @@ namespace Aurora.Modules.Gods
 
             //Save the changes
             client.Scene.RegionInfo.EstateSettings.Save();
-            client.Scene.RegionInfo.RegionSettings.Save();
-
-            //Save the changes
-            IConfig config = m_config.Configs["RegionStartup"];
-            if (config != null)
-            {
-                //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                    SaveChangesDatabase(client.Scene.RegionInfo);
-                else
-                    SaveChangesFile(oldRegionName, client.Scene.RegionInfo);
-            }
-            else
-                SaveChangesFile(oldRegionName, client.Scene.RegionInfo);
-
 
             //Tell the clients to update all references to the new settings
             foreach (IScenePresence sp in client.Scene.GetScenePresences())
@@ -275,71 +260,10 @@ namespace Aurora.Modules.Gods
         #region Helpers
 
         /// <summary>
-        ///   Save the config files
+        ///     Tell the client about the changes
         /// </summary>
-        /// <param name = "OldRegionName"></param>
-        /// <param name = "regionInfo"></param>
-        private void SaveChangesFile(string OldRegionName, RegionInfo regionInfo)
-        {
-            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
-
-            try
-            {
-                IConfig startupConfig = m_config.Configs["RegionStartup"];
-                regionConfigPath = startupConfig.GetString("RegionsDirectory", regionConfigPath).Trim();
-            }
-            catch (Exception)
-            {
-                // No INI setting recorded.
-            }
-            if (!Directory.Exists(regionConfigPath))
-                return;
-
-            string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
-            int i = 0;
-            foreach (string file in iniFiles)
-            {
-                IConfigSource source = new IniConfigSource(file, IniFileType.AuroraStyle);
-                IConfig cnf = source.Configs[OldRegionName];
-                if (cnf != null) //Does the old one exist in this file?
-                {
-                    IConfig check = source.Configs[regionInfo.RegionName];
-                    if (check == null) //Is the new name non existant as well?
-                    {
-                        cnf.Set("Location",
-                                (regionInfo.RegionLocX/Constants.RegionSize) + "," +
-                                (regionInfo.RegionLocY/Constants.RegionSize));
-                        cnf.Name = regionInfo.RegionName;
-                        source.Save();
-                    }
-                    else
-                    {
-                        //The new region exists too, no name change
-                        check.Set("Location",
-                                  (regionInfo.RegionLocX/Constants.RegionSize) + "," +
-                                  (regionInfo.RegionLocY/Constants.RegionSize));
-                    }
-                }
-                i++;
-            }
-        }
-
-        /// <summary>
-        ///   Save the database configs
-        /// </summary>
-        /// <param name = "regionInfo"></param>
-        private void SaveChangesDatabase(RegionInfo regionInfo)
-        {
-            IRegionInfoConnector connector = DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
-            if (connector != null)
-                connector.UpdateRegionInfo(regionInfo);
-        }
-
-        /// <summary>
-        ///   Tell the client about the changes
-        /// </summary>
-        /// <param name = "remote_client"></param>
-        /// <param name = "m_scene"></param>
+        /// <param name="remote_client"></param>
+        /// <param name="m_scene"></param>
         private void HandleRegionInfoRequest(IClientAPI remote_client, IScene m_scene)
         {
             RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs
@@ -351,12 +275,12 @@ namespace Aurora.Modules.Gods
                                                            (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                                        parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID,
                                                        pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
-                                                       redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX,
-                                                       redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY
+                                                       redirectGridX = 0,
+                                                       redirectGridY = 0
                                                    };
 
             IEstateModule estate = m_scene.RequestModuleInterface<IEstateModule>();
-            args.regionFlags = estate == null ? 0 : (uint)estate.GetRegionFlags();
+            args.regionFlags = estate == null ? 0 : estate.GetRegionFlags();
 
             args.simAccess = m_scene.RegionInfo.AccessLevel;
             args.sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition;

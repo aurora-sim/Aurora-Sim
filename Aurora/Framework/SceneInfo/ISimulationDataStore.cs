@@ -26,95 +26,101 @@
  */
 
 using System.Collections.Generic;
-using Nini.Config;
-using OpenMetaverse;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo.Entities;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public interface ISimulationDataStore
     {
         /// <summary>
-        ///   The name of the plugin
+        ///     The name of the plugin
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// A new map tile needs generated
+        ///     A new map tile needs generated
         /// </summary>
         bool MapTileNeedsGenerated { get; set; }
 
         /// <summary>
-        ///   Whether we should save backups currently or not
+        ///     Whether we should save backups currently or not
         /// </summary>
         bool SaveBackups { get; set; }
 
         /// <summary>
-        ///   Initialises the data storage engine
+        ///     Initialises the data storage engine
         /// </summary>
         void Initialise();
 
         /// <summary>
-        ///   Entirely removes the region, this includes everything about the region
+        ///     Entirely removes the region, this includes everything about the region
         /// </summary>
-        /// <param name = "uuid"></param>
-        /// <param name = "regionUUID"></param>
         /// <returns></returns>
-        void RemoveRegion(UUID regionUUID);
+        void RemoveRegion();
 
         /// <summary>
-        ///   Something has changed in the region, just alerting us to the change if we need to do anything
+        ///     Something has changed in the region, just alerting us to the change if we need to do anything
         /// </summary>
         void Tainted();
 
         /// <summary>
-        ///   Load persisted objects from region storage.
+        ///     Load persisted objects from region storage.
         /// </summary>
-        /// <param name = "regionUUID">the Region UUID</param>
         /// <returns>List of loaded groups</returns>
-        List<ISceneEntity> LoadObjects(IScene scene);
+        List<ISceneEntity> LoadObjects();
 
         /// <summary>
-        ///   Load the latest terrain revision from region storage
+        ///     Load the latest terrain revision from region storage
         /// </summary>
-        /// <param name = "regionID">the region UUID</param>
+        /// <param name="RevertMap"></param>
+        /// <param name="RegionSizeX"></param>
+        /// <param name="RegionSizeY"></param>
         /// <returns>Heightfield data</returns>
-        short[] LoadTerrain(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
+        void LoadTerrain(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
-        ///   Load the latest water revision from region storage
+        ///     Load the latest water revision from region storage
         /// </summary>
-        /// <param name = "scene">the region</param>
+        /// <param name="RevertMap"></param>
+        /// <param name="RegionSizeX"></param>
+        /// <param name="RegionSizeY"></param>
         /// <returns>Heightfield data</returns>
-        short[] LoadWater(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
+        void LoadWater(bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
-        ///   Load all parcels from the database
+        ///     Load all parcels from the database
         /// </summary>
-        /// <param name = "regionUUID"></param>
         /// <returns></returns>
-        List<LandData> LoadLandObjects(UUID regionUUID);
+        List<LandData> LoadLandObjects();
 
         /// <summary>
-        ///   Shutdown and exit the module
+        ///     Shutdown and exit the module
         /// </summary>
         void Shutdown();
 
         /// <summary>
-        ///   Make a copy of the given data store
+        ///     Clears out all references of the backup stream and dumps local caches
         /// </summary>
-        ISimulationDataStore Copy();
+        void CacheDispose();
 
         /// <summary>
-        /// Clears out all references of the backup stream and dumps local caches
+        ///     Load the region info for this sim
         /// </summary>
-        void Dispose();
+        /// <param name="simBase"></param>
+        /// <param name="newRegion"></param>
+        /// <returns></returns>
+        RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion);
 
         /// <summary>
-        ///   Rename any backups that we might have to a new regionName
+        ///     Set the region ref
         /// </summary>
-        /// <param name = "oldRegionName"></param>
-        /// <param name = "newRegionName"></param>
-        /// <param name = "configSource"></param>
-        void RenameBackupFiles(string oldRegionName, string newRegionName, IConfigSource configSource);
+        /// <param name="scene"></param>
+        void SetRegion(IScene scene);
+
+        /// <summary>
+        ///     Forces the datastore to backup the region
+        /// </summary>
+        void ForceBackup();
     }
 }

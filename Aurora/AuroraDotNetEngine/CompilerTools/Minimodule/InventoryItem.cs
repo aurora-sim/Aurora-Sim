@@ -26,9 +26,11 @@
  */
 
 using System;
+using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -63,7 +65,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             AssetBase a = m_rootScene.AssetService.Get(AssetID.ToString());
             T result = new T();
 
-            if ((sbyte)result.AssetType != a.Type)
+            if ((sbyte) result.AssetType != a.Type)
                 throw new ApplicationException("[MRM] The supplied asset class does not match the found asset");
 
             result.AssetData = a.Data;
@@ -79,23 +81,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         }
 
         /// <summary>
-        ///   This will attempt to convert from an IInventoryItem to an InventoryItem object
+        ///     This will attempt to convert from an IInventoryItem to an InventoryItem object
         /// </summary>
         /// <description>
-        ///   In order for this to work the object which implements IInventoryItem must inherit from InventoryItem, otherwise
-        ///   an exception is thrown.
+        ///     In order for this to work the object which implements IInventoryItem must inherit from InventoryItem, otherwise
+        ///     an exception is thrown.
         /// </description>
-        /// <param name = "i">
-        ///   The interface to upcast <see cref = "IInventoryItem" />
+        /// <param name="i">
+        ///     The interface to upcast <see cref="IInventoryItem" />
         /// </param>
         /// <returns>
-        ///   The object backing the interface implementation <see cref = "InventoryItem" />
+        ///     The object backing the interface implementation <see cref="InventoryItem" />
         /// </returns>
         internal static InventoryItem FromInterface(IInventoryItem i)
         {
-            if (typeof(InventoryItem).IsAssignableFrom(i.GetType()))
+            if (typeof (InventoryItem).IsAssignableFrom(i.GetType()))
             {
-                return (InventoryItem)i;
+                return (InventoryItem) i;
             }
             else
             {

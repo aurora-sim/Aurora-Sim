@@ -34,12 +34,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using BitmapProcessing;
+using Aurora.Framework.Utilities;
+
 #if SYSTEM_DRAWING
 
 #endif
 
-namespace PrimMesher
+namespace Aurora.Physics.PrimMesher
 {
     public class SculptMesh
     {
@@ -78,15 +79,15 @@ namespace PrimMesher
 #endif
 
         /// <summary>
-        ///   ** Experimental ** May disappear from future versions ** not recommeneded for use in applications
-        ///   Construct a sculpt mesh from a 2D array of floats
+        ///     ** Experimental ** May disappear from future versions ** not recommeneded for use in applications
+        ///     Construct a sculpt mesh from a 2D array of floats
         /// </summary>
-        /// <param name = "zMap"></param>
-        /// <param name = "xBegin"></param>
-        /// <param name = "xEnd"></param>
-        /// <param name = "yBegin"></param>
-        /// <param name = "yEnd"></param>
-        /// <param name = "viewerMode"></param>
+        /// <param name="zMap"></param>
+        /// <param name="xBegin"></param>
+        /// <param name="xEnd"></param>
+        /// <param name="yBegin"></param>
+        /// <param name="yEnd"></param>
+        /// <param name="viewerMode"></param>
         public SculptMesh(float[,] zMap, float xBegin, float xEnd, float yBegin, float yEnd, bool viewerMode)
         {
             float xStep, yStep;
@@ -192,14 +193,14 @@ namespace PrimMesher
 
 #if SYSTEM_DRAWING
         /// <summary>
-        ///   converts a bitmap to a list of lists of coords, while scaling the image.
-        ///   the scaling is done in floating point so as to allow for reduced vertex position
-        ///   quantization as the position will be averaged between pixel values. this routine will
-        ///   likely fail if the bitmap width and height are not powers of 2.
+        ///     converts a bitmap to a list of lists of coords, while scaling the image.
+        ///     the scaling is done in floating point so as to allow for reduced vertex position
+        ///     quantization as the position will be averaged between pixel values. this routine will
+        ///     likely fail if the bitmap width and height are not powers of 2.
         /// </summary>
-        /// <param name = "bitmap"></param>
-        /// <param name = "scale"></param>
-        /// <param name = "mirror"></param>
+        /// <param name="bitmap"></param>
+        /// <param name="scale"></param>
+        /// <param name="mirror"></param>
         /// <returns></returns>
         private List<List<Coord>> bitmap2Coords(Bitmap bitmap, int scale, bool mirror)
         {
@@ -461,7 +462,7 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Duplicates a SculptMesh object. All object properties are copied by value, including lists.
+        ///     Duplicates a SculptMesh object. All object properties are copied by value, including lists.
         /// </summary>
         /// <returns></returns>
         public SculptMesh Copy()
@@ -508,29 +509,7 @@ namespace PrimMesher
                         (this.normals[rowOffset] + this.normals[rowOffset + xSize - 1]).Normalize();
                 }
             }
-            
-#if (!ISWIN)
-            foreach(Face face in this.faces)
-            {
-                ViewerFace vf = new ViewerFace(0)
-                                                                    {
-                                                                        v1 = this.coords[face.v1],
-                                                                        v2 = this.coords[face.v2],
-                                                                        v3 = this.coords[face.v3],
-                                                                        coordIndex1 = face.v1,
-                                                                        coordIndex2 = face.v2,
-                                                                        coordIndex3 = face.v3,
-                                                                        n1 = this.normals[face.n1],
-                                                                        n2 = this.normals[face.n2],
-                                                                        n3 = this.normals[face.n3],
-                                                                        uv1 = this.uvs[face.uv1],
-                                                                        uv2 = this.uvs[face.uv2],
-                                                                        uv3 = this.uvs[face.uv3]
-                                                                    };
-                this.viewerFaces.Add(vf);
 
-            }
-#else
             foreach (ViewerFace vf in this.faces.Select(face => new ViewerFace(0)
                                                                     {
                                                                         v1 = this.coords[face.v1],
@@ -549,15 +528,14 @@ namespace PrimMesher
             {
                 this.viewerFaces.Add(vf);
             }
-#endif
         }
 
         /// <summary>
-        ///   Adds a value to each XYZ vertex coordinate in the mesh
+        ///     Adds a value to each XYZ vertex coordinate in the mesh
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
-        /// <param name = "z"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
         public void AddPos(float x, float y, float z)
         {
             int i;
@@ -587,9 +565,9 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Rotates the mesh
+        ///     Rotates the mesh
         /// </summary>
-        /// <param name = "q"></param>
+        /// <param name="q"></param>
         public void AddRot(Quat q)
         {
             int i;

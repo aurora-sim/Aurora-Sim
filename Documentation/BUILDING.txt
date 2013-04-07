@@ -30,10 +30,7 @@ From the distribution type:
  * ./runprebuild.sh
  * xbuild Aurora.sln
  * cd bin 
-=== If your Mono version >= 2.8 ===
  * run mono Aurora.exe --gc=sgen
-=== If your Mono version < 2.8 ===
- * run mono Aurora.exe
 
 === References ===
  

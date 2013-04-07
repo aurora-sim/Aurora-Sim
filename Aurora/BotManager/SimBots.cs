@@ -30,18 +30,18 @@ using System;
 namespace Aurora.BotManager
 {
     /// <summary>
-    ///   Created by Christy Lock
+    ///     Created by Christy Lock
     /// </summary>
     internal class SimBots
     {
         public static double target;
 
         /// <summary>
-        ///   This is used to seacrh the current map for
-        ///   Items that the bot needs. Like when he is hungry he will search for 9 on the map
-        ///   Fun is 7 and Comfort is 8 etc.
-        ///   This returns the x and y to BotMe and then he passes them on to Astar and builds a list of waypoints to
-        ///   Reach the goal.
+        ///     This is used to seacrh the current map for
+        ///     Items that the bot needs. Like when he is hungry he will search for 9 on the map
+        ///     Fun is 7 and Comfort is 8 etc.
+        ///     This returns the x and y to BotMe and then he passes them on to Astar and builds a list of waypoints to
+        ///     Reach the goal.
         /// </summary>
         public static double distTarget
         {

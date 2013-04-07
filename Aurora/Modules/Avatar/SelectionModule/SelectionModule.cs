@@ -25,19 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Aurora.Modules.Selection
 {
-    public class SelectionModule : ISharedRegionModule
+    public class SelectionModule : INonSharedRegionModule
     {
         #region Declares
 
@@ -50,7 +55,7 @@ namespace Aurora.Modules.Selection
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -59,10 +64,6 @@ namespace Aurora.Modules.Selection
             {
                 m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
             }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void AddRegion(IScene scene)
@@ -135,12 +136,14 @@ namespace Aurora.Modules.Selection
         }
 
         /// <summary>
-        ///   Invoked when the client requests a prim.
+        ///     Invoked when the client requests a prim.
         /// </summary>
-        /// <param name = "primLocalID"></param>
-        /// <param name = "cacheMissType">0 => full object (viewer doesn't have it)
-        ///   1 => CRC mismatch only</param>
-        /// <param name = "remoteClient"></param>
+        /// <param name="primLocalID"></param>
+        /// <param name="cacheMissType">
+        ///     0 => full object (viewer doesn't have it)
+        ///     1 => CRC mismatch only
+        /// </param>
+        /// <param name="remoteClient"></param>
         protected void RequestPrim(uint primLocalID, byte cacheMissType, IClientAPI remoteClient)
         {
             IEntity entity;
@@ -154,17 +157,18 @@ namespace Aurora.Modules.Selection
                     IObjectCache cache = remoteClient.Scene.RequestModuleInterface<IObjectCache>();
                     if (cache != null)
                         cache.RemoveObject(remoteClient.AgentId, entity.LocalId, cacheMissType);
-                    MainConsole.Instance.WarnFormat("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID,
-                                     cacheMissType, ((ISceneEntity) entity).RootChild.CRC);
+                    MainConsole.Instance.WarnFormat("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}",
+                                                    primLocalID,
+                                                    cacheMissType, ((ISceneEntity) entity).RootChild.CRC);
                 }
             }
         }
 
         /// <summary>
-        ///   Invoked when the client selects a prim.
+        ///     Invoked when the client selects a prim.
         /// </summary>
-        /// <param name = "primLocalID"></param>
-        /// <param name = "remoteClient"></param>
+        /// <param name="primLocalIDs"></param>
+        /// <param name="remoteClient"></param>
         protected void SelectPrim(List<uint> primLocalIDs, IClientAPI remoteClient)
         {
             IScene scene = remoteClient.Scene;
@@ -203,8 +207,9 @@ namespace Aurora.Modules.Selection
                 }
                 else
                 {
-                    MainConsole.Instance.ErrorFormat("[SCENEPACKETHANDLER]: Could not find prim {0} in SelectPrim, killing prim.",
-                                      primLocalID);
+                    MainConsole.Instance.ErrorFormat(
+                        "[SCENEPACKETHANDLER]: Could not find prim {0} in SelectPrim, killing prim.",
+                        primLocalID);
                     //Send a kill packet to the viewer so it doesn't come up again
                     remoteClient.SendKillObject(scene.RegionInfo.RegionHandle, new uint[1] {primLocalID});
                 }
@@ -226,10 +231,10 @@ namespace Aurora.Modules.Selection
         }
 
         /// <summary>
-        ///   Handle the deselection of a prim from the client.
+        ///     Handle the deselection of a prim from the client.
         /// </summary>
-        /// <param name = "primLocalID"></param>
-        /// <param name = "remoteClient"></param>
+        /// <param name="primLocalID"></param>
+        /// <param name="remoteClient"></param>
         protected void DeselectPrim(uint primLocalID, IClientAPI remoteClient)
         {
             IScene scene = remoteClient.Scene;
@@ -308,20 +313,13 @@ namespace Aurora.Modules.Selection
                     }
                 }
 
-#if (!ISWIN)
-                foreach (IScenePresence client in scene.GetScenePresences())
-                {
-                    if (client.ControllingClient.AgentId != remoteClient.AgentId)
-                    {
-                        client.ControllingClient.SendViewerEffect(effectBlockArray);
-                    }
-                }
-#else
-                foreach (IScenePresence client in scene.GetScenePresences().Where(client => client.ControllingClient.AgentId != remoteClient.AgentId))
+                foreach (
+                    IScenePresence client in
+                        scene.GetScenePresences()
+                             .Where(client => client.ControllingClient.AgentId != remoteClient.AgentId))
                 {
                     client.ControllingClient.SendViewerEffect(effectBlockArray);
                 }
-#endif
             }
         }
 
@@ -379,7 +377,7 @@ namespace Aurora.Modules.Selection
             {
                 if (m_presence == null)
                     return;
-                        //We can't deregister ourselves... our reference is lost... so just hope we stop getting called soon
+                //We can't deregister ourselves... our reference is lost... so just hope we stop getting called soon
                 if (!m_presence.IsChildAgent && m_module.UseSelectionParticles && (m_effectsLastSent == 0 ||
                                                                                    Util.EnvironmentTickCountSubtract(
                                                                                        m_effectsLastSent) > 900))
@@ -390,7 +388,7 @@ namespace Aurora.Modules.Selection
             }
 
             /// <summary>
-            ///   This sends the little particles to the client if they are selecting something or such
+            ///     This sends the little particles to the client if they are selecting something or such
             /// </summary>
             protected void SendViewerEffects()
             {
@@ -425,18 +423,9 @@ namespace Aurora.Modules.Selection
                 effect.TypeData = part;
                 effectBlockArray[0] = effect;
 
-#if (!ISWIN)
-                m_presence.Scene.ForEachClient(
-                    delegate(IClientAPI client)
-                    {
-                        client.SendViewerEffect(effectBlockArray);
-                    }
-                );
-#else
                 m_presence.Scene.ForEachClient(
                     client => client.SendViewerEffect(effectBlockArray)
                     );
-#endif
             }
         }
 

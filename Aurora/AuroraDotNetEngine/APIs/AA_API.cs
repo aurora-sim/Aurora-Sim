@@ -25,18 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Lifetime;
 using System.Xml;
-using Aurora.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
@@ -47,7 +50,6 @@ using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
-    [Serializable]
     public class AA_Api : MarshalByRefObject, IAA_Api, IScriptApi
     {
         internal IAssetConnector AssetConnector;
@@ -75,7 +77,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ICloudModule CloudModule = World.RequestModuleInterface<ICloudModule>();
             if (CloudModule == null)
                 return;
-            CloudModule.SetCloudDensity((float)density);
+            CloudModule.SetCloudDensity((float) density);
         }
 
         public void aaUpdateDatabase(LSL_String key, LSL_String value, LSL_String token)
@@ -293,12 +295,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (chatModule != null)
                 chatModule.SimChat(text, ChatTypeEnum.Custom, channelID,
                                    m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name,
-                                   m_host.UUID, false, false, (float)Distance.value, UUID.Zero, World);
+                                   m_host.UUID, false, false, (float) Distance.value, UUID.Zero, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.DeliverMessage(ChatTypeEnum.Custom, channelID, m_host.Name, m_host.UUID, text,
-                                     (float)Distance.value);
+                                     (float) Distance.value);
         }
 
         public void aaSayTo(string userID, string text)
@@ -336,7 +338,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void aaRaiseError(string message)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaRaiseError", m_host, "AA", m_itemID)) return;
-            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "on_error", new object[] { message });
+            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "on_error", new object[] {message});
             throw new EventAbortException();
         }
 
@@ -397,7 +399,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //This asks the agent whether they would like to participate in the combat
         public void aaRequestCombatPermission(string ID)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaRequestCombatPermission", m_host, "AA", m_itemID))
+            if (
+                !ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaRequestCombatPermission", m_host, "AA", m_itemID))
                 return;
             IScenePresence SP;
             UUID AgentID = UUID.Zero;
@@ -593,19 +596,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 LSL_Float f = value.GetLSLFloatItem(0);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
-                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, (float)f.value, grav[1], grav[2]);
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, (float) f.value, grav[1], grav[2]);
             }
             else if (name == ScriptBaseClass.GRAVITY_FORCE_Y)
             {
                 LSL_Float f = value.GetLSLFloatItem(0);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
-                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, grav[0], (float)f.value, grav[2]);
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, grav[0], (float) f.value, grav[2]);
             }
             else if (name == ScriptBaseClass.GRAVITY_FORCE_Z)
             {
                 LSL_Float f = value.GetLSLFloatItem(0);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
-                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, grav[0], grav[1], (float)f.value);
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, grav[0], grav[1], (float) f.value);
             }
             else if (name == ScriptBaseClass.ADD_GRAVITY_POINT)
             {
@@ -614,10 +617,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 LSL_Float radius = value.GetLSLFloatItem(2);
                 LSL_Integer ident = value.GetLSLIntegerItem(3);
                 m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint(false,
-                                                                       new Vector3((float)pos.x, (float)pos.y,
-                                                                                   (float)pos.z),
-                                                                       0, 0, 0, (float)gravForce.value,
-                                                                       (float)radius.value, ident.value);
+                                                                       new Vector3((float) pos.x, (float) pos.y,
+                                                                                   (float) pos.z),
+                                                                       0, 0, 0, (float) gravForce.value,
+                                                                       (float) radius.value, ident.value);
             }
             else if (name == ScriptBaseClass.ADD_GRAVITY_FORCE)
             {
@@ -628,10 +631,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 LSL_Float radius = value.GetLSLFloatItem(4);
                 LSL_Integer ident = value.GetLSLIntegerItem(5);
                 m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint(true,
-                                                                       new Vector3((float)pos.x, (float)pos.y,
-                                                                                   (float)pos.z),
-                                                                       (float)xForce, (float)yForce, (float)zForce, 0,
-                                                                       (float)radius.value, ident.value);
+                                                                       new Vector3((float) pos.x, (float) pos.y,
+                                                                                   (float) pos.z),
+                                                                       (float) xForce, (float) yForce, (float) zForce, 0,
+                                                                       (float) radius.value, ident.value);
             }
             else if (name == ScriptBaseClass.START_TIME_REVERSAL_SAVING)
             {
@@ -669,22 +672,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.TaskInventory)
             {
-#if (!ISWIN)
-                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
-                {
-                    if (inv.Value.Type == 10 && inv.Value.ItemID == m_itemID)
-                    {
-                        invItemID = inv.Key;
-                        break;
-                    }
-                }
-#else
-                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory.Where(inv => inv.Value.Type == 10 && inv.Value.ItemID == m_itemID))
+                foreach (
+                    KeyValuePair<UUID, TaskInventoryItem> inv in
+                        m_host.TaskInventory.Where(inv => inv.Value.Type == 10 && inv.Value.ItemID == m_itemID))
                 {
                     invItemID = inv.Key;
                     break;
                 }
-#endif
             }
 
             return invItemID;
@@ -729,7 +723,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_ScriptEngine = ScriptEngine;
             m_host = host;
             ScriptProtection = module;
-            AssetConnector = DataManager.DataManager.RequestPlugin<IAssetConnector>();
+            AssetConnector = Framework.Utilities.DataManager.RequestPlugin<IAssetConnector>();
         }
 
         public string Name
@@ -743,7 +737,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         /// <summary>
-        ///   We don't have to add any assemblies here
+        ///     We don't have to add any assemblies here
         /// </summary>
         public string[] ReferencedAssemblies
         {
@@ -751,7 +745,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         /// <summary>
-        ///   We use the default namespace, so we don't have any to add
+        ///     We use the default namespace, so we don't have any to add
         /// </summary>
         public string[] NamespaceAdditions
         {
@@ -771,7 +765,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public override Object InitializeLifetimeService()
         {
-            ILease lease = (ILease)base.InitializeLifetimeService();
+            ILease lease = (ILease) base.InitializeLifetimeService();
 
             if (lease.CurrentState == LeaseState.Initial)
             {
@@ -834,7 +828,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         internal void ShoutError(string msg)
         {
-            ILSL_Api api = (ILSL_Api)m_ScriptEngine.GetApi(m_itemID, "ll");
+            ILSL_Api api = (ILSL_Api) m_ScriptEngine.GetApi(m_itemID, "ll");
             api.llShout(ScriptBaseClass.DEBUG_CHANNEL, msg);
         }
 
@@ -870,87 +864,82 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAAllRegionInstanceSay", m_host, "AA", m_itemID))
                 return;
 
-            foreach (IScene scene in m_host.ParentEntity.Scene.RequestModuleInterface<ISceneManager>().GetAllScenes())
-            {
-                if (text.Length > 1023)
-                    text = text.Substring(0, 1023);
+            if (text.Length > 1023)
+                text = text.Substring(0, 1023);
 
-                IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
-                if (chatModule != null)
-                    chatModule.SimChat(text, ChatTypeEnum.Region, channelID,
-                        m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(text, ChatTypeEnum.Region, channelID,
+                                   m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, false,
+                                   World);
 
-                var comms = scene.RequestModuleInterface<IWorldComm>();
-                comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
-            }
+            var comms =
+                m_host.ParentEntity.Scene.RequestModuleInterface<ISceneManager>()
+                      .Scene.RequestModuleInterface<IWorldComm>();
+            comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
         }
 
         #region Get Windlight
 
         public LSL_List aaWindlightGetScene(LSL_List rules)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_List(new object[2] {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET});
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_List(new object[2] {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET});
+
+            if (!cycle.Cycle.IsStaticDayCycle)
+                return
+                    new LSL_List(new object[2] {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC});
+
+            LSL_List list = new LSL_List();
+            for (int i = 0; i < rules.Data.Length; i++)
             {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
+                int rule = rules.GetLSLIntegerItem(i);
 
-                if (!cycle.Cycle.IsStaticDayCycle)
-                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC });
-
-                LSL_List list = new LSL_List();
-                for (int i = 0; i < rules.Data.Length; i++)
-                {
-                    int rule = rules.GetLSLIntegerItem(i);
-
-                    ConvertWindlightDayCycle(cycle, 0, rule, ref list);
-                }
-                return list;
+                ConvertWindlightDayCycle(cycle, 0, rule, ref list);
             }
-
-            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            return list;
         }
 
         public LSL_List aaWindlightGetScene(int dayCycleIndex, LSL_List rules)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_List(new object[2] {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET});
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_List(new object[2] {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET});
+
+            if (cycle.Cycle.IsStaticDayCycle)
+                return
+                    new LSL_List(new object[2]
+                                     {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_NOT_BE_STATIC});
+
+            if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
+                return new LSL_List(new object[2] {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_PRESET_FOUND});
+
+            LSL_List list = new LSL_List();
+            for (int i = 0; i < rules.Data.Length; i++)
             {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
+                int rule = rules.GetLSLIntegerItem(i);
 
-                if (cycle.Cycle.IsStaticDayCycle)
-                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_NOT_BE_STATIC });
-
-                if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
-                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_PRESET_FOUND });
-
-                LSL_List list = new LSL_List();
-                for (int i = 0; i < rules.Data.Length; i++)
-                {
-                    int rule = rules.GetLSLIntegerItem(i);
-
-                    ConvertWindlightDayCycle(cycle, dayCycleIndex, rule, ref list);
-                }
-                return list;
+                ConvertWindlightDayCycle(cycle, dayCycleIndex, rule, ref list);
             }
-
-            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            return list;
         }
 
         public LSL_Integer aaWindlightGetSceneIsStatic()
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
-            {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
-                return new LSL_Integer(cycle.Cycle.IsStaticDayCycle ? 1 : 0);
-            }
-            return new LSL_Integer(-1);
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_Integer(-1);
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_Integer(-1);
+            return new LSL_Integer(cycle.Cycle.IsStaticDayCycle ? 1 : 0);
         }
 
         #endregion
@@ -959,133 +948,114 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Integer aaWindlightGetSceneDayCycleKeyFrameCount()
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
-            {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
-                return new LSL_Integer(cycle.Cycle.DataSettings.Count);
-            }
-            return new LSL_Integer(-1);
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_Integer(-1);
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_Integer(-1);
+            return new LSL_Integer(cycle.Cycle.DataSettings.Count);
         }
 
         public LSL_List aaWindlightGetDayCycle()
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return new LSL_List(new object[2] {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET});
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return new LSL_List(new object[2] {ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET});
+
+            if (cycle.Cycle.IsStaticDayCycle)
+                return new LSL_List(new object[3] {0, -1, cycle.Cycle.DataSettings["-1"].preset_name});
+
+            LSL_List list = new LSL_List();
+
+            int i = 0;
+            foreach (var key in cycle.Cycle.DataSettings)
             {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
-                if (cycle.Cycle.IsStaticDayCycle)
-                    return new LSL_List(new object[3] { 0, -1, cycle.Cycle.DataSettings["-1"].preset_name });
-
-                LSL_List list = new LSL_List();
-
-                int i = 0;
-                foreach (var key in cycle.Cycle.DataSettings)
-                {
-                    list.Add(i++);
-                    list.Add(key.Key);
-                    list.Add(key.Value.preset_name);
-                }
-                return list;
+                list.Add(i++);
+                list.Add(key.Key);
+                list.Add(key.Value.preset_name);
             }
-
-            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+            return list;
         }
 
         public LSL_Integer aaWindlightRemoveDayCycleFrame(int dayCycleFrame)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
-            {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return LSL_Integer.FALSE;
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return LSL_Integer.FALSE;
 
-                if (cycle.Cycle.IsStaticDayCycle || dayCycleFrame >= cycle.Cycle.DataSettings.Count)
-                    return LSL_Integer.FALSE;
+            if (cycle.Cycle.IsStaticDayCycle || dayCycleFrame >= cycle.Cycle.DataSettings.Count)
+                return LSL_Integer.FALSE;
 
-                var data = cycle.Cycle.DataSettings.Keys.ToList();
-                string keyToRemove = data[dayCycleFrame];
-                cycle.Cycle.DataSettings.Remove(keyToRemove);
-                gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
-                return LSL_Integer.TRUE;
-            }
-            return LSL_Integer.FALSE;
+            var data = cycle.Cycle.DataSettings.Keys.ToList();
+            string keyToRemove = data[dayCycleFrame];
+            cycle.Cycle.DataSettings.Remove(keyToRemove);
+            environmentSettings.SetDayCycle(cycle);
+            return LSL_Integer.TRUE;
         }
 
         public LSL_Integer aaWindlightAddDayCycleFrame(LSL_Float dayCyclePosition, int dayCycleFrameToCopy)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            if (d != null)
-            {
-                WindlightDayCycle cycle = new WindlightDayCycle();
-                cycle.FromOSD(d.Info);
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
+                return LSL_Integer.FALSE;
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return LSL_Integer.FALSE;
 
-                if (cycle.Cycle.IsStaticDayCycle || dayCycleFrameToCopy >= cycle.Cycle.DataSettings.Count)
-                    return LSL_Integer.FALSE;
+            if (cycle.Cycle.IsStaticDayCycle || dayCycleFrameToCopy >= cycle.Cycle.DataSettings.Count)
+                return LSL_Integer.FALSE;
 
-                var data = cycle.Cycle.DataSettings.Keys.ToList();
-                cycle.Cycle.DataSettings.Add(dayCyclePosition.ToString(), cycle.Cycle.DataSettings[data[dayCycleFrameToCopy]]);
-                gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
-                return LSL_Integer.TRUE;
-            }
-            return LSL_Integer.FALSE;
+            var data = cycle.Cycle.DataSettings.Keys.ToList();
+            cycle.Cycle.DataSettings.Add(dayCyclePosition.ToString(),
+                                         cycle.Cycle.DataSettings[data[dayCycleFrameToCopy]]);
+            environmentSettings.SetDayCycle(cycle);
+            return LSL_Integer.TRUE;
         }
 
         #endregion
 
         public LSL_Integer aaWindlightSetScene(LSL_List list)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            WindlightDayCycle cycle = new WindlightDayCycle();
-            if (d != null)
-            {
-                cycle.FromOSD(d.Info);
-                if (!cycle.Cycle.IsStaticDayCycle)
-                    return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
-            }
-            else
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
                 return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+            if (!cycle.Cycle.IsStaticDayCycle)
+                return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
 
             ConvertLSLToWindlight(ref cycle, 0, list);
-            gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
+            environmentSettings.SetDayCycle(cycle);
+            environmentSettings.TriggerWindlightUpdate(1);
 
-            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
-            if (environmentSettings != null)
-                environmentSettings.TriggerWindlightUpdate(1);
-            
             return ScriptBaseClass.WL_OK;
         }
 
         public LSL_Integer aaWindlightSetScene(int dayCycleIndex, LSL_List list)
         {
-            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
-            WindlightDayCycle cycle = new WindlightDayCycle();
-            if (d != null)
-            {
-                cycle.FromOSD(d.Info);
-                if (cycle.Cycle.IsStaticDayCycle)
-                    return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
-                if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
-                    return ScriptBaseClass.WL_ERROR_BAD_SETTING;
-            }
-            else
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings == null)
                 return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+            WindlightDayCycle cycle = environmentSettings.GetCurrentDayCycle();
+            if (cycle == null)
+                return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+            if (!cycle.Cycle.IsStaticDayCycle)
+                return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
+            if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
+                return ScriptBaseClass.WL_ERROR_BAD_SETTING;
 
             ConvertLSLToWindlight(ref cycle, dayCycleIndex, list);
-            gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
+            environmentSettings.SetDayCycle(cycle);
+            environmentSettings.TriggerWindlightUpdate(1);
 
-            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
-            if (environmentSettings != null)
-                environmentSettings.TriggerWindlightUpdate(1);
-            
             return ScriptBaseClass.WL_OK;
         }
 
@@ -1098,120 +1068,128 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             switch (rule)
             {
-                case (int)ScriptBaseClass.WL_AMBIENT:
+                case (int) ScriptBaseClass.WL_AMBIENT:
                     list.Add(new LSL_Rotation(skyData.ambient.X, skyData.ambient.Y,
-                        skyData.ambient.Z, skyData.ambient.W));
+                                              skyData.ambient.Z, skyData.ambient.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_BLUE_DENSITY:
+                case (int) ScriptBaseClass.WL_SKY_BLUE_DENSITY:
                     list.Add(new LSL_Rotation(skyData.blue_density.X, skyData.blue_density.Y,
-                        skyData.blue_density.Z, skyData.blue_density.W));
+                                              skyData.blue_density.Z, skyData.blue_density.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_BLUR_HORIZON:
+                case (int) ScriptBaseClass.WL_SKY_BLUR_HORIZON:
                     list.Add(new LSL_Rotation(skyData.blue_horizon.X, skyData.blue_horizon.Y,
-                        skyData.blue_horizon.Z, skyData.blue_horizon.W));
+                                              skyData.blue_horizon.Z, skyData.blue_horizon.W));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_COLOR:
+                case (int) ScriptBaseClass.WL_CLOUD_COLOR:
                     list.Add(new LSL_Rotation(skyData.cloud_color.X, skyData.cloud_color.Y,
-                        skyData.cloud_color.Z, skyData.cloud_color.W));
+                                              skyData.cloud_color.Z, skyData.cloud_color.W));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_POS_DENSITY1:
+                case (int) ScriptBaseClass.WL_CLOUD_POS_DENSITY1:
                     list.Add(new LSL_Rotation(skyData.cloud_pos_density1.X, skyData.cloud_pos_density1.Y,
-                        skyData.cloud_pos_density1.Z, skyData.cloud_pos_density1.W));
+                                              skyData.cloud_pos_density1.Z, skyData.cloud_pos_density1.W));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_POS_DENSITY2:
+                case (int) ScriptBaseClass.WL_CLOUD_POS_DENSITY2:
                     list.Add(new LSL_Rotation(skyData.cloud_pos_density2.X, skyData.cloud_pos_density2.Y,
-                        skyData.cloud_pos_density2.Z, skyData.cloud_pos_density2.W));
+                                              skyData.cloud_pos_density2.Z, skyData.cloud_pos_density2.W));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_SCALE:
+                case (int) ScriptBaseClass.WL_CLOUD_SCALE:
                     list.Add(new LSL_Rotation(skyData.cloud_scale.X, skyData.cloud_scale.Y,
-                        skyData.cloud_scale.Z, skyData.cloud_scale.W));
+                                              skyData.cloud_scale.Z, skyData.cloud_scale.W));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_SCROLL_X:
+                case (int) ScriptBaseClass.WL_CLOUD_SCROLL_X:
                     list.Add(new LSL_Float(skyData.cloud_scroll_rate.X));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_SCROLL_X_LOCK:
+                case (int) ScriptBaseClass.WL_CLOUD_SCROLL_X_LOCK:
                     list.Add(new LSL_Integer(skyData.enable_cloud_scroll.X));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_SCROLL_Y:
+                case (int) ScriptBaseClass.WL_CLOUD_SCROLL_Y:
                     list.Add(new LSL_Float(skyData.cloud_scroll_rate.Y));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_SCROLL_Y_LOCK:
+                case (int) ScriptBaseClass.WL_CLOUD_SCROLL_Y_LOCK:
                     list.Add(new LSL_Integer(skyData.enable_cloud_scroll.Y));
                     break;
-                case (int)ScriptBaseClass.WL_CLOUD_SHADOW:
-                    list.Add(new LSL_Rotation(skyData.cloud_shadow.X, skyData.cloud_shadow.Y, skyData.cloud_shadow.Z, skyData.cloud_shadow.W));
+                case (int) ScriptBaseClass.WL_CLOUD_SHADOW:
+                    list.Add(new LSL_Rotation(skyData.cloud_shadow.X, skyData.cloud_shadow.Y, skyData.cloud_shadow.Z,
+                                              skyData.cloud_shadow.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_DENSITY_MULTIPLIER:
-                    list.Add(new LSL_Rotation(skyData.density_multiplier.X, skyData.density_multiplier.Y, skyData.density_multiplier.Z, skyData.density_multiplier.W));
+                case (int) ScriptBaseClass.WL_SKY_DENSITY_MULTIPLIER:
+                    list.Add(new LSL_Rotation(skyData.density_multiplier.X, skyData.density_multiplier.Y,
+                                              skyData.density_multiplier.Z, skyData.density_multiplier.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_DISTANCE_MULTIPLIER:
-                    list.Add(new LSL_Rotation(skyData.distance_multiplier.X, skyData.distance_multiplier.Y, skyData.distance_multiplier.Z, skyData.distance_multiplier.W));
+                case (int) ScriptBaseClass.WL_SKY_DISTANCE_MULTIPLIER:
+                    list.Add(new LSL_Rotation(skyData.distance_multiplier.X, skyData.distance_multiplier.Y,
+                                              skyData.distance_multiplier.Z, skyData.distance_multiplier.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_GAMMA:
+                case (int) ScriptBaseClass.WL_SKY_GAMMA:
                     list.Add(new LSL_Rotation(skyData.gamma.X, skyData.gamma.Y, skyData.gamma.Z, skyData.gamma.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_GLOW:
+                case (int) ScriptBaseClass.WL_SKY_GLOW:
                     list.Add(new LSL_Rotation(skyData.glow.X, skyData.glow.Y, skyData.glow.Z, skyData.glow.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_HAZE_DENSITY:
-                    list.Add(new LSL_Rotation(skyData.haze_density.X, skyData.haze_density.Y, skyData.haze_density.Z, skyData.haze_density.W));
+                case (int) ScriptBaseClass.WL_SKY_HAZE_DENSITY:
+                    list.Add(new LSL_Rotation(skyData.haze_density.X, skyData.haze_density.Y, skyData.haze_density.Z,
+                                              skyData.haze_density.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_HAZE_HORIZON:
-                    list.Add(new LSL_Rotation(skyData.haze_horizon.X, skyData.haze_horizon.Y, skyData.haze_horizon.Z, skyData.haze_horizon.W));
+                case (int) ScriptBaseClass.WL_SKY_HAZE_HORIZON:
+                    list.Add(new LSL_Rotation(skyData.haze_horizon.X, skyData.haze_horizon.Y, skyData.haze_horizon.Z,
+                                              skyData.haze_horizon.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_LIGHT_NORMALS:
-                    list.Add(new LSL_Rotation(skyData.lightnorm.X, skyData.lightnorm.Y, skyData.lightnorm.Z, skyData.lightnorm.W));
+                case (int) ScriptBaseClass.WL_SKY_LIGHT_NORMALS:
+                    list.Add(new LSL_Rotation(skyData.lightnorm.X, skyData.lightnorm.Y, skyData.lightnorm.Z,
+                                              skyData.lightnorm.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_MAX_ALTITUDE:
+                case (int) ScriptBaseClass.WL_SKY_MAX_ALTITUDE:
                     list.Add(new LSL_Rotation(skyData.max_y.X, skyData.max_y.Y, skyData.max_y.Z, skyData.max_y.W));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_STAR_BRIGHTNESS:
+                case (int) ScriptBaseClass.WL_SKY_STAR_BRIGHTNESS:
                     list.Add(new LSL_Float(skyData.star_brightness));
                     break;
-                case (int)ScriptBaseClass.WL_SKY_SUNLIGHT_COLOR:
-                    list.Add(new LSL_Rotation(skyData.sunlight_color.X, skyData.sunlight_color.Y, skyData.sunlight_color.Z, skyData.sunlight_color.W));
+                case (int) ScriptBaseClass.WL_SKY_SUNLIGHT_COLOR:
+                    list.Add(new LSL_Rotation(skyData.sunlight_color.X, skyData.sunlight_color.Y,
+                                              skyData.sunlight_color.Z, skyData.sunlight_color.W));
                     break;
 
 
-                case (int)ScriptBaseClass.WL_WATER_BLUR_MULTIPLIER:
+                case (int) ScriptBaseClass.WL_WATER_BLUR_MULTIPLIER:
                     list.Add(new LSL_Float(cycle.Water.blurMultiplier));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_FRESNEL_OFFSET:
+                case (int) ScriptBaseClass.WL_WATER_FRESNEL_OFFSET:
                     list.Add(new LSL_Float(cycle.Water.fresnelOffset));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_FRESNEL_SCALE:
+                case (int) ScriptBaseClass.WL_WATER_FRESNEL_SCALE:
                     list.Add(new LSL_Float(cycle.Water.fresnelScale));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_NORMAL_MAP:
+                case (int) ScriptBaseClass.WL_WATER_NORMAL_MAP:
                     list.Add(new LSL_String(cycle.Water.normalMap));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_NORMAL_SCALE:
+                case (int) ScriptBaseClass.WL_WATER_NORMAL_SCALE:
                     list.Add(new LSL_Vector(cycle.Water.normScale.X, cycle.Water.normScale.Y,
-                        cycle.Water.normScale.Z));
+                                            cycle.Water.normScale.Z));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_SCALE_ABOVE:
+                case (int) ScriptBaseClass.WL_WATER_SCALE_ABOVE:
                     list.Add(new LSL_Float(cycle.Water.scaleAbove));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_SCALE_BELOW:
+                case (int) ScriptBaseClass.WL_WATER_SCALE_BELOW:
                     list.Add(new LSL_Float(cycle.Water.scaleBelow));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_UNDERWATER_FOG_MODIFIER:
+                case (int) ScriptBaseClass.WL_WATER_UNDERWATER_FOG_MODIFIER:
                     list.Add(new LSL_Float(cycle.Water.underWaterFogMod));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_FOG_COLOR:
-                    list.Add(new LSL_Rotation(cycle.Water.waterFogColor.X, cycle.Water.waterFogColor.Y, cycle.Water.waterFogColor.Z,
-                        cycle.Water.waterFogColor.W));
+                case (int) ScriptBaseClass.WL_WATER_FOG_COLOR:
+                    list.Add(new LSL_Rotation(cycle.Water.waterFogColor.X, cycle.Water.waterFogColor.Y,
+                                              cycle.Water.waterFogColor.Z,
+                                              cycle.Water.waterFogColor.W));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_FOG_DENSITY:
+                case (int) ScriptBaseClass.WL_WATER_FOG_DENSITY:
                     list.Add(new LSL_Float(cycle.Water.waterFogDensity));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_BIG_WAVE_DIRECTION:
+                case (int) ScriptBaseClass.WL_WATER_BIG_WAVE_DIRECTION:
                     list.Add(new LSL_Vector(cycle.Water.wave1Dir.X,
-                        cycle.Water.wave1Dir.Y, 0.0f));
+                                            cycle.Water.wave1Dir.Y, 0.0f));
                     break;
-                case (int)ScriptBaseClass.WL_WATER_LITTLE_WAVE_DIRECTION:
+                case (int) ScriptBaseClass.WL_WATER_LITTLE_WAVE_DIRECTION:
                     list.Add(new LSL_Vector(cycle.Water.wave2Dir.X,
-                        cycle.Water.wave2Dir.Y, 0.0f));
+                                            cycle.Water.wave2Dir.Y, 0.0f));
                     break;
             }
         }
@@ -1349,7 +1327,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case ScriptBaseClass.WL_SKY_STAR_BRIGHTNESS:
                         {
                             LSL_Float f = list.GetLSLFloatItem(i + 1);
-                            skyData.star_brightness = (float)f.value;
+                            skyData.star_brightness = (float) f.value;
                             break;
                         }
                     case ScriptBaseClass.WL_SKY_SUNLIGHT_COLOR:
@@ -1361,13 +1339,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case ScriptBaseClass.WL_WATER_BIG_WAVE_DIRECTION:
                         {
                             var rot = list.GetVector3Item(i + 1);
-                            cycle.Water.wave1Dir = new Vector2((float)rot.x.value, (float)rot.y.value);
+                            cycle.Water.wave1Dir = new Vector2((float) rot.x.value, (float) rot.y.value);
                             break;
                         }
                     case ScriptBaseClass.WL_WATER_BLUR_MULTIPLIER:
                         {
                             var f = list.GetLSLFloatItem(i + 1);
-                            cycle.Water.blurMultiplier = (float)f.value;
+                            cycle.Water.blurMultiplier = (float) f.value;
                             break;
                         }
                     case ScriptBaseClass.WL_WATER_FOG_COLOR:
@@ -1379,25 +1357,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case ScriptBaseClass.WL_WATER_FOG_DENSITY:
                         {
                             var f = list.GetLSLFloatItem(i + 1);
-                            cycle.Water.waterFogDensity = (float)f.value;
+                            cycle.Water.waterFogDensity = (float) f.value;
                             break;
                         }
                     case ScriptBaseClass.WL_WATER_FRESNEL_OFFSET:
                         {
                             var f = list.GetLSLFloatItem(i + 1);
-                            cycle.Water.fresnelOffset = (float)f.value;
+                            cycle.Water.fresnelOffset = (float) f.value;
                             break;
                         }
                     case ScriptBaseClass.WL_WATER_FRESNEL_SCALE:
                         {
                             var f = list.GetLSLFloatItem(i + 1);
-                            cycle.Water.fresnelScale = (float)f.value;
+                            cycle.Water.fresnelScale = (float) f.value;
                             break;
                         }
                     case ScriptBaseClass.WL_WATER_LITTLE_WAVE_DIRECTION:
                         {
                             var rot = list.GetVector3Item(i + 1);
-                            cycle.Water.wave2Dir = new Vector2((float)rot.x.value, (float)rot.y.value);
+                            cycle.Water.wave2Dir = new Vector2((float) rot.x.value, (float) rot.y.value);
                             break;
                         }
                     case ScriptBaseClass.WL_WATER_NORMAL_MAP:
@@ -1415,19 +1393,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case ScriptBaseClass.WL_WATER_SCALE_ABOVE:
                         {
                             var f = list.GetLSLFloatItem(i + 1);
-                            cycle.Water.scaleAbove = (float)f.value;
+                            cycle.Water.scaleAbove = (float) f.value;
                             break;
                         }
                     case ScriptBaseClass.WL_WATER_SCALE_BELOW:
                         {
                             var f = list.GetLSLFloatItem(i + 1);
-                            cycle.Water.scaleBelow = (float)f.value;
+                            cycle.Water.scaleBelow = (float) f.value;
                             break;
                         }
                     case ScriptBaseClass.WL_WATER_UNDERWATER_FOG_MODIFIER:
                         {
                             var f = list.GetLSLFloatItem(i + 1);
-                            cycle.Water.underWaterFogMod = (float)f.value;
+                            cycle.Water.underWaterFogMod = (float) f.value;
                             break;
                         }
                 }

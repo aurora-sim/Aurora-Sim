@@ -29,14 +29,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using Aurora.Framework.ConsoleFramework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public enum ProfileShape : byte
     {
@@ -74,7 +75,7 @@ namespace Aurora.Framework
         Flexible = 128
     }
 
-    [Serializable]
+    [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class PrimitiveBaseShape
     {
         private static readonly byte[] DEFAULT_TEXTURE =
@@ -131,7 +132,6 @@ namespace Aurora.Framework
         [XmlIgnore] private bool _sculptEntry;
         [XmlIgnore] private UUID _sculptTexture;
         [XmlIgnore] private byte _sculptType;
-        private byte _state;
         private byte[] m_textureEntry;
 
         public PrimitiveBaseShape()
@@ -152,9 +152,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Construct a PrimitiveBaseShape object from a OpenMetaverse.Primitive object
+        ///     Construct a PrimitiveBaseShape object from a OpenMetaverse.Primitive object
         /// </summary>
-        /// <param name = "prim"></param>
+        /// <param name="prim"></param>
         public PrimitiveBaseShape(Primitive prim)
         {
             PCode = (byte) prim.PrimData.PCode;
@@ -189,6 +189,7 @@ namespace Aurora.Framework
             SculptType = (byte) prim.Sculpt.Type;
         }
 
+        [ProtoMember(1)]
         public byte ProfileCurve
         {
             get { return (byte) ((byte) HollowShape | (byte) ProfileShape); }
@@ -230,10 +231,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Entries to store media textures on each face
+        ///     Entries to store media textures on each face
         /// </summary>
         /// Do not change this value directly - always do it through an IMoapModule.
         /// Lock before manipulating.
+        [ProtoMember(2)]
         public MediaList Media { get; set; }
 
         [XmlIgnore]
@@ -251,13 +253,14 @@ namespace Aurora.Framework
                 }
 
                 MainConsole.Instance.Warn("[SHAPE]: Failed to decode texture, length=" +
-                           ((m_textureEntry != null) ? m_textureEntry.Length : 0));
+                                          ((m_textureEntry != null) ? m_textureEntry.Length : 0));
                 return new Primitive.TextureEntry(UUID.Zero);
             }
 
             set { m_textureEntry = value.GetBytes(); }
         }
 
+        [ProtoMember(3, OverwriteList = true)]
         public byte[] TextureEntry
         {
             get { return m_textureEntry; }
@@ -283,304 +286,350 @@ namespace Aurora.Framework
             }
         }
 
-        public byte[] ExtraParams
-        {
-            get { return ExtraParamsToBytes(); }
-            set { ReadInExtraParamsBytes(value); }
-        }
-
+        [ProtoMember(4)]
         public ushort PathBegin
         {
             get { return _pathBegin; }
             set { _pathBegin = value; }
         }
 
+        [ProtoMember(5)]
         public byte PathCurve
         {
             get { return _pathCurve; }
             set { _pathCurve = value; }
         }
 
+        [ProtoMember(6)]
         public ushort PathEnd
         {
             get { return _pathEnd; }
             set { _pathEnd = value; }
         }
 
+        [ProtoMember(7)]
         public sbyte PathRadiusOffset
         {
             get { return _pathRadiusOffset; }
             set { _pathRadiusOffset = value; }
         }
 
+        [ProtoMember(8)]
         public byte PathRevolutions
         {
             get { return _pathRevolutions; }
             set { _pathRevolutions = value; }
         }
 
+        [ProtoMember(9)]
         public byte PathScaleX
         {
             get { return _pathScaleX; }
             set { _pathScaleX = value; }
         }
 
+        [ProtoMember(10)]
         public byte PathScaleY
         {
             get { return _pathScaleY; }
             set { _pathScaleY = value; }
         }
 
+        [ProtoMember(11)]
         public byte PathShearX
         {
             get { return _pathShearX; }
             set { _pathShearX = value; }
         }
 
+        [ProtoMember(12)]
         public byte PathShearY
         {
             get { return _pathShearY; }
             set { _pathShearY = value; }
         }
 
+        [ProtoMember(13)]
         public sbyte PathSkew
         {
             get { return _pathSkew; }
             set { _pathSkew = value; }
         }
 
+        [ProtoMember(14)]
         public sbyte PathTaperX
         {
             get { return _pathTaperX; }
             set { _pathTaperX = value; }
         }
 
+        [ProtoMember(15)]
         public sbyte PathTaperY
         {
             get { return _pathTaperY; }
             set { _pathTaperY = value; }
         }
 
+        [ProtoMember(16)]
         public sbyte PathTwist
         {
             get { return _pathTwist; }
             set { _pathTwist = value; }
         }
 
+        [ProtoMember(17)]
         public sbyte PathTwistBegin
         {
             get { return _pathTwistBegin; }
             set { _pathTwistBegin = value; }
         }
 
+        [ProtoMember(18)]
         public byte PCode
         {
             get { return _pCode; }
             set { _pCode = value; }
         }
 
+        [ProtoMember(19)]
         public ushort ProfileBegin
         {
             get { return _profileBegin; }
             set { _profileBegin = value; }
         }
 
+        [ProtoMember(20)]
         public ushort ProfileEnd
         {
             get { return _profileEnd; }
             set { _profileEnd = value; }
         }
 
+        [ProtoMember(21)]
         public ushort ProfileHollow
         {
             get { return _profileHollow; }
             set { _profileHollow = value; }
         }
 
+        [ProtoMember(22)]
         public Vector3 Scale
         {
             get { return _scale; }
             set { _scale = value; }
         }
 
-        public byte State
-        {
-            get { return _state; }
-            set { _state = value; }
-        }
+        [ProtoMember(23)]
+        public byte State { get; set; }
 
+        [ProtoMember(24)]
         public ProfileShape ProfileShape
         {
             get { return _profileShape; }
             set { _profileShape = value; }
         }
 
+        [ProtoMember(25)]
         public HollowShape HollowShape
         {
             get { return _hollowShape; }
             set { _hollowShape = value; }
         }
 
+        [ProtoMember(26)]
         public UUID SculptTexture
         {
             get { return _sculptTexture; }
             set { _sculptTexture = value; }
         }
 
+        [ProtoMember(27)]
         public byte SculptType
         {
             get { return _sculptType; }
             set { _sculptType = value; }
         }
 
+        [ProtoMember(28, OverwriteList = true)]
         public byte[] SculptData
         {
             get { return _sculptData; }
             set { _sculptData = value; }
         }
 
+        [ProtoMember(29)]
         public int FlexiSoftness
         {
             get { return _flexiSoftness; }
             set { _flexiSoftness = value; }
         }
 
+        [ProtoMember(30)]
         public float FlexiTension
         {
             get { return _flexiTension; }
             set { _flexiTension = value; }
         }
 
+        [ProtoMember(31)]
         public float FlexiDrag
         {
             get { return _flexiDrag; }
             set { _flexiDrag = value; }
         }
 
+        [ProtoMember(32)]
         public float FlexiGravity
         {
             get { return _flexiGravity; }
             set { _flexiGravity = value; }
         }
 
+        [ProtoMember(33)]
         public float FlexiWind
         {
             get { return _flexiWind; }
             set { _flexiWind = value; }
         }
 
+        [ProtoMember(34)]
         public float FlexiForceX
         {
             get { return _flexiForceX; }
             set { _flexiForceX = value; }
         }
 
+        [ProtoMember(35)]
         public float FlexiForceY
         {
             get { return _flexiForceY; }
             set { _flexiForceY = value; }
         }
 
+        [ProtoMember(36)]
         public float FlexiForceZ
         {
             get { return _flexiForceZ; }
             set { _flexiForceZ = value; }
         }
 
+        [ProtoMember(37)]
         public float LightColorR
         {
             get { return _lightColorR; }
             set { _lightColorR = value; }
         }
 
+        [ProtoMember(38)]
         public float LightColorG
         {
             get { return _lightColorG; }
             set { _lightColorG = value; }
         }
 
+        [ProtoMember(39)]
         public float LightColorB
         {
             get { return _lightColorB; }
             set { _lightColorB = value; }
         }
 
+        [ProtoMember(40)]
         public float LightColorA
         {
             get { return _lightColorA; }
             set { _lightColorA = value; }
         }
 
+        [ProtoMember(41)]
         public float LightRadius
         {
             get { return _lightRadius; }
             set { _lightRadius = value; }
         }
 
+        [ProtoMember(42)]
         public float LightCutoff
         {
             get { return _lightCutoff; }
             set { _lightCutoff = value; }
         }
 
+        [ProtoMember(43)]
         public float LightFalloff
         {
             get { return _lightFalloff; }
             set { _lightFalloff = value; }
         }
 
+        [ProtoMember(44)]
         public float LightIntensity
         {
             get { return _lightIntensity; }
             set { _lightIntensity = value; }
         }
 
+        [ProtoMember(45)]
         public bool FlexiEntry
         {
             get { return _flexiEntry; }
             set { _flexiEntry = value; }
         }
 
+        [ProtoMember(46)]
         public bool LightEntry
         {
             get { return _lightEntry; }
             set { _lightEntry = value; }
         }
 
+        [ProtoMember(47)]
         public bool SculptEntry
         {
             get { return _sculptEntry; }
             set { _sculptEntry = value; }
         }
 
+        [ProtoMember(48)]
         public bool ProjectionEntry
         {
             get { return _projectionEntry; }
             set { _projectionEntry = value; }
         }
 
+        [ProtoMember(49)]
         public UUID ProjectionTextureUUID
         {
             get { return _projectionTextureID; }
             set { _projectionTextureID = value; }
         }
 
+        [ProtoMember(50)]
         public float ProjectionFOV
         {
             get { return _projectionFOV; }
             set { _projectionFOV = value; }
         }
 
+        [ProtoMember(51)]
         public float ProjectionFocus
         {
             get { return _projectionFocus; }
             set { _projectionFocus = value; }
         }
 
+        [ProtoMember(52)]
         public float ProjectionAmbiance
         {
             get { return _projectionAmb; }
             set { _projectionAmb = value; }
+        }
+
+        [ProtoMember(53, OverwriteList = true)]
+        public byte[] ExtraParams
+        {
+            get { return ExtraParamsToBytes(); }
+            set { ReadInExtraParamsBytes(value); }
         }
 
         public static PrimitiveBaseShape Create()
@@ -1113,7 +1162,7 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        ///   Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
+        ///     Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
         /// </summary>
         /// <returns></returns>
         public Primitive ToOmvPrimitive()
@@ -1125,10 +1174,10 @@ namespace Aurora.Framework
 
 
         /// <summary>
-        ///   Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
+        ///     Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
         /// </summary>
-        /// <param name = "position"></param>
-        /// <param name = "rotation"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
         /// <returns></returns>
         public Primitive ToOmvPrimitive(Vector3 position, Quaternion rotation)
         {
@@ -1217,7 +1266,7 @@ namespace Aurora.Framework
         #region Nested type: MediaList
 
         /// <summary>
-        ///   Encapsulates a list of media entries.
+        ///     Encapsulates a list of media entries.
         /// </summary>
         /// This class is necessary because we want to replace auto-serialization of MediaEntry with something more
         /// OSD like and less vulnerable to change.
@@ -1272,18 +1321,11 @@ namespace Aurora.Framework
                             xtw.WriteAttributeString("version", "0.1");
 
                             OSDArray meArray = new OSDArray();
-#if (!ISWIN)
-                            foreach (MediaEntry me in this)
-                            {
-                                OSD osd = (null == me ? new OSD() : me.GetOSD());
-                                meArray.Add(osd);
-                            }
-#else
+
                             foreach (OSD osd in this.Select(me => (null == me ? new OSD() : me.GetOSD())))
                             {
                                 meArray.Add(osd);
                             }
-#endif
 
                             xtw.WriteStartElement("OSData");
                             xtw.WriteRaw(OSDParser.SerializeLLSDXmlString(meArray));
@@ -1322,18 +1364,14 @@ namespace Aurora.Framework
                         xtr.ReadStartElement("OSMedia");
 
                         OSDArray osdMeArray = (OSDArray) OSDParser.DeserializeLLSDXml(xtr.ReadInnerXml());
-#if (!ISWIN)
-                        foreach (OSD osdMe in osdMeArray)
-                        {
-                            MediaEntry me = (osdMe is OSDMap ? MediaEntry.FromOSD(osdMe) : new MediaEntry());
-                            Add(me);
-                        }
-#else
-                        foreach (MediaEntry me in osdMeArray.Select(osdMe => (osdMe is OSDMap ? MediaEntry.FromOSD(osdMe) : new MediaEntry())))
+
+                        foreach (
+                            MediaEntry me in
+                                osdMeArray.Select(
+                                    osdMe => (osdMe is OSDMap ? MediaEntry.FromOSD(osdMe) : new MediaEntry())))
                         {
                             Add(me);
                         }
-#endif
 
                         xtr.ReadEndElement();
                     }
@@ -1342,5 +1380,63 @@ namespace Aurora.Framework
         }
 
         #endregion
+
+        public ulong GetMeshKey (Vector3 size, float lod)
+        {
+            ulong hash = 5381;
+
+            hash = djb2(hash, PathCurve);
+            hash = djb2(hash, (byte)((byte)HollowShape | (byte)ProfileShape));
+            hash = djb2(hash, PathBegin);
+            hash = djb2(hash, PathEnd);
+            hash = djb2(hash, PathScaleX);
+            hash = djb2(hash, PathScaleY);
+            hash = djb2(hash, PathShearX);
+            hash = djb2(hash, PathShearY);
+            hash = djb2(hash, (byte)PathTwist);
+            hash = djb2(hash, (byte)PathTwistBegin);
+            hash = djb2(hash, (byte)PathRadiusOffset);
+            hash = djb2(hash, (byte)PathTaperX);
+            hash = djb2(hash, (byte)PathTaperY);
+            hash = djb2(hash, PathRevolutions);
+            hash = djb2(hash, (byte)PathSkew);
+            hash = djb2(hash, ProfileBegin);
+            hash = djb2(hash, ProfileEnd);
+            hash = djb2(hash, ProfileHollow);
+
+            // TODO: Separate scale out from the primitive shape data (after
+            // scaling is supported at the physics engine level)
+            byte[] scaleBytes = size.GetBytes();
+            hash = scaleBytes.Aggregate(hash, djb2);
+
+            // Include LOD in hash, accounting for endianness
+            byte[] lodBytes = new byte[4];
+            Buffer.BlockCopy(BitConverter.GetBytes(lod), 0, lodBytes, 0, 4);
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(lodBytes, 0, 4);
+            }
+            hash = lodBytes.Aggregate(hash, djb2);
+
+            // include sculpt UUID
+            if (SculptEntry)
+            {
+                scaleBytes = SculptTexture.GetBytes();
+                hash = scaleBytes.Aggregate(hash, djb2);
+            }
+
+            return hash;
+        }
+
+        private ulong djb2(ulong hash, byte c)
+        {
+            return ((hash << 5) + hash) + c;
+        }
+
+        private ulong djb2(ulong hash, ushort c)
+        {
+            hash = ((hash << 5) + hash) + ((byte)c);
+            return ((hash << 5) + hash) + (ulong)(c >> 8);
+        }
     }
 }

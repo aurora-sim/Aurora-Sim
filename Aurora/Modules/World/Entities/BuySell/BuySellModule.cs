@@ -28,12 +28,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
+using Aurora.Framework.Serialization;
 
 namespace Aurora.Modules.Entities.BuySell
 {
@@ -46,7 +51,7 @@ namespace Aurora.Modules.Entities.BuySell
 
         #region IBuySellModule Members
 
-        public bool BuyObject(IClientAPI remoteClient, UUID categoryID, uint localID, byte saleType, int salePrice)
+        public bool BuyObject(IClientAPI remoteClient, UUID categoryID, uint localID, byte saleType)
         {
             ISceneChildEntity part = m_scene.GetSceneObjectPart(localID);
 
@@ -110,7 +115,7 @@ namespace Aurora.Modules.Entities.BuySell
 
                     group.AbsolutePosition = inventoryStoredPosition;
 
-                    string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat((SceneObjectGroup) group);
+                    string sceneObjectXml = SceneEntitySerializer.SceneObjectSerializer.ToOriginalXmlFormat(group);
                     group.AbsolutePosition = originalPosition;
 
                     uint perms = group.GetEffectivePermissions();
@@ -161,26 +166,15 @@ namespace Aurora.Modules.Entities.BuySell
                     item.CreationDate = Util.UnixTimeSinceEpoch();
 
                     m_scene.InventoryService.AddItemAsync(item,
-                        (itm) => remoteClient.SendInventoryItemCreateUpdate(itm, 0));
+                                                          (itm) => remoteClient.SendInventoryItemCreateUpdate(itm, 0));
                     break;
 
                 case 3: // Sell contents
                     List<UUID> invList = part.Inventory.GetInventoryList();
 
-#if (!ISWIN)
-                    bool okToSell = true;
-                    foreach (UUID invId in invList)
-                    {
-                        TaskInventoryItem item1 = part.Inventory.GetInventoryItem(invId);
-                        if ((item1.CurrentPermissions & (uint) PermissionMask.Transfer) == 0)
-                        {
-                            okToSell = false;
-                            break;
-                        }
-                    }
-#else
-                    bool okToSell = invList.Select(invID => part.Inventory.GetInventoryItem(invID)).All(item1 => (item1.CurrentPermissions & (uint) PermissionMask.Transfer) != 0);
-#endif
+                    bool okToSell =
+                        invList.Select(invID => part.Inventory.GetInventoryItem(invID))
+                               .All(item1 => (item1.CurrentPermissions & (uint) PermissionMask.Transfer) != 0);
 
                     if (!okToSell)
                     {
@@ -338,7 +332,7 @@ namespace Aurora.Modules.Entities.BuySell
                 }
             }
 
-            BuyObject(remoteClient, categoryID, localID, saleType, salePrice);
+            BuyObject(remoteClient, categoryID, localID, saleType);
         }
     }
 }

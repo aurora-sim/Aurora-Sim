@@ -25,29 +25,30 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using log4net.Core;
-using System.Threading;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     public class Commands
     {
         public static bool _ConsoleIsCaseSensitive = true;
 
         /// <value>
-        ///   Commands organized by keyword in a tree
+        ///     Commands organized by keyword in a tree
         /// </value>
         private readonly CommandSet tree = new CommandSet();
 
         /// <summary>
-        ///   Get help for the given help string
+        ///     Get help for the given help string
         /// </summary>
-        /// <param name = "helpParts">Parsed parts of the help string.  If empty then general help is returned.</param>
+        /// <param name="cmd">Parsed parts of the help string.  If empty then general help is returned.</param>
         /// <returns></returns>
         public List<string> GetHelp(string[] cmd)
         {
@@ -55,21 +56,27 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Add a command to those which can be invoked from the console.
+        ///     Add a command to those which can be invoked from the console.
         /// </summary>
-        /// <param name = "command">The string that will make the command execute</param>
-        /// <param name = "commandHelp">The message that will show the user how to use the command</param>
-        /// <param name = "info">Any information about how the command works or what it does</param>
-        /// <param name = "fn"></param>
+        /// <param name="command">The string that will make the command execute</param>
+        /// <param name="commandHelp">The message that will show the user how to use the command</param>
+        /// <param name="infomessage">Any information about how the command works or what it does</param>
+        /// <param name="fn"></param>
         public void AddCommand(string command, string commandHelp, string infomessage, CommandDelegate fn)
         {
-            CommandInfo info = new CommandInfo{
-                command = command,
-                commandHelp = commandHelp,
-                info = infomessage,
-                fn = new List<CommandDelegate> {fn}
-            };
+            CommandInfo info = new CommandInfo
+                                   {
+                                       command = command,
+                                       commandHelp = commandHelp,
+                                       info = infomessage,
+                                       fn = new List<CommandDelegate> {fn}
+                                   };
             tree.AddCommand(info);
+        }
+
+        public bool ContainsCommand(string command)
+        {
+            return tree.FindCommands(new string[1] {command}).Length > 0;
         }
 
         public string[] FindNextOption(string[] cmd)
@@ -85,27 +92,27 @@ namespace Aurora.Framework
         #region Nested type: CommandInfo
 
         /// <summary>
-        ///   Encapsulates a command that can be invoked from the console
+        ///     Encapsulates a command that can be invoked from the console
         /// </summary>
         private class CommandInfo
         {
             /// <summary>
-            ///   The command for this commandinfo
+            ///     The command for this commandinfo
             /// </summary>
             public string command;
 
             /// <summary>
-            ///   The help info for how to use this command
+            ///     The help info for how to use this command
             /// </summary>
             public string commandHelp;
 
             /// <value>
-            ///   The method to invoke for this command
+            ///     The method to invoke for this command
             /// </value>
             public List<CommandDelegate> fn;
 
             /// <summary>
-            ///   Any info about this command
+            ///     Any info about this command
             /// </summary>
             public string info;
         }
@@ -201,7 +208,7 @@ namespace Aurora.Framework
                     }
                     commandOptions.Reverse();
                     commandPath = commandPathList.ToArray();
-                    if(commandOptions.Count > 0)
+                    if (commandOptions.Count > 0)
                         MainConsole.Instance.Info("Options: " + string.Join(", ", commandOptions.ToArray()));
                     List<string> cmdList;
                     if (commandPath.Length == 1 || !m_allowSubSets)
@@ -215,24 +222,13 @@ namespace Aurora.Framework
                             if (commands.ContainsKey(com))
                             {
                                 MainConsole.Instance.HasProcessedCurrentCommand = false;
-#if (!ISWIN)
-                                foreach (CommandDelegate fn in commands[com].fn)
-                                {
-                                    if (fn != null)
-                                    {
-                                        cmdList = new List<string>(commandPath);
-                                        cmdList.AddRange(commandOptions);
-                                        fn(cmdList.ToArray());
-                                    }
-                                }
-#else
+
                                 foreach (CommandDelegate fn in commands[com].fn.Where(fn => fn != null))
                                 {
                                     cmdList = new List<string>(commandPath);
                                     cmdList.AddRange(commandOptions);
                                     fn(cmdList.ToArray());
                                 }
-#endif
                                 return new string[0];
                             }
                             else if (commandPath[0] == "help")
@@ -241,7 +237,7 @@ namespace Aurora.Framework
 
                                 foreach (string s in help)
                                 {
-                                    MainConsole.Instance.Output(s, "Severe");
+                                    MainConsole.Instance.Format(Level.Off, s);
                                 }
                                 return new string[0];
                             }
@@ -298,44 +294,23 @@ namespace Aurora.Framework
                         else
                         {
                             //See if this is part of a word, and if it is part of a word, execute it
-#if (!ISWIN)
-                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
-                            {
-                                if (cmd.Key.StartsWith(commandPath[0]))
-                                {
-                                    cmdList = new List<string>(commandPath);
-                                    cmdList.AddRange(commandOptions);
-                                    return cmd.Value.ExecuteCommand(cmdList.ToArray());
-                                }
-                            }
-#else
-                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(commandPath[0])))
+                            foreach (
+                                KeyValuePair<string, CommandSet> cmd in
+                                    commandsets.Where(cmd => cmd.Key.StartsWith(commandPath[0])))
                             {
                                 cmdList = new List<string>(commandPath);
                                 cmdList.AddRange(commandOptions);
                                 return cmd.Value.ExecuteCommand(cmdList.ToArray());
                             }
-#endif
+
                             if (commands.ContainsKey(cmdToExecute))
                             {
-#if (!ISWIN)
-                                foreach (CommandDelegate fn in commands[cmdToExecute].fn)
-                                {
-                                    if (fn != null)
-                                    {
-                                       cmdList = new List<string>(commandPath);
-                                       cmdList.AddRange(commandOptions);
-                                       fn(cmdList.ToArray());
-                                    }
-                                }
-#else
                                 foreach (CommandDelegate fn in commands[cmdToExecute].fn.Where(fn => fn != null))
                                 {
                                     cmdList = new List<string>(commandPath);
                                     cmdList.AddRange(commandOptions);
                                     fn(cmdList.ToArray());
                                 }
-#endif
                                 return new string[0];
                             }
                         }
@@ -367,7 +342,9 @@ namespace Aurora.Framework
                     if ((commandPath.Length == 1 || !m_allowSubSets))
                     {
                         string fullcommand = string.Join(" ", command, 0, 2 > command.Length ? command.Length : 2);
-                        values.AddRange(from cmd in commands where cmd.Key.StartsWith(fullcommand) select cmd.Value.commandHelp);
+                        values.AddRange(from cmd in commands
+                                        where cmd.Key.StartsWith(fullcommand)
+                                        select cmd.Value.commandHelp);
                         if (commandPath.Length != 0)
                         {
                             string cmdToExecute = commandPath[0];
@@ -387,20 +364,12 @@ namespace Aurora.Framework
                             else
                             {
                                 //See if this is part of a word, and if it is part of a word, execute it
-#if (!ISWIN)
-                                foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
-                                {
-                                    if (cmd.Key.StartsWith(cmdToExecute))
-                                    {
-                                        values.AddRange(cmd.Value.FindCommands(commandPath));
-                                    }
-                                }
-#else
-                                foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
+                                foreach (
+                                    KeyValuePair<string, CommandSet> cmd in
+                                        commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
                                 {
                                     values.AddRange(cmd.Value.FindCommands(commandPath));
                                 }
-#endif
                             }
                         }
                     }
@@ -424,20 +393,12 @@ namespace Aurora.Framework
                         else
                         {
                             //See if this is part of a word, and if it is part of a word, execute it
-#if (!ISWIN)
-                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
-                            {
-                                if (cmd.Key.StartsWith(cmdToExecute))
-                                {
-                                    return cmd.Value.FindCommands(commandPath);
-                                }
-                            }
-#else
-                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
+                            foreach (
+                                KeyValuePair<string, CommandSet> cmd in
+                                    commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
                             {
                                 return cmd.Value.FindCommands(commandPath);
                             }
-#endif
                         }
                     }
                 }
@@ -456,14 +417,9 @@ namespace Aurora.Framework
                     help.Add("");
                 }
                 List<string> paths = new List<string>();
-#if (!ISWIN)
-                foreach (CommandSet set in commandsets.Values)
-                {
-                    paths.Add(string.Format("-- Help Set: {0}", set.Path));
-                }
-#else
+
                 paths.AddRange(commandsets.Values.Select(set => string.Format("-- Help Set: {0}", set.Path)));
-#endif
+
                 help.AddRange(StringUtils.AlphanumericSort(paths));
                 if (help.Count != 0)
                 {
@@ -472,14 +428,12 @@ namespace Aurora.Framework
                     help.Add("");
                 }
                 paths.Clear();
-#if (!ISWIN)
-                foreach (CommandInfo command in commands.Values)
-                {
-                    paths.Add(string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info));
-                }
-#else
-                paths.AddRange(commands.Values.Select(command => string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
-#endif
+
+				paths.AddRange(
+                    commands.Values.Select(
+                        command =>
+                        string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
+
                 help.AddRange(StringUtils.AlphanumericSort(paths));
                 return help;
             }
@@ -511,18 +465,8 @@ namespace Aurora.Framework
                 else
                 {
                     startingIndex = 0;
-                    string[] words = unquoted[index].Split(new[] { ' ' });
-#if (!ISWIN)
-                    foreach (string w in words)
-                    {
-                        if (w != String.Empty)
-                        {
-                            result.Add(w);
-                        }
-                    }
-#else
-                        result.AddRange(words.Where(w => w != String.Empty));
-#endif
+                    string[] words = unquoted[index].Split(new[] {' '});
+                    result.AddRange(words.Where(w => w != String.Empty));
                 }
             }
 
@@ -531,17 +475,19 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   A console that processes commands internally
+    ///     A console that processes commands internally
     /// </summary>
-    public class CommandConsole : BaseConsole, ICommandConsole
+    public class CommandConsole : ICommandConsole, IDisposable
     {
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
+        protected System.IO.TextWriter m_logFile;
         public List<string> m_promptOptions = new List<string>();
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
-            if (source.Configs["Console"] == null || source.Configs["Console"].GetString("Console", String.Empty) != Name)
+            if (source.Configs["Console"] == null ||
+                source.Configs["Console"].GetString("Console", String.Empty) != Name)
             {
                 return;
             }
@@ -550,6 +496,17 @@ namespace Aurora.Framework
             MainConsole.Instance = this;
 
             m_Commands.AddCommand("help", "help", "Get a general command list", Help);
+            InitializeLog(null);
+        }
+
+        protected void InitializeLog(string filename)
+        {
+            m_logFile = StreamWriter.Synchronized(new StreamWriter(filename ?? System.IO.Path.ChangeExtension(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName, ".log"), true));
+        }
+
+        public void Dispose()
+        {
+            m_logFile.Close();
         }
 
         public void Help(string[] cmd)
@@ -557,13 +514,11 @@ namespace Aurora.Framework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-            {
-                Output(s, "Severe");
-            }
+                Output(s, Level.Off);
         }
 
         /// <summary>
-        ///   Display a command prompt on the console and wait for user input
+        ///     Display a command prompt on the console and wait for user input
         /// </summary>
         public void Prompt()
         {
@@ -582,7 +537,7 @@ namespace Aurora.Framework
         {
             string[] parts = Parser.Parse(cmd);
             m_Commands.Resolve(parts);
-            Output("");
+            Output("", Threshold);
         }
 
         public virtual string ReadLine(string p, bool isCommand, bool e)
@@ -603,14 +558,12 @@ namespace Aurora.Framework
                     for (i = 0; i < cmd.Length; i++)
                     {
                         if (cmd[i].Contains(" "))
-                        {
                             cmd[i] = "\"" + cmd[i] + "\"";
-                        }
                     }
-                    return String.Empty;
                 }
+                m_defaultPrompt = oldDefaultPrompt;
+                return String.Empty;
             }
-            m_defaultPrompt = oldDefaultPrompt;
             return cmdinput;
         }
 
@@ -641,18 +594,10 @@ namespace Aurora.Framework
             m_promptOptions = new List<string>(options);
 
             bool itisdone = false;
-#if (!ISWIN)
-            string optstr = String.Empty;
-            foreach (string option in options)
-            {
-                optstr = optstr + (" " + option);
-            }
-#else
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
-#endif
-
             string temp = InternalPrompt(prompt, defaultresponse, options);
-            while (itisdone == false && options.Count > 0)
+ 
+			while (!itisdone && options.Count > 0)
             {
                 if (options.Contains(temp))
                 {
@@ -667,32 +612,11 @@ namespace Aurora.Framework
             itisdone = false;
             while (!itisdone && excludedCharacters.Count > 0)
             {
-                #if (!ISWIN)
-                    bool found = false;
-                    foreach (char c in excludedCharacters)
-                    {
-                        if (temp.Contains(c.ToString()))
-                        {
-                            Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                            itisdone = false;
-                            found = true;
-                        }
-                    }
-                    if (!found)
-                    {
-                        itisdone = true;
-                    }
-                    else
-                    {
-                        temp = InternalPrompt(prompt, defaultresponse, options);
-                    }
-#else
-                    foreach (char c in excludedCharacters.Where(c => temp.Contains(c.ToString())))
-                    {
-                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                        itisdone = false;
-                    }
-#endif
+                foreach (char c in excludedCharacters.Where(c => temp.Contains(c.ToString())))
+                {
+                    Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                    itisdone = false;
+                }
             }
             m_isPrompting = false;
             m_promptOptions.Clear();
@@ -701,21 +625,15 @@ namespace Aurora.Framework
 
         private string InternalPrompt(string prompt, string defaultresponse, List<string> options)
         {
-            string ret;
-            m_reading = Thread.CurrentThread != m_consoleReadingThread;
-            lock (m_readingLock)
-            {
-                ret = ReadLine(String.Format("{0}{2} [{1}]: ",
-                    prompt,
-                    defaultresponse,
-                    options.Count == 0 ? "" : ", Options are [" + string.Join(", ", options.ToArray()) + "]"
-                ), false, true);
-            }
-            m_reading = Thread.CurrentThread != m_consoleReadingThread ? false : m_reading;
+            string ret = ReadLine(String.Format("{0}{2} [{1}]: ",
+                                                prompt,
+                                                defaultresponse,
+                                                options.Count == 0
+                                                    ? ""
+                                                    : ", Options are [" + string.Join(", ", options.ToArray()) + "]"
+                                      ), false, true);
             if (ret == String.Empty)
-            {
                 ret = defaultresponse;
-            }
 
             return ret;
         }
@@ -730,15 +648,23 @@ namespace Aurora.Framework
             return line;
         }
 
-        public virtual void Output(string text, string lvl)
+        public virtual void Output(string text, Level level)
         {
-            MainConsole.TriggerLog(lvl, text);
-            Console.WriteLine(text);
-        }
+            if (Threshold <= level)
+            {
+                MainConsole.TriggerLog(level.ToString(), text);
+                text = string.Format("{0}:{1}:{2}: {3}",
+                    (DateTime.Now.Hour < 10 ? "0" + DateTime.Now.Hour : DateTime.Now.Hour.ToString()),
+                    (DateTime.Now.Minute < 10 ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString()),
+                    (DateTime.Now.Second < 10 ? "0" + DateTime.Now.Second : DateTime.Now.Second.ToString()), text);
 
-        public virtual void Output(string text)
-        {
-            Output(text, "Debug");
+                Console.WriteLine(text);
+                if (m_logFile != null)
+                {
+                    m_logFile.WriteLine(text);
+                    m_logFile.Flush();
+                }
+            }
         }
 
         public virtual void LockOutput()
@@ -751,57 +677,13 @@ namespace Aurora.Framework
 
         public virtual bool CompareLogLevels(string a, string b)
         {
-            Level aa = GetLevel(a);
-            Level bb = GetLevel(b);
+            Level aa = (Level)Enum.Parse(typeof(Level), a, true);
+            Level bb = (Level)Enum.Parse(typeof(Level), b, true);
             return aa <= bb;
         }
 
-        public Level GetLevel(string lvl)
-        {
-            switch (lvl.ToLower())
-            {
-                case "alert":
-                    return Level.Alert;
-                case "all":
-                    return Level.All;
-                case "critical":
-                    return Level.Critical;
-                case "debug":
-                    return Level.Debug;
-                case "emergency":
-                    return Level.Emergency;
-                case "error":
-                    return Level.Error;
-                case "fatal":
-                    return Level.Fatal;
-                case "fine":
-                    return Level.Fine;
-                case "finer":
-                    return Level.Finer;
-                case "finest":
-                    return Level.Finest;
-                case "info":
-                    return Level.Info;
-                case "notice":
-                    return Level.Notice;
-                case "none":
-                    return new Level(0, "None");
-                case "off":
-                    return Level.Off;
-                case "severe":
-                    return Level.Severe;
-                case "trace":
-                    return Level.Trace;
-                case "verbose":
-                    return Level.Verbose;
-                case "warn":
-                    return Level.Warn;
-            }
-            return null;
-        }
-
         /// <summary>
-        ///   The default prompt text.
+        ///     The default prompt text.
         /// </summary>
         public virtual string DefaultPrompt
         {
@@ -834,74 +716,121 @@ namespace Aurora.Framework
 
         public IScene m_ConsoleScene;
 
-        public void Dispose()
-        {
-        }
-
-
-        public void EndConsoleProcessing()
-        {
-            Processing = false;
-        }
-
-        public bool Processing = true;
-        private delegate void PromptEvent();
-        private readonly Object m_consoleLock = new Object();
-        protected static bool m_reading;
-        private Thread m_consoleReadingThread;
-        protected readonly Object m_readingLock = new Object();
-        private Thread StartReadingThread()
-        {
-            Thread t = new Thread(delegate()
-            {
-                lock(m_readingLock)
-                    Prompt();
-            });
-            t.Start();
-            return t;
-        }
-
         /// <summary>
-        ///   Starts the prompt for the console. This will never stop until the region is closed.
+        ///     Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
         public void ReadConsole()
         {
             while (true)
             {
-                if (!Processing)
-                {
-                    throw new Exception("Restart");
-                }
-                lock (m_consoleLock)
-                {
-                    if(m_consoleReadingThread == null)
-                        m_consoleReadingThread = StartReadingThread();
-                    try
-                    {
-                        if (m_reading)
-                        {
-                            if (m_consoleReadingThread.ThreadState == ThreadState.Running)
-                                m_consoleReadingThread.Abort();
-                            continue;
-                        }
-                        else if (m_consoleReadingThread.ThreadState == ThreadState.Stopped ||
-                            m_consoleReadingThread.ThreadState == ThreadState.Aborted)
-                        {
-                            m_consoleReadingThread = null;
-                            continue;
-                        }
-                        if (m_consoleReadingThread.Join(1000))
-                        {
-                            continue;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        //Eat the exception and go on
-                        Output("[Console]: Failed to execute command: " + ex);
-                    }
-                }
+                Prompt();
             }
         }
+
+        public Level Threshold { get; set; }
+
+        #region ILog Members
+
+        public bool IsDebugEnabled
+        {
+            get { return Threshold <= Level.Debug; }
+        }
+
+        public bool IsErrorEnabled
+        {
+            get { return Threshold <= Level.Error; }
+        }
+
+        public bool IsFatalEnabled
+        {
+            get { return Threshold <= Level.Fatal; }
+        }
+
+        public bool IsInfoEnabled
+        {
+            get { return Threshold <= Level.Info; }
+        }
+
+        public bool IsWarnEnabled
+        {
+            get { return Threshold <= Level.Warn; }
+        }
+
+        public bool IsTraceEnabled
+        {
+            get { return Threshold <= Level.Trace; }
+        }
+
+        public void Debug(object message)
+        {
+            Output(message.ToString(), Level.Debug);
+        }
+
+        public void DebugFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Debug);
+        }
+
+        public void Error(object message)
+        {
+            Output(message.ToString(), Level.Error);
+        }
+
+        public void ErrorFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Error);
+        }
+
+        public void Fatal(object message)
+        {
+            Output(message.ToString(), Level.Fatal);
+        }
+
+        public void FatalFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Fatal);
+        }
+
+        public void Format(Level level, string format, params object[] args)
+        {
+            Output(string.Format(format, args), level);
+        }
+
+        public void Info(object message)
+        {
+            Output(message.ToString(), Level.Info);
+        }
+
+        public void InfoFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Info);
+        }
+
+        public void Log(Level level, object message)
+        {
+            Output(message.ToString(), level);
+        }
+
+        public void Trace(object message)
+        {
+            Output(message.ToString(), Level.Trace);
+        }
+
+        public void TraceFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Trace);
+        }
+
+        public void Warn(object message)
+        {
+            Output(message.ToString(), Level.Warn);
+        }
+
+        public void WarnFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Warn);
+        }
+
+        #endregion
     }
 }

@@ -25,13 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.IO;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse.Packets;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.IO;
 
 namespace Aurora.Modules.Monitoring
 {
@@ -154,7 +156,7 @@ namespace Aurora.Modules.Monitoring
                 }
                 catch (Exception ex)
                 {
-                    MainConsole.Instance.Error("statistics gathering failed: " + ex.Message, ex);
+                    MainConsole.Instance.ErrorFormat("statistics gathering failed: {0}", ex.ToString());
                     if (m_statLog != null && m_statLog.Log != null)
                     {
                         m_statLog.Log.Close();

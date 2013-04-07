@@ -25,19 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using Nwc.XmlRpc;
+using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Threading;
-using Nini.Config;
-using Nwc.XmlRpc;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
 
 /*****************************************************
  *
@@ -74,10 +78,9 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class XMLRPCModule : ISharedRegionModule, IXMLRPC
+    public class XMLRPCModule : INonSharedRegionModule, IXMLRPC
     {
         private readonly object XMLRPCListLock = new object();
-        private readonly List<IScene> m_scenes = new List<IScene>();
         private int RemoteReplyScriptTimeout = 9000;
         private int RemoteReplyScriptWait = 300;
         private bool m_httpServerStarted;
@@ -93,12 +96,7 @@ namespace Aurora.Modules.Scripting
         private Dictionary<UUID, RPCRequestInfo> m_rpcPendingResponses;
         private IScriptModule m_scriptModule;
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -119,15 +117,11 @@ namespace Aurora.Modules.Scripting
 
         public void AddRegion(IScene scene)
         {
-            m_scenes.Add(scene);
-
             scene.RegisterModuleInterface<IXMLRPC>(this);
         }
 
         public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove(scene);
-
             scene.UnregisterModuleInterface<IXMLRPC>(this);
         }
 
@@ -139,9 +133,10 @@ namespace Aurora.Modules.Scripting
                 // Start http server
                 // Attach xmlrpc handlers
                 MainConsole.Instance.Info("[XMLRPC MODULE]: " +
-                           "Starting up XMLRPC Server on port " + m_remoteDataPort + " for llRemoteData commands.");
-                BaseHttpServer httpServer = new BaseHttpServer((uint) m_remoteDataPort, MainServer.Instance.HostName,
-                                                               false);
+                                          "Starting up XMLRPC Server on port " + m_remoteDataPort +
+                                          " for llRemoteData commands.");
+                IHttpServer httpServer = new BaseHttpServer((uint) m_remoteDataPort, MainServer.Instance.HostName,
+                                                            false);
                 httpServer.AddXmlRPCHandler("llRemoteData", XmlRpcRemoteData);
                 httpServer.Start();
             }
@@ -151,10 +146,6 @@ namespace Aurora.Modules.Scripting
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -210,24 +201,12 @@ namespace Aurora.Modules.Scripting
             }
 
             //Is a dupe?
-#if (!ISWIN)
-            foreach (RPCChannelInfo ci in m_openChannels.Values)
-            {
-                if (ci.GetItemID().Equals(itemID))
-                {
-                    // return the original channel ID for this item
-                    newChannel = ci.GetChannelID();
-                    break;
-                }
-            }
-#else
             foreach (RPCChannelInfo ci in m_openChannels.Values.Where(ci => ci.GetItemID().Equals(itemID)))
             {
                 // return the original channel ID for this item
                 newChannel = ci.GetChannelID();
                 break;
             }
-#endif
 
             if (newChannel == UUID.Zero)
             {
@@ -255,20 +234,10 @@ namespace Aurora.Modules.Scripting
 
                 lock (XMLRPCListLock)
                 {
-#if (!ISWIN)
-                    foreach (RPCChannelInfo li in m_openChannels.Values)
-                    {
-                        if (li.GetItemID().Equals(itemID))
-                        {
-                            tmp.Add(itemID);
-                        }
-                    }
-#else
                     foreach (RPCChannelInfo li in m_openChannels.Values.Where(li => li.GetItemID().Equals(itemID)))
                     {
                         tmp.Add(itemID);
                     }
-#endif
 
                     IEnumerator tmpEnumerator = tmp.GetEnumerator();
                     while (tmpEnumerator.MoveNext())
@@ -296,15 +265,10 @@ namespace Aurora.Modules.Scripting
 
             if (message_key == UUID.Zero)
             {
-#if (!ISWIN)
-                foreach (RPCRequestInfo oneRpcInfo in m_rpcPendingResponses.Values)
-                {
-                    if (oneRpcInfo.GetChannelKey() == channel_key) rpcInfo = oneRpcInfo;
-                }
-#else
-                foreach (RPCRequestInfo oneRpcInfo in m_rpcPendingResponses.Values.Where(oneRpcInfo => oneRpcInfo.GetChannelKey() == channel_key))
+                foreach (
+                    RPCRequestInfo oneRpcInfo in
+                        m_rpcPendingResponses.Values.Where(oneRpcInfo => oneRpcInfo.GetChannelKey() == channel_key))
                     rpcInfo = oneRpcInfo;
-#endif
             }
             else
             {
@@ -363,20 +327,10 @@ namespace Aurora.Modules.Scripting
                     return null;
                 lock (XMLRPCListLock)
                 {
-#if (!ISWIN)
-                    foreach (RPCRequestInfo luid in m_rpcPending.Values)
-                    {
-                        if (!luid.IsProcessed())
-                        {
-                            return luid;
-                        }
-                    }
-#else
                     foreach (RPCRequestInfo luid in m_rpcPending.Values.Where(luid => !luid.IsProcessed()))
                     {
                         return luid;
                     }
-#endif
                 }
             }
             return null;
@@ -420,20 +374,10 @@ namespace Aurora.Modules.Scripting
                     return null;
                 lock (XMLRPCListLock)
                 {
-#if (!ISWIN)
-                    foreach (SendRemoteDataRequest luid in m_pendingSRDResponses.Values)
-                    {
-                        if (luid.Finished)
-                        {
-                            return luid;
-                        }
-                    }
-#else
                     foreach (SendRemoteDataRequest luid in m_pendingSRDResponses.Values.Where(luid => luid.Finished))
                     {
                         return luid;
                     }
-#endif
                 }
             }
             return null;
@@ -457,20 +401,11 @@ namespace Aurora.Modules.Scripting
             {
                 lock (XMLRPCListLock)
                 {
-#if (!ISWIN)
-                    foreach (SendRemoteDataRequest li in m_pendingSRDResponses.Values)
-                    {
-                        if (li.ItemID.Equals(itemID))
-                        {
-                            m_pendingSRDResponses.Remove(li.GetReqID());
-                        }
-                    }
-#else
-                    foreach (SendRemoteDataRequest li in m_pendingSRDResponses.Values.Where(li => li.ItemID.Equals(itemID)))
+                    foreach (
+                        SendRemoteDataRequest li in m_pendingSRDResponses.Values.Where(li => li.ItemID.Equals(itemID)))
                     {
                         m_pendingSRDResponses.Remove(li.GetReqID());
                     }
-#endif
                 }
             }
         }

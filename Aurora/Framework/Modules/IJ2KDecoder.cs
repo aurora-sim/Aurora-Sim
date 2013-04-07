@@ -29,7 +29,7 @@ using System.Drawing;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public delegate void DecodedCallback(UUID AssetId, OpenJPEG.J2KLayerInfo[] layers);
 

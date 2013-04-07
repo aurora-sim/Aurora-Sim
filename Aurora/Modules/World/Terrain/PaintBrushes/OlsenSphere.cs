@@ -26,18 +26,18 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Terrain.PaintBrushes
 {
-    ///<summary>
-    ///  Speed-Optimised Hybrid Erosion Brush
-    ///
-    ///  As per Jacob Olsen's Paper
-    ///  http://www.oddlabs.com/download/terrain_generation.pdf
-    ///</summary>
+    /// <summary>
+    ///     Speed-Optimised Hybrid Erosion Brush
+    ///     As per Jacob Olsen's Paper
+    ///     http://www.oddlabs.com/download/terrain_generation.pdf
+    /// </summary>
     public class OlsenSphere : ITerrainPaintableEffect
     {
         private const float nConst = 1024;
@@ -154,7 +154,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
         #region ITerrainPaintableEffect Members
 
         public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
-                                float duration, float BrushSize, List<IScene> scene)
+                                float duration, float BrushSize)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 

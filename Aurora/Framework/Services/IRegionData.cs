@@ -25,15 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
-using OpenMetaverse;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     /// <summary>
-    ///   An interface for connecting to the authentication datastore
+    ///     An interface for connecting to the authentication datastore
     /// </summary>
     public interface IRegionData : IAuroraDataPlugin
     {
@@ -46,10 +45,12 @@ namespace Aurora.Framework
         List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, List<UUID> scopeIDs);
         List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort);
         List<GridRegion> Get(uint start, uint count, uint EstateID, RegionFlags flags, Dictionary<string, bool> sort);
-        List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count, Dictionary<string, bool> sort);
+
+        List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count,
+                             Dictionary<string, bool> sort);
 
         /// <summary>
-        /// Gets the number of regions matching the specified flags
+        ///     Gets the number of regions matching the specified flags
         /// </summary>
         /// <param name="includeFlags"></param>
         /// <param name="excludeFlags"></param>
@@ -57,24 +58,27 @@ namespace Aurora.Framework
         uint Count(RegionFlags includeFlags, RegionFlags excludeFlags);
 
         /// <summary>
-        /// Gets the neighbouring regions, taking into account variable-sized regions
+        ///     Gets the neighbouring regions, taking into account variable-sized regions
         /// </summary>
         /// <param name="regionID"></param>
-        /// <param name="ScopeID"></param>
+        /// <param name="scopeIDs"></param>
         /// <param name="squareRangeFromCenterInMeters">because calculating circular radii would be a complex.</param>
         /// <returns>If the return result is of zero length the region does not exist.</returns>
         List<GridRegion> GetNeighbours(UUID regionID, List<UUID> scopeIDs, uint squareRangeFromCenterInMeters);
 
         /// <summary>
-        /// Gets all regions within squareRangeFromCenterInMeters meters of centerX and centerY
+        ///     Gets all regions within squareRangeFromCenterInMeters meters of centerX and centerY
         /// </summary>
+        /// <param name="scopeIDs"></param>
+        /// <param name="excludeRegion"></param>
         /// <param name="centerX"></param>
         /// <param name="centerY"></param>
         /// <param name="squareRangeFromCenterInMeters"></param>
         /// <returns></returns>
-        List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters);
+        List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY,
+                             uint squareRangeFromCenterInMeters);
 
-        uint Count(uint EstateID, RegionFlags flags);
+        uint Count(uint estateID, RegionFlags flags);
 
         bool Store(GridRegion data);
 

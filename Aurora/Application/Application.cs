@@ -30,7 +30,7 @@ using Aurora.Simulation.Base;
 namespace Aurora
 {
     /// <summary>
-    ///   Starting class for the OpenSimulator Region
+    ///     Starting class for the OpenSimulator Region
     /// </summary>
     public class Application
     {

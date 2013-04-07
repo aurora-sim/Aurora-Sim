@@ -27,9 +27,10 @@
 
 using System.Linq;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
     internal class ScriptCountMonitor : IScriptCountMonitor
     {
@@ -52,6 +53,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             return "Total Script Count";
         }
 
+        public string GetInterfaceName()
+        {
+            return "IScriptCountMonitor";
+        }
+
         public string GetFriendlyValue()
         {
             return ActiveScripts + " active script(s), " + ScriptEPS + " event(s) per second";
@@ -70,16 +76,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             get
             {
                 IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                int sum = 0;
-                foreach (IScriptModule module in modules)
-                {
-                    if (module != null) sum += module.GetActiveScripts();
-                }
-                return sum;
-#else
                 return modules.Where(module => module != null).Sum(module => module.GetActiveScripts());
-#endif
             }
         }
 
@@ -88,16 +85,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             get
             {
                 IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
-#if (!ISWIN)
-                int sum = 0;
-                foreach (IScriptModule module in modules)
-                {
-                    if (module != null) sum += module.GetScriptEPS();
-                }
-                return sum;
-#else
                 return modules.Where(module => module != null).Sum(module => module.GetScriptEPS());
-#endif
             }
         }
 

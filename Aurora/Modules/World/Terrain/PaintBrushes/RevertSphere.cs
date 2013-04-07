@@ -26,10 +26,10 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Terrain.PaintBrushes
 {
@@ -45,10 +45,8 @@ namespace Aurora.Modules.Terrain.PaintBrushes
         #region ITerrainPaintableEffect Members
 
         public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
-                                float duration, float BrushSize, List<IScene> scene)
+                                float duration, float BrushSize)
         {
-            if (m_module == null)
-                return;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
             duration = 0.03f; //MCP Should be read from ini file
 

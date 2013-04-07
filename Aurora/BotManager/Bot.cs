@@ -25,17 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
+using Games.Pathfinding.AStar2DTest;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Timers;
-using Aurora.Framework;
-using Games.Pathfinding.AStar2DTest;
-using Mischel.Collections;
-using OpenMetaverse;
-using OpenMetaverse.Packets;
 
 namespace Aurora.BotManager
 {
@@ -86,7 +94,10 @@ namespace Aurora.BotManager
             m_scenePresence.SpeedModifier = speed;
         }
 
-        public Vector3 AbsolutePosition { get { return m_scenePresence.AbsolutePosition; } }
+        public Vector3 AbsolutePosition
+        {
+            get { return m_scenePresence.AbsolutePosition; }
+        }
 
         // Makes the bot fly to the specified destination
         public void StopMoving(bool fly, bool clearPath)
@@ -99,32 +110,46 @@ namespace Aurora.BotManager
             if (clearPath)
                 m_bot.m_nodeGraph.Clear();
             //Send the stop message
-            m_bot.m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
+            m_bot.m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
             if (fly)
-                m_bot.m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+                m_bot.m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
             OnBotAgentUpdate(Vector3.Zero, m_bot.m_movementFlag, m_bot.m_bodyDirection, false);
             m_scenePresence.CollisionPlane = Vector4.UnitW;
             if (m_scenePresence.PhysicsActor != null)
                 m_scenePresence.PhysicsActor.ForceSetVelocity(Vector3.Zero);
         }
 
-        public bool CanMove { get { return m_scenePresence.AllowMovement && !m_scenePresence.Frozen && !m_scenePresence.FallenStandUp; } }
+        public bool CanMove
+        {
+            get { return m_scenePresence.AllowMovement && !m_scenePresence.Frozen && !m_scenePresence.FallenStandUp; }
+        }
 
         public IScene GetScene()
         {
             return m_scenePresence.Scene;
         }
 
-        public bool ForceFly { get { return m_scenePresence.ForceFly; } set { m_scenePresence.ForceFly = value; } }
+        public bool ForceFly
+        {
+            get { return m_scenePresence.ForceFly; }
+            set { m_scenePresence.ForceFly = value; }
+        }
 
-        public bool SetAlwaysRun { get { return m_scenePresence.SetAlwaysRun; } set { m_scenePresence.SetAlwaysRun = value; } }
+        public bool SetAlwaysRun
+        {
+            get { return m_scenePresence.SetAlwaysRun; }
+            set { m_scenePresence.SetAlwaysRun = value; }
+        }
 
         public void Teleport(Vector3 pos)
         {
             m_scenePresence.Teleport(pos);
         }
 
-        public PhysicsActor PhysicsActor { get { return m_scenePresence.PhysicsActor; } }
+        public PhysicsActor PhysicsActor
+        {
+            get { return m_scenePresence.PhysicsActor; }
+        }
 
         public void StandUp()
         {
@@ -145,11 +170,14 @@ namespace Aurora.BotManager
         {
             if (isMoving)
                 m_hasStoppedMoving = false;
-            AgentUpdateArgs pack = new AgentUpdateArgs { ControlFlags = controlFlag, BodyRotation = bodyRotation };
+            AgentUpdateArgs pack = new AgentUpdateArgs {ControlFlags = controlFlag, BodyRotation = bodyRotation};
             m_scenePresence.ControllingClient.ForceSendOnAgentUpdate(m_scenePresence.ControllingClient, pack);
         }
 
-        public UUID UUID { get { return m_scenePresence.UUID; } }
+        public UUID UUID
+        {
+            get { return m_scenePresence.UUID; }
+        }
 
         #region Chat interface
 
@@ -158,23 +186,23 @@ namespace Aurora.BotManager
             if (m_scenePresence == null || m_scenePresence.Scene == null)
                 return;
             OSChatMessage args = new OSChatMessage
-            {
-                Message = message,
-                Channel = channel,
-                From = m_scenePresence.Name,
-                Position = m_scenePresence.AbsolutePosition,
-                Sender = m_scenePresence.ControllingClient,
-                Type = (ChatTypeEnum)sayType,
-                Scene = m_scenePresence.Scene
-            };
+                                     {
+                                         Message = message,
+                                         Channel = channel,
+                                         From = m_scenePresence.Name,
+                                         Position = m_scenePresence.AbsolutePosition,
+                                         Sender = m_scenePresence.ControllingClient,
+                                         Type = (ChatTypeEnum) sayType,
+                                         Scene = m_scenePresence.Scene
+                                     };
 
             m_scenePresence.ControllingClient.OnForceChatFromViewer(m_scenePresence.ControllingClient, args);
         }
 
         public void SendInstantMessage(GridInstantMessage im)
         {
-            if (im.dialog == (byte)InstantMessageDialog.GodLikeRequestTeleport ||
-                im.dialog == (byte)InstantMessageDialog.RequestTeleport)
+            if (im.dialog == (byte) InstantMessageDialog.GodLikeRequestTeleport ||
+                im.dialog == (byte) InstantMessageDialog.RequestTeleport)
             {
                 if (m_bot.AvatarCreatorID == im.fromAgentID || m_scenePresence.Scene.Permissions.IsGod(im.fromAgentID))
                 {
@@ -196,7 +224,10 @@ namespace Aurora.BotManager
 
         #endregion
 
-        public string Name { get { return m_scenePresence.Name; } }
+        public string Name
+        {
+            get { return m_scenePresence.Name; }
+        }
 
 
         public void Jump()
@@ -207,7 +238,7 @@ namespace Aurora.BotManager
 
     #endregion
 
-    public sealed class Bot 
+    public sealed class Bot : IDisposable
     {
         #region Declares
 
@@ -227,13 +258,13 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   There are several events added so far,
-        ///   Update - called every 0.1s, allows for updating of the position of where the avatar is supposed to be goign
-        ///   Move - called every 10ms, allows for subtle changes and fast callbacks before the avatar moves toward its next location
-        ///   ToAvatar - a following event, called when the bot is within range of the avatar (range = m_followCloseToPoint)
-        ///   LostAvatar - a following event, called when the bot is out of the maximum range to look for its avatar (range = m_followLoseAvatarDistance)
-        ///   HereEvent - Triggered when a script passes TRIGGER_HERE_EVENT via botSetMap
-        ///   ChangedState = Triggered when the state of a bot changes
+        ///     There are several events added so far,
+        ///     Update - called every 0.1s, allows for updating of the position of where the avatar is supposed to be goign
+        ///     Move - called every 10ms, allows for subtle changes and fast callbacks before the avatar moves toward its next location
+        ///     ToAvatar - a following event, called when the bot is within range of the avatar (range = m_followCloseToPoint)
+        ///     LostAvatar - a following event, called when the bot is out of the maximum range to look for its avatar (range = m_followLoseAvatarDistance)
+        ///     HereEvent - Triggered when a script passes TRIGGER_HERE_EVENT via botSetMap
+        ///     ChangedState = Triggered when the state of a bot changes
         /// </summary>
         public AuroraEventManager EventManager = new AuroraEventManager();
 
@@ -430,9 +461,9 @@ namespace Aurora.BotManager
         #region Move / fly bot
 
         /// <summary>
-        ///   Does the actual movement of the bot
+        ///     Does the actual movement of the bot
         /// </summary>
-        /// <param name = "pos"></param>
+        /// <param name="pos"></param>
         private void walkTo(Vector3 pos)
         {
             Vector3 bot_forward = new Vector3(2, 0, 0);
@@ -454,15 +485,16 @@ namespace Aurora.BotManager
             if (m_controller.CanMove)
                 m_controller.OnBotAgentUpdate(bot_toward, m_movementFlag, m_bodyDirection);
             else
-                m_controller.OnBotAgentUpdate(Vector3.Zero, (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP, Quaternion.Identity);
+                m_controller.OnBotAgentUpdate(Vector3.Zero, (uint) AgentManager.ControlFlags.AGENT_CONTROL_STOP,
+                                              Quaternion.Identity);
 
             m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
         }
 
         /// <summary>
-        ///   Does the actual movement of the bot
+        ///     Does the actual movement of the bot
         /// </summary>
-        /// <param name = "pos"></param>
+        /// <param name="pos"></param>
         private void flyTo(Vector3 pos)
         {
             Vector3 bot_forward = new Vector3(1, 0, 0), bot_toward = Vector3.Zero;
@@ -504,10 +536,10 @@ namespace Aurora.BotManager
         #region Jump Decision Tree
 
         /// <summary>
-        ///   See whether we should jump based on the start and end positions given
+        ///     See whether we should jump based on the start and end positions given
         /// </summary>
-        /// <param name = "start"></param>
-        /// <param name = "end"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
         /// <returns></returns>
         private bool JumpDecisionTree(Vector3 start, Vector3 end)
         {
@@ -530,8 +562,9 @@ namespace Aurora.BotManager
             Vector3 endvector = new Vector3(end.X, end.Y, end.Z);
 
             List<ISceneChildEntity> entities = new List<ISceneChildEntity>();
-            List<ContactResult> results = m_controller.GetScene().PhysicsScene.RaycastWorld(startvector, dir, dir.Length(),
-                                                                                          5);
+            List<ContactResult> results = m_controller.GetScene()
+                                                      .PhysicsScene.RaycastWorld(startvector, dir, dir.Length(),
+                                                                                 5);
 
             double distance = Util.GetDistanceTo(startvector, endvector);
             if (distance == 0)
@@ -557,9 +590,8 @@ namespace Aurora.BotManager
         #region Enable/Disable walking
 
         /// <summary>
-        ///   Blocks walking and sets to only flying
+        ///     Blocks walking and sets to only flying
         /// </summary>
-        /// <param name = "pos"></param>
         public void DisableWalk()
         {
             ShouldFly = true;
@@ -568,9 +600,8 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   Allows for flying and walkin
+        ///     Allows for flying and walking
         /// </summary>
-        /// <param name = "pos"></param>
         public void EnableWalk()
         {
             ShouldFly = false;
@@ -621,31 +652,33 @@ namespace Aurora.BotManager
             Vector3 pos;
             TravelMode state;
             bool teleport;
-            if(!ForceCloseToPoint)
-                m_closeToPoint = m_controller.PhysicsActor is PhysicsCharacter && ((PhysicsCharacter)m_controller.PhysicsActor).Flying ? 1.5f : 1.0f;
+            if (!ForceCloseToPoint)
+                m_closeToPoint = m_controller.PhysicsActor.Flying
+                                     ? 1.5f
+                                     : 1.0f;
             if (m_nodeGraph.GetNextPosition(m_controller.AbsolutePosition, m_closeToPoint, 60, out pos, out state,
                                             out teleport))
             {
-                if (state == TravelMode.Fly)
-                    FlyTo(pos);
-                else if (state == TravelMode.Run)
+                switch (state)
                 {
-                    m_controller.SetAlwaysRun = true;
-                    WalkTo(pos);
-                }
-                else if (state == TravelMode.Walk)
-                {
-                    m_controller.SetAlwaysRun = false;
-                    WalkTo(pos);
-                }
-                else if (state == TravelMode.Teleport)
-                {
-                    m_controller.Teleport(pos);
-                    m_nodeGraph.CurrentPos++;
-                }
-                else if (state == TravelMode.TriggerHereEvent)
-                {
-                    EventManager.FireGenericEventHandler("HereEvent", null);
+                    case TravelMode.Fly:
+                        FlyTo(pos);
+                        break;
+                    case TravelMode.Run:
+                        m_controller.SetAlwaysRun = true;
+                        WalkTo(pos);
+                        break;
+                    case TravelMode.Walk:
+                        m_controller.SetAlwaysRun = false;
+                        WalkTo(pos);
+                        break;
+                    case TravelMode.Teleport:
+                        m_controller.Teleport(pos);
+                        m_nodeGraph.CurrentPos++;
+                        break;
+                    case TravelMode.TriggerHereEvent:
+                        EventManager.FireGenericEventHandler("HereEvent", null);
+                        break;
                 }
             }
             else
@@ -695,7 +728,9 @@ namespace Aurora.BotManager
 
             waypoints.AddRange(from s in points
                                select s.Split(',')
-                               into Vector where Vector.Length == 3 select new Vector3(float.Parse(Vector[0]), float.Parse(Vector[1]), float.Parse(Vector[2])));
+                               into Vector where Vector.Length == 3
+                               select
+                                   new Vector3(float.Parse(Vector[0]), float.Parse(Vector[1]), float.Parse(Vector[2])));
             return waypoints;
         }
 
@@ -738,7 +773,8 @@ namespace Aurora.BotManager
 
         #region Interface members
 
-        public void FollowAvatar(string avatarName, float startFollowDistance, float stopFollowDistance, Vector3 offsetFromUser, bool requireLOS)
+        public void FollowAvatar(string avatarName, float startFollowDistance, float stopFollowDistance,
+                                 Vector3 offsetFromUser, bool requireLOS)
         {
             m_controller.GetScene().TryGetAvatarByName(avatarName, out FollowSP);
             if (FollowSP == null)
@@ -754,7 +790,8 @@ namespace Aurora.BotManager
             }
             if (FollowSP == null || FollowSP.IsChildAgent)
             {
-                MainConsole.Instance.Warn("Could not find avatar " + avatarName + " for bot " + m_controller.Name + " to follow");
+                MainConsole.Instance.Warn("Could not find avatar " + avatarName + " for bot " + m_controller.Name +
+                                          " to follow");
                 return;
             }
             FollowRequiresLOS = requireLOS;
@@ -880,8 +917,7 @@ namespace Aurora.BotManager
                 //If we were having to fly to here, stop flying
                 if (jumpTry > 0)
                 {
-                    if(m_controller.PhysicsActor is PhysicsCharacter)
-                        ((PhysicsCharacter)m_controller.PhysicsActor).Flying = false;
+                    m_controller.PhysicsActor.Flying = false;
                     walkTo(m_controller.AbsolutePosition);
                     //Fix the animation from flying > walking
                     m_controller.UpdateMovementAnimations(false);
@@ -1385,10 +1421,14 @@ namespace Aurora.BotManager
             List<FollowingEventHolder> events = (from kvp in m_followDistance
                                                  let sp = m_controller.GetScene().GetScenePresence(kvp.Key)
                                                  where sp != null
-                                                 where Util.DistanceLessThan(sp.AbsolutePosition, m_controller.AbsolutePosition, kvp.Value)
+                                                 where
+                                                     Util.DistanceLessThan(sp.AbsolutePosition,
+                                                                           m_controller.AbsolutePosition, kvp.Value)
                                                  select new FollowingEventHolder
                                                             {
-                                                                Event = m_followDistanceEvents[kvp.Key], AvID = kvp.Key, BotID = m_controller.UUID
+                                                                Event = m_followDistanceEvents[kvp.Key],
+                                                                AvID = kvp.Key,
+                                                                BotID = m_controller.UUID
                                                             }).ToList();
             foreach (FollowingEventHolder h in events)
             {
@@ -1422,12 +1462,17 @@ namespace Aurora.BotManager
             List<FollowingEventHolder> events = (from kvp in m_LineOfSight
                                                  let sp = m_controller.GetScene().GetScenePresence(kvp.Key)
                                                  where sp != null
-                                                 let entities = llCastRay(sp.AbsolutePosition, m_controller.AbsolutePosition)
+                                                 let entities =
+                                                     llCastRay(sp.AbsolutePosition, m_controller.AbsolutePosition)
                                                  where entities.Count == 0
-                                                 where m_controller.AbsolutePosition.ApproxEquals(sp.AbsolutePosition, m_LineOfSight[kvp.Key])
+                                                 where
+                                                     m_controller.AbsolutePosition.ApproxEquals(sp.AbsolutePosition,
+                                                                                                m_LineOfSight[kvp.Key])
                                                  select new FollowingEventHolder
                                                             {
-                                                                Event = m_LineOfSightEvents[kvp.Key], AvID = kvp.Key, BotID = m_controller.UUID
+                                                                Event = m_LineOfSightEvents[kvp.Key],
+                                                                AvID = kvp.Key,
+                                                                BotID = m_controller.UUID
                                                             }).ToList();
             foreach (FollowingEventHolder h in events)
             {
@@ -1451,6 +1496,12 @@ namespace Aurora.BotManager
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            if (m_frames != null)
+                m_frames.Close();
+        }
     }
 
     public class BotClientAPI : IClientAPI
@@ -1461,17 +1512,9 @@ namespace Aurora.BotManager
         private static UInt32 UniqueId = 1;
         private BotAvatarController m_controller;
 
-        public UUID ScopeID
-        {
-            get;
-            set;
-        }
+        public UUID ScopeID { get; set; }
 
-        public List<UUID> AllScopeIDs
-        {
-            get;
-            set;
-        }
+        public List<UUID> AllScopeIDs { get; set; }
 
         // creates new bot on the default location
         public BotClientAPI(IScene scene, AgentCircuitData data)
@@ -1492,9 +1535,8 @@ namespace Aurora.BotManager
             m_controller = controller;
         }
 
-        public string m_firstName = "";
-        public string m_lastName = "";
         public readonly Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
+
         public Vector3 StartPos
         {
             get { return DEFAULT_START_POSITION; }
@@ -1504,18 +1546,6 @@ namespace Aurora.BotManager
         public UUID AgentId
         {
             get { return m_myID; }
-        }
-
-        public string FirstName
-        {
-            get { return m_firstName; }
-            set { m_firstName = value; }
-        }
-
-        public string LastName
-        {
-            get { return m_lastName; }
-            set { m_lastName = value; }
         }
 
         private uint m_circuitCode;
@@ -1528,7 +1558,8 @@ namespace Aurora.BotManager
 
         public String Name
         {
-            get { return FirstName + " " + LastName; }
+            get;
+            set;
         }
 
         public IScene Scene
@@ -1544,14 +1575,14 @@ namespace Aurora.BotManager
 
         public T Get<T>()
         {
-            return (T)m_clientInterfaces[typeof(T)];
+            return (T) m_clientInterfaces[typeof (T)];
         }
 
         public bool TryGet<T>(out T iface)
         {
-            if (m_clientInterfaces.ContainsKey(typeof(T)))
+            if (m_clientInterfaces.ContainsKey(typeof (T)))
             {
-                iface = (T)m_clientInterfaces[typeof(T)];
+                iface = (T) m_clientInterfaces[typeof (T)];
                 return true;
             }
             iface = default(T);
@@ -1566,9 +1597,9 @@ namespace Aurora.BotManager
         {
             lock (m_clientInterfaces)
             {
-                if (!m_clientInterfaces.ContainsKey(typeof(T)))
+                if (!m_clientInterfaces.ContainsKey(typeof (T)))
                 {
-                    m_clientInterfaces.Add(typeof(T), iface);
+                    m_clientInterfaces.Add(typeof (T), iface);
                 }
             }
         }
@@ -1923,7 +1954,7 @@ namespace Aurora.BotManager
 
         public IPEndPoint RemoteEndPoint
         {
-            get { return new IPEndPoint(IPAddress.Loopback, (ushort)m_circuitCode); }
+            get { return new IPEndPoint(IPAddress.Loopback, (ushort) m_circuitCode); }
         }
 
         public void SetDebugPacketLevel(int newDebug)
@@ -1944,7 +1975,7 @@ namespace Aurora.BotManager
             //raiseevent on the packet server to Shutdown the circuit
             if (OnLogout != null)
                 OnLogout(this);
-            if(OnConnectionClosed != null)
+            if (OnConnectionClosed != null)
                 OnConnectionClosed(this);
         }
 
@@ -1976,7 +2007,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
         }
 
@@ -2146,7 +2177,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string firstname, string lastname,
+        public void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string name,
                                         ulong grouppowers, string groupname, string grouptitle)
         {
         }
@@ -2168,7 +2199,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendNameReply(UUID profileId, string firstname, string lastname)
+        public void SendNameReply(UUID profileId, string name)
         {
         }
 
@@ -2190,8 +2221,8 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong CurrentTime, uint SecondsPerSunCycle,
-                               uint SecondsPerYear, float OrbitalPosition)
+        public void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong currentTime, uint secondsPerSunCycle,
+                               uint secondsPerYear, float orbitalPosition)
         {
         }
 
@@ -2218,11 +2249,11 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendEstateList(UUID invoice, int code, UUID[] Data, uint estateID)
+        public void SendEstateList(UUID invoice, int code, List<UUID> Data, uint estateID)
         {
         }
 
-        public void SendBannedUserList(UUID invoice, EstateBan[] banlist, uint estateID)
+        public void SendBannedUserList(UUID invoice, List<EstateBan> banlist, uint estateID)
         {
         }
 
@@ -2545,18 +2576,22 @@ namespace Aurora.BotManager
         }
 
         public void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID,
-                                               int amt, int currentInterval, int interval, string startDate, GroupAccountHistory[] history)
+                                               int amt, int currentInterval, int interval, string startDate,
+                                               GroupAccountHistory[] history)
         {
         }
 
-        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTier,
+        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt,
+                                               int totalTier,
                                                int usedTier, string startDate, int currentInterval, int intervalLength,
-                                               string taxDate, string lastTaxDate, int parcelDirectoryFee, int landTaxFee, int groupTaxFee, int objectTaxFee)
+                                               string taxDate, string lastTaxDate, int parcelDirectoryFee,
+                                               int landTaxFee, int groupTaxFee, int objectTaxFee)
         {
         }
 
         public void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID,
-                                                        UUID sessionID, int currentInterval, int intervalDays, string startingDate, GroupAccountHistory[] history)
+                                                        UUID sessionID, int currentInterval, int intervalDays,
+                                                        string startingDate, GroupAccountHistory[] history)
         {
         }
 

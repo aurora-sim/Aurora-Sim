@@ -26,10 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class LastFrameTimeMonitor : IMonitor, ISetMonitor
+    public class LastFrameTimeMonitor : IMonitor, ILastFrameTimeMonitor
     {
         private int MonitorLastFrameTick;
 
@@ -49,6 +52,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Last Completed Frame At";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "ILastFrameTimeMonitor";
         }
 
         public string GetFriendlyValue()

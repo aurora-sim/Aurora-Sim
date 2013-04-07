@@ -28,9 +28,8 @@
 //#define USE_DRAWSTUFF
 
 using System;
-using OdeAPI;
-using Aurora.Framework;
 using Aurora.Framework.Physics;
+
 //using Ode.NET;
 //#if USE_DRAWSTUFF
 //using Drawstuff.NET;
@@ -39,7 +38,7 @@ using Aurora.Framework.Physics;
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     /// <summary>
-    ///   ODE plugin
+    ///     ODE plugin
     /// </summary>
     public class AuroraODEPlugin : IPhysicsPlugin
     {
@@ -66,7 +65,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         // Initializing ODE only when a scene is created allows alternative ODE plugins to co-habit (according to
                         // http://opensimulator.org/mantis/view.php?id=2750).
-                        d.SetODEFile();
                         d.InitODE();
                         m_initialized = true;
                     }
@@ -74,7 +72,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _mScene = new AuroraODEPhysicsScene();
                 }
             }
-            
+
             return _mScene;
         }
 
@@ -91,7 +89,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     }
 
     /// <summary>
-    ///   Various properties that ODE uses for AMotors but isn't exposed in ODE.NET so we must define them ourselves.
+    ///     Various properties that ODE uses for AMotors but isn't exposed in ODE.NET so we must define them ourselves.
     /// </summary>
     public enum dParam
     {
@@ -119,7 +117,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     }
 
     /// <summary>
-    ///   Collision flags
+    ///     Collision flags
     /// </summary>
     [Flags]
     public enum CollisionCategories
@@ -137,7 +135,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     }
 
     /// <summary>
-    ///   Material type for a primitive
+    ///     Material type for a primitive
     /// </summary>
     public enum Material
     {

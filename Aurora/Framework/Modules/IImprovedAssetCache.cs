@@ -25,13 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Aurora.Framework
+using Aurora.Framework.Services.ClassHelpers.Assets;
+
+namespace Aurora.Framework.Modules
 {
     public interface IImprovedAssetCache
     {
         void Cache(string assetID, AssetBase asset);
+        void CacheData(string assetID, byte[] data);
         AssetBase Get(string id);
         AssetBase Get(string id, out bool found);
+        byte[] GetData(string id, out bool found);
         void Expire(string id);
         void Clear();
         bool Contains(string id);

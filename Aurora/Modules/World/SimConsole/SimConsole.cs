@@ -25,33 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.SimConsole
 {
     /// <summary>
-    ///   This module allows for the console to be accessed in V2 viewers that support SimConsole
-    ///   This will eventually be extended in Imprudence so that full console support can be added into the viewer (this module already supports the eventual extension)
+    ///     This module allows for the console to be accessed in V2 viewers that support SimConsole
+    ///     This will eventually be extended in Imprudence so that full console support can be added into the viewer (this module already supports the eventual extension)
     /// </summary>
-    public class SimConsole : ISharedRegionModule
+    public class SimConsole : INonSharedRegionModule
     {
         #region Declares
 
         private readonly Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access>();
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_Scene;
         private readonly Dictionary<string, Access> m_userKeys = new Dictionary<string, Access>();
         private readonly Dictionary<UUID, string> m_userLogLevel = new Dictionary<UUID, string>();
         private bool m_enabled;
@@ -70,7 +74,7 @@ namespace Aurora.Modules.SimConsole
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
         {
@@ -90,14 +94,9 @@ namespace Aurora.Modules.SimConsole
                         m_userKeys.Add(Users[i], (Access) Enum.Parse(typeof (Access), Users[i + 1]));
                     }
                     else
-                        MainConsole.Instance.Output(
-                            "No second configuration option given for SimConsole Users, ignoring", "WARN");
+                        MainConsole.Instance.Warn("[SimConsole]: No second configuration option given for SimConsole Users, ignoring");
                 }
             }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void AddRegion(IScene scene)
@@ -108,7 +107,7 @@ namespace Aurora.Modules.SimConsole
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
             scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
-            m_scenes.Add(scene);
+            m_Scene = scene;
         }
 
         public void RegionLoaded(IScene scene)
@@ -117,7 +116,7 @@ namespace Aurora.Modules.SimConsole
 
         public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove(scene);
+            m_Scene = null;
             scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent -= EventManager_OnMakeRootAgent;
             scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
@@ -147,17 +146,16 @@ namespace Aurora.Modules.SimConsole
             retVal["SimConsoleAsync"] = CapsUtil.CreateCAPS("SimConsoleAsync", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["SimConsoleAsync"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return SimConsoleAsyncResponder(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return SimConsoleAsyncResponder(request, agentID); }));
             return retVal;
         }
 
         private byte[] SimConsoleAsyncResponder(Stream request, UUID agentID)
         {
-            IScenePresence SP = findScene(agentID).GetScenePresence(agentID);
+            IScenePresence SP = m_Scene.GetScenePresence(agentID);
             if (SP == null)
                 return new byte[0]; //They don't exist
 
@@ -280,44 +278,31 @@ namespace Aurora.Modules.SimConsole
         {
             if (text == "")
                 return;
-#if (!ISWIN)
-            foreach (KeyValuePair<UUID, Access> kvp in m_authorizedParticipants)
-            {
-                if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
-                {
-                    if (m_userLogLevel.ContainsKey(kvp.Key) && MainConsole.Instance.CompareLogLevels(m_userLogLevel[kvp.Key], level))
-                    {
-                        //Send the EQM with the message to all people who have read access
-                        SendConsoleEventEQM(kvp.Key, text);
-                    }
-                }
-            }
-#else
-            foreach (KeyValuePair<UUID, Access> kvp in m_authorizedParticipants.Where(kvp => kvp.Value == Access.ReadWrite || kvp.Value == Access.Read).Where(kvp => m_userLogLevel.ContainsKey(kvp.Key) && MainConsole.Instance.CompareLogLevels(m_userLogLevel[kvp.Key], level)))
+
+            foreach (
+                KeyValuePair<UUID, Access> kvp in
+                    m_authorizedParticipants.Where(kvp => kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
+                                            .Where(
+                                                kvp =>
+                                                m_userLogLevel.ContainsKey(kvp.Key) &&
+                                                MainConsole.Instance.CompareLogLevels(m_userLogLevel[kvp.Key], level)))
             {
                 //Send the EQM with the message to all people who have read access
                 SendConsoleEventEQM(kvp.Key, text);
             }
-#endif
         }
 
         /// <summary>
-        ///   Send a console message to the viewer
+        ///     Send a console message to the viewer
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "text"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="text"></param>
         private void SendConsoleEventEQM(UUID AgentID, string text)
         {
             OSDMap item = new OSDMap {{"body", text}, {"message", OSD.FromString("SimConsoleResponse")}};
-            IEventQueueService eq = m_scenes[0].RequestModuleInterface<IEventQueueService>();
-            IScene scene = findScene(AgentID);
-            if (eq != null && scene != null)
-                eq.Enqueue(item, AgentID, scene.RegionInfo.RegionHandle);
-        }
-
-        private IScene findScene(UUID agentID)
-        {
-            return (from scene in m_scenes let SP = scene.GetScenePresence(agentID) where SP != null && !SP.IsChildAgent select scene).FirstOrDefault();
+            IEventQueueService eq = m_Scene.RequestModuleInterface<IEventQueueService>();
+            if (eq != null)
+                eq.Enqueue(item, AgentID, m_Scene.RegionInfo.RegionID);
         }
     }
 }

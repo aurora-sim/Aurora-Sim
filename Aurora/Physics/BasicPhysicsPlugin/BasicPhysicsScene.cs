@@ -26,15 +26,17 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
 
-namespace OpenSim.Region.Physics.BasicPhysicsPlugin
+namespace Aurora.Physics.BasicPhysicsPlugin
 {
     public class BasicScene : PhysicsScene
     {
-        private readonly List<PhysicsCharacter> _actors = new List<PhysicsCharacter>();
+        private readonly List<PhysicsActor> _actors = new List<PhysicsActor>();
         private short[] _heightMap;
         private RegionInfo m_region;
 
@@ -53,9 +55,9 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             get { return false; }
         }
 
-        public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
+        public override void Initialise(IMesher meshmerizer, IScene scene)
         {
-            m_region = region;
+            m_region = scene.RegionInfo;
         }
 
         public override void PostInitialise(IConfigSource config)
@@ -66,7 +68,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
+        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint localID, UUID UUID)
         {
             BasicCharacterActor act = new BasicCharacterActor {Position = position, Flying = isFlying};
@@ -74,15 +76,15 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return act;
         }
 
-        public override void RemovePrim(PhysicsObject prim)
+        public override void RemovePrim(PhysicsActor prim)
         {
         }
 
-        public override void DeletePrim(PhysicsObject prim)
+        public override void DeletePrim(PhysicsActor prim)
         {
         }
 
-        public override void RemoveAvatar(PhysicsCharacter actor)
+        public override void RemoveAvatar(PhysicsActor actor)
         {
             BasicCharacterActor act = (BasicCharacterActor) actor;
             if (_actors.Contains(act))
@@ -98,14 +100,15 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         }
 */
 
-        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
+        public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape, 
+                                                Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
         {
             return null;
         }
 
         public override void Simulate(float timeStep)
         {
-            foreach (PhysicsCharacter actor in _actors)
+            foreach (PhysicsActor actor in _actors)
             {
                 Vector3 actorPosition = actor.Position;
                 Vector3 actorVelocity = actor.Velocity;

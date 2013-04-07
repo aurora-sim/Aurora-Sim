@@ -26,8 +26,8 @@
  */
 
 using System;
-using System.Reflection;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

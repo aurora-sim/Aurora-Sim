@@ -25,18 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Aurora.Modules.OpenRegionSettingsModule
 {
@@ -188,12 +191,6 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             set { m_settings.DefaultUndershirt = value; }
         }
 
-        public bool ClampPrimSizes
-        {
-            get { return m_settings.ClampPrimSizes; }
-            set { m_settings.ClampPrimSizes = value; }
-        }
-
         public bool ForceDrawDistance
         {
             get { return m_settings.ForceDrawDistance; }
@@ -210,12 +207,6 @@ namespace Aurora.Modules.OpenRegionSettingsModule
         {
             get { return m_settings.MaxGroups; }
             set { m_settings.MaxGroups = value; }
-        }
-
-        public bool AllowParcelWindLight
-        {
-            get { return m_settings.AllowParcelWindLight; }
-            set { m_settings.AllowParcelWindLight = value; }
         }
 
         public void RegisterGenericValue(string key, string value)
@@ -248,11 +239,11 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             m_scene = scene;
             scene.EventManager.OnMakeRootAgent += OnNewClient;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
+            m_settings = scene.RegionInfo.OpenRegionSettings;
             scene.RegisterModuleInterface<IOpenRegionSettingsModule>(this);
-            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-            if (orsc != null)
-                m_settings = orsc.GetSettings(scene.RegionInfo.RegionID);
-            ReadConfig(scene);
+            RegionInfo reg = m_scene.RegionInfo;
+            ReadOpenRegionSettings(m_scene.Config.Configs["OpenRegionSettings"], ref reg);
+            m_scene.RegionInfo = reg;
         }
 
         public void RemoveRegion(IScene scene)
@@ -262,7 +253,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
         public void RegionLoaded(IScene scene)
         {
             IChatModule chatmodule = scene.RequestModuleInterface<IChatModule>();
-            if (chatmodule != null)
+            if (chatmodule != null && m_settings != null)
             {
                 //Set default chat ranges
                 m_settings.WhisperDistance = chatmodule.WhisperDistance;
@@ -301,11 +292,11 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
             //Sets the OpenRegionSettings
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["DispatchOpenRegionSettings"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return DispatchOpenRegionSettings(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return DispatchOpenRegionSettings(request, agentID);
+                                                                 }));
             return retVal;
         }
 
@@ -334,16 +325,9 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             m_settings.TerrainDetailScale = (float) rm["terrain_detail_scale"].AsReal();
             m_settings.ShowTags = (int) rm["show_tags"].AsReal();
             m_settings.MaxGroups = (int) rm["max_groups"].AsReal();
-            m_settings.AllowParcelWindLight = rm["allow_parcel_windlight"].AsBoolean();
             m_settings.EnableTeenMode = rm["enable_teen_mode"].AsBoolean();
-            m_settings.ClampPrimSizes = rm["enforce_max_build"].AsBoolean();
 
-            IOpenRegionSettingsConnector connector =
-                DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-
-            //Update the database
-            if (connector != null)
-                connector.SetSettings(m_scene.RegionInfo.RegionID, m_settings);
+            m_scene.RegionInfo.OpenRegionSettings = m_settings;
 
             //Update all clients about changes
             SendToAllClients();
@@ -355,50 +339,61 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
         #region Setup
 
-        private void ReadConfig(IScene scene)
+        private void ReadOpenRegionSettings(IConfig instanceSettings, ref RegionInfo region)
         {
-            //Set up the instance first
-            //DEPRECATED (rSmythe 11/4/11) - Now set in viewer and Region Manager
-            /*IConfig instanceSettings = m_source.Configs["InstanceSettings"];
-            if (instanceSettings != null)
-            {
-                ReadSettings(instanceSettings);
-            }
-            IConfig regionSettings = m_source.Configs[scene.RegionInfo.RegionName];
-            if (regionSettings != null)
-            {
-                ReadSettings(regionSettings);
-            }*/
-        }
-
-        private void ReadSettings(IConfig instanceSettings)
-        {
-            m_settings.MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance", MaxDragDistance);
-            m_settings.DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance", DefaultDrawDistance);
+            if (instanceSettings == null)
+                return;
+            region.OpenRegionSettings.MaxDragDistance = instanceSettings.GetFloat("MaxDragDistance",
+                                                                                  region.OpenRegionSettings
+                                                                                        .MaxDragDistance);
+            region.OpenRegionSettings.DefaultDrawDistance = instanceSettings.GetFloat("DefaultDrawDistance",
+                                                                                      region.OpenRegionSettings
+                                                                                            .DefaultDrawDistance);
 
 
-            m_settings.MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale", MaximumPrimScale);
-            m_settings.MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale", MinimumPrimScale);
-            m_settings.MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale", MaximumPhysPrimScale);
+            region.OpenRegionSettings.MaximumPrimScale = instanceSettings.GetFloat("MaximumPrimScale",
+                                                                                   region.OpenRegionSettings
+                                                                                         .MaximumPrimScale);
+            region.OpenRegionSettings.MinimumPrimScale = instanceSettings.GetFloat("MinimumPrimScale",
+                                                                                   region.OpenRegionSettings
+                                                                                         .MinimumPrimScale);
+            region.OpenRegionSettings.MaximumPhysPrimScale = instanceSettings.GetFloat("MaximumPhysPrimScale",
+                                                                                       region.OpenRegionSettings
+                                                                                             .MaximumPhysPrimScale);
 
 
-            m_settings.MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize", MaximumHollowSize);
-            m_settings.MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize", MinimumHoleSize);
+            region.OpenRegionSettings.MaximumHollowSize = instanceSettings.GetFloat("MaximumHollowSize",
+                                                                                    region.OpenRegionSettings
+                                                                                          .MaximumHollowSize);
+            region.OpenRegionSettings.MinimumHoleSize = instanceSettings.GetFloat("MinimumHoleSize",
+                                                                                  region.OpenRegionSettings
+                                                                                        .MinimumHoleSize);
 
 
-            m_settings.MaximumLinkCount = instanceSettings.GetInt("MaximumLinkCount", MaximumLinkCount);
-            m_settings.MaximumLinkCountPhys = instanceSettings.GetInt("MaximumLinkCountPhys", MaximumLinkCountPhys);
+            region.OpenRegionSettings.MaximumLinkCount = instanceSettings.GetInt("MaximumLinkCount",
+                                                                                 region.OpenRegionSettings
+                                                                                       .MaximumLinkCount);
+            region.OpenRegionSettings.MaximumLinkCountPhys = instanceSettings.GetInt("MaximumLinkCountPhys",
+                                                                                     region.OpenRegionSettings
+                                                                                           .MaximumLinkCountPhys);
 
 
-            m_settings.RenderWater = instanceSettings.GetBoolean("RenderWater", RenderWater);
-            m_settings.MaximumInventoryItemsTransfer = instanceSettings.GetInt("MaximumInventoryItemsTransfer",
-                                                                               MaximumInventoryItemsTransfer);
-            m_settings.DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap", DisplayMinimap);
-            m_settings.AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims", AllowPhysicalPrims);
-            m_settings.ClampPrimSizes = instanceSettings.GetBoolean("ClampPrimSizes", ClampPrimSizes);
-            m_settings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance", ForceDrawDistance);
+            region.OpenRegionSettings.RenderWater = instanceSettings.GetBoolean("RenderWater",
+                                                                                region.OpenRegionSettings.RenderWater);
+            region.OpenRegionSettings.MaximumInventoryItemsTransfer =
+                instanceSettings.GetInt("MaximumInventoryItemsTransfer",
+                                        region.OpenRegionSettings.MaximumInventoryItemsTransfer);
+            region.OpenRegionSettings.DisplayMinimap = instanceSettings.GetBoolean("DisplayMinimap",
+                                                                                   region.OpenRegionSettings
+                                                                                         .DisplayMinimap);
+            region.OpenRegionSettings.AllowPhysicalPrims = instanceSettings.GetBoolean("AllowPhysicalPrims",
+                                                                                       region.OpenRegionSettings
+                                                                                             .AllowPhysicalPrims);
+            region.OpenRegionSettings.ForceDrawDistance = instanceSettings.GetBoolean("ForceDrawDistance",
+                                                                                      region.OpenRegionSettings
+                                                                                            .ForceDrawDistance);
 
-            string offset = instanceSettings.GetString("OffsetOfUTC", OffsetOfUTC.ToString());
+            string offset = instanceSettings.GetString("OffsetOfUTC", region.OpenRegionSettings.OffsetOfUTC.ToString());
             int off;
             if (!int.TryParse(offset, out off))
             {
@@ -407,19 +402,23 @@ namespace Aurora.Modules.OpenRegionSettingsModule
                 else if (offset == "UTC" || offset == "GMT")
                     off = 0;
             }
-            m_settings.OffsetOfUTC = off;
-            m_settings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST", OffsetOfUTCDST);
-            m_settings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode", EnableTeenMode);
-            m_settings.ShowTags = instanceSettings.GetInt("ShowTags", ShowTags);
-            m_settings.MaxGroups = instanceSettings.GetInt("MaxGroups", MaxGroups);
-            m_settings.AllowParcelWindLight = instanceSettings.GetBoolean("AllowParcelWindLight", AllowParcelWindLight);
+            region.OpenRegionSettings.OffsetOfUTC = off;
+            region.OpenRegionSettings.OffsetOfUTCDST = instanceSettings.GetBoolean("OffsetOfUTCDST",
+                                                                                   region.OpenRegionSettings
+                                                                                         .OffsetOfUTCDST);
+            region.OpenRegionSettings.EnableTeenMode = instanceSettings.GetBoolean("EnableTeenMode",
+                                                                                   region.OpenRegionSettings
+                                                                                         .EnableTeenMode);
+            region.OpenRegionSettings.ShowTags = instanceSettings.GetInt("ShowTags", region.OpenRegionSettings.ShowTags);
+            region.OpenRegionSettings.MaxGroups = instanceSettings.GetInt("MaxGroups",
+                                                                          region.OpenRegionSettings.MaxGroups);
 
             string defaultunderpants = instanceSettings.GetString("DefaultUnderpants",
-                                                                  m_settings.DefaultUnderpants.ToString());
-            UUID.TryParse(defaultunderpants, out m_settings.m_DefaultUnderpants);
+                                                                  region.OpenRegionSettings.DefaultUnderpants.ToString());
+            UUID.TryParse(defaultunderpants, out region.OpenRegionSettings.m_DefaultUnderpants);
             string defaultundershirt = instanceSettings.GetString("DefaultUndershirt",
-                                                                  m_settings.DefaultUndershirt.ToString());
-            UUID.TryParse(defaultundershirt, out m_settings.m_DefaultUndershirt);
+                                                                  region.OpenRegionSettings.DefaultUndershirt.ToString());
+            UUID.TryParse(defaultundershirt, out region.OpenRegionSettings.m_DefaultUndershirt);
         }
 
         #endregion
@@ -441,7 +440,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             OSD item = BuildOpenRegionInfo(presence);
             IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();
             if (eq != null)
-                eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionHandle);
+                eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionID);
         }
 
         public OSD BuildOpenRegionInfo(IScenePresence sp)
@@ -450,13 +449,8 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
             OSDMap body = new OSDMap();
 
-
-            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-            if (orsc != null)
-            {
-                if (sp.Scene.Permissions.CanIssueEstateCommand(sp.UUID, false))
-                    body.Add("EditURL", OSD.FromString(orsc.AddOpenRegionSettingsHTMLPage(sp.Scene.RegionInfo.RegionID)));
-            }
+            if (sp.Scene.Permissions.CanIssueEstateCommand(sp.UUID, false))
+                body.Add("EditURL", OSD.FromString(AddOpenRegionSettingsHTMLPage(sp.Scene)));
 
             if (m_settings.MaxDragDistance != -1)
                 body.Add("MaxDragDistance", OSD.FromReal(m_settings.MaxDragDistance));
@@ -478,7 +472,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
                 body.Add("MaxHollowSize", OSD.FromReal(m_settings.MaximumHollowSize));
             if (m_settings.MinimumHoleSize != -1)
                 body.Add("MinHoleSize", OSD.FromReal(m_settings.MinimumHoleSize));
-            body.Add("EnforceMaxBuild", OSD.FromInteger(m_settings.ClampPrimSizes ? 1 : 0));
+            body.Add("EnforceMaxBuild", OSD.FromInteger(1));
 
             if (m_settings.MaximumLinkCount != -1)
                 body.Add("MaxLinkCount", OSD.FromInteger(m_settings.MaximumLinkCount));
@@ -508,7 +502,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             body.Add("ShowTags", OSD.FromInteger(m_settings.ShowTags));
             if (m_settings.MaxGroups != -1)
                 body.Add("MaxGroups", OSD.FromInteger(m_settings.MaxGroups));
-            body.Add("AllowParcelWindLight", OSD.FromInteger(m_settings.AllowParcelWindLight ? 1 : 0));
+            body.Add("AllowParcelWindLight", 1);
 
             //Add all the generic ones
             foreach (KeyValuePair<string, string> KVP in additionalKVPs)
@@ -519,6 +513,77 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             map.Add("body", body);
             map.Add("message", OSD.FromString("OpenRegionInfo"));
             return map;
+        }
+
+        #endregion
+
+        #region ORS HTML
+
+        public string AddOpenRegionSettingsHTMLPage(IScene scene)
+        {
+            Dictionary<string, object> vars = new Dictionary<string, object>();
+            OpenRegionSettings settings = scene.RegionInfo.OpenRegionSettings;
+            vars.Add("Default Draw Distance", settings.DefaultDrawDistance.ToString());
+            vars.Add("Force Draw Distance", settings.ForceDrawDistance ? "checked" : "");
+            vars.Add("Max Drag Distance", settings.MaxDragDistance.ToString());
+            vars.Add("Max Prim Scale", settings.MaximumPrimScale.ToString());
+            vars.Add("Min Prim Scale", settings.MinimumPrimScale.ToString());
+            vars.Add("Max Physical Prim Scale", settings.MaximumPhysPrimScale.ToString());
+            vars.Add("Max Hollow Size", settings.MaximumHollowSize.ToString());
+            vars.Add("Min Hole Size", settings.MinimumHoleSize.ToString());
+            vars.Add("Max Link Count", settings.MaximumLinkCount.ToString());
+            vars.Add("Max Link Count Phys", settings.MaximumLinkCountPhys.ToString());
+            vars.Add("Max Inventory Items To Transfer", settings.MaximumInventoryItemsTransfer.ToString());
+            vars.Add("Terrain Scale", settings.TerrainDetailScale.ToString());
+            vars.Add("Show Tags", settings.ShowTags.ToString());
+            vars.Add("Render Water", settings.RenderWater ? "checked" : "");
+            vars.Add("Allow Minimap", settings.DisplayMinimap ? "checked" : "");
+            vars.Add("Allow Physical Prims", settings.AllowPhysicalPrims ? "checked" : "");
+            vars.Add("Enable Teen Mode", settings.EnableTeenMode ? "checked" : "");
+            vars.Add("Enforce Max Build Constraints", "checked");
+            string HTMLPage = "";
+            string path = Util.BasePathCombine(System.IO.Path.Combine("data", "OpenRegionSettingsPage.html"));
+            if (System.IO.File.Exists(path))
+                HTMLPage = System.IO.File.ReadAllText(path);
+            return CSHTMLCreator.AddHTMLPage(HTMLPage, "", "OpenRegionSettings", vars, (newVars) =>
+                                                                                           {
+                                                                                               ParseUpdatedList(scene,
+                                                                                                                newVars);
+                                                                                               return
+                                                                                                   AddOpenRegionSettingsHTMLPage
+                                                                                                       (scene);
+                                                                                           });
+        }
+
+        private void ParseUpdatedList(IScene scene, Dictionary<string, string> vars)
+        {
+            OpenRegionSettings settings = scene.RegionInfo.OpenRegionSettings;
+            settings.DefaultDrawDistance = floatParse(vars["Default Draw Distance"]);
+            settings.ForceDrawDistance = vars["Force Draw Distance"] != null;
+            settings.MaxDragDistance = floatParse(vars["Max Drag Distance"]);
+            settings.MaximumPrimScale = floatParse(vars["Max Prim Scale"]);
+            settings.MinimumPrimScale = floatParse(vars["Min Prim Scale"]);
+            settings.MaximumPhysPrimScale = floatParse(vars["Max Physical Prim Scale"]);
+            settings.MaximumHollowSize = floatParse(vars["Max Hollow Size"]);
+            settings.MinimumHoleSize = floatParse(vars["Min Hole Size"]);
+            settings.MaximumLinkCount = (int) floatParse(vars["Max Link Count"]);
+            settings.MaximumLinkCountPhys = (int) floatParse(vars["Max Link Count Phys"]);
+            settings.MaximumInventoryItemsTransfer = (int) floatParse(vars["Max Inventory Items To Transfer"]);
+            settings.TerrainDetailScale = floatParse(vars["Terrain Scale"]);
+            settings.ShowTags = (int) floatParse(vars["Show Tags"]);
+            settings.RenderWater = vars["Render Water"] != null;
+            settings.DisplayMinimap = vars["Allow Minimap"] != null;
+            settings.AllowPhysicalPrims = vars["Allow Physical Prims"] != null;
+            settings.EnableTeenMode = vars["Enable Teen Mode"] != null;
+            scene.RegionInfo.OpenRegionSettings = settings;
+        }
+
+        private float floatParse(string p)
+        {
+            float d = 0;
+            if (!float.TryParse(p, out d))
+                d = 0;
+            return d;
         }
 
         #endregion

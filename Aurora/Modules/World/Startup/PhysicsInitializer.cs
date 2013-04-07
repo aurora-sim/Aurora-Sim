@@ -26,9 +26,12 @@
  */
 
 using System;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Startup
 {
@@ -67,8 +70,7 @@ namespace Aurora.Modules.Startup
             PhysicsPluginManager physicsPluginManager = new PhysicsPluginManager();
             physicsPluginManager.LoadPluginsFromAssemblies(Util.BasePathCombine(Path));
 
-            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo,
-                                                                       scene);
+            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene);
             scene.PhysicsScene = pScene;
         }
 

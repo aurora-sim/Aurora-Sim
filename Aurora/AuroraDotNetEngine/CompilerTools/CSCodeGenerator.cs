@@ -28,8 +28,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Tools;
+using Aurora.Framework.Utilities;
 using Aurora.ScriptEngineParser;
+using Tools;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
@@ -117,7 +118,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
     }
 
-    public class CSCodeGenerator : IDisposable
+    public sealed class CSCodeGenerator : IDisposable
     {
         private readonly List<string> AfterFuncCalls = new List<string>();
         private readonly HashSet<string> DTFunctions = new HashSet<string>();
@@ -125,17 +126,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         //        public Dictionary<string, string> IenFunctions = new Dictionary<string, string>();
         private readonly Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
         private Dictionary<string, SYMBOL> DuplicatedGlobalVariables = new Dictionary<string, SYMBOL>();
-        private Dictionary<string, Dictionary<string, SYMBOL>> DuplicatedLocalVariables = new Dictionary<string, Dictionary<string, SYMBOL>>();
+
+        private Dictionary<string, Dictionary<string, SYMBOL>> DuplicatedLocalVariables =
+            new Dictionary<string, Dictionary<string, SYMBOL>>();
 
         /// <summary>
-        ///   This saves the variables in methods so that we can make sure multiple variables do not have the same name, and if they do, rename/assign them to the correct variable name
+        ///     This saves the variables in methods so that we can make sure multiple variables do not have the same name, and if they do, rename/assign them to the correct variable name
         /// </summary>
         private readonly Dictionary<string, GlobalVar> MethodVariables = new Dictionary<string, GlobalVar>();
 
         private readonly List<string> MethodsToAdd = new List<string>();
 
         /// <summary>
-        ///   This contains a list of variables that we need to rename because of some constraint
+        ///     This contains a list of variables that we need to rename because of some constraint
         /// </summary>
         private readonly Dictionary<string, VarRename> VariablesToRename = new Dictionary<string, VarRename>();
 
@@ -143,9 +146,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             new Dictionary<string, List<ArgumentDeclarationList>>();
 
         /// <summary>
-        ///   Param 1 - the API function name, Param 2 - the API name
+        ///     Param 1 - the API function name, Param 2 - the API name
         /// </summary>
-        private readonly Dictionary<string, IScriptApi> m_apiFunctions = new Dictionary<string, IScriptApi>();
+        private static Dictionary<string, IScriptApi> m_apiFunctions = null;
 
         private readonly Compiler m_compiler;
 
@@ -158,16 +161,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private bool isAdditionExpression;
         private int m_CSharpCol; // the current column of generated C# code
         private int m_CSharpLine; // the current line of generated C# code
-        private SYMBOL m_astRoot;
         private int m_braceCount; // for indentation
         private int m_indentWidth = 4; // for indentation
         private bool m_isInEnumeratedDeclaration;
         private Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> m_positionMap;
         private Parser p;
-
+        private static yyLSLSyntax _LSLSyntax = new yyLSLSyntax();
 
         /// <summary>
-        ///   Creates an 'empty' CSCodeGenerator instance.
+        ///     Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
         public CSCodeGenerator(Compiler compiler)
         {
@@ -248,25 +250,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             ResetCounters();
             m_compiler = compiler;
 
-            m_apiFunctions = compiler.ScriptEngine.GetAllFunctionNamesAPIs();
+            if(m_apiFunctions == null)
+                m_apiFunctions = compiler.ScriptEngine.GetAllFunctionNamesAPIs();
         }
 
         /// <summary>
-        ///   Get the mapping between LSL and C# line/column number.
+        ///     Get the mapping between LSL and C# line/column number.
         /// </summary>
-        /// <returns>Dictionary\<KeyValuePair\<int, int\>, KeyValuePair\<int, int\>\>.</returns>
+        /// <returns>
+        ///     Dictionary&lt;KeyValuePair&lt;int, int&gt;, KeyValuePair&lt;int, int&gt;&gt;
+        /// </returns>
         public Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap
         {
             get { return m_positionMap; }
-        }
-
-        /// <summary>
-        ///   Get the mapping between LSL and C# line/column number.
-        /// </summary>
-        /// <returns>SYMBOL pointing to root of the abstract syntax tree.</returns>
-        public SYMBOL ASTRoot
-        {
-            get { return m_astRoot; }
         }
 
         #region IDisposable Members
@@ -279,12 +275,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         #endregion
 
         /// <summary>
-        ///   Resets various counters and metadata.
+        ///     Resets various counters and metadata.
         /// </summary>
         private void ResetCounters()
         {
             //NOTE: This takes a VERY long time to rebuild. Ideally, this should be reset, but interesting errors are happening when it is reset..
-            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
+            p = new LSLSyntax(_LSLSyntax, new ErrorHandler(true));
             MethodVariables.Clear();
             VariablesToRename.Clear();
             GlobalVariables.Clear();
@@ -293,7 +289,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             m_CSharpCol = 1;
             m_positionMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
             LocalMethods.Clear();
-            m_astRoot = null;
             IsParentEnumerable = false;
             OriginalScript = "";
             lock (FuncCalls)
@@ -315,41 +310,34 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         public static string CreateCompilerScript(Compiler compiler,
-            List<string> MethodsToAdd, string ScriptClass)
+                                                  List<string> MethodsToAdd, string ScriptClass)
         {
-            string compiledScript = "";
+            StringBuilder sb = new StringBuilder();
             foreach (IScriptApi api in compiler.ScriptEngine.GetAPIs())
                 foreach (string nameSpace in api.NamespaceAdditions)
-                    compiledScript += "using " + nameSpace + ";\n";
-            compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;\n";
-            compiledScript += "using LSL_Types = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types;\n";
-            compiledScript += "using System;\n";
+                    sb.AppendFormat("using {0};\n", nameSpace);
+            sb.AppendLine(
+@"using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using LSL_Types = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types;
+using System;
+namespace Script
+{
+[Serializable]
+public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass
+{");
 
-            compiledScript += "namespace Script\n";
-            compiledScript += "{\n";
+            sb.AppendLine(ScriptClass);
+            sb.AppendLine(string.Join("\n", MethodsToAdd));
 
-            compiledScript += "[Serializable]\n";
-            compiledScript +=
-                "public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass\n";
-            compiledScript += "{\n";
+            sb.AppendLine("}}");
 
-            compiledScript += ScriptClass;
-            foreach (string method in MethodsToAdd)
-            {
-                compiledScript += method;
-            }
-
-            compiledScript += "}\n"; // Close Class
-
-            compiledScript += "}\n"; // Close Namespace
-
-            return compiledScript;
+            return sb.ToString();
         }
 
         /// <summary>
-        ///   Generate the code from the AST we have.
+        ///     Generate the code from the AST we have.
         /// </summary>
-        /// <param name = "script">The LSL source as a string.</param>
+        /// <param name="script">The LSL source as a string.</param>
         /// <returns>String containing the generated C# code.</returns>
         public string Convert(string script)
         {
@@ -395,25 +383,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return "Error parsing the script. " + message;
             }
 
-            m_astRoot = codeTransformer.Transform(LocalMethods, LocalMethodArguements);
+            SYMBOL root = codeTransformer.Transform(LocalMethods, LocalMethodArguements);
             DuplicatedGlobalVariables = codeTransformer.DuplicatedGlobalVars;
             DuplicatedLocalVariables = codeTransformer.DuplicatedLocalVars;
             OriginalScript = script;
-            string returnstring = "";
+            StringBuilder retVal = new StringBuilder();
 
             // line number
             //m_CSharpLine += 3;
 
             // here's the payload
-            returnstring += GenerateLine();
-            foreach (SYMBOL s in m_astRoot.kids)
-                returnstring += GenerateNode(s);
+            retVal.Append(GenerateLine());
+            foreach (SYMBOL s in root.kids)
+                retVal.Append(GenerateNode(s));
 
-            returnstring += GenerateFireEventMethod();
+            retVal.Append(GenerateFireEventMethod());
 
             // Removes all carriage return characters which may be generated in Windows platform. 
             //Is there a cleaner way of doing this?
-            returnstring = returnstring.Replace("\r", "");
+            string returnstring = retVal.ToString().Replace("\r", "");
 
             try
             {
@@ -430,7 +418,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateFireEventMethod()
         {
             StringBuilder retVal = new StringBuilder();
-            retVal.AppendLine("public override System.Collections.IEnumerator FireEvent (string evName, object[] parameters)");
+            retVal.AppendLine(
+                "public override System.Collections.IEnumerator FireEvent (string evName, object[] parameters)");
             retVal.AppendLine("{");
             foreach (KeyValuePair<string, List<ArgumentDeclarationList>> method in m_allMethods)
             {
@@ -440,7 +429,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     for (int b = 0; b < t.kids.Count; b++)
                     {
-                        retVal.Append("(" + ((Declaration)t.kids[b]).Datatype + ")");
+                        retVal.Append("(" + ((Declaration) t.kids[b]).Datatype + ")");
                         retVal.Append("parameters[" + b + "]");
                         if (b != t.kids.Count - 1)
                             retVal.Append(", ");
@@ -467,7 +456,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 if (AddLine.Contains("float"))
                 {
                     if (line.Contains("e") && !line.Contains("(") && !line.Contains(")"))
-                    // Looking for exponents, but not for functions that have ()
+                        // Looking for exponents, but not for functions that have ()
                     {
                         //Should have this - float *** = 151e9;
                         string[] SplitBeforeE = AddLine.Split('='); // Split at the e so we can look at the syntax
@@ -537,7 +526,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         {
                             string AddInsideLine = parline;
                             //throw out all odd numbered lines as they are inside ""
-                            if (lineNumber % 2 != 1)
+                            if (lineNumber%2 != 1)
                             {
                                 string[] SplitLineA = AddLine.Split('<');
                                 if (SplitLineA.Length > 1)
@@ -585,14 +574,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Checks the C# script for the correct casts in events
-        ///   This stops errors from misformed events ex. 'touch(vector3 position)' instead of 'touch(int touch)'
+        ///     Checks the C# script for the correct casts in events
+        ///     This stops errors from misformed events ex. 'touch(vector3 position)' instead of 'touch(int touch)'
         /// </summary>
-        /// <param name = "script"></param>
+        /// <param name="script"></param>
         private void CheckEventCasts(string script)
         {
             CheckEvent(script, "default");
-            string[] States = OriginalScript.Split(new string[] { "state " }, StringSplitOptions.RemoveEmptyEntries);
+            string[] States = OriginalScript.Split(new string[] {"state "}, StringSplitOptions.RemoveEmptyEntries);
             foreach (string state in States)
             {
                 string stateName = state.Split(' ')[0].Split('\n')[0];
@@ -1443,8 +1432,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 i++;
             }
             throw new InvalidOperationException(String.Format("({0},{1}) {2}",
-                                              lineNumber,
-                                              charNumber, Problem + " in '" + EventName + "'\n"));
+                                                              lineNumber,
+                                                              charNumber, Problem + " in '" + EventName + "'\n"));
         }
 
         private void AddWarning(string warning)
@@ -1453,152 +1442,149 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Recursively called to generate each type of node. Will generate this
-        ///   node, then all it's children.
+        ///     Recursively called to generate each type of node. Will generate this
+        ///     node, then all it's children.
         /// </summary>
-        /// <param name = "s">The current node to generate code for.</param>
+        /// <param name="s">The current node to generate code for.</param>
         /// <returns>String containing C# code for SYMBOL s.</returns>
         private string GenerateNode(SYMBOL s)
         {
-            string fullretstr = "";
-
             // make sure to put type lower in the inheritance hierarchy first
             // ie: since IdentArgument and ExpressionArgument inherit from
             // Argument, put IdentArgument and ExpressionArgument before Argument
             if (s is GlobalFunctionDefinition)
             {
-                fullretstr += GenerateGlobalFunctionDefinition((GlobalFunctionDefinition)s);
+                return GenerateGlobalFunctionDefinition((GlobalFunctionDefinition) s);
             }
             else if (s is GlobalVariableDeclaration)
             {
-                fullretstr += GenerateGlobalVariableDeclaration((GlobalVariableDeclaration)s);
+                return GenerateGlobalVariableDeclaration((GlobalVariableDeclaration) s);
             }
             else if (s is State)
             {
-                fullretstr += GenerateState((State)s);
+                return GenerateState((State) s);
             }
             else if (s is CompoundStatement)
             {
-                fullretstr += GenerateCompoundStatement((CompoundStatement)s);
+                return GenerateCompoundStatement((CompoundStatement) s);
             }
             else if (s is Declaration)
             {
-                fullretstr += GenerateDeclaration((Declaration)s);
+                return GenerateDeclaration((Declaration) s);
             }
             else if (s is Statement)
             {
-                fullretstr += GenerateStatement((Statement)s);
+                return GenerateStatement((Statement) s);
             }
             else if (s is ReturnStatement)
             {
-                fullretstr += GenerateReturnStatement((ReturnStatement)s);
+                return GenerateReturnStatement((ReturnStatement) s);
             }
             else if (s is JumpLabel)
             {
-                fullretstr += GenerateJumpLabel((JumpLabel)s);
+                return GenerateJumpLabel((JumpLabel) s);
             }
             else if (s is JumpStatement)
             {
-                fullretstr += GenerateJumpStatement((JumpStatement)s);
+                return GenerateJumpStatement((JumpStatement) s);
             }
             else if (s is StateChange)
             {
-                fullretstr += GenerateStateChange((StateChange)s);
+                return GenerateStateChange((StateChange) s);
             }
             else if (s is IfStatement)
             {
-                fullretstr += GenerateIfStatement((IfStatement)s);
+                return GenerateIfStatement((IfStatement) s);
             }
             else if (s is WhileStatement)
             {
-                fullretstr += GenerateWhileStatement((WhileStatement)s);
+                return GenerateWhileStatement((WhileStatement) s);
             }
             else if (s is DoWhileStatement)
             {
-                fullretstr += GenerateDoWhileStatement((DoWhileStatement)s);
+                return GenerateDoWhileStatement((DoWhileStatement) s);
             }
             else if (s is ForLoop)
             {
-                fullretstr += GenerateForLoop((ForLoop)s);
+                return GenerateForLoop((ForLoop) s);
             }
             else if (s is ArgumentList)
             {
-                fullretstr += GenerateArgumentList((ArgumentList)s);
+                return GenerateArgumentList((ArgumentList) s);
             }
             else if (s is Assignment)
             {
-                fullretstr += GenerateAssignment((Assignment)s);
+                return GenerateAssignment((Assignment) s);
             }
             else if (s is BinaryExpression)
             {
-                fullretstr += GenerateBinaryExpression((BinaryExpression)s, false, "");
+                return GenerateBinaryExpression((BinaryExpression) s, false, "");
             }
             else if (s is ParenthesisExpression)
             {
-                fullretstr += GenerateParenthesisExpression((ParenthesisExpression)s);
+                return GenerateParenthesisExpression((ParenthesisExpression) s);
             }
             else if (s is UnaryExpression)
             {
-                fullretstr += GenerateUnaryExpression((UnaryExpression)s);
+                return GenerateUnaryExpression((UnaryExpression) s);
             }
             else if (s is IncrementDecrementExpression)
             {
-                fullretstr += GenerateIncrementDecrementExpression((IncrementDecrementExpression)s);
+                return GenerateIncrementDecrementExpression((IncrementDecrementExpression) s);
             }
             else if (s is TypecastExpression)
             {
-                fullretstr += GenerateTypecastExpression((TypecastExpression)s);
+                return GenerateTypecastExpression((TypecastExpression) s);
             }
             else if (s is FunctionCall)
             {
-                fullretstr += GenerateFunctionCall((FunctionCall)s, true);
+                return GenerateFunctionCall((FunctionCall) s, true);
             }
             else if (s is VectorConstant)
             {
-                fullretstr += GenerateVectorConstant((VectorConstant)s);
+                return GenerateVectorConstant((VectorConstant) s);
             }
             else if (s is RotationConstant)
             {
-                fullretstr += GenerateRotationConstant((RotationConstant)s);
+                return GenerateRotationConstant((RotationConstant) s);
             }
             else if (s is ListConstant)
             {
-                fullretstr += GenerateListConstant((ListConstant)s);
+                return GenerateListConstant((ListConstant)s);
             }
             else if (s is Constant)
             {
-                fullretstr += GenerateConstant((Constant)s);
+                return GenerateConstant((Constant)s);
             }
             else if (s is IdentDotExpression)
             {
-                fullretstr += Generate(
-                    CheckName(((IdentDotExpression)s).Name) + "." + ((IdentDotExpression)s).Member, s);
+                return Generate(CheckName(((IdentDotExpression) s).Name) + "." + ((IdentDotExpression) s).Member, s);
             }
             else if (s is IdentExpression)
             {
-                fullretstr += Generate(CheckName(((IdentExpression)s).Name), s);
+                return Generate(CheckName(((IdentExpression)s).Name), s);
             }
             else if (s is IDENT)
             {
-                fullretstr += Generate(CheckName(((TOKEN)s).yytext), s);
+                return Generate(CheckName(((TOKEN) s).yytext), s);
             }
             else
             {
+                StringBuilder retVal = new StringBuilder();
                 foreach (SYMBOL kid in s.kids)
-                {
-                    fullretstr += GenerateNode(kid);
-                }
+                    retVal.Append(GenerateNode(kid));
+                return retVal.ToString();
             }
-            return fullretstr;
         }
 
         private GlobalFunctionDefinition _currentGlobalFunctionDeclaration = null;
         private StateEvent _currentLocalFunctionDeclaration = null;
         private State _currentLocalStateDeclaration = null;
+
         /// <summary>
-        ///   Generates the code for a GlobalFunctionDefinition node.
+        ///     Generates the code for a GlobalFunctionDefinition node.
         /// </summary>
-        /// <param name = "gf">The GlobalFunctionDefinition node.</param>
+        /// <param name="gf">The GlobalFunctionDefinition node.</param>
         /// <returns>String containing C# code for GlobalFunctionDefinition gf.</returns>
         private string GenerateGlobalFunctionDefinition(GlobalFunctionDefinition gf)
         {
@@ -1618,7 +1604,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 else
                     remainingKids.Add(kid);
 
-            retstr.Append(GenerateIndented(String.Format("public System.Collections.IEnumerator {0}(", CheckName(gf.Name)), gf));
+            retstr.Append(
+                GenerateIndented(String.Format("public System.Collections.IEnumerator {0}(", CheckName(gf.Name)), gf));
 
             IsParentEnumerable = true;
 
@@ -1626,7 +1613,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             List<ArgumentDeclarationList> args = new List<ArgumentDeclarationList>();
             foreach (SYMBOL kid in argumentDeclarationListKids)
             {
-                ArgumentDeclarationList ADL = (ArgumentDeclarationList)kid;
+                ArgumentDeclarationList ADL = (ArgumentDeclarationList) kid;
                 args.Add(ADL);
                 retstr.Append(GenerateArgumentDeclarationList(ADL));
             }
@@ -1657,31 +1644,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Generates the code for a GlobalVariableDeclaration node.
+        ///     Generates the code for a GlobalVariableDeclaration node.
         /// </summary>
-        /// <param name = "gv">The GlobalVariableDeclaration node.</param>
+        /// <param name="gv">The GlobalVariableDeclaration node.</param>
         /// <returns>String containing C# code for GlobalVariableDeclaration gv.</returns>
         private string GenerateGlobalVariableDeclaration(GlobalVariableDeclaration gv)
         {
-            string retstr = "";
+            StringBuilder retVal = new StringBuilder();
 
             foreach (SYMBOL s in gv.kids)
             {
-                retstr += Indent();
-                retstr += "public ";
+                retVal.Append(Indent());
+                retVal.Append("public ");
                 if (s is Assignment)
                 {
-                    string innerretstr = "";
-
                     Assignment a = s as Assignment;
                     List<string> identifiers = new List<string>();
 
                     checkForMultipleAssignments(identifiers, a);
 
                     IsaGlobalVar = true;
-                    SYMBOL variableName = (SYMBOL)a.kids.Pop();
+                    SYMBOL variableName = (SYMBOL) a.kids.Pop();
                     string VarName = GenerateNode(variableName);
-                    innerretstr += VarName;
+                    retVal.Append(VarName);
                     IsaGlobalVar = false;
 
                     #region Find the var name and type
@@ -1692,23 +1677,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                     #endregion
 
-                    if (DuplicatedGlobalVariables.ContainsKey(((Declaration)variableName).Id))
+                    if (DuplicatedGlobalVariables.ContainsKey(((Declaration) variableName).Id))
                     {
                         if (a.kids.Count == 1)
                         {
-                            SYMBOL assignmentChild = (SYMBOL)a.kids[0];
+                            SYMBOL assignmentChild = (SYMBOL) a.kids[0];
                             if (assignmentChild is IdentExpression)
                             {
-                                IdentExpression identEx = (IdentExpression)assignmentChild;
+                                IdentExpression identEx = (IdentExpression) assignmentChild;
                             }
                             else if (assignmentChild is ListConstant)
                             {
-                                ListConstant listConst = (ListConstant)assignmentChild;
+                                ListConstant listConst = (ListConstant) assignmentChild;
                                 foreach (SYMBOL listChild in listConst.kids)
                                 {
                                     if (listChild is ArgumentList)
                                     {
-                                        ArgumentList argList = (ArgumentList)listChild;
+                                        ArgumentList argList = (ArgumentList) listChild;
                                         int i = 0;
                                         bool changed = false;
                                         object[] p = new object[argList.kids.Count];
@@ -1717,7 +1702,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                             p[i] = objChild;
                                             if (objChild is IdentExpression)
                                             {
-                                                IdentExpression identEx = (IdentExpression)objChild;
+                                                IdentExpression identEx = (IdentExpression) objChild;
                                             }
                                             i++;
                                         }
@@ -1732,10 +1717,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                             else if (assignmentChild is Constant)
                             {
-                                Constant identEx = (Constant)assignmentChild;
+                                Constant identEx = (Constant) assignmentChild;
                                 string value = GetValue(identEx);
-                                Constant dupConstant = (Constant)DuplicatedGlobalVariables[dec.Id];
-                                dupConstant.Value = dupConstant.Value == null ? GetValue(dupConstant) : dupConstant.Value;
+                                Constant dupConstant = (Constant) DuplicatedGlobalVariables[dec.Id];
+                                dupConstant.Value = dupConstant.Value == null
+                                                        ? GetValue(dupConstant)
+                                                        : dupConstant.Value;
                                 if (value != dupConstant.Value)
                                 {
                                     return "";
@@ -1744,61 +1731,58 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         }
                     }
 
-                    innerretstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
+                    retVal.Append(Generate(String.Format(" {0} ", a.AssignmentType), a));
                     foreach (SYMBOL kid in a.kids)
                     {
-                        innerretstr += CheckIfGlobalVariable(varName, type, kid);
+                        retVal.Append(CheckIfGlobalVariable(varName, type, kid));
                     }
-
-                    retstr += innerretstr;
                 }
                 else
-                    retstr += GenerateNode(s);
+                    retVal.Append(GenerateNode(s));
 
-                retstr += GenerateLine(";");
+                retVal.Append(GenerateLine(";"));
             }
 
-            return retstr;
+            return retVal.ToString();
         }
 
         private string GetValue(Constant identEx)
         {
             if (identEx.Value != null)
                 return identEx.Value;
+            StringBuilder retVal = new StringBuilder();
             if (identEx is VectorConstant)
             {
-                VectorConstant vc = (VectorConstant)identEx;
-                string retstr = "";
+                VectorConstant vc = (VectorConstant) identEx;
 
-                retstr += Generate(String.Format("new {0}(", vc.Type), vc);
-                retstr += GenerateNode((SYMBOL)vc.kids[0]);
-                retstr += Generate(", ");
-                retstr += GenerateNode((SYMBOL)vc.kids[1]);
-                retstr += Generate(", ");
-                retstr += GenerateNode((SYMBOL)vc.kids[2]);
-                retstr += Generate(")");
+                retVal.Append(Generate(String.Format("new {0}(", vc.Type), vc));
+                retVal.Append(GenerateNode((SYMBOL) vc.kids[0]));
+                retVal.Append(Generate(", "));
+                retVal.Append(GenerateNode((SYMBOL) vc.kids[1]));
+                retVal.Append(Generate(", "));
+                retVal.Append(GenerateNode((SYMBOL) vc.kids[2]));
+                retVal.Append(Generate(")"));
 
-                return retstr;
+                return retVal.ToString();
             }
             if (identEx is RotationConstant)
             {
-                RotationConstant rc = (RotationConstant)identEx;
-                string retstr = "";
+                RotationConstant rc = (RotationConstant) identEx;
 
-                retstr += Generate(String.Format("new {0}(", rc.Type), rc);
-                retstr += GenerateNode((SYMBOL)rc.kids[0]);
-                retstr += Generate(", ");
-                retstr += GenerateNode((SYMBOL)rc.kids[1]);
-                retstr += Generate(", ");
-                retstr += GenerateNode((SYMBOL)rc.kids[2]);
-                retstr += Generate(", ");
-                retstr += GenerateNode((SYMBOL)rc.kids[3]);
-                retstr += Generate(")");
+                retVal.Append(Generate(String.Format("new {0}(", rc.Type), rc));
+                retVal.Append(GenerateNode((SYMBOL) rc.kids[0]));
+                retVal.Append(Generate(", "));
+                retVal.Append(GenerateNode((SYMBOL) rc.kids[1]));
+                retVal.Append(Generate(", "));
+                retVal.Append(GenerateNode((SYMBOL) rc.kids[2]));
+                retVal.Append(Generate(", "));
+                retVal.Append(GenerateNode((SYMBOL) rc.kids[3]));
+                retVal.Append(Generate(")"));
 
-                return retstr;
+                return retVal.ToString();
             }
             if (identEx is ListConstant)
-                return GenerateListConstant((ListConstant)identEx);
+                return GenerateListConstant((ListConstant) identEx);
             return null;
         }
 
@@ -1848,10 +1832,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
                 else
                     GlobalVariables.Add(varName, new GlobalVar
-                    {
-                        Type = type,
-                        Value = globalVarValue
-                    });
+                                                     {
+                                                         Type = type,
+                                                         Value = globalVarValue
+                                                     });
                 return globalVarValue;
             }
             else if (kid is IdentExpression)
@@ -1872,10 +1856,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                 }
                 GlobalVariables.Add(varName, new GlobalVar
-                {
-                    Type = type,
-                    Value = globalVarValue
-                });
+                                                 {
+                                                     Type = type,
+                                                     Value = globalVarValue
+                                                 });
 
                 return globalVarValue;
             }
@@ -1893,28 +1877,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Generates the code for a State node.
+        ///     Generates the code for a State node.
         /// </summary>
-        /// <param name = "s">The State node.</param>
+        /// <param name="s">The State node.</param>
         /// <returns>String containing C# code for State s.</returns>
         private string GenerateState(State s)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             _currentLocalStateDeclaration = s;
 
             foreach (SYMBOL kid in s.kids)
                 if (kid is StateEvent)
-                    retstr += GenerateStateEvent((StateEvent)kid, s.Name);
+                    retVal.Append(GenerateStateEvent((StateEvent)kid, s.Name));
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a StateEvent node.
+        ///     Generates the code for a StateEvent node.
         /// </summary>
-        /// <param name = "se">The StateEvent node.</param>
-        /// <param name = "parentStateName">The name of the parent state.</param>
+        /// <param name="se">The StateEvent node.</param>
+        /// <param name="parentStateName">The name of the parent state.</param>
         /// <returns>String containing C# code for StateEvent se.</returns>
         private string GenerateStateEvent(StateEvent se, string parentStateName)
         {
@@ -1945,8 +1928,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             List<ArgumentDeclarationList> args = new List<ArgumentDeclarationList>();
             foreach (SYMBOL kid in argumentDeclarationListKids)
             {
-                args.Add(((ArgumentDeclarationList)kid));
-                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList)kid));
+                args.Add(((ArgumentDeclarationList) kid));
+                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList) kid));
             }
 
             m_allMethods.Add(String.Format("{0}_event_{1}", parentStateName, se.Name), args);
@@ -1964,82 +1947,79 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Generates the code for an ArgumentDeclarationList node.
+        ///     Generates the code for an ArgumentDeclarationList node.
         /// </summary>
-        /// <param name = "adl">The ArgumentDeclarationList node.</param>
+        /// <param name="adl">The ArgumentDeclarationList node.</param>
         /// <returns>String containing C# code for ArgumentDeclarationList adl.</returns>
         private string GenerateArgumentDeclarationList(ArgumentDeclarationList adl)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             int comma = adl.kids.Count - 1; // tells us whether to print a comma
 
             foreach (Declaration d in adl.kids)
             {
-                retstr += GenerateDeclaration(d);
+                retVal.Append(GenerateDeclaration(d));
                 //                retstr += Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
                 if (0 < comma--)
-                    retstr += Generate(", ");
+                    retVal.Append(Generate(", "));
             }
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for an ArgumentList node.
+        ///     Generates the code for an ArgumentList node.
         /// </summary>
-        /// <param name = "al">The ArgumentList node.</param>
+        /// <param name="al">The ArgumentList node.</param>
         /// <returns>String containing C# code for ArgumentList al.</returns>
         private string GenerateArgumentList(ArgumentList al)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             int comma = al.kids.Count - 1; // tells us whether to print a comma
 
             foreach (SYMBOL s in al.kids)
             {
-                retstr += GenerateNode(s);
+                retVal.Append(GenerateNode(s));
                 if (0 < comma--)
-                    retstr += Generate(", ");
+                    retVal.Append(Generate(", "));
             }
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a CompoundStatement node.
+        ///     Generates the code for a CompoundStatement node.
         /// </summary>
-        /// <param name = "cs">The CompoundStatement node.</param>
+        /// <param name="cs">The CompoundStatement node.</param>
         /// <returns>String containing C# code for CompoundStatement cs.</returns>
         private string GenerateCompoundStatement(CompoundStatement cs)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             // opening brace
-            retstr += GenerateIndentedLine("{");
+            retVal.Append(GenerateIndentedLine("{"));
             //            if (IsParentEnumerable)
             //                retstr += GenerateLine("if (CheckSlice()) yield return null;");
             m_braceCount++;
 
             foreach (SYMBOL kid in cs.kids)
                 if (kid is Statement && kid.kids.Top is BinaryExpression &&
-                    ((BinaryExpression)kid.kids.Top).ExpressionSymbol == "==")
+                    ((BinaryExpression) kid.kids.Top).ExpressionSymbol == "==")
                     continue;
                 else
-                    retstr += GenerateNode(kid);
+                    retVal.Append(GenerateNode(kid));
 
             // closing brace
             m_braceCount--;
 
-            retstr += GenerateIndentedLine("}");
+            retVal.Append(GenerateIndentedLine("}"));
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a Declaration node.
+        ///     Generates the code for a Declaration node.
         /// </summary>
-        /// <param name = "d">The Declaration node.</param>
+        /// <param name="d">The Declaration node.</param>
         /// <returns>String containing C# code for Declaration d.</returns>
         private string GenerateDeclaration(Declaration d)
         {
@@ -2082,18 +2062,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Generates the code for a Statement node.
+        ///     Generates the code for a Statement node.
         /// </summary>
-        /// <param name = "s">The Statement node.</param>
+        /// <param name="s">The Statement node.</param>
         /// <returns>String containing C# code for Statement s.</returns>
         private string GenerateStatement(Statement s)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             bool printSemicolon = true;
 
             bool marc = FuncCallsMarc();
-            retstr += Indent();
+            retVal.Append(Indent());
 
             if (0 < s.kids.Count)
             {
@@ -2113,27 +2092,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             List<string> identifiers = new List<string>();
                             checkForMultipleAssignments(identifiers, a);
 
-                            SYMBOL firstChild = (SYMBOL)a.kids[0];
+                            SYMBOL firstChild = (SYMBOL) a.kids[0];
                             bool retStrChanged = false;
                             if (firstChild is Declaration &&
-                                        DuplicatedLocalVariables[GetLocalDeclarationKey()].ContainsKey(((Declaration)firstChild).Id))
+                                DuplicatedLocalVariables[GetLocalDeclarationKey()].ContainsKey(
+                                    ((Declaration) firstChild).Id))
                             {
-                                Declaration dec = ((Declaration)firstChild);
+                                Declaration dec = ((Declaration) firstChild);
                                 if (a.kids.Count == 2)
                                 {
-                                    SYMBOL assignmentChild = (SYMBOL)a.kids[1];
+                                    SYMBOL assignmentChild = (SYMBOL) a.kids[1];
                                     if (assignmentChild is IdentExpression)
                                     {
-                                        IdentExpression identEx = (IdentExpression)assignmentChild;
+                                        IdentExpression identEx = (IdentExpression) assignmentChild;
                                     }
                                     else if (assignmentChild is ListConstant)
                                     {
-                                        ListConstant listConst = (ListConstant)assignmentChild;
+                                        ListConstant listConst = (ListConstant) assignmentChild;
                                         foreach (SYMBOL listChild in listConst.kids)
                                         {
                                             if (listChild is ArgumentList)
                                             {
-                                                ArgumentList argList = (ArgumentList)listChild;
+                                                ArgumentList argList = (ArgumentList) listChild;
                                                 int i = 0;
                                                 bool changed = false;
                                                 object[] p = new object[argList.kids.Count];
@@ -2142,7 +2122,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                                     p[i] = objChild;
                                                     if (objChild is IdentExpression)
                                                     {
-                                                        IdentExpression identEx = (IdentExpression)objChild;
+                                                        IdentExpression identEx = (IdentExpression) objChild;
                                                     }
                                                     i++;
                                                 }
@@ -2157,22 +2137,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     }
                                     else if (assignmentChild is Constant)
                                     {
-                                        Constant identEx = (Constant)assignmentChild;
+                                        Constant identEx = (Constant) assignmentChild;
                                         string value = GetValue(identEx);
-                                        Constant dupConstant = (Constant)DuplicatedLocalVariables[GetLocalDeclarationKey()][dec.Id];
-                                        dupConstant.Value = dupConstant.Value == null ? GetValue(dupConstant) : dupConstant.Value;
+                                        Constant dupConstant =
+                                            (Constant) DuplicatedLocalVariables[GetLocalDeclarationKey()][dec.Id];
+                                        dupConstant.Value = dupConstant.Value == null
+                                                                ? GetValue(dupConstant)
+                                                                : dupConstant.Value;
                                         if (value != dupConstant.Value)
                                         {
                                             retStrChanged = true;
-                                            retstr += dec.Id;
+                                            retVal.Append(dec.Id);
                                             a.kids.Pop();
                                         }
                                     }
                                 }
                             }
                             if (!retStrChanged)
-                                retstr += GenerateNode((SYMBOL)a.kids.Pop());
-                            retstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
+                                retVal.Append(GenerateNode((SYMBOL) a.kids.Pop()));
+                            retVal.Append(Generate(String.Format(" {0} ", a.AssignmentType), a));
                             foreach (SYMBOL akid in a.kids)
                             {
                                 if (akid is BinaryExpression)
@@ -2181,32 +2164,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
                                     {
                                         // special case handling for logical and/or, see Mantis 3174
-                                        retstr += "((bool)(";
-                                        retstr += GenerateNode((SYMBOL)be.kids.Pop());
-                                        retstr += "))";
-                                        retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)),
-                                                           be);
-                                        retstr += "((bool)(";
+                                        retVal.Append("((bool)(");
+                                        retVal.Append(GenerateNode((SYMBOL) be.kids.Pop()));
+                                        retVal.Append("))");
+                                        retVal.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)),
+                                                           be));
+                                        retVal.Append("((bool)(");
                                         foreach (SYMBOL bkid in be.kids)
-                                            retstr += GenerateNode(bkid);
-                                        retstr += "))";
+                                            retVal.Append(GenerateNode(bkid));
+                                        retVal.Append("))");
                                     }
                                     else
                                     {
-                                        retstr += GenerateNode((SYMBOL)be.kids.Pop());
-                                        retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
+                                        retVal.Append(GenerateNode((SYMBOL) be.kids.Pop()));
+                                        retVal.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol), be));
                                         foreach (SYMBOL kidb in be.kids)
                                         {
                                             //                                            if (kidb is FunctionCallExpression)
                                             {
-                                                retstr += GenerateNode(kidb);
+                                                retVal.Append(GenerateNode(kidb));
                                             }
                                         }
                                     }
                                 }
                                 else
                                 {
-                                    retstr += GenerateNode(akid);
+                                    retVal.Append(GenerateNode(akid));
                                 }
                             }
                         }
@@ -2217,16 +2200,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 foreach (SYMBOL akid in kid.kids)
                                 {
                                     if (akid is FunctionCall)
-                                        retstr += GenerateFunctionCall(akid as FunctionCall, false);
+                                        retVal.Append(GenerateFunctionCall(akid as FunctionCall, false));
                                     else
-                                        retstr += GenerateNode(akid);
+                                        retVal.Append(GenerateNode(akid));
                                 }
                             }
                             else
                             {
                                 // this kids will not need to dump in current string position
                                 // so save what we have in dump and let kids have their own then take it again
-                                retstr += DumpFunc(marc) + GenerateNode(kid);
+                                retVal.Append(DumpFunc(marc));
+                                retVal.Append(GenerateNode(kid));
                                 marc = FuncCallsMarc();
                             }
                         }
@@ -2235,13 +2219,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             //Nasty hack to fix if statements with yield return and yield break;
-            if (retstr[retstr.Length - 1] == '}')
+            if (retVal[retVal.Length - 1] == '}')
                 printSemicolon = false;
 
             if (printSemicolon)
-                retstr += GenerateLine(";");
+                retVal.Append(GenerateLine(";"));
 
-            return DumpFunc(marc) + retstr + DumpAfterFunc(marc);
+            return DumpFunc(marc) + retVal.ToString() + DumpAfterFunc(marc);
         }
 
         private string GetLocalDeclarationKey()
@@ -2257,13 +2241,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Generates the code for an Assignment node.
+        ///     Generates the code for an Assignment node.
         /// </summary>
-        /// <param name = "a">The Assignment node.</param>
+        /// <param name="a">The Assignment node.</param>
         /// <returns>String containing C# code for Assignment a.</returns>
         private string GenerateAssignment(Assignment a)
         {
-            string retstr = "";
+            StringBuilder retVal = new StringBuilder();
             List<string> identifiers = new List<string>();
 
             bool marc = FuncCallsMarc();
@@ -2273,19 +2257,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 a.kids.Pop(); //Get rid of the first one
                 foreach (SYMBOL kid in a.kids)
-                    retstr += GenerateNode(kid);
-                return retstr; //If it is a list, and we are in an addition expression, we drop the assignment
+                    retVal.Append(GenerateNode(kid));
+                return retVal.ToString(); //If it is a list, and we are in an addition expression, we drop the assignment
             }
 
-            retstr += GenerateNode((SYMBOL)a.kids.Pop());
-            retstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
+            retVal.Append(GenerateNode((SYMBOL) a.kids.Pop()));
+            retVal.Append(Generate(String.Format(" {0} ", a.AssignmentType), a));
             foreach (SYMBOL kid in a.kids)
-                retstr += GenerateNode(kid);
+                retVal.Append(GenerateNode(kid));
             //fCalls += ";";//Add a ; at the end.
             //lock (AfterFuncCalls)
             //    AfterFuncCalls.Add (fCalls);
 
-            return DumpFunc(marc) + retstr + DumpAfterFunc(marc);
+            return DumpFunc(marc) + retVal.ToString() + DumpAfterFunc(marc);
         }
 
         // This code checks for LSL of the following forms, and generates a
@@ -2310,26 +2294,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             if (s is Assignment)
             {
-                Assignment a = (Assignment)s;
+                Assignment a = (Assignment) s;
                 string newident = null;
 
                 if (a.kids[0] is Declaration)
                 {
-                    newident = ((Declaration)a.kids[0]).Id;
+                    newident = ((Declaration) a.kids[0]).Id;
                 }
                 else if (a.kids[0] is IDENT)
                 {
-                    newident = ((IDENT)a.kids[0]).yytext;
+                    newident = ((IDENT) a.kids[0]).yytext;
                 }
                 else if (a.kids[0] is IdentDotExpression)
                 {
-                    newident = ((IdentDotExpression)a.kids[0]).Name; // +"." + ((IdentDotExpression)a.kids[0]).Member;
+                    newident = ((IdentDotExpression) a.kids[0]).Name; // +"." + ((IdentDotExpression)a.kids[0]).Member;
                 }
                 else
                 {
                     AddWarning(String.Format(
                         "Multiple assignments checker internal error '{0}' at line {1} column {2}.", a.kids[0].GetType(),
-                        ((SYMBOL)a.kids[0]).Line - 1, ((SYMBOL)a.kids[0]).Position));
+                        ((SYMBOL) a.kids[0]).Line - 1, ((SYMBOL) a.kids[0]).Position));
                 }
 
                 if (identifiers.Contains(newident))
@@ -2337,7 +2321,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     AddWarning(
                         String.Format(
                             "Multiple assignments to '{0}' at line {1} column {2}; results may differ between LSL and OSSL.",
-                            newident, ((SYMBOL)a.kids[0]).Line - 1, ((SYMBOL)a.kids[0]).Position));
+                            newident, ((SYMBOL) a.kids[0]).Line - 1, ((SYMBOL) a.kids[0]).Position));
                 }
                 identifiers.Add(newident);
             }
@@ -2345,52 +2329,52 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             int index;
             for (index = 0; index < s.kids.Count; index++)
             {
-                checkForMultipleAssignments(identifiers, (SYMBOL)s.kids[index]);
+                checkForMultipleAssignments(identifiers, (SYMBOL) s.kids[index]);
             }
         }
 
         /// <summary>
-        ///   Generates the code for a ReturnStatement node.
+        ///     Generates the code for a ReturnStatement node.
         /// </summary>
-        /// <param name = "rs">The ReturnStatement node.</param>
+        /// <param name="rs">The ReturnStatement node.</param>
         /// <returns>String containing C# code for ReturnStatement rs.</returns>
         private string GenerateReturnStatement(ReturnStatement rs)
         {
-            string retstr = "";
+            StringBuilder retVal = new StringBuilder();
 
             bool dump = FuncCallsMarc();
 
             if (IsParentEnumerable)
             {
-                retstr += GenerateLine("{ ");
+                retVal.Append(GenerateLine("{ "));
                 if (rs.kids.Count == 0)
-                    retstr += GenerateLine("yield break;", rs);
+                    retVal.Append(GenerateLine("yield break;", rs));
                 else
                 {
-                    retstr += Generate(string.Format("yield return ({0})(", _currentGlobalFunctionDeclaration.ReturnType), rs);
+                    retVal.Append(Generate(string.Format("yield return ({0})(", _currentGlobalFunctionDeclaration.ReturnType), rs));
                     foreach (SYMBOL kid in rs.kids)
-                        retstr += GenerateNode(kid);
-                    retstr += GenerateLine(");", null);
-                    retstr += GenerateLine("yield break;", null);
+                        retVal.Append(GenerateNode(kid));
+                    retVal.Append(GenerateLine(");", null));
+                    retVal.Append(GenerateLine("yield break;", null));
                 }
-                retstr += GenerateLine("}");
+                retVal.Append(GenerateLine("}"));
             }
             else
             {
-                retstr += Generate(string.Format("return ({0})", _currentGlobalFunctionDeclaration.ReturnType), rs);
+                retVal.Append(Generate(string.Format("return ({0})", _currentGlobalFunctionDeclaration.ReturnType), rs));
 
                 foreach (SYMBOL kid in rs.kids)
-                    retstr += GenerateNode(kid);
+                    retVal.Append(GenerateNode(kid));
             }
             if (dump)
-                return DumpFunc(dump) + retstr + DumpAfterFunc(dump);
-            return retstr;
+                return DumpFunc(dump) + retVal.ToString() + DumpAfterFunc(dump);
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a JumpLabel node.
+        ///     Generates the code for a JumpLabel node.
         /// </summary>
-        /// <param name = "jl">The JumpLabel node.</param>
+        /// <param name="jl">The JumpLabel node.</param>
         /// <returns>String containing C# code for JumpLabel jl.</returns>
         private string GenerateJumpLabel(JumpLabel jl)
         {
@@ -2398,9 +2382,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Generates the code for a JumpStatement node.
+        ///     Generates the code for a JumpStatement node.
         /// </summary>
-        /// <param name = "js">The JumpStatement node.</param>
+        /// <param name="js">The JumpStatement node.</param>
         /// <returns>String containing C# code for JumpStatement js.</returns>
         private string GenerateJumpStatement(JumpStatement js)
         {
@@ -2408,9 +2392,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Generates the code for an IfStatement node.
+        ///     Generates the code for an IfStatement node.
         /// </summary>
-        /// <param name = "ifs">The IfStatement node.</param>
+        /// <param name="ifs">The IfStatement node.</param>
         /// <returns>String containing C# code for IfStatement ifs.</returns>
         private string GenerateIfStatement(IfStatement ifs)
         {
@@ -2454,15 +2438,15 @@ default
         }
     }
 }*/
-            string retstr = "";
-            string tmpstr = "";
+            StringBuilder retVal = new StringBuilder(), tmpVal = new StringBuilder();
             bool DoBrace = false;
             bool marc = FuncCallsMarc();
-            tmpstr += GenerateIndented("if (", ifs);
-            tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
-            tmpstr += GenerateLine(")");
+            tmpVal.Append(GenerateIndented("if (", ifs));
+            tmpVal.Append(GenerateNode((SYMBOL)ifs.kids.Pop()));
+            tmpVal.Append(GenerateLine(")"));
 
-            retstr += DumpFunc(marc) + tmpstr;
+            retVal.Append(DumpFunc(marc));
+            retVal.Append(tmpVal.ToString());
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
@@ -2471,123 +2455,125 @@ default
             // if (indentHere) m_braceCount++;
             DoBrace = !(ifs.kids.Top is CompoundStatement);
             if (DoBrace)
-                retstr += GenerateLine("{");
+                retVal.Append(GenerateLine("{"));
 
-            retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
+            retVal.Append(GenerateNode((SYMBOL)ifs.kids.Pop()));
             // if (indentHere) m_braceCount--;
             if (DoBrace)
-                retstr += GenerateLine("}");
+                retVal.Append(GenerateLine("}"));
 
 
             if (0 < ifs.kids.Count) // do it again for an else
             {
-                retstr += GenerateIndentedLine("else", ifs);
+                retVal.Append(GenerateIndentedLine("else", ifs));
 
                 // indentHere = ifs.kids.Top is Statement;
                 // if (indentHere) m_braceCount++;
                 DoBrace = !(ifs.kids.Top is CompoundStatement);
                 if (DoBrace)
-                    retstr += GenerateLine("{");
+                    retVal.Append(GenerateLine("{"));
 
-                retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
+                retVal.Append(GenerateNode((SYMBOL)ifs.kids.Pop()));
 
                 if (DoBrace)
-                    retstr += GenerateLine("}");
+                    retVal.Append(GenerateLine("}"));
 
 
                 // if (indentHere) m_braceCount--;
             }
 
-            return retstr + DumpAfterFunc(marc);
+            retVal.Append(DumpAfterFunc(marc));
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a StateChange node.
+        ///     Generates the code for a StateChange node.
         /// </summary>
-        /// <param name = "sc">The StateChange node.</param>
+        /// <param name="sc">The StateChange node.</param>
         /// <returns>String containing C# code for StateChange sc.</returns>
         private string GenerateStateChange(StateChange sc)
         {
             //State is in the LSL_Api because it requires a ref to the ScriptEngine, which we can't have in the ScriptBase
-            string retStr = GenerateLine("try", null);
-            retStr += GenerateLine("{", null);
-            retStr += Generate(
+            StringBuilder retVal = new StringBuilder();
+            retVal.Append(GenerateLine("try", null));
+            retVal.Append(GenerateLine("{", null));
+            retVal.Append(Generate(
                 String.Format("((ILSL_Api)m_apis[\"ll\"]).state(\"{0}\");", sc.NewState)
-                , sc);
-            retStr += GenerateLine("}", null);
-            retStr += GenerateLine("catch", null);
-            retStr += GenerateLine("{", null);
-            retStr += GenerateLine("yield break;", null);
-            retStr += GenerateLine("}", null);
-            return retStr;
+                , sc));
+            retVal.Append(GenerateLine("}", null));
+            retVal.Append(GenerateLine("catch", null));
+            retVal.Append(GenerateLine("{", null));
+            retVal.Append(GenerateLine("yield break;", null));
+            retVal.Append(GenerateLine("}", null));
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a WhileStatement node.
+        ///     Generates the code for a WhileStatement node.
         /// </summary>
-        /// <param name = "ws">The WhileStatement node.</param>
+        /// <param name="ws">The WhileStatement node.</param>
         /// <returns>String containing C# code for WhileStatement ws.</returns>
         private string GenerateWhileStatement(WhileStatement ws)
         {
-            string retstr = "";
-            string tmpstr = "";
+            StringBuilder retVal = new StringBuilder();
+            StringBuilder tmpVal = new StringBuilder();
 
             bool marc = FuncCallsMarc();
 
-            tmpstr += GenerateIndented("while (", ws);
-            tmpstr += GenerateNode((SYMBOL)ws.kids.Pop());
-            tmpstr += GenerateLine(")");
+            tmpVal.Append(GenerateIndented("while (", ws));
+            tmpVal.Append(GenerateNode((SYMBOL) ws.kids.Pop()));
+            tmpVal.Append(GenerateLine(")"));
 
             //Forces all functions to use MoveNext() instead of .Current, as it never changes otherwise, and the loop runs infinitely
             m_isInEnumeratedDeclaration = true;
-            retstr += DumpFunc(marc) + tmpstr;
+            retVal.Append(DumpFunc(marc));
+            retVal.Append(tmpVal.ToString());
             m_isInEnumeratedDeclaration = false; //End above
 
             if (IsParentEnumerable)
             {
-                retstr += GenerateLine("{"); // SLAM! No 'while(true) doThis(); ' statements for you!
-                retstr += GenerateLine("if (CheckSlice()) yield return null;");
+                retVal.Append(GenerateLine("{")); // SLAM! No 'while(true) doThis(); ' statements for you!
+                retVal.Append(GenerateLine("if (CheckSlice()) yield return null;"));
             }
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = ws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr += GenerateNode((SYMBOL)ws.kids.Pop());
+            retVal.Append(GenerateNode((SYMBOL) ws.kids.Pop()));
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
-                retstr += GenerateLine("}");
+                retVal.Append(GenerateLine("}"));
 
-            return retstr + DumpAfterFunc(marc);
+            return retVal.ToString() + DumpAfterFunc(marc);
         }
 
         /// <summary>
-        ///   Generates the code for a DoWhileStatement node.
+        ///     Generates the code for a DoWhileStatement node.
         /// </summary>
-        /// <param name = "dws">The DoWhileStatement node.</param>
+        /// <param name="dws">The DoWhileStatement node.</param>
         /// <returns>String containing C# code for DoWhileStatement dws.</returns>
         private string GenerateDoWhileStatement(DoWhileStatement dws)
         {
-            string retstr = "";
-            string tmpstr = "";
+            StringBuilder retVal = new StringBuilder();
 
-            tmpstr += GenerateIndentedLine("do", dws);
+            retVal.Append(GenerateIndentedLine("do", dws));
             if (IsParentEnumerable)
             {
-                tmpstr += GenerateLine("{"); // SLAM!
-                tmpstr += GenerateLine("if (CheckSlice()) yield return null;");
+                retVal.Append(GenerateLine("{")); // SLAM!
+                retVal.Append(GenerateLine("if (CheckSlice()) yield return null;"));
             }
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = dws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            tmpstr += GenerateNode((SYMBOL)dws.kids.Pop());
+            retVal.Append(GenerateNode((SYMBOL) dws.kids.Pop()));
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
-                tmpstr += GenerateLine("}");
+                retVal.Append(GenerateLine("}"));
 
             bool marc = FuncCallsMarc();
 
@@ -2595,80 +2581,79 @@ default
 
             m_isInEnumeratedDeclaration = true;
 
-            tmpstr += GenerateIndented("while (", dws);
-            tmpstr += GenerateNode((SYMBOL)dws.kids.Pop());
-            tmpstr += GenerateLine(");");
+            retVal.Append(GenerateIndented("while (", dws));
+            retVal.Append(GenerateNode((SYMBOL) dws.kids.Pop()));
+            retVal.Append(GenerateLine(");"));
 
             m_isInEnumeratedDeclaration = false; //End above
 
-            retstr += DumpFunc(marc) + tmpstr;
-
-            return retstr + DumpAfterFunc(marc);
+            return DumpFunc(marc) + retVal.ToString() + DumpAfterFunc(marc);
         }
 
         /// <summary>
-        ///   Generates the code for a ForLoop node.
+        ///     Generates the code for a ForLoop node.
         /// </summary>
-        /// <param name = "fl">The ForLoop node.</param>
+        /// <param name="fl">The ForLoop node.</param>
         /// <returns>String containing C# code for ForLoop fl.</returns>
         private string GenerateForLoop(ForLoop fl)
         {
-            string retstr = "";
-            string tmpstr = "";
+            StringBuilder retVal = new StringBuilder();
+            StringBuilder tmpVal = new StringBuilder();
 
             bool marc = FuncCallsMarc();
 
-            tmpstr += GenerateIndented("for (", fl);
+            tmpVal.Append(GenerateIndented("for (", fl));
 
             // It's possible that we don't have an assignment, in which case
             // the child will be null and we only print the semicolon.
             // for (x = 0; x < 10; x++)
             //      ^^^^^
-            ForLoopStatement s = (ForLoopStatement)fl.kids.Pop();
+            ForLoopStatement s = (ForLoopStatement) fl.kids.Pop();
             if (null != s)
             {
-                tmpstr += GenerateForLoopStatement(s);
+                tmpVal.Append(GenerateForLoopStatement(s));
             }
-            tmpstr += Generate("; ");
+            tmpVal.Append(Generate("; "));
             // for (x = 0; x < 10; x++)
             //             ^^^^^^
-            tmpstr += GenerateNode((SYMBOL)fl.kids.Pop());
-            tmpstr += Generate("; ");
+            tmpVal.Append(GenerateNode((SYMBOL) fl.kids.Pop()));
+            tmpVal.Append(Generate("; "));
             // for (x = 0; x < 10; x++)
             //                     ^^^
-            tmpstr += GenerateForLoopStatement((ForLoopStatement)fl.kids.Pop());
-            tmpstr += GenerateLine(")");
+            tmpVal.Append(GenerateForLoopStatement((ForLoopStatement) fl.kids.Pop()));
+            tmpVal.Append(GenerateLine(")"));
 
-            retstr += DumpFunc(marc) + tmpstr;
+            retVal.Append(DumpFunc(marc));
+            retVal.Append(tmpVal.ToString());
 
             if (IsParentEnumerable)
             {
-                retstr += GenerateLine("{"); // SLAM! No 'for(i = 0; i < 1; i = 0) doSomething();' statements for you
-                retstr += GenerateLine("if (CheckSlice()) yield return null;");
+                retVal.Append(GenerateLine("{")); // SLAM! No 'for(i = 0; i < 1; i = 0) doSomething();' statements for you
+                retVal.Append(GenerateLine("if (CheckSlice()) yield return null;"));
             }
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
             bool indentHere = fl.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr += GenerateNode((SYMBOL)fl.kids.Pop());
+            retVal.Append(GenerateNode((SYMBOL) fl.kids.Pop()));
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
-                retstr += GenerateLine("}");
-
-            return retstr + DumpAfterFunc(marc);
+                retVal.Append(GenerateLine("}"));
+            
+            retVal.Append(DumpAfterFunc(marc));
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a ForLoopStatement node.
+        ///     Generates the code for a ForLoopStatement node.
         /// </summary>
-        /// <param name = "fls">The ForLoopStatement node.</param>
+        /// <param name="fls">The ForLoopStatement node.</param>
         /// <returns>String containing C# code for ForLoopStatement fls.</returns>
         private string GenerateForLoopStatement(ForLoopStatement fls)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             int comma = fls.kids.Count - 1; // tells us whether to print a comma
 
             // It's possible that all we have is an empty Ident, for example:
@@ -2677,11 +2662,11 @@ default
             //
             // Which is illegal in C# (MONO). We'll skip it.
             if (fls.kids.Top is IdentExpression && 1 == fls.kids.Count)
-                return retstr;
+                return "";
 
             for (int i = 0; i < fls.kids.Count; i++)
             {
-                SYMBOL s = (SYMBOL)fls.kids[i];
+                SYMBOL s = (SYMBOL) fls.kids[i];
 
                 // Statements surrounded by parentheses in for loops
                 //
@@ -2697,49 +2682,50 @@ default
                 // script but with no debug or warnings at all!  Therefore, we won't deal with this yet (which looks
                 // like it would be considerably more complicated to handle).
                 while (s is ParenthesisExpression)
-                    s = (SYMBOL)s.kids.Pop();
+                    s = (SYMBOL) s.kids.Pop();
 
-                retstr += GenerateNode(s);
+                retVal.Append(GenerateNode(s));
                 if (0 < comma--)
-                    retstr += Generate(", ");
+                    retVal.Append(Generate(", "));
             }
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a BinaryExpression node.
+        ///     Generates the code for a BinaryExpression node.
         /// </summary>
-        /// <param name = "be">The BinaryExpression node.</param>
+        /// <param name="be">The BinaryExpression node.</param>
+        /// <param name="isUnaryExpression"></param>
+        /// <param name="addition"></param>
         /// <returns>String containing C# code for BinaryExpression be.</returns>
         private string GenerateBinaryExpression(BinaryExpression be, bool isUnaryExpression, string addition)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             bool marc = FuncCallsMarc();
 
             if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
             {
                 // special case handling for logical and/or, see Mantis 3174
-                retstr += "((LSL_Types.LSLInteger)( " +
+                retVal.Append("((LSL_Types.LSLInteger)( " +
                           (isUnaryExpression ? addition : "") +
-                          "(bool)(";
-                retstr += GenerateNode((SYMBOL)be.kids.Pop());
-                retstr += "))";
-                retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
-                retstr += "((LSL_Types.LSLInteger)((bool)(";
+                          "(bool)(");
+                retVal.Append(GenerateNode((SYMBOL) be.kids.Pop()));
+                retVal.Append("))");
+                retVal.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be));
+                retVal.Append("((LSL_Types.LSLInteger)((bool)(");
                 foreach (SYMBOL kid in be.kids)
-                    retstr += GenerateNode(kid);
-                retstr += "))))";
+                    retVal.Append(GenerateNode(kid));
+                retVal.Append("))))");
             }
             else if (be.ExpressionSymbol.Equals("!=") || be.ExpressionSymbol.Equals("=="))
             {
-                retstr += "((LSL_Types.LSLInteger)(";
-                retstr += GenerateNode((SYMBOL)be.kids.Pop());
-                retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
+                retVal.Append("((LSL_Types.LSLInteger)(");
+                retVal.Append(GenerateNode((SYMBOL) be.kids.Pop()));
+                retVal.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol), be));
                 foreach (SYMBOL kid in be.kids)
-                    retstr += GenerateNode(kid);
-                retstr += "))";
+                    retVal.Append(GenerateNode(kid));
+                retVal.Append("))");
             }
             else
             {
@@ -2754,122 +2740,114 @@ default
                     weSetTheAdditionExpression = true;
                     isAdditionExpression = true;
                 }
-                retstr += GenerateNode((SYMBOL)be.kids.Pop());
+                retVal.Append(GenerateNode((SYMBOL) be.kids.Pop()));
                 if (weSetTheAdditionExpression)
                     isAdditionExpression = false;
-                if (!(retstr == "()" || retstr == ""))
-                    retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
+                if (!(retVal.ToString() == "()" || retVal.ToString() == ""))
+                    retVal.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol), be));
                 else
                     //Something was removed, we need to remove the operator here!
-                    retstr = "";
+                    retVal.Clear();
                 foreach (SYMBOL kid in be.kids)
-                    retstr += GenerateNode(kid);
+                    retVal.Append(GenerateNode(kid));
             }
 
-            return DumpFunc(marc) + retstr + DumpAfterFunc(marc);
+            return DumpFunc(marc) + retVal.ToString() + DumpAfterFunc(marc);
         }
 
         /// <summary>
-        ///   Generates the code for a UnaryExpression node.
+        ///     Generates the code for a UnaryExpression node.
         /// </summary>
-        /// <param name = "ue">The UnaryExpression node.</param>
+        /// <param name="ue">The UnaryExpression node.</param>
         /// <returns>String containing C# code for UnaryExpression ue.</returns>
         private string GenerateUnaryExpression(UnaryExpression ue)
         {
-            string retstr = "";
-
-            retstr += Generate(ue.UnarySymbol, ue);
-            SYMBOL kid = (SYMBOL)ue.kids.Pop();
+            StringBuilder retVal = new StringBuilder();
+            retVal.Append(Generate(ue.UnarySymbol, ue));
+            SYMBOL kid = (SYMBOL) ue.kids.Pop();
             if (kid is BinaryExpression)
             {
-                string tempretstr = retstr;
-                retstr = "";
-                retstr += GenerateBinaryExpression((BinaryExpression)kid, true, tempretstr);
+                string tempretstr = retVal.ToString();
+                retVal.Clear();
+                retVal.Append(GenerateBinaryExpression((BinaryExpression)kid, true, tempretstr));
             }
             else
-                retstr += GenerateNode(kid);
+                retVal.Append(GenerateNode(kid));
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a ParenthesisExpression node.
+        ///     Generates the code for a ParenthesisExpression node.
         /// </summary>
-        /// <param name = "pe">The ParenthesisExpression node.</param>
+        /// <param name="pe">The ParenthesisExpression node.</param>
         /// <returns>String containing C# code for ParenthesisExpression pe.</returns>
         private string GenerateParenthesisExpression(ParenthesisExpression pe)
         {
-            string retstr = "";
-
-            retstr += Generate("(");
+            StringBuilder retVal = new StringBuilder();
+            retVal.Append(Generate("("));
             foreach (SYMBOL kid in pe.kids)
-                retstr += GenerateNode(kid);
-            retstr += Generate(")");
+                retVal.Append(GenerateNode(kid));
+            retVal.Append(Generate(")"));
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a IncrementDecrementExpression node.
+        ///     Generates the code for a IncrementDecrementExpression node.
         /// </summary>
-        /// <param name = "ide">The IncrementDecrementExpression node.</param>
+        /// <param name="ide">The IncrementDecrementExpression node.</param>
         /// <returns>String containing C# code for IncrementDecrementExpression ide.</returns>
         private string GenerateIncrementDecrementExpression(IncrementDecrementExpression ide)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             if (0 < ide.kids.Count)
             {
-                IdentDotExpression dot = (IdentDotExpression)ide.kids.Top;
-                retstr +=
-                    Generate(
+                IdentDotExpression dot = (IdentDotExpression) ide.kids.Top;
+                retVal.Append(Generate(
                         String.Format("{0}",
                                       ide.PostOperation
                                           ? CheckName(dot.Name) + "." + dot.Member + ide.Operation
-                                          : ide.Operation + CheckName(dot.Name) + "." + dot.Member), ide);
+                                          : ide.Operation + CheckName(dot.Name) + "." + dot.Member), ide));
             }
             else
-                retstr +=
-                    Generate(
+                retVal.Append(Generate(
                         String.Format("{0}",
                                       ide.PostOperation
                                           ? CheckName(ide.Name) + ide.Operation
-                                          : ide.Operation + CheckName(ide.Name)), ide);
+                                          : ide.Operation + CheckName(ide.Name)), ide));
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a TypecastExpression node.
+        ///     Generates the code for a TypecastExpression node.
         /// </summary>
-        /// <param name = "te">The TypecastExpression node.</param>
+        /// <param name="te">The TypecastExpression node.</param>
         /// <returns>String containing C# code for TypecastExpression te.</returns>
         private string GenerateTypecastExpression(TypecastExpression te)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder();
             // we wrap all typecasted statements in parentheses
-            retstr += Generate(String.Format("({0}) (", te.TypecastType), te);
-            retstr += GenerateNode((SYMBOL)te.kids.Pop());
-            retstr += Generate(")");
-
-            return retstr;
+            retVal.Append(Generate(String.Format("({0}) (", te.TypecastType), te));
+            retVal.Append(GenerateNode((SYMBOL) te.kids.Pop()));
+            retVal.Append(Generate(")"));
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a FunctionCall node.
+        ///     Generates the code for a FunctionCall node.
         /// </summary>
-        /// <param name = "fc">The FunctionCall node.</param>
+        /// <param name="fc">The FunctionCall node.</param>
+        /// <param name="NeedRetVal"></param>
         /// <returns>String containing C# code for FunctionCall fc.</returns>
         private string GenerateFunctionCall(FunctionCall fc, bool NeedRetVal)
         {
-            string retstr = "";
-
+            StringBuilder retVal = new StringBuilder(), tmpVal = new StringBuilder();
             bool marc = FuncCallsMarc();
 
             string Mname = "";
             bool isEnumerable = false;
-            string tempString = "";
 
             //int NeedCloseParent = 0;
 
@@ -2890,56 +2868,55 @@ default
                             if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
                             {
                                 // special case handling for logical and/or, see Mantis 3174
-                                tempString += "((bool)(";
-                                tempString += GenerateNode((SYMBOL)be.kids.Pop());
-                                tempString += "))";
-                                tempString += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
-                                tempString += "((bool)(";
+                                tmpVal.Append("((bool)(");
+                                tmpVal.Append(GenerateNode((SYMBOL) be.kids.Pop()));
+                                tmpVal.Append("))");
+                                tmpVal.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be));
+                                tmpVal.Append("((bool)(");
                                 foreach (SYMBOL kidb in be.kids)
-                                    retstr += GenerateNode(kidb);
-                                tempString += "))";
+                                    retVal.Append(GenerateNode(kidb));
+                                tmpVal.Append("))");
                             }
                             else
                             {
-                                tempString += GenerateNode((SYMBOL)be.kids.Pop());
-                                tempString += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
+                                tmpVal.Append(GenerateNode((SYMBOL) be.kids.Pop()));
+                                tmpVal.Append(Generate(String.Format(" {0} ", be.ExpressionSymbol), be));
                                 foreach (SYMBOL kidb in be.kids)
                                 {
                                     if (kidb is FunctionCallExpression)
                                     {
-                                        tempString += GenerateNode(kidb);
+                                        tmpVal.Append(GenerateNode(kidb));
                                     }
                                     else if (kidb is TypecastExpression)
                                     {
-                                        tempString +=
-                                            Generate(String.Format("({0}) (", ((TypecastExpression)kidb).TypecastType));
-                                        tempString += GenerateNode((SYMBOL)kidb.kids.Pop());
-                                        tempString += Generate(")");
+                                        tmpVal.Append(Generate(String.Format("({0}) (", ((TypecastExpression) kidb).TypecastType)));
+                                        tmpVal.Append(GenerateNode((SYMBOL) kidb.kids.Pop()));
+                                        tmpVal.Append(Generate(")"));
                                     }
 
                                     else
-                                        tempString += GenerateNode(kidb);
+                                        tmpVal.Append(GenerateNode(kidb));
                                 }
                             }
                         }
                         else if (s is TypecastExpression)
                         {
-                            tempString += Generate(String.Format("({0}) (", ((TypecastExpression)s).TypecastType));
-                            tempString += GenerateNode((SYMBOL)s.kids.Pop());
-                            tempString += Generate(")");
+                            tmpVal.Append(Generate(String.Format("({0}) (", ((TypecastExpression) s).TypecastType)));
+                            tmpVal.Append(GenerateNode((SYMBOL) s.kids.Pop()));
+                            tmpVal.Append(Generate(")"));
                         }
                         else
                         {
-                            tempString += GenerateNode(s);
+                            tmpVal.Append(GenerateNode(s));
                         }
 
                         if (0 < comma--)
-                            tempString += Generate(", ");
+                            tmpVal.Append(Generate(", "));
                     }
                 }
                 else
                 {
-                    tempString += GenerateNode(kid);
+                    tmpVal.Append(GenerateNode(kid));
                 }
             }
 
@@ -2949,7 +2926,7 @@ default
             string rettype = "void";
             if (LocalMethods.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
-            /* suspended.. API fails with IEnums
+                /* suspended.. API fails with IEnums
                         else if (IenFunctions.TryGetValue(fc.Id, out rettype))
                             isEnumerable = true;
             */
@@ -2969,17 +2946,17 @@ default
 
             if (DTFunction)
             {
-                retstr += Generate("yield return ");
-                retstr += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
-                retstr += tempString;
-                retstr += Generate(")");
+                retVal.Append(Generate("yield return "));
+                retVal.Append(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
+                retVal.Append(tmpVal.ToString());
+                retVal.Append(Generate(")"));
             }
             else if (isEnumerable)
             {
                 if (m_isInEnumeratedDeclaration && NeedRetVal) //Got to have a retVal for do/while
                 {
                     //This is for things like the do/while statement, where a function is in the while() part and can't be dumped in front of the do/while
-                    string MethodName = Aurora.Framework.StringUtils.RandomString(10, true);
+                    string MethodName = StringUtils.RandomString(10, true);
                     string typeDefs = "";
                     ObjectList arguements = null;
                     if (LocalMethodArguements.TryGetValue(fc.Id, out arguements))
@@ -2989,7 +2966,7 @@ default
                         {
                             if (kid is ArgumentDeclarationList)
                             {
-                                ArgumentDeclarationList ADL = (ArgumentDeclarationList)kid;
+                                ArgumentDeclarationList ADL = (ArgumentDeclarationList) kid;
                                 typeDefs += (GenerateArgumentDeclarationList(ADL)) + ",";
                             }
                         }
@@ -3001,10 +2978,10 @@ default
                                                      typeDefs);
                     newMethod += (Generate("{"));
                     newMethod += (Generate("ahwowuerogng = true;"));
-                    Mname = Aurora.Framework.StringUtils.RandomString(10, true);
+                    Mname = StringUtils.RandomString(10, true);
                     newMethod += (Generate("System.Collections.IEnumerator " + Mname + " = "));
                     newMethod += (Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
-                    newMethod += (tempString);
+                    newMethod += (tmpVal.ToString());
                     newMethod += (Generate(");"));
 
                     newMethod += (Generate(" try {"));
@@ -3021,23 +2998,23 @@ default
                     MethodsToAdd.Add(newMethod);
 
                     List<string> fCalls = new List<string>();
-                    string boolname = Aurora.Framework.StringUtils.RandomString(10, true);
+                    string boolname = StringUtils.RandomString(10, true);
                     fCalls.Add(Generate("bool " + boolname + " = true;"));
-                    retstr += MethodName + "(" + tempString + ", out " + boolname + ")";
+                    retVal.Append(MethodName + "(" + tmpVal.ToString() + ", out " + boolname + ")");
                     lock (FuncCalls)
                         FuncCalls.AddRange(fCalls);
                 }
                 else
                 {
                     //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
-                    Mname = Aurora.Framework.StringUtils.RandomString(10, true);
-                    string Exname = Aurora.Framework.StringUtils.RandomString(10, true);
+                    Mname = StringUtils.RandomString(10, true);
+                    string Exname = StringUtils.RandomString(10, true);
                     List<string> fCalls = new List<string>
                                               {
                                                   Generate("string " + Exname + " =  \"\";"),
                                                   Generate("System.Collections.IEnumerator " + Mname + " = "),
                                                   Generate(String.Format("{0}(", CheckName(fc.Id)), fc),
-                                                  tempString,
+                                                  tmpVal.ToString(),
                                                   Generate(");"),
                                                   Generate("while (true) {"),
                                                   Generate(" try {"),
@@ -3061,7 +3038,7 @@ default
                     //Let the other things process for a bit here at the end of each enumeration
                     if (NeedRetVal && rettype != "void")
                     {
-                        retstr += " (" + rettype + ") " + Mname + ".Current";
+                        retVal.Append(" (" + rettype + ") " + Mname + ".Current");
                     }
                     lock (FuncCalls)
                         FuncCalls.AddRange(fCalls);
@@ -3069,25 +3046,23 @@ default
             }
             else
             {
-                retstr += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
-                retstr += tempString;
+                retVal.Append(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
+                retVal.Append(tmpVal.ToString());
 
-                retstr += Generate(")");
+                retVal.Append(Generate(")"));
             }
 
             //Function calls are first if needed
-            return DumpFunc(marc) + retstr + DumpAfterFunc(marc);
+            return DumpFunc(marc) + retVal.ToString() + DumpAfterFunc(marc);
         }
 
         /// <summary>
-        ///   Generates the code for a Constant node.
+        ///     Generates the code for a Constant node.
         /// </summary>
-        /// <param name = "c">The Constant node.</param>
+        /// <param name="c">The Constant node.</param>
         /// <returns>String containing C# code for Constant c.</returns>
         private string GenerateConstant(Constant c)
         {
-            string retstr = "";
-
             // Supprt LSL's weird acceptance of floats with no trailing digits
             // after the period. Turn float x = 10.; into float x = 10.0;
             if ("LSL_Types.LSLFloat" == c.Type)
@@ -3106,74 +3081,69 @@ default
                 c.Value = "new LSL_Types.LSLString(\"" + c.Value + "\")";
             }
 
-            retstr += Generate(c.Value, c);
-
-            return retstr;
+            return Generate(c.Value, c);
         }
 
         /// <summary>
-        ///   Generates the code for a VectorConstant node.
+        ///     Generates the code for a VectorConstant node.
         /// </summary>
-        /// <param name = "vc">The VectorConstant node.</param>
+        /// <param name="vc">The VectorConstant node.</param>
         /// <returns>String containing C# code for VectorConstant vc.</returns>
         private string GenerateVectorConstant(VectorConstant vc)
         {
-            string retstr = "";
+            StringBuilder retVal = new StringBuilder();
+            retVal.Append(Generate(String.Format("new {0}(", vc.Type), vc));
+            retVal.Append(GenerateNode((SYMBOL) vc.kids.Pop()));
+            retVal.Append(Generate(", "));
+            retVal.Append(GenerateNode((SYMBOL) vc.kids.Pop()));
+            retVal.Append(Generate(", "));
+            retVal.Append(GenerateNode((SYMBOL) vc.kids.Pop()));
+            retVal.Append(Generate(")"));
 
-            retstr += Generate(String.Format("new {0}(", vc.Type), vc);
-            retstr += GenerateNode((SYMBOL)vc.kids.Pop());
-            retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL)vc.kids.Pop());
-            retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL)vc.kids.Pop());
-            retstr += Generate(")");
-
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a RotationConstant node.
+        ///     Generates the code for a RotationConstant node.
         /// </summary>
-        /// <param name = "rc">The RotationConstant node.</param>
+        /// <param name="rc">The RotationConstant node.</param>
         /// <returns>String containing C# code for RotationConstant rc.</returns>
         private string GenerateRotationConstant(RotationConstant rc)
         {
-            string retstr = "";
+            StringBuilder retVal = new StringBuilder();
+            retVal.Append(Generate(String.Format("new {0}(", rc.Type), rc));
+            retVal.Append(GenerateNode((SYMBOL) rc.kids.Pop()));
+            retVal.Append(Generate(", "));
+            retVal.Append(GenerateNode((SYMBOL) rc.kids.Pop()));
+            retVal.Append(Generate(", "));
+            retVal.Append(GenerateNode((SYMBOL) rc.kids.Pop()));
+            retVal.Append(Generate(", "));
+            retVal.Append(GenerateNode((SYMBOL) rc.kids.Pop()));
+            retVal.Append(Generate(")"));
 
-            retstr += Generate(String.Format("new {0}(", rc.Type), rc);
-            retstr += GenerateNode((SYMBOL)rc.kids.Pop());
-            retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL)rc.kids.Pop());
-            retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL)rc.kids.Pop());
-            retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL)rc.kids.Pop());
-            retstr += Generate(")");
-
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Generates the code for a ListConstant node.
+        ///     Generates the code for a ListConstant node.
         /// </summary>
-        /// <param name = "lc">The ListConstant node.</param>
+        /// <param name="lc">The ListConstant node.</param>
         /// <returns>String containing C# code for ListConstant lc.</returns>
         private string GenerateListConstant(ListConstant lc)
         {
-            string retstr = "";
-
-            retstr += Generate(String.Format("new {0}(", lc.Type), lc);
+            StringBuilder retVal = new StringBuilder();
+            retVal.Append(Generate(String.Format("new {0}(", lc.Type), lc));
 
             foreach (SYMBOL kid in lc.kids)
-                retstr += GenerateNode(kid);
+                retVal.Append(GenerateNode(kid));
 
-            retstr += Generate(")");
+            retVal.Append(Generate(")"));
 
-            return retstr;
+            return retVal.ToString();
         }
 
         /// <summary>
-        ///   Prints a newline.
+        ///     Prints a newline.
         /// </summary>
         /// <returns>A newline.</returns>
         private string GenerateLine()
@@ -3182,9 +3152,9 @@ default
         }
 
         /// <summary>
-        ///   Prints text, followed by a newline.
+        ///     Prints text, followed by a newline.
         /// </summary>
-        /// <param name = "s">String of text to print.</param>
+        /// <param name="s">String of text to print.</param>
         /// <returns>String s followed by newline.</returns>
         private string GenerateLine(string s)
         {
@@ -3192,11 +3162,13 @@ default
         }
 
         /// <summary>
-        ///   Prints text, followed by a newline.
+        ///     Prints text, followed by a newline.
         /// </summary>
-        /// <param name = "s">String of text to print.</param>
-        /// <param name = "sym">Symbol being generated to extract original line
-        ///   number and column from.</param>
+        /// <param name="s">String of text to print.</param>
+        /// <param name="sym">
+        ///     Symbol being generated to extract original line
+        ///     number and column from.
+        /// </param>
         /// <returns>String s followed by newline.</returns>
         private string GenerateLine(string s, SYMBOL sym)
         {
@@ -3209,9 +3181,9 @@ default
         }
 
         /// <summary>
-        ///   Prints text.
+        ///     Prints text.
         /// </summary>
-        /// <param name = "s">String of text to print.</param>
+        /// <param name="s">String of text to print.</param>
         /// <returns>String s.</returns>
         private string Generate(string s)
         {
@@ -3219,11 +3191,13 @@ default
         }
 
         /// <summary>
-        ///   Prints text.
+        ///     Prints text.
         /// </summary>
-        /// <param name = "s">String of text to print.</param>
-        /// <param name = "sym">Symbol being generated to extract original line
-        ///   number and column from.</param>
+        /// <param name="s">String of text to print.</param>
+        /// <param name="sym">
+        ///     Symbol being generated to extract original line
+        ///     number and column from.
+        /// </param>
         /// <returns>String s.</returns>
         private string Generate(string s, SYMBOL sym)
         {
@@ -3237,9 +3211,9 @@ default
         }
 
         /// <summary>
-        ///   Prints text correctly indented, followed by a newline.
+        ///     Prints text correctly indented, followed by a newline.
         /// </summary>
-        /// <param name = "s">String of text to print.</param>
+        /// <param name="s">String of text to print.</param>
         /// <returns>Properly indented string s followed by newline.</returns>
         private string GenerateIndentedLine(string s)
         {
@@ -3247,11 +3221,13 @@ default
         }
 
         /// <summary>
-        ///   Prints text correctly indented, followed by a newline.
+        ///     Prints text correctly indented, followed by a newline.
         /// </summary>
-        /// <param name = "s">String of text to print.</param>
-        /// <param name = "sym">Symbol being generated to extract original line
-        ///   number and column from.</param>
+        /// <param name="s">String of text to print.</param>
+        /// <param name="sym">
+        ///     Symbol being generated to extract original line
+        ///     number and column from.
+        /// </param>
         /// <returns>Properly indented string s followed by newline.</returns>
         private string GenerateIndentedLine(string s, SYMBOL sym)
         {
@@ -3264,11 +3240,13 @@ default
         }
 
         /// <summary>
-        ///   Prints text correctly indented.
+        ///     Prints text correctly indented.
         /// </summary>
-        /// <param name = "s">String of text to print.</param>
-        /// <param name = "sym">Symbol being generated to extract original line
-        ///   number and column from.</param>
+        /// <param name="s">String of text to print.</param>
+        /// <param name="sym">
+        ///     Symbol being generated to extract original line
+        ///     number and column from.
+        /// </param>
         /// <returns>Properly indented string s.</returns>
         private string GenerateIndented(string s, SYMBOL sym)
         {
@@ -3284,7 +3262,7 @@ default
         }
 
         /// <summary>
-        ///   Prints correct indentation.
+        ///     Prints correct indentation.
         /// </summary>
         /// <returns>Indentation based on brace count.</returns>
         private string Indent()
@@ -3301,19 +3279,17 @@ default
             return retstr;
         }
 
-        ///<summary>
-        ///  Returns the passed name with an underscore prepended if that name is a reserved word in C#
-        ///  and not resevered in LSL otherwise it just returns the passed name.
-        ///
-        ///  This makes no attempt to cache the results to minimise future lookups. For a non trivial
-        ///  scripts the number of unique identifiers could easily grow to the size of the reserved word
-        ///  list so maintaining a list or dictionary and doing the lookup there firstwould probably not
-        ///  give any real speed advantage.
-        ///
-        ///  I believe there is a class Microsoft.CSharp.CSharpCodeProvider that has a function
-        ///  CreateValidIdentifier(str) that will return either the value of str if it is not a C#
-        ///  key word or "_"+str if it is. But availability under Mono?
-        ///</summary>
+        /// <summary>
+        ///     Returns the passed name with an underscore prepended if that name is a reserved word in C#
+        ///     and not resevered in LSL otherwise it just returns the passed name.
+        ///     This makes no attempt to cache the results to minimise future lookups. For a non trivial
+        ///     scripts the number of unique identifiers could easily grow to the size of the reserved word
+        ///     list so maintaining a list or dictionary and doing the lookup there firstwould probably not
+        ///     give any real speed advantage.
+        ///     I believe there is a class Microsoft.CSharp.CSharpCodeProvider that has a function
+        ///     CreateValidIdentifier(str) that will return either the value of str if it is not a C#
+        ///     key word or "_"+str if it is. But availability under Mono?
+        /// </summary>
         private string CheckName(string s)
         {
             if (CSReservedWords.IsReservedWord(s))

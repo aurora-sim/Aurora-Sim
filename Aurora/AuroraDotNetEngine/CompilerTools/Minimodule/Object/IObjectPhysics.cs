@@ -30,9 +30,9 @@ using OpenMetaverse;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     /// <summary>
-    ///   This implements an interface similar to that provided by physics engines to OpenSim internally.
-    ///   Eg, PhysicsActor. It is capable of setting and getting properties related to the current
-    ///   physics scene representation of this object.
+    ///     This implements an interface similar to that provided by physics engines to OpenSim internally.
+    ///     Eg, PhysicsActor. It is capable of setting and getting properties related to the current
+    ///     physics scene representation of this object.
     /// </summary>
     public interface IObjectPhysics
     {

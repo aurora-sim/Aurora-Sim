@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Aurora.Framework
+﻿namespace Aurora.Framework.Modules
 {
-    public delegate void UpdatedSetting (string value);
-    public delegate string GetSetting ();
+    public delegate void UpdatedSetting(string value);
+
+    public delegate string GetSetting();
+
     public class ServerSetting
     {
         public string Name;
@@ -14,23 +11,26 @@ namespace Aurora.Framework
         public string Type;
         //Full XML representation
         public event GetSetting OnGetSetting;
-        public string GetValue ()
+
+        public string GetValue()
         {
-            if(OnGetSetting != null)
+            if (OnGetSetting != null)
                 return OnGetSetting();
             return "";
         }
-        public void SetValue (string value)
+
+        public void SetValue(string value)
         {
-            if(OnUpdatedSetting != null)
+            if (OnUpdatedSetting != null)
                 OnUpdatedSetting(value);
         }
+
         public event UpdatedSetting OnUpdatedSetting;
     }
 
     public interface IServerSettings
     {
-        void RegisterSetting (ServerSetting setting);
-        void UnregisterSetting (ServerSetting setting);
+        void RegisterSetting(ServerSetting setting);
+        void UnregisterSetting(ServerSetting setting);
     }
 }

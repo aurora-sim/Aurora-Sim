@@ -25,13 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Wind.Plugins
 {
@@ -148,7 +149,7 @@ namespace Aurora.Modules.Wind.Plugins
                                                         {
                                                             "varDirection",
                                                             "allowable variance in wind direction in +/- degrees"
-                                                            },
+                                                        },
                                                         {"rateChange", "rate of change"}
                                                     };
 

@@ -26,10 +26,11 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public class multipleMapItemReply : IDataTransferable
     {
@@ -37,40 +38,6 @@ namespace Aurora.Framework
 
         public multipleMapItemReply()
         {
-        }
-
-        public multipleMapItemReply(Dictionary<string, object> KVP)
-        {
-            FromKVP(KVP);
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            foreach (KeyValuePair<string, object> kvp in KVP)
-            {
-                ulong handle = ulong.Parse(kvp.Key.Split('A')[1]);
-                mapItemReply item = new mapItemReply(kvp.Value as Dictionary<string, object>);
-
-                if (!items.ContainsKey(handle))
-                    items.Add(handle, new List<mapItemReply>());
-
-                items[handle].Add(item);
-            }
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            foreach (KeyValuePair<ulong, List<mapItemReply>> kvp in items)
-            {
-                int i = 0;
-                foreach (mapItemReply item in kvp.Value)
-                {
-                    result["A" + kvp.Key + "A" + i.ToString()] = item.ToKVP();
-                    i++;
-                }
-            }
-            return result;
         }
 
         public override OSDMap ToOSD()
@@ -93,12 +60,12 @@ namespace Aurora.Framework
             foreach (KeyValuePair<string, OSD> kvp in map)
             {
                 ulong regionHandle = ulong.Parse(kvp.Key);
-                OSDArray array = (OSDArray)kvp.Value;
+                OSDArray array = (OSDArray) kvp.Value;
                 List<mapItemReply> replies = new List<mapItemReply>();
-                foreach(OSD o in array)
+                foreach (OSD o in array)
                 {
                     mapItemReply r = new mapItemReply();
-                    r.FromOSD((OSDMap)o);
+                    r.FromOSD((OSDMap) o);
                     replies.Add(r);
                 }
                 items[regionHandle] = replies;
@@ -119,38 +86,11 @@ namespace Aurora.Framework
         {
         }
 
-        public mapItemReply(Dictionary<string, object> KVP)
-        {
-            FromKVP(KVP);
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            x = uint.Parse(KVP["X"].ToString());
-            y = uint.Parse(KVP["Y"].ToString());
-            id = UUID.Parse(KVP["ID"].ToString());
-            Extra = int.Parse(KVP["Extra"].ToString());
-            Extra2 = int.Parse(KVP["Extra2"].ToString());
-            name = KVP["Name"].ToString();
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["X"] = x;
-            KVP["Y"] = y;
-            KVP["ID"] = id;
-            KVP["Extra"] = Extra;
-            KVP["Extra2"] = Extra2;
-            KVP["Name"] = name;
-            return KVP;
-        }
-
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
-            map["X"] = (int)x;
-            map["Y"] = (int)y;
+            map["X"] = (int) x;
+            map["Y"] = (int) y;
             map["ID"] = id;
             map["Extra"] = Extra;
             map["Extra2"] = Extra2;
@@ -160,8 +100,8 @@ namespace Aurora.Framework
 
         public override void FromOSD(OSDMap map)
         {
-            x = (uint)(int)map["X"];
-            y = (uint)(int)map["Y"];
+            x = (uint) (int) map["X"];
+            y = (uint) (int) map["Y"];
             id = map["ID"];
             Extra = map["Extra"];
             Extra2 = map["Extra2"];

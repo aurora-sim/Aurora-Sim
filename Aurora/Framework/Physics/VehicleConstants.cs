@@ -32,21 +32,21 @@ namespace Aurora.Framework.Physics
     public enum Vehicle
     {
         /// <summary>
-        ///   Turns off Vehicle Support
+        ///     Turns off Vehicle Support
         /// </summary>
         TYPE_NONE = 0,
 
         /// <summary>
-        ///   No Angular motor, High Left right friction, No Hover, Linear Deflection 1, no angular deflection 
-        ///   no vertical attractor, No banking, Identity rotation frame
+        ///     No Angular motor, High Left right friction, No Hover, Linear Deflection 1, no angular deflection
+        ///     no vertical attractor, No banking, Identity rotation frame
         /// </summary>
         TYPE_SLED = 1,
 
         /// <summary>
-        ///   Needs Motors to be driven by timer or control events  High left/right friction, No angular friction
-        ///   Linear Motor wins in a second, decays in 60 seconds.  Angular motor wins in a second, decays in 8/10ths of a second
-        ///   linear deflection 2 seconds
-        ///   Vertical Attractor locked UP
+        ///     Needs Motors to be driven by timer or control events  High left/right friction, No angular friction
+        ///     Linear Motor wins in a second, decays in 60 seconds.  Angular motor wins in a second, decays in 8/10ths of a second
+        ///     linear deflection 2 seconds
+        ///     Vertical Attractor locked UP
         /// </summary>
         TYPE_CAR = 2,
         TYPE_BOAT = 3,
@@ -55,22 +55,22 @@ namespace Aurora.Framework.Physics
         LINEAR_FRICTION_TIMESCALE = 16,
 
         /// <summary>
-        ///   vector of timescales for exponential decay of angular velocity about three axis
+        ///     vector of timescales for exponential decay of angular velocity about three axis
         /// </summary>
         ANGULAR_FRICTION_TIMESCALE = 17,
 
         /// <summary>
-        ///   linear velocity vehicle will try for
+        ///     linear velocity vehicle will try for
         /// </summary>
         LINEAR_MOTOR_DIRECTION = 18,
 
         /// <summary>
-        ///   Offset from center of mass where linear motor forces are added
+        ///     Offset from center of mass where linear motor forces are added
         /// </summary>
         LINEAR_MOTOR_OFFSET = 20,
 
         /// <summary>
-        ///   angular velocity that vehicle will try for
+        ///     angular velocity that vehicle will try for
         /// </summary>
         ANGULAR_MOTOR_DIRECTION = 19,
         HOVER_HEIGHT = 24,
@@ -83,7 +83,7 @@ namespace Aurora.Framework.Physics
         LINEAR_MOTOR_DECAY_TIMESCALE = 31,
 
         /// <summary>
-        ///   slide between 0 and 1
+        ///     slide between 0 and 1
         /// </summary>
         ANGULAR_DEFLECTION_EFFICIENCY = 32,
         ANGULAR_DEFLECTION_TIMESCALE = 33,

@@ -6,26 +6,6 @@
 [InterestManagement]
     ;; This section controls how updates for prims and avatars are sent to the client
     
-    ;;
-    ;; Prioritizer section
-    ;;
-    
-    ;; Valid values are:
-    ;; Time - First come, first out
-    ;; Distance - Sends closer objects first
-    ;; SimpleAngularDistance - Not Available
-    ;; FrontBack - What is in front is first
-    ;; BestAvatarResponsiveness - Checks the update for closer objects, in front of the avatar, whether the avatar is sitting on objects, child agents, etc. Recommended to use this option.
-    ;; OOB - Based on the object bounding boxes and distance
-    ;; Default is BestAvatarResponsiveness
-    UpdatePrioritizationScheme = BestAvatarResponsiveness
-    ;; Distance child agent cameras have to move before updates are reprioritized
-    ChildReprioritizationDistance = 20.0
-    
-    ;;
-    ;; Culling section
-    ;;
-    
     ;; Should we only send the updates that clients can see (based on their draw distance)?
     ;; EXTREMELY NOT RECOMMENDED to disable!
     ;; Default: true
@@ -34,10 +14,12 @@
     ;; Culling based on distance
     ;; Default: true
     UseDistanceBasedCulling = true;
+	
+    ;; Distance child agent cameras have to move before updates are reprioritized
+    ChildReprioritizationDistance = 20.0
 
 [ObjectCache]
     ;; This helps reduce bandwidth by sending cached updates to the client
-    ;; EXTREMELY NOT RECOMMENDED to disable!
     ;; Default: ObjectCacheModule
     Module = ObjectCacheModule
 
@@ -122,13 +104,6 @@
     ;; Default is 120
     ClientTimeOut = 120
 
-    ;; Quash and remove any light properties from attachments not on the
-    ;; hands. This allows flashlights and lanterns to function, but kills
-    ;; silly vanity "Facelights" dead. Sorry, head mounted miner's lamps
-    ;; will also be affected.
-    ;;
-    ;DisableFacelights = "false"
-
 [ImageDecoding]
     ;; Use CSJ2K for layer boundary decoding if true, OpenJPEG is used if false
     ;; Default is false
@@ -150,11 +125,11 @@
     ;;
     ;; Max threads to allocate on the FireAndForget thread pool
     ;; when running with the SmartThreadPool option above
-    ;; This defaults to 15, but this is a misleading default as it depends on your machine, real recommended are as follows
+    ;; This defaults to 30, but this is a misleading default as it depends on your machine, real recommended are as follows
     ;; Single Core, 15
     ;; Dual Core, 30
     ;; Quad Core, 45
-    MaxPoolThreads = 15
+    MaxPoolThreads = 30
 
 [SSLConfig]
     ;; ssl config: Experimental!
@@ -165,7 +140,3 @@
     http_listener_cn = localhost ; Use the cert with the common name
     http_listener_sslport = 9001 ; Use this port for SSL connections
     http_listener_ssl_cert = "" ; Currently unused, but will be used for OSHttpServer
-
-[MediaOnAPrim]
-    ;; Enable media on a prim facilities
-    Enabled = true

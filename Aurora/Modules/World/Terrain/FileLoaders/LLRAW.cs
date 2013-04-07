@@ -28,14 +28,15 @@
 using System;
 using System.IO;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Modules.Terrain.FileLoaders
 {
     public class LLRAW : ITerrainLoader
     {
         /// <summary>
-        ///   Lookup table to speed up terrain exports
+        ///     Lookup table to speed up terrain exports
         /// </summary>
         private HeightmapLookupValue[] LookupHeightTable;
 
@@ -112,7 +113,6 @@ namespace Aurora.Modules.Terrain.FileLoaders
             }
 
             bs.Close();
-            s.Close();
 
             return retval;
         }

@@ -29,21 +29,27 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Search
 {
-    public class AuroraSearchModule : ISharedRegionModule
+    public class AuroraSearchModule : INonSharedRegionModule
     {
         #region Declares
 
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly List<IScene> m_Scenes = new List<IScene>();
+        private IScene m_Scene;
         private IGroupsModule GroupsModule;
         private IProfileConnector ProfileFrontend;
         private IDirectoryServiceConnector directoryService;
@@ -66,6 +72,8 @@ namespace Aurora.Modules.Search
             client.OnMapItemRequest += HandleMapItemRequest;
             client.OnPlacesQuery += OnPlacesQueryRequest;
             client.OnAvatarPickerRequest += ProcessAvatarPickerRequest;
+            client.OnEventNotificationAddRequest += client_OnEventNotificationAddRequest;
+            client.OnEventNotificationRemoveRequest += client_OnEventNotificationRemoveRequest;
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -80,6 +88,8 @@ namespace Aurora.Modules.Search
             client.OnMapItemRequest -= HandleMapItemRequest;
             client.OnPlacesQuery -= OnPlacesQueryRequest;
             client.OnAvatarPickerRequest -= ProcessAvatarPickerRequest;
+            client.OnEventNotificationAddRequest -= client_OnEventNotificationAddRequest;
+            client.OnEventNotificationRemoveRequest -= client_OnEventNotificationRemoveRequest;
         }
 
         #endregion
@@ -93,32 +103,25 @@ namespace Aurora.Modules.Search
         #endregion
 
         /// <summary>
-        ///   Parcel request
+        ///     Parcel request
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "queryID"></param>
-        /// <param name = "queryText">The thing to search for</param>
-        /// <param name = "queryFlags"></param>
-        /// <param name = "category"></param>
-        /// <param name = "simName"></param>
-        /// <param name = "queryStart"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID"></param>
+        /// <param name="queryText">The thing to search for</param>
+        /// <param name="queryFlags"></param>
+        /// <param name="category"></param>
+        /// <param name="simName"></param>
+        /// <param name="queryStart"></param>
         protected void DirPlacesQuery(IClientAPI remoteClient, UUID queryID,
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
         {
             List<DirPlacesReplyData> ReturnValues =
                 directoryService.FindLand(queryText, category.ToString(), queryStart,
-                                                                       (uint) queryFlags, remoteClient.ScopeID);
+                                          (uint) queryFlags, remoteClient.ScopeID);
 
-#if (!ISWIN)
-            SplitPackets<DirPlacesReplyData>(ReturnValues, delegate(DirPlacesReplyData[] data)
-            {
-                remoteClient.SendDirPlacesReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirPlacesReply(queryID, data));
-#endif
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
@@ -130,38 +133,34 @@ namespace Aurora.Modules.Search
         }
 
         /// <summary>
-        ///   Land for sale request
+        ///     Land for sale request
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "queryID"></param>
-        /// <param name = "queryFlags"></param>
-        /// <param name = "searchType"></param>
-        /// <param name = "price"></param>
-        /// <param name = "area"></param>
-        /// <param name = "queryStart"></param>
-        public void DirLandQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart)
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID"></param>
+        /// <param name="queryFlags"></param>
+        /// <param name="searchType"></param>
+        /// <param name="price"></param>
+        /// <param name="area"></param>
+        /// <param name="queryStart"></param>
+        public void DirLandQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price,
+                                 uint area, int queryStart)
         {
-            List<DirLandReplyData> ReturnValues = new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area, queryStart, queryFlags, remoteClient.ScopeID));
+            List<DirLandReplyData> ReturnValues =
+                new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area,
+                                                                            queryStart, queryFlags, remoteClient.ScopeID));
 
-#if (!ISWIN)
-            SplitPackets<DirLandReplyData>(ReturnValues, delegate(DirLandReplyData[] data)
-            {
-                remoteClient.SendDirLandReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirLandReply(queryID, data));
-#endif
         }
 
         /// <summary>
-        ///   Finds either people or events
+        ///     Finds either people or events
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "queryID">Just a UUID to send back to the client</param>
-        /// <param name = "queryText">The term to search for</param>
-        /// <param name = "queryFlags">Flags like maturity, etc</param>
-        /// <param name = "queryStart">Where in the search should we start? 0, 10, 20, etc</param>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryID">Just a UUID to send back to the client</param>
+        /// <param name="queryText">The term to search for</param>
+        /// <param name="queryFlags">Flags like maturity, etc</param>
+        /// <param name="queryStart">Where in the search should we start? 0, 10, 20, etc</param>
         public void DirFindQuery(IClientAPI remoteClient, UUID queryID,
                                  string queryText, uint queryFlags, int queryStart)
         {
@@ -169,13 +168,11 @@ namespace Aurora.Modules.Search
             {
                 DirPeopleQuery(remoteClient, queryID, queryText, queryFlags,
                                queryStart);
-                return;
             }
             else if ((queryFlags & 32) != 0) //Events query
             {
                 DirEventsQuery(remoteClient, queryID, queryText, queryFlags,
                                queryStart);
-                return;
             }
         }
 
@@ -184,8 +181,8 @@ namespace Aurora.Modules.Search
                                    string queryText, uint queryFlags, int queryStart)
         {
             //Find the user accounts
-            List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(remoteClient.AllScopeIDs,
-                                                                                        queryText);
+            List<UserAccount> accounts = m_Scene.UserAccountService.GetUserAccounts(remoteClient.AllScopeIDs,
+                                                                                    queryText);
             List<DirPeopleReplyData> ReturnValues =
                 new List<DirPeopleReplyData>();
 
@@ -214,7 +211,7 @@ namespace Aurora.Modules.Search
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo =
-                        m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
+                        m_Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
                     if (Pinfo != null && Pinfo.IsOnline) //If it is null, they are offline
                         person.online = true;
                     person.reputation = 0;
@@ -242,7 +239,7 @@ namespace Aurora.Modules.Search
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo =
-                        m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
+                        m_Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
                     if (Pinfo != null && Pinfo.IsOnline)
                         person.online = true;
                     person.reputation = 0;
@@ -250,44 +247,30 @@ namespace Aurora.Modules.Search
                 }
             }
 
-#if (!ISWIN)
-            SplitPackets<DirPeopleReplyData>(ReturnValues, delegate(DirPeopleReplyData[] data)
-            {
-                remoteClient.SendDirPeopleReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirPeopleReply(queryID, data));
-#endif
         }
 
-        public void DirEventsQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, int queryStart)
+        public void DirEventsQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags,
+                                   int queryStart)
         {
-            List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart, remoteClient.ScopeID));
+            List<DirEventsReplyData> ReturnValues =
+                new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart,
+                                                                         remoteClient.ScopeID));
 
-#if (!ISWIN)
-            SplitPackets<DirEventsReplyData>(ReturnValues, delegate(DirEventsReplyData[] data)
-            {
-                remoteClient.SendDirEventsReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues, data => remoteClient.SendDirEventsReply(queryID, data));
-#endif
         }
 
-        public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, uint category, int queryStart)
+        public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags,
+                                       uint category, int queryStart)
         {
-            List<DirClassifiedReplyData> ReturnValues = new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(), queryFlags, queryStart, remoteClient.ScopeID));
+            List<DirClassifiedReplyData> ReturnValues =
+                new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(),
+                                                                                  queryFlags, queryStart,
+                                                                                  remoteClient.ScopeID));
 
-#if (!ISWIN)
-            SplitPackets<DirClassifiedReplyData>(ReturnValues, delegate(DirClassifiedReplyData[] data)
-            {
-                remoteClient.SendDirClassifiedReply(queryID, data);
-            });
-#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirClassifiedReply(queryID, data));
-#endif
         }
 
         public void SplitPackets<T>(List<T> packets, SendPacket<T> send)
@@ -310,10 +293,10 @@ namespace Aurora.Modules.Search
         }
 
         /// <summary>
-        ///   Tell the client about X event
+        ///     Tell the client about X event
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "queryEventID">ID of the event</param>
+        /// <param name="remoteClient"></param>
+        /// <param name="queryEventID">ID of the event</param>
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
         {
             //Find the event
@@ -336,7 +319,9 @@ namespace Aurora.Modules.Search
             Utils.LongToUInts(remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
             GridRegion GR = null;
 
-            GR = regionhandle == 0 ? new GridRegion(remoteClient.Scene.RegionInfo) : m_Scenes[0].GridService.GetRegionByPosition(remoteClient.AllScopeIDs, (int)xstart, (int)ystart);
+            GR = regionhandle == 0
+                     ? new GridRegion(remoteClient.Scene.RegionInfo)
+                     : m_Scene.GridService.GetRegionByPosition(remoteClient.AllScopeIDs, (int) xstart, (int) ystart);
             if (GR == null)
             {
                 //No region???
@@ -347,7 +332,7 @@ namespace Aurora.Modules.Search
 
             if (itemtype == (uint) GridItemType.Telehub)
             {
-                IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>();
+                IRegionConnector GF = Framework.Utilities.DataManager.RequestPlugin<IRegionConnector>();
                 if (GF == null)
                     return;
 
@@ -385,7 +370,8 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                List<DirLandReplyData> Landdata = directoryService.FindLandForSaleInRegion("0", uint.MaxValue, 0, 0, 0, GR.RegionID);
+                List<DirLandReplyData> Landdata = directoryService.FindLandForSaleInRegion("0", uint.MaxValue, 0, 0, 0,
+                                                                                           GR.RegionID);
 
                 int locX = 0;
                 int locY = 0;
@@ -396,16 +382,16 @@ namespace Aurora.Modules.Search
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
-                    foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
+                    if (m_Scene.RegionInfo.RegionID == landdata.RegionID)
                     {
                         //Global coords, so add the meters
-                        locX = scene.RegionInfo.RegionLocX;
-                        locY = scene.RegionInfo.RegionLocY;
+                        locX = m_Scene.RegionInfo.RegionLocX;
+                        locY = m_Scene.RegionInfo.RegionLocY;
                     }
-                    if (locY == 0 && locX == 0)
+                    else
                     {
                         //Ask the grid service for the coordinates if the region is not local
-                        GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(remoteClient.AllScopeIDs, landdata.RegionID);
+                        GridRegion r = m_Scene.GridService.GetRegionByUUID(remoteClient.AllScopeIDs, landdata.RegionID);
                         if (r != null)
                         {
                             locX = r.RegionLocX;
@@ -441,7 +427,8 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0, remoteClient.ScopeID);
+                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0,
+                                                                                   remoteClient.ScopeID);
 
                 int locX = 0;
                 int locY = 0;
@@ -450,26 +437,16 @@ namespace Aurora.Modules.Search
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
-#if (!ISWIN)
-                    foreach (IScene scene in m_Scenes)
+
+                    if (m_Scene.RegionInfo.RegionID == landdata.RegionID)
                     {
-                        if (scene.RegionInfo.RegionID == landdata.RegionID)
-                        {
-                            locX = scene.RegionInfo.RegionLocX;
-                            locY = scene.RegionInfo.RegionLocY;
-                        }
+                        locX = m_Scene.RegionInfo.RegionLocX;
+                        locY = m_Scene.RegionInfo.RegionLocY;
                     }
-#else
-                    foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
-                    {
-                        locX = scene.RegionInfo.RegionLocX;
-                        locY = scene.RegionInfo.RegionLocY;
-                    }
-#endif
-                    if (locY == 0 && locX == 0)
+                    else
                     {
                         //Ask the grid service for the coordinates if the region is not local
-                        GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(remoteClient.AllScopeIDs, landdata.RegionID);
+                        GridRegion r = m_Scene.GridService.GetRegionByUUID(remoteClient.AllScopeIDs, landdata.RegionID);
                         if (r != null)
                         {
                             locX = r.RegionLocX;
@@ -530,8 +507,8 @@ namespace Aurora.Modules.Search
                     Vector3 globalPos = eventdata.globalPos;
                     mapitem = new mapItemReply
                                   {
-                                      x = (uint) (globalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX/2)),
-                                      y = (uint) (globalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY/2)),
+                                      x = (uint) globalPos.X,
+                                      y = (uint) globalPos.Y,
                                       id = UUID.Random(),
                                       name = eventData.name,
                                       Extra = (int) eventdata.dateUTC,
@@ -563,7 +540,7 @@ namespace Aurora.Modules.Search
                 foreach (Classified classified in Classifieds)
                 {
                     //Get the region so we have its position
-                    GridRegion region = m_Scenes[0].GridService.GetRegionByName(remoteClient.AllScopeIDs, classified.SimName);
+                    GridRegion region = m_Scene.GridService.GetRegionByName(remoteClient.AllScopeIDs, classified.SimName);
 
                     mapitem = new mapItemReply
                                   {
@@ -600,7 +577,8 @@ namespace Aurora.Modules.Search
             if (QueryFlags == 64) //Agent Owned
             {
                 //Get all the parcels
-                client.SendPlacesQuery(directoryService.GetParcelByOwner(client.AgentId).ToArray(), QueryID, TransactionID);
+                client.SendPlacesQuery(directoryService.GetParcelByOwner(client.AgentId).ToArray(), QueryID,
+                                       TransactionID);
             }
             if (QueryFlags == 256) //Group Owned
             {
@@ -670,9 +648,19 @@ namespace Aurora.Modules.Search
             client.SendAvatarPickerReply(agent_data, data_args);
         }
 
+        private void client_OnEventNotificationRemoveRequest(uint EventID, IClientAPI client)
+        {
+            directoryService.RemoveEventNofication(client.AgentId, EventID);
+        }
+
+        private void client_OnEventNotificationAddRequest(uint EventID, IClientAPI client)
+        {
+            directoryService.AddEventNofication(client.AgentId, EventID);
+        }
+
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -687,7 +675,7 @@ namespace Aurora.Modules.Search
             if (!m_SearchEnabled)
                 return;
 
-            m_Scenes.Add(scene);
+            m_Scene = scene;
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
@@ -697,7 +685,7 @@ namespace Aurora.Modules.Search
             if (!m_SearchEnabled)
                 return;
 
-            m_Scenes.Remove(scene);
+            m_Scene = null;
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
@@ -707,23 +695,14 @@ namespace Aurora.Modules.Search
             if (!m_SearchEnabled)
                 return;
             //Pull in the services we need
-            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            directoryService = DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            ProfileFrontend = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
+            directoryService = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             GroupsModule = scene.RequestModuleInterface<IGroupsModule>();
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

@@ -17,9 +17,6 @@
     ;; Directory to load module .ini files from
     IniDirectory = "Configuration/Modules"
 
-    ;; Disables all WinForm based popups and uses the console whenever possible
-    NoGUI = false
-
     ;; Commands to be run on startup are in the given file
     startup_console_commands_file = startup_commands.txt
 
@@ -31,18 +28,14 @@
     ;; Time between each timer to run (in minutes)
     ;timer_time = 20
 
-    ;; If you have only one region in an instance, or to avoid the many bugs
-    ;; that you can trigger in modules by restarting a region, set this to
-    ;; true to make the entire instance restart instead of restarting the region.
-    ;; Restarting the region in this way is the same as reopening Aurora.
-    InworldRestartShutsDown = false
-
-    ;; Should we restart Aurora if the sim crashes?
-    AutoRestartOnCrash = false
-
     ;; Should Aurora wait until all modules have finished starting up before allowing logins and use of the console?
     ;; Default is true
     CompleteStartupAfterAllModulesLoad = true
+	
+	;; If the region is told to restart, should we instead
+	;;   shut down this instance?
+	;;   Default is true, as restarts work
+	RegionRestartCausesShutdown = false
 
 [Network]
 	
@@ -52,19 +45,8 @@
 	;; For UDP connections, you know what it is if you need it
 	;internal_ip = "0.0.0.0"
 	
-	;; HTTPS configs
+	;; HTTPS configs (See HTTPS.txt in AuroraDocs/)
 	use_https = false
-	;; Path to your HTTPS certificate
-	https_cert_path = ""
-	;; Password to your HTTPS cert
-	https_cert_pass = ""
-	;; The protocols that will be able to be used
-	;; The valid values are
-	;; Default - Specifies that either SSL 3.0 or TLS 1.0 are acceptable for secure communications
-	;; Tls - Specifies that the TLS 1.0 security protocol is the only acceptable secure communications protocol
-	;; Ssl3 - Specifies that the SSL 3.0 security protocol is the only acceptable secure communications protocol
-	;; Ssl2 - Specifies that the SSL 2.0 security protocol is the only acceptable secure communications protocol
-	https_ssl_protocol = "Default"
 	
 	;; This doesn't require any changes if you wish to use the automatic finding of the external IP
     ;HostName = 127.0.0.1
@@ -77,31 +59,6 @@
     ;; CommandConsole = Default black and white console
     ;; GUIConsole = Special interface to allow i/o redirection to work for GUI applications.
     Console = LocalConsole
-
-    ;; These are the settings for the remote console, unneeded if not using the remote console
-    ;RemoteConsoleUser =
-    ;RemoteConsolePass =
-    ;remote_console_port = 0
-
-[RegionStartup]
-    ;; This sets the default for which region loader will create new regions
-    ;; Values are:
-    ;; RegionLoaderDataBaseSystem - database loader
-    ;; RegionLoaderFileSystem - .ini file loader
-    ;; RegionLoaderWebServer - the web loader (loads .ini files via a url)
-    ;; Default is RegionLoaderDataBaseSystem
-    Default = RegionLoaderDataBaseSystem
-
-    ;; If you want to enable only certain loaders, you can disable them there
-    RegionLoaderDataBaseSystem_Enabled = true
-    RegionLoaderFileSystem_Enabled = false
-    RegionLoaderWebServer_Enabled = true
-
-    ;; What directory region .ini files loaded from
-    RegionsDirectory = Regions
-
-    ;; Web page that .ini files are stored (used by the RegionLoaderWebServer plugin)
-    ;WebServerURL = http://example.com/regions.ini;
 
 ;; Please note that all the configuration files have been moved to the Configuration folder and organized from there.
 ;; Please do NOT edit below this line unless you know what you are doing with it!

@@ -26,11 +26,13 @@
  */
 
 using System.Collections.Generic;
-using System.Reflection;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Physics
 {
     public delegate void RaycastCallback(
         bool hitYN, Vector3 collisionPoint, uint localid, float distance, Vector3 normal);
@@ -67,7 +69,7 @@ namespace Aurora.Framework
 
         public virtual bool DisableCollisions { get; set; }
 
-        public virtual List<PhysicsObject> ActiveObjects
+        public virtual List<PhysicsActor> ActiveObjects
         {
             get { return null; }
         }
@@ -77,78 +79,39 @@ namespace Aurora.Framework
             get { return false; }
         }
 
-        public virtual int StatPhysicsTaintTime
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatPhysicsTaintTime { get; protected set; }
 
-        public virtual int StatPhysicsMoveTime
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatPhysicsMoveTime { get; protected set; }
 
-        public virtual int StatCollisionOptimizedTime
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatCollisionOptimizedTime { get; protected set; }
 
-        public virtual int StatSendCollisionsTime
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatSendCollisionsTime { get; protected set; }
 
-        public virtual int StatAvatarUpdatePosAndVelocity
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatAvatarUpdatePosAndVelocity { get; protected set; }
 
-        public virtual int StatPrimUpdatePosAndVelocity
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatPrimUpdatePosAndVelocity { get; protected set; }
 
-        public virtual int StatUnlockedArea
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatUnlockedArea { get; protected set; }
 
-        public virtual int StatFindContactsTime
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatFindContactsTime { get; protected set; }
 
-        public virtual int StatContactLoopTime
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatContactLoopTime { get; protected set; }
 
-        public virtual int StatCollisionAccountingTime
-        {
-            get;
-            protected set;
-        }
+        public virtual int StatCollisionAccountingTime { get; protected set; }
 
-        public abstract void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry);
+        public abstract void Initialise(IMesher meshmerizer, IScene scene);
         public abstract void PostInitialise(IConfigSource config);
 
-        public abstract PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
+        public abstract PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint LocalID, UUID UUID);
 
-        public abstract void RemoveAvatar(PhysicsCharacter actor);
+        public abstract void RemoveAvatar(PhysicsActor actor);
 
-        public abstract void RemovePrim(PhysicsObject prim);
-        public abstract void DeletePrim(PhysicsObject prim);
+        public abstract void RemovePrim(PhysicsActor prim);
+        public abstract void DeletePrim(PhysicsActor prim);
 
-        public abstract PhysicsObject AddPrimShape(ISceneChildEntity entity);
+        public abstract PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
+            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical);
 
         public abstract void Simulate(float timeStep);
 
@@ -165,7 +128,7 @@ namespace Aurora.Framework
         public abstract Dictionary<uint, float> GetTopColliders();
 
         /// <summary>
-        ///   True if the physics plugin supports raycasting against the physics scene
+        ///     True if the physics plugin supports raycasting against the physics scene
         /// </summary>
         public virtual bool SupportsRayCast()
         {
@@ -173,24 +136,21 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Queue a raycast against the physics scene.
-        ///   The provided callback method will be called when the raycast is complete
-        /// 
-        ///   Many physics engines don't support collision testing at the same time as 
-        ///   manipulating the physics scene, so we queue the request up and callback 
-        ///   a custom method when the raycast is complete.
-        ///   This allows physics engines that give an immediate result to callback immediately
-        ///   and ones that don't, to callback when it gets a result back.
-        /// 
-        ///   ODE for example will not allow you to change the scene while collision testing or
-        ///   it asserts, 'opteration not valid for locked space'.  This includes adding a ray to the scene.
-        /// 
-        ///   This is named RayCastWorld to not conflict with modrex's Raycast method.
+        ///     Queue a raycast against the physics scene.
+        ///     The provided callback method will be called when the raycast is complete
+        ///     Many physics engines don't support collision testing at the same time as
+        ///     manipulating the physics scene, so we queue the request up and callback
+        ///     a custom method when the raycast is complete.
+        ///     This allows physics engines that give an immediate result to callback immediately
+        ///     and ones that don't, to callback when it gets a result back.
+        ///     ODE for example will not allow you to change the scene while collision testing or
+        ///     it asserts, 'opteration not valid for locked space'.  This includes adding a ray to the scene.
+        ///     This is named RayCastWorld to not conflict with modrex's Raycast method.
         /// </summary>
-        /// <param name = "position">Origin of the ray</param>
-        /// <param name = "direction">Direction of the ray</param>
-        /// <param name = "length">Length of ray in meters</param>
-        /// <param name = "retMethod">Method to call when the raycast is complete</param>
+        /// <param name="position">Origin of the ray</param>
+        /// <param name="direction">Direction of the ray</param>
+        /// <param name="length">Length of ray in meters</param>
+        /// <param name="retMethod">Method to call when the raycast is complete</param>
         public virtual void RaycastWorld(Vector3 position, Vector3 direction, float length, RaycastCallback retMethod)
         {
             if (retMethod != null)
@@ -243,7 +203,7 @@ namespace Aurora.Framework
             get { return false; }
         }
 
-        public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
+        public override void Initialise(IMesher meshmerizer, IScene scene)
         {
             // Does nothing right now
         }
@@ -252,22 +212,22 @@ namespace Aurora.Framework
         {
         }
 
-        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
+        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint localID, UUID UUID)
         {
             MainConsole.Instance.InfoFormat("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
             return new NullCharacterPhysicsActor();
         }
 
-        public override void RemoveAvatar(PhysicsCharacter actor)
+        public override void RemoveAvatar(PhysicsActor actor)
         {
         }
 
-        public override void RemovePrim(PhysicsObject prim)
+        public override void RemovePrim(PhysicsActor prim)
         {
         }
 
-        public override void DeletePrim(PhysicsObject prim)
+        public override void DeletePrim(PhysicsActor prim)
         {
         }
 
@@ -283,7 +243,8 @@ namespace Aurora.Framework
                     }
         */
 
-        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
+        public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
+            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
         {
             return new NullObjectPhysicsActor();
         }

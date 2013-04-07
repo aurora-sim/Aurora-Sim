@@ -25,59 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
+using Aurora.Framework.Modules;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
+using System.Collections.Generic;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework.Services
 {
     public class FriendInfo : IDataTransferable
     {
         /// <summary>
-        ///   The friend of PrincipalID
+        ///     The friend of PrincipalID
         /// </summary>
         public string Friend;
 
         /// <summary>
-        ///   The flags that PrincipalID has given to Friend
+        ///     The flags that PrincipalID has given to Friend
         /// </summary>
         public int MyFlags;
 
         /// <summary>
-        ///   The user who is a friend of "Friend"
+        ///     The user who is a friend of "Friend"
         /// </summary>
         public UUID PrincipalID;
 
         /// <summary>
-        ///   The flags Friend has given to PrincipalID
+        ///     The flags Friend has given to PrincipalID
         /// </summary>
         public int TheirFlags;
 
         public FriendInfo()
         {
-        }
-
-        public FriendInfo(Dictionary<string, object> kvp)
-        {
-            FromKVP(kvp);
-        }
-
-        public override void FromKVP(Dictionary<string, object> kvp)
-        {
-            PrincipalID = UUID.Zero;
-            if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
-                UUID.TryParse(kvp["PrincipalID"].ToString(), out PrincipalID);
-            Friend = string.Empty;
-            if (kvp.ContainsKey("Friend") && kvp["Friend"] != null)
-                Friend = kvp["Friend"].ToString();
-            MyFlags = 0;
-            if (kvp.ContainsKey("MyFlags") && kvp["MyFlags"] != null)
-                Int32.TryParse(kvp["MyFlags"].ToString(), out MyFlags);
-            TheirFlags = 0;
-            if (kvp.ContainsKey("TheirFlags") && kvp["TheirFlags"] != null)
-                Int32.TryParse(kvp["TheirFlags"].ToString(), out TheirFlags);
         }
 
         public override void FromOSD(OpenMetaverse.StructuredData.OSDMap map)
@@ -86,17 +64,6 @@ namespace OpenSim.Services.Interfaces
             Friend = map["Friend"];
             MyFlags = map["MyFlags"];
             TheirFlags = map["TheirFlags"];
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            result["PrincipalID"] = PrincipalID.ToString();
-            result["Friend"] = Friend;
-            result["MyFlags"] = MyFlags.ToString();
-            result["TheirFlags"] = TheirFlags.ToString();
-
-            return result;
         }
 
         public override OpenMetaverse.StructuredData.OSDMap ToOSD()
@@ -114,41 +81,40 @@ namespace OpenSim.Services.Interfaces
     public interface IFriendsService
     {
         /// <summary>
-        ///   The local service (if possible)
+        ///     The local service (if possible)
         /// </summary>
         IFriendsService InnerService { get; }
 
         /// <summary>
-        ///   Get all friends of the given user
+        ///     Get all friends of the given user
         /// </summary>
-        /// <param name = "PrincipalID"></param>
+        /// <param name="principalID"></param>
         /// <returns></returns>
-        List<FriendInfo> GetFriends(UUID PrincipalID);
+        List<FriendInfo> GetFriends(UUID principalID);
 
         /// <summary>
-        ///   Get all friends requests of the given user
+        ///     Get all friends requests of the given user
         /// </summary>
-        /// <param name = "PrincipalID"></param>
+        /// <param name="principalID"></param>
         /// <returns></returns>
-        /// 
         List<FriendInfo> GetFriendsRequest(UUID principalID);
 
         /// <summary>
-        ///   Store the changes of the friend of PrincipalID
+        ///     Store the changes of the friend of PrincipalID
         /// </summary>
-        /// <param name = "PrincipalID"></param>
-        /// <param name = "Friend"></param>
-        /// <param name = "flags"></param>
+        /// <param name="principalID"></param>
+        /// <param name="friend"></param>
+        /// <param name="flags"></param>
         /// <returns></returns>
-        bool StoreFriend(UUID PrincipalID, string Friend, int flags);
+        bool StoreFriend(UUID principalID, string friend, int flags);
 
         /// <summary>
-        ///   Delete the friendship between the two users
+        ///     Delete the friendship between the two users
         /// </summary>
-        /// <param name = "PrincipalID"></param>
-        /// <param name = "Friend"></param>
+        /// <param name="principalID"></param>
+        /// <param name="friend"></param>
         /// <returns></returns>
-        bool Delete(UUID PrincipalID, string Friend);
+        bool Delete(UUID principalID, string friend);
 
         void Initialize(IConfigSource config, IRegistryCore registry);
 

@@ -28,8 +28,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using OpenMetaverse;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -93,7 +95,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public IObject this[int index]
         {
-            get { return new SOPObject(m_scene, (uint)index, m_security); }
+            get { return new SOPObject(m_scene, (uint) index, m_security); }
         }
 
         public IObject this[uint index]
@@ -105,7 +107,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get
             {
-                Aurora.Framework.IEntity ent;
+                Framework.SceneInfo.Entities.IEntity ent;
                 if (m_scene.Entities.TryGetValue(index, out ent))
                     return new SOPObject(m_scene, ent.LocalId, m_security);
                 return null;
@@ -153,7 +155,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public bool Contains(IObject item)
         {
-            Aurora.Framework.IEntity ent;
+            Framework.SceneInfo.Entities.IEntity ent;
             return m_scene.Entities.TryGetValue(item.GlobalID, out ent);
         }
 

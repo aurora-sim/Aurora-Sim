@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using Aurora.Framework.Physics;
 
-namespace OpenSim.Region.Physics.BasicPhysicsPlugin
+namespace Aurora.Physics.BasicPhysicsPlugin
 {
     /// <summary>
-    ///   Effectively a physics plugin that simulates no physics at all.
+    ///     Effectively a physics plugin that simulates no physics at all.
     /// </summary>
     public class BasicPhysicsPlugin : IPhysicsPlugin
     {

@@ -27,10 +27,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public struct WearableItem
     {
@@ -44,7 +45,7 @@ namespace Aurora.Framework
         }
     }
 
-    public class AvatarWearable : IDataTransferable
+    public class AvatarWearable
     {
         // these are guessed at by the list here -
         // http://wiki.secondlife.com/wiki/Avatar_Appearance.  We'll
@@ -107,7 +108,7 @@ namespace Aurora.Framework
 
         public AvatarWearable(OSDArray args)
         {
-            Unpack(args);
+            FromOSD(args);
         }
 
         public int Count
@@ -169,24 +170,10 @@ namespace Aurora.Framework
 
         public Dictionary<UUID, UUID> GetItems()
         {
-#if (!ISWIN)
-            Dictionary<UUID, UUID> dictionary = new Dictionary<UUID, UUID>();
-            foreach (KeyValuePair<UUID, UUID> item in m_items)
-                dictionary.Add(item.Key, item.Value);
-            return dictionary;
-#else
             return m_items.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-#endif
         }
 
-        public override OSDMap ToOSD()
-        {
-            OSDMap map = new OSDMap();
-            map["Value"] = Pack();
-            return map;
-        }
-
-        public OSD Pack()
+        public OSDArray ToOSD()
         {
             OSDArray wearlist = new OSDArray();
 
@@ -201,12 +188,7 @@ namespace Aurora.Framework
             return wearlist;
         }
 
-        public override void FromOSD(OSDMap map)
-        {
-            Unpack((OSDArray)map["Value"]);
-        }
-
-        public void Unpack(OSDArray args)
+        public void FromOSD(OSDArray args)
         {
             Clear();
 
@@ -262,22 +244,11 @@ namespace Aurora.Framework
         {
             UUID itemID = UUID.Zero;
 
-#if (!ISWIN)
-            foreach (KeyValuePair<UUID, UUID> kvp in m_items)
-            {
-                if (kvp.Value == assetID)
-                {
-                    itemID = kvp.Key;
-                    break;
-                }
-            }
-#else
             foreach (KeyValuePair<UUID, UUID> kvp in m_items.Where(kvp => kvp.Value == assetID))
             {
                 itemID = kvp.Key;
                 break;
             }
-#endif
 
             if (itemID != UUID.Zero)
             {
@@ -297,20 +268,12 @@ namespace Aurora.Framework
         {
             if (!m_items.ContainsValue(assetID))
                 return UUID.Zero;
-#if (!ISWIN)
-            foreach (KeyValuePair<UUID, UUID> kvp in m_items)
-            {
-                if (kvp.Value == assetID)
-                {
-                    return kvp.Key;
-                }
-            }
-#else
+
             foreach (KeyValuePair<UUID, UUID> kvp in m_items.Where(kvp => kvp.Value == assetID))
             {
                 return kvp.Key;
             }
-#endif
+
             return UUID.Zero;
         }
     }

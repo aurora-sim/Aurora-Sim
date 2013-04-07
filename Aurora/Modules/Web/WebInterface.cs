@@ -1,20 +1,25 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Xsl;
-using Aurora.Framework;
+﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Simulation.Base;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Web;
+using System.Xml;
+using System.Xml.Xsl;
 
 namespace Aurora.Modules.Web
 {
@@ -22,7 +27,7 @@ namespace Aurora.Modules.Web
     {
         #region Declares
 
-        protected const int CLIENT_CACHE_TIME = 86400;//1 day
+        protected const int CLIENT_CACHE_TIME = 86400; //1 day
         protected uint _port = 8002;
         protected bool _enabled = true;
         protected Dictionary<string, IWebInterfacePage> _pages = new Dictionary<string, IWebInterfacePage>();
@@ -36,9 +41,21 @@ namespace Aurora.Modules.Web
         public IRegistryCore Registry { get; protected set; }
 
         public string GridName { get; private set; }
-        public string LoginScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/welcomescreen/"; } }
-        public string WebProfileURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/webprofile/"; } }
-        public string RegistrationScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/register.html"; } }
+
+        public string LoginScreenURL
+        {
+            get { return MainServer.Instance.FullHostName + ":" + _port + "/welcomescreen/"; }
+        }
+
+        public string WebProfileURL
+        {
+            get { return MainServer.Instance.FullHostName + ":" + _port + "/webprofile/"; }
+        }
+
+        public string RegistrationScreenURL
+        {
+            get { return MainServer.Instance.FullHostName + ":" + _port + "/register.html"; }
+        }
 
         #endregion
 
@@ -48,7 +65,7 @@ namespace Aurora.Modules.Web
         {
             Registry = registry;
 
-            var webPages = Aurora.Framework.AuroraModuleLoader.PickupModules<IWebInterfacePage>();
+            var webPages = AuroraModuleLoader.PickupModules<IWebInterfacePage>();
             foreach (var pages in webPages)
             {
                 foreach (var page in pages.FilePath)
@@ -109,12 +126,13 @@ namespace Aurora.Modules.Web
             return page;
         }
 
-        protected byte[] FindAndSendPage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        protected byte[] FindAndSendPage(string path, Stream request, OSHttpRequest httpRequest,
+                                         OSHttpResponse httpResponse)
         {
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
             if (filename == null)
-                return MainServer.NoResponse;
+                return MainServer.BlankResponse;
             if (httpRequest.HttpMethod == "POST")
                 httpResponse.KeepAlive = false;
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename + ", keep-alive: " + httpResponse.KeepAlive);
@@ -131,7 +149,9 @@ namespace Aurora.Modules.Web
                 else
                     text = File.ReadAllText(filename);
 
-                var requestParameters = request != null ? WebUtils.ParseQueryString(request.ReadUntilEnd()) : new Dictionary<string, object>();
+                var requestParameters = request != null
+                                            ? ParseQueryString(request.ReadUntilEnd())
+                                            : new Dictionary<string, object>();
                 if (filename.EndsWith(".xsl"))
                 {
                     AuroraXmlDocument vars = GetXML(filename, httpRequest, httpResponse, requestParameters);
@@ -153,18 +173,18 @@ namespace Aurora.Modules.Web
                 {
                     string respStr = null;
                     var vars = AddVarsForPage(filename, filename, httpRequest,
-                            httpResponse, requestParameters, out respStr);
+                                              httpResponse, requestParameters, out respStr);
 
                     AddDefaultVarsForPage(ref vars);
 
                     if (!string.IsNullOrEmpty(respStr))
                         return response = Encoding.UTF8.GetBytes(respStr);
                     if (httpResponse.StatusCode != 200)
-                        return MainServer.NoResponse;
+                        return MainServer.BlankResponse;
                     if (vars == null)
                         return MainServer.BadRequest;
                     response = Encoding.UTF8.GetBytes(ConvertHTML(filename, text, httpRequest, httpResponse,
-                        requestParameters, vars));
+                                                                  requestParameters, vars));
                 }
             }
             else
@@ -190,7 +210,10 @@ namespace Aurora.Modules.Web
             }
         }
 
-        protected Dictionary<string, object> AddVarsForPage(string filename, string parentFileName, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, out string response)
+        protected Dictionary<string, object> AddVarsForPage(string filename, string parentFileName,
+                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse,
+                                                            Dictionary<string, object> requestParameters,
+                                                            out string response)
         {
             response = null;
             Dictionary<string, object> vars = new Dictionary<string, object>();
@@ -200,8 +223,10 @@ namespace Aurora.Modules.Web
                 ITranslator translator = null;
                 if (httpRequest.Query.ContainsKey("language"))
                 {
-                    translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Query["language"].ToString());
-                    httpResponse.AddCookie(new System.Web.HttpCookie("language", httpRequest.Query["language"].ToString()));
+                    translator =
+                        _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Query["language"].ToString());
+                    httpResponse.AddCookie(new System.Web.HttpCookie("language",
+                                                                     httpRequest.Query["language"].ToString()));
                 }
                 else if (httpRequest.Cookies.Get("language") != null)
                 {
@@ -221,20 +246,23 @@ namespace Aurora.Modules.Web
                     if (!Authenticator.CheckAdminAuthentication(httpRequest))
                         return null;
                 }
-                vars = page.Fill(this, parentFileName, httpRequest, httpResponse, requestParameters, translator, out response);
+                vars = page.Fill(this, parentFileName, httpRequest, httpResponse, requestParameters, translator,
+                                 out response);
                 return vars;
             }
             return null;
         }
 
-        private AuroraXmlDocument GetXML(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        private AuroraXmlDocument GetXML(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse,
+                                         Dictionary<string, object> requestParameters)
         {
             IWebInterfacePage page = GetPage(filename);
             if (page != null)
             {
                 ITranslator translator = null;
                 if (httpRequest.Query.ContainsKey("language"))
-                    translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Query["language"].ToString());
+                    translator =
+                        _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Query["language"].ToString());
                 if (translator == null)
                     translator = _defaultTranslator;
 
@@ -249,11 +277,17 @@ namespace Aurora.Modules.Web
                     }
                 }
                 string response = null;
-                return (AuroraXmlDocument)page.Fill(this, filename, httpRequest, httpResponse, requestParameters, translator, out response)["xml"];
+                return
+                    (AuroraXmlDocument)
+                    page.Fill(this, filename, httpRequest, httpResponse, requestParameters, translator, out response)[
+                        "xml"];
             }
             return null;
         }
-        protected string ConvertHTML(string originalFileName, string file, OSHttpRequest request, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, Dictionary<string, object> vars)
+
+        protected string ConvertHTML(string originalFileName, string file, OSHttpRequest request,
+                                     OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                     Dictionary<string, object> vars)
         {
             string html = CSHTMLCreator.BuildHTML(file, vars);
 
@@ -265,40 +299,47 @@ namespace Aurora.Modules.Web
                 string cleanLine = line.Trim();
                 if (cleanLine.StartsWith("<!--#include file="))
                 {
-                    string[] split = line.Split(new string[2] { "<!--#include file=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] split = line.Split(new string[2] {"<!--#include file=\"", "\" -->"},
+                                                StringSplitOptions.RemoveEmptyEntries);
                     for (int i = 0; i < split.Length; i += 2)
                     {
                         string filename = GetFileNameFromHTMLPath(split[i]);
                         string response = null;
                         Dictionary<string, object> newVars = AddVarsForPage(filename, originalFileName,
-                            request, httpResponse, requestParameters, out response);
+                                                                            request, httpResponse, requestParameters,
+                                                                            out response);
                         AddDefaultVarsForPage(ref newVars);
-                        sb.AppendLine(ConvertHTML(filename, File.ReadAllText(filename), 
-                            request, httpResponse, requestParameters, newVars));
+                        sb.AppendLine(ConvertHTML(filename, File.ReadAllText(filename),
+                                                  request, httpResponse, requestParameters, newVars));
                     }
                 }
                 else if (cleanLine.StartsWith("<!--#include folder="))
                 {
-                    string[] split = line.Split(new string[2] { "<!--#include folder=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
-                    for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
+                    string[] split = line.Split(new string[2] {"<!--#include folder=\"", "\" -->"},
+                                                StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = split.Length%2 == 0 ? 0 : 1; i < split.Length; i += 2)
                     {
                         string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html", "");
                         if (Directory.Exists(filename))
                         {
                             string response = null;
-                            Dictionary<string, object> newVars = AddVarsForPage(filename, filename, request, httpResponse,
+                            Dictionary<string, object> newVars = AddVarsForPage(filename, filename, request,
+                                                                                httpResponse,
                                                                                 requestParameters, out response);
                             string[] files = Directory.GetFiles(filename);
                             foreach (string f in files)
                             {
                                 if (!f.EndsWith(".html")) continue;
-                                Dictionary<string, object> newVars2 = AddVarsForPage(f, filename, request, httpResponse, requestParameters, out response) ??
-                                                                      new Dictionary<string, object>();
-                                foreach (KeyValuePair<string, object> pair in newVars.Where(pair => !newVars2.ContainsKey(pair.Key)))
+                                Dictionary<string, object> newVars2 =
+                                    AddVarsForPage(f, filename, request, httpResponse, requestParameters, out response) ??
+                                    new Dictionary<string, object>();
+                                foreach (
+                                    KeyValuePair<string, object> pair in
+                                        newVars.Where(pair => !newVars2.ContainsKey(pair.Key)))
                                     newVars2.Add(pair.Key, pair.Value);
                                 AddDefaultVarsForPage(ref newVars2);
                                 sb.AppendLine(ConvertHTML(f, File.ReadAllText(f), request, httpResponse,
-                                                                    requestParameters, newVars2));
+                                                          requestParameters, newVars2));
                             }
                         }
                     }
@@ -314,11 +355,13 @@ namespace Aurora.Modules.Web
                         pos = posToCheckFrom;
                         if (vars.ContainsKey(keyToCheck))
                         {
-                            List<Dictionary<string, object>> dicts = vars[keyToCheck] as List<Dictionary<string, object>>;
+                            List<Dictionary<string, object>> dicts =
+                                vars[keyToCheck] as List<Dictionary<string, object>>;
                             if (dicts != null)
                                 foreach (var dict in dicts)
-                                    sb.AppendLine(ConvertHTML(originalFileName, string.Join("\n", repeatedLines.ToArray()), request,
-                                                                httpResponse, requestParameters, dict));
+                                    sb.AppendLine(ConvertHTML(originalFileName,
+                                                              string.Join("\n", repeatedLines.ToArray()), request,
+                                                              httpResponse, requestParameters, dict));
                         }
                     }
                     else if ((indEnd = cleanLine.IndexOf("AuthenticatedBegin}")) != -1)
@@ -329,20 +372,20 @@ namespace Aurora.Modules.Web
                             pos = posToCheckFrom;
                     }
                     else if ((indBegin = cleanLine.IndexOf("{If")) != -1 &&
-                        (indEnd = cleanLine.IndexOf("Begin}")) != -1)
+                             (indEnd = cleanLine.IndexOf("Begin}")) != -1)
                     {
                         string key = cleanLine.Substring(indBegin + 3, indEnd - indBegin - 3);
                         int posToCheckFrom = FindLines(lines, pos, "If" + key, "End");
-                        if (!vars.ContainsKey(key) || ((bool)vars[key]) == false)
+                        if (!vars.ContainsKey(key) || ((bool) vars[key]) == false)
                             pos = posToCheckFrom;
                     }
                     else if ((indBegin = cleanLine.IndexOf("{If")) != -1 &&
-                        (indEnd = cleanLine.IndexOf("End}")) != -1)
+                             (indEnd = cleanLine.IndexOf("End}")) != -1)
                     {
                         //end of an if statement, just ignore it
                     }
                     else if ((indBegin = cleanLine.IndexOf("{Is")) != -1 &&
-                        (indEnd = cleanLine.IndexOf("End}")) != -1)
+                             (indEnd = cleanLine.IndexOf("End}")) != -1)
                     {
                         //end of an if statement, just ignore it
                     }
@@ -357,7 +400,7 @@ namespace Aurora.Modules.Web
         }
 
         /// <summary>
-        /// Returns false if the authentication was wrong
+        ///     Returns false if the authentication was wrong
         /// </summary>
         /// <param name="p"></param>
         /// <param name="request"></param>
@@ -392,8 +435,8 @@ namespace Aurora.Modules.Web
             return posToCheckFrom - 1;
         }
 
-        private static List<string> ExtractLines(string[] lines, int pos, 
-            string keyToCheck, string type, out int posToCheckFrom)
+        private static List<string> ExtractLines(string[] lines, int pos,
+                                                 string keyToCheck, string type, out int posToCheckFrom)
         {
             posToCheckFrom = pos + 1;
             List<string> repeatedLines = new List<string>();
@@ -404,7 +447,7 @@ namespace Aurora.Modules.Web
 
         protected string GetContentType(string filename, OSHttpResponse response)
         {
-            switch(Path.GetExtension(filename))
+            switch (Path.GetExtension(filename))
             {
                 case ".jpeg":
                 case ".jpg":
@@ -450,11 +493,61 @@ namespace Aurora.Modules.Web
             }
         }
 
+
+        public static Dictionary<string, object> ParseQueryString(string query)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            string[] terms = query.Split(new[] { '&' });
+
+            if (terms.Length == 0)
+                return result;
+
+            foreach (string t in terms)
+            {
+                string[] elems = t.Split(new[] { '=' });
+                if (elems.Length == 0)
+                    continue;
+
+                string name = HttpUtility.UrlDecode(elems[0]);
+                string value = String.Empty;
+
+                if (elems.Length > 1)
+                    value = HttpUtility.UrlDecode(elems[1]);
+
+                if (name.EndsWith("[]"))
+                {
+                    string cleanName = name.Substring(0, name.Length - 2);
+                    if (result.ContainsKey(cleanName))
+                    {
+                        if (!(result[cleanName] is List<string>))
+                            continue;
+
+                        List<string> l = (List<string>)result[cleanName];
+
+                        l.Add(value);
+                    }
+                    else
+                    {
+                        List<string> newList = new List<string> { value };
+
+                        result[cleanName] = newList;
+                    }
+                }
+                else
+                {
+                    if (!result.ContainsKey(name))
+                        result[name] = value;
+                }
+            }
+
+            return result;
+        }
+
         #endregion
 
         internal void Redirect(OSHttpResponse httpResponse, string url)
         {
-            httpResponse.StatusCode = (int)HttpStatusCode.Redirect;
+            httpResponse.StatusCode = (int) HttpStatusCode.Redirect;
             httpResponse.AddHeader("Location", url);
             httpResponse.KeepAlive = false;
         }
@@ -462,7 +555,14 @@ namespace Aurora.Modules.Web
 
     internal class GridNewsItem : IDataTransferable
     {
-        public static readonly GridNewsItem NoNewsItem = new GridNewsItem() { ID = -1, Text = "No news to report", Time = DateTime.Now, Title = "No news to report" };
+        public static readonly GridNewsItem NoNewsItem = new GridNewsItem()
+                                                             {
+                                                                 ID = -1,
+                                                                 Text = "No news to report",
+                                                                 Time = DateTime.Now,
+                                                                 Title = "No news to report"
+                                                             };
+
         public string Title;
         public string Text;
         public DateTime Time;
@@ -502,13 +602,14 @@ namespace Aurora.Modules.Web
     internal class GridWelcomeScreen : IDataTransferable
     {
         public static readonly GridWelcomeScreen Default = new GridWelcomeScreen
-        {
-            SpecialWindowMessageTitle = "Nothing to report at this time.",
-            SpecialWindowMessageText = "Grid is up and running.",
-            SpecialWindowMessageColor = "white",
-            SpecialWindowActive = true,
-            GridStatus = true
-        };
+                                                               {
+                                                                   SpecialWindowMessageTitle =
+                                                                       "Nothing to report at this time.",
+                                                                   SpecialWindowMessageText = "Grid is up and running.",
+                                                                   SpecialWindowMessageColor = "white",
+                                                                   SpecialWindowActive = true,
+                                                                   GridStatus = true
+                                                               };
 
         public string SpecialWindowMessageTitle;
         public string SpecialWindowMessageText;
@@ -551,8 +652,14 @@ namespace Aurora.Modules.Web
         public bool AdminRequired = false;
         public int AdminLevelRequired = 1;
 
-        public GridPage() { } 
-        public GridPage(OSD map) { FromOSD(map as OSDMap); }
+        public GridPage()
+        {
+        }
+
+        public GridPage(OSD map)
+        {
+            FromOSD(map as OSDMap);
+        }
 
         public override void FromOSD(OSDMap map)
         {
@@ -566,7 +673,7 @@ namespace Aurora.Modules.Web
             LoggedOutRequired = map["LoggedOutRequired"];
             AdminRequired = map["AdminRequired"];
             AdminLevelRequired = map["AdminLevelRequired"];
-            Children = ((OSDArray)map["Children"]).ConvertAll<GridPage>(o => new GridPage(o));
+            Children = ((OSDArray) map["Children"]).ConvertAll<GridPage>(o => new GridPage(o));
         }
 
         public override OSDMap ToOSD()
@@ -735,8 +842,14 @@ namespace Aurora.Modules.Web
         public bool HideStyleBar = false;
         public UUID DefaultScopeID = UUID.Zero;
 
-        public GridSettings() { }
-        public GridSettings(OSD map) { FromOSD(map as OSDMap); }
+        public GridSettings()
+        {
+        }
+
+        public GridSettings(OSD map)
+        {
+            FromOSD(map as OSDMap);
+        }
 
         public override void FromOSD(OSDMap map)
         {

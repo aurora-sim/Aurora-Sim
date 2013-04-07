@@ -28,12 +28,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
-    ///   Manage client circuits
+    ///     Manage client circuits
     /// </summary>
     public class AgentCircuitManager
     {
@@ -64,10 +65,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Add information about a new circuit so that later on we can authenticate a new client session.
+        ///     Add information about a new circuit so that later on we can authenticate a new client session.
         /// </summary>
-        /// <param name = "circuitCode"></param>
-        /// <param name = "agentData"></param>
+        /// <param name="circuitCode"></param>
+        /// <param name="agentData"></param>
         public virtual void AddNewCircuit(uint circuitCode, AgentCircuitData agentData)
         {
             lock (AgentCircuits)
@@ -76,107 +77,25 @@ namespace Aurora.Framework
             }
         }
 
-        public virtual void RemoveCircuit(uint circuitCode)
-        {
-            lock (AgentCircuits)
-            {
-                AgentCircuits.Remove(circuitCode);
-            }
-        }
-
         public virtual void RemoveCircuit(UUID agentID)
         {
             lock (AgentCircuits)
             {
-#if (!ISWIN)
-                foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values))
+                foreach (
+                    AgentCircuitData circuitData in
+                        new List<AgentCircuitData>(AgentCircuits.Values).Where(
+                            circuitData => circuitData.AgentID == agentID))
                 {
-                    if (circuitData.AgentID == agentID)
-                    {
-                        AgentCircuits.Remove(circuitData.circuitcode);
-                    }
+                    AgentCircuits.Remove(circuitData.CircuitCode);
                 }
-#else
-                foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values).Where(circuitData => circuitData.AgentID == agentID))
-                {
-                    AgentCircuits.Remove(circuitData.circuitcode);
-                }
-#endif
             }
-        }
-
-        public AgentCircuitData GetAgentCircuitData(uint circuitCode)
-        {
-            AgentCircuitData agentCircuit = null;
-            AgentCircuits.TryGetValue(circuitCode, out agentCircuit);
-            return agentCircuit;
         }
 
         public AgentCircuitData GetAgentCircuitData(UUID agentID)
         {
-#if (!ISWIN)
-            foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values))
-            {
-                if (circuitData.AgentID == agentID) return circuitData;
-            }
-            return null;
-#else
-            return new List<AgentCircuitData>(AgentCircuits.Values).FirstOrDefault(circuitData => circuitData.AgentID == agentID);
-#endif
-        }
-
-        public void UpdateAgentData(AgentCircuitData agentData)
-        {
-            if (AgentCircuits.ContainsKey(agentData.circuitcode))
-            {
-                AgentCircuits[agentData.circuitcode].startpos = agentData.startpos;
-
-                // Updated for when we don't know them before calling Scene.NewUserConnection
-                AgentCircuits[agentData.circuitcode].SecureSessionID = agentData.SecureSessionID;
-                AgentCircuits[agentData.circuitcode].SessionID = agentData.SessionID;
-
-                // MainConsole.Instance.Debug("update user start pos is " + agentData.startpos.X + " , " + agentData.startpos.Y + " , " + agentData.startpos.Z);
-            }
-        }
-
-        /// <summary>
-        ///   Sometimes the circuitcode may not be known before setting up the connection
-        /// </summary>
-        /// <param name = "circuitcode"></param>
-        /// <param name = "newcircuitcode"></param>
-        public bool TryChangeCiruitCode(uint circuitcode, uint newcircuitcode)
-        {
-            lock (AgentCircuits)
-            {
-                if (AgentCircuits.ContainsKey(circuitcode) && !AgentCircuits.ContainsKey(newcircuitcode))
-                {
-                    AgentCircuitData agentData = AgentCircuits[circuitcode];
-
-                    agentData.circuitcode = newcircuitcode;
-
-                    AgentCircuits.Remove(circuitcode);
-                    AgentCircuits.Add(newcircuitcode, agentData);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public void UpdateAgentChildStatus(uint circuitcode, bool childstatus)
-        {
-            if (AgentCircuits.ContainsKey(circuitcode))
-            {
-                AgentCircuits[circuitcode].child = childstatus;
-            }
-        }
-
-        public bool GetAgentChildStatus(uint circuitcode)
-        {
-            if (AgentCircuits.ContainsKey(circuitcode))
-            {
-                return AgentCircuits[circuitcode].child;
-            }
-            return false;
+            return
+                new List<AgentCircuitData>(AgentCircuits.Values).FirstOrDefault(
+                    circuitData => circuitData.AgentID == agentID);
         }
     }
 }

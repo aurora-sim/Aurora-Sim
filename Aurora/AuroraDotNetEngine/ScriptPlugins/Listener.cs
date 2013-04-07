@@ -27,10 +27,10 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -43,7 +43,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
-        public bool RemoveOnStateChange { get { return true; } }
+        public bool RemoveOnStateChange
+        {
+            get { return true; }
+        }
 
         public void Initialize(ScriptEngine engine)
         {
@@ -89,21 +92,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public OSD GetSerializationData(UUID itemID, UUID primID)
         {
-#if (!ISWIN)
-            foreach (IWorldComm comms in m_modules)
-            {
-                OSD r = comms.GetSerializationData(itemID, primID);
-                if (r != null)
-                {
-                    return r;
-                }
-            }
-#else
-            foreach (OSD r in m_modules.Select(comms => comms.GetSerializationData(itemID, primID)).Where(r => r != null))
+            foreach (
+                OSD r in m_modules.Select(comms => comms.GetSerializationData(itemID, primID)).Where(r => r != null))
             {
                 return r;
             }
-#endif
             return new OSDMap();
         }
 

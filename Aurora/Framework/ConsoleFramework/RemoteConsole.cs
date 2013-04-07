@@ -32,12 +32,17 @@ using System.Linq;
 using System.Threading;
 using System.Web;
 using System.Xml;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework.Servers.HttpServer;
-using log4net.Core;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using System.IO;
+using System.Text;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     public class ConsoleConnection
     {
@@ -95,12 +100,12 @@ namespace Aurora.Framework
         {
             m_Server = server;
 
-            m_Server.AddHTTPHandler("/StartSession/", HandleHttpStartSession);
-            m_Server.AddHTTPHandler("/CloseSession/", HandleHttpCloseSession);
-            m_Server.AddHTTPHandler("/SessionCommand/", HandleHttpSessionCommand);
+            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/StartSession/", HandleHttpStartSession));
+            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/CloseSession/", HandleHttpCloseSession));
+            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/SessionCommand/", HandleHttpSessionCommand));
         }
 
-        public override void Output(string text, string level)
+        public override void Output(string text, Level level)
         {
             lock (m_Scrollback)
             {
@@ -112,17 +117,12 @@ namespace Aurora.Framework
             Console.WriteLine(text.Trim());
         }
 
-        public override void Output(string text)
-        {
-            Output(text, "Info");
-        }
-
         public override string ReadLine(string p, bool isCommand, bool e)
         {
             if (isCommand)
-                Output("+++" + p);
+                Output("+++" + p, Threshold);
             else
-                Output("-++" + p);
+                Output("-++" + p, Threshold);
 
             m_DataEvent.WaitOne();
 
@@ -167,7 +167,9 @@ namespace Aurora.Framework
 
             lock (m_Connections)
             {
-                expired.AddRange(from kvp in m_Connections where Environment.TickCount - kvp.Value.last > 500000 select kvp.Key);
+                expired.AddRange(from kvp in m_Connections
+                                 where Environment.TickCount - kvp.Value.last > 500000
+                                 select kvp.Key);
 
                 foreach (UUID id in expired)
                 {
@@ -177,28 +179,23 @@ namespace Aurora.Framework
             }
         }
 
-        private Hashtable HandleHttpStartSession(Hashtable request)
+        private byte[] HandleHttpStartSession(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
-            Hashtable reply = new Hashtable();
+            Hashtable post = DecodePostString(request.ReadUntilEnd());
 
-            reply["str_response_string"] = "";
-            reply["int_response_code"] = 401;
-            reply["content_type"] = "text/plain";
-
+            httpResponse.StatusCode = 401;
+            httpResponse.ContentType = "text/plain";
             if (m_UserName == String.Empty)
-                return reply;
+                return MainServer.BlankResponse;
 
             if (post["USER"] == null || post["PASS"] == null)
-                return reply;
+                return MainServer.BlankResponse;
 
             if (m_UserName != post["USER"].ToString() ||
                 m_Password != post["PASS"].ToString())
-            {
-                return reply;
-            }
+                return MainServer.BlankResponse;
 
             ConsoleConnection c = new ConsoleConnection {last = Environment.TickCount, lastLineSeen = 0};
 
@@ -211,8 +208,7 @@ namespace Aurora.Framework
 
             string uri = "/ReadResponses/" + sessionID.ToString() + "/";
 
-            m_Server.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
-                                               new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, Valid,
+            m_Server.AddPollServiceHTTPHandler(uri, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents,
                                                                         sessionID));
 
             XmlDocument xmldoc = new XmlDocument();
@@ -235,40 +231,25 @@ namespace Aurora.Framework
 
             rootElement.AppendChild(prompt);
 
-            reply["str_response_string"] = xmldoc.InnerXml;
-            reply["int_response_code"] = 200;
-            reply["content_type"] = "text/xml";
-
-            return reply;
+            httpResponse.StatusCode = 200;
+            httpResponse.ContentType = "text/xml";
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
 
-        private bool Valid()
-        {
-            return true;
-        }
-
-        private Hashtable HandleHttpPoll(Hashtable request)
-        {
-            return new Hashtable();
-        }
-
-        private Hashtable HandleHttpCloseSession(Hashtable request)
+        private byte[] HandleHttpCloseSession(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
-            Hashtable reply = new Hashtable();
+            Hashtable post = DecodePostString(request.ReadUntilEnd());
 
-            reply["str_response_string"] = "";
-            reply["int_response_code"] = 404;
-            reply["content_type"] = "text/plain";
-
+            httpResponse.StatusCode = 401;
+            httpResponse.ContentType = "text/plain";
             if (post["ID"] == null)
-                return reply;
+                return MainServer.BlankResponse;
 
             UUID id;
             if (!UUID.TryParse(post["ID"].ToString(), out id))
-                return reply;
+                return MainServer.BlankResponse;
 
             lock (m_Connections)
             {
@@ -294,39 +275,35 @@ namespace Aurora.Framework
 
             rootElement.AppendChild(res);
 
-            reply["str_response_string"] = xmldoc.InnerXml;
-            reply["int_response_code"] = 200;
-            reply["content_type"] = "text/xml";
-
-            return reply;
+            httpResponse.StatusCode = 200;
+            httpResponse.ContentType = "text/xml";
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
 
-        private Hashtable HandleHttpSessionCommand(Hashtable request)
+        private byte[] HandleHttpSessionCommand(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
+            Hashtable post = DecodePostString(request.ReadUntilEnd());
             Hashtable reply = new Hashtable();
 
-            reply["str_response_string"] = "";
-            reply["int_response_code"] = 404;
-            reply["content_type"] = "text/plain";
-
+            httpResponse.StatusCode = 401;
+            httpResponse.ContentType = "text/plain";
             if (post["ID"] == null)
-                return reply;
+                return MainServer.BlankResponse;
 
             UUID id;
             if (!UUID.TryParse(post["ID"].ToString(), out id))
-                return reply;
+                return MainServer.BlankResponse;
 
             lock (m_Connections)
             {
                 if (!m_Connections.ContainsKey(id))
-                    return reply;
+                    return MainServer.BlankResponse;
             }
 
             if (post["COMMAND"] == null)
-                return reply;
+                return MainServer.BlankResponse;
 
             lock (m_InputData)
             {
@@ -349,11 +326,9 @@ namespace Aurora.Framework
 
             rootElement.AppendChild(res);
 
-            reply["str_response_string"] = xmldoc.InnerXml;
-            reply["int_response_code"] = 200;
-            reply["content_type"] = "text/xml";
-
-            return reply;
+            httpResponse.StatusCode = 200;
+            httpResponse.ContentType = "text/xml";
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
 
         private Hashtable DecodePostString(string data)
@@ -409,21 +384,19 @@ namespace Aurora.Framework
             return false;
         }
 
-        private Hashtable GetEvents(UUID RequestID, UUID sessionID, string request)
+        private byte[] GetEvents(UUID RequestID, UUID sessionID, string req, OSHttpResponse response)
         {
             ConsoleConnection c = null;
 
             lock (m_Connections)
             {
                 if (!m_Connections.ContainsKey(sessionID))
-                    return NoEvents(RequestID, UUID.Zero);
+                    return NoEvents(RequestID, UUID.Zero, response);
                 c = m_Connections[sessionID];
             }
             c.last = Environment.TickCount;
             if (c.lastLineSeen >= m_LineNumber)
-                return NoEvents(RequestID, UUID.Zero);
-
-            Hashtable result = new Hashtable();
+                return NoEvents(RequestID, UUID.Zero, response);
 
             XmlDocument xmldoc = new XmlDocument();
             XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
@@ -436,7 +409,7 @@ namespace Aurora.Framework
             if (c.newConnection)
             {
                 c.newConnection = false;
-                Output("+++" + DefaultPrompt);
+                Output("+++" + DefaultPrompt, Threshold);
             }
 
             lock (m_Scrollback)
@@ -460,19 +433,15 @@ namespace Aurora.Framework
 
             xmldoc.AppendChild(rootElement);
 
-            result["str_response_string"] = xmldoc.InnerXml;
-            result["int_response_code"] = 200;
-            result["content_type"] = "application/xml";
-            result["keepalive"] = false;
-            result["reusecontext"] = false;
 
-            return result;
+            response.StatusCode = 200;
+            response.ContentType = "application/xml";
+
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
 
-        private Hashtable NoEvents(UUID RequestID, UUID id)
+        private byte[] NoEvents(UUID RequestID, UUID id, OSHttpResponse response)
         {
-            Hashtable result = new Hashtable();
-
             XmlDocument xmldoc = new XmlDocument();
             XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
                                                 "", "");
@@ -483,13 +452,9 @@ namespace Aurora.Framework
 
             xmldoc.AppendChild(rootElement);
 
-            result["str_response_string"] = xmldoc.InnerXml;
-            result["int_response_code"] = 200;
-            result["content_type"] = "text/xml";
-            result["keepalive"] = false;
-            result["reusecontext"] = false;
-
-            return result;
+            response.StatusCode = 200;
+            response.ContentType = "text/xml";
+            return Encoding.UTF8.GetBytes(xmldoc.InnerXml);
         }
     }
 }

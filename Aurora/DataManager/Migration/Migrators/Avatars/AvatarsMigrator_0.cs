@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.Avatars
 {
     public class AvatarsMigrator_0 : Migrator
     {
@@ -46,9 +46,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("PrincipalID", ColumnTypes.Char36),
                 ColDef("Name", ColumnTypes.String32),
                 ColDef("Value", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "PrincipalID", "Name" }, IndexType.Primary)
-            ));
+                                     ), IndexDefs(
+                                         IndexDef(new string[2] {"PrincipalID", "Name"}, IndexType.Primary)
+                                            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

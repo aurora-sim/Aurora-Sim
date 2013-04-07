@@ -25,20 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Wind
 {
     public class WindModule : IWindModule, INonSharedRegionModule
     {
         private const string m_dWindPluginName = "SimpleRandomWind";
-        
+
         private readonly Dictionary<string, IWindModelPlugin> m_availableWindPlugins =
             new Dictionary<string, IWindModelPlugin>();
 
@@ -57,11 +60,6 @@ namespace Aurora.Modules.Wind
         private Vector2[] windSpeeds = new Vector2[16*16];
 
         #region IRegion Methods
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
 
         public void Initialise(IConfigSource config)
         {
@@ -116,7 +114,8 @@ namespace Aurora.Modules.Wind
                 // if the plug-in wasn't found, default to no wind.
                 if (m_activeWindPlugin == null)
                 {
-                    MainConsole.Instance.ErrorFormat("[WIND] Could not find specified wind plug-in: {0}", desiredWindPlugin);
+                    MainConsole.Instance.ErrorFormat("[WIND] Could not find specified wind plug-in: {0}",
+                                                     desiredWindPlugin);
                     MainConsole.Instance.ErrorFormat("[WIND] Defaulting to no wind.");
                 }
 
@@ -193,10 +192,6 @@ namespace Aurora.Modules.Wind
             get { return "WindModule"; }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         #endregion
 
         #region Console Commands
@@ -211,7 +206,7 @@ namespace Aurora.Modules.Wind
         }
 
         /// <summary>
-        ///   Base console command handler, only used if a person specifies the base command with now options
+        ///     Base console command handler, only used if a person specifies the base command with now options
         /// </summary>
         private void HandleConsoleCommand(string[] cmdparams)
         {
@@ -221,7 +216,7 @@ namespace Aurora.Modules.Wind
         }
 
         /// <summary>
-        ///   Called to change the active wind model plugin
+        ///     Called to change the active wind model plugin
         /// </summary>
         private void HandleConsoleBaseCommand(string[] cmdparams)
         {
@@ -246,7 +241,8 @@ namespace Aurora.Modules.Wind
                     }
                     else
                     {
-                        MainConsole.Instance.InfoFormat("[WIND] Invalid value {0} specified for {1}", cmdparams[3], cmdparams[2]);
+                        MainConsole.Instance.InfoFormat("[WIND] Invalid value {0} specified for {1}", cmdparams[3],
+                                                        cmdparams[2]);
                         return;
                     }
 
@@ -263,7 +259,8 @@ namespace Aurora.Modules.Wind
                     if (m_availableWindPlugins.ContainsKey(desiredPlugin))
                     {
                         m_activeWindPlugin = m_availableWindPlugins[cmdparams[3]];
-                        MainConsole.Instance.InfoFormat("[WIND] {0} wind model plugin now active", m_activeWindPlugin.Name);
+                        MainConsole.Instance.InfoFormat("[WIND] {0} wind model plugin now active",
+                                                        m_activeWindPlugin.Name);
                     }
                     else
                     {
@@ -274,7 +271,7 @@ namespace Aurora.Modules.Wind
         }
 
         /// <summary>
-        ///   Called to change plugin parameters.
+        ///     Called to change plugin parameters.
         /// </summary>
         private void HandleConsoleParamCommand(string[] cmdparams)
         {
@@ -326,11 +323,12 @@ namespace Aurora.Modules.Wind
         #region IWindModule Methods
 
         /// <summary>
-        ///   Retrieve the wind speed at the given region coordinate.  This 
-        ///   implimentation ignores Z.
+        ///     Retrieve the wind speed at the given region coordinate.  This
+        ///     implimentation ignores Z.
         /// </summary>
-        /// <param name = "x">0...255</param>
-        /// <param name = "y">0...255</param>
+        /// <param name="x">0...255</param>
+        /// <param name="y">0...255</param>
+        /// <param name="z">Ignored</param>
         public Vector3 WindSpeed(int x, int y, int z)
         {
             if (m_activeWindPlugin != null)
@@ -388,7 +386,7 @@ namespace Aurora.Modules.Wind
         #endregion
 
         /// <summary>
-        ///   Called on each frame update.  Updates the wind model and clients as necessary.
+        ///     Called on each frame update.  Updates the wind model and clients as necessary.
         /// </summary>
         public void WindUpdate()
         {
@@ -442,7 +440,7 @@ namespace Aurora.Modules.Wind
         }
 
         /// <summary>
-        ///   Calculate the sun's orbital position and its velocity.
+        ///     Calculate the sun's orbital position and its velocity.
         /// </summary>
         private void GenWindPos()
         {

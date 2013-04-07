@@ -25,9 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net.Core;
+using Aurora.Framework.Modules;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     public class MainConsole
     {
@@ -38,7 +38,6 @@ namespace Aurora.Framework
         #endregion
 
         public static ICommandConsole Instance { get; set; }
-        public static INotificationService NotificationService { get; set; }
         public static event IncomingLogWrite OnIncomingLogWrite;
 
         public static void TriggerLog(string level, string text)

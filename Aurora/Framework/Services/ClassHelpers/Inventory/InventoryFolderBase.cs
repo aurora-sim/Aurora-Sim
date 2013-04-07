@@ -28,10 +28,10 @@
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Inventory
 {
     /// <summary>
-    ///   User inventory folder
+    ///     User inventory folder
     /// </summary>
     public class InventoryFolderBase : InventoryNodeBase
     {
@@ -81,9 +81,9 @@ namespace Aurora.Framework
             map["ID"] = ID;
             map["Name"] = Name;
             map["Owner"] = Owner;
-            map["Type"] = (int)Type;
+            map["Type"] = (int) Type;
             map["ParentID"] = ParentID;
-            map["Version"] = (int)Version;
+            map["Version"] = (int) Version;
 
             return map;
         }
@@ -93,9 +93,9 @@ namespace Aurora.Framework
             ID = map["ID"];
             Name = map["Name"];
             Owner = map["Owner"];
-            Type = (short)map["Type"];
+            Type = (short) map["Type"];
             ParentID = map["ParentID"];
-            Version = (ushort)(int)map["Version"];
+            Version = (ushort) (int) map["Version"];
         }
     }
 }

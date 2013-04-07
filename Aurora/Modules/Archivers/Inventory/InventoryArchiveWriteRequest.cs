@@ -25,26 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Serialization;
+using Aurora.Framework.Serialization.External;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Reflection;
 using System.Xml;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
-using Aurora.Framework.Serialization.External;
-using Aurora.Modules.Archivers;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {
     public class InventoryArchiveWriteRequest
     {
         /// <value>
-        ///   Used to select all inventory nodes in a folder but not the folder itself
+        ///     Used to select all inventory nodes in a folder but not the folder itself
         /// </value>
         private const string STAR_WILDCARD = "*";
 
@@ -52,7 +54,7 @@ namespace Aurora.Modules.Archivers
         private readonly bool m_saveAssets;
 
         /// <value>
-        ///   The stream to which the inventory archive will be saved.
+        ///     The stream to which the inventory archive will be saved.
         /// </value>
         private readonly Stream m_saveStream;
 
@@ -61,7 +63,7 @@ namespace Aurora.Modules.Archivers
         protected UuidGatherer m_assetGatherer;
 
         /// <value>
-        ///   Used to collect the uuids of the assets that we need to save into the archive
+        ///     Used to collect the uuids of the assets that we need to save into the archive
         /// </value>
         protected Dictionary<UUID, AssetType> m_assetUuids = new Dictionary<UUID, AssetType>();
 
@@ -69,24 +71,24 @@ namespace Aurora.Modules.Archivers
         protected InventoryFolderBase m_defaultFolderToSave;
 
         /// <value>
-        ///   ID of this request
+        ///     ID of this request
         /// </value>
         protected Guid m_id;
 
         private string m_invPath;
 
         /// <value>
-        ///   We only use this to request modules
+        ///     We only use this to request modules
         /// </value>
         protected IRegistryCore m_registry;
 
         /// <value>
-        ///   Used to collect the uuids of the users that we need to save into the archive
+        ///     Used to collect the uuids of the users that we need to save into the archive
         /// </value>
         protected Dictionary<UUID, int> m_userUuids = new Dictionary<UUID, int>();
 
         /// <summary>
-        ///   Constructor
+        ///     Constructor
         /// </summary>
         public InventoryArchiveWriteRequest(
             Guid id, InventoryArchiverModule module, IRegistryCore registry,
@@ -103,7 +105,7 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Constructor
+        ///     Constructor
         /// </summary>
         public InventoryArchiveWriteRequest(
             Guid id, InventoryArchiverModule module, IRegistryCore registry,
@@ -167,11 +169,11 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Save an inventory folder
+        ///     Save an inventory folder
         /// </summary>
-        /// <param name = "inventoryFolder">The inventory folder to save</param>
-        /// <param name = "path">The path to which the folder should be saved</param>
-        /// <param name = "saveThisFolderItself">If true, save this folder itself.  If false, only saves contents</param>
+        /// <param name="inventoryFolder">The inventory folder to save</param>
+        /// <param name="path">The path to which the folder should be saved</param>
+        /// <param name="saveThisFolderItself">If true, save this folder itself.  If false, only saves contents</param>
         protected void SaveInvFolder(InventoryFolderBase inventoryFolder, string path, bool saveThisFolderItself)
         {
             if (saveThisFolderItself)
@@ -198,7 +200,7 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Execute the inventory write request
+        ///     Execute the inventory write request
         /// </summary>
         public void Execute()
         {
@@ -318,16 +320,18 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Save information for the users that we've collected.
+        ///     Save information for the users that we've collected.
         /// </summary>
         protected void SaveUsers()
         {
-            MainConsole.Instance.InfoFormat("[INVENTORY ARCHIVER]: Saving user information for {0} users", m_userUuids.Count);
+            MainConsole.Instance.InfoFormat("[INVENTORY ARCHIVER]: Saving user information for {0} users",
+                                            m_userUuids.Count);
 
             foreach (UUID creatorId in m_userUuids.Keys)
             {
                 // Record the creator of this item
-                UserAccount creator = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, creatorId);
+                UserAccount creator = m_registry.RequestModuleInterface<IUserAccountService>()
+                                                .GetUserAccount(null, creatorId);
 
                 if (creator != null)
                 {
@@ -337,40 +341,41 @@ namespace Aurora.Modules.Archivers
                 }
                 else
                 {
-                    MainConsole.Instance.WarnFormat("[INVENTORY ARCHIVER]: Failed to get creator profile for {0}", creatorId);
+                    MainConsole.Instance.WarnFormat("[INVENTORY ARCHIVER]: Failed to get creator profile for {0}",
+                                                    creatorId);
                 }
             }
         }
 
-        ///<summary>
-        ///  Create the archive name for a particular folder.
-        ///</summary>
-        ///These names are prepended with an inventory folder's UUID so that more than one folder can have the
-        ///same name
-        ///<param name = "folder"></param>
-        ///<returns></returns>
+        /// <summary>
+        ///     Create the archive name for a particular folder.
+        /// </summary>
+        /// These names are prepended with an inventory folder's UUID so that more than one folder can have the
+        /// same name
+        /// <param name="folder"></param>
+        /// <returns></returns>
         public static string CreateArchiveFolderName(InventoryFolderBase folder)
         {
             return CreateArchiveFolderName(folder.Name, folder.ID);
         }
 
-        ///<summary>
-        ///  Create the archive name for a particular item.
-        ///</summary>
-        ///These names are prepended with an inventory item's UUID so that more than one item can have the
-        ///same name
-        ///<param name = "item"></param>
-        ///<returns></returns>
+        /// <summary>
+        ///     Create the archive name for a particular item.
+        /// </summary>
+        /// These names are prepended with an inventory item's UUID so that more than one item can have the
+        /// same name
+        /// <param name="item"></param>
+        /// <returns></returns>
         public static string CreateArchiveItemName(InventoryItemBase item)
         {
             return CreateArchiveItemName(item.Name, item.ID);
         }
 
         /// <summary>
-        ///   Create an archive folder name given its constituent components
+        ///     Create an archive folder name given its constituent components
         /// </summary>
-        /// <param name = "name"></param>
-        /// <param name = "id"></param>
+        /// <param name="name"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         public static string CreateArchiveFolderName(string name, UUID id)
         {
@@ -382,10 +387,10 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Create an archive item name given its constituent components
+        ///     Create an archive item name given its constituent components
         /// </summary>
-        /// <param name = "name"></param>
-        /// <param name = "id"></param>
+        /// <param name="name"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         public static string CreateArchiveItemName(string name, UUID id)
         {
@@ -397,7 +402,7 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Create the control file for a 0.1 version archive
+        ///     Create the control file for a 0.1 version archive
         /// </summary>
         /// <returns></returns>
         public static string Create0p1ControlFile()

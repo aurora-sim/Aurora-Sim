@@ -25,19 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
 using Nini.Config;
-using Aurora.Framework;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework.Services
 {
     public interface IDefaultLibraryLoader
     {
         /// <summary>
-        ///   Load any default inventory folders and items from this module into the main ILibraryService
+        ///     Load any default inventory folders and items from this module into the main ILibraryService
         /// </summary>
-        /// <param name = "service"></param>
-        /// <param name = "source"></param>
-        /// <param name = "registry"></param>
+        /// <param name="service"></param>
+        /// <param name="source"></param>
+        /// <param name="registry"></param>
         void LoadLibrary(ILibraryService service, IConfigSource source, IRegistryCore registry);
     }
 }

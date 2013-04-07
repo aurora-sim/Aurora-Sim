@@ -26,10 +26,12 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class SleepFrameMonitor : ITimeMonitor
+    public class SleepFrameMonitor : ISleepFrameMonitor
     {
         private int SleepFrame;
 
@@ -47,6 +49,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Sleep Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "ISleepFrameMonitor";
         }
 
         public string GetFriendlyValue()

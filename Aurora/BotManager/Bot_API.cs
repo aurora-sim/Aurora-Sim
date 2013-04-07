@@ -25,14 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.ScriptEngine.AuroraDotNetEngine;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Remoting.Lifetime;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
-using OpenMetaverse;
-using Aurora.Framework;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
@@ -40,10 +44,10 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using ThreatLevel = Aurora.ScriptEngine.AuroraDotNetEngine.ThreatLevel;
 
 namespace Aurora.BotManager
 {
-    [Serializable]
     public class Bot_Api : MarshalByRefObject, IBot_Api, IScriptApi
     {
         internal ScriptProtectionModule ScriptProtection;
@@ -52,7 +56,7 @@ namespace Aurora.BotManager
         internal UUID m_itemID;
 
         /// <summary>
-        ///   Created by John Sibly @ http://stackoverflow.com/questions/52797/c-how-do-i-get-the-path-of-the-assembly-the-code-is-in
+        ///     Created by John Sibly @ http://stackoverflow.com/questions/52797/c-how-do-i-get-the-path-of-the-assembly-the-code-is-in
         /// </summary>
         public static string AssemblyFileName
         {
@@ -83,7 +87,7 @@ namespace Aurora.BotManager
                         manager.CreateAvatar(FirstName, LastName, m_host.ParentEntity.Scene,
                                              UUID.Parse(appearanceToClone), m_host.OwnerID,
                                              new Vector3((float) startPos.x, (float) startPos.y, (float) startPos.z)).
-                            ToString());
+                                ToString());
             return new LSL_String("");
         }
 
@@ -156,7 +160,8 @@ namespace Aurora.BotManager
                 return;
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
-                manager.FollowAvatar(UUID.Parse(bot), avatarName, (float)startFollowDistance, (float)endFollowDistance, false, Vector3.Zero,
+                manager.FollowAvatar(UUID.Parse(bot), avatarName, (float) startFollowDistance, (float) endFollowDistance,
+                                     false, Vector3.Zero,
                                      m_host.OwnerID);
         }
 
@@ -268,7 +273,8 @@ namespace Aurora.BotManager
 
         #region IScriptApi Members
 
-        public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID, ScriptProtectionModule module)
+        public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID,
+                               ScriptProtectionModule module)
         {
             m_itemID = itemID;
             m_ScriptEngine = ScriptEngine;
@@ -292,8 +298,8 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   We have to add a ref here, as this API is NOT inside of the script engine
-        ///   So we add the referenced assembly to ourselves
+        ///     We have to add a ref here, as this API is NOT inside of the script engine
+        ///     So we add the referenced assembly to ourselves
         /// </summary>
         public string[] ReferencedAssemblies
         {
@@ -307,7 +313,7 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   We use "Aurora.BotManager", and that isn't a default namespace, so we need to add it
+        ///     We use "Aurora.BotManager", and that isn't a default namespace, so we need to add it
         /// </summary>
         public string[] NamespaceAdditions
         {

@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework.Services
 {
     public class AbuseReport : IDataTransferable
     {
@@ -54,48 +53,6 @@ namespace OpenSim.Services.Interfaces
 
         public AbuseReport()
         {
-        }
-
-        public override void FromKVP(Dictionary<string, object> DicCol)
-        {
-            AbuseDetails = DicCol["AbuseDetails"].ToString();
-            AbuseLocation = DicCol["AbuseLocation"].ToString();
-            AbuserName = DicCol["AbuserName"].ToString();
-            AbuseSummary = DicCol["AbuseSummary"].ToString();
-            Active = Convert.ToBoolean(DicCol["Active"].ToString());
-            AssignedTo = DicCol["AssignedTo"].ToString();
-            Category = DicCol["Category"].ToString();
-            Checked = Convert.ToBoolean(DicCol["Checked"]);
-            Notes = DicCol["Notes"].ToString();
-            Number = int.Parse(DicCol["Number"].ToString());
-            ObjectName = DicCol["ObjectName"].ToString();
-            ObjectPosition = DicCol["ObjectPosition"].ToString();
-            ObjectUUID = new UUID(DicCol["ObjectUUID"].ToString());
-            RegionName = DicCol["RegionName"].ToString();
-            ReporterName = DicCol["ReporterName"].ToString();
-            ScreenshotID = new UUID(DicCol["ScreenshotID"].ToString());
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> NewDicCol = new Dictionary<string, object>();
-            NewDicCol["AbuseDetails"] = AbuseDetails;
-            NewDicCol["AbuseLocation"] = AbuseLocation;
-            NewDicCol["AbuserName"] = AbuserName;
-            NewDicCol["AbuseSummary"] = AbuseSummary;
-            NewDicCol["Active"] = Active;
-            NewDicCol["AssignedTo"] = AssignedTo;
-            NewDicCol["Category"] = Category;
-            NewDicCol["Checked"] = Checked;
-            NewDicCol["Notes"] = Notes;
-            NewDicCol["Number"] = Number;
-            NewDicCol["ObjectName"] = ObjectName;
-            NewDicCol["ObjectPosition"] = ObjectPosition;
-            NewDicCol["ObjectUUID"] = ObjectUUID;
-            NewDicCol["RegionName"] = RegionName;
-            NewDicCol["ReporterName"] = ReporterName;
-            NewDicCol["ScreenshotID"] = ScreenshotID;
-            return NewDicCol;
         }
 
         public override void FromOSD(OSDMap DicCol)
@@ -144,46 +101,45 @@ namespace OpenSim.Services.Interfaces
     public interface IAbuseReports
     {
         /// <summary>
-        ///   Gets the abuse report associated with the number and uses the pass to authenticate.
+        ///     Gets the abuse report associated with the number and uses the pass to authenticate.
         /// </summary>
-        /// <param name = "Number"></param>
-        /// <param name = "Password"></param>
+        /// <param name="Number"></param>
+        /// <param name="Password"></param>
         /// <returns></returns>
         AbuseReport GetAbuseReport(int Number, string Password);
 
         /// <summary>
-        /// Gets the abuse report associated with the number without authentication
+        ///     Gets the abuse report associated with the number without authentication
         /// </summary>
         /// <param name="Number"></param>
         /// <returns></returns>
         AbuseReport GetAbuseReport(int Number);
 
         /// <summary>
-        ///   Adds a new abuse report to the database
+        ///     Adds a new abuse report to the database
         /// </summary>
-        /// <param name = "report"></param>
-        /// <param name = "Password"></param>
+        /// <param name="report"></param>
         void AddAbuseReport(AbuseReport report);
 
         /// <summary>
-        ///   Updates an abuse report and authenticates with the password.
+        ///     Updates an abuse report and authenticates with the password.
         /// </summary>
-        /// <param name = "report"></param>
-        /// <param name = "Password"></param>
+        /// <param name="report"></param>
+        /// <param name="Password"></param>
         void UpdateAbuseReport(AbuseReport report, string Password);
 
         /// <summary>
-        /// Updates an abuse report without authentication
+        ///     Updates an abuse report without authentication
         /// </summary>
         /// <param name="report"></param>
         void UpdateAbuseReport(AbuseReport report);
 
         /// <summary>
-        ///   Gets a collection of abuse reports
+        ///     Gets a collection of abuse reports
         /// </summary>
-        /// <param name = "start"></param>
-        /// <param name = "count"></param>
-        /// <param name = "filter"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <param name="active"></param>
         /// <returns></returns>
         List<AbuseReport> GetAbuseReports(int start, int count, bool active);
     }

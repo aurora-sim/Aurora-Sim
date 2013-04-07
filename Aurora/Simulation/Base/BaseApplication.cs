@@ -27,51 +27,39 @@
 
 //#define BlockUnsupportedVersions
 
+using Aurora.Framework;
+using Aurora.Framework.Configuration;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Utilities;
+using Nini.Config;
 using System;
-using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Aurora.Framework.Servers.HttpServer;
-using Nini.Config;
-using Aurora.Framework;
-using log4net.Config;
-using System.Net;
-using System.Text;
 
 namespace Aurora.Simulation.Base
 {
     /// <summary>
-    ///   Starting class for the Aurora Server
+    ///     Starting class for the Aurora Server
     /// </summary>
     public class BaseApplication
     {
         /// <summary>
-        ///   Save Crashes in the bin/crashes folder.  Configurable with m_crashDir
+        ///     Save Crashes in the bin/crashes folder.  Configurable with m_crashDir
         /// </summary>
         public static bool m_saveCrashDumps;
 
         /// <summary>
-        ///   Should we send an error report?
-        /// </summary>
-        public static bool m_sendErrorReport;
-
-        /// <summary>
-        ///   Where to post errors
-        /// </summary>
-        public static string m_urlToPostErrors = "http://aurora-sim.org/CrashReports/crashreports.php";
-
-        /// <summary>
-        ///   Loader of configuration files
+        ///     Loader of configuration files
         /// </summary>
         private static readonly ConfigurationLoader m_configLoader = new ConfigurationLoader();
 
         /// <summary>
-        ///   Directory to save crash reports to.  Relative to bin/
+        ///     Directory to save crash reports to.  Relative to bin/
         /// </summary>
         public static string m_crashDir = "crashes";
 
@@ -90,21 +78,6 @@ namespace Aurora.Simulation.Base
             if (!args.Contains("-skipconfig"))
                 Configure(false);
 
-            // Configure Log4Net
-            configSource.AddSwitch("Startup", "logconfig");
-            string logConfigFile = configSource.Configs["Startup"].GetString("logconfig", String.Empty);
-            if (logConfigFile != String.Empty)
-            {
-                XmlConfigurator.Configure(new FileInfo(logConfigFile));
-                //MainConsole.Instance.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file",
-                //                 logConfigFile);
-            }
-            else
-            {
-                XmlConfigurator.Configure();
-                //MainConsole.Instance.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
-            }
-
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             int workerThreads, iocpThreads;
             ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
@@ -115,27 +88,6 @@ namespace Aurora.Simulation.Base
                 iocpThreads = 1000;
                 //MainConsole.Instance.Info("[OPENSIM MAIN]: Bumping up to 500 worker threads and 1000 IOCP threads");
                 ThreadPool.SetMaxThreads(workerThreads, iocpThreads);
-            }
-
-            // Check if the system is compatible with OpenSimulator.
-            // Ensures that the minimum system requirements are met
-            //MainConsole.Instance.Info("[Setup]: Performing compatibility checks... \n");
-            string supported = String.Empty;
-            if (Util.IsEnvironmentSupported(ref supported))
-            {
-                int minWorker, minIOC;
-                // Get the current settings.
-                ThreadPool.GetMinThreads(out minWorker, out minIOC);
-
-                //MainConsole.Instance.InfoFormat("[Setup]: Environment is compatible. Thread Workers: {0}, IO Workers {1}\n", minWorker, minIOC);
-            }
-            else
-            {
-                MainConsole.Instance.Warn("[Setup]: Environment is unsupported (" + supported + ")\n");
-#if BlockUnsupportedVersions
-                    Thread.Sleep(10000); //Sleep 10 seconds
-                    return;
-#endif
             }
 
             BinMigratorService service = new BinMigratorService();
@@ -169,27 +121,8 @@ namespace Aurora.Simulation.Base
             // load Crash directory config
             m_crashDir = m_configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
 
-            // check auto restart
-            bool AutoRestart = m_configSource.Configs["Startup"].GetBoolean("AutoRestartOnCrash", true);
-
-            //Set up the error reporting
-            if (m_configSource.Configs["ErrorReporting"] != null)
-            {
-                m_sendErrorReport = m_configSource.Configs["ErrorReporting"].GetBoolean("SendErrorReports", true);
-                m_urlToPostErrors = m_configSource.Configs["ErrorReporting"].GetString("ErrorReportingURL",
-                                                                                       m_urlToPostErrors);
-            }
-
-            bool Running = true;
-            //If auto restart is set, then we always run.
-            // otherwise, just run the first time that Running == true
-            while (AutoRestart || Running)
-            {
-                //Always run once, then disable this
-                Running = false;
-                //Initialize the sim base now
-                Startup(configSource, m_configSource, simBase.Copy(), args);
-            }
+            //Initialize the sim base now
+            Startup(configSource, m_configSource, simBase.Copy(), args);
         }
 
         public static void Configure(bool requested)
@@ -197,10 +130,11 @@ namespace Aurora.Simulation.Base
             bool Aurora_log = (File.Exists(Path.Combine(Util.configDir(), "Aurora.log")));
             bool Aurora_Server_log = (File.Exists(Path.Combine(Util.configDir(), "Aurora.Server.log")));
             bool isAuroraExe = System.AppDomain.CurrentDomain.FriendlyName == "Aurora.exe" ||
-                System.AppDomain.CurrentDomain.FriendlyName == "Aurora.vshost.exe";
+                               System.AppDomain.CurrentDomain.FriendlyName == "Aurora.vshost.exe";
 
-            if (requested || !(isAuroraExe ?
-                Aurora_log : Aurora_Server_log))
+            if (requested || !(isAuroraExe
+                                   ? Aurora_log
+                                   : Aurora_Server_log))
             {
                 string resp = "no";
                 if (!requested)
@@ -208,7 +142,8 @@ namespace Aurora.Simulation.Base
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("\n\n*************Required Configuration files not found.*************");
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("\n\n   This is your first time running Aurora, if not and you already configured your " +
+                    Console.WriteLine(
+                        "\n\n   This is your first time running Aurora, if not and you already configured your " +
                         "*ini.example files, please ignore this warning and press enter; " +
                         "Otherwise type yes and Aurora will guide you trough configuration files.\n\nRemember, " +
                         "these file names are Case Sensitive in Linux and Proper Cased.\n1. ./Aurora.ini\nand\n2. " +
@@ -233,13 +168,13 @@ namespace Aurora.Simulation.Base
                     string dbPasswd = "aurora";
                     string dbSchema = "aurora";
                     string dbUser = "aurora";
-                    string ipAddress = Utilities.GetExternalIp(),
-                        gridIPAddress = Utilities.GetExternalIp();
-                    string mode = "1";
+                    string gridIPAddress = Utilities.GetExternalIp();
+                    bool isStandalone = true;
                     string dbType = "1";
                     string gridName = "Aurora-Sim Grid";
                     string welcomeMessage = "";
                     string allowAnonLogin = "true";
+                    uint port = 9000;
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("====================================================================");
                     Console.WriteLine("========================= AURORA CONFIGURATOR ======================");
@@ -252,132 +187,70 @@ namespace Aurora.Simulation.Base
                         Console.ForegroundColor = ConsoleColor.Cyan;
                         Console.WriteLine("[1] Standalone Mode \n[2] Grid Mode");
                         Console.ResetColor();
-                        mode = ReadLine("Choose 1 or 2", mode);
+                        isStandalone = ReadLine("Choose 1 or 2", "1") == "1";
+
+
+                        Console.WriteLine("Http Port for the server");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("Default is 9000");
+                        Console.ResetColor();
+                        port = uint.Parse(ReadLine("Choose the port", "9000"));
                     }
 
-                    Console.WriteLine("Which database do you want to use?");
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine("[1] SQLite \n[2] MySQL");
-                    Console.ResetColor();
-                    dbType = ReadLine("Choose 1 or 2", dbType);
-                    if (dbType == "2")
+                    if (isStandalone)
                     {
-                        Console.WriteLine("Note: this setup does not automatically create a MySQL installation for you.\n" +
-                            "You must install MySQL on your own");
+                        Console.WriteLine("Which database do you want to use?");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("[1] SQLite \n[2] MySQL");
+                        Console.ResetColor();
+                        dbType = ReadLine("Choose 1 or 2", dbType);
+                        if (dbType == "2")
+                        {
+                            Console.WriteLine(
+                                "Note: this setup does not automatically create a MySQL installation for you.\n" +
+                                "You must install MySQL on your own");
 
-                        dbSchema = ReadLine("MySQL database name for your region", dbSchema);
-                        dbSource = ReadLine("MySQL database IP", dbSource);
-                        dbUser = ReadLine("MySQL database user account", dbUser);
+                            dbSchema = ReadLine("MySQL database name for your region", dbSchema);
+                            dbSource = ReadLine("MySQL database IP", dbSource);
+                            dbUser = ReadLine("MySQL database user account", dbUser);
 
-                        Console.Write("MySQL database password for that account: ");
-                        dbPasswd = Console.ReadLine();
+                            Console.Write("MySQL database password for that account: ");
+                            dbPasswd = Console.ReadLine();
+                        }
                     }
 
-                    if (mode == "1")
+                    if (isStandalone)
                     {
                         gridName = ReadLine("Name of your Aurora-Sim Grid", gridName);
 
                         welcomeMessage = "Welcome to " + gridName + ", <USERNAME>!";
-                        welcomeMessage = ReadLine("Welcome Message to show during login (putting <USERNAME> into the " + 
-                            "welcome message will insert the user's name)", welcomeMessage);
+                        welcomeMessage = ReadLine("Welcome Message to show during login (putting <USERNAME> into the " +
+                                                  "welcome message will insert the user's name)", welcomeMessage);
 
                         allowAnonLogin = ReadLine("Create accounts automatically when users log in " +
-                            "(you don't have to create all accounts manually or have a web interface then)", allowAnonLogin);
+                                                  "(you don't have to create all accounts manually or have a web interface then)",
+                                                  allowAnonLogin);
                     }
 
-                    ipAddress = ReadLine("Your external domain name or IP address", ipAddress);
-                    if (ipAddress.StartsWith("http://"))//IP only!
-                        ipAddress = ipAddress.Remove(0, 7);
-
-                    if (mode == "2")
-                        gridIPAddress = ReadLine("The external domain name or IP address of the grid server you wish to connect to",
-                            ipAddress);
-
-                    if (isAuroraExe)
-                    {
-                        MakeSureExists("Aurora.ini");
-                        IniConfigSource aurora_ini = new IniConfigSource("Aurora.ini", Nini.Ini.IniFileType.AuroraStyle);
-                        IniConfigSource aurora_ini_example = new IniConfigSource("Aurora.ini.example", Nini.Ini.IniFileType.AuroraStyle);
-
-                        bool setHostName = false;
-                        foreach (IConfig config in aurora_ini_example.Configs)
-                        {
-                            IConfig newConfig = aurora_ini.AddConfig(config.Name);
-                            foreach (string key in config.GetKeys())
-                            {
-                                if (key == "HostName")
-                                {
-                                    setHostName = true;
-                                    newConfig.Set(key, ipAddress);
-                                }
-                                //No GUI for mono
-                                else if (key == "NoGUI" &&
-                                    Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
-                                    newConfig.Set(key, true);
-                                //Next 3: Set file loader to the default for mono
-                                else if (config.Name == "RegionStartup" && key == "Default" &&
-                                    Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
-                                    newConfig.Set(key, "RegionLoaderFileSystem");
-                                else if (key == "RegionLoaderFileSystem_Enabled" &&
-                                    Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
-                                    newConfig.Set(key, true);
-                                else if (key == "RegionLoaderDataBaseSystem_Enabled" &&
-                                    Util.GetRuntimeEnvironment() == Framework.RuntimeEnvironment.Mono)
-                                    newConfig.Set(key, false);
-                                else
-                                    newConfig.Set(key, config.Get(key));
-                            }
-                        }
-                        if (!setHostName)
-                            aurora_ini.Configs["Network"].Set("HostName", ipAddress);
-
-                        aurora_ini.Save();
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your Aurora.ini has been successfully configured");
-                        Console.ResetColor();
-                    }
-                    else
-                    {
-                        MakeSureExists("Aurora.Server.ini");
-                        IniConfigSource aurora_ini = new IniConfigSource("Aurora.Server.ini", Nini.Ini.IniFileType.AuroraStyle);
-                        IniConfigSource aurora_ini_example = new IniConfigSource("Aurora.Server.ini.example", Nini.Ini.IniFileType.AuroraStyle);
-
-                        bool setHostName = false;
-                        foreach (IConfig config in aurora_ini_example.Configs)
-                        {
-                            IConfig newConfig = aurora_ini.AddConfig(config.Name);
-                            foreach (string key in config.GetKeys())
-                            {
-                                if (key == "HostName")
-                                {
-                                    setHostName = true;
-                                    newConfig.Set(key, ipAddress);
-                                }
-                                else
-                                    newConfig.Set(key, config.Get(key));
-                            }
-                        }
-                        if (!setHostName)
-                            aurora_ini.Configs["Network"].Set("HostName", ipAddress);
-
-                        aurora_ini.Save();
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your Aurora.Server.ini has been successfully configured");
-                        Console.ResetColor();
-                    }
+                    if (!isStandalone)
+                        gridIPAddress =
+                            ReadLine("The external domain name or IP address of the grid server you wish to connect to",
+                                     gridIPAddress);
 
                     //Data.ini setup
+                    if (isStandalone)
                     {
                         string folder = isAuroraExe ? "Configuration/" : "AuroraServerConfiguration/";
                         MakeSureExists(folder + "Data/Data.ini");
-                        IniConfigSource data_ini = new IniConfigSource(folder + "Data/Data.ini", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource data_ini = new IniConfigSource(folder + "Data/Data.ini",
+                                                                       Nini.Ini.IniFileType.AuroraStyle);
                         IConfig conf = data_ini.AddConfig("DataFile");
                         if (dbType == "1")
                             conf.Set("Include-SQLite", folder + "Data/SQLite.ini");
                         else
                             conf.Set("Include-MySQL", folder + "Data/MySQL.ini");
 
-                        if(isAuroraExe)
+                        if (isAuroraExe)
                             conf.Set("Include-FileBased", "Configuration/Data/FileBased.ini");
 
                         conf = data_ini.AddConfig("AuroraConnectors");
@@ -388,19 +261,23 @@ namespace Aurora.Simulation.Base
                         Console.WriteLine("Your Data.ini has been successfully configured");
                         Console.ResetColor();
 
-                        if (dbType == "2")//MySQL setup
+                        if (dbType == "2") //MySQL setup
                         {
                             MakeSureExists(folder + "Data/MySQL.ini");
-                            IniConfigSource mysql_ini = new IniConfigSource(folder + "Data/MySQL.ini", Nini.Ini.IniFileType.AuroraStyle);
-                            IniConfigSource mysql_ini_example = new IniConfigSource(folder + "Data/MySQL.ini.example", Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource mysql_ini = new IniConfigSource(folder + "Data/MySQL.ini",
+                                                                            Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource mysql_ini_example = new IniConfigSource(folder + "Data/MySQL.ini.example",
+                                                                                    Nini.Ini.IniFileType.AuroraStyle);
                             foreach (IConfig config in mysql_ini_example.Configs)
                             {
                                 IConfig newConfig = mysql_ini.AddConfig(config.Name);
                                 foreach (string key in config.GetKeys())
                                 {
                                     if (key == "ConnectionString")
-                                        newConfig.Set(key, string.Format("\"Data Source={0};Port=3306;Database={1};User ID={2};Password={3};\"",
-                                            dbSource, dbSchema, dbUser, dbPasswd));
+                                        newConfig.Set(key,
+                                                      string.Format(
+                                                          "\"Data Source={0};Port=3306;Database={1};User ID={2};Password={3};\"",
+                                                          dbSource, dbSchema, dbUser, dbPasswd));
                                     else
                                         newConfig.Set(key, config.Get(key));
                                 }
@@ -414,11 +291,33 @@ namespace Aurora.Simulation.Base
 
                     if (isAuroraExe)
                     {
+                        MakeSureExists("Aurora.ini");
+                        IniConfigSource aurora_ini = new IniConfigSource("Aurora.ini", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource aurora_ini_example = new IniConfigSource("Aurora.ini.example", Nini.Ini.IniFileType.AuroraStyle);
+
+                        foreach (IConfig config in aurora_ini_example.Configs)
+                        {
+                            IConfig newConfig = aurora_ini.AddConfig(config.Name);
+                            foreach (string key in config.GetKeys())
+                            {
+                                if (key == "http_listener_port")
+                                    newConfig.Set(key, port);
+                                else
+                                    newConfig.Set(key, config.Get(key));
+                            }
+                        }
+
+                        aurora_ini.Save();
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("Your Aurora.ini has been successfully configured");
+                        Console.ResetColor();
+
                         MakeSureExists("Configuration/Main.ini");
-                        IniConfigSource main_ini = new IniConfigSource("Configuration/Main.ini", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource main_ini = new IniConfigSource("Configuration/Main.ini",
+                                                                       Nini.Ini.IniFileType.AuroraStyle);
 
                         IConfig conf = main_ini.AddConfig("Architecture");
-                        if (mode == "1")
+                        if (isStandalone)
                             conf.Set("Include-Standalone", "Configuration/Standalone/StandaloneCommon.ini");
                         else
                             conf.Set("Include-Grid", "Configuration/Grid/AuroraGridCommon.ini");
@@ -429,18 +328,22 @@ namespace Aurora.Simulation.Base
                         Console.WriteLine("Your Main.ini has been successfully configured");
                         Console.ResetColor();
 
-                        if (mode == "1")
+                        if (isStandalone)
                         {
                             MakeSureExists("Configuration/Standalone/StandaloneCommon.ini");
-                            IniConfigSource standalone_ini = new IniConfigSource("Configuration/Standalone/StandaloneCommon.ini", Nini.Ini.IniFileType.AuroraStyle);
-                            IniConfigSource standalone_ini_example = new IniConfigSource("Configuration/Standalone/StandaloneCommon.ini.example", Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource standalone_ini =
+                                new IniConfigSource("Configuration/Standalone/StandaloneCommon.ini",
+                                                    Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource standalone_ini_example =
+                                new IniConfigSource("Configuration/Standalone/StandaloneCommon.ini.example",
+                                                    Nini.Ini.IniFileType.AuroraStyle);
                             foreach (IConfig config in standalone_ini_example.Configs)
                             {
                                 IConfig newConfig = standalone_ini.AddConfig(config.Name);
                                 if (newConfig.Name == "GridInfoService")
                                 {
                                     newConfig.Set("GridInfoInHandlerPort", 0);
-                                    newConfig.Set("login", "http://" + ipAddress + ":9000/");
+                                    newConfig.Set("login", "http://" + gridIPAddress + ":9000/");
                                     newConfig.Set("gridname", gridName);
                                     newConfig.Set("gridnick", gridName);
                                 }
@@ -466,12 +369,13 @@ namespace Aurora.Simulation.Base
                         else
                         {
                             MakeSureExists("Configuration/Grid/AuroraGridCommon.ini");
-                            IniConfigSource grid_ini = new IniConfigSource("Configuration/Grid/AuroraGridCommon.ini", Nini.Ini.IniFileType.AuroraStyle);
+                            IniConfigSource grid_ini = new IniConfigSource("Configuration/Grid/AuroraGridCommon.ini",
+                                                                           Nini.Ini.IniFileType.AuroraStyle);
 
                             conf = grid_ini.AddConfig("Includes");
                             conf.Set("Include-Grid", "Configuration/Grid/Grid.ini");
                             conf = grid_ini.AddConfig("Configuration");
-                            conf.Set("RegistrationURI", "http://" + gridIPAddress + ":8003");
+                            conf.Set("GridServerURI", "http://" + gridIPAddress + ":8012/grid/");
 
                             grid_ini.Save();
                             Console.ForegroundColor = ConsoleColor.Green;
@@ -482,8 +386,11 @@ namespace Aurora.Simulation.Base
                     if (!isAuroraExe)
                     {
                         MakeSureExists("AuroraServerConfiguration/Login.ini");
-                        IniConfigSource login_ini = new IniConfigSource("AuroraServerConfiguration/Login.ini", Nini.Ini.IniFileType.AuroraStyle);
-                        IniConfigSource login_ini_example = new IniConfigSource("AuroraServerConfiguration/Login.ini.example", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource login_ini = new IniConfigSource("AuroraServerConfiguration/Login.ini",
+                                                                        Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource login_ini_example =
+                            new IniConfigSource("AuroraServerConfiguration/Login.ini.example",
+                                                Nini.Ini.IniFileType.AuroraStyle);
                         foreach (IConfig config in login_ini_example.Configs)
                         {
                             IConfig newConfig = login_ini.AddConfig(config.Name);
@@ -503,10 +410,12 @@ namespace Aurora.Simulation.Base
                         Console.ResetColor();
 
                         MakeSureExists("AuroraServerConfiguration/GridInfoService.ini");
-                        IniConfigSource grid_info_ini = new IniConfigSource("AuroraServerConfiguration/GridInfoService.ini", Nini.Ini.IniFileType.AuroraStyle);
+                        IniConfigSource grid_info_ini =
+                            new IniConfigSource("AuroraServerConfiguration/GridInfoService.ini",
+                                                Nini.Ini.IniFileType.AuroraStyle);
                         IConfig conf = grid_info_ini.AddConfig("GridInfoService");
                         conf.Set("GridInfoInHandlerPort", 8002);
-                        conf.Set("login", "http://" + ipAddress + ":8002");
+                        conf.Set("login", "http://" + gridIPAddress + ":8002");
                         conf.Set("gridname", gridName);
                         conf.Set("gridnick", gridName);
 
@@ -522,19 +431,23 @@ namespace Aurora.Simulation.Base
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine(gridName);
                     Console.ResetColor();
-                    Console.WriteLine("\nYour loginuri is ");
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine("http://" + ipAddress + (isAuroraExe ? ":9000/" : ":8002/"));
-                    Console.ResetColor();
-                    if (mode == "2")
+                    if (isStandalone)
+                    {
+                        Console.WriteLine("\nYour loginuri is ");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("http://" + gridIPAddress + (isAuroraExe ? ":9000/" : ":8002/"));
+                        Console.ResetColor();
+                    }
+                    else
                     {
                         Console.WriteLine("\nConnected Grid URL: ");
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine("http://" + ipAddress + ":8003/");
+                        Console.WriteLine("http://" + gridIPAddress + ":8002/");
                         Console.ResetColor();
                     }
                     Console.WriteLine("\n====================================================================\n");
-                    Console.WriteLine("If you ever want to rerun this configurator, you can type \"run configurator\" into the console to bring this prompt back up.");
+                    Console.WriteLine(
+                        "If you ever want to rerun this configurator, you can type \"run configurator\" into the console to bring this prompt back up.");
                 }
             }
         }
@@ -557,7 +470,7 @@ namespace Aurora.Simulation.Base
             return mode;
         }
 
-        public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource,
+        public static void Startup(IConfigSource originalConfigSource, IConfigSource configSource,
                                    ISimulationBase simBase, string[] cmdParameters)
         {
             //Get it ready to run
@@ -571,39 +484,17 @@ namespace Aurora.Simulation.Base
             }
             catch (Exception ex)
             {
-                if (ex.Message != "Restart") //Internal needs a restart message
-                {
-                    UnhandledException(false, ex);
-                    //Just clean it out as good as we can
-                    simBase.Shutdown(false);
-                    IRegionLoader[] regionLoaders = simBase.ApplicationRegistry.RequestModuleInterfaces<IRegionLoader>();
-#if (!ISWIN)
-                    foreach (IRegionLoader loader in regionLoaders)
-                    {
-                        if (loader != null && loader.Default)
-                        {
-                            loader.FailedToStartRegions(ex.Message);
-                        }
-                    }
-#else
-                    foreach (IRegionLoader loader in regionLoaders.Where(loader => loader != null && loader.Default))
-                    {
-                        loader.FailedToStartRegions(ex.Message);
-                    }
-#endif
-                }
-                //Then let it restart if it needs by sending it back up to 'while (AutoRestart || Running)' above
-                return;
+                UnhandledException(false, ex);
+                //Just clean it out as good as we can
+                simBase.Shutdown(false);
             }
-            //If it didn't throw an error, it wants to quit
-            Environment.Exit(0);
         }
 
         /// <summary>
-        ///   Load the configuration for the Application
+        ///     Load the configuration for the Application
         /// </summary>
-        /// <param name = "configSource"></param>
-        /// <param name = "defaultIniFile"></param>
+        /// <param name="configSource"></param>
+        /// <param name="defaultIniFile"></param>
         /// <returns></returns>
         private static IConfigSource Configuration(IConfigSource configSource, string defaultIniFile)
         {
@@ -613,10 +504,10 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        ///   Global exception handler -- all unhandlet exceptions end up here :)
+        ///     Global exception handler -- all unhandlet exceptions end up here :)
         /// </summary>
-        /// <param name = "sender"></param>
-        /// <param name = "e"></param>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (_IsHandlingException)
@@ -652,13 +543,13 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        ///   Deal with sending the error to the error reporting service and saving the dump to the harddrive if needed
+        ///     Deal with sending the error to the error reporting service and saving the dump to the harddrive if needed
         /// </summary>
-        /// <param name = "msg"></param>
-        /// <param name = "ex"></param>
+        /// <param name="msg"></param>
+        /// <param name="ex"></param>
         public static void handleException(string msg, Exception ex)
         {
-            if (m_saveCrashDumps)
+            if (m_saveCrashDumps && Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
                 // Log exception to disk
                 try
@@ -681,26 +572,6 @@ namespace Aurora.Simulation.Base
                 catch (Exception e2)
                 {
                     MainConsole.Instance.ErrorFormat("[CRASH LOGGER CRASHED]: {0}", e2);
-                }
-            }
-
-            if (m_sendErrorReport)
-            {
-                Hashtable param = new Hashtable
-                                      {
-                                          {"Version", VersionInfo.Version},
-                                          {"Message", msg},
-                                          {"Platform", Environment.OSVersion.Platform.ToString()}
-                                      };
-                IList parameters = new ArrayList();
-                parameters.Add(param);
-                ConfigurableKeepAliveXmlRpcRequest req = new ConfigurableKeepAliveXmlRpcRequest("SendErrorReport", parameters, true);
-                try
-                {
-                    req.Send(m_urlToPostErrors, 10000);
-                }
-                catch
-                {
                 }
             }
         }

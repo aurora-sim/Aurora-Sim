@@ -27,24 +27,28 @@
 
 //#define SPAM
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
+using OpenMetaverse.StructuredData;
+#if DEBUGING
+using PrimMesher;
+#else
+using Aurora.Physics.PrimMesher;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Physics;
-using PrimMesher;
 using zlib;
-using Path = System.IO.Path;
 
-namespace OpenSim.Region.Physics.Meshing
+namespace Aurora.Physics.Meshing
 {
     public class MeshmerizerPlugin : IMeshingPlugin
     {
@@ -80,9 +84,7 @@ namespace OpenSim.Region.Physics.Meshing
         private readonly bool UseMeshesPhysicsMesh;
 
         private float minSizeForComplexMesh = 0.2f;
-                      // prims with all dimensions smaller than this will have a bounding box mesh
-
-        private readonly Dictionary<ulong, Mesh> m_uniqueMeshes = new Dictionary<ulong, Mesh>();
+        // prims with all dimensions smaller than this will have a bounding box mesh
 
         public Meshmerizer(IConfigSource config)
         {
@@ -92,12 +94,7 @@ namespace OpenSim.Region.Physics.Meshing
             cacheSculptMaps = start_config.GetBoolean("CacheSculptMaps", cacheSculptMaps);
             UseMeshesPhysicsMesh = start_config.GetBoolean("UseMeshesPhysicsMesh", UseMeshesPhysicsMesh);
 
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-            {
-                cacheSculptAlphaMaps = false;
-            }
-            else
-                cacheSculptAlphaMaps = cacheSculptMaps; 
+            cacheSculptAlphaMaps = Environment.OSVersion.Platform != PlatformID.Unix && cacheSculptMaps;
 
             try
             {
@@ -106,92 +103,85 @@ namespace OpenSim.Region.Physics.Meshing
             }
             catch (Exception e)
             {
-                MainConsole.Instance.WarnFormat("[SCULPT]: Unable to create {0} directory: ", decodedSculptMapPath, e.ToString());
+                MainConsole.Instance.WarnFormat("[SCULPT]: Unable to create {0} directory: ", decodedSculptMapPath,
+                                                e.ToString());
             }
         }
 
         /// <summary>
-        ///   creates a simple box mesh of the specified size. This mesh is of very low vertex count and may
-        ///   be useful as a backup proxy when level of detail is not needed or when more complex meshes fail
-        ///   for some reason
+        ///     creates a simple box mesh of the specified size. This mesh is of very low vertex count and may
+        ///     be useful as a backup proxy when level of detail is not needed or when more complex meshes fail
+        ///     for some reason
         /// </summary>
-        /// <param name = "minX"></param>
-        /// <param name = "maxX"></param>
-        /// <param name = "minY"></param>
-        /// <param name = "maxY"></param>
-        /// <param name = "minZ"></param>
-        /// <param name = "maxZ"></param>
+        /// <param name="minX"></param>
+        /// <param name="maxX"></param>
+        /// <param name="minY"></param>
+        /// <param name="maxY"></param>
+        /// <param name="minZ"></param>
+        /// <param name="maxZ"></param>
+        /// <param name="key"></param>
         /// <returns></returns>
         private static Mesh CreateSimpleBoxMesh(float minX, float maxX, float minY, float maxY, float minZ, float maxZ,
                                                 ulong key)
         {
             Mesh box = new Mesh(key);
-            List<Vertex> vertices = new List<Vertex>
+            List<Coord> vertices = new List<Coord>
                                         {
-                                            new Vertex(minX, maxY, minZ),
-                                            new Vertex(maxX, maxY, minZ),
-                                            new Vertex(maxX, minY, minZ),
-                                            new Vertex(minX, minY, minZ)
+                                            new Coord(minX, maxY, minZ),
+                                            new Coord(maxX, maxY, minZ),
+                                            new Coord(maxX, minY, minZ),
+                                            new Coord(minX, minY, minZ)
                                         };
             // bottom
 
-            box.Add(new Triangle(vertices[0], vertices[1], vertices[2]));
-            box.Add(new Triangle(vertices[0], vertices[2], vertices[3]));
+            List<Face> faces = new List<Face>();
+            faces.Add(new Face(0, 1, 2));
+            faces.Add(new Face(0, 1, 3));
 
             // top
 
-            vertices.Add(new Vertex(maxX, maxY, maxZ));
-            vertices.Add(new Vertex(minX, maxY, maxZ));
-            vertices.Add(new Vertex(minX, minY, maxZ));
-            vertices.Add(new Vertex(maxX, minY, maxZ));
+            vertices.Add(new Coord(maxX, maxY, maxZ));
+            vertices.Add(new Coord(minX, maxY, maxZ));
+            vertices.Add(new Coord(minX, minY, maxZ));
+            vertices.Add(new Coord(maxX, minY, maxZ));
 
-            box.Add(new Triangle(vertices[4], vertices[5], vertices[6]));
-            box.Add(new Triangle(vertices[4], vertices[6], vertices[7]));
+            faces.Add(new Face(4, 5, 6));
+            faces.Add(new Face(4, 5, 7));
 
             // sides
 
-            box.Add(new Triangle(vertices[5], vertices[0], vertices[3]));
-            box.Add(new Triangle(vertices[5], vertices[3], vertices[6]));
+            faces.Add(new Face(5, 0, 3));
+            faces.Add(new Face(5, 3, 6));
 
-            box.Add(new Triangle(vertices[1], vertices[0], vertices[5]));
-            box.Add(new Triangle(vertices[1], vertices[5], vertices[4]));
+            faces.Add(new Face(1, 0, 5));
+            faces.Add(new Face(1, 5, 4));
 
-            box.Add(new Triangle(vertices[7], vertices[1], vertices[4]));
-            box.Add(new Triangle(vertices[7], vertices[2], vertices[1]));
+            faces.Add(new Face(7, 1, 4));
+            faces.Add(new Face(7, 2, 1));
 
-            box.Add(new Triangle(vertices[3], vertices[2], vertices[7]));
-            box.Add(new Triangle(vertices[3], vertices[7], vertices[6]));
+            faces.Add(new Face(3, 2, 7));
+            faces.Add(new Face(3, 7, 6));
+
+            box.Set(vertices, faces);
+
+            vertices.Clear();
+            faces.Clear();
+            vertices = null;
+            faces = null;
 
             return box;
         }
 
 
         /// <summary>
-        ///   Creates a simple bounding box mesh for a complex input mesh
+        ///     Creates a simple bounding box mesh for a complex input mesh
         /// </summary>
-        /// <param name = "meshIn"></param>
+        /// <param name="meshIn"></param>
+        /// <param name="key"></param>
         /// <returns></returns>
-        private static Mesh CreateBoundingBoxMesh(Mesh meshIn, ulong key)
+        private static Mesh CreateBoundingBoxMesh(Vector3 size, ulong key)
         {
-            float minX = float.MaxValue;
-            float maxX = float.MinValue;
-            float minY = float.MaxValue;
-            float maxY = float.MinValue;
-            float minZ = float.MaxValue;
-            float maxZ = float.MinValue;
-
-            foreach (Vector3 v in meshIn.getVertexList())
-            {
-                if (v.X < minX) minX = v.X;
-                if (v.Y < minY) minY = v.Y;
-                if (v.Z < minZ) minZ = v.Z;
-
-                if (v.X > maxX) maxX = v.X;
-                if (v.Y > maxY) maxY = v.Y;
-                if (v.Z > maxZ) maxZ = v.Z;
-            }
-
-            return CreateSimpleBoxMesh(minX, maxX, minY, maxY, minZ, maxZ, key);
+            return CreateSimpleBoxMesh(0, size.X,0, size.Y, 0, size.Z, key);
         }
 
         private void ReportPrimError(string message, string primName, PrimMesh primMesh)
@@ -199,64 +189,6 @@ namespace OpenSim.Region.Physics.Meshing
             MainConsole.Instance.Error(message);
             MainConsole.Instance.Error("\nPrim Name: " + primName);
             MainConsole.Instance.Error("****** PrimMesh Parameters ******\n" + primMesh.ParamsToDisplayString());
-        }
-
-        private ulong GetMeshKey(PrimitiveBaseShape pbs, Vector3 size, float lod)
-        {
-            ulong hash = 5381;
-
-            hash = djb2(hash, pbs.PathCurve);
-            hash = djb2(hash, (byte) ((byte) pbs.HollowShape | (byte) pbs.ProfileShape));
-            hash = djb2(hash, pbs.PathBegin);
-            hash = djb2(hash, pbs.PathEnd);
-            hash = djb2(hash, pbs.PathScaleX);
-            hash = djb2(hash, pbs.PathScaleY);
-            hash = djb2(hash, pbs.PathShearX);
-            hash = djb2(hash, pbs.PathShearY);
-            hash = djb2(hash, (byte) pbs.PathTwist);
-            hash = djb2(hash, (byte) pbs.PathTwistBegin);
-            hash = djb2(hash, (byte) pbs.PathRadiusOffset);
-            hash = djb2(hash, (byte) pbs.PathTaperX);
-            hash = djb2(hash, (byte) pbs.PathTaperY);
-            hash = djb2(hash, pbs.PathRevolutions);
-            hash = djb2(hash, (byte) pbs.PathSkew);
-            hash = djb2(hash, pbs.ProfileBegin);
-            hash = djb2(hash, pbs.ProfileEnd);
-            hash = djb2(hash, pbs.ProfileHollow);
-
-            // TODO: Separate scale out from the primitive shape data (after
-            // scaling is supported at the physics engine level)
-            byte[] scaleBytes = size.GetBytes();
-            hash = scaleBytes.Aggregate(hash, djb2);
-
-            // Include LOD in hash, accounting for endianness
-            byte[] lodBytes = new byte[4];
-            Buffer.BlockCopy(BitConverter.GetBytes(lod), 0, lodBytes, 0, 4);
-            if (!BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(lodBytes, 0, 4);
-            }
-            hash = lodBytes.Aggregate(hash, djb2);
-
-            // include sculpt UUID
-            if (pbs.SculptEntry)
-            {
-                scaleBytes = pbs.SculptTexture.GetBytes();
-                hash = scaleBytes.Aggregate(hash, djb2);
-            }
-
-            return hash;
-        }
-
-        private ulong djb2(ulong hash, byte c)
-        {
-            return ((hash << 5) + hash) + c;
-        }
-
-        private ulong djb2(ulong hash, ushort c)
-        {
-            hash = ((hash << 5) + hash) + ((byte) c);
-            return ((hash << 5) + hash) + (ulong) (c >> 8);
         }
 
 
@@ -274,7 +206,7 @@ namespace OpenSim.Region.Physics.Meshing
 
             if (primShape.SculptEntry)
             {
-                if (((SculptType)primShape.SculptType & SculptType.Mesh) == SculptType.Mesh)
+                if (((SculptType) primShape.SculptType & SculptType.Mesh) == SculptType.Mesh)
                 {
                     if (!UseMeshesPhysicsMesh)
                         return null;
@@ -314,16 +246,16 @@ namespace OpenSim.Region.Physics.Meshing
                             Mesh cachedMesh = new Mesh(key);
                             cachedMesh.Deserialize(cachedMeshMap);
                             cachedMesh.WasCached = true;
-                            return cachedMesh;//Return here, we found all of the info right here
+                            return cachedMesh; //Return here, we found all of the info right here
                         }
                         if (map.ContainsKey("physics_shape"))
-                            physicsParms = (OSDMap)map["physics_shape"]; // old asset format
+                            physicsParms = (OSDMap) map["physics_shape"]; // old asset format
                         if (physicsParms.Count == 0 && map.ContainsKey("physics_mesh"))
-                            physicsParms = (OSDMap)map["physics_mesh"]; // new asset format
+                            physicsParms = (OSDMap) map["physics_mesh"]; // new asset format
                         if (physicsParms.Count == 0 && map.ContainsKey("physics_convex"))
                             // convex hull format, which we can't read, so instead
                             // read the highest lod that exists, and use it instead
-                            physicsParms = (OSDMap)map["high_lod"]; 
+                            physicsParms = (OSDMap) map["high_lod"];
 
                         int physOffset = physicsParms["offset"].AsInteger() + (int) start;
                         int physSize = physicsParms["size"].AsInteger();
@@ -384,10 +316,11 @@ namespace OpenSim.Region.Physics.Meshing
 
                                     Vector3 posMax = new Vector3(0.5f, 0.5f, 0.5f);
                                     Vector3 posMin = new Vector3(-0.5f, -0.5f, -0.5f);
-                                    if (subMeshMap.ContainsKey("PositionDomain"))//Optional, so leave the max and min values otherwise
+                                    if (subMeshMap.ContainsKey("PositionDomain"))
+                                        //Optional, so leave the max and min values otherwise
                                     {
-                                        posMax = ((OSDMap)subMeshMap["PositionDomain"])["Max"].AsVector3();
-                                        posMin = ((OSDMap)subMeshMap["PositionDomain"])["Min"].AsVector3();
+                                        posMax = ((OSDMap) subMeshMap["PositionDomain"])["Max"].AsVector3();
+                                        posMin = ((OSDMap) subMeshMap["PositionDomain"])["Min"].AsVector3();
                                     }
                                     ushort faceIndexOffset = (ushort) coords.Count;
 
@@ -426,7 +359,7 @@ namespace OpenSim.Region.Physics.Meshing
                 {
                     if (cacheSculptMaps && primShape.SculptTexture != UUID.Zero)
                     {
-                        decodedSculptFileName = Path.Combine(decodedSculptMapPath,
+                        decodedSculptFileName = System.IO.Path.Combine(decodedSculptMapPath,
                                                              "smap_" + primShape.SculptTexture.ToString());
                         try
                         {
@@ -437,7 +370,8 @@ namespace OpenSim.Region.Physics.Meshing
                         }
                         catch (Exception e)
                         {
-                            MainConsole.Instance.Error("[SCULPT]: unable to load cached sculpt map " + decodedSculptFileName + " " + e);
+                            MainConsole.Instance.Error("[SCULPT]: unable to load cached sculpt map " +
+                                                       decodedSculptFileName + " " + e);
                         }
                         //if (idata != null)
                         //    MainConsole.Instance.Debug("[SCULPT]: loaded cached map asset for map ID: " + primShape.SculptTexture.ToString());
@@ -454,17 +388,19 @@ namespace OpenSim.Region.Physics.Meshing
                             OpenJPEG.DecodeToImage(primShape.SculptData, out unusedData, out idata);
                             unusedData = null;
 
-                            if (cacheSculptMaps && (cacheSculptAlphaMaps || (((ImageFlags)(idata.Flags) & ImageFlags.HasAlpha) == 0)))
+                            if (cacheSculptMaps &&
+                                (cacheSculptAlphaMaps || (((ImageFlags) (idata.Flags) & ImageFlags.HasAlpha) == 0)))
                             {
                                 try
                                 {
-                                    if(idata != null)
+                                    if (idata != null)
                                         idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp);
                                 }
                                 catch (Exception e)
                                 {
-                                    MainConsole.Instance.Error("[SCULPT]: unable to cache sculpt map " + decodedSculptFileName + " " +
-                                                e);
+                                    MainConsole.Instance.Error("[SCULPT]: unable to cache sculpt map " +
+                                                               decodedSculptFileName + " " +
+                                                               e);
                                 }
                             }
                         }
@@ -476,7 +412,8 @@ namespace OpenSim.Region.Physics.Meshing
                         }
                         catch (IndexOutOfRangeException)
                         {
-                            MainConsole.Instance.Error("[PHYSICS]: OpenJpeg was unable to decode this. Physics Proxy generation failed");
+                            MainConsole.Instance.Error(
+                                "[PHYSICS]: OpenJpeg was unable to decode this. Physics Proxy generation failed");
                             return null;
                         }
                         catch (Exception ex)
@@ -553,26 +490,34 @@ namespace OpenSim.Region.Physics.Meshing
                 }
 
                 int sides = 4;
-                if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.EquilateralTriangle)
-                    sides = 3;
-                else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.Circle)
-                    sides = 24;
-                else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.HalfCircle)
+                switch ((primShape.ProfileCurve & 0x07))
                 {
-                    // half circle, prim is a sphere
-                    sides = 24;
-
-                    profileBegin = 0.5f*profileBegin + 0.5f;
-                    profileEnd = 0.5f*profileEnd + 0.5f;
+                    case (byte) ProfileShape.EquilateralTriangle:
+                        sides = 3;
+                        break;
+                    case (byte) ProfileShape.Circle:
+                        sides = 24;
+                        break;
+                    case (byte) ProfileShape.HalfCircle:
+                        sides = 24;
+                        profileBegin = 0.5f*profileBegin + 0.5f;
+                        profileEnd = 0.5f*profileEnd + 0.5f;
+                        break;
                 }
 
                 int hollowSides = sides;
-                if (primShape.HollowShape == HollowShape.Circle)
-                    hollowSides = 24;
-                else if (primShape.HollowShape == HollowShape.Square)
-                    hollowSides = 4;
-                else if (primShape.HollowShape == HollowShape.Triangle)
-                    hollowSides = 3;
+                switch (primShape.HollowShape)
+                {
+                    case HollowShape.Circle:
+                        hollowSides = 24;
+                        break;
+                    case HollowShape.Square:
+                        hollowSides = 4;
+                        break;
+                    case HollowShape.Triangle:
+                        hollowSides = 3;
+                        break;
+                }
 
                 primMesh = new PrimMesh(sides, profileBegin, profileEnd, profileHollow, hollowSides);
 
@@ -654,24 +599,11 @@ namespace OpenSim.Region.Physics.Meshing
                 primMesh = null;
             }
 
-            int numCoords = coords.Count;
-            int numFaces = faces.Count;
-
-            // Create the list of vertices
-            List<Vertex> vertices = new List<Vertex>();
-            for (int i = 0; i < numCoords; i++)
-            {
-                Coord c = coords[i];
-                vertices.Add(new Vertex(c.X, c.Y, c.Z));
-            }
-
             Mesh mesh = new Mesh(key);
+            //mesh.m_triangles = faces;
+            //mesh.m_vertices = coords;
             // Add the corresponding triangles to the mesh
-            for (int i = 0; i < numFaces; i++)
-            {
-                Face f = faces[i];
-                mesh.Add(new Triangle(vertices[f.v1], vertices[f.v2], vertices[f.v3]));
-            }
+            mesh.Set(coords, faces);
             coords.Clear();
             faces.Clear();
             coords = null;
@@ -679,56 +611,24 @@ namespace OpenSim.Region.Physics.Meshing
             return mesh;
         }
 
-        public void FinishedMeshing()
-        {
-            foreach (Mesh mesh in m_uniqueMeshes.Values)
-            {
-                mesh.releaseSourceMeshData();
-            }
-            m_uniqueMeshes.Clear();
-        }
-
         public void RemoveMesh(ulong key)
         {
-            m_uniqueMeshes.Remove(key);
         }
 
         public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical)
         {
             Mesh mesh = null;
-            ulong key = 0;
-
-            // If this mesh has been created already, return it instead of creating another copy
-            // For large regions with 100k+ prims and hundreds of copies of each, this can save a GB or more of memory
-
-            key = GetMeshKey(primShape, size, lod);
-            if (m_uniqueMeshes.TryGetValue(key, out mesh))
-                return mesh;
+            ulong key = primShape.GetMeshKey(size, lod);
 
             if (size.X < 0.01f) size.X = 0.01f;
             if (size.Y < 0.01f) size.Y = 0.01f;
             if (size.Z < 0.01f) size.Z = 0.01f;
 
             if ((!isPhysical) && size.X < minSizeForComplexMesh && size.Y < minSizeForComplexMesh &&
-                    size.Z < minSizeForComplexMesh)
-            {
-#if SPAM
-                MainConsole.Instance.Debug("Meshmerizer: prim " + primName + " has a size of " + size.ToString() + " which is below threshold of " + 
-                            minSizeForComplexMesh.ToString() + " - creating simple bounding box");
-#endif
-                mesh = CreateBoundingBoxMesh(mesh, key);
-                mesh.DumpRaw(baseDir, primName, "Z extruded");
-            }
+                size.Z < minSizeForComplexMesh)
+                mesh = CreateBoundingBoxMesh(size, key);
             else
                 mesh = CreateMeshFromPrimMesher(primName, primShape, size, lod, key);
-
-            if (mesh != null)
-            {
-                // trim the vertex and triangle lists to free up memory
-                mesh.TrimExcess();
-
-                m_uniqueMeshes.Add(key, mesh);
-            }
 
             return mesh;
         }

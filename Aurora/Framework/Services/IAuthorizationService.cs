@@ -25,21 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
+using Aurora.Framework.PresenceInfo;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework.Services
 {
     // Generic Authorization service used for authorizing principals in a particular region
 
     public interface IAuthorizationService
     {
         /// <summary>
-        ///   Gets whether the given agent is able to enter the given region as a root or child agent
+        ///     Gets whether the given agent is able to enter the given region as a root or child agent
         /// </summary>
-        /// <param name = "region">The region the agent is attempting to enter</param>
-        /// <param name = "agent">The CircuitData of the agent that is attempting to enter</param>
-        /// <param name = "isRootAgent">Whether the agent is a root agent or not</param>
-        /// <param name = "reason">If it fails, the reason they cannot enter</param>
+        /// <param name="region">The region the agent is attempting to enter</param>
+        /// <param name="agent">The CircuitData of the agent that is attempting to enter</param>
+        /// <param name="isRootAgent">Whether the agent is a root agent or not</param>
+        /// <param name="reason">If it fails, the reason they cannot enter</param>
         /// <returns></returns>
         bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent,
                                    out string reason);

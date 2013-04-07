@@ -1,40 +1,47 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using Nini.Config;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Web
 {
     public class PageManagerPage : IWebInterfacePage
     {
-        public string[] FilePath { get
+        public string[] FilePath
         {
-            return new[]
-                       {
-                           "html/admin/page_manager.html"
-                       };
-        } }
+            get
+            {
+                return new[]
+                           {
+                               "html/admin/page_manager.html"
+                           };
+            }
+        }
 
-        public bool RequiresAuthentication { get { return true; } }
-        public bool RequiresAdminAuthentication { get { return true; } }
+        public bool RequiresAuthentication
+        {
+            get { return true; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return true; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
-            
+
             #region Find pages
 
             List<Dictionary<string, object>> pages = new List<Dictionary<string, object>>();
 
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             GridPage rootPage = generics.GetGeneric<GridPage>(UUID.Zero, "WebPages", "Root");
             rootPage.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));
             List<GridPage> allPages = new List<GridPage>(rootPage.Children);
@@ -42,13 +49,21 @@ namespace Aurora.Modules.Web
                 allPages.AddRange(page.Children);
             allPages.RemoveAll((a) => !a.ShowInMenu);
 
-            string MenuItem = requestParameters.ContainsKey("MenuItem") ? 
-                requestParameters["MenuItem"].ToString() : "";
+            string MenuItem = requestParameters.ContainsKey("MenuItem")
+                                  ? requestParameters["MenuItem"].ToString()
+                                  : "";
             foreach (GridPage page in allPages)
             {
-                pages.Add(new Dictionary<string, object> { { "Value", page.Location }, 
-                    { "Name", page.Location }, { "PageSelected", MenuItem == page.Location ? 
-                                               "selected=\"selected\"" : "" } });
+                pages.Add(new Dictionary<string, object>
+                              {
+                                  {"Value", page.Location},
+                                  {"Name", page.Location},
+                                  {
+                                      "PageSelected", MenuItem == page.Location
+                                                          ? "selected=\"selected\""
+                                                          : ""
+                                  }
+                              });
             }
             vars.Add("PagesList", pages);
 
@@ -59,9 +74,9 @@ namespace Aurora.Modules.Web
                 rootPage.RemovePageByLocation(MenuItem, null);
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
                 response = "<h3>Successfully updated menu</h3>" +
-                    "<script language=\"javascript\">" +
-                    "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
-                    "</script>";
+                           "<script language=\"javascript\">" +
+                           "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
+                           "</script>";
                 return null;
             }
             if (requestParameters.ContainsKey("AddItem"))
@@ -91,14 +106,28 @@ namespace Aurora.Modules.Web
                 vars.Add("DisplayInMenuNo", !page.ShowInMenu ? "selected=\"selected\"" : "");
                 vars.Add("DisplayEdit", true);
 
-                pages = new List<Dictionary<string, object>> { new Dictionary<string, object> { { "Value", "Top Level" }, 
-                    { "Name", translator.GetTranslatedString("TopLevel") }, { "PageSelected", "" } } };
+                pages = new List<Dictionary<string, object>>
+                            {
+                                new Dictionary<string, object>
+                                    {
+                                        {"Value", "Top Level"},
+                                        {"Name", translator.GetTranslatedString("TopLevel")},
+                                        {"PageSelected", ""}
+                                    }
+                            };
                 GridPage parent = rootPage.GetParent(page);
                 foreach (GridPage p in allPages)
                 {
-                    pages.Add(new Dictionary<string, object> { { "Value", p.Location }, 
-                    { "Name", p.Location }, { "PageSelected", parent.Location == p.Location ? 
-                                               "selected=\"selected\"" : "" } });
+                    pages.Add(new Dictionary<string, object>
+                                  {
+                                      {"Value", p.Location},
+                                      {"Name", p.Location},
+                                      {
+                                          "PageSelected", parent.Location == p.Location
+                                                              ? "selected=\"selected\""
+                                                              : ""
+                                      }
+                                  });
                 }
                 vars.Add("ParentPagesList", pages);
             }
@@ -109,7 +138,7 @@ namespace Aurora.Modules.Web
                 vars.Add("PageID", "");
                 vars.Add("PagePosition", "");
                 vars.Add("PageLocation", "");
-                if(!vars.ContainsKey("EdittingPageID"))
+                if (!vars.ContainsKey("EdittingPageID"))
                     vars.Add("EdittingPageID", "");
                 vars.Add("RequiresLoginYes", "");
                 vars.Add("RequiresLoginNo", "");
@@ -119,12 +148,23 @@ namespace Aurora.Modules.Web
                 vars.Add("RequiresAdminNo", "");
                 vars.Add("RequiresAdminLevel", "1");
 
-                pages = new List<Dictionary<string, object>> { new Dictionary<string, object> { { "Value", "Top Level" }, 
-                    { "Name", translator.GetTranslatedString("TopLevel") }, { "PageSelected", "" } } };
+                pages = new List<Dictionary<string, object>>
+                            {
+                                new Dictionary<string, object>
+                                    {
+                                        {"Value", "Top Level"},
+                                        {"Name", translator.GetTranslatedString("TopLevel")},
+                                        {"PageSelected", ""}
+                                    }
+                            };
                 foreach (GridPage p in allPages)
                 {
-                    pages.Add(new Dictionary<string, object> { { "Value", p.Location }, 
-                    { "Name", p.Location }, { "PageSelected", "" } });
+                    pages.Add(new Dictionary<string, object>
+                                  {
+                                      {"Value", p.Location},
+                                      {"Name", p.Location},
+                                      {"PageSelected", ""}
+                                  });
                 }
                 vars.Add("ParentPagesList", pages);
             }
@@ -145,7 +185,7 @@ namespace Aurora.Modules.Web
                 GridPage page = rootPage.GetPage(edittingPageID);
                 bool add = page == null;
                 if (page == null)
-                    page = new GridPage { MenuID = PageLocation, ShowInMenu = true };
+                    page = new GridPage {MenuID = PageLocation, ShowInMenu = true};
 
                 page.Location = PageLocation;
                 page.MenuID = PageID;
@@ -171,9 +211,9 @@ namespace Aurora.Modules.Web
                         rootPage.Children.Add(page);
 
                     response = "<h3>Successfully updated menu</h3>" +
-                        "<script language=\"javascript\">" +
-                        "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
-                        "</script>";
+                               "<script language=\"javascript\">" +
+                               "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
+                               "</script>";
                 }
                 else
                     response = "<h3>" + translator.GetTranslatedString("CannotSetParentToChild") + "</h3>";

@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.Estate
 {
     public class EstateMigrator_0 : Migrator
     {
@@ -44,9 +44,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ID", ColumnTypes.String45),
                 ColDef("Key", ColumnTypes.String50),
                 ColDef("Value", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "ID", "Key" }, IndexType.Primary)
-            ));
+                                     ), IndexDefs(
+                                         IndexDef(new string[2] {"ID", "Key"}, IndexType.Primary)
+                                            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

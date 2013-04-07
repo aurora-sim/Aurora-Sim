@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.PhysicsState
 {
@@ -102,24 +105,16 @@ namespace Aurora.Modules.PhysicsState
         {
             WorldPhysicsState state = new WorldPhysicsState();
             //Add all active objects in the scene
-            foreach (PhysicsObject prm in m_scene.PhysicsScene.ActiveObjects)
+            foreach (PhysicsActor prm in m_scene.PhysicsScene.ActiveObjects)
             {
                 state.AddPrim(prm);
             }
-#if (!ISWIN)
-            foreach (IScenePresence sp in m_scene.GetScenePresences())
-            {
-                if (!sp.IsChildAgent)
-                {
-                    state.AddAvatar(sp.PhysicsActor);
-                }
-            }
-#else
+
             foreach (IScenePresence sp in m_scene.GetScenePresences().Where(sp => !sp.IsChildAgent))
             {
                 state.AddAvatar(sp.PhysicsActor);
             }
-#endif
+
             return state;
         }
 
@@ -153,7 +148,7 @@ namespace Aurora.Modules.PhysicsState
         {
             private readonly Dictionary<UUID, PhysicsState> m_activePrims = new Dictionary<UUID, PhysicsState>();
 
-            public void AddPrim(PhysicsObject prm)
+            public void AddPrim(PhysicsActor prm)
             {
                 PhysicsState state = new PhysicsState
                                          {
@@ -165,7 +160,7 @@ namespace Aurora.Modules.PhysicsState
                 m_activePrims[prm.UUID] = state;
             }
 
-            public void AddAvatar(PhysicsCharacter prm)
+            public void AddAvatar(PhysicsActor prm)
             {
                 PhysicsState state = new PhysicsState
                                          {
@@ -193,7 +188,7 @@ namespace Aurora.Modules.PhysicsState
                 }
             }
 
-            private void ResetPrim(PhysicsObject physicsObject, PhysicsState physicsState, float direction)
+            private void ResetPrim(PhysicsActor physicsObject, PhysicsState physicsState, float direction)
             {
                 physicsObject.Position = physicsState.Position;
                 physicsObject.Orientation = physicsState.Rotation;
@@ -203,7 +198,7 @@ namespace Aurora.Modules.PhysicsState
                 physicsObject.RequestPhysicsterseUpdate();
             }
 
-            private void ResetAvatar(PhysicsCharacter physicsObject, PhysicsState physicsState, float direction)
+            private void ResetAvatar(PhysicsActor physicsObject, PhysicsState physicsState, float direction)
             {
                 physicsObject.Position = physicsState.Position;
                 physicsObject.ForceSetPosition(physicsState.Position);

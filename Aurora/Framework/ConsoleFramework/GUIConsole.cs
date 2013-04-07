@@ -25,24 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Threading;
 using System.Timers;
-using Nini.Config;
-using log4net.Core;
-using Timer = System.Timers.Timer;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     /// <summary>
-    ///   This is a special class designed to take over control of the command console prompt of
-    ///   the server instance to allow for the input and output to the server to be redirected
-    ///   by an external application, in this case a GUI based application on Windows.
+    ///     This is a special class designed to take over control of the command console prompt of
+    ///     the server instance to allow for the input and output to the server to be redirected
+    ///     by an external application, in this case a GUI based application on Windows.
     /// </summary>
-    public class GUIConsole : BaseConsole, ICommandConsole
+    public class GUIConsole : ICommandConsole
     {
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
@@ -51,7 +50,8 @@ namespace Aurora.Framework
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
-            if (source.Configs["Console"] == null || source.Configs["Console"].GetString("Console", String.Empty) != Name)
+            if (source.Configs["Console"] == null ||
+                source.Configs["Console"].GetString("Console", String.Empty) != Name)
             {
                 return;
             }
@@ -69,18 +69,19 @@ namespace Aurora.Framework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
-                Output(s, "Severe");
+                Output(s, Level.Off);
         }
 
         /// <summary>
-        ///   Display a command prompt on the console and wait for user input
+        ///     Display a command prompt on the console and wait for user input
         /// </summary>
         public void Prompt()
         {
             // Set this culture for the thread 
             // to en-US to avoid number parsing issues
             Culture.SetCurrentCulture();
-            /*string line = */ReadLine(m_defaultPrompt + "# ", true, true);
+            /*string line = */
+            ReadLine(m_defaultPrompt + "# ", true, true);
 
 //            result.AsyncWaitHandle.WaitOne(-1);
 
@@ -94,15 +95,15 @@ namespace Aurora.Framework
         {
             string[] parts = Parser.Parse(cmd);
             m_Commands.Resolve(parts);
-            Output("");
+            Output("", Threshold);
         }
 
         /// <summary>
-        ///   Method that reads a line of text from the user.
+        ///     Method that reads a line of text from the user.
         /// </summary>
-        /// <param name = "p"></param>
-        /// <param name = "isCommand"></param>
-        /// <param name = "e"></param>
+        /// <param name="p"></param>
+        /// <param name="isCommand"></param>
+        /// <param name="e"></param>
         /// <returns></returns>
         public virtual string ReadLine(string p, bool isCommand, bool e)
         {
@@ -172,22 +173,12 @@ namespace Aurora.Framework
                 else
                 {
                     string ret1 = ret;
-#if (!ISWIN)
-                    foreach (char c in excludedCharacters)
-                    {
-                        if (ret1.Contains(c.ToString()))
-                        {
-                            Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                            itisdone = false;
-                        }
-                    }
-#else
+
                     foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
                     {
                         Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
                         itisdone = false;
                     }
-#endif
                 }
             }
             m_isPrompting = false;
@@ -202,13 +193,8 @@ namespace Aurora.Framework
             m_promptOptions = new List<string>(options);
 
             bool itisdone = false;
-#if (!ISWIN)
-            string optstr = String.Empty;
-            foreach (string option in options)
-                optstr = optstr + (" " + option);
-#else
+
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
-#endif
 
             string temp = Prompt(prompt, defaultresponse);
             while (itisdone == false)
@@ -238,18 +224,7 @@ namespace Aurora.Framework
             return line;
         }
 
-        public virtual void Output(string text, string level)
-        {
-            Output(text);
-        }
-
-        public virtual void Output(string text)
-        {
-            Log(text);
-            Console.WriteLine(text);
-        }
-
-        public virtual void Log(string text)
+        public virtual void Output(string text, Level level)
         {
         }
 
@@ -263,55 +238,13 @@ namespace Aurora.Framework
 
         public virtual bool CompareLogLevels(string a, string b)
         {
-            Level aa = GetLevel(a);
-            Level bb = GetLevel(b);
+            Level aa = (Level)Enum.Parse(typeof(Level), a, true);
+            Level bb = (Level)Enum.Parse(typeof(Level), b, true);
             return aa <= bb;
         }
 
-        public Level GetLevel(string lvl)
-        {
-            switch (lvl.ToLower())
-            {
-                case "alert":
-                    return Level.Alert;
-                case "all":
-                    return Level.All;
-                case "critical":
-                    return Level.Critical;
-                case "debug":
-                    return Level.Debug;
-                case "emergency":
-                    return Level.Emergency;
-                case "error":
-                    return Level.Error;
-                case "fatal":
-                    return Level.Fatal;
-                case "fine":
-                    return Level.Fine;
-                case "finer":
-                    return Level.Finer;
-                case "finest":
-                    return Level.Finest;
-                case "info":
-                    return Level.Info;
-                case "notice":
-                    return Level.Notice;
-                case "off":
-                    return Level.Off;
-                case "severe":
-                    return Level.Severe;
-                case "trace":
-                    return Level.Trace;
-                case "verbose":
-                    return Level.Verbose;
-                case "warn":
-                    return Level.Warn;
-            }
-            return null;
-        }
-
         /// <summary>
-        ///   The default prompt text.
+        ///     The default prompt text.
         /// </summary>
         public virtual string DefaultPrompt
         {
@@ -346,71 +279,14 @@ namespace Aurora.Framework
         {
         }
 
-
-        public void EndConsoleProcessing()
-        {
-            Processing = false;
-        }
-
-        public bool Processing = true;
-        private delegate void PromptEvent();
-
-        private IAsyncResult result;
-        private PromptEvent action;
-        private readonly Object m_consoleLock = new Object();
-        private bool m_calledEndInvoke;
-
         /// <summary>
-        ///   Starts the prompt for the console. This will never stop until the region is closed.
+        ///     Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
         public void ReadConsole()
         {
-            WaitHandle[] wHandles = new WaitHandle[1];
-            if (result != null)
-            {
-                wHandles[0] = result.AsyncWaitHandle;
-            }
-            Timer t = new Timer {Interval = 0.5};
-            t.Elapsed += t_Elapsed;
-            t.Start();
             while (true)
             {
-                if (!Processing)
-                {
-                    throw new Exception("Restart");
-                }
-                lock (m_consoleLock)
-                {
-                    if (action == null)
-                    {
-                        action = Prompt;
-                        result = action.BeginInvoke(null, null);
-                        m_calledEndInvoke = false;
-                    }
-                    try
-                    {
-                        if ((!result.IsCompleted) &&
-                            (!result.AsyncWaitHandle.WaitOne(5000, false) || !result.IsCompleted))
-                        {
-                        }
-                        else if (action != null &&
-                                 !result.CompletedSynchronously &&
-                                 !m_calledEndInvoke)
-                        {
-                            m_calledEndInvoke = true;
-                            action.EndInvoke(result);
-                            action = null;
-                            result = null;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        //Eat the exception and go on
-                        Output("[Console]: Failed to execute command: " + ex);
-                        action = null;
-                        result = null;
-                    }
-                }
+                Prompt();
             }
         }
 
@@ -419,5 +295,111 @@ namespace Aurora.Framework
             //Tell the GUI that we are still here and it needs to keep checking
             Console.Write((char) 0);
         }
+
+        public Level Threshold { get; set; }
+
+        #region ILog Members
+
+        public bool IsDebugEnabled
+        {
+            get { return Threshold <= Level.Debug; }
+        }
+
+        public bool IsErrorEnabled
+        {
+            get { return Threshold <= Level.Error; }
+        }
+
+        public bool IsFatalEnabled
+        {
+            get { return Threshold <= Level.Fatal; }
+        }
+
+        public bool IsInfoEnabled
+        {
+            get { return Threshold <= Level.Info; }
+        }
+
+        public bool IsWarnEnabled
+        {
+            get { return Threshold <= Level.Warn; }
+        }
+
+        public bool IsTraceEnabled
+        {
+            get { return Threshold <= Level.Trace; }
+        }
+
+        public void Debug(object message)
+        {
+            Output(message.ToString(), Level.Debug);
+        }
+
+        public void DebugFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Debug);
+        }
+
+        public void Error(object message)
+        {
+            Output(message.ToString(), Level.Error);
+        }
+
+        public void ErrorFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Error);
+        }
+
+        public void Fatal(object message)
+        {
+            Output(message.ToString(), Level.Fatal);
+        }
+
+        public void FatalFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Fatal);
+        }
+
+        public void Format(Level level, string format, params object[] args)
+        {
+            Output(string.Format(format, args), level);
+        }
+
+        public void Info(object message)
+        {
+            Output(message.ToString(), Level.Info);
+        }
+
+        public void InfoFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Info);
+        }
+
+        public void Log(Level level, object message)
+        {
+            Output(message.ToString(), level);
+        }
+
+        public void Trace(object message)
+        {
+            Output(message.ToString(), Level.Trace);
+        }
+
+        public void TraceFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Trace);
+        }
+
+        public void Warn(object message)
+        {
+            Output(message.ToString(), Level.Warn);
+        }
+
+        public void WarnFormat(string format, params object[] args)
+        {
+            Output(string.Format(format, args), Level.Warn);
+        }
+
+        #endregion
     }
 }

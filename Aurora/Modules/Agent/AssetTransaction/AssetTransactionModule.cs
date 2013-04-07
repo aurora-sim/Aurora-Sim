@@ -25,21 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
+using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Agent.AssetTransaction
 {
-    public class AssetTransactionModule : ISharedRegionModule, IAgentAssetTransactions
+    public class AssetTransactionModule : INonSharedRegionModule, IAgentAssetTransactions
     {
 //        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        ///   Each agent has its own singleton collection of transactions
+        ///     Each agent has its own singleton collection of transactions
         /// </summary>
         private readonly Dictionary<UUID, AgentAssetTransactions> AgentTransactions =
             new Dictionary<UUID, AgentAssetTransactions>();
@@ -53,12 +56,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             get { return m_scene; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -66,36 +64,24 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
         public void AddRegion(IScene scene)
         {
-            if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
-            {
-                // MainConsole.Instance.Debug("initialising AgentAssetTransactionModule");
-                RegisteredScenes.Add(scene.RegionInfo.RegionID, scene);
-                scene.RegisterModuleInterface<IAgentAssetTransactions>(this);
+            scene.RegisterModuleInterface<IAgentAssetTransactions>(this);
 
-                scene.EventManager.OnNewClient += NewClient;
-                scene.EventManager.OnClosingClient += OnClosingClient;
-                scene.EventManager.OnRemovePresence += OnRemovePresence;
-            }
+            scene.EventManager.OnNewClient += NewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnRemovePresence += OnRemovePresence;
 
-            // EVIL HACK!
-            // This needs killing!
-            //
-            if (m_scene == null)
-                m_scene = scene;
+            m_scene = scene;
         }
 
         public void RemoveRegion(IScene scene)
         {
-            if (RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
-            {
-                // MainConsole.Instance.Debug("initialising AgentAssetTransactionModule");
-                RegisteredScenes.Remove(scene.RegionInfo.RegionID);
-                scene.UnregisterModuleInterface<IAgentAssetTransactions>(this);
+            scene.UnregisterModuleInterface<IAgentAssetTransactions>(this);
 
-                scene.EventManager.OnNewClient -= NewClient;
-                scene.EventManager.OnClosingClient -= OnClosingClient;
-                scene.EventManager.OnRemovePresence -= OnRemovePresence;
-            }
+            scene.EventManager.OnNewClient -= NewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnRemovePresence -= OnRemovePresence;
+
+            m_scene = null;
         }
 
         public void RegionLoaded(IScene scene)
@@ -105,10 +91,6 @@ namespace Aurora.Modules.Agent.AssetTransaction
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -143,10 +125,10 @@ namespace Aurora.Modules.Agent.AssetTransaction
         #region AgentAssetTransactions
 
         /// <summary>
-        ///   Remove the given agent asset transactions.  This should be called when a client is departing
-        ///   from a scene (and hence won't be making any more transactions here).
+        ///     Remove the given agent asset transactions.  This should be called when a client is departing
+        ///     from a scene (and hence won't be making any more transactions here).
         /// </summary>
-        /// <param name = "userID"></param>
+        /// <param name="userID"></param>
         public void RemoveAgentAssetTransactions(UUID userID)
         {
             // MainConsole.Instance.DebugFormat("Removing agent asset transactions structure for agent {0}", userID);
@@ -157,22 +139,21 @@ namespace Aurora.Modules.Agent.AssetTransaction
             }
         }
 
-        ///<summary>
-        ///  Create an inventory item from data that has been received through a transaction.
-        ///
-        ///  This is called when new clothing or body parts are created.  It may also be called in other
-        ///  situations.
-        ///</summary>
-        ///<param name = "remoteClient"></param>
-        ///<param name = "transactionID"></param>
-        ///<param name = "folderID"></param>
-        ///<param name = "callbackID"></param>
-        ///<param name = "description"></param>
-        ///<param name = "name"></param>
-        ///<param name = "invType"></param>
-        ///<param name = "type"></param>
-        ///<param name = "wearableType"></param>
-        ///<param name = "nextOwnerMask"></param>
+        /// <summary>
+        ///     Create an inventory item from data that has been received through a transaction.
+        ///     This is called when new clothing or body parts are created.  It may also be called in other
+        ///     situations.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="transactionID"></param>
+        /// <param name="folderID"></param>
+        /// <param name="callbackID"></param>
+        /// <param name="description"></param>
+        /// <param name="name"></param>
+        /// <param name="invType"></param>
+        /// <param name="type"></param>
+        /// <param name="wearableType"></param>
+        /// <param name="nextOwnerMask"></param>
         public void HandleItemCreationFromTransaction(IClientAPI remoteClient, UUID transactionID, UUID folderID,
                                                       uint callbackID, string description, string name, sbyte invType,
                                                       sbyte type, byte wearableType, uint nextOwnerMask)
@@ -185,9 +166,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 
@@ -196,15 +175,14 @@ namespace Aurora.Modules.Agent.AssetTransaction
                 name, invType, type, wearableType, nextOwnerMask);
         }
 
-        ///<summary>
-        ///  Update an inventory item with data that has been received through a transaction.
-        ///
-        ///  This is called when clothing or body parts are updated (for instance, with new textures or
-        ///  colours).  It may also be called in other situations.
-        ///</summary>
-        ///<param name = "remoteClient"></param>
-        ///<param name = "transactionID"></param>
-        ///<param name = "item"></param>
+        /// <summary>
+        ///     Update an inventory item with data that has been received through a transaction.
+        ///     This is called when clothing or body parts are updated (for instance, with new textures or
+        ///     colours).  It may also be called in other situations.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="transactionID"></param>
+        /// <param name="item"></param>
         public void HandleItemUpdateFromTransaction(IClientAPI remoteClient, UUID transactionID,
                                                     InventoryItemBase item)
         {
@@ -217,25 +195,23 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 
             transactions.RequestUpdateInventoryItem(remoteClient, transactionID, item);
         }
 
-        ///<summary>
-        ///  Update a task inventory item with data that has been received through a transaction.
-        ///
-        ///  This is currently called when, for instance, a notecard in a prim is saved.  The data is sent
-        ///  up through a single AssetUploadRequest.  A subsequent UpdateTaskInventory then references the transaction
-        ///  and comes through this method.
-        ///</summary>
-        ///<param name = "remoteClient"></param>
-        ///<param name = "transactionID"></param>
-        ///<param name = "item"></param>
+        /// <summary>
+        ///     Update a task inventory item with data that has been received through a transaction.
+        ///     This is currently called when, for instance, a notecard in a prim is saved.  The data is sent
+        ///     up through a single AssetUploadRequest.  A subsequent UpdateTaskInventory then references the transaction
+        ///     and comes through this method.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="part"></param>
+        /// <param name="transactionID"></param>
+        /// <param name="item"></param>
         public void HandleTaskItemUpdateFromTransaction(
             IClientAPI remoteClient, ISceneChildEntity part, UUID transactionID, TaskInventoryItem item)
         {
@@ -248,9 +224,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 
@@ -258,10 +232,10 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         /// <summary>
-        ///   Get the collection of asset transactions for the given user.  If one does not already exist, it
-        ///   is created.
+        ///     Get the collection of asset transactions for the given user.  If one does not already exist, it
+        ///     is created.
         /// </summary>
-        /// <param name = "userID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         private AgentAssetTransactions GetUserTransactions(UUID userID)
         {
@@ -278,15 +252,15 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         /// <summary>
-        ///   Request that a client (agent) begin an asset transfer.
+        ///     Request that a client (agent) begin an asset transfer.
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "assetID"></param>
-        /// <param name = "transaction"></param>
-        /// <param name = "type"></param>
-        /// <param name = "data"></param>
-        /// </param>
-        /// <param name = "tempFile"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="assetID"></param>
+        /// <param name="transaction"></param>
+        /// <param name="type"></param>
+        /// <param name="data"></param>
+        /// <param name="storeLocal"></param>
+        /// <param name="tempFile"></param>
         public void HandleUDPUploadRequest(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type,
                                            byte[] data, bool storeLocal, bool tempFile)
         {
@@ -321,13 +295,13 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         /// <summary>
-        ///   Handle asset transfer data packets received in response to the asset upload request in
-        ///   HandleUDPUploadRequest()
+        ///     Handle asset transfer data packets received in response to the asset upload request in
+        ///     HandleUDPUploadRequest()
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "xferID"></param>
-        /// <param name = "packetID"></param>
-        /// <param name = "data"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="xferID"></param>
+        /// <param name="packetID"></param>
+        /// <param name="data"></param>
         public void HandleXfer(IClientAPI remoteClient, ulong xferID, uint packetID, byte[] data)
         {
             //MainConsole.Instance.Debug("xferID: " + xferID + "  packetID: " + packetID + "  data!");
@@ -336,9 +310,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor =
-                    (INetworkMonitor)
-                    monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
                 networkMonitor.AddPendingUploads(1);
             }
 

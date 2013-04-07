@@ -25,14 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -104,32 +108,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private class LimitDef
         {
             /// <summary>
-            ///   What action will be taken
+            ///     What action will be taken
             /// </summary>
             public LimitAction Action = LimitAction.None;
 
             /// <summary>
-            ///   What alert will be triggered by the limitor if it does limit
+            ///     What alert will be triggered by the limitor if it does limit
             /// </summary>
             public LimitAlert Alert = LimitAlert.None;
 
             /// <summary>
-            ///   The number of times a function can be fired over the timescale
+            ///     The number of times a function can be fired over the timescale
             /// </summary>
             public int FunctionsOverTimeScale;
 
             /// <summary>
-            ///   The max number of times a function can be fired (in total, does not decrease)
+            ///     The max number of times a function can be fired (in total, does not decrease)
             /// </summary>
             public int MaxNumberOfTimes;
 
             /// <summary>
-            ///   Time (in ms) that a function has to wait before being fired again
+            ///     Time (in ms) that a function has to wait before being fired again
             /// </summary>
             public int TimeScale;
 
             /// <summary>
-            ///   The group that will be limited by this function
+            ///     The group that will be limited by this function
             /// </summary>
             public LimitType Type = LimitType.None;
         }
@@ -202,21 +206,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     try
                     {
-                        limitDef.Type = (LimitType)Enum.Parse(typeof(LimitType), limitType, true);
+                        limitDef.Type = (LimitType) Enum.Parse(typeof (LimitType), limitType, true);
                     }
                     catch
                     {
                     }
                     try
                     {
-                        limitDef.Alert = (LimitAlert)Enum.Parse(typeof(LimitAlert), limitAlert, true);
+                        limitDef.Alert = (LimitAlert) Enum.Parse(typeof (LimitAlert), limitAlert, true);
                     }
                     catch
                     {
                     }
                     try
                     {
-                        limitDef.Action = (LimitAction)Enum.Parse(typeof(LimitAction), limitAction, true);
+                        limitDef.Action = (LimitAction) Enum.Parse(typeof (LimitAction), limitAction, true);
                     }
                     catch
                     {
@@ -265,9 +269,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                                                                      "SevereUserSet",
                                                                                                      UserSet.None), this);
             m_threatLevelNoAccess = new ThreatLevelDefinition(ThreatLevel.NoAccess,
-                                                            UserSetHelpers.ParseUserSetConfigSetting(config,
-                                                                                                     "NoAccessUserSet",
-                                                                                                     UserSet.None), this);
+                                                              UserSetHelpers.ParseUserSetConfigSetting(config,
+                                                                                                       "NoAccessUserSet",
+                                                                                                       UserSet.None),
+                                                              this);
         }
 
         #endregion
@@ -467,11 +472,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        ///   Fires the action associated with the limitation
+        ///     Fires the action associated with the limitation
         /// </summary>
-        /// <param name = "d"></param>
-        /// <param name = "m_host"></param>
-        /// <param name = "itemID"></param>
+        /// <param name="d"></param>
+        /// <param name="m_host"></param>
+        /// <param name="itemID"></param>
         /// <returns>Whether the event should be dropped</returns>
         private bool TriggerAction(LimitDef d, ISceneChildEntity m_host, UUID itemID)
         {
@@ -497,7 +502,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public class ThreatLevelDefinition
         {
             /// <summary>
-            ///   Which owners have access to which functions
+            ///     Which owners have access to which functions
             /// </summary>
             private readonly Dictionary<string, List<UUID>> m_FunctionPerms = new Dictionary<string, List<UUID>>();
 
@@ -524,19 +529,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (perm != "")
                 {
                     string[] ids = perm.Split(',');
-#if (!ISWIN)
-                    foreach (string id in ids)
-                    {
-                        string current = id.Trim();
-                        UUID uuid;
 
-                        if (UUID.TryParse(current, out uuid))
-                        {
-                            if (uuid != UUID.Zero)
-                                m_allowedUsers.Add(uuid);
-                        }
-                    }
-#else
                     foreach (string current in ids.Select(id => id.Trim()))
                     {
                         UUID uuid;
@@ -547,25 +540,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 m_allowedUsers.Add(uuid);
                         }
                     }
-#endif
                 }
                 perm = m_scriptProtectionModule.m_config.GetString("Allow_All", "");
                 if (perm != "")
                 {
                     string[] ids = perm.Split(',');
-#if (!ISWIN)
-                    foreach (string id in ids)
-                    {
-                        string current = id.Trim();
-                        UUID uuid;
-
-                        if (UUID.TryParse(current, out uuid))
-                        {
-                            if (uuid != UUID.Zero)
-                                m_allowedUsers.Add(uuid);
-                        }
-                    }
-#else
                     foreach (string current in ids.Select(id => id.Trim()))
                     {
                         UUID uuid;
@@ -576,7 +555,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 m_allowedUsers.Add(uuid);
                         }
                     }
-#endif
                 }
             }
 
@@ -599,26 +577,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         if (bool.TryParse(perm, out allowed))
                         {
                             // Boolean given
-                            FunctionPerms = allowed ? new List<UUID> { UUID.Zero } : new List<UUID>();
+                            FunctionPerms = allowed ? new List<UUID> {UUID.Zero} : new List<UUID>();
                         }
                         else
                         {
                             FunctionPerms = new List<UUID>();
 
-                            string[] ids = perm.Split(new[] { ',' });
-#if (!ISWIN)
-                            foreach (string id in ids)
-                            {
-                                string current = id.Trim();
-                                UUID uuid;
+                            string[] ids = perm.Split(new[] {','});
 
-                                if (UUID.TryParse(current, out uuid))
-                                {
-                                    if (uuid != UUID.Zero)
-                                        FunctionPerms.Add(uuid);
-                                }
-                            }
-#else
                             foreach (string current in ids.Select(id => id.Trim()))
                             {
                                 UUID uuid;
@@ -629,7 +595,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                         FunctionPerms.Add(uuid);
                                 }
                             }
-#endif
                         }
                         m_FunctionPerms[function] = FunctionPerms;
                     }
@@ -750,9 +715,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #region Previously Compiled Scripts
 
         /// <summary>
-        ///   Reset all lists (if hard), if not hard, just reset previously compiled
+        ///     Reset all lists (if hard), if not hard, just reset previously compiled
         /// </summary>
-        /// <param name = "hard"></param>
+        /// <param name="hard"></param>
         public void Reset(bool hard)
         {
             lock (PreviouslyCompiled)
@@ -873,17 +838,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<ScriptData> Ids = new List<ScriptData>();
             lock (Scripts)
             {
-#if(!ISWIN)
-                foreach (Dictionary<UUID, ScriptData> Instances in Scripts.Values)
-                {
-                    foreach (ScriptData ID in Instances.Values)
-                    {
-                        Ids.Add(ID);
-                    }
-                }
-#else
                 Ids.AddRange(Scripts.Values.SelectMany(Instances => Instances.Values));
-#endif
             }
             return Ids.ToArray();
         }

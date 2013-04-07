@@ -26,6 +26,8 @@
  */
 
 using System;
+using System.Linq;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
@@ -42,7 +44,7 @@ using Aurora.Framework.Physics;
  * it's always availabe and thus the default in case of configuration errors
 */
 
-namespace OpenSim.Region.Physics.Meshing
+namespace Aurora.Physics.Meshing
 {
     public class ZeroMesherPlugin : IMeshingPlugin
     {
@@ -71,10 +73,6 @@ namespace OpenSim.Region.Physics.Meshing
         }
 
         public void RemoveMesh(ulong key)
-        {
-        }
-
-        public void FinishedMeshing()
         {
         }
 

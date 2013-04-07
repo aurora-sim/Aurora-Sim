@@ -25,17 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using OpenMetaverse;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
+
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
@@ -129,19 +130,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (string strl in allowComp.Split(','))
             {
                 string strlan = strl.Trim(" \t".ToCharArray()).ToLower();
-#if (!ISWIN)
-                foreach (IScriptConverter converter in converters)
-                {
-                    if (converter.Name == strlan)
-                    {
-                        AllowedCompilers.Add(strlan, converter);
-                        if (converter.Name == DefaultCompileLanguage)
-                        {
-                            found = true;
-                        }
-                    }
-                }
-#else
                 foreach (IScriptConverter converter in converters.Where(converter => converter.Name == strlan))
                 {
                     AllowedCompilers.Add(strlan, converter);
@@ -150,7 +138,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         found = true;
                     }
                 }
-#endif
             }
             if (AllowedCompilers.Count == 0)
                 MainConsole.Instance.Error(
@@ -158,15 +145,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (!found)
                 MainConsole.Instance.Error("[Compiler]: " +
-                            "Config error. Default language \"" + DefaultCompileLanguage +
-                            "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
+                                           "Config error. Default language \"" + DefaultCompileLanguage +
+                                           "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
 
             // Is this language in allow-list?
             if (!AllowedCompilers.ContainsKey(DefaultCompileLanguage))
             {
                 MainConsole.Instance.Error("[Compiler]: " +
-                            "Config error. Default language \"" + DefaultCompileLanguage +
-                            "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
+                                           "Config error. Default language \"" + DefaultCompileLanguage +
+                                           "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
             }
 
             // We now have an allow-list, a mapping list, and a default language
@@ -197,15 +184,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         #region Compile script
 
         /// <summary>
-        ///   Converts script (if needed) and compiles
+        ///     Converts script (if needed) and compiles
         /// </summary>
-        /// <param name = "Script">LSL script</param>
+        /// <param name="script">LSL script</param>
+        /// <param name="itemID"></param>
+        /// <param name="ownerUUID"></param>
+        /// <param name="assembly"></param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly)
+        public void PerformScriptCompile(string script, UUID itemID, UUID ownerUUID, out string assembly)
         {
             assembly = "";
 
-            if (Script == String.Empty)
+            if (script == String.Empty)
             {
                 AddError("No script text present");
                 return;
@@ -222,7 +212,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             IScriptConverter converter;
             string compileScript;
-            CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
+            CheckLanguageAndConvert(script, ownerUUID, out converter, out compileScript);
             if (GetErrors().Length != 0)
                 return;
             if (converter == null)
@@ -231,14 +221,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return;
             }
 
-            CompileFromDotNetText(compileScript, converter, assembly, Script, false);
+            CompileFromDotNetText(compileScript, converter, assembly, script, false);
         }
 
         /// <summary>
-        ///   Converts script (if needed) and compiles into memory
+        ///     Converts script (if needed) and compiles into memory
         /// </summary>
-        /// <param name = "Script"></param>
-        /// <param name = "itemID"></param>
+        /// <param name="Script"></param>
+        /// <param name="itemID"></param>
         /// <returns></returns>
         public void PerformInMemoryScriptCompile(string Script, UUID itemID)
         {
@@ -272,24 +262,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public IScriptConverter FindConverterForScript(string Script)
         {
-#if (!ISWIN)
-            IScriptConverter language = null;
-            foreach (IScriptConverter convert in converters)
-            {
-                if (Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture))
-                    language = convert;
-
-                if (language == null && convert.Name == DefaultCompileLanguage)
-                    language = convert;
-            }
-#else
             IScriptConverter language = converters.FirstOrDefault(convert => convert.Name == DefaultCompileLanguage);
-            foreach (IScriptConverter convert in converters.Where(convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
+            foreach (
+                IScriptConverter convert in
+                    converters.Where(
+                        convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
             {
                 language = convert;
             }
-#endif
-
             return language;
         }
 
@@ -300,20 +280,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             converter = null;
             string language = DefaultCompileLanguage;
 
-#if (!ISWIN)
-            foreach (IScriptConverter convert in converters)
-            {
-                if (Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture))
-                {
-                    language = convert.Name;
-                }
-            }
-#else
-            foreach (IScriptConverter convert in converters.Where(convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
+            foreach (
+                IScriptConverter convert in
+                    converters.Where(
+                        convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
             {
                 language = convert.Name;
             }
-#endif
+
             if (!AllowedCompilers.ContainsKey(language))
             {
                 // Not allowed to compile to this language!
@@ -323,7 +297,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return;
             }
 
-            if (m_scriptEngine.Worlds[0].Permissions.CanCompileScript(ownerID, language) == false)
+            if (m_scriptEngine.Scene.Permissions.CanCompileScript(ownerID, language) == false)
             {
                 // Not allowed to compile to this language!
                 AddError(ownerID +
@@ -443,11 +417,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        ///   Compile .NET script to .Net assembly (.dll)
+        ///     Compile .NET script to .Net assembly (.dll)
         /// </summary>
-        /// <param name = "Script">CS script</param>
+        /// <param name="script">CS script</param>
+        /// <param name="converter"></param>
+        /// <param name="assembly"></param>
+        /// <param name="originalScript"></param>
+        /// <param name="inMemory"></param>
         /// <returns>Filename to .dll assembly</returns>
-        internal void CompileFromDotNetText(string Script, IScriptConverter converter, string assembly,
+        internal void CompileFromDotNetText(string script, IScriptConverter converter, string assembly,
                                             string originalScript, bool inMemory)
         {
             string ext = "." + converter.Name;
@@ -476,18 +454,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 try
                 {
-                    File.WriteAllText(srcFileName, Script);
+                    File.WriteAllText(srcFileName, script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {
                     MainConsole.Instance.Error("[Compiler]: Exception while " +
-                                "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex);
+                                               "trying to write script source to file \"" +
+                                               srcFileName + "\": " + ex);
                 }
             }
 
             // Do actual compile
-            CompilerParameters parameters = new CompilerParameters { IncludeDebugInformation = true };
+            CompilerParameters parameters = new CompilerParameters {IncludeDebugInformation = true};
 
 
             string rootPath =
@@ -503,12 +481,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                                                  "Aurora.Framework.dll"));
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "OpenMetaverseTypes.dll"));
-
-                if (converter.Name == "yp")
-                {
-                    parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                                                                     "OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll"));
-                }
             }
 
             parameters.ReferencedAssemblies.AddRange(m_referencedFiles.ToArray());
@@ -521,7 +493,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             parameters.TreatWarningsAsErrors = false;
 
             CompilerResults results = converter.Compile(parameters, WriteScriptSourceToDebugFile,
-                                                        WriteScriptSourceToDebugFile ? srcFileName : Script);
+                                                        WriteScriptSourceToDebugFile ? srcFileName : script);
             parameters = null;
             //
             // WARNINGS AND ERRORS
@@ -531,13 +503,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 try
                 {
-                    File.WriteAllText(srcFileName, Script);
+                    File.WriteAllText(srcFileName, script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {
                     MainConsole.Instance.Error("[Compiler]: Exception while " +
-                                "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex);
+                                               "trying to write script source to file \"" +
+                                               srcFileName + "\": " + ex);
                 }
 
                 foreach (CompilerError CompErr in results.Errors)

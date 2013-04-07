@@ -25,13 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Servers
 {
     public class MainServer
     {
-        public static byte[] NoResponse = new byte[1] { 1 };
         public static IHttpServer Instance { get; set; }
         public static byte[] BlankResponse = System.Text.Encoding.UTF8.GetBytes("");
         public static byte[] BadRequest = new byte[0];

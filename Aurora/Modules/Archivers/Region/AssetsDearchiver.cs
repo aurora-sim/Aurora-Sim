@@ -25,38 +25,39 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Serialization;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Xml;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Dearchives assets
+    ///     Dearchives assets
     /// </summary>
     public class AssetsDearchiver
     {
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
 
         /// <summary>
-        ///   Store for asset data we received before we get the metadata
+        ///     Store for asset data we received before we get the metadata
         /// </summary>
         protected Dictionary<string, byte[]> m_assetDataAwaitingMetadata = new Dictionary<string, byte[]>();
 
         /// <summary>
-        ///   Cache to which dearchived assets will be added
+        ///     Cache to which dearchived assets will be added
         /// </summary>
         protected IAssetService m_cache;
 
         /// <summary>
-        ///   Asset metadata.  Is null if asset metadata isn't yet available.
+        ///     Asset metadata.  Is null if asset metadata isn't yet available.
         /// </summary>
         protected Dictionary<string, AssetMetadata> m_metadata;
 
@@ -66,10 +67,10 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Add asset data to the dearchiver
+        ///     Add asset data to the dearchiver
         /// </summary>
-        /// <param name = "assetFilename"></param>
-        /// <param name = "data"></param>
+        /// <param name="assetFilename"></param>
+        /// <param name="data"></param>
         public void AddAssetData(string assetFilename, byte[] data)
         {
             if (null == m_metadata)
@@ -83,9 +84,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Add asset metadata xml
+        ///     Add asset metadata xml
         /// </summary>
-        /// <param name = "xml"></param>
+        /// <param name="xml"></param>
         public void AddAssetMetadata(string xml)
         {
             m_metadata = new Dictionary<string, AssetMetadata>();
@@ -123,7 +124,7 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Resolve asset data that we collected before receiving the metadata
+        ///     Resolve asset data that we collected before receiving the metadata
         /// </summary>
         protected void ResolvePendingAssetData()
         {
@@ -134,10 +135,10 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Resolve a new piece of asset data against stored metadata
+        ///     Resolve a new piece of asset data against stored metadata
         /// </summary>
-        /// <param name = "assetFilename"></param>
-        /// <param name = "data"></param>
+        /// <param name="assetPath"></param>
+        /// <param name="data"></param>
         protected void ResolveAssetData(string assetPath, byte[] data)
         {
             // Right now we're nastily obtaining the UUID from the filename
@@ -170,7 +171,7 @@ namespace Aurora.Modules.Archivers
         #region Nested type: AssetMetadata
 
         /// <summary>
-        ///   Metadata for an asset
+        ///     Metadata for an asset
         /// </summary>
         protected struct AssetMetadata
         {

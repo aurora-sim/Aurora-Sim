@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
+
     #region Enumerations
 
     public enum PIDHoverType
@@ -19,23 +22,22 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    /// Only used internally to schedule client updates.
+    ///     Only used internally to schedule client updates.
     /// </summary>
-    /// 
     public enum InternalUpdateFlags : byte
     {
         /// <summary>
-        /// no update is scheduled
+        ///     no update is scheduled
         /// </summary>
         NoUpdate = 0,
 
         /// <summary>
-        /// terse update scheduled
+        ///     terse update scheduled
         /// </summary>
         TerseUpdate = 1,
 
         /// <summary>
-        /// full update scheduled
+        ///     full update scheduled
         /// </summary>
         FullUpdate = 2
     }
@@ -110,8 +112,6 @@ namespace Aurora.Framework
         IEntityInventory Inventory { get; }
         void ResetEntityIDs();
 
-        string GenericData { get; }
-
         PrimFlags Flags { get; set; }
 
         int UseSoundQueue { get; set; }
@@ -129,7 +129,7 @@ namespace Aurora.Framework
 
         Quaternion GetWorldRotation();
 
-        PhysicsObject PhysActor { get; set; }
+        PhysicsActor PhysActor { get; set; }
 
         TaskInventoryDictionary TaskInventory { get; set; }
 
@@ -246,6 +246,7 @@ namespace Aurora.Framework
         void startLookAt(Quaternion rotation, float p, float p_2);
 
         Vector3 Acceleration { get; set; }
+        Vector3 RelativePosition { get; }
 
         void SetAngularImpulse(Vector3 vector3, bool p);
 
@@ -357,7 +358,8 @@ namespace Aurora.Framework
 
         void SetText(string text, Vector3 av3, double p);
 
-        bool UpdatePrimFlags(bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVolumeDetect, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks);
+        bool UpdatePrimFlags(bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVolumeDetect,
+                             ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks);
 
         List<UUID> SitTargetAvatar { get; set; }
         Dictionary<int, string> CollisionFilter { get; }
@@ -396,6 +398,8 @@ namespace Aurora.Framework
 
         void Redo();
 
+        void FinishedSerializingGenericProperties();
+
         DateTime Expires { get; set; }
 
         uint CRC { get; set; }
@@ -405,8 +409,11 @@ namespace Aurora.Framework
         int CreationDate { get; set; }
 
         bool DIE_AT_EDGE { get; set; }
+        bool RETURN_AT_EDGE { get; set; }
 
         byte[] TextureAnimation { get; set; }
+
+        Dictionary<UUID, StateSave> StateSaves { get; set; }
 
         Vector3 GroupPosition { get; }
         Vector3 GetGroupPosition();
@@ -415,83 +422,47 @@ namespace Aurora.Framework
 
         void TrimPermissions();
 
-        byte PhysicsType
-        {
-            get;
-            set;
-        }
+        byte PhysicsType { get; set; }
 
-        float Density
-        {
-            get;
-            set;
-        }
+        float Density { get; set; }
 
-        float Friction
-        {
-            get;
-            set;
-        }
+        float Friction { get; set; }
 
-        float Restitution
-        {
-            get;
-            set;
-        }
+        float Restitution { get; set; }
 
-        float GravityMultiplier
-        {
-            get;
-            set;
-        }
+        float GravityMultiplier { get; set; }
 
-        float PIDTau
-        {
-            get;
-            set;
-        }
+        float PIDTau { get; set; }
 
-        Vector3 PIDTarget
-        {
-            get;
-            set;
-        }
+        Vector3 PIDTarget { get; set; }
 
-        bool PIDActive
-        {
-            get;
-            set;
-        }
+        bool PIDActive { get; set; }
 
-        float PIDHoverTau
-        {
-            get;
-            set;
-        }
+        float PIDHoverTau { get; set; }
 
-        float PIDHoverHeight
-        {
-            get;
-            set;
-        }
+        float PIDHoverHeight { get; set; }
 
-        bool PIDHoverActive
-        {
-            get;
-            set;
-        }
+        bool PIDHoverActive { get; set; }
 
-        PIDHoverType PIDHoverType
-        {
-            get;
-            set;
-        }
+        PIDHoverType PIDHoverType { get; set; }
 
         void GenerateRotationalVelocityFromOmega();
 
         void ScriptSetTemporaryStatus(bool tempOnRez);
 
         uint InventorySerial { get; set; }
-		void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool b);
+        void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool b);
+
+        Quaternion GetRotationOffset();
+
+        string CurrentMediaVersion { get; set; }
+
+        void SetRotationOffset(bool p1, Quaternion Rotation, bool p2);
+
+        bool Undoing { get; set; }
+
+        bool IsLoading { get; set; }
+
+        void UpdateMaterial(int mat);
     }
 }

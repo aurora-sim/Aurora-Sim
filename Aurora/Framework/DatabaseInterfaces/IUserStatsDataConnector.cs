@@ -25,25 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using Aurora.Framework.Services;
 using OpenMetaverse;
-using Aurora.Framework;
 using OpenMetaverse.Messages.Linden;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IUserStatsDataConnector : IAuroraDataPlugin
     {
         /// <summary>
-        ///   Add/Update a user's stats in the database
+        ///     Add/Update a user's stats in the database
         /// </summary>
-        /// <param name = "uid"></param>
+        /// <param name="uid"></param>
+        /// <param name="agentID"></param>
+        /// <param name="regionID"></param>
         void UpdateUserStats(ViewerStatsMessage uid, UUID agentID, UUID regionID);
 
         /// <summary>
-        /// Get the count of sessions that match the given information
+        ///     Get the count of sessions that match the given information
         /// </summary>
         /// <param name="columnName"></param>
         /// <param name="whereCheck"></param>
@@ -51,21 +51,21 @@ namespace Aurora.Framework
         int GetCount(string columnName, KeyValuePair<string, object> whereCheck);
 
         /// <summary>
-        /// Get the information in the given column
+        ///     Get the information in the given column
         /// </summary>
         /// <param name="columnName"></param>
         /// <returns></returns>
         List<string> Get(string columnName);
 
         /// <summary>
-        /// Get a certain session from the database
+        ///     Get a certain session from the database
         /// </summary>
         /// <param name="sessionID"></param>
         /// <returns></returns>
         ViewerStatsMessage GetBySession(UUID sessionID);
 
         /// <summary>
-        /// Remove all sessions from the database
+        ///     Remove all sessions from the database
         /// </summary>
         void RemoveAllSessions();
     }

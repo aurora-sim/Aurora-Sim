@@ -25,21 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Aurora.Modules.Terrain.FileLoaders;
+using Aurora.Modules.Terrain.FloodBrushes;
+using Aurora.Modules.Terrain.PaintBrushes;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Timers;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Modules.Terrain.FileLoaders;
-using Aurora.Modules.Terrain.FloodBrushes;
-using Aurora.Modules.Terrain.PaintBrushes;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Terrain
 {
@@ -48,7 +51,7 @@ namespace Aurora.Modules.Terrain
         #region StandardTerrainEffects enum
 
         /// <summary>
-        ///   A standard set of terrain brushes and effects recognised by viewers
+        ///     A standard set of terrain brushes and effects recognised by viewers
         /// </summary>
         public enum StandardTerrainEffects : byte
         {
@@ -71,7 +74,6 @@ namespace Aurora.Modules.Terrain
         private const int MAX_HEIGHT = 250;
         private const int MIN_HEIGHT = 0;
 
-        private static readonly List<IScene> m_scenes = new List<IScene>();
         private static readonly List<TerrainModule> m_terrainModules = new List<TerrainModule>();
 
         private readonly Dictionary<StandardTerrainEffects, ITerrainFloodEffect> m_floodeffects =
@@ -101,10 +103,9 @@ namespace Aurora.Modules.Terrain
         #region INonSharedRegionModule Members
 
         /// <summary>
-        ///   Creates and initialises a terrain module for a region
+        ///     Creates and initialises a terrain module for a region
         /// </summary>
-        /// <param name = "scene">Region initialising</param>
-        /// <param name = "config">Config for the region</param>
+        /// <param name="config">Config for the region</param>
         public void Initialise(IConfigSource config)
         {
             if (config.Configs["TerrainModule"] != null)
@@ -119,15 +120,12 @@ namespace Aurora.Modules.Terrain
 
         public void AddRegion(IScene scene)
         {
-            bool firstScene = m_scenes.Count == 0;
             m_scene = scene;
-            m_scenes.Add(scene);
             m_terrainModules.Add(this);
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
 
-            if (firstScene)
-                AddConsoleCommands();
+            AddConsoleCommands();
 
             InstallDefaultEffects();
             LoadPlugins();
@@ -160,22 +158,18 @@ namespace Aurora.Modules.Terrain
 
         public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove(scene);
-            lock (m_scene)
-            {
-                // remove the event-handlers
-                m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
-                m_scene.EventManager.OnClosingClient -= OnClosingClient;
-                m_scene.EventManager.OnSignificantClientMovement -= EventManager_OnSignificantClientMovement;
-                m_scene.AuroraEventManager.UnregisterEventHandler("DrawDistanceChanged",
-                                                                  AuroraEventManager_OnGenericEvent);
-                m_scene.AuroraEventManager.UnregisterEventHandler("SignficantCameraMovement",
-                                                                  AuroraEventManager_OnGenericEvent);
-                m_scene.EventManager.OnNewPresence -= OnNewPresence;
+            // remove the event-handlers
+            m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
+            m_scene.EventManager.OnClosingClient -= OnClosingClient;
+            m_scene.EventManager.OnSignificantClientMovement -= EventManager_OnSignificantClientMovement;
+            m_scene.AuroraEventManager.UnregisterEventHandler("DrawDistanceChanged",
+                                                              AuroraEventManager_OnGenericEvent);
+            m_scene.AuroraEventManager.UnregisterEventHandler("SignficantCameraMovement",
+                                                              AuroraEventManager_OnGenericEvent);
+            m_scene.EventManager.OnNewPresence -= OnNewPresence;
 
-                // remove the interface
-                m_scene.UnregisterModuleInterface<ITerrainModule>(this);
-            }
+            // remove the interface
+            m_scene.UnregisterModuleInterface<ITerrainModule>(this);
         }
 
         public void Close()
@@ -229,7 +223,7 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Reset the terrain of this region to the default
+        ///     Reset the terrain of this region to the default
         /// </summary>
         public void ResetTerrain()
         {
@@ -244,26 +238,18 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads the World Revert heightmap
+        ///     Loads the World Revert heightmap
         /// </summary>
         public void LoadRevertMap()
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX,
-                                                                        m_scene.RegionInfo.RegionSizeY);
-                if (map == null)
+                m_scene.SimulationDataService.LoadTerrain(true, m_scene.RegionInfo.RegionSizeX,
+                                                          m_scene.RegionInfo.RegionSizeY);
+                if (m_revert == null)
                 {
-                    if (m_revert == null)
-                    {
-                        m_revert = m_channel.MakeCopy();
-
-                        m_scene.SimulationDataService.Tainted();
-                    }
-                }
-                else
-                {
-                    m_revert = new TerrainChannel(map, m_scene);
+                    m_revert = m_channel.MakeCopy();
+                    m_scene.SimulationDataService.Tainted();
                 }
             }
             catch (IOException e)
@@ -299,27 +285,20 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads the World heightmap
+        ///     Loads the World heightmap
         /// </summary>
         public void LoadWorldHeightmap()
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX,
-                                                                        m_scene.RegionInfo.RegionSizeY);
-                if (map == null)
+                m_scene.SimulationDataService.LoadTerrain(false, m_scene.RegionInfo.RegionSizeX,
+                                                          m_scene.RegionInfo.RegionSizeY);
+                if (m_channel == null)
                 {
-                    if (m_channel == null)
-                    {
-                        MainConsole.Instance.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
-                        m_channel = new TerrainChannel(m_scene);
+                    MainConsole.Instance.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
+                    m_channel = new TerrainChannel(m_scene);
 
-                        m_scene.SimulationDataService.Tainted();
-                    }
-                }
-                else
-                {
-                    m_channel = new TerrainChannel(map, m_scene);
+                    m_scene.SimulationDataService.Tainted();
                 }
             }
             catch (IOException e)
@@ -365,74 +344,15 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads a terrain file from disk and installs it in the scene.
+        ///     Loads a terrain file from disk and installs it in the scene.
         /// </summary>
-        /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
         public void LoadFromFile(string filename, int offsetX, int offsetY)
         {
-#if (!ISWIN)
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-            {
-                if (filename.EndsWith(loader.Key))
-                {
-                    lock (m_scene)
-                    {
-                        try
-                        {
-                            ITerrainChannel channel = loader.Value.LoadFile(filename, m_scene);
-                            channel.Scene = m_scene;
-                            if (m_channel.Height == channel.Height && m_channel.Width == channel.Width)
-                            {
-                                m_channel = channel;
-                                m_scene.RegisterModuleInterface(m_channel);
-                                MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
-                            }
-                            else
-                            {
-                                //Make sure it is in bounds
-                                if ((offsetX + channel.Width) > m_channel.Width || (offsetY + channel.Height) > m_channel.Height)
-                                {
-                                    MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
-                                    return;
-                                }
-                                else
-                                {
-                                    //Merge the terrains together at the specified offset
-                                    for (int x = offsetX; x < offsetX + channel.Width; x++)
-                                    {
-                                        for (int y = offsetY; y < offsetY + channel.Height; y++)
-                                        {
-                                            m_channel[x, y] = channel[x - offsetX, y - offsetY];
-                                        }
-                                    }
-                                    MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
-                                }
-                            }
-                            UpdateRevertMap();
-                        }
-                        catch (NotImplementedException)
-                        {
-                            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
-                            throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
-                        }
-                        catch (FileNotFoundException)
-                        {
-                            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, file not found. (A directory permissions error may also cause this)");
-                            throw new TerrainException(String.Format("unable to load heightmap: file {0} not found (or permissions do not allow access", filename));
-                        }
-                        catch (ArgumentException e)
-                        {
-                            MainConsole.Instance.ErrorFormat("[TERRAIN]: Unable to load heightmap: {0}", e.Message);
-                            throw new TerrainException(String.Format("Unable to load heightmap: {0}", e.Message));
-                        }
-                    }
-                    CheckForTerrainUpdates();
-                    MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
-                    return;
-                }
-            }
-#else
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+            foreach (
+                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
             {
                 lock (m_scene)
                 {
@@ -446,7 +366,7 @@ namespace Aurora.Modules.Terrain
                             m_channel = channel;
                             m_scene.RegisterModuleInterface(m_channel);
                             MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
-                                              channel.Height);
+                                                             channel.Height);
                         }
                         else
                         {
@@ -468,8 +388,9 @@ namespace Aurora.Modules.Terrain
                                         m_channel[x, y] = channel[x - offsetX, y - offsetY];
                                     }
                                 }
-                                MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
-                                                  channel.Height);
+                                MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}",
+                                                                 channel.Width,
+                                                                 channel.Height);
                             }
                         }
                         UpdateRevertMap();
@@ -477,7 +398,7 @@ namespace Aurora.Modules.Terrain
                     catch (NotImplementedException)
                     {
                         MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
-                                    " parser does not support file loading. (May be save only)");
+                                                   " parser does not support file loading. (May be save only)");
                         throw new TerrainException(
                             String.Format("unable to load heightmap: parser {0} does not support loading",
                                           loader.Value));
@@ -502,7 +423,6 @@ namespace Aurora.Modules.Terrain
                 MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return;
             }
-#endif
 
             MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
@@ -510,33 +430,25 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Saves the current heightmap to a specified file.
+        ///     Saves the current heightmap to a specified file.
         /// </summary>
-        /// <param name = "filename">The destination filename</param>
+        /// <param name="filename">The destination filename</param>
         public void SaveToFile(string filename)
         {
             try
             {
-#if (!ISWIN)
-                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-                {
-                    if (filename.EndsWith(loader.Key))
-                    {
-                        loader.Value.SaveFile(filename, m_channel);
-                        return;
-                    }
-                }
-#else
-                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                foreach (
+                    KeyValuePair<string, ITerrainLoader> loader in
+                        m_loaders.Where(loader => filename.EndsWith(loader.Key)))
                 {
                     loader.Value.SaveFile(filename, m_channel);
                     return;
                 }
-#endif
             }
             catch (NotImplementedException)
             {
-                MainConsole.Instance.Error("Unable to save to " + filename + ", saving of this file format has not been implemented.");
+                MainConsole.Instance.Error("Unable to save to " + filename +
+                                           ", saving of this file format has not been implemented.");
                 throw new TerrainException(
                     String.Format("Unable to save heightmap: saving of this file format not implemented"));
             }
@@ -548,85 +460,24 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads a terrain file from the specified URI
+        ///     Loads a terrain file from the specified URI
         /// </summary>
-        /// <param name = "filename">The name of the terrain to load</param>
-        /// <param name = "pathToTerrainHeightmap">The URI to the terrain height map</param>
+        /// <param name="filename">The name of the terrain to load</param>
+        /// <param name="pathToTerrainHeightmap">The URI to the terrain height map</param>
         public void LoadFromStream(string filename, Uri pathToTerrainHeightmap)
         {
             LoadFromStream(filename, URIFetch(pathToTerrainHeightmap));
         }
 
         /// <summary>
-        ///   Loads a terrain file from a stream and installs it in the scene.
+        ///     Loads a terrain file from a stream and installs it in the scene.
         /// </summary>
-        /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
-        /// <param name = "stream"></param>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
         public void LoadFromStream(string filename, Stream stream)
         {
-#if (!ISWIN)
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-            {
-                if (filename.EndsWith(loader.Key))
-                {
-                    lock (m_scene)
-                    {
-                        try
-                        {
-                            ITerrainChannel channel = loader.Value.LoadStream(stream, m_scene);
-                            if (channel != null)
-                            {
-                                channel.Scene = m_scene;
-                                if (m_channel.Height == channel.Height && m_channel.Width == channel.Width)
-                                {
-                                    m_channel = channel;
-                                    m_scene.RegisterModuleInterface(m_channel);
-                                }
-                                else
-                                {
-                                    //Make sure it is in bounds
-                                    if ((channel.Width) > m_channel.Width || (channel.Height) > m_channel.Height)
-                                    {
-                                        for (int x = 0; x < m_channel.Width; x++)
-                                        {
-                                            for (int y = 0; y < m_channel.Height; y++)
-                                            {
-                                                m_channel[x, y] = channel[x, y];
-                                            }
-                                        }
-                                        //MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
-                                        //return;
-                                    }
-                                    else
-                                    {
-                                        //Merge the terrains together at the specified offset
-                                        for (int x = 0; x < channel.Width; x++)
-                                        {
-                                            for (int y = 0; y < channel.Height; y++)
-                                            {
-                                                m_channel[x, y] = channel[x, y];
-                                            }
-                                        }
-                                        MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
-                                    }
-                                }
-                                UpdateRevertMap();
-                            }
-                        }
-                        catch (NotImplementedException)
-                        {
-                            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
-                            throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
-                        }
-                    }
-
-                    CheckForTerrainUpdates();
-                    MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
-                    return;
-                }
-            }
-#else
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+            foreach (
+                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
             {
                 lock (m_scene)
                 {
@@ -668,8 +519,9 @@ namespace Aurora.Modules.Terrain
                                             m_channel[x, y] = channel[x, y];
                                         }
                                     }
-                                    MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
-                                                      channel.Height);
+                                    MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}",
+                                                                     channel.Width,
+                                                                     channel.Height);
                                 }
                             }
                             UpdateRevertMap();
@@ -678,7 +530,7 @@ namespace Aurora.Modules.Terrain
                     catch (NotImplementedException)
                     {
                         MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
-                                    " parser does not support file loading. (May be save only)");
+                                                   " parser does not support file loading. (May be save only)");
                         throw new TerrainException(
                             String.Format("unable to load heightmap: parser {0} does not support loading",
                                           loader.Value));
@@ -689,17 +541,19 @@ namespace Aurora.Modules.Terrain
                 MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return;
             }
-#endif
+
             MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
                 String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
         }
 
         /// <summary>
-        ///   Loads a terrain file from a stream and installs it in the scene.
+        ///     Loads a terrain file from a stream and installs it in the scene.
         /// </summary>
-        /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
-        /// <param name = "stream"></param>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
         public void LoadFromStream(string filename, Stream stream, int offsetX, int offsetY)
         {
             m_channel = InternalLoadFromStream(filename, stream, offsetX, offsetY, m_channel);
@@ -711,10 +565,12 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads a terrain file from a stream and installs it in the scene.
+        ///     Loads a terrain file from a stream and installs it in the scene.
         /// </summary>
-        /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
-        /// <param name = "stream"></param>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
         public void LoadWaterFromStream(string filename, Stream stream, int offsetX, int offsetY)
         {
             m_waterChannel = InternalLoadFromStream(filename, stream, offsetX, offsetY, m_waterChannel);
@@ -725,32 +581,37 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads a terrain file from a stream and installs it in the scene.
+        ///     Loads a terrain file from a stream and installs it in the scene.
         /// </summary>
-        /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
-        /// <param name = "stream"></param>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
         public void LoadRevertMapFromStream(string filename, Stream stream, int offsetX, int offsetY)
         {
             m_revert = InternalLoadFromStream(filename, stream, offsetX, offsetY, m_revert);
         }
 
         /// <summary>
-        ///   Loads a terrain file from a stream and installs it in the scene.
+        ///     Loads a terrain file from a stream and installs it in the scene.
         /// </summary>
-        /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
-        /// <param name = "stream"></param>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
         public void LoadWaterRevertMapFromStream(string filename, Stream stream, int offsetX, int offsetY)
         {
             m_waterRevert = InternalLoadFromStream(filename, stream, offsetX, offsetY, m_waterRevert);
         }
 
         /// <summary>
-        ///   Modify Land
+        ///     Modify Land
         /// </summary>
-        /// <param name = "pos">Land-position (X,Y,0)</param>
-        /// <param name = "size">The size of the brush (0=small, 1=medium, 2=large)</param>
-        /// <param name = "action">0=LAND_LEVEL, 1=LAND_RAISE, 2=LAND_LOWER, 3=LAND_SMOOTH, 4=LAND_NOISE, 5=LAND_REVERT</param>
-        /// <param name = "agentId">UUID of script-owner</param>
+        /// <param name="user"></param>
+        /// <param name="pos">Land-position (X,Y,0)</param>
+        /// <param name="size">The size of the brush (0=small, 1=medium, 2=large)</param>
+        /// <param name="action">0=LAND_LEVEL, 1=LAND_RAISE, 2=LAND_LOWER, 3=LAND_SMOOTH, 4=LAND_NOISE, 5=LAND_REVERT</param>
+        /// <param name="agentId">UUID of script-owner</param>
         public void ModifyTerrain(UUID user, Vector3 pos, byte size, byte action, UUID agentId)
         {
             float duration = 0.25f;
@@ -760,34 +621,27 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Saves the current heightmap to a specified stream.
+        ///     Saves the current heightmap to a specified stream.
         /// </summary>
-        /// <param name = "filename">The destination filename.  Used here only to identify the image type</param>
-        /// <param name = "stream"></param>
+        /// <param name="channel"></param>
+        /// <param name="filename">The destination filename.  Used here only to identify the image type</param>
+        /// <param name="stream"></param>
         public void SaveToStream(ITerrainChannel channel, string filename, Stream stream)
         {
             try
             {
-#if (!ISWIN)
-                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-                {
-                    if (filename.EndsWith(loader.Key))
-                    {
-                        loader.Value.SaveStream(stream, channel);
-                        return;
-                    }
-                }
-#else
-                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                foreach (
+                    KeyValuePair<string, ITerrainLoader> loader in
+                        m_loaders.Where(loader => filename.EndsWith(loader.Key)))
                 {
                     loader.Value.SaveStream(stream, channel);
                     return;
                 }
-#endif
             }
             catch (NotImplementedException)
             {
-                MainConsole.Instance.Error("Unable to save to " + filename + ", saving of this file format has not been implemented.");
+                MainConsole.Instance.Error("Unable to save to " + filename +
+                                           ", saving of this file format has not been implemented.");
                 throw new TerrainException(
                     String.Format("Unable to save heightmap: saving of this file format not implemented"));
             }
@@ -840,9 +694,9 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Installs terrain brush hook to IClientAPI
+        ///     Installs terrain brush hook to IClientAPI
         /// </summary>
-        /// <param name = "client"></param>
+        /// <param name="client"></param>
         private void EventManager_OnNewClient(IClientAPI client)
         {
             client.OnModifyTerrain += client_OnModifyTerrain;
@@ -882,9 +736,9 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Send the region heightmap to the client
+        ///     Send the region heightmap to the client
         /// </summary>
-        /// <param name = "RemoteClient">Client to send to</param>
+        /// <param name="RemoteClient">Client to send to</param>
         public void SendLayerData(IClientAPI RemoteClient)
         {
             if (!m_sendTerrainUpdatesByViewDistance && !m_noTerrain)
@@ -974,15 +828,14 @@ namespace Aurora.Modules.Terrain
                     if (!terrainarray[x, y])
                     {
                         Vector3 posToCheckFrom = new Vector3(presence.AbsolutePosition.X % m_scene.RegionInfo.RegionSizeX,
-                            presence.AbsolutePosition.Y % m_scene.RegionInfo.RegionSizeY, presence.AbsolutePosition.Z);
-                        int xx, yy;
-                        Util.UlongToInts(presence.RootAgentHandle, out xx, out yy);
-                        int xOffset = m_scene.RegionInfo.RegionLocX - xx;
-                        int yOffset = m_scene.RegionInfo.RegionLocY - yy;
+                                                             presence.AbsolutePosition.Y % m_scene.RegionInfo.RegionSizeY,
+                                                             presence.AbsolutePosition.Z);
                         //Check which has less distance, camera or avatar position, both have to be done
                         if (Util.DistanceLessThan(posToCheckFrom,
-                            new Vector3(x * Constants.TerrainPatchSize + (xOffset > 0 ? -xOffset : xOffset), y * Constants.TerrainPatchSize + (yOffset > 0 ? -yOffset : yOffset),
-                                                              0), presence.DrawDistance + 50) ||
+                                                  new Vector3(
+                                                      x*Constants.TerrainPatchSize,
+                                                      y*Constants.TerrainPatchSize,
+                                                      0), presence.DrawDistance + 50) ||
                             Util.DistanceLessThan(presence.CameraPosition,
                                                   new Vector3(x*Constants.TerrainPatchSize, y*Constants.TerrainPatchSize,
                                                               0), presence.DrawDistance + 50))
@@ -1027,7 +880,7 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Reset the terrain of this region to the default
+        ///     Reset the terrain of this region to the default
         /// </summary>
         public void ResetWater()
         {
@@ -1041,31 +894,24 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads the World Revert heightmap
+        ///     Loads the World Revert heightmap
         /// </summary>
         public void LoadRevertWaterMap()
         {
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadWater(m_scene, true, m_scene.RegionInfo.RegionSizeX,
-                                                                      m_scene.RegionInfo.RegionSizeY);
-                if (map == null)
+                m_scene.SimulationDataService.LoadWater(true, m_scene.RegionInfo.RegionSizeX,
+                                                        m_scene.RegionInfo.RegionSizeY);
+                if (m_waterRevert == null)
                 {
-                    if (m_waterRevert == null)
-                    {
-                        m_waterRevert = m_waterChannel.MakeCopy();
-
-                        m_scene.SimulationDataService.Tainted();
-                    }
-                }
-                else
-                {
-                    m_waterRevert = new TerrainChannel(map, m_scene);
+                    m_waterRevert = m_waterChannel.MakeCopy();
+                    m_scene.SimulationDataService.Tainted();
                 }
             }
             catch (IOException e)
             {
-                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e +
+                                          " Regenerating");
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize ||
                     m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
@@ -1077,14 +923,16 @@ namespace Aurora.Modules.Terrain
             }
             catch (IndexOutOfRangeException e)
             {
-                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e +
+                                          " Regenerating");
                 m_waterRevert = m_waterChannel.MakeCopy();
 
                 m_scene.SimulationDataService.Tainted();
             }
             catch (ArgumentOutOfRangeException e)
             {
-                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e +
+                                          " Regenerating");
                 m_waterRevert = m_waterChannel.MakeCopy();
 
                 m_scene.SimulationDataService.Tainted();
@@ -1099,7 +947,7 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads the World heightmap
+        ///     Loads the World heightmap
         /// </summary>
         public void LoadWorldWaterMap()
         {
@@ -1107,33 +955,27 @@ namespace Aurora.Modules.Terrain
                 return;
             try
             {
-                short[] map = m_scene.SimulationDataService.LoadWater(m_scene, false, m_scene.RegionInfo.RegionSizeX,
-                                                                      m_scene.RegionInfo.RegionSizeY);
-                if (map == null)
+                m_scene.SimulationDataService.LoadWater(false, m_scene.RegionInfo.RegionSizeX,
+                                                        m_scene.RegionInfo.RegionSizeY);
+                if (m_waterChannel == null)
                 {
-                    if (m_waterChannel == null)
+                    MainConsole.Instance.Info("[TERRAIN]: No default water. Generating a new water.");
+                    m_waterChannel = new TerrainChannel(m_scene);
+                    for (int x = 0; x < m_waterChannel.Height; x++)
                     {
-                        MainConsole.Instance.Info("[TERRAIN]: No default water. Generating a new water.");
-                        m_waterChannel = new TerrainChannel(m_scene);
-                        for (int x = 0; x < m_waterChannel.Height; x++)
+                        for (int y = 0; y < m_waterChannel.Height; y++)
                         {
-                            for (int y = 0; y < m_waterChannel.Height; y++)
-                            {
-                                m_waterChannel[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
-                            }
+                            m_waterChannel[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
                         }
-
-                        m_scene.SimulationDataService.Tainted();
                     }
-                }
-                else
-                {
-                    m_waterChannel = new TerrainChannel(map, m_scene);
+
+                    m_scene.SimulationDataService.Tainted();
                 }
             }
             catch (IOException e)
             {
-                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e +
+                                          " Regenerating");
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize ||
                     m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
@@ -1152,7 +994,8 @@ namespace Aurora.Modules.Terrain
             }
             catch (IndexOutOfRangeException e)
             {
-                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e +
+                                          " Regenerating");
                 m_waterChannel = new TerrainChannel(m_scene);
                 for (int x = 0; x < m_waterChannel.Height; x++)
                 {
@@ -1166,7 +1009,8 @@ namespace Aurora.Modules.Terrain
             }
             catch (ArgumentOutOfRangeException e)
             {
-                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e +
+                                          " Regenerating");
                 m_waterChannel = new TerrainChannel(m_scene);
                 for (int x = 0; x < m_waterChannel.Height; x++)
                 {
@@ -1196,82 +1040,20 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads a terrain file from a stream and installs it in the scene.
+        ///     Loads a terrain file from a stream and installs it in the scene.
         /// </summary>
-        /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
-        /// <param name = "stream"></param>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
+        /// <param name="update"></param>
         public ITerrainChannel InternalLoadFromStream(string filename, Stream stream, int offsetX, int offsetY,
                                                       ITerrainChannel update)
         {
             ITerrainChannel channel = null;
-#if (!ISWIN)
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-            {
-                if (filename.EndsWith(loader.Key))
-                {
-                    lock (m_scene)
-                    {
-                        try
-                        {
-                            channel = loader.Value.LoadStream(stream, m_scene);
-                            if (channel != null)
-                            {
-                                channel.Scene = m_scene;
-                                if (update == null || (update.Height == channel.Height && update.Width == channel.Width))
-                                {
-                                    if (m_scene.RegionInfo.RegionSizeX != channel.Width || m_scene.RegionInfo.RegionSizeY != channel.Height)
-                                    {
-                                        if ((channel.Width) > m_scene.RegionInfo.RegionSizeX || (channel.Height) > m_scene.RegionInfo.RegionSizeY)
-                                        {
-                                            TerrainChannel c = new TerrainChannel(true, m_scene);
-                                            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
-                                            {
-                                                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
-                                                {
-                                                    c[x, y] = channel[x, y];
-                                                }
-                                            }
-                                            return c;
-                                        }
-                                        return null;
-                                    }
-                                }
-                                else
-                                {
-                                    //Make sure it is in bounds
-                                    if ((offsetX + channel.Width) > update.Width || (offsetY + channel.Height) > update.Height)
-                                    {
-                                        MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
-                                        return null;
-                                    }
-                                    else
-                                    {
-                                        //Merge the terrains together at the specified offset
-                                        for (int x = offsetX; x < offsetX + channel.Width; x++)
-                                        {
-                                            for (int y = offsetY; y < offsetY + channel.Height; y++)
-                                            {
-                                                update[x, y] = channel[x - offsetX, y - offsetY];
-                                            }
-                                        }
-                                        return update;
-                                    }
-                                }
-                            }
-                        }
-                        catch (NotImplementedException)
-                        {
-                            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
-                            throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
-                        }
-                    }
 
-                    MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
-                    return channel;
-                }
-            }
-#else
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+			foreach (
+                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
             {
                 lock (m_scene)
                 {
@@ -1331,7 +1113,7 @@ namespace Aurora.Modules.Terrain
                     catch (NotImplementedException)
                     {
                         MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
-                                    " parser does not support file loading. (May be save only)");
+                                                   " parser does not support file loading. (May be save only)");
                         throw new TerrainException(
                             String.Format("unable to load heightmap: parser {0} does not support loading",
                                           loader.Value));
@@ -1341,7 +1123,7 @@ namespace Aurora.Modules.Terrain
                 MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return channel;
             }
-#endif
+
             MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
                 String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
@@ -1367,7 +1149,7 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Installs into terrain module the standard suite of brushes
+        ///     Installs into terrain module the standard suite of brushes
         /// </summary>
         private void InstallDefaultEffects()
         {
@@ -1380,9 +1162,6 @@ namespace Aurora.Modules.Terrain
             m_painteffects[StandardTerrainEffects.Revert] = new RevertSphere(this);
             m_painteffects[StandardTerrainEffects.Erode] = new ErodeSphere();
             m_painteffects[StandardTerrainEffects.Weather] = new WeatherSphere();
-            m_painteffects[StandardTerrainEffects.Paint] = new PaintSphere();
-            if (m_scene.RegionInfo.RegionSettings.UsePaintableTerrain)
-                m_painteffects[StandardTerrainEffects.Revert] = new PaintSphere();
 
             // Area of effect selection effects
             m_floodeffects[StandardTerrainEffects.Raise] = new RaiseArea();
@@ -1407,7 +1186,7 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Saves the current state of the region into the revert map buffer.
+        ///     Saves the current state of the region into the revert map buffer.
         /// </summary>
         public void UpdateRevertWaterMap()
         {
@@ -1416,7 +1195,7 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Saves the current state of the region into the revert map buffer.
+        ///     Saves the current state of the region into the revert map buffer.
         /// </summary>
         public void UpdateRevertMap()
         {
@@ -1426,13 +1205,13 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Loads a tile from a larger terrain file and installs it into the region.
+        ///     Loads a tile from a larger terrain file and installs it into the region.
         /// </summary>
-        /// <param name = "filename">The terrain file to load</param>
-        /// <param name = "fileWidth">The width of the file in units</param>
-        /// <param name = "fileHeight">The height of the file in units</param>
-        /// <param name = "fileStartX">Where to begin our slice</param>
-        /// <param name = "fileStartY">Where to begin our slice</param>
+        /// <param name="filename">The terrain file to load</param>
+        /// <param name="fileWidth">The width of the file in units</param>
+        /// <param name="fileHeight">The height of the file in units</param>
+        /// <param name="fileStartX">Where to begin our slice</param>
+        /// <param name="fileStartY">Where to begin our slice</param>
         public void LoadFromFile(string filename, int fileWidth, int fileHeight, int fileStartX, int fileStartY)
         {
             int offsetX = (m_scene.RegionInfo.RegionLocX/Constants.RegionSize) - fileStartX;
@@ -1441,24 +1220,9 @@ namespace Aurora.Modules.Terrain
             if (offsetX >= 0 && offsetX < fileWidth && offsetY >= 0 && offsetY < fileHeight)
             {
                 // this region is included in the tile request
-#if (!ISWIN)
-                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-                {
-                    if (filename.EndsWith(loader.Key))
-                    {
-                        lock (m_scene)
-                        {
-                            ITerrainChannel channel = loader.Value.LoadFile(filename, offsetX, offsetY, fileWidth, fileHeight, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
-                            channel.Scene = m_scene;
-                            m_channel = channel;
-                            m_scene.RegisterModuleInterface(m_channel);
-                            UpdateRevertMap();
-                        }
-                        return;
-                    }
-                }
-#else
-                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                foreach (
+                    KeyValuePair<string, ITerrainLoader> loader in
+                        m_loaders.Where(loader => filename.EndsWith(loader.Key)))
                 {
                     lock (m_scene)
                     {
@@ -1473,7 +1237,6 @@ namespace Aurora.Modules.Terrain
                     }
                     return;
                 }
-#endif
             }
         }
 
@@ -1502,9 +1265,9 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Checks to see if the terrain has been modified since last check
-        ///   but won't attempt to limit those changes to the limits specified in the estate settings
-        ///   currently invoked by the command line operations in the region server only
+        ///     Checks to see if the terrain has been modified since last check
+        ///     but won't attempt to limit those changes to the limits specified in the estate settings
+        ///     currently invoked by the command line operations in the region server only
         /// </summary>
         private void CheckForTerrainUpdates()
         {
@@ -1512,14 +1275,14 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Checks to see if the terrain has been modified since last check.
-        ///   If it has been modified, every all the terrain patches are sent to the client.
-        ///   If the call is asked to respect the estate settings for terrain_raise_limit and
-        ///   terrain_lower_limit, it will clamp terrain updates between these values
-        ///   currently invoked by client_OnModifyTerrain only and not the Commander interfaces
-        ///   <param name = "respectEstateSettings">should height map deltas be limited to the estate settings limits</param>
-        ///   <param name = "forceSendOfTerrainInfo">force send terrain</param>
-        ///   <param name = "isWater">Check water or terrain</param>
+        ///     Checks to see if the terrain has been modified since last check.
+        ///     If it has been modified, every all the terrain patches are sent to the client.
+        ///     If the call is asked to respect the estate settings for terrain_raise_limit and
+        ///     terrain_lower_limit, it will clamp terrain updates between these values
+        ///     currently invoked by client_OnModifyTerrain only and not the Commander interfaces
+        ///     <param name="respectEstateSettings">should height map deltas be limited to the estate settings limits</param>
+        ///     <param name="forceSendOfTerrainInfo">force send terrain</param>
+        ///     <param name="isWater">Check water or terrain</param>
         /// </summary>
         private void CheckForTerrainUpdates(bool respectEstateSettings, bool forceSendOfTerrainInfo, bool isWater)
         {
@@ -1602,9 +1365,9 @@ namespace Aurora.Modules.Terrain
         }
 
         /// <summary>
-        ///   Checks to see height deltas in the tainted terrain patch at xStart ,yStart
-        ///   are all within the current estate limits
-        ///   <returns>true if changes were limited, false otherwise</returns>
+        ///     Checks to see height deltas in the tainted terrain patch at xStart ,yStart
+        ///     are all within the current estate limits
+        ///     <returns>true if changes were limited, false otherwise</returns>
         /// </summary>
         private bool LimitChannelChanges(ITerrainChannel channel, ITerrainChannel revert)
         {
@@ -1663,7 +1426,7 @@ namespace Aurora.Modules.Terrain
                 {
                     StoreUndoState();
                     m_painteffects[(StandardTerrainEffects) action].PaintEffect(
-                        m_channel, user, west, south, height, size, seconds, BrushSize, m_scenes);
+                        m_channel, user, west, south, height, size, seconds, BrushSize);
 
                     //revert changes outside estate limits
                     CheckForTerrainUpdates(!god, false, false);
@@ -1674,7 +1437,7 @@ namespace Aurora.Modules.Terrain
                     {
                         StoreUndoState();
                         m_painteffects[(StandardTerrainEffects) action - WATER_CONST].PaintEffect(
-                            m_waterChannel, user, west, south, height, size, seconds, BrushSize, m_scenes);
+                            m_waterChannel, user, west, south, height, size, seconds, BrushSize);
 
                         //revert changes outside estate limits
                         CheckForTerrainUpdates(!god, false, true);
@@ -1755,17 +1518,7 @@ namespace Aurora.Modules.Terrain
                 //Return them all
                 return m_terrainModules;
             }
-#if (!ISWIN)
-            foreach (TerrainModule module in m_terrainModules)
-            {
-                if (module.m_scene == scene)
-                {
-                    modules.Add(module);
-                }
-            }
-#else
             modules.AddRange(m_terrainModules.Where(module => module.m_scene == scene));
-#endif
             return modules;
         }
 
@@ -1905,7 +1658,8 @@ namespace Aurora.Modules.Terrain
         {
             if (cmd.Count() < 4)
             {
-                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                MainConsole.Instance.Info(
+                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
                 return;
             }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
@@ -1974,7 +1728,8 @@ namespace Aurora.Modules.Terrain
         {
             if (cmd.Count() < 3)
             {
-                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                MainConsole.Instance.Info(
+                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
                 return;
             }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
@@ -1993,7 +1748,8 @@ namespace Aurora.Modules.Terrain
         {
             if (cmd.Count() < 3)
             {
-                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                MainConsole.Instance.Info(
+                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
                 return;
             }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
@@ -2012,7 +1768,8 @@ namespace Aurora.Modules.Terrain
         {
             if (cmd.Count() < 3)
             {
-                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                MainConsole.Instance.Info(
+                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
                 return;
             }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
@@ -2031,7 +1788,8 @@ namespace Aurora.Modules.Terrain
         {
             if (cmd.Count() < 3)
             {
-                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                MainConsole.Instance.Info(
+                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
                 return;
             }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
@@ -2106,13 +1864,11 @@ namespace Aurora.Modules.Terrain
                 else
                     return;
             }
-#if (!ISWIN)
-            string supportedFileExtensions = "";
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-                supportedFileExtensions = supportedFileExtensions + (" " + loader.Key + " (" + loader.Value + ")");
-#else
-            string supportedFileExtensions = m_loaders.Aggregate("", (current, loader) => current + (" " + loader.Key + " (" + loader.Value + ")"));
-#endif
+
+            string supportedFileExtensions = m_loaders.Aggregate("",
+                                                                 (current, loader) =>
+                                                                 current +
+                                                                 (" " + loader.Key + " (" + loader.Value + ")"));
 
             MainConsole.Instance.Info(
                 "terrain load <FileName> - Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
@@ -2127,21 +1883,23 @@ namespace Aurora.Modules.Terrain
                 "\n minimum X tile: The X region coordinate of the first section on the file" +
                 "\n minimum Y tile: The Y region coordinate of the first section on the file");
             MainConsole.Instance.Info("terrain fill <value> - Fills the current heightmap with a specified value." +
-                       "\n value: The numeric value of the height you wish to set your region to.");
-            MainConsole.Instance.Info("terrain elevate <value> - Raises the current heightmap by the specified amount." +
-                       "\n amount: The amount of height to remove from the terrain in meters.");
+                                      "\n value: The numeric value of the height you wish to set your region to.");
+            MainConsole.Instance.Info(
+                "terrain elevate <value> - Raises the current heightmap by the specified amount." +
+                "\n amount: The amount of height to remove from the terrain in meters.");
             MainConsole.Instance.Info("terrain lower <value> - Lowers the current heightmap by the specified amount." +
-                       "\n amount: The amount of height to remove from the terrain in meters.");
+                                      "\n amount: The amount of height to remove from the terrain in meters.");
             MainConsole.Instance.Info("terrain multiply <value> - Multiplies the heightmap by the value specified." +
-                       "\n value: The value to multiply the heightmap by.");
+                                      "\n value: The value to multiply the heightmap by.");
             MainConsole.Instance.Info("terrain bake - Saves the current terrain into the regions revert map.");
             MainConsole.Instance.Info("terrain revert - Loads the revert map terrain into the regions heightmap.");
-            MainConsole.Instance.Info("terrain stats - Shows some information about the regions heightmap for debugging purposes.");
+            MainConsole.Instance.Info(
+                "terrain stats - Shows some information about the regions heightmap for debugging purposes.");
             MainConsole.Instance.Info(
                 "terrain newbrushes <enabled> - Enables experimental brushes which replace the standard terrain brushes." +
                 "\n enabled: true / false - Enable new brushes");
             MainConsole.Instance.Info("terrain flip <direction> - Flips the current terrain about the X or Y axis" +
-                       "\n direction: [x|y] the direction to flip the terrain in");
+                                      "\n direction: [x|y] the direction to flip the terrain in");
             MainConsole.Instance.Info(
                 "terrain rescale <min> <max> - Rescales the current terrain to fit between the given min and max heights" +
                 "\n Min: min terrain height after rescaling" +
@@ -2151,13 +1909,10 @@ namespace Aurora.Modules.Terrain
         private void AddConsoleCommands()
         {
             // Load / Save
-#if (!ISWIN)
-            string supportedFileExtensions = "";
-            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
-                supportedFileExtensions = supportedFileExtensions + (" " + loader.Key + " (" + loader.Value + ")");
-#else
-            string supportedFileExtensions = m_loaders.Aggregate("", (current, loader) => current + (" " + loader.Key + " (" + loader.Value + ")"));
-#endif
+            string supportedFileExtensions = m_loaders.Aggregate("",
+                                                                 (current, loader) =>
+                                                                 current +
+                                                                 (" " + loader.Key + " (" + loader.Value + ")"));
 
             if (MainConsole.Instance != null)
             {

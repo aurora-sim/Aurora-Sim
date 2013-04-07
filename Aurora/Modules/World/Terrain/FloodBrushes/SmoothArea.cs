@@ -26,9 +26,10 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Terrain.FloodBrushes
 {
@@ -59,7 +60,7 @@ namespace Aurora.Modules.Terrain.FloodBrushes
                         for (l = 0 - area; l < area; l += step)
                         {
                             avgsteps++;
-                            average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map, new List<IScene>());
+                            average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map);
                         }
                     }
 

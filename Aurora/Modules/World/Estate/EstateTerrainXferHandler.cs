@@ -25,9 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using OpenMetaverse;
 using Aurora.Framework;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
+using OpenMetaverse;
+using System;
 
 namespace Aurora.Modules.Estate
 {
@@ -42,6 +45,7 @@ namespace Aurora.Modules.Estate
         #endregion
 
         private readonly AssetBase m_asset;
+        private readonly object _lock = new object();
 
         private TerrainUploadComplete handlerTerrainUploadDone;
         public ulong mXferID;
@@ -67,34 +71,38 @@ namespace Aurora.Modules.Estate
         }
 
         /// <summary>
-        ///   Process transfer data received from the client.
+        ///     Process transfer data received from the client.
         /// </summary>
-        /// <param name = "xferID"></param>
-        /// <param name = "packetID"></param>
-        /// <param name = "data"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="xferID"></param>
+        /// <param name="packetID"></param>
+        /// <param name="data"></param>
         public void XferReceive(IClientAPI remoteClient, ulong xferID, uint packetID, byte[] data)
         {
             if (mXferID == xferID)
             {
-                if (m_asset.Data.Length > 1)
+                lock (_lock)
                 {
-                    byte[] destinationArray = new byte[m_asset.Data.Length + data.Length];
-                    Array.Copy(m_asset.Data, 0, destinationArray, 0, m_asset.Data.Length);
-                    Array.Copy(data, 0, destinationArray, m_asset.Data.Length, data.Length);
-                    m_asset.Data = destinationArray;
-                }
-                else
-                {
-                    byte[] buffer2 = new byte[data.Length - 4];
-                    Array.Copy(data, 4, buffer2, 0, data.Length - 4);
-                    m_asset.Data = buffer2;
-                }
+                    if (m_asset.Data.Length > 1)
+                    {
+                        byte[] destinationArray = new byte[m_asset.Data.Length + data.Length];
+                        Array.Copy(m_asset.Data, 0, destinationArray, 0, m_asset.Data.Length);
+                        Array.Copy(data, 0, destinationArray, m_asset.Data.Length, data.Length);
+                        m_asset.Data = destinationArray;
+                    }
+                    else
+                    {
+                        byte[] buffer2 = new byte[data.Length - 4];
+                        Array.Copy(data, 4, buffer2, 0, data.Length - 4);
+                        m_asset.Data = buffer2;
+                    }
 
-                remoteClient.SendConfirmXfer(xferID, packetID);
+                    remoteClient.SendConfirmXfer(xferID, packetID);
 
-                if ((packetID & 0x80000000) != 0)
-                {
-                    SendCompleteMessage(remoteClient);
+                    if ((packetID & 0x80000000) != 0)
+                    {
+                        SendCompleteMessage(remoteClient);
+                    }
                 }
             }
         }

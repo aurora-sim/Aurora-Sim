@@ -28,9 +28,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -86,7 +89,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             if (_OnNewUser != null)
             {
-                NewUserEventArgs e = new NewUserEventArgs { Avatar = new SPAvatar(m_internalScene, presence.UUID, m_security) };
+                NewUserEventArgs e = new NewUserEventArgs
+                                         {
+                                             Avatar =
+                                                 new SPAvatar(m_internalScene, presence.UUID,
+                                                              m_security)
+                                         };
                 _OnNewUser(this, e);
             }
         }
@@ -204,14 +212,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                 {
                     List<ILandObject> m_los = parcelManagement.AllParcels();
 
-#if (!ISWIN)
-                    foreach (ILandObject landObject in m_los)
-                    {
-                        m_parcels.Add(new LOParcel(m_internalScene, landObject.LandData.LocalID));
-                    }
-#else
-                    m_parcels.AddRange(m_los.Select(landObject => new LOParcel(m_internalScene, landObject.LandData.LocalID)).Cast<IParcel>());
-#endif
+                    m_parcels.AddRange(
+                        m_los.Select(landObject => new LOParcel(m_internalScene, landObject.LandData.LocalID))
+                             .Cast<IParcel>());
                 }
 
                 return m_parcels.ToArray();

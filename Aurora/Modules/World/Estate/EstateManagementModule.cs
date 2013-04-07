@@ -25,21 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using OpenSim.Region.Framework.Interfaces;
-using Aurora.Framework.Servers.HttpServer;
-using OpenMetaverse.StructuredData;
-using OpenSim.Services.Interfaces;
 using RegionFlags = OpenMetaverse.RegionFlags;
 
 namespace Aurora.Modules.Estate
@@ -63,47 +69,48 @@ namespace Aurora.Modules.Estate
             uint sun = 0;
 
             if (!m_scene.RegionInfo.EstateSettings.UseGlobalTime)
-                sun=(uint)(m_scene.RegionInfo.EstateSettings.SunPosition*1024.0) + 0x1800;
+                sun = (uint) (m_scene.RegionInfo.EstateSettings.SunPosition*1024.0) + 0x1800;
             UUID estateOwner = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
             //if (m_scene.Permissions.IsGod(remote_client.AgentId))
             //    estateOwner = remote_client.AgentId;
 
             remote_client.SendDetailedEstateData(invoice,
-                    m_scene.RegionInfo.EstateSettings.EstateName,
-                    m_scene.RegionInfo.EstateSettings.EstateID,
-                    m_scene.RegionInfo.EstateSettings.ParentEstateID,
-                    GetEstateFlags(),
-                    sun,
-                    m_scene.RegionInfo.RegionSettings.Covenant,
-                    m_scene.RegionInfo.RegionSettings.CovenantLastUpdated,
-                    m_scene.RegionInfo.EstateSettings.AbuseEmail,
-                    estateOwner);
+                                                 m_scene.RegionInfo.EstateSettings.EstateName,
+                                                 m_scene.RegionInfo.EstateSettings.EstateID,
+                                                 m_scene.RegionInfo.EstateSettings.ParentEstateID,
+                                                 GetEstateFlags(),
+                                                 sun,
+                                                 m_scene.RegionInfo.RegionSettings.Covenant,
+                                                 m_scene.RegionInfo.RegionSettings.CovenantLastUpdated,
+                                                 m_scene.RegionInfo.EstateSettings.AbuseEmail,
+                                                 estateOwner);
 
             remote_client.SendEstateList(invoice,
-                    (int)EstateTools.EstateAccessReplyDelta.EstateManagers,
-                    m_scene.RegionInfo.EstateSettings.EstateManagers,
-                    m_scene.RegionInfo.EstateSettings.EstateID);
+                                         (int) EstateTools.EstateAccessReplyDelta.EstateManagers,
+                                         m_scene.RegionInfo.EstateSettings.EstateManagers,
+                                         m_scene.RegionInfo.EstateSettings.EstateID);
 
             remote_client.SendEstateList(invoice,
-                    (int)EstateTools.EstateAccessReplyDelta.AllowedUsers,
-                    m_scene.RegionInfo.EstateSettings.EstateAccess,
-                    m_scene.RegionInfo.EstateSettings.EstateID);
+                                         (int) EstateTools.EstateAccessReplyDelta.AllowedUsers,
+                                         m_scene.RegionInfo.EstateSettings.EstateAccess,
+                                         m_scene.RegionInfo.EstateSettings.EstateID);
 
             remote_client.SendEstateList(invoice,
-                    (int)EstateTools.EstateAccessReplyDelta.AllowedGroups,
-                    m_scene.RegionInfo.EstateSettings.EstateGroups,
-                    m_scene.RegionInfo.EstateSettings.EstateID);
+                                         (int) EstateTools.EstateAccessReplyDelta.AllowedGroups,
+                                         m_scene.RegionInfo.EstateSettings.EstateGroups,
+                                         m_scene.RegionInfo.EstateSettings.EstateID);
 
             remote_client.SendBannedUserList(invoice,
-                    m_scene.RegionInfo.EstateSettings.EstateBans,
-                    m_scene.RegionInfo.EstateSettings.EstateID);
+                                             m_scene.RegionInfo.EstateSettings.EstateBans,
+                                             m_scene.RegionInfo.EstateSettings.EstateID);
         }
 
-        private void estateSetRegionInfoHandler(IClientAPI remoteClient, bool blockTerraform, bool noFly, bool allowDamage, bool AllowLandResell, int maxAgents, float objectBonusFactor,
+        private void estateSetRegionInfoHandler(IClientAPI remoteClient, bool blockTerraform, bool noFly,
+                                                bool allowDamage, bool AllowLandResell, int maxAgents,
+                                                float objectBonusFactor,
                                                 int matureLevel, bool restrictPushObject, bool allowParcelChanges)
         {
-
             m_scene.RegionInfo.RegionSettings.BlockTerraform = blockTerraform;
 
             m_scene.RegionInfo.RegionSettings.BlockFly = noFly;
@@ -111,7 +118,6 @@ namespace Aurora.Modules.Estate
             m_scene.RegionInfo.RegionSettings.AllowDamage = allowDamage;
 
             m_scene.RegionInfo.RegionSettings.RestrictPushing = restrictPushObject;
-
 
 
             m_scene.RegionInfo.RegionSettings.AllowLandResell = AllowLandResell;
@@ -129,7 +135,6 @@ namespace Aurora.Modules.Estate
 
             m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide = allowParcelChanges;
 
-            m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
 
             sendRegionInfoPacketToAll();
@@ -141,18 +146,16 @@ namespace Aurora.Modules.Estate
             retVal["DispatchRegionInfo"] = CapsUtil.CreateCAPS("DispatchRegionInfo", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["DispatchRegionInfo"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return DispatchRegionInfo(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return DispatchRegionInfo(request, agentID); }));
             retVal["EstateChangeInfo"] = CapsUtil.CreateCAPS("EstateChangeInfo", "");
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["EstateChangeInfo"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return EstateChangeInfo(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return EstateChangeInfo(request, agentID); }));
             return retVal;
         }
 
@@ -161,7 +164,7 @@ namespace Aurora.Modules.Estate
             if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
                 return new byte[0];
 
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
             string estate_name = rm["estate_name"].AsString();
             bool allow_direct_teleport = rm["allow_direct_teleport"].AsBoolean();
@@ -172,7 +175,7 @@ namespace Aurora.Modules.Estate
             bool is_externally_visible = rm["is_externally_visible"].AsBoolean();
             bool is_sun_fixed = rm["is_sun_fixed"].AsBoolean();
             string owner_abuse_email = rm["owner_abuse_email"].AsString();
-            double sun_hour = rm["sun_hour"].AsReal ();
+            double sun_hour = rm["sun_hour"].AsReal();
             m_scene.RegionInfo.EstateSettings.EstateName = estate_name;
             m_scene.RegionInfo.EstateSettings.AllowDirectTeleport = allow_direct_teleport;
             m_scene.RegionInfo.EstateSettings.AllowVoice = allow_voice_chat;
@@ -209,7 +212,7 @@ namespace Aurora.Modules.Estate
             if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
                 return new byte[0];
 
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
             int agent_limit = rm["agent_limit"].AsInteger();
             bool allow_damage = rm["allow_damage"].AsBoolean();
@@ -243,7 +246,6 @@ namespace Aurora.Modules.Estate
             m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide = allow_parcel_changes;
             m_scene.RegionInfo.RegionSettings.BlockShowInSearch = block_parcel_search;
 
-            m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
 
             sendRegionInfoPacketToAll();
@@ -256,7 +258,7 @@ namespace Aurora.Modules.Estate
             setEstateTerrainBaseTexture(null, level, texture);
             sendRegionHandshakeToAll();
         }
- 
+
         public void setEstateTerrainBaseTexture(IClientAPI remoteClient, int level, UUID texture)
         {
             if (texture == UUID.Zero)
@@ -283,7 +285,7 @@ namespace Aurora.Modules.Estate
         {
             setEstateTerrainTextureHeights(null, corner, lowValue, highValue);
         }
- 
+
         public void setEstateTerrainTextureHeights(IClientAPI client, int corner, float lowValue, float highValue)
         {
             if (m_scene.Permissions.CanIssueEstateCommand(client.AgentId, true))
@@ -312,16 +314,15 @@ namespace Aurora.Modules.Estate
 
         private void handleCommitEstateTerrainTextureRequest(IClientAPI remoteClient)
         {
-            m_scene.RegionInfo.RegionSettings.Save ();
-            TriggerRegionInfoChange ();
-            sendRegionHandshakeToAll ();
+            TriggerRegionInfoChange();
+            sendRegionHandshakeToAll();
             //sendRegionInfoPacketToAll ();
         }
 
         public void setRegionTerrainSettings(UUID AgentID, float WaterHeight,
-                float TerrainRaiseLimit, float TerrainLowerLimit,
-                bool UseEstateSun, bool UseFixedSun, float SunHour,
-                bool UseGlobal, bool EstateFixedSun, float EstateSunHour)
+                                             float TerrainRaiseLimit, float TerrainLowerLimit,
+                                             bool UseEstateSun, bool UseFixedSun, float SunHour,
+                                             bool UseGlobal, bool EstateFixedSun, float EstateSunHour)
         {
             if (AgentID == UUID.Zero || m_scene.Permissions.CanIssueEstateCommand(AgentID, false))
             {
@@ -347,7 +348,6 @@ namespace Aurora.Modules.Estate
                 //MainConsole.Instance.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
 
                 sendRegionInfoPacketToAll();
-                m_scene.RegionInfo.RegionSettings.Save();
                 TriggerRegionInfoChange();
             }
         }
@@ -377,7 +377,6 @@ namespace Aurora.Modules.Estate
         {
             m_scene.RegionInfo.RegionSettings.Covenant = estateCovenantID;
             m_scene.RegionInfo.RegionSettings.CovenantLastUpdated = Util.UnixTimeSinceEpoch();
-            m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
         }
 
@@ -396,32 +395,34 @@ namespace Aurora.Modules.Estate
             MoreToCome = 1 << 10
         }
 
-        private void handleEstateAccessDeltaRequest(IClientAPI remote_client, UUID invoice, int estateAccessType, UUID user)
+        private void handleEstateAccessDeltaRequest(IClientAPI remote_client, UUID invoice, int estateAccessType,
+                                                    UUID user)
         {
             // EstateAccessDelta handles Estate Managers, Sim Access, Sim Banlist, allowed Groups..  etc.
 
             if (user == m_scene.RegionInfo.EstateSettings.EstateOwner)
                 return; // never process EO
 
-            if ((estateAccessType & (int)AccessDeltaRequest.AddAllowedUser) != 0) // User add
+            if ((estateAccessType & (int) AccessDeltaRequest.AddAllowedUser) != 0) // User add
             {
                 if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true))
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector> ();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
-                        List<EstateSettings> estateIDs = connector.GetEstates (remote_client.AgentId);
+                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
                         foreach (EstateSettings estate in estateIDs)
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                estate.AddEstateUser (user);
-                                estate.Save ();
+                                estate.AddEstateUser(user);
+                                estate.Save();
                             }
                         }
                     }
                     m_scene.RegionInfo.EstateSettings.AddEstateUser(user);
-                    if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
+                        //1024 means more than one is being sent
                     {
                         m_scene.RegionInfo.EstateSettings.Save();
                         TriggerEstateInfoChange();
@@ -432,25 +433,27 @@ namespace Aurora.Modules.Estate
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
             }
-            if ((estateAccessType & (int)AccessDeltaRequest.RemoveAllowedUser) != 0) // User remove
+            if ((estateAccessType & (int) AccessDeltaRequest.RemoveAllowedUser) != 0) // User remove
             {
-                IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector> ();
+                IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                 if ((estateAccessType & 1) != 0 && connector != null) // All estates
                 {
-                    List<EstateSettings> estateIDs = connector.GetEstates (remote_client.AgentId);
+                    List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
                     foreach (EstateSettings estate in estateIDs)
                     {
                         if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                         {
-                            estate.RemoveEstateUser (user);
-                            estate.Save ();
+                            estate.RemoveEstateUser(user);
+                            estate.Save();
                         }
                     }
                 }
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
+                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
+                    m_scene.Permissions.BypassPermissions())
                 {
                     m_scene.RegionInfo.EstateSettings.RemoveEstateUser(user);
-                    if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
+                        //1024 means more than one is being sent
                     {
                         m_scene.RegionInfo.EstateSettings.Save();
                         TriggerEstateInfoChange();
@@ -461,25 +464,27 @@ namespace Aurora.Modules.Estate
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
             }
-            if ((estateAccessType & (int)AccessDeltaRequest.AddAllowedGroup) != 0) // Group add
+            if ((estateAccessType & (int) AccessDeltaRequest.AddAllowedGroup) != 0) // Group add
             {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
+                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
+                    m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector> ();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
-                        List<EstateSettings> estateIDs = connector.GetEstates (remote_client.AgentId);
+                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
                         foreach (EstateSettings estate in estateIDs)
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                estate.AddEstateGroup (user);
-                                estate.Save ();
+                                estate.AddEstateGroup(user);
+                                estate.Save();
                             }
                         }
                     }
                     m_scene.RegionInfo.EstateSettings.AddEstateGroup(user);
-                    if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
+                        //1024 means more than one is being sent
                     {
                         m_scene.RegionInfo.EstateSettings.Save();
                         TriggerEstateInfoChange();
@@ -490,25 +495,27 @@ namespace Aurora.Modules.Estate
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
             }
-            if ((estateAccessType & (int)AccessDeltaRequest.RemoveAllowedGroup) != 0) // Group remove
+            if ((estateAccessType & (int) AccessDeltaRequest.RemoveAllowedGroup) != 0) // Group remove
             {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
+                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
+                    m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector> ();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
-                        List<EstateSettings> estateIDs = connector.GetEstates (remote_client.AgentId);
+                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
                         foreach (EstateSettings estate in estateIDs)
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                estate.RemoveEstateGroup (user);
-                                estate.Save ();
+                                estate.RemoveEstateGroup(user);
+                                estate.Save();
                             }
                         }
                     }
                     m_scene.RegionInfo.EstateSettings.RemoveEstateGroup(user);
-                    if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
+                        //1024 means more than one is being sent
                     {
                         m_scene.RegionInfo.EstateSettings.Save();
                         TriggerEstateInfoChange();
@@ -519,63 +526,51 @@ namespace Aurora.Modules.Estate
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
             }
-            if ((estateAccessType & (int)AccessDeltaRequest.AddBannedUser) != 0) // Ban add
+            if ((estateAccessType & (int) AccessDeltaRequest.AddBannedUser) != 0) // Ban add
             {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false) || m_scene.Permissions.BypassPermissions())
+                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false) ||
+                    m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector> ();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
-                        List<EstateSettings> estateIDs = connector.GetEstates (remote_client.AgentId);
+                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
                         foreach (EstateSettings estate in estateIDs)
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                EstateBan[] innerbanlistcheck = estate.EstateBans;
+                                List<EstateBan> innerbanlistcheck = estate.EstateBans;
 
-#if (!ISWIN)
-                                bool inneralreadyInList = false;
-                                foreach (EstateBan t in innerbanlistcheck)
-                                {
-                                    if (user == t.BannedUserID)
-                                    {
-                                        inneralreadyInList = true;
-                                        break;
-                                    }
-                                }
-#else
                                 bool inneralreadyInList = innerbanlistcheck.Any(t => user == t.BannedUserID);
-#endif
 
                                 if (!inneralreadyInList)
                                 {
                                     EstateBan item = new EstateBan {BannedUserID = user, EstateID = estate.EstateID};
 
-                                    IScenePresence SP = m_scene.GetScenePresence (user);
-                                    item.BannedHostAddress = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP ()).Address.ToString () : "0.0.0.0";
-                                    item.BannedHostIPMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP ()).Address.ToString () : "0.0.0.0";
-                                    item.BannedHostNameMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP ()).Address.ToString () : "0.0.0.0";
-                                    estate.AddBan (item);
-                                    estate.Save ();
+                                    IScenePresence SP = m_scene.GetScenePresence(user);
+                                    item.BannedHostAddress = (SP != null)
+                                                                 ? ((System.Net.IPEndPoint)
+                                                                    SP.ControllingClient.GetClientEP()).Address.ToString
+                                                                       ()
+                                                                 : "0.0.0.0";
+                                    item.BannedHostIPMask = (SP != null)
+                                                                ? ((System.Net.IPEndPoint)
+                                                                   SP.ControllingClient.GetClientEP()).Address.ToString()
+                                                                : "0.0.0.0";
+                                    item.BannedHostNameMask = (SP != null)
+                                                                  ? ((System.Net.IPEndPoint)
+                                                                     SP.ControllingClient.GetClientEP()).Address
+                                                                                                        .ToString()
+                                                                  : "0.0.0.0";
+                                    estate.AddBan(item);
+                                    estate.Save();
                                 }
                             }
                         }
                     }
-                    EstateBan[] banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
+                    List<EstateBan> banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 
-#if (!ISWIN)
-                    bool alreadyInList = false;
-                    foreach (EstateBan t in banlistcheck)
-                    {
-                        if (user == t.BannedUserID)
-                        {
-                            alreadyInList = true;
-                            break;
-                        }
-                    }
-#else
                     bool alreadyInList = banlistcheck.Any(t => user == t.BannedUserID);
-#endif
 
                     if (!alreadyInList)
                     {
@@ -586,15 +581,19 @@ namespace Aurora.Modules.Estate
                                                  BannedHostAddress = "0.0.0.0"
                                              };
 
-                        IScenePresence SP = m_scene.GetScenePresence (user);
-                        item.BannedHostIPMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP()).Address.ToString() : "0.0.0.0";
+                        IScenePresence SP = m_scene.GetScenePresence(user);
+                        item.BannedHostIPMask = (SP != null)
+                                                    ? ((System.Net.IPEndPoint) SP.ControllingClient.GetClientEP())
+                                                          .Address.ToString()
+                                                    : "0.0.0.0";
 
                         m_scene.RegionInfo.EstateSettings.AddBan(item);
 
                         //Trigger the event
                         m_scene.AuroraEventManager.FireGenericEventHandler("BanUser", user);
 
-                        if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+                        if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
+                            //1024 means more than one is being sent
                         {
                             m_scene.RegionInfo.EstateSettings.Save();
                             TriggerEstateInfoChange();
@@ -604,16 +603,18 @@ namespace Aurora.Modules.Estate
                         {
                             if (!SP.IsChildAgent)
                             {
-                                IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule>();
+                                IEntityTransferModule transferModule =
+                                    m_scene.RequestModuleInterface<IEntityTransferModule>();
                                 if (transferModule != null)
                                     transferModule.TeleportHome(user, SP.ControllingClient);
                             }
                             else
                             {
                                 //Close them in the sim
-                                IEntityTransferModule transferModule = SP.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                                IEntityTransferModule transferModule =
+                                    SP.Scene.RequestModuleInterface<IEntityTransferModule>();
                                 if (transferModule != null)
-                                    transferModule.IncomingCloseAgent (SP.Scene, SP.UUID);
+                                    transferModule.IncomingCloseAgent(SP.Scene, SP.UUID);
                             }
                         }
                     }
@@ -627,19 +628,20 @@ namespace Aurora.Modules.Estate
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
             }
-            if ((estateAccessType & (int)AccessDeltaRequest.RemoveBannedUser) != 0) // Ban remove
+            if ((estateAccessType & (int) AccessDeltaRequest.RemoveBannedUser) != 0) // Ban remove
             {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false) || m_scene.Permissions.BypassPermissions())
+                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false) ||
+                    m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector> ();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
-                        List<EstateSettings> estateIDs = connector.GetEstates (remote_client.AgentId);
+                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
                         foreach (EstateSettings estate in estateIDs)
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                EstateBan[] innerbanlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
+                                List<EstateBan> innerbanlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 
                                 bool inneralreadyInList = false;
                                 EstateBan innerlistitem = null;
@@ -656,13 +658,13 @@ namespace Aurora.Modules.Estate
 
                                 if (inneralreadyInList)
                                 {
-                                    m_scene.RegionInfo.EstateSettings.RemoveBan (innerlistitem.BannedUserID);
+                                    m_scene.RegionInfo.EstateSettings.RemoveBan(innerlistitem.BannedUserID);
                                 }
-                                estate.Save ();
+                                estate.Save();
                             }
                         }
                     }
-                    EstateBan[] banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
+                    List<EstateBan> banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 
                     bool alreadyInList = false;
                     EstateBan listitem = null;
@@ -683,7 +685,8 @@ namespace Aurora.Modules.Estate
                     if (alreadyInList)
                     {
                         m_scene.RegionInfo.EstateSettings.RemoveBan(listitem.BannedUserID);
-                        if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+                        if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
+                            //1024 means more than one is being sent
                         {
                             m_scene.RegionInfo.EstateSettings.Save();
                             TriggerEstateInfoChange();
@@ -699,25 +702,27 @@ namespace Aurora.Modules.Estate
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
             }
-            if ((estateAccessType & (int)AccessDeltaRequest.AddEstateManager) != 0) // Manager add
+            if ((estateAccessType & (int) AccessDeltaRequest.AddEstateManager) != 0) // Manager add
             {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
+                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
+                    m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector> ();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
-                        List<EstateSettings> estateIDs = connector.GetEstates (remote_client.AgentId);
+                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
                         foreach (EstateSettings estate in estateIDs)
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                estate.AddEstateManager (user);
-                                estate.Save ();
+                                estate.AddEstateManager(user);
+                                estate.Save();
                             }
                         }
                     }
                     m_scene.RegionInfo.EstateSettings.AddEstateManager(user);
-                    if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
+                        //1024 means more than one is being sent
                     {
                         m_scene.RegionInfo.EstateSettings.Save();
                         TriggerEstateInfoChange();
@@ -728,25 +733,27 @@ namespace Aurora.Modules.Estate
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
             }
-            if ((estateAccessType & (int)AccessDeltaRequest.RemoveEstateManager) != 0) // Manager remove
+            if ((estateAccessType & (int) AccessDeltaRequest.RemoveEstateManager) != 0) // Manager remove
             {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) || m_scene.Permissions.BypassPermissions())
+                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
+                    m_scene.Permissions.BypassPermissions())
                 {
-                    IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector> ();
+                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                     if ((estateAccessType & 1) != 0 && connector != null) // All estates
                     {
-                        List<EstateSettings> estateIDs = connector.GetEstates (remote_client.AgentId);
+                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
                         foreach (EstateSettings estate in estateIDs)
                         {
                             if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
                             {
-                                estate.RemoveEstateManager (user);
-                                estate.Save ();
+                                estate.RemoveEstateManager(user);
+                                estate.Save();
                             }
                         }
                     }
                     m_scene.RegionInfo.EstateSettings.RemoveEstateManager(user);
-                    if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
+                        //1024 means more than one is being sent
                     {
                         m_scene.RegionInfo.EstateSettings.Save();
                         TriggerEstateInfoChange();
@@ -757,12 +764,19 @@ namespace Aurora.Modules.Estate
                     remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
                 }
             }
-            if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
+            if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
             {
-                remote_client.SendEstateList(invoice, (int)EstateTools.EstateAccessReplyDelta.AllowedUsers, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
-                remote_client.SendEstateList(invoice, (int)EstateTools.EstateAccessReplyDelta.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
-                remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
-                remote_client.SendEstateList(invoice, (int)EstateTools.EstateAccessReplyDelta.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendEstateList(invoice, (int) EstateTools.EstateAccessReplyDelta.AllowedUsers,
+                                             m_scene.RegionInfo.EstateSettings.EstateAccess,
+                                             m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendEstateList(invoice, (int) EstateTools.EstateAccessReplyDelta.AllowedGroups,
+                                             m_scene.RegionInfo.EstateSettings.EstateGroups,
+                                             m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans,
+                                                 m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendEstateList(invoice, (int) EstateTools.EstateAccessReplyDelta.EstateManagers,
+                                             m_scene.RegionInfo.EstateSettings.EstateManagers,
+                                             m_scene.RegionInfo.EstateSettings.EstateID);
             }
         }
 
@@ -770,7 +784,7 @@ namespace Aurora.Modules.Estate
             IClientAPI remote_client, UUID invoice, UUID senderID, UUID sessionID, string senderName, string message)
         {
             IDialogModule dm = m_scene.RequestModuleInterface<IDialogModule>();
-            
+
             if (dm != null)
                 dm.SendNotificationToUsersInRegion(senderID, senderName, message);
         }
@@ -781,18 +795,14 @@ namespace Aurora.Modules.Estate
             TriggerEstateMessage(senderID, senderName, message);
         }
 
-        private void handleEstateDebugRegionRequest(IClientAPI remote_client, UUID invoice, UUID senderID, bool scripted, bool collisionEvents, bool physics)
+        private void handleEstateDebugRegionRequest(IClientAPI remote_client, UUID invoice, UUID senderID, bool scripted,
+                                                    bool collisionEvents, bool physics)
         {
             m_scene.RegionInfo.RegionSettings.DisablePhysics = physics;
-
             m_scene.RegionInfo.RegionSettings.DisableScripts = scripted;
-
             m_scene.RegionInfo.RegionSettings.DisableCollisions = collisionEvents;
 
-
-            m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
-
             SetSceneCoreDebug(scripted, collisionEvents, physics);
         }
 
@@ -810,35 +820,36 @@ namespace Aurora.Modules.Estate
                 {
                     MainConsole.Instance.Info("[SCENEDEBUG]: Starting all Scripts in Scene");
 
-                    ISceneEntity[] entities = m_scene.Entities.GetEntities ();
+                    ISceneEntity[] entities = m_scene.Entities.GetEntities();
                     foreach (ISceneEntity ent in entities)
                     {
                         ent.CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero, false);
                     }
                 }
-                m_scene.RegionInfo.RegionSettings.DisableScripts = !ScriptEngine;
+                m_scene.RegionInfo.RegionSettings.DisableScripts = ScriptEngine;
             }
 
             if (m_scene.RegionInfo.RegionSettings.DisablePhysics == !PhysicsEngine)
             {
-                m_scene.RegionInfo.RegionSettings.DisablePhysics = !PhysicsEngine;
+                m_scene.RegionInfo.RegionSettings.DisablePhysics = PhysicsEngine;
             }
 
             if (m_scene.RegionInfo.RegionSettings.DisableCollisions == !CollisionEvents)
             {
-                m_scene.RegionInfo.RegionSettings.DisableCollisions = !CollisionEvents;
-                m_scene.PhysicsScene.DisableCollisions = m_scene.RegionInfo.RegionSettings.DisableCollisions;
+                m_scene.PhysicsScene.DisableCollisions =
+                    m_scene.RegionInfo.RegionSettings.DisableCollisions = CollisionEvents;
             }
         }
 
-        private void handleEstateTeleportOneUserHomeRequest(IClientAPI remover_client, UUID invoice, UUID senderID, UUID prey)
+        private void handleEstateTeleportOneUserHomeRequest(IClientAPI remover_client, UUID invoice, UUID senderID,
+                                                            UUID prey)
         {
             if (!m_scene.Permissions.CanIssueEstateCommand(remover_client.AgentId, false))
                 return;
 
             if (prey != UUID.Zero)
             {
-                IScenePresence s = m_scene.GetScenePresence (prey);
+                IScenePresence s = m_scene.GetScenePresence(prey);
                 if (s != null)
                 {
                     IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule>();
@@ -854,21 +865,23 @@ namespace Aurora.Modules.Estate
                 return;
 
             m_scene.ForEachScenePresence(delegate(IScenePresence sp)
-            {
-                if (sp.UUID != senderID)
-                {
-                    IScenePresence p = m_scene.GetScenePresence (sp.UUID);
-                    // make sure they are still there, we could be working down a long list
-                    // Also make sure they are actually in the region
-                    if (p != null && !p.IsChildAgent)
-                    {
-                        IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule>();
-                        if (transferModule != null)
-                            transferModule.TeleportHome(p.UUID, p.ControllingClient);
-                    }
-                }
-            });
+                                             {
+                                                 if (sp.UUID != senderID)
+                                                 {
+                                                     IScenePresence p = m_scene.GetScenePresence(sp.UUID);
+                                                     // make sure they are still there, we could be working down a long list
+                                                     // Also make sure they are actually in the region
+                                                     if (p != null && !p.IsChildAgent)
+                                                     {
+                                                         IEntityTransferModule transferModule =
+                                                             m_scene.RequestModuleInterface<IEntityTransferModule>();
+                                                         if (transferModule != null)
+                                                             transferModule.TeleportHome(p.UUID, p.ControllingClient);
+                                                     }
+                                                 }
+                                             });
         }
+
         private void AbortTerrainXferHandler(IClientAPI remoteClient, ulong XferID)
         {
             if (TerrainUploader != null)
@@ -886,8 +899,8 @@ namespace Aurora.Modules.Estate
                     }
                 }
             }
-
         }
+
         private void HandleTerrainApplication(string filename, byte[] terrainData, IClientAPI remoteClient)
         {
             lock (TerrainUploader)
@@ -903,7 +916,8 @@ namespace Aurora.Modules.Estate
 
             if (terr != null)
             {
-                MainConsole.Instance.Warn("[CLIENT]: Got Request to Send Terrain in region " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Warn("[CLIENT]: Got Request to Send Terrain in region " +
+                                          m_scene.RegionInfo.RegionName);
 
                 try
                 {
@@ -932,34 +946,47 @@ namespace Aurora.Modules.Estate
                         MemoryStream terrainStream = new MemoryStream(terrainData);
                         terr.LoadFromStream(filename, terrainStream);
                         terrainStream.Close();
-                        remoteClient.SendAlertMessage("Your terrain was loaded as a ." + x.Extension + " file. It may take a few moments to appear.");
+                        remoteClient.SendAlertMessage("Your terrain was loaded as a ." + x.Extension +
+                                                      " file. It may take a few moments to appear.");
                     }
                 }
                 catch (IOException e)
                 {
-                    MainConsole.Instance.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
-                    remoteClient.SendAlertMessage("There was an IO Exception loading your terrain.  Please check free space.");
+                    MainConsole.Instance.ErrorFormat(
+                        "[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}",
+                        e);
+                    remoteClient.SendAlertMessage(
+                        "There was an IO Exception loading your terrain.  Please check free space.");
 
                     return;
                 }
                 catch (SecurityException e)
                 {
-                    MainConsole.Instance.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
-                    remoteClient.SendAlertMessage("There was a security Exception loading your terrain.  Please check the security on the simulator drive");
+                    MainConsole.Instance.ErrorFormat(
+                        "[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}",
+                        e);
+                    remoteClient.SendAlertMessage(
+                        "There was a security Exception loading your terrain.  Please check the security on the simulator drive");
 
                     return;
                 }
                 catch (UnauthorizedAccessException e)
                 {
-                    MainConsole.Instance.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
-                    remoteClient.SendAlertMessage("There was a security Exception loading your terrain.  Please check the security on the simulator drive");
+                    MainConsole.Instance.ErrorFormat(
+                        "[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}",
+                        e);
+                    remoteClient.SendAlertMessage(
+                        "There was a security Exception loading your terrain.  Please check the security on the simulator drive");
 
                     return;
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.ErrorFormat("[TERRAIN]: Error loading a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
-                    remoteClient.SendAlertMessage("There was a general error loading your terrain.  Please fix the terrain file and try again");
+                    MainConsole.Instance.ErrorFormat(
+                        "[TERRAIN]: Error loading a terrain file uploaded via the estate tools.  It gave us the following error: {0}",
+                        e);
+                    remoteClient.SendAlertMessage(
+                        "There was a general error loading your terrain.  Please fix the terrain file and try again");
                 }
             }
             else
@@ -986,16 +1013,17 @@ namespace Aurora.Modules.Estate
             {
                 remote_client.SendAlertMessage("Another Terrain Upload is in progress.  Please wait your turn!");
             }
-
         }
+
         private void handleTerrainRequest(IClientAPI remote_client, string clientFileName)
         {
             // Save terrain here
             ITerrainModule terr = m_scene.RequestModuleInterface<ITerrainModule>();
-            
+
             if (terr != null)
             {
-                MainConsole.Instance.Warn("[CLIENT]: Got Request to Send Terrain in region " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Warn("[CLIENT]: Got Request to Send Terrain in region " +
+                                          m_scene.RegionInfo.RegionName);
                 if (File.Exists(Util.dataDir() + "/terrain.raw"))
                 {
                     File.Delete(Util.dataDir() + "/terrain.raw");
@@ -1004,10 +1032,10 @@ namespace Aurora.Modules.Estate
 
                 FileStream input = new FileStream(Util.dataDir() + "/terrain.raw", FileMode.Open);
                 byte[] bdata = new byte[input.Length];
-                input.Read(bdata, 0, (int)input.Length);
+                input.Read(bdata, 0, (int) input.Length);
                 remote_client.SendAlertMessage("Terrain file written, starting download...");
                 IXfer xfer = m_scene.RequestModuleInterface<IXfer>();
-                if(xfer != null)
+                if (xfer != null)
                     xfer.AddNewFile("terrain.raw", bdata);
                 // Tell client about it
                 MainConsole.Instance.Warn("[CLIENT]: Sending Terrain to " + remote_client.Name);
@@ -1026,9 +1054,9 @@ namespace Aurora.Modules.Estate
                                                            (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                                        parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID,
                                                        pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
-                                                       redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX,
-                                                       redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY,
-                                                       regionFlags = (uint)GetRegionFlags(),
+                                                       redirectGridX = 0,
+                                                       redirectGridY = 0,
+                                                       regionFlags = GetRegionFlags(),
                                                        simAccess = m_scene.RegionInfo.AccessLevel,
                                                        sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition,
                                                        terrainLowerLimit =
@@ -1048,21 +1076,22 @@ namespace Aurora.Modules.Estate
         private void HandleEstateCovenantRequest(IClientAPI remote_client)
         {
             remote_client.SendEstateCovenantInformation(m_scene.RegionInfo.RegionSettings.Covenant,
-                m_scene.RegionInfo.RegionSettings.CovenantLastUpdated);
+                                                        m_scene.RegionInfo.RegionSettings.CovenantLastUpdated);
         }
 
-        private void HandleLandStatRequest(int parcelID, uint reportType, uint requestFlags, string filter, IClientAPI remoteClient)
+        private void HandleLandStatRequest(int parcelID, uint reportType, uint requestFlags, string filter,
+                                           IClientAPI remoteClient)
         {
             if (!m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, false))
                 return;
 
-            Dictionary<uint, float> SceneData = new Dictionary<uint,float>();
-            
-            if (reportType == (uint)EstateTools.LandStatReportType.TopColliders)
+            Dictionary<uint, float> SceneData = new Dictionary<uint, float>();
+
+            if (reportType == (uint) EstateTools.LandStatReportType.TopColliders)
             {
                 SceneData = m_scene.PhysicsScene.GetTopColliders();
             }
-            else if (reportType == (uint)EstateTools.LandStatReportType.TopScripts)
+            else if (reportType == (uint) EstateTools.LandStatReportType.TopScripts)
             {
                 IScriptModule scriptModule = m_scene.RequestModuleInterface<IScriptModule>();
                 SceneData = scriptModule.GetTopScripts(m_scene.RegionInfo.RegionID);
@@ -1073,7 +1102,7 @@ namespace Aurora.Modules.Estate
             {
                 foreach (uint obj in SceneData.Keys)
                 {
-                    ISceneChildEntity prt = m_scene.GetSceneObjectPart (obj);
+                    ISceneChildEntity prt = m_scene.GetSceneObjectPart(obj);
                     if (prt != null)
                     {
                         if (prt.ParentEntity != null)
@@ -1110,17 +1139,17 @@ namespace Aurora.Modules.Estate
                             SceneReport.Add(lsri);
                         }
                     }
-
                 }
             }
-            remoteClient.SendLandStatReply(reportType, requestFlags, (uint)SceneReport.Count,SceneReport.ToArray());
+            remoteClient.SendLandStatReply(reportType, requestFlags, (uint) SceneReport.Count, SceneReport.ToArray());
         }
 
         private static void LookupUUIDSCompleted(IAsyncResult iar)
         {
-            LookupUUIDS icon = (LookupUUIDS)iar.AsyncState;
+            LookupUUIDS icon = (LookupUUIDS) iar.AsyncState;
             icon.EndInvoke(iar);
         }
+
         private void LookupUUID(List<UUID> uuidLst)
         {
             LookupUUIDS d = LookupUUIDsAsync;
@@ -1129,6 +1158,7 @@ namespace Aurora.Modules.Estate
                           LookupUUIDSCompleted,
                           d);
         }
+
         private void LookupUUIDsAsync(List<UUID> uuidLst)
         {
             UUID[] uuidarr;
@@ -1157,23 +1187,25 @@ namespace Aurora.Modules.Estate
         {
             if (m_scene.Permissions.CanIssueEstateCommand(client.AgentId, false))
             {
-                List<ISceneEntity> prims = new List<ISceneEntity> ();
+                List<ISceneEntity> prims = new List<ISceneEntity>();
                 IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagement != null)
                 {
-                    int containsScript = (flags & (int)SimWideDeletesFlags.ScriptedPrimsOnly);
+                    int containsScript = (flags & (int) SimWideDeletesFlags.ScriptedPrimsOnly);
                     foreach (ILandObject selectedParcel in parcelManagement.AllParcels())
                     {
-                        if ((flags & (int)SimWideDeletesFlags.OthersLandNotUserOnly) == (int)SimWideDeletesFlags.OthersLandNotUserOnly)
+                        if ((flags & (int) SimWideDeletesFlags.OthersLandNotUserOnly) ==
+                            (int) SimWideDeletesFlags.OthersLandNotUserOnly)
                         {
-                            if (selectedParcel.LandData.OwnerID != targetID)//Check to make sure it isn't their land
-                                prims.AddRange (selectedParcel.GetPrimsOverByOwner (targetID, containsScript));
+                            if (selectedParcel.LandData.OwnerID != targetID) //Check to make sure it isn't their land
+                                prims.AddRange(selectedParcel.GetPrimsOverByOwner(targetID, containsScript));
                         }
                             //Other estates flag doesn't seem to get sent by the viewer, so don't touch it
-                        //else if ((flags & (int)SimWideDeletesFlags.ReturnObjectsOtherEstate) == (int)SimWideDeletesFlags.ReturnObjectsOtherEstate)
-                        //    prims.AddRange (selectedParcel.GetPrimsOverByOwner (targetID, containsScript));
-                        else// if ((flags & (int)SimWideDeletesFlags.ReturnObjects) == (int)SimWideDeletesFlags.ReturnObjects)//Return them all
-                            prims.AddRange (selectedParcel.GetPrimsOverByOwner (targetID, containsScript));
+                            //else if ((flags & (int)SimWideDeletesFlags.ReturnObjectsOtherEstate) == (int)SimWideDeletesFlags.ReturnObjectsOtherEstate)
+                            //    prims.AddRange (selectedParcel.GetPrimsOverByOwner (targetID, containsScript));
+                        else
+                            // if ((flags & (int)SimWideDeletesFlags.ReturnObjects) == (int)SimWideDeletesFlags.ReturnObjects)//Return them all
+                            prims.AddRange(selectedParcel.GetPrimsOverByOwner(targetID, containsScript));
                     }
                 }
                 ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
@@ -1193,10 +1225,10 @@ namespace Aurora.Modules.Estate
         public void sendRegionInfoPacketToAll()
         {
             m_scene.ForEachScenePresence(delegate(IScenePresence sp)
-            {
-                if (!sp.IsChildAgent)
-                    HandleRegionInfoRequest(sp.ControllingClient);
-            });
+                                             {
+                                                 if (!sp.IsChildAgent)
+                                                     HandleRegionInfoRequest(sp.ControllingClient);
+                                             });
         }
 
         public void sendRegionHandshake(IClientAPI remoteClient)
@@ -1204,22 +1236,22 @@ namespace Aurora.Modules.Estate
             RegionHandshakeArgs args = new RegionHandshakeArgs
                                            {isEstateManager = m_scene.Permissions.IsGod(remoteClient.AgentId)};
 
-            if (m_scene.RegionInfo.EstateSettings.EstateOwner != UUID.Zero && m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
+            if (m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
                 args.isEstateManager = true;
             else if (m_scene.RegionInfo.EstateSettings.IsEstateManager(remoteClient.AgentId))
                 args.isEstateManager = true;
 
             args.billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor;
-            args.terrainStartHeight0 = (float)m_scene.RegionInfo.RegionSettings.Elevation1SW;
-            args.terrainHeightRange0 = (float)m_scene.RegionInfo.RegionSettings.Elevation2SW;
-            args.terrainStartHeight1 = (float)m_scene.RegionInfo.RegionSettings.Elevation1NW;
-            args.terrainHeightRange1 = (float)m_scene.RegionInfo.RegionSettings.Elevation2NW;
-            args.terrainStartHeight2 = (float)m_scene.RegionInfo.RegionSettings.Elevation1SE;
-            args.terrainHeightRange2 = (float)m_scene.RegionInfo.RegionSettings.Elevation2SE;
-            args.terrainStartHeight3 = (float)m_scene.RegionInfo.RegionSettings.Elevation1NE;
-            args.terrainHeightRange3 = (float)m_scene.RegionInfo.RegionSettings.Elevation2NE;
+            args.terrainStartHeight0 = (float) m_scene.RegionInfo.RegionSettings.Elevation1SW;
+            args.terrainHeightRange0 = (float) m_scene.RegionInfo.RegionSettings.Elevation2SW;
+            args.terrainStartHeight1 = (float) m_scene.RegionInfo.RegionSettings.Elevation1NW;
+            args.terrainHeightRange1 = (float) m_scene.RegionInfo.RegionSettings.Elevation2NW;
+            args.terrainStartHeight2 = (float) m_scene.RegionInfo.RegionSettings.Elevation1SE;
+            args.terrainHeightRange2 = (float) m_scene.RegionInfo.RegionSettings.Elevation2SE;
+            args.terrainStartHeight3 = (float) m_scene.RegionInfo.RegionSettings.Elevation1NE;
+            args.terrainHeightRange3 = (float) m_scene.RegionInfo.RegionSettings.Elevation2NE;
             args.simAccess = m_scene.RegionInfo.AccessLevel;
-            args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+            args.waterHeight = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
             args.regionFlags = GetRegionFlags();
             args.regionName = m_scene.RegionInfo.RegionName;
             args.SimOwner = m_scene.RegionInfo.EstateSettings.EstateOwner;
@@ -1228,39 +1260,13 @@ namespace Aurora.Modules.Estate
             args.terrainBase1 = UUID.Zero;
             args.terrainBase2 = UUID.Zero;
             args.terrainBase3 = UUID.Zero;
-
-            if (!m_scene.RegionInfo.RegionSettings.UsePaintableTerrain)
-            {
-                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
-                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
-                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
-                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
-            }
-            else
-            {
-                args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-                args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-
-                AssetBase paintAsset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
-                if (paintAsset == null)
-                {
-                    paintAsset = new AssetBase(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture,
-                                               "PaintableTerrainTexture-" + m_scene.RegionInfo.RegionID,
-                                               AssetType.Texture, UUID.Zero) {Flags = AssetFlags.Deletable};
-                    AssetBase defaultTexture = m_scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
-                    if (defaultTexture == null)
-                        //Erm... what to do!
-                        return;
-
-                    paintAsset.Data = defaultTexture.Data;//Eventually we need to replace this with an interpolation of the existing textures!
-                    paintAsset.ID = m_scene.AssetService.Store(paintAsset);
-                }
-            }
+            args.terrainDetail0 = m_scene.RegionInfo.RegionSettings.TerrainTexture1;
+            args.terrainDetail1 = m_scene.RegionInfo.RegionSettings.TerrainTexture2;
+            args.terrainDetail2 = m_scene.RegionInfo.RegionSettings.TerrainTexture3;
+            args.terrainDetail3 = m_scene.RegionInfo.RegionSettings.TerrainTexture4;
             args.RegionType = Utils.StringToBytes(m_scene.RegionInfo.RegionType);
 
-            remoteClient.SendRegionHandshake(m_scene.RegionInfo,args);
+            remoteClient.SendRegionHandshake(m_scene.RegionInfo, args);
         }
 
         public void sendRegionHandshakeToAll()
@@ -1268,7 +1274,8 @@ namespace Aurora.Modules.Estate
             m_scene.ForEachClient(sendRegionHandshake);
         }
 
-        public void handleEstateChangeInfo(IClientAPI remoteClient, UUID invoice, UUID senderID, UInt32 parms1, UInt32 parms2)
+        public void handleEstateChangeInfo(IClientAPI remoteClient, UUID invoice, UUID senderID, UInt32 parms1,
+                                           UInt32 parms2)
         {
             if (parms2 == 0)
             {
@@ -1297,7 +1304,8 @@ namespace Aurora.Modules.Estate
 
             m_scene.RegionInfo.EstateSettings.DenyMinors = (parms1 & 0x40000000) != 0;
 
-            m_scene.RegionInfo.RegionSettings.BlockShowInSearch = (parms1 & (uint)RegionFlags.BlockParcelSearch) == (uint)RegionFlags.BlockParcelSearch;
+            m_scene.RegionInfo.RegionSettings.BlockShowInSearch = (parms1 & (uint) RegionFlags.BlockParcelSearch) ==
+                                                                  (uint) RegionFlags.BlockParcelSearch;
 
             m_scene.RegionInfo.EstateSettings.Save();
             TriggerEstateInfoChange();
@@ -1324,15 +1332,16 @@ namespace Aurora.Modules.Estate
             int x = (args.Length > 5 ? int.Parse(args[5]) : -1);
             int y = (args.Length > 6 ? int.Parse(args[6]) : -1);
 
-            if (x == -1 || (m_scene.RegionInfo.RegionLocX / Constants.RegionSize) == x)
+            if (x == -1 || (m_scene.RegionInfo.RegionLocX/Constants.RegionSize) == x)
             {
-                if (y == -1 || (m_scene.RegionInfo.RegionLocY / Constants.RegionSize) == y)
+                if (y == -1 || (m_scene.RegionInfo.RegionLocY/Constants.RegionSize) == y)
                 {
                     int corner = int.Parse(num);
                     UUID texture = UUID.Parse(uuid);
 
-                    MainConsole.Instance.Debug("[ESTATEMODULE] Setting terrain textures for " + m_scene.RegionInfo.RegionName +
-                                string.Format(" (C#{0} = {1})", corner, texture));
+                    MainConsole.Instance.Debug("[ESTATEMODULE] Setting terrain textures for " +
+                                               m_scene.RegionInfo.RegionName +
+                                               string.Format(" (C#{0} = {1})", corner, texture));
 
                     switch (corner)
                     {
@@ -1349,14 +1358,12 @@ namespace Aurora.Modules.Estate
                             m_scene.RegionInfo.RegionSettings.TerrainTexture4 = texture;
                             break;
                     }
-                    m_scene.RegionInfo.RegionSettings.Save();
                     TriggerRegionInfoChange();
                     sendRegionInfoPacketToAll();
-
                 }
             }
-         }
- 
+        }
+
         public void consoleSetTerrainHeights(string[] args)
         {
             string num = args[3];
@@ -1365,16 +1372,16 @@ namespace Aurora.Modules.Estate
             int x = (args.Length > 6 ? int.Parse(args[6]) : -1);
             int y = (args.Length > 7 ? int.Parse(args[7]) : -1);
 
-            if (x == -1 || (m_scene.RegionInfo.RegionLocX / Constants.RegionSize) == x)
+            if (x == -1 || (m_scene.RegionInfo.RegionLocX/Constants.RegionSize) == x)
             {
-                if (y == -1 || (m_scene.RegionInfo.RegionLocY / Constants.RegionSize) == y)
+                if (y == -1 || (m_scene.RegionInfo.RegionLocY/Constants.RegionSize) == y)
                 {
                     int corner = int.Parse(num);
                     float lowValue = float.Parse(min, Culture.NumberFormatInfo);
                     float highValue = float.Parse(max, Culture.NumberFormatInfo);
 
                     MainConsole.Instance.Debug("[ESTATEMODULE] Setting terrain heights " + m_scene.RegionInfo.RegionName +
-                                string.Format(" (C{0}, {1}-{2}", corner, lowValue, highValue));
+                                               string.Format(" (C{0}, {1}-{2}", corner, lowValue, highValue));
 
                     switch (corner)
                     {
@@ -1395,7 +1402,6 @@ namespace Aurora.Modules.Estate
                             m_scene.RegionInfo.RegionSettings.Elevation2NE = highValue;
                             break;
                     }
-                    m_scene.RegionInfo.RegionSettings.Save();
                     TriggerRegionInfoChange();
                     sendRegionHandshakeToAll();
                 }
@@ -1404,9 +1410,7 @@ namespace Aurora.Modules.Estate
 
         #endregion
 
-
-
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IEstateModule>(this);
@@ -1417,25 +1421,25 @@ namespace Aurora.Modules.Estate
 
             if (MainConsole.Instance != null)
             {
-                MainConsole.Instance.Commands.AddCommand (
-                                    "set terrain texture",
-                                    "set terrain texture [number] [uuid] [x] [y]",
-                                    "Sets the terrain [number] to [uuid], if [x] or [y] are specified, it will only " +
-                                    "set it on regions with a matching coordinate. Specify -1 in [x] or [y] to wildcard" +
-                                    " that coordinate.",
-                                    consoleSetTerrainTexture);
+                MainConsole.Instance.Commands.AddCommand(
+                    "set terrain texture",
+                    "set terrain texture [number] [uuid] [x] [y]",
+                    "Sets the terrain [number] to [uuid], if [x] or [y] are specified, it will only " +
+                    "set it on regions with a matching coordinate. Specify -1 in [x] or [y] to wildcard" +
+                    " that coordinate.",
+                    consoleSetTerrainTexture);
 
-                MainConsole.Instance.Commands.AddCommand (
-                                    "set terrain heights",
-                                    "set terrain heights [corner] [min] [max] [x] [y]",
-                                    "Sets the terrain texture heights on corner #[corner] to [min]/[max], if [x] or [y] are specified, it will only " +
-                                    "set it on regions with a matching coordinate. Specify -1 in [x] or [y] to wildcard" +
-                                    " that coordinate. Corner # SW = 0, NW = 1, SE = 2, NE = 3.",
-                                    consoleSetTerrainHeights);
+                MainConsole.Instance.Commands.AddCommand(
+                    "set terrain heights",
+                    "set terrain heights [corner] [min] [max] [x] [y]",
+                    "Sets the terrain texture heights on corner #[corner] to [min]/[max], if [x] or [y] are specified, it will only " +
+                    "set it on regions with a matching coordinate. Specify -1 in [x] or [y] to wildcard" +
+                    " that coordinate. Corner # SW = 0, NW = 1, SE = 2, NE = 3.",
+                    consoleSetTerrainHeights);
             }
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scene.UnregisterModuleInterface<IEstateModule>(this);
             m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
@@ -1444,7 +1448,7 @@ namespace Aurora.Modules.Estate
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             // Sets up the sun module based no the saved Estate and Region Settings
             // DO NOT REMOVE or the sun will stop working
@@ -1454,10 +1458,6 @@ namespace Aurora.Modules.Estate
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-        
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -1469,11 +1469,6 @@ namespace Aurora.Modules.Estate
             get { return "EstateManagementModule"; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #endregion
 
         #region Other Functions
@@ -1481,14 +1476,14 @@ namespace Aurora.Modules.Estate
         public void changeWaterHeight(float height)
         {
             setRegionTerrainSettings(UUID.Zero, height,
-                    (float)m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit,
-                    (float)m_scene.RegionInfo.RegionSettings.TerrainLowerLimit,
-                    m_scene.RegionInfo.RegionSettings.UseEstateSun,
-                    m_scene.RegionInfo.RegionSettings.FixedSun,
-                    (float)m_scene.RegionInfo.RegionSettings.SunPosition,
-                    m_scene.RegionInfo.EstateSettings.UseGlobalTime,
-                    m_scene.RegionInfo.EstateSettings.FixedSun,
-                    (float)m_scene.RegionInfo.EstateSettings.SunPosition);
+                                     (float) m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit,
+                                     (float) m_scene.RegionInfo.RegionSettings.TerrainLowerLimit,
+                                     m_scene.RegionInfo.RegionSettings.UseEstateSun,
+                                     m_scene.RegionInfo.RegionSettings.FixedSun,
+                                     (float) m_scene.RegionInfo.RegionSettings.SunPosition,
+                                     m_scene.RegionInfo.EstateSettings.UseGlobalTime,
+                                     m_scene.RegionInfo.EstateSettings.FixedSun,
+                                     (float) m_scene.RegionInfo.EstateSettings.SunPosition);
 
             sendRegionInfoPacketToAll();
         }
@@ -1582,16 +1577,20 @@ namespace Aurora.Modules.Estate
             if (m_scene.RegionInfo.RegionSettings.Sandbox)
                 flags |= RegionFlags.Sandbox;
 
-            if (m_scene.RegionInfo.EstateSettings.AllowLandmark)
-                flags |= RegionFlags.AllowLandmark;
-            if (m_scene.RegionInfo.EstateSettings.AllowSetHome)
-                flags |= RegionFlags.AllowSetHome;
-            if (m_scene.RegionInfo.EstateSettings.BlockDwell)
-                flags |= RegionFlags.BlockDwell;
-            if (m_scene.RegionInfo.EstateSettings.ResetHomeOnTeleport)
-                flags |= RegionFlags.ResetHomeOnTeleport;
+            if (m_scene.RegionInfo.EstateSettings != null)
+            {
+                if (m_scene.RegionInfo.EstateSettings.AllowLandmark)
+                    flags |= RegionFlags.AllowLandmark;
+                if (m_scene.RegionInfo.EstateSettings.AllowSetHome)
+                    flags |= RegionFlags.AllowSetHome;
+                if (m_scene.RegionInfo.EstateSettings.BlockDwell)
+                    flags |= RegionFlags.BlockDwell;
+                if (m_scene.RegionInfo.EstateSettings.ResetHomeOnTeleport)
+                    flags |= RegionFlags.ResetHomeOnTeleport;
+                if (m_scene.RegionInfo.EstateSettings.AllowVoice)
+                    flags |= RegionFlags.AllowVoice;
+            }
 
-            
 
             // Omitted
             //
@@ -1599,7 +1598,7 @@ namespace Aurora.Modules.Estate
             // Omitted: NullLayer Unknown: Related to the availability of an overview world map tile.(Think mainland images when zoomed out.)
             // Omitted: SkipAgentAction Unknown: Related to region debug flags. Possibly to skip processing of agent interaction with world.
 
-            return (ulong)flags;
+            return (ulong) flags;
         }
 
         public uint GetEstateFlags()
@@ -1638,9 +1637,9 @@ namespace Aurora.Modules.Estate
             if (m_scene.RegionInfo.EstateSettings.AllowSetHome)
                 flags |= RegionFlags.AllowSetHome;
             if (m_scene.RegionInfo.EstateSettings.DenyMinors)
-                flags |= (RegionFlags)(1 << 30);
+                flags |= (RegionFlags) (1 << 30);
 
-            return (uint)flags;
+            return (uint) flags;
         }
 
         public bool IsManager(UUID avatarID)
@@ -1689,31 +1688,31 @@ namespace Aurora.Modules.Estate
             float sun;
             if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
             {
-                sun = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
+                sun = (float) m_scene.RegionInfo.EstateSettings.SunPosition;
                 if (m_scene.RegionInfo.EstateSettings.UseGlobalTime)
                 {
                     ISunModule sunModule = m_scene.RequestModuleInterface<ISunModule>();
-                    if(sunModule != null)
+                    if (sunModule != null)
                         sun = sunModule.GetCurrentSunHour();
                 }
 
                 // 
                 m_scene.EventManager.TriggerEstateToolsSunUpdate(
-                        m_scene.RegionInfo.RegionHandle,
-                        m_scene.RegionInfo.EstateSettings.FixedSun,
-                        m_scene.RegionInfo.RegionSettings.UseEstateSun,
-                        sun);
+                    m_scene.RegionInfo.RegionHandle,
+                    m_scene.RegionInfo.EstateSettings.FixedSun,
+                    m_scene.RegionInfo.RegionSettings.UseEstateSun,
+                    sun);
             }
             else
             {
                 // Use the Sun Position from the Region Settings
-                sun = (float)m_scene.RegionInfo.RegionSettings.SunPosition/* - 6.0f*/;
+                sun = (float) m_scene.RegionInfo.RegionSettings.SunPosition /* - 6.0f*/;
 
                 m_scene.EventManager.TriggerEstateToolsSunUpdate(
-                        m_scene.RegionInfo.RegionHandle,
-                        m_scene.RegionInfo.RegionSettings.FixedSun,
-                        m_scene.RegionInfo.RegionSettings.UseEstateSun,
-                        sun);
+                    m_scene.RegionInfo.RegionHandle,
+                    m_scene.RegionInfo.RegionSettings.FixedSun,
+                    m_scene.RegionInfo.RegionSettings.UseEstateSun,
+                    sun);
             }
         }
     }

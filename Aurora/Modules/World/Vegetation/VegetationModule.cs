@@ -25,13 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using System;
 
 namespace Aurora.Modules.Vegetation
 {
@@ -39,11 +41,6 @@ namespace Aurora.Modules.Vegetation
     {
         protected static readonly PCode[] creationCapabilities = new[] {PCode.Grass, PCode.NewTree, PCode.Tree};
         protected IScene m_scene;
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
 
         #region INonSharedRegionModule Members
 
@@ -113,8 +110,7 @@ namespace Aurora.Modules.Vegetation
                 return null;
             }
 
-            SceneObjectGroup sceneObject = baseEntity as SceneObjectGroup;
-            SceneObjectPart rootPart = (SceneObjectPart) sceneObject.GetChildPart(sceneObject.UUID);
+            ISceneChildEntity rootPart = baseEntity.GetChildPart(baseEntity.UUID);
 
             // if grass or tree, make phantom
             //rootPart.TrimPermissions();
@@ -122,18 +118,14 @@ namespace Aurora.Modules.Vegetation
             if (rootPart.Shape.PCode != (byte) PCode.Grass)
                 AdaptTree(ref shape);
 
-            m_scene.SceneGraph.AddPrimToScene(sceneObject);
-            sceneObject.SetGroup(groupID, ownerID, true);
-            sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+            m_scene.SceneGraph.AddPrimToScene(baseEntity);
+            baseEntity.SetGroup(groupID, ownerID, true);
+            baseEntity.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
-            return sceneObject;
+            return baseEntity;
         }
 
         #endregion
-
-        public void PostInitialise()
-        {
-        }
 
         protected void AdaptTree(ref PrimitiveBaseShape tree)
         {

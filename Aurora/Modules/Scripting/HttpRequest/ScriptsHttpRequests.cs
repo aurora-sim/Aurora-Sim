@@ -34,11 +34,14 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
 
 /*****************************************************
  *
@@ -107,11 +110,6 @@ namespace Aurora.Modules.Scripting
             ServicePointManager.ServerCertificateValidationCallback += ValidateServerCertificate;
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #region IHttpRequestModule Members
 
         public UUID MakeHttpRequest(string url, string parameters, string body)
@@ -156,17 +154,17 @@ namespace Aurora.Modules.Scripting
                             BODY_MAXLENGTH = int.Parse(parms[i + 1]);
                             break;
 
-                        case (int)HttpRequestConstants.HTTP_VERIFY_CERT:
+                        case (int) HttpRequestConstants.HTTP_VERIFY_CERT:
 
                             htc.HttpVerifyCert = (int.Parse(parms[i + 1]) != 0);
                             break;
 
-                        case (int)HttpRequestConstants.HTTP_VERBOSE_THROTTLE:
+                        case (int) HttpRequestConstants.HTTP_VERBOSE_THROTTLE:
 
                             htc.VerbroseThrottle = (int.Parse(parms[i + 1]) != 0);
                             break;
 
-                        case (int)HttpRequestConstants.HTTP_PRAGMA_NO_CACHE:
+                        case (int) HttpRequestConstants.HTTP_PRAGMA_NO_CACHE:
 
                             if (int.Parse(parms[i + 1]) != 0)
                             {
@@ -174,11 +172,11 @@ namespace Aurora.Modules.Scripting
                             }
                             break;
 
-                        case (int)HttpRequestConstants.HTTP_CUSTOM_HEADER:
+                        case (int) HttpRequestConstants.HTTP_CUSTOM_HEADER:
 
                             string name = parms[i + 1];
                             string value = parms[i + 2];
-                            i++;//Move forward one, since we pulled out 3 instead of 2
+                            i++; //Move forward one, since we pulled out 3 instead of 2
                             headers[name] = value;
                             break;
                     }
@@ -264,7 +262,9 @@ namespace Aurora.Modules.Scripting
                 return null;
             lock (HttpListLock)
             {
-                foreach (HttpRequestClass luid in from luids in m_pendingRequests.Values from luid in luids where luid.Finished select luid)
+                foreach (
+                    HttpRequestClass luid in
+                        from luids in m_pendingRequests.Values from luid in luids where luid.Finished select luid)
                 {
                     return luid;
                 }
@@ -364,10 +364,6 @@ namespace Aurora.Modules.Scripting
             return true;
         }
 
-        public void PostInitialise()
-        {
-        }
-
         #region Nested type: HTTPMax
 
         public class HTTPMax
@@ -391,13 +387,16 @@ namespace Aurora.Modules.Scripting
         public int HttpTimeout;
         public bool HttpVerifyCert = true;
         private bool _VerbroseThrottle = false;
+
         public bool VerbroseThrottle
         {
             get { return _VerbroseThrottle; }
             set { _VerbroseThrottle = value; }
         }
+
         public int MaxLength;
         public object[] _Metadata = new object[0];
+
         public object[] Metadata
         {
             get { return _Metadata; }
@@ -515,10 +514,10 @@ namespace Aurora.Modules.Scripting
                     {
                         throw;
                     }
-                    response = (HttpWebResponse)e.Response;
+                    response = (HttpWebResponse) e.Response;
                 }
 
-                Status = (int)response.StatusCode;
+                Status = (int) response.StatusCode;
 
                 Stream resStream = response.GetResponseStream();
 
@@ -549,7 +548,7 @@ namespace Aurora.Modules.Scripting
             }
             catch (Exception e)
             {
-                Status = (int)OSHttpStatusCode.ClientErrorJoker;
+                Status = (int) OSHttpStatusCode.ClientErrorJoker;
                 ResponseBody = e.Message;
 
                 _finished = true;
@@ -561,7 +560,7 @@ namespace Aurora.Modules.Scripting
                     response.Close();
             }
 
-            Status = (int)HttpStatusCode.OK;
+            Status = (int) HttpStatusCode.OK;
             _finished = true;
         }
 

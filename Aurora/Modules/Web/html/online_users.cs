@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using Nini.Config;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Web
 {
@@ -19,17 +14,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/online_users.html"
-                       };
+                           {
+                               "html/online_users.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -37,17 +40,19 @@ namespace Aurora.Modules.Web
 
             uint amountPerQuery = 10;
             int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
-            uint count = DataManager.DataManager.RequestPlugin<IAgentInfoConnector>().RecentlyOnline(5 * 60, true);
-            int maxPages = (int)(count / amountPerQuery) - 1;
+            uint count = Framework.Utilities.DataManager.RequestPlugin<IAgentInfoConnector>().RecentlyOnline(5*60, true);
+            int maxPages = (int) (count/amountPerQuery) - 1;
 
             if (start == -1)
-                start = (int)(maxPages < 0 ? 0 : maxPages);
+                start = (int) (maxPages < 0 ? 0 : maxPages);
 
             vars.Add("CurrentPage", start);
             vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
             vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-            var users = DataManager.DataManager.RequestPlugin<IAgentInfoConnector>().RecentlyOnline(5 * 60, true, new Dictionary<string, bool>(), (uint)start, amountPerQuery);
+            var users = Framework.Utilities.DataManager.RequestPlugin<IAgentInfoConnector>()
+                                   .RecentlyOnline(5*60, true, new Dictionary<string, bool>(), (uint) start,
+                                                   amountPerQuery);
             IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
             IGridService gridService = webInterface.Registry.RequestModuleInterface<IGridService>();
             foreach (var user in users)
@@ -55,8 +60,13 @@ namespace Aurora.Modules.Web
                 var region = gridService.GetRegionByUUID(null, user.CurrentRegionID);
                 var account = accountService.GetUserAccount(region.AllScopeIDs, UUID.Parse(user.UserID));
                 if (account != null && region != null)
-                    usersList.Add(new Dictionary<string, object> { { "UserName", account.Name }, 
-                        { "UserRegion", region.RegionName }, { "UserID", user.UserID }, { "UserRegionID", region.RegionID } });
+                    usersList.Add(new Dictionary<string, object>
+                                      {
+                                          {"UserName", account.Name},
+                                          {"UserRegion", region.RegionName},
+                                          {"UserID", user.UserID},
+                                          {"UserRegionID", region.RegionID}
+                                      });
             }
             if (requestParameters.ContainsKey("Order"))
             {

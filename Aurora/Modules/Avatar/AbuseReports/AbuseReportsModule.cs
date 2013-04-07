@@ -25,23 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Windows.Forms;
 using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Aurora.Modules.AbuseReportsGUI;
-using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace Aurora.Modules.AbuseReports
 {
@@ -81,22 +77,24 @@ namespace Aurora.Modules.AbuseReports
         public void ThreadProcARGUI()
         {
             Culture.SetCurrentCulture();
-            Application.Run(new Abuse(m_registry.RequestModuleInterface<IAssetService>(), m_registry.RequestModuleInterface<IJ2KDecoder>()));
+            Application.Run(new Abuse(m_registry.RequestModuleInterface<IAssetService>(),
+                                      m_registry.RequestModuleInterface<IJ2KDecoder>()));
         }
 
         #endregion
     }
+
     /// <summary>
-    ///   Enables the saving of abuse reports to the database
+    ///     Enables the saving of abuse reports to the database
     /// </summary>
-    public class AbuseReportsModule : ISharedRegionModule
+    public class AbuseReportsModule : INonSharedRegionModule
     {
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private readonly List<IScene> m_SceneList = new List<IScene>();
+        private IScene m_Scene;
         private bool m_enabled;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -110,11 +108,7 @@ namespace Aurora.Modules.AbuseReports
             if (!m_enabled)
                 return;
 
-            lock (m_SceneList)
-            {
-                if (!m_SceneList.Contains(scene))
-                    m_SceneList.Add(scene);
-            }
+            m_Scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -127,11 +121,9 @@ namespace Aurora.Modules.AbuseReports
             if (!m_enabled)
                 return;
 
-            lock (m_SceneList)
-            {
-                if (m_SceneList.Contains(scene))
-                    m_SceneList.Remove(scene);
-            }
+
+            m_Scene = null;
+
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             //Disabled until complete
@@ -139,10 +131,6 @@ namespace Aurora.Modules.AbuseReports
         }
 
         public void RegionLoaded(IScene scene)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 
@@ -173,20 +161,20 @@ namespace Aurora.Modules.AbuseReports
         }
 
         /// <summary>
-        ///   This deals with saving the report into the database.
+        ///     This deals with saving the report into the database.
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "regionName"></param>
-        /// <param name = "abuserID"></param>
-        /// <param name = "catagory"></param>
-        /// <param name = "checkflags"></param>
-        /// <param name = "details"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "position"></param>
-        /// <param name = "reportType"></param>
-        /// <param name = "screenshotID"></param>
-        /// <param name = "summery"></param>
-        /// <param name = "reporter"></param>
+        /// <param name="client"></param>
+        /// <param name="regionName"></param>
+        /// <param name="abuserID"></param>
+        /// <param name="catagory"></param>
+        /// <param name="checkflags"></param>
+        /// <param name="details"></param>
+        /// <param name="objectID"></param>
+        /// <param name="position"></param>
+        /// <param name="reportType"></param>
+        /// <param name="screenshotID"></param>
+        /// <param name="summery"></param>
+        /// <param name="reporter"></param>
         private void UserReport(IClientAPI client, string regionName, UUID abuserID, byte catagory, byte checkflags,
                                 string details, UUID objectID, Vector3 position, byte reportType, UUID screenshotID,
                                 string summery, UUID reporter)
@@ -250,7 +238,7 @@ namespace Aurora.Modules.AbuseReports
             //If the abuse email is set up and the email module is available, send the email
             if (ES.AbuseEmailToEstateOwner && ES.AbuseEmail != "")
             {
-                IEmailModule Email = m_SceneList[0].RequestModuleInterface<IEmailModule>();
+                IEmailModule Email = m_Scene.RequestModuleInterface<IEmailModule>();
                 if (Email != null)
                     Email.SendEmail(UUID.Zero, ES.AbuseEmail, "Abuse Report", "This abuse report was submitted by " +
                                                                               report.ReporterName + " against " +
@@ -258,10 +246,11 @@ namespace Aurora.Modules.AbuseReports
                                                                               report.AbuseLocation + " in your region " +
                                                                               report.RegionName +
                                                                               ". Summary: " + report.AbuseSummary +
-                                                                              ". Details: " + report.AbuseDetails + ".", client.Scene);
+                                                                              ". Details: " + report.AbuseDetails + ".",
+                                    client.Scene);
             }
             //Tell the DB about it
-            IAbuseReports conn = m_SceneList[0].RequestModuleInterface<IAbuseReports>();
+            IAbuseReports conn = m_Scene.RequestModuleInterface<IAbuseReports>();
             if (conn != null)
                 conn.AddAbuseReport(report);
         }
@@ -305,17 +294,7 @@ namespace Aurora.Modules.AbuseReports
 
         public IScenePresence findScenePresence(UUID avID)
         {
-#if (!ISWIN)
-            foreach (IScene s in m_SceneList)
-            {
-                IScenePresence SP = s.GetScenePresence(avID);
-                if (SP != null)
-                    return SP;
-            }
-            return null;
-#else
-            return m_SceneList.Select(s => s.GetScenePresence(avID)).FirstOrDefault(SP => SP != null);
-#endif
+            return m_Scene.GetScenePresence(avID);
         }
 
         #endregion

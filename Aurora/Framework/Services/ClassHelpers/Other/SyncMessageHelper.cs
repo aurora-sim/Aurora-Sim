@@ -25,34 +25,36 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using System.Collections.Generic;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services.ClassHelpers.Other
 {
     public class SyncMessageHelper
     {
         public static OSDMap ArrivedAtDestination(UUID AgentID, int DrawDistance, AgentCircuitData circuit,
-                                                  ulong requestingRegion)
+                                                  UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
                                       {"AgentID", AgentID},
                                       {"DrawDistance", DrawDistance},
-                                      {"Circuit", circuit.PackAgentCircuitData()}
+                                      {"Circuit", circuit.ToOSD()}
                                   };
 
             return buildEvent("ArrivedAtDestination", llsdBody, AgentID, requestingRegion);
         }
 
         /// <summary>
-        ///   Tells the region to tell the given agent that the other agent is online
+        ///     Tells the region to tell the given agent that the other agent is online
         /// </summary>
-        /// <param name = "AgentID">Agent that is either logging in or logging out</param>
-        /// <param name = "FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
-        /// <param name = "newStatus">Whether they are logged in or out</param>
+        /// <param name="AgentID">Agent that is either logging in or logging out</param>
+        /// <param name="FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
+        /// <param name="newStatus">Whether they are logged in or out</param>
         /// <returns></returns>
         public static OSDMap AgentStatusChange(UUID AgentID, UUID FriendToInformID, bool newStatus)
         {
@@ -63,15 +65,15 @@ namespace Aurora.Framework
                                       {"NewStatus", newStatus}
                                   };
 
-            return buildEvent("AgentStatusChange", llsdBody, AgentID, 0);
+            return buildEvent("AgentStatusChange", llsdBody, AgentID, UUID.Zero);
         }
 
         /// <summary>
-        ///   Tells the region to tell the given agent that the other agent is online
+        ///     Tells the region to tell the given agent that the other agent is online
         /// </summary>
-        /// <param name = "AgentID">Agent that is either logging in or logging out</param>
-        /// <param name = "FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
-        /// <param name = "newStatus">Whether they are logged in or out</param>
+        /// <param name="AgentIDs">Agents that are either logging in or logging out</param>
+        /// <param name="FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
+        /// <param name="newStatus">Whether they are logged in or out</param>
         /// <returns></returns>
         public static OSDMap AgentStatusChanges(List<UUID> AgentIDs, UUID FriendToInformID, bool newStatus)
         {
@@ -82,14 +84,14 @@ namespace Aurora.Framework
                                       {"NewStatus", newStatus}
                                   };
 
-            return buildEvent("AgentStatusChanges", llsdBody, FriendToInformID, 0);
+            return buildEvent("AgentStatusChanges", llsdBody, FriendToInformID, UUID.Zero);
         }
 
         public static OSDMap UpdateEstateInfo(uint EstateID, UUID RegionID)
         {
             OSDMap llsdBody = new OSDMap {{"EstateID", EstateID}, {"RegionID", RegionID}};
 
-            return buildEvent("UpdateEstateInfo", llsdBody, UUID.Zero, 0);
+            return buildEvent("UpdateEstateInfo", llsdBody, UUID.Zero, UUID.Zero);
         }
 
         public static OSDMap NeighborChange(UUID TargetRegionID, UUID RegionID, bool down)
@@ -100,20 +102,20 @@ namespace Aurora.Framework
             llsdBody["Region"] = RegionID;
             llsdBody["Down"] = down;
 
-            return buildEvent("NeighborChange", llsdBody, UUID.Zero, 0);
+            return buildEvent("NeighborChange", llsdBody, UUID.Zero, UUID.Zero);
         }
 
         public static OSDMap CrossAgent(GridRegion crossingRegion, Vector3 pos,
                                         Vector3 velocity, AgentCircuitData circuit, AgentData cAgent,
-                                        ulong RequestingRegion)
+                                        UUID RequestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
                                       {"Pos", pos},
                                       {"Vel", velocity},
                                       {"Region", crossingRegion.ToOSD()},
-                                      {"Circuit", circuit.PackAgentCircuitData()},
-                                      {"AgentData", cAgent.Pack()}
+                                      {"Circuit", circuit.ToOSD()},
+                                      {"AgentData", cAgent.ToOSD()}
                                   };
 
             return buildEvent("CrossAgent", llsdBody, circuit.AgentID, RequestingRegion);
@@ -121,43 +123,48 @@ namespace Aurora.Framework
 
         public static OSDMap TeleportAgent(int DrawDistance, AgentCircuitData circuit,
                                            AgentData data, uint TeleportFlags,
-                                           GridRegion destination, ulong requestingRegion)
+                                           GridRegion destination, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
                                       {"DrawDistance", DrawDistance},
-                                      {"Circuit", circuit.PackAgentCircuitData()},
+                                      {"Circuit", circuit.ToOSD()},
                                       {"TeleportFlags", TeleportFlags},
-                                      {"AgentData", data.Pack()},
+                                      {"AgentData", data.ToOSD()},
                                       {"Region", destination.ToOSD()}
                                   };
 
             return buildEvent("TeleportAgent", llsdBody, circuit.AgentID, requestingRegion);
         }
 
-        public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, ulong requestingRegion)
+        public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, UUID requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap {{"AgentPos", agentpos.Pack()}};
+            OSDMap llsdBody = new OSDMap { { "AgentPos", agentpos.ToOSD() } };
 
             return buildEvent("SendChildAgentUpdate", llsdBody, agentpos.AgentID, requestingRegion);
         }
 
-        public static OSDMap CancelTeleport(UUID AgentID, ulong requestingRegion)
+        public static OSDMap CancelTeleport(UUID AgentID, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"RequestingRegion", requestingRegion}};
 
             return buildEvent("CancelTeleport", llsdBody, AgentID, requestingRegion);
         }
 
-        public static OSDMap AgentLoggedOut(UUID AgentID, ulong requestingRegion)
+        public static OSDMap AgentLoggedOut(UUID AgentID, UUID requestingRegion, AgentPosition agentpos)
         {
-            OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"RequestingRegion", requestingRegion}};
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"AgentID", AgentID},
+                                      {"AgentPos", agentpos.ToOSD()},
+                                      {"RequestingRegion", requestingRegion}
+                                  };
 
             return buildEvent("AgentLoggedOut", llsdBody, AgentID, requestingRegion);
         }
 
         public static OSDMap FriendGrantRights(UUID requester, UUID target, int myFlags, int rights,
-                                               ulong requestingRegion)
+                                               UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -171,7 +178,7 @@ namespace Aurora.Framework
             return buildEvent("FriendGrantRights", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap FriendTerminated(UUID requester, UUID exfriend, ulong requestingRegion)
+        public static OSDMap FriendTerminated(UUID requester, UUID exfriend, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -184,7 +191,7 @@ namespace Aurora.Framework
         }
 
         public static OSDMap FriendshipOffered(UUID requester, UUID friend, GridInstantMessage im,
-                                               ulong requestingRegion)
+                                               UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -197,7 +204,7 @@ namespace Aurora.Framework
             return buildEvent("FriendshipOffered", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap FriendshipDenied(UUID requester, string clientName, UUID friendID, ulong requestingRegion)
+        public static OSDMap FriendshipDenied(UUID requester, string clientName, UUID friendID, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -210,7 +217,7 @@ namespace Aurora.Framework
             return buildEvent("FriendshipDenied", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap FriendshipApproved(UUID requester, string clientName, UUID friendID, ulong requestingRegion)
+        public static OSDMap FriendshipApproved(UUID requester, string clientName, UUID friendID, UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap
                                   {
@@ -223,25 +230,19 @@ namespace Aurora.Framework
             return buildEvent("FriendshipApproved", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap LogoutRegionAgents(ulong requestingRegion)
+        public static OSDMap LogoutRegionAgents(UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();
             return buildEvent("LogoutRegionAgents", llsdBody, UUID.Zero, requestingRegion);
         }
 
-        public static OSDMap RegionIsOnline(ulong requestingRegion)
+        public static OSDMap RegionIsOnline(UUID requestingRegion)
         {
             OSDMap llsdBody = new OSDMap();
             return buildEvent("RegionIsOnline", llsdBody, UUID.Zero, requestingRegion);
         }
 
-        public static OSDMap DisableSimulator(UUID AgentID, ulong requestingRegion)
-        {
-            OSDMap llsdBody = new OSDMap();
-            return buildEvent("DisableSimulator", llsdBody, AgentID, requestingRegion);
-        }
-
-        public static OSDMap buildEvent(string eventName, OSD eventBody, UUID AgentID, ulong requestingRegion)
+        public static OSDMap buildEvent(string eventName, OSD eventBody, UUID AgentID, UUID requestingRegion)
         {
             OSDMap llsdEvent = new OSDMap(2)
                                    {

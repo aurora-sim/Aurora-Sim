@@ -25,10 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Services.DataService
 {
@@ -46,15 +50,16 @@ namespace Aurora.Services.DataService
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "Generics",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            if (GD != null)
+                GD.ConnectToDatabase(defaultConnectionString, "Generics",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("EmailConnector", "LocalConnector") ==
-                 "LocalConnector")
+                "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
             Init(simBase, Name);
         }
@@ -65,16 +70,16 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets all offline messages for the user in GridInstantMessage format.
+        ///     Gets all offline messages for the user in GridInstantMessage format.
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="objectID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<Email> GetEmails(UUID objectID)
         {
             object remoteValue = DoRemote(objectID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<Email>)remoteValue;
+                return (List<Email>) remoteValue;
 
             //Get all the messages
             List<Email> emails = GenericUtils.GetGenerics<Email>(objectID, "Emails", GD);
@@ -83,10 +88,10 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Adds a new offline message for the user.
+        ///     Adds a new offline message for the user.
         /// </summary>
-        /// <param name = "message"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        /// <param name="email"></param>
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void InsertEmail(Email email)
         {
             object remoteValue = DoRemote(email);
@@ -94,7 +99,7 @@ namespace Aurora.Services.DataService
                 return;
 
             GenericUtils.AddGeneric(email.toPrimID, "Emails", UUID.Random().ToString(),
-                                            email.ToOSD(), GD);
+                                    email.ToOSD(), GD);
         }
 
         #endregion

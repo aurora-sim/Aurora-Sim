@@ -26,9 +26,10 @@
  */
 
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
     internal class AgentCountMonitor : IMonitor
     {
@@ -49,6 +50,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Root Agent Count";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "";
         }
 
         public string GetFriendlyValue()

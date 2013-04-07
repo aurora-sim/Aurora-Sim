@@ -27,8 +27,9 @@
 
 using System;
 using System.Drawing;
-using OpenMetaverse;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -50,12 +51,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get
             {
                 Color4 res = GetTexface().RGBA;
-                return Color.FromArgb((int)(res.A * 255), (int)(res.R * 255), (int)(res.G * 255), (int)(res.B * 255));
+                return Color.FromArgb((int) (res.A*255), (int) (res.R*255), (int) (res.G*255), (int) (res.B*255));
             }
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
                 texface.RGBA = new Color4(value.R, value.G, value.B, value.A);
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex, false);
@@ -72,7 +73,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
                 texface.TextureID = value;
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex, false);
@@ -91,7 +92,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
                 texface.Fullbright = value;
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex, false);
@@ -104,8 +105,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
-                texface.Glow = (float)value;
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
+                texface.Glow = (float) value;
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex, false);
             }
@@ -117,7 +118,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
                 texface.Shiny = value ? Shininess.High : Shininess.None;
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex, false);
@@ -135,7 +136,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         private Primitive.TextureEntryFace GetTexface()
         {
             Primitive.TextureEntry tex = m_parent.Shape.Textures;
-            return tex.GetFace((uint)m_face);
+            return tex.GetFace((uint) m_face);
         }
     }
 }

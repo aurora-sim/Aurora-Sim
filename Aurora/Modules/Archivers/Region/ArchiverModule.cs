@@ -25,24 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Nini.Config;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   This module loads and saves OpenSimulator region archives
+    ///     This module loads and saves OpenSimulator region archives
     /// </summary>
     public class ArchiverModule : INonSharedRegionModule, IRegionArchiverModule
     {
         /// <value>
-        ///   The file used to load and save an opensimulator archive if no filename has been specified
+        ///     The file used to load and save an opensimulator archive if no filename has been specified
         /// </value>
         protected const string DEFAULT_OAR_BACKUP_FILENAME = "region.oar";
 
@@ -90,9 +91,9 @@ namespace Aurora.Modules.Archivers
         #region IRegionArchiverModule Members
 
         /// <summary>
-        ///   Load a whole region from an opensimulator archive.
+        ///     Load a whole region from an opensimulator archive.
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         public void HandleLoadOarConsoleCommand(string[] cmdparams)
         {
             bool mergeOar = false;
@@ -166,31 +167,24 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Save a region to a file, including all the assets needed to restore it.
+        ///     Save a region to a file, including all the assets needed to restore it.
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         public void HandleSaveOarConsoleCommand(string[] cmdparams)
         {
             if (cmdparams.Length > 2)
             {
                 string permissions = null;
                 List<string> newParams = new List<string>(cmdparams);
-#if (!ISWIN)
-                foreach (string param in cmdparams)
-                {
-                    if (param.StartsWith("--perm=", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        permissions = param.Remove(0, 7);
-                        newParams.Remove(param);
-                    }
-                }
-#else
-                foreach (string param in cmdparams.Where(param => param.StartsWith("--perm=", StringComparison.CurrentCultureIgnoreCase)))
+
+                foreach (
+                    string param in
+                        cmdparams.Where(param => param.StartsWith("--perm=", StringComparison.CurrentCultureIgnoreCase))
+                    )
                 {
                     permissions = param.Remove(0, 7);
                     newParams.Remove(param);
                 }
-#endif
                 ArchiveRegion(newParams[2], Guid.Empty, permissions);
             }
             else
@@ -238,10 +232,12 @@ namespace Aurora.Modules.Archivers
             DearchiveRegion(loadStream, false, false, 0, 0, 0, false, false, false, false);
         }
 
-        public void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ,
-                             bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
+        public void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY,
+                                    int offsetZ,
+                                    bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
         {
-            new ArchiveReadRequest(m_scene, loadStream, merge, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership).DearchiveRegion();
+            new ArchiveReadRequest(m_scene, loadStream, merge, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY,
+                                   useParcelOwnership, checkOwnership).DearchiveRegion();
         }
 
         #endregion

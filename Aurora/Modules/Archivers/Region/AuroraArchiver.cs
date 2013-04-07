@@ -25,18 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Serialization;
+using Aurora.Framework.Services;
+using Microsoft.Win32;
+using Nini.Config;
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using Aurora.Simulation.Base;
-using Microsoft.Win32;
-using Nini.Config;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {
@@ -150,7 +151,7 @@ namespace Aurora.Modules.Archivers
             }
 
             string fileName = MainConsole.Instance.Prompt("What file name should we load?",
-                                                             scene.RegionInfo.RegionName + ".abackup");
+                                                          scene.RegionInfo.RegionName + ".abackup");
 
 
             var stream = ArchiveHelpers.GetStream(fileName);
@@ -176,7 +177,7 @@ namespace Aurora.Modules.Archivers
             }
 
             string fileName = MainConsole.Instance.Prompt("What file name will this be saved as?",
-                                                             scene.RegionInfo.RegionName + ".abackup");
+                                                          scene.RegionInfo.RegionName + ".abackup");
 
             GZipStream m_saveStream = new GZipStream(new FileStream(fileName, FileMode.Create), CompressionMode.Compress);
             TarArchiveWriter writer = new TarArchiveWriter(m_saveStream);

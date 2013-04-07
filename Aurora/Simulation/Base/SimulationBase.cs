@@ -25,19 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Configuration;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Timers;
-using log4net.Appender;
-using log4net.Core;
-using log4net.Repository;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using System.Security.Authentication;
 
 namespace Aurora.Simulation.Base
 {
@@ -52,10 +56,12 @@ namespace Aurora.Simulation.Base
         protected ConfigurationLoader m_configurationLoader;
 
         /// <value>
-        /// The config information passed into the Aurora server.
+        ///     The config information passed into the Aurora server.
         /// </value>
         protected IConfigSource m_config;
+
         protected IConfigSource m_original_config;
+
         public IConfigSource ConfigSource
         {
             get { return m_config; }
@@ -63,30 +69,34 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Server version information.  Usually VersionInfo + information about git commit, operating system, etc.
+        ///     Server version information.  Usually VersionInfo + information about git commit, operating system, etc.
         /// </summary>
         protected string m_version;
+
         public string Version
         {
             get { return m_version; }
         }
 
         protected IRegistryCore m_applicationRegistry = new RegistryCore();
+
         public IRegistryCore ApplicationRegistry
         {
             get { return m_applicationRegistry; }
         }
 
         protected AuroraEventManager m_eventManager = new AuroraEventManager();
+
         public AuroraEventManager EventManager
         {
             get { return m_eventManager; }
         }
 
         /// <summary>
-        /// Time at which this server was started
+        ///     Time at which this server was started
         /// </summary>
         protected DateTime m_StartupTime;
+
         public DateTime StartupTime
         {
             get { return m_StartupTime; }
@@ -99,31 +109,34 @@ namespace Aurora.Simulation.Base
             get { return m_BaseHTTPServer; }
         }
 
-        protected Dictionary<uint, BaseHttpServer> m_Servers =
-            new Dictionary<uint, BaseHttpServer>();
+        protected Dictionary<uint, IHttpServer> m_Servers =
+            new Dictionary<uint, IHttpServer>();
 
         protected uint m_Port;
+
         public uint DefaultPort
         {
             get { return m_Port; }
         }
 
         protected string[] m_commandLineParameters = null;
+
         public string[] CommandLineParameters
         {
-             get { return m_commandLineParameters; }
+            get { return m_commandLineParameters; }
         }
 
         protected string m_pidFile = String.Empty;
 
         /// <summary>
-        /// Do the initial setup for the application
+        ///     Do the initial setup for the application
         /// </summary>
         /// <param name="originalConfig"></param>
         /// <param name="configSource"></param>
         /// <param name="cmdParams"></param>
         /// <param name="configLoader"></param>
-        public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource, string[] cmdParams, ConfigurationLoader configLoader)
+        public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource, string[] cmdParams,
+                                       ConfigurationLoader configLoader)
         {
             m_commandLineParameters = cmdParams;
             m_StartupTime = DateTime.Now;
@@ -146,7 +159,7 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Read the configuration
+        ///     Read the configuration
         /// </summary>
         /// <param name="configSource"></param>
         public virtual void Configuration(IConfigSource configSource)
@@ -158,7 +171,8 @@ namespace Aurora.Simulation.Base
             if (startupConfig != null)
             {
                 m_startupCommandsFile = startupConfig.GetString("startup_console_commands_file", "startup_commands.txt");
-                m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
+                m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file",
+                                                                 "shutdown_commands.txt");
 
                 m_TimerScriptFileName = startupConfig.GetString("timer_Script", "disabled");
                 m_TimerScriptTime = startupConfig.GetInt("timer_time", m_TimerScriptTime);
@@ -173,7 +187,8 @@ namespace Aurora.Simulation.Base
             {
                 string asyncCallMethodStr = SystemConfig.GetString("AsyncCallMethod", String.Empty);
                 FireAndForgetMethod asyncCallMethod;
-                if (!String.IsNullOrEmpty(asyncCallMethodStr) && Utils.EnumTryParse(asyncCallMethodStr, out asyncCallMethod))
+                if (!String.IsNullOrEmpty(asyncCallMethodStr) &&
+                    Utils.EnumTryParse(asyncCallMethodStr, out asyncCallMethod))
                     Util.FireAndForgetMethod = asyncCallMethod;
 
                 stpMaxThreads = SystemConfig.GetInt("MaxPoolThreads", 15);
@@ -184,13 +199,14 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Performs initialisation of the application, such as loading the HTTP server and modules
+        ///     Performs initialisation of the application, such as loading the HTTP server and modules
         /// </summary>
         public virtual void Startup()
         {
             MainConsole.Instance.Warn("====================================================================");
-            MainConsole.Instance.Warn(string.Format("====================== STARTING AURORA ({0}) ======================", 
-                (IntPtr.Size == 4 ? "x86" : "x64")));
+            MainConsole.Instance.Warn(
+                string.Format("====================== STARTING AURORA ({0}) ======================",
+                              (IntPtr.Size == 4 ? "x86" : "x64")));
             MainConsole.Instance.Warn("====================================================================");
             MainConsole.Instance.Warn("[AuroraStartup]: Version: " + Version + "\n");
 
@@ -208,7 +224,7 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Run the console now that we are all done with startup
+        ///     Run the console now that we are all done with startup
         /// </summary>
         public virtual void Run()
         {
@@ -222,44 +238,39 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Get an HTTPServer on the given port. It will create one if one does not exist
+        ///     Get an HTTPServer on the given port. It will create one if one does not exist
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
         public IHttpServer GetHttpServer(uint port)
         {
-            return GetHttpServer(port, false, "", "", SslProtocols.None);
-        }
-
-        public IHttpServer GetHttpServer (uint port, bool secure, string certPath, string certPass, SslProtocols sslProtocol)
-        {
             if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
 
-            BaseHttpServer server;
-            if(m_Servers.TryGetValue(port, out server) && server.Secure == secure)
+            bool useHTTPS = m_config.Configs["Network"].GetBoolean("use_https", false);
+            IHttpServer server;
+            if (m_Servers.TryGetValue(port, out server) && server.Secure == useHTTPS)
                 return server;
 
             string hostName =
-                m_config.Configs["Network"].GetString("HostName", "http" + (secure ? "s" : "") + "://" + Utilities.GetExternalIp());
+                m_config.Configs["Network"].GetString("HostName",
+                                                      "http" + (useHTTPS ? "s" : "") + "://" + Utilities.GetExternalIp());
             //Clean it up a bit
             if (hostName.StartsWith("http://") || hostName.StartsWith("https://"))
                 hostName = hostName.Replace("https://", "").Replace("http://", "");
-            if (hostName.EndsWith ("/"))
-                hostName = hostName.Remove (hostName.Length - 1, 1);
+            if (hostName.EndsWith("/"))
+                hostName = hostName.Remove(hostName.Length - 1, 1);
 
-            server = new BaseHttpServer(port, hostName, secure);
+            server = new BaseHttpServer(port, hostName, useHTTPS);
 
             try
             {
-                if(secure)//Set these params now
-                    server.SetSecureParams(certPath, certPass, sslProtocol);
                 server.Start();
             }
-            catch(Exception)
+            catch (Exception)
             {
                 //Remove the server from the list
-                m_Servers.Remove (port);
+                m_Servers.Remove(port);
                 //Then pass the exception upwards
                 throw;
             }
@@ -268,26 +279,12 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Set up the base HTTP server 
+        ///     Set up the base HTTP server
         /// </summary>
         public virtual void SetUpHTTPServer()
         {
             m_Port = m_config.Configs["Network"].GetUInt("http_listener_port", 9000);
-            bool useHTTPS = m_config.Configs["Network"].GetBoolean("use_https", false);
-            string certPath = m_config.Configs["Network"].GetString("https_cert_path", "");
-            string certPass = m_config.Configs["Network"].GetString("https_cert_pass", "");
-            string sslProtocol = m_config.Configs["Network"].GetString("https_ssl_protocol", "Default");
-
-            SslProtocols protocols;
-            try
-            {
-                protocols = (SslProtocols)Enum.Parse(typeof(SslProtocols), sslProtocol);
-            }
-            catch
-            {
-                protocols = SslProtocols.Tls;
-            }
-            m_BaseHTTPServer = GetHttpServer(m_Port, useHTTPS, certPath, certPass, protocols);
+            m_BaseHTTPServer = GetHttpServer(m_Port);
             MainServer.Instance = m_BaseHTTPServer;
         }
 
@@ -295,50 +292,38 @@ namespace Aurora.Simulation.Base
         {
             m_applicationPlugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.PreStartup(this);
-            }
         }
 
         /// <summary>
-        /// Start the application modules
+        ///     Start the application modules
         /// </summary>
         public virtual void StartModules()
         {
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.Initialize(this);
-            }
 
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.PostInitialise();
-            }
 
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.Start();
-            }
 
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.PostStart();
-            }
         }
 
         /// <summary>
-        /// Close all the Application Plugins
+        ///     Close all the Application Plugins
         /// </summary>
         public virtual void CloseModules()
         {
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.Close();
-            }
         }
 
         /// <summary>
-        /// Run the commands given now that startup is complete
+        ///     Run the commands given now that startup is complete
         /// </summary>
         public void RunStartupCommands()
         {
@@ -357,7 +342,7 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Opens a file and uses it as input to the console command parser.
+        ///     Opens a file and uses it as input to the console command parser.
         /// </summary>
         /// <param name="fileName">name of file to use as input to the console</param>
         private void PrintFileToConsole(string fileName)
@@ -374,8 +359,8 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Timer to run a specific text file as console commands.
-        /// Configured in in the main .ini file
+        ///     Timer to run a specific text file as console commands.
+        ///     Configured in in the main .ini file
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -387,7 +372,7 @@ namespace Aurora.Simulation.Base
         #region Console Commands
 
         /// <summary>
-        /// Register standard set of region console commands
+        ///     Register standard set of region console commands
         /// </summary>
         public virtual void RegisterConsoleCommands()
         {
@@ -397,15 +382,21 @@ namespace Aurora.Simulation.Base
 
             MainConsole.Instance.Commands.AddCommand("shutdown", "shutdown", "Quit the application", HandleQuit);
 
-            MainConsole.Instance.Commands.AddCommand("show info", "show info", "Show server information (e.g. startup path)", HandleShowInfo);
-            MainConsole.Instance.Commands.AddCommand("show version", "show version", "Show server version", HandleShowVersion);
+            MainConsole.Instance.Commands.AddCommand("show info", "show info",
+                                                     "Show server information (e.g. startup path)", HandleShowInfo);
+            MainConsole.Instance.Commands.AddCommand("show version", "show version", "Show server version",
+                                                     HandleShowVersion);
 
-            MainConsole.Instance.Commands.AddCommand("reload config", "reload config", "Reloads .ini file configuration", HandleConfigRefresh);
+            MainConsole.Instance.Commands.AddCommand("reload config", "reload config", "Reloads .ini file configuration",
+                                                     HandleConfigRefresh);
 
-            MainConsole.Instance.Commands.AddCommand("set timer script interval", "set timer script interval", "Set the interval for the timer script (in minutes).", HandleTimerScriptTime);
+            MainConsole.Instance.Commands.AddCommand("set timer script interval", "set timer script interval",
+                                                     "Set the interval for the timer script (in minutes).",
+                                                     HandleTimerScriptTime);
 
             MainConsole.Instance.Commands.AddCommand("force GC", "force GC", "Forces garbage collection.", HandleForceGC);
-            MainConsole.Instance.Commands.AddCommand("run configurator", "run configurator", "Runs Aurora.Configurator.", runConfig);
+            MainConsole.Instance.Commands.AddCommand("run configurator", "run configurator", "Runs Aurora.Configurator.",
+                                                     runConfig);
         }
 
         private void HandleQuit(string[] args)
@@ -414,7 +405,7 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Run an optional startup list of commands
+        ///     Run an optional startup list of commands
         /// </summary>
         /// <param name="fileName"></param>
         public virtual void RunCommandScript(string fileName)
@@ -443,10 +434,10 @@ namespace Aurora.Simulation.Base
         }
 
         public virtual void HandleForceGC(string[] cmd)
-        {   
+        {
             GC.Collect();
             MainConsole.Instance.Warn("Garbage collection finished");
-        }   
+        }
 
         public virtual void runConfig(string[] cmd)
         {
@@ -463,14 +454,14 @@ namespace Aurora.Simulation.Base
             MainConsole.Instance.Warn("[CONSOLE]: Set Timer Interval to " + cmd[4]);
             m_TimerScriptTime = int.Parse(cmd[4]);
             m_TimerScriptTimer.Enabled = false;
-            m_TimerScriptTimer.Interval = m_TimerScriptTime * 60 * 1000;
+            m_TimerScriptTimer.Interval = m_TimerScriptTime*60*1000;
             m_TimerScriptTimer.Enabled = true;
         }
 
         public virtual void HandleConfigRefresh(string[] cmd)
         {
             //Rebuild the configs
-            m_config = m_configurationLoader.LoadConfigSettings (m_original_config);
+            m_config = m_configurationLoader.LoadConfigSettings(m_original_config);
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
                 plugin.ReloadConfiguration(m_config);
 
@@ -480,33 +471,33 @@ namespace Aurora.Simulation.Base
             // these are doing nothing??
             hostName.Replace("http://", "");
             hostName.Replace("https://", "");
-            if(hostName.EndsWith("/"))
+            if (hostName.EndsWith("/"))
                 hostName = hostName.Remove(hostName.Length - 1, 1);
-            foreach(IHttpServer server in m_Servers.Values)
+            foreach (IHttpServer server in m_Servers.Values)
             {
                 server.HostName = hostName;
             }
-            MainConsole.Instance.Info ("Finished reloading configuration.");
+            MainConsole.Instance.Info("Finished reloading configuration.");
         }
 
-        public virtual void HandleShowInfo (string[] cmd)
+        public virtual void HandleShowInfo(string[] cmd)
         {
-            MainConsole.Instance.Info ("Version: " + m_version);
-            MainConsole.Instance.Info ("Startup directory: " + Environment.CurrentDirectory);
+            MainConsole.Instance.Info("Version: " + m_version);
+            MainConsole.Instance.Info("Startup directory: " + Environment.CurrentDirectory);
         }
 
-        public virtual void HandleShowVersion (string[] cmd)
+        public virtual void HandleShowVersion(string[] cmd)
         {
-            MainConsole.Instance.Info (
-                String.Format (
+            MainConsole.Instance.Info(
+                String.Format(
                     "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion));
         }
 
         #endregion
 
         /// <summary>
-        /// Should be overriden and referenced by descendents if they need to perform extra shutdown processing
-        /// Performs any last-minute sanity checking and shuts down the region server
+        ///     Should be overriden and referenced by descendents if they need to perform extra shutdown processing
+        ///     Performs any last-minute sanity checking and shuts down the region server
         /// </summary>
         public virtual void Shutdown(bool close)
         {
@@ -545,7 +536,7 @@ namespace Aurora.Simulation.Base
                 try
                 {
                     //Stop the HTTP server(s)
-                    foreach (BaseHttpServer server in m_Servers.Values)
+                    foreach (IHttpServer server in m_Servers.Values)
                     {
                         server.Stop();
                     }
@@ -558,7 +549,8 @@ namespace Aurora.Simulation.Base
                 if (close)
                     MainConsole.Instance.Info("[SHUTDOWN]: Terminating");
 
-                MainConsole.Instance.Info("[SHUTDOWN]: Shutdown processing on main thread complete. " + (close ? " Exiting..." : ""));
+                MainConsole.Instance.Info("[SHUTDOWN]: Shutdown processing on main thread complete. " +
+                                          (close ? " Exiting..." : ""));
 
                 if (close)
                     Environment.Exit(0);
@@ -569,7 +561,7 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Write the PID file to the hard drive
+        ///     Write the PID file to the hard drive
         /// </summary>
         /// <param name="path"></param>
         protected void CreatePIDFile(string path)
@@ -590,7 +582,7 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Delete the PID file now that we are done running
+        ///     Delete the PID file now that we are done running
         /// </summary>
         protected void RemovePIDFile()
         {

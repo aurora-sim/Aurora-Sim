@@ -25,34 +25,36 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Serialization;
+using Aurora.Framework.Serialization.External;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
-using Aurora.Framework.Serialization.External;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {
     public class InventoryArchiveReadRequest
     {
         private readonly string m_invPath;
-        private readonly Dictionary<UUID, AssetBase> assetNonBinaryCollection = new Dictionary<UUID, AssetBase>();
-        private readonly Dictionary<UUID, UUID> assetBinaryChangeRecord = new Dictionary<UUID, UUID>();
         private readonly List<InventoryItemBase> itemsSavedOff = new List<InventoryItemBase>();
         private readonly Queue<UUID> assets2Save = new Queue<UUID>();
-        const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
+
+        private const string sPattern =
+            @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
 
         /// <value>
-        ///   The stream from which the inventory archive will be loaded.
+        ///     The stream from which the inventory archive will be loaded.
         /// </value>
         private readonly Stream m_loadStream;
 
@@ -60,56 +62,59 @@ namespace Aurora.Modules.Archivers
         protected TarArchiveReader archive;
 
         /// <summary>
-        ///   Record the creator id that should be associated with an asset.  This is used to adjust asset creator ids
-        ///   after OSP resolution (since OSP creators are only stored in the item
+        ///     Record the creator id that should be associated with an asset.  This is used to adjust asset creator ids
+        ///     after OSP resolution (since OSP creators are only stored in the item
         /// </summary>
         protected Dictionary<UUID, UUID> m_creatorIdForAssetId = new Dictionary<UUID, UUID>();
 
         /// <summary>
-        ///   Do we want to merge this load with existing inventory?
+        ///     Do we want to merge this load with existing inventory?
         /// </summary>
         protected bool m_merge;
 
         /// <value>
-        ///   We only use this to request modules
+        ///     We only use this to request modules
         /// </value>
         protected IRegistryCore m_registry;
 
         private UUID m_overridecreator = UUID.Zero;
 
+        static InventoryArchiveReadRequest()
+        {
+            if (Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer == null)
+                Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer =
+                    new Aurora.Region.Serialization.SceneObjectSerializer();
+        }
+
         public bool ReplaceAssets { get; set; }
 
         public InventoryArchiveReadRequest(
-            IRegistryCore registry, UserAccount userInfo, string invPath, string loadPath, bool merge, UUID overwriteCreator)
-            : this(
-                registry,
-                userInfo,
-                invPath,
-                new GZipStream(ArchiveHelpers.GetStream(loadPath), CompressionMode.Decompress),
-                merge, overwriteCreator)
+            IRegistryCore registry, UserAccount userInfo, string invPath, string loadPath, bool merge,
+            UUID overwriteCreator)
         {
-        }
+            Stream str = ArchiveHelpers.GetStream(loadPath);
+            if (str == null)
+                return;
 
-        public InventoryArchiveReadRequest(
-            IRegistryCore registry, UserAccount userInfo, string invPath, Stream loadStream, bool merge, UUID overwriteCreator)
-        {
             m_registry = registry;
             m_merge = merge;
             m_userInfo = userInfo;
             m_invPath = invPath;
-            m_loadStream = loadStream;
+            m_loadStream = new GZipStream(str, CompressionMode.Decompress);
             m_overridecreator = overwriteCreator;
         }
 
         /// <summary>
-        ///   Execute the request
+        ///     Execute the request
         /// </summary>
         /// <returns>
-        ///   A list of the inventory nodes loaded.  If folders were loaded then only the root folders are
-        ///   returned
+        ///     A list of the inventory nodes loaded.  If folders were loaded then only the root folders are
+        ///     returned
         /// </returns>
         public HashSet<InventoryNodeBase> Execute(bool loadAll)
         {
+            if (m_loadStream == null)
+                return new HashSet<InventoryNodeBase>();
             try
             {
                 string filePath = "ERROR";
@@ -126,7 +131,8 @@ namespace Aurora.Modules.Archivers
                 if (folderCandidates.Count == 0)
                 {
                     // Possibly provide an option later on to automatically create this folder if it does not exist
-                    MainConsole.Instance.ErrorFormat("[INVENTORY ARCHIVER]: Inventory path {0} does not exist", m_invPath);
+                    MainConsole.Instance.ErrorFormat("[INVENTORY ARCHIVER]: Inventory path {0} does not exist",
+                                                     m_invPath);
 
                     return loadedNodes;
                 }
@@ -150,7 +156,7 @@ namespace Aurora.Modules.Archivers
                         else
                             failedAssetRestores++;
 
-                        if ((successfulAssetRestores) % 50 == 0)
+                        if ((successfulAssetRestores)%50 == 0)
                             MainConsole.Instance.InfoFormat(
                                 "[INVENTORY ARCHIVER]: Loaded {0} assets...",
                                 successfulAssetRestores);
@@ -175,9 +181,9 @@ namespace Aurora.Modules.Archivers
                             {
                                 successfulItemRestores++;
 
-                                if ((successfulItemRestores) % 50 == 0)
+                                if ((successfulItemRestores)%50 == 0)
                                     MainConsole.Instance.InfoFormat(
-                                        "[INVENTORY ARCHIVER]: Loaded {0} items...",
+                                        "[INVENTORY ARCHIVER]: Restored {0} items...",
                                         successfulItemRestores);
 
                                 // If we aren't loading the folder containing the item then well need to update the 
@@ -190,30 +196,25 @@ namespace Aurora.Modules.Archivers
                     }
                     data = null;
                 }
-
-                IAssetService assetService = m_registry.RequestModuleInterface<IAssetService>();
-                int savingAssetsCount = 0;
-                do
-                {
-                    UUID assetid = assets2Save.Dequeue();
-                    SaveNonBinaryAssets(assetid, assetNonBinaryCollection[assetid], assetService);
-                    savingAssetsCount++;
-                    if ((savingAssetsCount) % 250 == 0)
-                        MainConsole.Instance.Info("[INVENTORY ARCHIVER]: Saving " + savingAssetsCount + " assets...");
-                } while (assets2Save.Count != 0);
-
+                int successfulItemLoaded = 0;
                 foreach (InventoryItemBase item in itemsSavedOff)
                 {
                     AddInventoryItem(item);
+                    successfulItemLoaded++;
+
+                    if ((successfulItemLoaded)%50 == 0)
+                        MainConsole.Instance.InfoFormat(
+                            "[INVENTORY ARCHIVER]: Loaded {0} items of {1}...",
+                            successfulItemLoaded, itemsSavedOff.Count);
                 }
                 itemsSavedOff.Clear();
-                assetNonBinaryCollection.Clear();
                 assets2Save.Clear();
 
                 MainConsole.Instance.InfoFormat(
                     "[INVENTORY ARCHIVER]: Successfully loaded {0} assets with {1} failures",
                     successfulAssetRestores, failedAssetRestores);
-                MainConsole.Instance.InfoFormat("[INVENTORY ARCHIVER]: Successfully loaded {0} items", successfulItemRestores);
+                MainConsole.Instance.InfoFormat("[INVENTORY ARCHIVER]: Successfully loaded {0} items",
+                                                successfulItemRestores);
 
                 return loadedNodes;
             }
@@ -223,54 +224,6 @@ namespace Aurora.Modules.Archivers
             }
         }
 
-        private AssetBase SaveNonBinaryAssets(UUID key, AssetBase asset, IAssetService assetService)
-        {
-            if (!asset.HasBeenSaved)
-            {
-                string stringData = Utils.BytesToString(asset.Data);
-                MatchCollection mc = Regex.Matches(stringData, sPattern);
-                bool didChange = false;
-                if (mc.Count >= 1)
-                {
-                    foreach (Match match in mc)
-                    {
-                        try
-                        {
-                            UUID thematch = new UUID(match.Value);
-                            UUID newvalue = thematch;
-                            if ((thematch == UUID.Zero) || (thematch == key)) continue;
-                            if (assetNonBinaryCollection.ContainsKey(thematch))
-                            {
-                                AssetBase subasset = assetNonBinaryCollection[thematch];
-                                if (!subasset.HasBeenSaved)
-                                    subasset = SaveNonBinaryAssets(thematch, subasset, assetService);
-                                newvalue = subasset.ID;
-                            }
-                            else if (assetBinaryChangeRecord.ContainsKey(thematch))
-                                newvalue = assetBinaryChangeRecord[thematch];
-
-                            if (thematch == newvalue) continue;
-                            stringData = stringData.Replace(thematch.ToString(), newvalue.ToString());
-                            didChange = true;
-                        }
-                        catch { }
-                    }
-                    if (didChange)
-                    {
-                        asset.Data = Utils.StringToBytes(stringData);
-                        // so it doesn't try to find the old file
-                        asset.LastHashCode = asset.HashCode;
-                    }
-                }
-
-                asset.ID = assetService.Store(asset);
-                asset.HasBeenSaved = true;
-            }
-            if (assetNonBinaryCollection.ContainsKey(key))
-                assetNonBinaryCollection[key] = asset;
-            return asset;
-        }
-
         public void Close()
         {
             if (m_loadStream != null)
@@ -278,16 +231,16 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Replicate the inventory paths in the archive to the user's inventory as necessary.
+        ///     Replicate the inventory paths in the archive to the user's inventory as necessary.
         /// </summary>
-        /// <param name = "iarPath">The item archive path to replicate</param>
-        /// <param name = "rootDestFolder">The root folder for the inventory load</param>
-        /// <param name = "resolvedFolders">
-        ///   The folders that we have resolved so far for a given archive path.
-        ///   This method will add more folders if necessary
+        /// <param name="iarPath">The item archive path to replicate</param>
+        /// <param name="rootDestFolder">The root folder for the inventory load</param>
+        /// <param name="resolvedFolders">
+        ///     The folders that we have resolved so far for a given archive path.
+        ///     This method will add more folders if necessary
         /// </param>
-        /// <param name = "loadedNodes">
-        ///   Track the inventory nodes created.
+        /// <param name="loadedNodes">
+        ///     Track the inventory nodes created.
         /// </param>
         /// <returns>The last user inventory folder created or found for the archive path</returns>
         public InventoryFolderBase ReplicateArchivePathToUserInventory(
@@ -315,23 +268,24 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Resolve a destination folder
+        ///     Resolve a destination folder
         /// </summary>
         /// We require here a root destination folder (usually the root of the user's inventory) and the archive
         /// path.  We also pass in a list of previously resolved folders in case we've found this one previously.
-        /// <param name = "archivePath">
-        ///   The item archive path to resolve.  The portion of the path passed back is that
-        ///   which corresponds to the resolved desintation folder.
-        ///   <param name = "rootDestFolder">
+        /// <param name="archivePath">
+        ///     The item archive path to resolve.  The portion of the path passed back is that
+        ///     which corresponds to the resolved desintation folder.
+        /// </param>
+        /// <param name="rootDestFolder">
         ///     The root folder for the inventory load
-        ///   </param>
-        ///   <param name = "resolvedFolders">
+        /// </param>
+        /// <param name="resolvedFolders">
         ///     The folders that we have resolved so far for a given archive path.
-        ///   </param>
-        ///   <returns>
+        /// </param>
+        /// <returns>
         ///     The folder in the user's inventory that matches best the archive path given.  If no such folder was found
         ///     then the passed in root destination folder is returned.
-        ///   </returns>
+        /// </returns>
         protected InventoryFolderBase ResolveDestinationFolder(
             InventoryFolderBase rootDestFolder,
             ref string archivePath,
@@ -389,22 +343,22 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Create a set of folders for the given path.
+        ///     Create a set of folders for the given path.
         /// </summary>
-        /// <param name = "destFolder">
-        ///   The root folder from which the creation will take place.
+        /// <param name="destFolder">
+        ///     The root folder from which the creation will take place.
         /// </param>
-        /// <param name = "iarPathExisting">
-        ///   the part of the iar path that already exists
+        /// <param name="iarPathExisting">
+        ///     the part of the iar path that already exists
         /// </param>
-        /// <param name = "iarPathToReplicate">
-        ///   The path to replicate in the user's inventory from iar
+        /// <param name="iarPathToReplicate">
+        ///     The path to replicate in the user's inventory from iar
         /// </param>
-        /// <param name = "resolvedFolders">
-        ///   The folders that we have resolved so far for a given archive path.
+        /// <param name="resolvedFolders">
+        ///     The folders that we have resolved so far for a given archive path.
         /// </param>
-        /// <param name = "loadedNodes">
-        ///   Track the inventory nodes created.
+        /// <param name="loadedNodes">
+        ///     Track the inventory nodes created.
         /// </param>
         protected void CreateFoldersForPath(
             InventoryFolderBase destFolder,
@@ -413,7 +367,7 @@ namespace Aurora.Modules.Archivers
             ref Dictionary<string, InventoryFolderBase> resolvedFolders,
             ref HashSet<InventoryNodeBase> loadedNodes)
         {
-            string[] rawDirsToCreate = iarPathToReplicate.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] rawDirsToCreate = iarPathToReplicate.Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
 
             for (int i = 0; i < rawDirsToCreate.Length; i++)
             {
@@ -438,7 +392,7 @@ namespace Aurora.Modules.Archivers
                 destFolder
                     = new InventoryFolderBase(
                         newFolderId, newFolderName, m_userInfo.PrincipalID,
-                        (short)AssetType.Unknown, destFolder.ID, 1);
+                        (short) AssetType.Unknown, destFolder.ID, 1);
                 m_registry.RequestModuleInterface<IInventoryService>().AddFolder(destFolder);
 
                 // Record that we have now created this folder
@@ -452,9 +406,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Load an item from the archive
+        ///     Load an item from the archive
         /// </summary>
-        /// <param name = "data">The raw item data</param>
+        /// <param name="data">The raw item data</param>
         /// <param name="loadFolder"> </param>
         protected InventoryItemBase LoadItem(byte[] data, InventoryFolderBase loadFolder)
         {
@@ -504,8 +458,8 @@ namespace Aurora.Modules.Archivers
             {
                 InventoryFolderBase f =
                     m_registry.RequestModuleInterface<IInventoryService>().GetFolderForType(item.Owner,
-                                                                                            (InventoryType)item.InvType,
-                                                                                            (AssetType)item.AssetType);
+                                                                                            (InventoryType) item.InvType,
+                                                                                            (AssetType) item.AssetType);
                 if (f != null)
                 {
                     //                    MainConsole.Instance.DebugFormat(
@@ -531,26 +485,21 @@ namespace Aurora.Modules.Archivers
                 }
             }
 
-            if (assetNonBinaryCollection.ContainsKey(item.AssetID))
-                item.AssetID = assetNonBinaryCollection[item.AssetID].ID;
-            else if (assetBinaryChangeRecord.ContainsKey(item.AssetID))
-                item.AssetID = assetBinaryChangeRecord[item.AssetID];
-
             if (!m_registry.RequestModuleInterface<IInventoryService>().AddItem(item))
             {
                 MainConsole.Instance.WarnFormat(
-                "[AGENT INVENTORY]: Agent {0} could not add item {1} {2}",
-                item.Owner, item.Name, item.ID);
+                    "[AGENT INVENTORY]: Agent {0} could not add item {1} {2}",
+                    item.Owner, item.Name, item.ID);
                 return false;
             }
             return true;
         }
 
         /// <summary>
-        ///   Load an asset
+        ///     Load an asset
         /// </summary>
         /// <param name="assetPath"> </param>
-        /// <param name = "data"></param>
+        /// <param name="data"></param>
         /// <returns>true if asset was successfully loaded, false otherwise</returns>
         private bool LoadAsset(string assetPath, byte[] data)
         {
@@ -577,53 +526,56 @@ namespace Aurora.Modules.Archivers
                 AssetType assetType = ArchiveConstants.EXTENSION_TO_ASSET_TYPE[extension];
 
                 if (assetType == AssetType.Unknown)
-                    MainConsole.Instance.WarnFormat("[INVENTORY ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length,
-                                     uuid);
+                    MainConsole.Instance.WarnFormat(
+                        "[INVENTORY ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length,
+                        uuid);
                 else if (assetType == AssetType.Object)
                 {
                     string xmlData = Utils.BytesToString(data);
-                    List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>
-                                                              {
-                                                                  SceneObjectSerializer.FromOriginalXmlFormat(xmlData,
-                                                                                                              m_registry)
-                                                              };
-
-                    if (m_creatorIdForAssetId.ContainsKey(UUID.Parse(uuid)))
+                    ISceneEntity sceneObject = SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(
+                        xmlData, m_registry);
+                    if (sceneObject != null)
                     {
-                        foreach (SceneObjectPart sop in from sog in sceneObjects from sop in sog.Parts where string.IsNullOrEmpty(sop.CreatorData) select sop)
-                            sop.CreatorID = m_creatorIdForAssetId[UUID.Parse(uuid)];
-                    }
-                    foreach (SceneObjectGroup sog in sceneObjects)
-                        foreach (SceneObjectPart sop in sog.Parts)
+                        if (m_creatorIdForAssetId.ContainsKey(UUID.Parse(uuid)))
+                        {
+                            foreach (
+                                ISceneChildEntity sop in
+                                    from sop in sceneObject.ChildrenEntities()
+                                    where string.IsNullOrEmpty(sop.CreatorData)
+                                    select sop)
+                                sop.CreatorID = m_creatorIdForAssetId[UUID.Parse(uuid)];
+                        }
+                        foreach (ISceneChildEntity sop in sceneObject.ChildrenEntities())
                         {
                             //Fix ownerIDs and perms
-                            sop.Inventory.ApplyGodPermissions((uint)PermissionMask.All);
-                            sog.ApplyPermissions((uint)PermissionMask.All);
+                            sop.Inventory.ApplyGodPermissions((uint) PermissionMask.All);
+                            sceneObject.ApplyPermissions((uint) PermissionMask.All);
                             foreach (TaskInventoryItem item in sop.Inventory.GetInventoryItems())
                                 item.OwnerID = m_userInfo.PrincipalID;
                             sop.OwnerID = m_userInfo.PrincipalID;
                         }
-                    data = Utils.StringToBytes(SceneObjectSerializer.ToOriginalXmlFormat(sceneObjects[0]));
+                        data =
+                            Utils.StringToBytes(
+                                SceneEntitySerializer.SceneObjectSerializer.ToOriginalXmlFormat(sceneObject));
+                    }
                 }
                 //MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
 
-                AssetBase asset = new AssetBase(UUID.Parse(uuid), "RandomName", assetType, m_overridecreator) { Data = data, Flags = AssetFlags.Normal };
+                AssetBase asset = new AssetBase(UUID.Parse(uuid), "RandomName", assetType, m_overridecreator)
+                                      {
+                                          Data =
+                                              data,
+                                          Flags
+                                              =
+                                              AssetFlags
+                                              .Normal
+                                      };
                 IAssetService assetService = m_registry.RequestModuleInterface<IAssetService>();
-                IAssetDataPlugin assetData = DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+                IAssetDataPlugin assetData = Framework.Utilities.DataManager.RequestPlugin<IAssetDataPlugin>();
                 if (assetData != null && ReplaceAssets)
                     assetData.Delete(asset.ID, true);
-                if (asset.IsBinaryAsset)
-                {
-                    UUID old_assid = asset.ID;
-                    asset.ID = assetService.Store(asset);
-                    if (old_assid != asset.ID)
-                        assetBinaryChangeRecord.Add(old_assid, asset.ID);
-                }
-                else
-                {
-                    assets2Save.Enqueue(asset.ID);
-                    assetNonBinaryCollection.Add(asset.ID, asset);
-                }
+
+                assetService.Store(asset);
                 return true;
             }
             MainConsole.Instance.ErrorFormat(

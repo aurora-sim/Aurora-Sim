@@ -27,7 +27,7 @@
 
 using System;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public class RegionInfoForEstateMenuArgs : EventArgs
     {
@@ -39,7 +39,7 @@ namespace Aurora.Framework
         public int pricePerMeter;
         public int redirectGridX;
         public int redirectGridY;
-        public uint regionFlags;
+        public ulong regionFlags;
         public string regionType;
         public byte simAccess;
         public string simName;

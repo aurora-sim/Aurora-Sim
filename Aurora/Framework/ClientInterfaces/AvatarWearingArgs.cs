@@ -29,14 +29,14 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public class AvatarWearingArgs : EventArgs
     {
         private List<Wearable> m_nowWearing = new List<Wearable>();
 
-        ///<summary>
-        ///</summary>
+        /// <summary>
+        /// </summary>
         public List<Wearable> NowWearing
         {
             get { return m_nowWearing; }

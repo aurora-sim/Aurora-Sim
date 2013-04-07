@@ -256,6 +256,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         DateTime llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture,
                              LSL_Vector offset);
+
         LSL_Integer llManageEstateAccess(LSL_Integer action, LSL_String avatar);
         DateTime llMapDestination(string simname, LSL_Vector pos, LSL_Vector look_at);
         LSL_String llMD5String(string src, int nonce);
@@ -414,8 +415,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void llTargetOmega(LSL_Vector axis, LSL_Float spinrate, LSL_Float gain);
         void llTargetRemove(int number);
         void llTeleportAgent(LSL_Key avatar, LSL_String landmark, LSL_Vector position, LSL_Vector look_at);
+
         void llTeleportAgentGlobalCoords(LSL_Key agent, LSL_Vector global_coordinates,
-            LSL_Vector region_coordinates, LSL_Vector look_at);
+                                         LSL_Vector region_coordinates, LSL_Vector look_at);
+
         DateTime llTeleportAgentHome(LSL_Key agent);
         DateTime llTextBox(string avatar, string message, int chat_channel);
         LSL_String llToLower(string source);

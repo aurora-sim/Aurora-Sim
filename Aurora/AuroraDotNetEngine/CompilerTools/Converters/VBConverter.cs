@@ -27,8 +27,8 @@
 
 using System;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
 using Microsoft.VisualBasic;
+
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools

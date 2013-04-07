@@ -1,0 +1,14 @@
+[Handlers]
+    AssetServiceOpenServerHandler = true
+    AssetServiceServerHandlerPort = 8010
+
+	SyncMessagePosterServiceHandler = SyncMessagePosterService
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8010
+	SyncMessagePosterServiceDoRemote = true
+	
+[ExternalCaps]
+	CapsHandlers = AssetCAPS
+
+[Includes]
+	Include-Base = Aurora.ServersBase.ini

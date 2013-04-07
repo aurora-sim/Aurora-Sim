@@ -29,8 +29,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using OpenMetaverse;
 using Aurora.Framework;
+using Aurora.Framework.Utilities;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {
@@ -91,7 +92,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private int TimeSliceEnd;
 
         /// <summary>
-        ///   Contains the script to execute functions in.
+        ///     Contains the script to execute functions in.
         /// </summary>
         protected IScript m_Script;
 
@@ -146,7 +147,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void OpenTimeSlice(EnumeratorInfo Start)
         {
-            TimeSliceEnd = Start == null ? Util.EnvironmentTickCountAdd(MaxTimeSlice) : Util.EnvironmentTickCountAdd(MaxTimeSlice / 2);
+            TimeSliceEnd = Start == null
+                               ? Util.EnvironmentTickCountAdd(MaxTimeSlice)
+                               : Util.EnvironmentTickCountAdd(MaxTimeSlice/2);
             InTimeSlice = true;
         }
 
@@ -217,7 +220,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             {
                 if (Start == null)
                 {
-                    Start = new EnumeratorInfo { Key = UUID.Random().Guid };
+                    Start = new EnumeratorInfo {Key = UUID.Random().Guid};
                 }
                 lock (m_enumerators)
                 {
@@ -225,10 +228,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 }
 
                 if (thread.Current is DateTime)
-                    Start.SleepTo = (DateTime)thread.Current;
+                    Start.SleepTo = (DateTime) thread.Current;
                 else if (thread.Current is string)
                 {
-                    ex = new Exception((string)thread.Current);
+                    ex = new Exception((string) thread.Current);
                     running = false;
                     lock (m_enumerators)
                     {

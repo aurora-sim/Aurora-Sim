@@ -27,6 +27,11 @@
 
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 
@@ -35,9 +40,7 @@ namespace Aurora.Services.DataService
     public class LocalOfflineMessagesConnector : ConnectorBase, IOfflineMessagesConnector
     {
         private IGenericData GD;
-        private int m_maxGroupOfflineMessages = 50;
         private int m_maxOfflineMessages = 20;
-        private bool m_saveGroupOfflineMessages = true;
 
         #region IOfflineMessagesConnector Members
 
@@ -49,20 +52,17 @@ namespace Aurora.Services.DataService
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "Generics",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            if (GD != null)
+                GD.ConnectToDatabase(defaultConnectionString, "Generics",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
 
             m_maxOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxOfflineMessages", m_maxOfflineMessages);
-            m_maxGroupOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxGroupOfflineMessages",
-                                                                                  m_maxGroupOfflineMessages);
-            m_saveGroupOfflineMessages = source.Configs["AuroraConnectors"].GetBoolean("SaveOfflineGroupChatMessages",
-                                                                                       m_saveGroupOfflineMessages);
             if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") ==
                 "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
             Init(simBase, Name);
         }
@@ -73,19 +73,20 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets all offline messages for the user in GridInstantMessage format.
+        ///     Gets all offline messages for the user in GridInstantMessage format.
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<GridInstantMessage> GetOfflineMessages(UUID agentID)
         {
             object remoteValue = DoRemote(agentID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GridInstantMessage>)remoteValue;
+                return (List<GridInstantMessage>) remoteValue;
 
             //Get all the messages
-            List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages", GD);
+            List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages",
+                                                                                             GD);
             Messages.AddRange(GenericUtils.GetGenerics<GridInstantMessage>(agentID, "GroupOfflineMessages", GD));
             //Clear them out now that we have them
             GenericUtils.RemoveGenericByType(agentID, "OfflineMessages", GD);
@@ -94,37 +95,22 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Adds a new offline message for the user.
+        ///     Adds a new offline message for the user.
         /// </summary>
-        /// <param name = "message"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        /// <param name="message"></param>
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool AddOfflineMessage(GridInstantMessage message)
         {
             object remoteValue = DoRemote(message);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue == null ? false : (bool) remoteValue;
 
-            if (message.fromGroup)
+            if (m_maxOfflineMessages <= 0 ||
+                GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
             {
-                if (!m_saveGroupOfflineMessages)
-                    return false;
-                if (m_maxGroupOfflineMessages <= 0 ||
-                    GenericUtils.GetGenericCount(message.toAgentID, "GroupOfflineMessages", GD) < m_maxOfflineMessages)
-                {
-                    GenericUtils.AddGeneric(message.toAgentID, "GroupOfflineMessages", UUID.Random().ToString(),
-                                            message.ToOSD(), GD);
-                    return true;
-                }
-            }
-            else
-            {
-                if (m_maxOfflineMessages <= 0 ||
-                    GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
-                {
-                    GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(),
-                                            message.ToOSD(), GD);
-                    return true;
-                }
+                GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(),
+                                        message.ToOSD(), GD);
+                return true;
             }
             return false;
         }

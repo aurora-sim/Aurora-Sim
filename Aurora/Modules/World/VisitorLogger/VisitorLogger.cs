@@ -28,17 +28,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.VisitorLogger
 {
     /// <summary>
-    ///   This module logs all visitors to the sim to a specified file
+    ///     This module logs all visitors to the sim to a specified file
     /// </summary>
-    public class VisitorLoggerModule : ISharedRegionModule
+    public class VisitorLoggerModule : INonSharedRegionModule
     {
         #region Declares
 
@@ -48,7 +50,7 @@ namespace Aurora.Modules.VisitorLogger
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
         {
@@ -58,10 +60,6 @@ namespace Aurora.Modules.VisitorLogger
                 m_enabled = config.GetBoolean("Enabled", m_enabled);
                 m_fileName = config.GetString("FileName", m_fileName);
             }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -108,7 +106,8 @@ namespace Aurora.Modules.VisitorLogger
                     StreamWriter m_streamWriter = new StreamWriter(stream);
                     m_streamWriter.BaseStream.Position += m_streamWriter.BaseStream.Length;
 
-                    string LineToWrite = DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " + client.Name + " left " +
+                    string LineToWrite = DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() +
+                                         " - " + client.Name + " left " +
                                          client.Scene.RegionInfo.RegionName + " after " +
                                          (DateTime.Now - m_timesOfUsers[client.AgentId]).Minutes + " minutes.";
                     m_timesOfUsers.Remove(presence.UUID);
@@ -132,7 +131,8 @@ namespace Aurora.Modules.VisitorLogger
                 StreamWriter m_streamWriter = new StreamWriter(stream);
                 m_streamWriter.BaseStream.Position += m_streamWriter.BaseStream.Length;
 
-                string LineToWrite = DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " + presence.Name + " entered " +
+                string LineToWrite = DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " +
+                                     presence.Name + " entered " +
                                      presence.Scene.RegionInfo.RegionName + ".";
                 m_timesOfUsers[presence.UUID] = DateTime.Now;
 

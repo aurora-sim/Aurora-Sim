@@ -26,11 +26,13 @@
  */
 
 using System;
-using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     [Serializable]
     public class GridInstantMessage : IDataTransferable
@@ -68,7 +70,7 @@ namespace Aurora.Framework
             fromGroup = _fromGroup;
             message = _message;
             imSessionID = _imSessionID;
-            offline = _offline ? (Byte)1 : (Byte)0;
+            offline = _offline ? (Byte) 1 : (Byte) 0;
             Position = _position;
             binaryBucket = _binaryBucket;
 

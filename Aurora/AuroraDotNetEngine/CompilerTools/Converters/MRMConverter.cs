@@ -32,6 +32,7 @@ using System.IO;
 using Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule;
 using Microsoft.CSharp;
 using OpenMetaverse;
+
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
@@ -65,7 +66,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
         {
-            string[] lines = Script.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] lines = Script.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
             List<string> libraries = new List<string>();
             foreach (string s in lines)
                 if (s.StartsWith("//@DEPENDS:"))
@@ -78,7 +79,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 if (rootPath != null) parameters.ReferencedAssemblies.Add(Path.Combine(rootPath, library));
             }
 
-            libraries.Add("OpenSim.Region.OptionalModules.dll");
             libraries.Add("OpenMetaverseTypes.dll");
             libraries.Add("log4net.dll");
 
@@ -126,7 +126,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void FinishCompile(IScriptModulePlugin plugin, ScriptData data, IScript Script)
         {
-            MRMBase mmb = (MRMBase)Script;
+            MRMBase mmb = (MRMBase) Script;
             if (mmb == null)
                 return;
 

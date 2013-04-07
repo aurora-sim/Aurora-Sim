@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Web
 {
@@ -19,17 +21,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/register.html"
-                       };
+                           {
+                               "html/register.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -47,22 +57,27 @@ namespace Aurora.Modules.Web
                 string UserDOBMonth = requestParameters["UserDOBMonth"].ToString();
                 string UserDOBDay = requestParameters["UserDOBDay"].ToString();
                 string UserDOBYear = requestParameters["UserDOBYear"].ToString();
-                string AvatarArchive = requestParameters.ContainsKey("AvatarArchive") ? requestParameters["AvatarArchive"].ToString() : "";
-                bool ToSAccept = requestParameters.ContainsKey("ToSAccept") && requestParameters["ToSAccept"].ToString() == "Accepted";
+                string AvatarArchive = requestParameters.ContainsKey("AvatarArchive")
+                                           ? requestParameters["AvatarArchive"].ToString()
+                                           : "";
+                bool ToSAccept = requestParameters.ContainsKey("ToSAccept") &&
+                                 requestParameters["ToSAccept"].ToString() == "Accepted";
 
-                IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+                IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
                 var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
                 if (ToSAccept)
                 {
                     AvatarPassword = Util.Md5Hash(AvatarPassword);
 
-                    IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
+                    IUserAccountService accountService =
+                        webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                     UUID userID = UUID.Random();
-                    string error = accountService.CreateUser(userID, settings.DefaultScopeID, AvatarName, AvatarPassword, UserEmail);
+                    string error = accountService.CreateUser(userID, settings.DefaultScopeID, AvatarName, AvatarPassword,
+                                                             UserEmail);
                     if (error == "")
                     {
-                        IAgentConnector con = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+                        IAgentConnector con = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
                         con.CreateNewAgent(userID);
                         IAgentInfo agent = con.GetAgent(userID);
                         agent.OtherAgentInformation["RLFirstName"] = FirstName;
@@ -83,7 +98,8 @@ namespace Aurora.Modules.Web
 
                         if (AvatarArchive != "")
                         {
-                            IProfileConnector profileData = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                            IProfileConnector profileData =
+                                Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
                             profileData.CreateNewProfile(userID);
 
                             IUserProfileInfo profile = profileData.GetUserProfile(userID);
@@ -93,9 +109,9 @@ namespace Aurora.Modules.Web
                         }
 
                         response = "<h3>Successfully created account, redirecting to main page</h3>" +
-                            "<script language=\"javascript\">" +
-                            "setTimeout(function() {window.location.href = \"index.html\";}, 3000);" +
-                            "</script>";
+                                   "<script language=\"javascript\">" +
+                                   "setTimeout(function() {window.location.href = \"index.html\";}, 3000);" +
+                                   "</script>";
                     }
                     else
                         response = "<h3>" + error + "</h3>";
@@ -107,36 +123,41 @@ namespace Aurora.Modules.Web
 
             List<Dictionary<string, object>> daysArgs = new List<Dictionary<string, object>>();
             for (int i = 1; i <= 31; i++)
-                daysArgs.Add(new Dictionary<string, object> { { "Value", i } });
+                daysArgs.Add(new Dictionary<string, object> {{"Value", i}});
 
             List<Dictionary<string, object>> monthsArgs = new List<Dictionary<string, object>>();
             for (int i = 1; i <= 12; i++)
-                monthsArgs.Add(new Dictionary<string, object> { { "Value", i } });
+                monthsArgs.Add(new Dictionary<string, object> {{"Value", i}});
 
             List<Dictionary<string, object>> yearsArgs = new List<Dictionary<string, object>>();
             for (int i = 1900; i <= 2013; i++)
-                yearsArgs.Add(new Dictionary<string, object> { { "Value", i } });
+                yearsArgs.Add(new Dictionary<string, object> {{"Value", i}});
 
             vars.Add("Days", daysArgs);
             vars.Add("Months", monthsArgs);
             vars.Add("Years", yearsArgs);
 
-            List<AvatarArchive> archives = Aurora.DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>().GetAvatarArchives(true);
+            List<AvatarArchive> archives = webInterface.Registry.RequestModuleInterface<IAvatarAppearanceArchiver>().GetAvatarArchives();
 
             List<Dictionary<string, object>> avatarArchives = new List<Dictionary<string, object>>();
             IWebHttpTextureService webTextureService = webInterface.Registry.
-                    RequestModuleInterface<IWebHttpTextureService>();
+                                                                    RequestModuleInterface<IWebHttpTextureService>();
             foreach (var archive in archives)
-                avatarArchives.Add(new Dictionary<string, object> { 
-                { "AvatarArchiveName", archive.Name },
-                { "AvatarArchiveSnapshotID", archive.Snapshot }, 
-                { "AvatarArchiveSnapshotURL", webTextureService.GetTextureURL(UUID.Parse(archive.Snapshot)) } 
-                });
+                avatarArchives.Add(new Dictionary<string, object>
+                                       {
+                                           {"AvatarArchiveName", archive.FileName },
+                                           {"AvatarArchiveSnapshotID", archive.Snapshot},
+                                           {
+                                               "AvatarArchiveSnapshotURL",
+                                               webTextureService.GetTextureURL(archive.Snapshot)
+                                           }
+                                       });
 
             vars.Add("AvatarArchive", avatarArchives);
 
-            
-            IConfig loginServerConfig = webInterface.Registry.RequestModuleInterface<ISimulationBase>().ConfigSource.Configs["LoginService"];
+
+            IConfig loginServerConfig =
+                webInterface.Registry.RequestModuleInterface<ISimulationBase>().ConfigSource.Configs["LoginService"];
             string tosLocation = "";
             if (loginServerConfig != null && loginServerConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false))
                 tosLocation = loginServerConfig.GetString("FileNameOfTOS", "");
@@ -144,7 +165,8 @@ namespace Aurora.Modules.Web
 
             if (tosLocation != "")
             {
-                System.IO.StreamReader reader = new System.IO.StreamReader(System.IO.Path.Combine(Environment.CurrentDirectory, tosLocation));
+                System.IO.StreamReader reader =
+                    new System.IO.StreamReader(System.IO.Path.Combine(Environment.CurrentDirectory, tosLocation));
                 ToS = reader.ReadToEnd();
                 reader.Close();
             }

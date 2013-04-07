@@ -25,16 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.IO;
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.IO;
 
 namespace Aurora.Modules.Auction
 {
@@ -112,16 +118,16 @@ namespace Aurora.Modules.Auction
             retVal["ViewerStartAuction"] = CapsUtil.CreateCAPS("ViewerStartAuction", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ViewerStartAuction"],
-                                                        ViewerStartAuction));
+                                                             ViewerStartAuction));
             return retVal;
         }
 
         private byte[] ViewerStartAuction(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                          OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
-            return MainServer.NoResponse;
+            return MainServer.BlankResponse;
         }
 
         #endregion
@@ -137,7 +143,7 @@ namespace Aurora.Modules.Auction
                 if (landObject == null)
                     return;
                 landObject.LandData.SnapshotID = SnapshotID;
-                landObject.LandData.AuctionID = (uint)Util.RandomClass.Next(0, int.MaxValue);
+                landObject.LandData.AuctionID = (uint) Util.RandomClass.Next(0, int.MaxValue);
                 landObject.LandData.Status = ParcelStatus.Abandoned;
                 landObject.SendLandUpdateToAvatarsOverMe();
             }
@@ -151,7 +157,7 @@ namespace Aurora.Modules.Auction
         public void AddAuctionBid(int LocalID, UUID userID, int bid)
         {
             AuctionInfo info = GetAuctionInfo(LocalID);
-            info.AuctionBids.Add(new AuctionBid() { Amount = bid, AuctionBidder = userID, TimeBid = DateTime.Now });
+            info.AuctionBids.Add(new AuctionBid() {Amount = bid, AuctionBidder = userID, TimeBid = DateTime.Now});
             SaveAuctionInfo(LocalID, info);
         }
 
@@ -165,31 +171,35 @@ namespace Aurora.Modules.Auction
                     return;
 
                 AuctionInfo info = GetAuctionInfo(LocalID);
-                AuctionBid highestBid = new AuctionBid() { Amount = 0 };
+                AuctionBid highestBid = new AuctionBid() {Amount = 0};
                 foreach (AuctionBid bid in info.AuctionBids)
                     if (highestBid.Amount < bid.Amount)
                         highestBid = bid;
 
-                IOfflineMessagesConnector offlineMessages = Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
+                IOfflineMessagesConnector offlineMessages =
+                    Framework.Utilities.DataManager.RequestPlugin<IOfflineMessagesConnector>();
                 if (offlineMessages != null)
                     offlineMessages.AddOfflineMessage(new GridInstantMessage()
-                    {
-                        binaryBucket = new byte[0],
-                        dialog = (byte)InstantMessageDialog.MessageBox,
-                        fromAgentID = UUID.Zero,
-                        fromAgentName = "System",
-                        fromGroup = false,
-                        imSessionID = UUID.Random(),
-                        message = "You won the auction for the parcel " + landObject.LandData.Name + ", paying " + highestBid.Amount + " for it",
-                        offline = 0,
-                        ParentEstateID = 0,
-                        Position = Vector3.Zero,
-                        RegionID = m_scene.RegionInfo.RegionID,
-                        timestamp = (uint)Util.UnixTimeSinceEpoch(),
-                        toAgentID = highestBid.AuctionBidder
-                    });
+                                                          {
+                                                              binaryBucket = new byte[0],
+                                                              dialog = (byte) InstantMessageDialog.MessageBox,
+                                                              fromAgentID = UUID.Zero,
+                                                              fromAgentName = "System",
+                                                              fromGroup = false,
+                                                              imSessionID = UUID.Random(),
+                                                              message =
+                                                                  "You won the auction for the parcel " +
+                                                                  landObject.LandData.Name + ", paying " +
+                                                                  highestBid.Amount + " for it",
+                                                              offline = 0,
+                                                              ParentEstateID = 0,
+                                                              Position = Vector3.Zero,
+                                                              RegionID = m_scene.RegionInfo.RegionID,
+                                                              timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                              toAgentID = highestBid.AuctionBidder
+                                                          });
                 landObject.UpdateLandSold(highestBid.AuctionBidder, UUID.Zero, false, landObject.LandData.AuctionID,
-                    highestBid.Amount, landObject.LandData.Area);
+                                          highestBid.Amount, landObject.LandData.Area);
             }
         }
 
@@ -201,7 +211,7 @@ namespace Aurora.Modules.Auction
                 ILandObject landObject = parcelManagement.GetLandObject(LocalID);
                 if (landObject == null)
                     return;
-                landObject.LandData.GenericData["AuctionInfo"] = info.ToOSD();
+                landObject.LandData.AuctionInfo = info;
             }
         }
 
@@ -213,10 +223,7 @@ namespace Aurora.Modules.Auction
                 ILandObject landObject = parcelManagement.GetLandObject(LocalID);
                 if (landObject == null)
                     return null;
-                OSDMap map = (OSDMap)landObject.LandData.GenericData["AuctionInfo"];
-                AuctionInfo info = new AuctionInfo();
-                info.FromOSD(map);
-                return info;
+                return landObject.LandData.AuctionInfo;
             }
             return null;
         }

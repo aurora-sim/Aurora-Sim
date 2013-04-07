@@ -24,26 +24,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.DataManager;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Ban
 {
     public class LocalPresenceInfoConnector : IPresenceInfo
-	{
+    {
         private IGenericData GD = null;
         private string DatabaseToAuthTable = "auth";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry, string DefaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry,
+                               string DefaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("PresenceInfoConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("PresenceInfoConnector", "LocalConnector") ==
+                "LocalConnector")
             {
                 GD = GenericData;
 
@@ -52,8 +54,9 @@ namespace Aurora.Modules.Ban
                     DefaultConnectionString = source.Configs[Name].GetString("ConnectionString", DefaultConnectionString);
                     DatabaseToAuthTable = source.Configs[Name].GetString("DatabasePathToAuthTable", DatabaseToAuthTable);
                 }
-                GD.ConnectToDatabase(DefaultConnectionString, "PresenceInfo", true);
-                DataManager.DataManager.RegisterPlugin(this);
+                if (GD != null)
+                    GD.ConnectToDatabase(DefaultConnectionString, "PresenceInfo", true);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -67,14 +70,14 @@ namespace Aurora.Modules.Ban
         }
 
         public PresenceInfo GetPresenceInfo(UUID agentID)
-		{
+        {
             PresenceInfo agent = new PresenceInfo();
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["AgentID"] = agentID;
-            List<string> query = GD.Query(new[] { "*" }, "baninfo", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> query = GD.Query(new[] {"*"}, "baninfo", new QueryFilter
+                                                                      {
+                                                                          andFilters = where
+                                                                      }, null, null, null);
 
             if (query.Count == 0) //Couldn't find it, return null then.
             {
@@ -84,7 +87,8 @@ namespace Aurora.Modules.Ban
             agent.AgentID = agentID;
             if (query[1] != "")
             {
-                agent.Flags = (PresenceInfo.PresenceInfoFlags)Enum.Parse(typeof(PresenceInfo.PresenceInfoFlags), query[1]);
+                agent.Flags =
+                    (PresenceInfo.PresenceInfoFlags) Enum.Parse(typeof (PresenceInfo.PresenceInfoFlags), query[1]);
             }
             agent.KnownAlts = Util.ConvertToList(query[2]);
             agent.KnownID0s = Util.ConvertToList(query[3]);
@@ -96,12 +100,12 @@ namespace Aurora.Modules.Ban
             agent.LastKnownMac = query[9];
             agent.LastKnownViewer = query[10];
             agent.Platform = query[11];
-            
-			return agent;
-		}
+
+            return agent;
+        }
 
         public void UpdatePresenceInfo(PresenceInfo agent)
-		{
+        {
             Dictionary<string, object> row = new Dictionary<string, object>(12);
             row["AgentID"] = agent.AgentID;
             row["Flags"] = agent.Flags;
@@ -120,7 +124,7 @@ namespace Aurora.Modules.Ban
 
         public void Check(List<string> viewers, bool includeList)
         {
-            List<string> query = GD.Query(new[] { "AgentID" }, "baninfo", new QueryFilter(), null, null, null);
+            List<string> query = GD.Query(new[] {"AgentID"}, "baninfo", new QueryFilter(), null, null, null);
             foreach (string ID in query)
             {
                 //Check all
@@ -128,7 +132,7 @@ namespace Aurora.Modules.Ban
             }
         }
 
-        public void Check (PresenceInfo info, List<string> viewers, bool includeList)
+        public void Check(PresenceInfo info, List<string> viewers, bool includeList)
         {
             //
             //Check passwords
@@ -142,13 +146,13 @@ namespace Aurora.Modules.Ban
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UUID"] = info.AgentID;
 
-            List<string> query = GD.Query(new[] { "passwordHash" }, DatabaseToAuthTable, filter, null, null, null);
+            List<string> query = GD.Query(new[] {"passwordHash"}, DatabaseToAuthTable, filter, null, null, null);
 
             if (query.Count != 0)
             {
                 filter = new QueryFilter();
                 filter.andFilters["passwordHash"] = query[0];
-                query = GD.Query(new[] { "UUID" }, DatabaseToAuthTable, filter, null, null, null);
+                query = GD.Query(new[] {"UUID"}, DatabaseToAuthTable, filter, null, null, null);
 
                 foreach (string ID in query)
                 {
@@ -158,7 +162,7 @@ namespace Aurora.Modules.Ban
                         continue;
                     }
 
-                    CoralateLists (info, suspectedInfo);
+                    CoralateLists(info, suspectedInfo);
 
                     needsUpdated = true;
                 }
@@ -172,7 +176,7 @@ namespace Aurora.Modules.Ban
             // 2 == Flags
 
             filter = new QueryFilter();
-            query = GD.Query(new[] { "AgentID" }, "baninfo", filter, null, null, null);
+            query = GD.Query(new[] {"AgentID"}, "baninfo", filter, null, null, null);
 
             foreach (string ID in query)
             {
@@ -183,7 +187,7 @@ namespace Aurora.Modules.Ban
                 {
                     if (info.KnownID0s.Contains(ID0))
                     {
-                        CoralateLists (info, suspectedInfo);
+                        CoralateLists(info, suspectedInfo);
                         needsUpdated = true;
                     }
                 }
@@ -191,7 +195,7 @@ namespace Aurora.Modules.Ban
                 {
                     if (info.KnownIPs.Contains(IP.Split(':')[0]))
                     {
-                        CoralateLists (info, suspectedInfo);
+                        CoralateLists(info, suspectedInfo);
                         needsUpdated = true;
                     }
                 }
@@ -199,7 +203,7 @@ namespace Aurora.Modules.Ban
                 {
                     if (info.KnownMacs.Contains(Mac))
                     {
-                        CoralateLists (info, suspectedInfo);
+                        CoralateLists(info, suspectedInfo);
                         needsUpdated = true;
                     }
                 }
@@ -212,21 +216,23 @@ namespace Aurora.Modules.Ban
                     if ((info.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean)
                     {
                         //Update them to suspected for their viewer
-                        AddFlag (ref info, PresenceInfo.PresenceInfoFlags.Suspected);
+                        AddFlag(ref info, PresenceInfo.PresenceInfoFlags.Suspected);
                         //And update them later
                         needsUpdated = true;
                     }
-                    else if ((info.Flags & PresenceInfo.PresenceInfoFlags.Suspected) == PresenceInfo.PresenceInfoFlags.Suspected)
+                    else if ((info.Flags & PresenceInfo.PresenceInfoFlags.Suspected) ==
+                             PresenceInfo.PresenceInfoFlags.Suspected)
                     {
                         //Suspected, we don't really want to move them higher than this...
                     }
-                    else if ((info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known)
+                    else if ((info.Flags & PresenceInfo.PresenceInfoFlags.Known) ==
+                             PresenceInfo.PresenceInfoFlags.Known)
                     {
                         //Known, can't update anymore
                     }
                 }
             }
-            if (DoGC(info) & !needsUpdated)//Clean up all info
+            if (DoGC(info) & !needsUpdated) //Clean up all info
                 needsUpdated = true;
 
             #endregion
@@ -275,36 +281,38 @@ namespace Aurora.Modules.Ban
             return update;
         }
 
-        private void CoralateLists (PresenceInfo info, PresenceInfo suspectedInfo)
+        private void CoralateLists(PresenceInfo info, PresenceInfo suspectedInfo)
         {
             bool addedFlag = false;
             const PresenceInfo.PresenceInfoFlags Flag = 0;
 
             if ((suspectedInfo.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean &&
-                    (info.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean)
+                (info.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean)
             {
                 //They are both clean, do nothing
             }
-            else if ((suspectedInfo.Flags & PresenceInfo.PresenceInfoFlags.Suspected) == PresenceInfo.PresenceInfoFlags.Suspected ||
-                (info.Flags & PresenceInfo.PresenceInfoFlags.Suspected) == PresenceInfo.PresenceInfoFlags.Suspected)
+            else if ((suspectedInfo.Flags & PresenceInfo.PresenceInfoFlags.Suspected) ==
+                     PresenceInfo.PresenceInfoFlags.Suspected ||
+                     (info.Flags & PresenceInfo.PresenceInfoFlags.Suspected) == PresenceInfo.PresenceInfoFlags.Suspected)
             {
                 //Suspected, update them both
                 addedFlag = true;
-                AddFlag (ref info, PresenceInfo.PresenceInfoFlags.Suspected);
-                AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.Suspected);
+                AddFlag(ref info, PresenceInfo.PresenceInfoFlags.Suspected);
+                AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.Suspected);
             }
-            else if ((suspectedInfo.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known ||
-                (info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known)
+            else if ((suspectedInfo.Flags & PresenceInfo.PresenceInfoFlags.Known) ==
+                     PresenceInfo.PresenceInfoFlags.Known ||
+                     (info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known)
             {
                 //Known, update them both
                 addedFlag = true;
-                AddFlag (ref info, PresenceInfo.PresenceInfoFlags.Known);
-                AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.Known);
+                AddFlag(ref info, PresenceInfo.PresenceInfoFlags.Known);
+                AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.Known);
             }
 
             //Add the alt account flag
-            AddFlag (ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
-            AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
+            AddFlag(ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
+            AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
 
             if (suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.Suspected ||
                 suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected ||
@@ -312,32 +320,32 @@ namespace Aurora.Modules.Ban
                 info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected)
             {
                 //They might be an alt, but the other is clean, so don't bother them too much
-                AddFlag (ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
-                AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
+                AddFlag(ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
+                AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
             }
             else if (suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.Known ||
-                suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
-                info.Flags == PresenceInfo.PresenceInfoFlags.Known ||
-                info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown)
+                     suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
+                     info.Flags == PresenceInfo.PresenceInfoFlags.Known ||
+                     info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown)
             {
                 //Flag 'em
-                AddFlag (ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
-                AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
+                AddFlag(ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
+                AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
             }
 
             //Add the lists together
-            List<string> alts = new List<string> ();
+            List<string> alts = new List<string>();
             foreach (string alt in info.KnownAlts)
             {
-                if (!alts.Contains (alt))
-                    alts.Add (alt);
+                if (!alts.Contains(alt))
+                    alts.Add(alt);
             }
             foreach (string alt in suspectedInfo.KnownAlts)
             {
-                if (!alts.Contains (alt))
-                    alts.Add (alt);
+                if (!alts.Contains(alt))
+                    alts.Add(alt);
             }
-            if(!alts.Contains(suspectedInfo.AgentID.ToString()))
+            if (!alts.Contains(suspectedInfo.AgentID.ToString()))
                 alts.Add(suspectedInfo.AgentID.ToString());
             if (!alts.Contains(info.AgentID.ToString()))
                 alts.Add(info.AgentID.ToString());
@@ -345,16 +353,18 @@ namespace Aurora.Modules.Ban
             //If we have added a flag, we need to update ALL alts as well
             if (addedFlag || alts.Count != 0)
             {
-                foreach (string alt in alts.Where(s => s != suspectedInfo.AgentID.ToString() && s != info.AgentID.ToString()))
+                foreach (
+                    string alt in alts.Where(s => s != suspectedInfo.AgentID.ToString() && s != info.AgentID.ToString())
+                    )
                 {
-                    PresenceInfo altInfo = GetPresenceInfo (UUID.Parse (alt));
+                    PresenceInfo altInfo = GetPresenceInfo(UUID.Parse(alt));
                     if (altInfo != null)
                     {
                         //Give them the flag as well
-                        AddFlag (ref altInfo, Flag);
+                        AddFlag(ref altInfo, Flag);
 
                         //Add the alt account flag
-                        AddFlag (ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
+                        AddFlag(ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
 
                         //Also give them the flags for alts
                         if (suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.Suspected ||
@@ -363,15 +373,15 @@ namespace Aurora.Modules.Ban
                             info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected)
                         {
                             //They might be an alt, but the other is clean, so don't bother them too much
-                            AddFlag (ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
+                            AddFlag(ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
                         }
                         else if (suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.Known ||
-                            suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
-                            info.Flags == PresenceInfo.PresenceInfoFlags.Known ||
-                            info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown)
+                                 suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
+                                 info.Flags == PresenceInfo.PresenceInfoFlags.Known ||
+                                 info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown)
                         {
                             //Flag 'em
-                            AddFlag (ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
+                            AddFlag(ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
                         }
                         altInfo.KnownAlts = new List<string>(alts.Where(s => s != altInfo.AgentID.ToString()));
 
@@ -386,10 +396,10 @@ namespace Aurora.Modules.Ban
             suspectedInfo.KnownAlts = new List<string>(alts.Where(s => s != suspectedInfo.AgentID.ToString()));
 
             //Update them, as we changed their info, we get updated below
-            UpdatePresenceInfo (suspectedInfo);
+            UpdatePresenceInfo(suspectedInfo);
         }
 
-        private void AddFlag (ref PresenceInfo info, PresenceInfo.PresenceInfoFlags presenceInfoFlags)
+        private void AddFlag(ref PresenceInfo info, PresenceInfo.PresenceInfoFlags presenceInfoFlags)
         {
             if (presenceInfoFlags == 0)
                 return;

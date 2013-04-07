@@ -25,11 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Aurora.Services.DataService;
 using Nini.Config;
-using Aurora.Framework;
 
-namespace OpenSim.CoreApplicationPlugins
+namespace Aurora.CoreApplicationPlugins.AuroraData
 {
     public class AuroraDataStartupPlugin : IApplicationPlugin
     {

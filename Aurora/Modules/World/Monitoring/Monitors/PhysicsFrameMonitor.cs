@@ -26,10 +26,12 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class PhysicsFrameMonitor : IMonitor, IPhysicsFrameMonitor
+    public class PhysicsFrameMonitor : IPhysicsFrameMonitor
     {
         private float physicsFPS;
 
@@ -47,6 +49,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Total Physics Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IPhysicsFrameMonitor";
         }
 
         public string GetFriendlyValue()

@@ -28,21 +28,22 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
-using Language = Aurora.GoogleAPIs.Language;
-using Google.API.Translate;
 
 namespace Aurora.Modules.Chat
 {
     /// <summary>
-    ///   This allows you to use a calculator inworld via chat
-    ///   Example would be to type: 
-    ///   calc.Add 1 1 
-    ///   which would return 2
-    ///   or 
-    ///   calc.Divide 4 2
-    ///   which returns 2
+    ///     This allows you to use a calculator inworld via chat
+    ///     Example would be to type:
+    ///     calc.Add 1 1
+    ///     which would return 2
+    ///     or
+    ///     calc.Divide 4 2
+    ///     which returns 2
     /// </summary>
     public class CalcChatPlugin : IChatPlugin
     {
@@ -117,11 +118,11 @@ namespace Aurora.Modules.Chat
         #endregion
 
         /// <summary>
-        ///   Tell the client what the result is
+        ///     Tell the client what the result is
         /// </summary>
-        /// <param name = "result"></param>
-        /// <param name = "scene"></param>
-        /// <param name = "position"></param>
+        /// <param name="result"></param>
+        /// <param name="scene"></param>
+        /// <param name="position"></param>
         private void BuildAndSendResult(float result, IScene scene, Vector3 position)
         {
             OSChatMessage message = new OSChatMessage
@@ -144,139 +145,7 @@ namespace Aurora.Modules.Chat
     }
 
     /// <summary>
-    ///   Translate chat from X language to Y language from chat
-    ///   Example to turn on translator
-    ///   translator en >> fr         translator en > fr
-    ///   translator fr << en translator fr < en Example to enable/disable the translator translator settings enabled true/false
-    ///    Example to show the old text previous to translating translator settings showold =  true/false Help for the translator
-    ///    translator help
-    /// </summary>
-    public class TranslatorPlugin : IChatPlugin
-    {
-        private readonly Dictionary<UUID, TranslatorUserInfo> UserInfos = new Dictionary<UUID, TranslatorUserInfo>();
-
-        #region IChatPlugin Members
-
-        public void Initialize(IChatModule module)
-        {
-            //We register all so that we can hook up to all chat when they enable us
-            module.RegisterChatPlugin("all", this);
-        }
-
-        public bool OnNewChatMessageFromWorld(OSChatMessage c, out OSChatMessage newc)
-        {
-            string[] operators = c.Message.Split(' ');
-            TranslatorUserInfo UInfo = null;
-
-            if (operators[0].StartsWith("translate", StringComparison.CurrentCultureIgnoreCase))
-            {
-                // Example to turn on translator
-                // translator en >> fr         translator en > fr
-                // translator fr << en         translator fr < en
-
-                if (operators[2].Contains(">")) //Covers > and >>, 
-                {
-                    UserInfos[c.SenderUUID] = new TranslatorUserInfo
-                                                  {
-                                                      enabled = true,
-                                                      From = Language.GetValue(operators[1]),
-                                                      To = Language.GetValue(operators[3])
-                                                  };
-                }
-                else if (operators[2].Contains("<")) //Covers < and <<, 
-                {
-                    UserInfos[c.SenderUUID] = new TranslatorUserInfo
-                                                  {
-                                                      enabled = true,
-                                                      From = Language.GetValue(operators[3]),
-                                                      To = Language.GetValue(operators[1])
-                                                  };
-                }
-            }
-            else if (c.Message.StartsWith("translator settings", StringComparison.CurrentCultureIgnoreCase))
-            {
-                if (UserInfos.TryGetValue(c.SenderUUID, out UInfo))
-                {
-                    if (operators[2] == "enabled")
-                        UInfo.enabled = bool.Parse(operators[3]);
-                    if (operators[2] == "showold")
-                        UInfo.ShowNonTranslated = bool.Parse(operators[3]);
-                }
-            }
-            else if (c.Message.StartsWith("translator help", StringComparison.CurrentCultureIgnoreCase))
-            {
-                c.Message = "Translate: \n" +
-                            "translate from >> to  - translates from language 'from' into language 'to'\n" +
-                            "Settings:\n" +
-                            "translator settings enabled true/false - enables the translator\n" +
-                            "translator settings showold true/false - shows the original chat\n" +
-                            "Languages\n";
-                foreach (Language lang in Language.TranslatableList)
-                {
-                    c.Message += lang.Name + " - " + lang.Value + "\n";
-                }
-            }
-            else if (UserInfos.TryGetValue(c.SenderUUID, out UInfo))
-            {
-                //If enabled, ask google translator about it
-                if (UInfo.enabled)
-                {
-                    TranslateClient tc =
-                        new TranslateClient("http://ajax.googleapis.com/ajax/services/language/translate");
-                    string translated = "";
-                    try
-                    {
-                        translated = tc.Translate(c.Message, UInfo.From.Value, UInfo.To.Value);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("[Aurora Translator]: Error in requesting translation, " + ex);
-                    }
-                    if (!UInfo.ShowNonTranslated)
-                        c.Message = translated;
-                    else
-                        c.Message = translated + " (" + c.Message + ")";
-                }
-            }
-            newc = c;
-            return true;
-        }
-
-        public void OnNewClient(IClientAPI client)
-        {
-        }
-
-        public void OnClosingClient(UUID clientID, IScene scene)
-        {
-            UserInfos.Remove(clientID);
-        }
-
-        public string Name
-        {
-            get { return "TranslatorPlugin"; }
-        }
-
-        #endregion
-
-        public void Dispose()
-        {
-        }
-
-        #region Nested type: TranslatorUserInfo
-
-        public class TranslatorUserInfo
-        {
-            public Language From = Language.Unknown;
-            public bool ShowNonTranslated;
-            public Language To = Language.English;
-            public bool enabled;
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    ///   Set some default settings for users entering the sim
+    ///     Set some default settings for users entering the sim
     /// </summary>
     public class AdminChatPlugin : IChatPlugin
     {

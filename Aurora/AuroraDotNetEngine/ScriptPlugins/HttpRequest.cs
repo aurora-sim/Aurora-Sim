@@ -25,11 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using System.Collections.Generic;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -40,7 +43,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
-        public bool RemoveOnStateChange { get { return false; } }
+        public bool RemoveOnStateChange
+        {
+            get { return false; }
+        }
 
         public void Initialize(ScriptEngine engine)
         {
@@ -71,7 +77,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                 while (httpInfo != null)
                 {
-                    IHttpRequestClass info = (IHttpRequestClass)httpInfo;
+                    IHttpRequestClass info = (IHttpRequestClass) httpInfo;
                     //MainConsole.Instance.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
 
                     // Deliver data to prim's remote_data handler
@@ -87,18 +93,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                           };
 
                     m_ScriptEngine.AddToObjectQueue(info.PrimID, "http_response", new DetectParams[0], resobj);
-                    if (info.Status == (int)Aurora.Framework.Servers.HttpServer.OSHttpStatusCode.ClientErrorJoker && info.VerbroseThrottle)
+                    if (info.Status == (int) OSHttpStatusCode.ClientErrorJoker &&
+                        info.VerbroseThrottle)
                     {
-                        foreach (var scene in m_ScriptEngine.Worlds)
+                        ISceneChildEntity part = m_ScriptEngine.Scene.GetSceneObjectPart(info.PrimID);
+                        if (part != null)
                         {
-                            ISceneChildEntity part = scene.GetSceneObjectPart(info.PrimID);
-                            if (part != null)
-                            {
-                                IChatModule chatModule = scene.RequestModuleInterface<IChatModule>();
-                                if (chatModule != null)
-                                    chatModule.SimChat(part.Name + "(" + part.AbsolutePosition + ") http_response error: Too many outgoing requests.", ChatTypeEnum.DebugChannel,
-                                                       2147483647, part.AbsolutePosition, part.Name, part.UUID, false, scene);
-                            }
+                            IChatModule chatModule = m_ScriptEngine.Scene.RequestModuleInterface<IChatModule>();
+                            if (chatModule != null)
+                                chatModule.SimChat(
+                                    part.Name + "(" + part.AbsolutePosition +
+                                    ") http_response error: Too many outgoing requests.", ChatTypeEnum.DebugChannel,
+                                    2147483647, part.AbsolutePosition, part.Name, part.UUID, false, m_ScriptEngine.Scene);
                         }
                     }
                     httpInfo = iHttpReq.GetNextCompletedRequest();

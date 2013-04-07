@@ -29,22 +29,23 @@ using System;
 using System.IO;
 using System.Text;
 using System.Xml;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 
 namespace Aurora.Framework.Serialization.External
 {
     /// <summary>
-    ///   Serialize and deserialize user inventory items as an external format.
+    ///     Serialize and deserialize user inventory items as an external format.
     /// </summary>
     /// XXX: Please do not use yet.
     public class UserInventoryItemSerializer
     {
         /// <summary>
-        ///   Deserialize item
+        ///     Deserialize item
         /// </summary>
-        /// <param name = "serializedSettings"></param>
+        /// <param name="serialization"></param>
         /// <returns></returns>
-        /// <exception cref = "System.Xml.XmlException"></exception>
+        /// <exception cref="System.Xml.XmlException"></exception>
         public static InventoryItemBase Deserialize(byte[] serialization)
         {
             InventoryItemBase item = new InventoryItemBase();
@@ -62,7 +63,7 @@ namespace Aurora.Framework.Serialization.External
             item.InvType = Convert.ToInt32(xtr.ReadElementString("InvType"));
             item.CreatorId = xtr.ReadElementString("CreatorUUID");
             try
-            {   
+            {
                 item.CreatorData = xtr.ReadElementString("CreatorData");
             }
             catch
@@ -91,11 +92,11 @@ namespace Aurora.Framework.Serialization.External
         }
 
         /// <summary>
-        ///   Deserialize settings
+        ///     Deserialize settings
         /// </summary>
-        /// <param name = "serializedSettings"></param>
+        /// <param name="serialization"></param>
         /// <returns></returns>
-        /// <exception cref = "System.Xml.XmlException"></exception>
+        /// <exception cref="System.Xml.XmlException"></exception>
         public static InventoryItemBase Deserialize(string serialization)
         {
             InventoryItemBase item = new InventoryItemBase();
@@ -128,7 +129,6 @@ namespace Aurora.Framework.Serialization.External
             xtr.ReadEndElement();
 
             xtr.Close();
-            sr.Close();
 
             return item;
         }
@@ -202,7 +202,6 @@ namespace Aurora.Framework.Serialization.External
             writer.WriteEndElement();
 
             writer.Close();
-            sw.Close();
 
             return sw.ToString();
         }

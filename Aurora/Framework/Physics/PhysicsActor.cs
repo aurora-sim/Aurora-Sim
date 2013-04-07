@@ -27,9 +27,11 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Physics
 {
     public struct ContactPoint
     {
@@ -52,19 +54,14 @@ namespace Aurora.Framework
         // Raising the event on the object, so don't need to provide location..  further up the tree knows that info.
 
         public bool Cleared;
-        public Dictionary<uint, ContactPoint> m_objCollisionList = new Dictionary<uint, ContactPoint>();
-
-        public CollisionEventUpdate(Dictionary<uint, ContactPoint> objCollisionList)
-        {
-            m_objCollisionList = objCollisionList;
-        }
+        private Dictionary<uint, ContactPoint> m_objCollisionList = new Dictionary<uint, ContactPoint>();
 
         public CollisionEventUpdate()
         {
             m_objCollisionList = new Dictionary<uint, ContactPoint>();
         }
 
-        public void addCollider(uint localID, ContactPoint contact)
+        public void AddCollider(uint localID, ContactPoint contact)
         {
             Cleared = false;
             /*ContactPoint oldCol;
@@ -82,8 +79,13 @@ namespace Aurora.Framework
             }*/
         }
 
+        public int Count
+        {
+            get { lock (m_objCollisionList) return m_objCollisionList.Count; }
+        }
+
         /// <summary>
-        ///   Reset all the info about this collider
+        ///     Reset all the info about this collider
         /// </summary>
         public void Clear()
         {
@@ -102,10 +104,23 @@ namespace Aurora.Framework
             }
             return c;
         }
+
+        public Dictionary<uint, ContactPoint> GetCollisionEvents()
+        {
+            Dictionary<uint, ContactPoint> c = new Dictionary<uint, ContactPoint>();
+            lock (m_objCollisionList)
+            {
+                foreach (KeyValuePair<uint, ContactPoint> kvp in m_objCollisionList)
+                    c.Add(kvp.Key, kvp.Value);
+            }
+            return c;
+        }
     }
 
     public delegate void PositionUpdate(Vector3 position);
+
     public delegate void VelocityUpdate(Vector3 velocity);
+
     public delegate void OrientationUpdate(Quaternion orientation);
 
     public enum ActorTypes
@@ -117,98 +132,10 @@ namespace Aurora.Framework
         Water = 4
     }
 
-    public abstract class PhysicsCharacter : PhysicsActor
-    {
-        public abstract bool IsJumping { get; }
-        public abstract float SpeedModifier { get; set; }
-        public abstract bool IsPreJumping { get; }
-        public abstract bool Flying { get; set; }
-        public abstract bool SetAlwaysRun { get; set; }
-
-        public virtual void AddMovementForce(Vector3 force) { }
-        public virtual void SetMovementForce(Vector3 force) { }
-
-        public virtual void Destroy() { }
-
-        public delegate bool checkForRegionCrossing();
-        public event checkForRegionCrossing OnCheckForRegionCrossing;
-
-        public virtual bool CheckForRegionCrossing()
-        {
-            // Make a temporary copy of the event to avoid possibility of
-            // a race condition if the last subscriber unsubscribes
-            // immediately after the null check and before the event is raised.
-            checkForRegionCrossing handler = OnCheckForRegionCrossing;
-
-            if (handler != null)
-                return handler();
-            return false;
-        }
-    }
-
-    public abstract class PhysicsObject : PhysicsActor
-    {
-        public virtual void link(PhysicsObject obj) { }
-
-        public virtual void delink() { }
-
-        public virtual bool LinkSetIsColliding { get; set; }
-
-        public virtual void LockAngularMotion(Vector3 axis) { }
-
-        public virtual PrimitiveBaseShape Shape
-        {
-            set { if (value == null) throw new ArgumentNullException("value"); }
-        }
-
-        public abstract bool Selected { set; }
-
-        public abstract void CrossingFailure();
-
-        public virtual void SetMaterial(int material, bool forceMaterialSettings) { }
-
-        // set never appears to be called
-        public virtual int VehicleType { get { return 0; } set { return; } }
-        public virtual void VehicleFloatParam(int param, float value) { }
-        public virtual void VehicleVectorParam(int param, Vector3 value) { }
-        public virtual void VehicleRotationParam(int param, Quaternion rotation) { }
-        public virtual void VehicleFlags(int param, bool remove) { }
-        public virtual void SetCameraPos(Quaternion CameraRotation) { }
-        public virtual bool BuildingRepresentation { get; set; }
-        public virtual bool BlockPhysicalReconstruction { get; set; }
-        public abstract float Buoyancy { get; set; }
-        public abstract Vector3 CenterOfMass { get; }
-        public abstract Vector3 Torque { get; set; }
-        public abstract void SubscribeEvents(int ms);
-        public abstract void UnSubscribeEvents();
-
-        //set never appears to be called
-        public virtual bool VolumeDetect
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public abstract Vector3 Acceleration { get; }
-        public abstract void AddAngularForce(Vector3 force, bool pushforce);
-        public virtual void ClearVelocity()
-        {
-        }
-
-        public event BlankHandler OnPhysicalRepresentationChanged;
-        public void FirePhysicalRepresentationChanged()
-        {
-            if (OnPhysicalRepresentationChanged != null)
-                OnPhysicalRepresentationChanged();
-        }
-
-        public virtual void Destroy()
-        {
-        }
-    }
-
     public abstract class PhysicsActor
     {
+        #region Actor Declares
+
         // disable warning: public events
 #pragma warning disable 67
         public delegate void RequestTerseUpdate();
@@ -223,10 +150,9 @@ namespace Aurora.Framework
 #pragma warning restore 67
 
         public abstract Vector3 Size { get; set; }
-
-        public abstract uint LocalID { get; set; }
-
-        public UUID UUID { get; set; }
+        public virtual uint LocalID { get; set; }
+        public virtual string Name { get; set; }
+        public virtual UUID UUID { get; set; }
 
         public virtual void RequestPhysicsterseUpdate()
         {
@@ -282,10 +208,11 @@ namespace Aurora.Framework
         }
 
         public abstract Vector3 Position { get; set; }
-        public abstract float Mass { get; }
+        public abstract Vector3 Velocity { get; set; }
+        public virtual Vector3 Acceleration { get; set; }
         public abstract Vector3 Force { get; set; }
 
-        public abstract Vector3 Velocity { get; set; }
+        public abstract float Mass { get; }
         public abstract float CollisionScore { get; set; }
         public abstract Quaternion Orientation { get; set; }
         public abstract int PhysicsActorType { get; }
@@ -295,11 +222,15 @@ namespace Aurora.Framework
         public abstract bool IsTruelyColliding { get; set; }
         public abstract bool FloatOnWater { set; }
         public abstract Vector3 RotationalVelocity { get; set; }
-
+        public virtual float Friction { get; set; }
+        public virtual float Restitution { get; set; }
+        public virtual float GravityMultiplier { get; set; }
+        public virtual float Density { get; set; }
+        public virtual byte PhysicsShapeType { get; set; }
         public abstract void AddForce(Vector3 force, bool pushforce);
         public abstract bool SubscribedEvents();
 
-        public abstract void SendCollisions();
+        public abstract bool SendCollisions();
         public abstract void AddCollisionEvent(uint localID, ContactPoint contact);
 
         public virtual void ForceSetVelocity(Vector3 velocity)
@@ -309,9 +240,92 @@ namespace Aurora.Framework
         public virtual void ForceSetPosition(Vector3 position)
         {
         }
+
+        #endregion
+
+        #region Object Declares
+
+        public virtual void link(PhysicsActor obj) { }
+        public virtual void delink() { }
+        public virtual bool LinkSetIsColliding { get; set; }
+        public virtual void LockAngularMotion(Vector3 axis) { }
+        public virtual void CrossingFailure() { }
+        public virtual void SetMaterial(int material, float friction, float restitution, float gravityMultiplier, float density) { }
+        public virtual void SetCameraPos(Quaternion CameraRotation) { }
+        public virtual void ClearVelocity() { }
+
+        public virtual int VehicleType { get; set; }
+        public virtual void VehicleFloatParam(int param, float value) { }
+        public virtual void VehicleVectorParam(int param, Vector3 value) { }
+        public virtual void VehicleRotationParam(int param, Quaternion rotation) { }
+        public virtual void VehicleFlags(int param, bool remove) { }
+        public virtual void AddAngularForce(Vector3 force, bool pushforce) { }
+
+        public virtual PrimitiveBaseShape Shape { get; set; }
+        public virtual bool Selected { get; set; }
+        public virtual bool BlockPhysicalReconstruction { get; set; }
+        public virtual float Buoyancy { get; set; }
+        public virtual Vector3 CenterOfMass { get; set; }
+        public virtual Vector3 Torque { get; set; }
+        public virtual void SubscribeEvents(int ms) { }
+        public virtual void UnSubscribeEvents() { }
+        public virtual bool VolumeDetect { get; set; }
+
+        public event BlankHandler OnPhysicalRepresentationChanged;
+
+        public void FirePhysicalRepresentationChanged()
+        {
+            if (OnPhysicalRepresentationChanged != null)
+                OnPhysicalRepresentationChanged();
+        }
+
+        #endregion
+
+        #region Character Defines
+
+        public virtual bool IsJumping { get; set; }
+        public virtual float SpeedModifier { get; set; }
+        public virtual bool IsPreJumping { get; set; }
+        public virtual bool Flying { get; set; }
+        public virtual bool SetAlwaysRun { get; set; }
+
+        /// <summary>
+        /// The desired velocity of this actor.
+        /// </summary>
+        /// <remarks>
+        /// Setting this provides a target velocity for physics scene updates.
+        /// Getting this returns the last set target. Fetch Velocity to get the current velocity.
+        /// </remarks>
+        protected Vector3 m_targetVelocity;
+        public virtual Vector3 TargetVelocity
+        {
+            get { return m_targetVelocity; }
+            set
+            {
+                m_targetVelocity = value;
+                Velocity = m_targetVelocity;
+            }
+        }
+
+        public delegate bool checkForRegionCrossing();
+        public event checkForRegionCrossing OnCheckForRegionCrossing;
+
+        public virtual bool CheckForRegionCrossing()
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            checkForRegionCrossing handler = OnCheckForRegionCrossing;
+
+            if (handler != null)
+                return handler();
+            return false;
+        }
+
+        #endregion
     }
 
-    public class NullObjectPhysicsActor : PhysicsObject
+    public class NullObjectPhysicsActor : PhysicsActor
     {
         public override Vector3 Position
         {
@@ -443,8 +457,9 @@ namespace Aurora.Framework
             return false;
         }
 
-        public override void SendCollisions()
+        public override bool SendCollisions()
         {
+            return false;
         }
 
         public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
@@ -452,7 +467,7 @@ namespace Aurora.Framework
         }
     }
 
-    public class NullCharacterPhysicsActor : PhysicsCharacter
+    public class NullCharacterPhysicsActor : PhysicsActor
     {
         public override bool IsJumping
         {
@@ -569,8 +584,9 @@ namespace Aurora.Framework
             return false;
         }
 
-        public override void SendCollisions()
+        public override bool SendCollisions()
         {
+            return false;
         }
 
         public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)

@@ -25,14 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
-using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalAssetConnector : ConnectorBase, IAssetConnector    {
+    public class LocalAssetConnector : ConnectorBase, IAssetConnector
+    {
         private IGenericData GD;
 
         #region IAssetConnector Members
@@ -45,14 +49,15 @@ namespace Aurora.Services.DataService
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "Asset",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            if (GD != null)
+                GD.ConnectToDatabase(defaultConnectionString, "Asset",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") == "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -61,7 +66,7 @@ namespace Aurora.Services.DataService
             get { return "IAssetConnector"; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void UpdateLSLData(string token, string key, string value)
         {
             object remoteValue = DoRemote(token, key, value);
@@ -83,17 +88,17 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)] 
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public List<string> FindLSLData(string token, string key)
         {
             object remoteValue = DoRemote(token, key);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<string>)remoteValue;
-            
+                return (List<string>) remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Token"] = token;
             filter.andFilters["KeySetting"] = key;
-            return GD.Query(new string[1] { "*" }, "lslgenericdata", filter, null, null, null);
+            return GD.Query(new string[1] {"*"}, "lslgenericdata", filter, null, null, null);
         }
 
         #endregion

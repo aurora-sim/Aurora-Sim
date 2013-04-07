@@ -25,14 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Aurora.Modules.Entities.ObjectDelete
 {
@@ -47,16 +52,18 @@ namespace Aurora.Modules.Entities.ObjectDelete
     }
 
     /// <summary>
-    ///   Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
-    ///   up the main client thread.
+    ///     Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
+    ///     up the main client thread.
     /// </summary>
     public class AsyncSceneObjectGroupDeleter : INonSharedRegionModule, IAsyncSceneObjectGroupDeleter
     {
-        private readonly ConcurrentQueue<DeleteToInventoryHolder> m_removeFromSimQueue = new ConcurrentQueue<DeleteToInventoryHolder>();
+        private readonly ConcurrentQueue<DeleteToInventoryHolder> m_removeFromSimQueue =
+            new ConcurrentQueue<DeleteToInventoryHolder>();
+
         private bool DeleteLoopInUse;
 
         /// <value>
-        ///   Is the deleter currently enabled?
+        ///     Is the deleter currently enabled?
         /// </value>
         public bool Enabled;
 
@@ -102,7 +109,7 @@ namespace Aurora.Modules.Entities.ObjectDelete
         #region Delete To Inventory
 
         /// <summary>
-        ///   Delete the given object from the scene
+        ///     Delete the given object from the scene
         /// </summary>
         public void DeleteToInventory(DeRezAction action, UUID folderID,
                                       List<ISceneEntity> objectGroups, UUID AgentId,
@@ -138,15 +145,15 @@ namespace Aurora.Modules.Entities.ObjectDelete
             lock (objectGroups)
             {
                 m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
-                {
-                    foreach (ISceneEntity grp in objectGroups)
-                    {
-                        if (avatar != null && avatar.ControllingClient != null)
-                            avatar.ControllingClient.SendKillObject(
-                                m_scene.RegionInfo.RegionHandle,
-                                grp.ChildrenEntities().ToArray());
-                    }
-                });
+                                                 {
+                                                     foreach (ISceneEntity grp in objectGroups)
+                                                     {
+                                                         if (avatar != null && avatar.ControllingClient != null)
+                                                             avatar.ControllingClient.SendKillObject(
+                                                                 m_scene.RegionInfo.RegionHandle,
+                                                                 grp.ChildrenEntities().ToArray());
+                                                     }
+                                                 });
             }
         }
 
@@ -155,7 +162,8 @@ namespace Aurora.Modules.Entities.ObjectDelete
             if (DeleteObject())
             {
                 //Requeue us if there is some left
-                Util.FireAndForget(DoDeleteObject);
+                Thread.Sleep(5);
+                DoDeleteObject(o);
             }
             else
             {
@@ -179,7 +187,8 @@ namespace Aurora.Modules.Entities.ObjectDelete
                             backup.DeleteSceneObjects(x.objectGroups.ToArray(), true, true);
                     }
                     MainConsole.Instance.DebugFormat(
-                        "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", m_removeFromSimQueue.Count);
+                        "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.",
+                        m_removeFromSimQueue.Count);
 
                     if (x.permissionToTake)
                     {

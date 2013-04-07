@@ -29,9 +29,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
-using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -84,17 +87,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                 IAvatarAppearanceModule appearance = GetSP().RequestModuleInterface<IAvatarAppearanceModule>();
                 List<AvatarAttachment> internalAttachments = appearance.Appearance.GetAttachments();
 
-#if (!ISWIN)
-                List<IAvatarAttachment> list = new List<IAvatarAttachment>();
-                foreach (AvatarAttachment attach in internalAttachments)
-                {
-                    IAvatarAttachment attachment = new SPAvatarAttachment(m_rootScene, this, attach.AttachPoint, new UUID(attach.ItemID), new UUID(attach.AssetID), m_security);
-                    list.Add(attachment);
-                }
-                return list.ToArray();
-#else
-                return internalAttachments.Select(attach => new SPAvatarAttachment(m_rootScene, this, attach.AttachPoint, new UUID(attach.ItemID), new UUID(attach.AssetID), m_security)).Cast<IAvatarAttachment>().ToArray();
-#endif
+                return
+                    internalAttachments.Select(
+                        attach =>
+                        new SPAvatarAttachment(m_rootScene, this, attach.AttachPoint, new UUID(attach.ItemID),
+                                               new UUID(attach.AssetID), m_security))
+                                       .Cast<IAvatarAttachment>()
+                                       .ToArray();
             }
         }
 

@@ -25,11 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public class EventData : IDataTransferable
     {
@@ -44,56 +44,13 @@ namespace Aurora.Framework
         public uint eventFlags;
         public uint eventID;
         public Vector3 globalPos;
+        public Vector3 regionPos;
         public int maturity;
         public string name;
         public string simName;
 
         public EventData()
         {
-        }
-
-        public EventData(Dictionary<string, object> KVP)
-        {
-            FromKVP(KVP);
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["eventID"] = eventID;
-            KVP["creator"] = creator;
-            KVP["name"] = name;
-            KVP["category"] = category;
-            KVP["description"] = description;
-            KVP["date"] = date;
-            KVP["dateUTC"] = dateUTC;
-            KVP["duration"] = duration;
-            KVP["cover"] = cover;
-            KVP["amount"] = amount;
-            KVP["simName"] = simName;
-            KVP["globalPos"] = globalPos.ToRawString();
-            KVP["eventFlags"] = eventFlags;
-            KVP["maturity"] = maturity;
-            return KVP;
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            eventID = uint.Parse(KVP["eventID"].ToString());
-            creator = KVP["creator"].ToString();
-            name = KVP["name"].ToString();
-            category = KVP["category"].ToString();
-            description = KVP["description"].ToString();
-            date = KVP["date"].ToString();
-            dateUTC = uint.Parse(KVP["dateUTC"].ToString());
-            duration = uint.Parse(KVP["duration"].ToString());
-            cover = uint.Parse(KVP["cover"].ToString());
-            amount = uint.Parse(KVP["amount"].ToString());
-            simName = KVP["simName"].ToString();
-            string[] Pos = KVP["globalPos"].ToString().Split(' ');
-            globalPos = new Vector3(float.Parse(Pos[0]), float.Parse(Pos[1]), float.Parse(Pos[2]));
-            eventFlags = uint.Parse(KVP["eventFlags"].ToString());
-            maturity = int.Parse(KVP["maturity"].ToString());
         }
 
         public override OSDMap ToOSD()
@@ -111,6 +68,7 @@ namespace Aurora.Framework
             map["amount"] = amount;
             map["simName"] = simName;
             map["globalPos"] = globalPos;
+            map["regionPos"] = regionPos;
             map["eventFlags"] = eventFlags;
             map["maturity"] = maturity;
             return map;
@@ -130,6 +88,7 @@ namespace Aurora.Framework
             amount = map["amount"];
             simName = map["simName"];
             globalPos = map["globalPos"];
+            regionPos = map["regionPos"];
             eventFlags = map["eventFlags"];
             maturity = map["maturity"];
         }

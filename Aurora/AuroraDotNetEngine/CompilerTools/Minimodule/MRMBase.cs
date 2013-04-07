@@ -29,8 +29,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
-using OpenMetaverse;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -64,10 +65,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public ISponsor Sponsor
         {
             get { return null; }
-        }
-
-        public void UpdateLease(TimeSpan time)
-        {
         }
 
         public long GetStateEventFlags(string state)

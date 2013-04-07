@@ -20,7 +20,7 @@
     ;; On timer checks every x minutes (customizable below) and does not lag logins, but the settings may take a bit to update.
 
     ;; Check for similarities on login
-    CheckForSimilaritiesOnLogin = true
+    CheckForSimilaritiesOnLogin = false
     ;; Check for similarities on a timer
     CheckForSimilaritiesOnTimer = false
     ;; Minutes between each timer check (if CheckForSimilaritiesOnTimer is enabled)

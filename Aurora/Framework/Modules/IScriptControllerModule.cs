@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public enum ScriptControlled : uint
     {
@@ -37,7 +36,8 @@ namespace Aurora.Framework
 
         void UnRegisterControlEventsToScript(uint p, UUID uUID);
 
-        void RegisterControlEventsToScript(int controls, int accept, int pass_on, ISceneChildEntity m_host, UUID m_itemID);
+        void RegisterControlEventsToScript(int controls, int accept, int pass_on, ISceneChildEntity m_host,
+                                           UUID m_itemID);
 
         void OnNewMovement(ref AgentManager.ControlFlags flags);
 

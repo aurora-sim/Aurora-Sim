@@ -25,78 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
+using ProtoBuf;
+using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
-    public class StateSave : IDataTransferable
+    [ProtoContract]
+    public class StateSave
     {
-        public string AssemblyName;
-        public bool Compiled = true;
-        public bool Disabled;
-        public UUID ItemID;
-        public double MinEventDelay;
-        public UUID PermsGranter;
-        public int PermsMask;
-        public OSDMap Plugins;
-        public bool Running;
-        public string Source;
-        public string State;
-        public bool TargetOmegaWasSet;
-        public UUID UserInventoryID;
-        public string Variables;
-
-        public override void FromOSD(OSDMap map)
-        {
-            State = map["State"].AsString();
-            Source = map["Source"].AsString();
-            ItemID = map["ItemID"].AsUUID();
-            Running = map["Running"].AsBoolean();
-            Disabled = map["Disabled"].AsBoolean();
-            Variables = map["Variables"].AsString();
-            Plugins = (OSDMap) map["Plugins"];
-            PermsGranter = map["PermsGranter"].AsUUID();
-            PermsMask = map["PermsMask"].AsInteger();
-            MinEventDelay = map["MinEventDelay"].AsReal();
-            AssemblyName = map["AssemblyName"].AsString();
-            UserInventoryID = map["UserInventoryID"].AsUUID();
-            TargetOmegaWasSet = map["TargetOmegaWasSet"].AsBoolean();
-            if (map.ContainsKey("Compiled"))
-                Compiled = map["Compiled"].AsBoolean();
-        }
-
-        public override OSDMap ToOSD()
-        {
-            OSDMap map = new OSDMap
-                             {
-                                 {"State", State},
-                                 {"Source", Source},
-                                 {"ItemID", ItemID},
-                                 {"Running", Running},
-                                 {"Disabled", Disabled},
-                                 {"Variables", Variables},
-                                 {"Plugins", Plugins},
-                                 {"PermsGranter", PermsGranter},
-                                 {"PermsMask", PermsMask},
-                                 {"MinEventDelay", MinEventDelay},
-                                 {"AssemblyName", AssemblyName},
-                                 {"UserInventoryID", UserInventoryID},
-                                 {"TargetOmegaWasSet", TargetOmegaWasSet},
-                                 {"Compiled", Compiled}
-                             };
-            return map;
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
-        }
+        [ProtoMember(1)] public string AssemblyName;
+        [ProtoMember(2)] public bool Compiled = true;
+        [ProtoMember(3)] public bool Disabled;
+        [ProtoMember(4)] public UUID ItemID;
+        [ProtoMember(5)] public double MinEventDelay;
+        [ProtoMember(6)] public UUID PermsGranter;
+        [ProtoMember(7)] public int PermsMask;
+        [ProtoMember(8)] public string Plugins;
+        [ProtoMember(9)] public bool Running;
+        [ProtoMember(10)] public string Source;
+        [ProtoMember(11)] public string State;
+        [ProtoMember(12)] public bool TargetOmegaWasSet;
+        [ProtoMember(13)] public UUID UserInventoryID;
+        [ProtoMember(14)] public string Variables;
     }
 }

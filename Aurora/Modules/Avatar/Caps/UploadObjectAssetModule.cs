@@ -25,20 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.IO;
-using System.Reflection;
-using System.Text;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Utilities;
+using Aurora.Region;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using System;
+using System.IO;
+using System.Text;
 using ExtraParamType = OpenMetaverse.ExtraParamType;
 
 namespace Aurora.Modules.Caps
@@ -91,27 +95,26 @@ namespace Aurora.Modules.Caps
             retVal["UploadObjectAsset"] = CapsUtil.CreateCAPS("UploadObjectAsset", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UploadObjectAsset"],
-                                                       delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProcessAdd(request, httpResponse, agentID);
-                                                       }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return ProcessAdd(request, httpResponse, agentID); }));
             return retVal;
         }
 
         /// <summary>
-        ///   Parses ad request
+        ///     Parses ad request
         /// </summary>
-        /// <param name = "request"></param>
-        /// <param name = "AgentId"></param>
-        /// <param name = "cap"></param>
+        /// <param name="request"></param>
+        /// <param name="response"></param>
+        /// <param name="AgentId"></param>
         /// <returns></returns>
         public byte[] ProcessAdd(Stream request, OSHttpResponse response, UUID AgentId)
         {
             IScenePresence avatar;
 
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
-                return MainServer.NoResponse;
+                return MainServer.BlankResponse;
 
             OSDMap r = (OSDMap) OSDParser.Deserialize(request);
             UploadObjectAssetMessage message = new UploadObjectAssetMessage();
@@ -128,7 +131,9 @@ namespace Aurora.Modules.Caps
             if (message == null)
             {
                 response.StatusCode = 400; //501; //410; //404;
-                return Encoding.UTF8.GetBytes("<llsd><map><key>error</key><string>Error parsing Object</string></map></llsd>");
+                return
+                    Encoding.UTF8.GetBytes(
+                        "<llsd><map><key>error</key><string>Error parsing Object</string></map></llsd>");
             }
 
             Vector3 pos = avatar.AbsolutePosition + (Vector3.UnitX*avatar.Rotation);
@@ -231,7 +236,7 @@ namespace Aurora.Modules.Caps
                 pbs.Scale = obj.Scale;
                 pbs.State = 0;
                 SceneObjectPart prim = new SceneObjectPart(AgentId, pbs, obj.Position, obj.Rotation,
-                                                           Vector3.Zero, obj.Name, m_scene)
+                                                           Vector3.Zero, obj.Name)
                                            {
                                                UUID = UUID.Random(),
                                                CreatorID = AgentId,
@@ -282,7 +287,7 @@ namespace Aurora.Modules.Caps
                     rootGroup = grp;
 
                 grp.AbsolutePosition = obj.Position;
-                prim.RotationOffset = obj.Rotation;
+                prim.SetRotationOffset(true, obj.Rotation, true);
 
                 grp.RootPart.IsAttachment = false;
 
@@ -297,7 +302,7 @@ namespace Aurora.Modules.Caps
                     //Stop now then
                     avatar.ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " +
                                                               reason);
-                    return MainServer.NoResponse;
+                    return MainServer.BlankResponse;
                 }
                 allparts[i] = grp;
             }

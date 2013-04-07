@@ -25,16 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using System;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework.Services
 {
     /// <summary>
-    ///   Callback used when a user's inventory is received from the inventory service
+    ///     Callback used when a user's inventory is received from the inventory service
     /// </summary>
     public delegate void InventoryReceiptCallback(
         ICollection<InventoryFolderImpl> folders, ICollection<InventoryItemBase> items);
@@ -47,35 +48,38 @@ namespace OpenSim.Services.Interfaces
     public interface IInventoryService
     {
         /// <summary>
-        ///   Create the entire inventory for a given user (local only)
+        ///     Create the entire inventory for a given user (local only)
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
+        /// <param name="createDefaultItems"></param>
         /// <returns></returns>
         bool CreateUserInventory(UUID user, bool createDefaultItems);
 
         /// <summary>
-        ///   Create the entire inventory for a given user (local only)
+        ///     Create the entire inventory for a given user (local only)
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
+        /// <param name="createDefaultItems"></param>
+        /// <param name="defaultInventoryItems"></param>
         /// <returns></returns>
         bool CreateUserInventory(UUID user, bool createDefaultItems, out List<InventoryItemBase> defaultInventoryItems);
 
         /// <summary>
-        ///   Gets the skeleton of the inventory -- folders only (local only)
+        ///     Gets the skeleton of the inventory -- folders only (local only)
         /// </summary>
-        /// <param name = "userId"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
         List<InventoryFolderBase> GetInventorySkeleton(UUID userId);
 
         /// <summary>
-        ///   Retrieve the root inventory folder for the given user.
+        ///     Retrieve the root inventory folder for the given user.
         /// </summary>
-        /// <param name = "userID"></param>
+        /// <param name="userID"></param>
         /// <returns>null if no root folder was found</returns>
         InventoryFolderBase GetRootFolder(UUID userID);
 
         /// <summary>
-        /// Gets a folder by name for the given user
+        ///     Gets a folder by name for the given user
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="FolderName"></param>
@@ -83,106 +87,107 @@ namespace OpenSim.Services.Interfaces
         InventoryFolderBase GetFolderByOwnerAndName(UUID userID, string FolderName);
 
         /// <summary>
-        ///   Retrieve the root inventory folder for the given user. - local only
+        ///     Retrieve the root inventory folder for the given user. - local only
         /// </summary>
-        /// <param name = "userID"></param>
+        /// <param name="userID"></param>
         /// <returns>null if no root folder was found</returns>
         List<InventoryFolderBase> GetRootFolders(UUID userID);
 
         /// <summary>
-        ///   Gets the user folder for the given folder-type
+        ///     Gets the user folder for the given folder-type
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "invType"></param>
-        /// <param name = "type"></param>
+        /// <param name="userID"></param>
+        /// <param name="invType"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
         InventoryFolderBase GetFolderForType(UUID userID, InventoryType invType, AssetType type);
 
         /// <summary>
-        ///   Gets everything (folders and items) inside a folder
+        ///     Gets everything (folders and items) inside a folder
         /// </summary>
-        /// <param name = "userId"></param>
-        /// <param name = "folderID"></param>
+        /// <param name="userID"></param>
+        /// <param name="folderID"></param>
         /// <returns></returns>
         InventoryCollection GetFolderContent(UUID userID, UUID folderID);
 
         /// <summary>
-        ///   Gets the folders inside a folder (local only)
+        ///     Gets the folders inside a folder (local only)
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "folderID"></param>
+        /// <param name="userID"></param>
+        /// <param name="folderID"></param>
         /// <returns></returns>
         List<InventoryFolderBase> GetFolderFolders(UUID userID, UUID folderID);
 
         /// <summary>
-        ///   Gets the items inside a folder - local only
+        ///     Gets the items inside a folder - local only
         /// </summary>
-        /// <param name = "userID"></param>
-        /// <param name = "folderID"></param>
+        /// <param name="userID"></param>
+        /// <param name="folderID"></param>
         /// <returns></returns>
         List<InventoryItemBase> GetFolderItems(UUID userID, UUID folderID);
 
         /// <summary>
-        ///   Add a new folder to the user's inventory
+        ///     Add a new folder to the user's inventory
         /// </summary>
-        /// <param name = "folder"></param>
+        /// <param name="folder"></param>
         /// <returns>true if the folder was successfully added</returns>
         bool AddFolder(InventoryFolderBase folder);
 
         /// <summary>
-        ///   Update a folder in the user's inventory
+        ///     Update a folder in the user's inventory
         /// </summary>
-        /// <param name = "folder"></param>
+        /// <param name="folder"></param>
         /// <returns>true if the folder was successfully updated</returns>
         bool UpdateFolder(InventoryFolderBase folder);
 
         /// <summary>
-        ///   Move an inventory folder to a new location
+        ///     Move an inventory folder to a new location
         /// </summary>
-        /// <param name = "folder">A folder containing the details of the new location</param>
+        /// <param name="folder">A folder containing the details of the new location</param>
         /// <returns>true if the folder was successfully moved</returns>
         bool MoveFolder(InventoryFolderBase folder);
 
         /// <summary>
-        ///   Delete an item from the user's inventory
+        ///     Delete an item from the user's inventory
         /// </summary>
-        /// <param name = "item"></param>
+        /// <param name="userID"></param>
+        /// <param name="folderIDs"></param>
         /// <returns>true if the item was successfully deleted</returns>
         bool DeleteFolders(UUID userID, List<UUID> folderIDs);
 
         /// <summary>
-        ///   Force Deletes a folder (LOCAL ONLY)
+        ///     Force Deletes a folder (LOCAL ONLY)
         /// </summary>
-        /// <param name = "folder"></param>
+        /// <param name="folder"></param>
         /// <returns></returns>
         bool ForcePurgeFolder(InventoryFolderBase folder);
 
         /// <summary>
-        ///   Purge an inventory folder of all its items and subfolders.
+        ///     Purge an inventory folder of all its items and subfolders.
         /// </summary>
-        /// <param name = "folder"></param>
+        /// <param name="folder"></param>
         /// <returns>true if the folder was successfully purged</returns>
         bool PurgeFolder(InventoryFolderBase folder);
 
         /// <summary>
-        ///   Add a new item to the user's inventory
+        ///     Add a new item to the user's inventory
         /// </summary>
-        /// <param name = "item">
-        ///   The item to be added.  If item.FolderID == UUID.Zero then the item is added to the most suitable system
-        ///   folder.  If there is no suitable folder then the item is added to the user's root inventory folder.
+        /// <param name="item">
+        ///     The item to be added.  If item.FolderID == UUID.Zero then the item is added to the most suitable system
+        ///     folder.  If there is no suitable folder then the item is added to the user's root inventory folder.
         /// </param>
         /// <returns>true if the item was successfully added, false if it was not</returns>
         bool AddItem(InventoryItemBase item);
 
         /// <summary>
-        ///   Update an item in the user's inventory
+        ///     Update an item in the user's inventory
         /// </summary>
-        /// <param name = "item"></param>
+        /// <param name="item"></param>
         /// <returns>true if the item was successfully updated</returns>
         bool UpdateItem(InventoryItemBase item);
 
         /// <summary>
-        /// Update the assetID for the given item
+        ///     Update the assetID for the given item
         /// </summary>
         /// <param name="itemID"></param>
         /// <param name="assetID"></param>
@@ -190,43 +195,45 @@ namespace OpenSim.Services.Interfaces
         bool UpdateAssetIDForItem(UUID itemID, UUID assetID);
 
         /// <summary>
-        ///   Move the given items to the folder given in the inventory item
+        ///     Move the given items to the folder given in the inventory item
         /// </summary>
-        /// <param name = "ownerID"></param>
-        /// <param name = "items"></param>
+        /// <param name="ownerID"></param>
+        /// <param name="items"></param>
         /// <returns></returns>
         bool MoveItems(UUID ownerID, List<InventoryItemBase> items);
 
         /// <summary>
-        ///   Delete an item from the user's inventory
+        ///     Delete an item from the user's inventory
         /// </summary>
-        /// <param name = "item"></param>
+        /// <param name="userID"></param>
+        /// <param name="itemIDs"></param>
         /// <returns>true if the item was successfully deleted</returns>
         bool DeleteItems(UUID userID, List<UUID> itemIDs);
 
         /// <summary>
-        ///   Get an item, given by its UUID
+        ///     Get an item, given by its UUID
         /// </summary>
-        /// <param name = "item"></param>
+        /// <param name="userID"></param>
+        /// <param name="inventoryID"></param>
         /// <returns></returns>
-        InventoryItemBase GetItem(InventoryItemBase item);
+        InventoryItemBase GetItem(UUID userID, UUID inventoryID);
 
         /// <summary>
-        ///   Get a folder, given by its UUID
+        ///     Get a folder, given by its UUID
         /// </summary>
-        /// <param name = "folder"></param>
+        /// <param name="folder"></param>
         /// <returns></returns>
         InventoryFolderBase GetFolder(InventoryFolderBase folder);
 
         /// <summary>
-        ///   Get the active gestures of the agent.
+        ///     Get the active gestures of the agent.
         /// </summary>
-        /// <param name = "userId"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
         List<InventoryItemBase> GetActiveGestures(UUID userId);
 
         /// <summary>
-        /// Gives an inventory item to another user (LOCAL ONLY)
+        ///     Gives an inventory item to another user (LOCAL ONLY)
         /// </summary>
         /// <param name="recipient"></param>
         /// <param name="senderId"></param>
@@ -234,30 +241,32 @@ namespace OpenSim.Services.Interfaces
         /// <param name="recipientFolderId"></param>
         /// <param name="doOwnerCheck"></param>
         /// <returns></returns>
-        InventoryItemBase InnerGiveInventoryItem(UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck);
+        InventoryItemBase InnerGiveInventoryItem(UUID recipient, UUID senderId, InventoryItemBase item,
+                                                 UUID recipientFolderId, bool doOwnerCheck);
 
         #region OSD methods
 
         /// <summary>
-        ///   Get the item serialized as an OSDArray - local only
+        ///     Get the item serialized as an OSDArray - local only
         /// </summary>
-        /// <param name = "itemID"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="itemID"></param>
         /// <returns></returns>
-        OSDArray GetItem(UUID avatarID, UUID itemID);
+        OSDArray GetOSDItem(UUID avatarID, UUID itemID);
 
         #endregion
 
         #region Async methods
 
         /// <summary>
-        /// Adds a new item to the user's inventory asynchronously
+        ///     Adds a new item to the user's inventory asynchronously
         /// </summary>
         /// <param name="item"></param>
         /// <param name="success"></param>
         void AddItemAsync(InventoryItemBase item, Action<InventoryItemBase> success);
 
         /// <summary>
-        /// Moves multiple items to a new folder in the user's inventory
+        ///     Moves multiple items to a new folder in the user's inventory
         /// </summary>
         /// <param name="agentID"></param>
         /// <param name="items"></param>
@@ -265,7 +274,7 @@ namespace OpenSim.Services.Interfaces
         void MoveItemsAsync(UUID agentID, List<InventoryItemBase> items, NoParam success);
 
         /// <summary>
-        /// Gives an inventory item to another user asychronously
+        ///     Gives an inventory item to another user asychronously
         /// </summary>
         /// <param name="recipient"></param>
         /// <param name="senderId"></param>
@@ -274,10 +283,10 @@ namespace OpenSim.Services.Interfaces
         /// <param name="doOwnerCheck"></param>
         /// <param name="success"></param>
         void GiveInventoryItemAsync(UUID recipient, UUID senderId, UUID itemId,
-            UUID recipientFolderId, bool doOwnerCheck, GiveItemParam success);
+                                    UUID recipientFolderId, bool doOwnerCheck, GiveItemParam success);
 
         /// <summary>
-        /// Gives an entire inventory folder to another user asynchronously
+        ///     Gives an entire inventory folder to another user asynchronously
         /// </summary>
         /// <param name="recipientId"></param>
         /// <param name="senderId"></param>
@@ -288,9 +297,12 @@ namespace OpenSim.Services.Interfaces
             UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId, GiveFolderParam success);
 
         #endregion
+
+        UUID GetItemAssetID(UUID uuid, UUID itemID);
     }
 
     public delegate void GiveFolderParam(InventoryFolderBase folder);
+
     public delegate void GiveItemParam(InventoryItemBase item);
 
     public interface IInventoryData : IAuroraDataPlugin
@@ -317,5 +329,7 @@ namespace OpenSim.Services.Interfaces
 
         void IncrementFolder(UUID folderID);
         void IncrementFolderByItem(UUID folderID);
+
+        List<UUID> GetItemAssetIDs(UUID userID, string[] p1, string[] p2);
     }
 }

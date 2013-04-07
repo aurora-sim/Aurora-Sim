@@ -25,15 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Land
 {
@@ -99,23 +100,21 @@ namespace Aurora.Modules.Land
             m_Scene.EventManager.OnSceneGroupMove += EventManager_OnSceneGroupMove;
         }
 
-        bool EventManager_OnSceneGroupMove(UUID groupID, Vector3 pos)
+        private bool EventManager_OnSceneGroupMove(UUID groupID, Vector3 pos)
         {
-            Util.FireAndForget(delegate                   
-            {
-                IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
-                ILandObject landObject = parcelManagment.GetLandObject(pos.X,pos.Y) ?? parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
-                if (landObject == null) return;
-                ParcelCounts parcelCounts;
-                if ((m_ParcelCounts.TryGetValue(landObject.LandData.GlobalID, out parcelCounts)) && (!parcelCounts.Objects.ContainsKey(groupID)))
-                    m_Tainted = true;
-            });
+            IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
+            ILandObject landObject = parcelManagment.GetLandObject(pos.X, pos.Y) ??
+                                     parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
+            if (landObject == null) return true;
+            ParcelCounts parcelCounts;
+            if ((m_ParcelCounts.TryGetValue(landObject.LandData.GlobalID, out parcelCounts)) &&
+                (!parcelCounts.Objects.ContainsKey(groupID)))
+                m_Tainted = true;
             return true;
         }
 
         public void RegionLoaded(IScene scene)
         {
-
         }
 
         public void RemoveRegion(IScene scene)
@@ -262,6 +261,8 @@ namespace Aurora.Modules.Land
                 UUID landOwner = landData.OwnerID;
 
                 parcelCounts.Objects[obj.UUID] = obj;
+                if (!m_SimwideCounts.ContainsKey(landOwner))
+                    m_SimwideCounts.Add(landOwner, 0);
                 m_SimwideCounts[landOwner] += obj.PrimCount;
 
                 if (parcelCounts.Users.ContainsKey(obj.OwnerID))
@@ -300,7 +301,8 @@ namespace Aurora.Modules.Land
 
             IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
             Vector3 pos = obj.AbsolutePosition;
-            ILandObject landObject = parcelManagment.GetLandObject(pos.X,pos.Y) ?? parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
+            ILandObject landObject = parcelManagment.GetLandObject(pos.X, pos.Y) ??
+                                     parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
             if (landObject == null) return;
             LandData landData = landObject.LandData;
             ParcelCounts parcelCounts;
@@ -502,53 +504,35 @@ namespace Aurora.Modules.Land
 
             List<ILandObject> land = m_Scene.RequestModuleInterface<IParcelManagementModule>().AllParcels();
 
-#if (!ISWIN)
-            foreach (ILandObject l in land)
-            {
-                LandData landData = l.LandData;
-                m_OwnerMap[landData.GlobalID] = landData.OwnerID;
-                m_SimwideCounts[landData.OwnerID] = 0;
-                m_ParcelCounts[landData.GlobalID] = new ParcelCounts();
-            }
-#else
             foreach (LandData landData in land.Select(l => l.LandData))
             {
                 m_OwnerMap[landData.GlobalID] = landData.OwnerID;
                 m_SimwideCounts[landData.OwnerID] = 0;
                 m_ParcelCounts[landData.GlobalID] = new ParcelCounts();
             }
-#endif
 
             ISceneEntity[] objlist = m_Scene.Entities.GetEntities();
             foreach (ISceneEntity obj in objlist)
             {
                 try
                 {
-                    if (obj is SceneObjectGroup)
-                        AddObject(obj);
+                    AddObject(obj);
                 }
                 catch (Exception e)
                 {
                     // Catch it and move on. This includes situations where splist has inconsistent info
-                    MainConsole.Instance.WarnFormat("[ParcelPrimCountModule]: Problem processing action in Recount: {0}", e);
+                    MainConsole.Instance.WarnFormat(
+                        "[ParcelPrimCountModule]: Problem processing action in Recount: {0}", e);
                 }
             }
 
             List<UUID> primcountKeys = new List<UUID>(m_PrimCounts.Keys);
-#if (!ISWIN)
-            foreach (UUID k in primcountKeys)
-            {
-                if (!m_OwnerMap.ContainsKey(k))
-                {
-                    m_PrimCounts.Remove(k);
-                }
-            }
-#else
+
             foreach (UUID k in primcountKeys.Where(k => !m_OwnerMap.ContainsKey(k)))
             {
                 m_PrimCounts.Remove(k);
             }
-#endif
+
             m_Tainted = false;
         }
 
@@ -574,8 +558,8 @@ namespace Aurora.Modules.Land
             //}
             if (FunctionName == "ObjectChangedOwner")
             {
-                TaintPrimCount((int) ((SceneObjectGroup) parameters).AbsolutePosition.X,
-                               (int) ((SceneObjectGroup) parameters).AbsolutePosition.Y);
+                TaintPrimCount((int) ((ISceneEntity) parameters).AbsolutePosition.X,
+                               (int) ((ISceneEntity) parameters).AbsolutePosition.Y);
             }
             else if (FunctionName == "ObjectEnteringNewParcel")
             {

@@ -6,6 +6,11 @@
     Include-Grid = Configuration/Grid/Grid.ini
 
 [Configuration]
-    ;;
-    ;; Change this to your grid-wide grid server
-    RegistrationURI = "http://127.0.0.1:8003"
+    GridServerURI = "http://127.0.0.1:8012/grid/"
+	
+	;; If regions should be marked as offline on the map
+	;;  instead of being removed on shutdown.
+	MarkRegionsAsOffline = true
+	
+	;; For setting a password for this region
+    ;RegisterRegionPassword = 

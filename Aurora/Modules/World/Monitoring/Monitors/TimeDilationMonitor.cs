@@ -26,8 +26,11 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
     internal class TimeDilationMonitor : ITimeDilationMonitor
     {
@@ -49,6 +52,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Time Dilation";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "ITimeDilationMonitor";
         }
 
         public string GetFriendlyValue()

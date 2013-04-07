@@ -28,11 +28,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.ObjectCache
 {
@@ -52,7 +55,7 @@ namespace Aurora.Modules.ObjectCache
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public virtual void Initialise(IConfigSource source)
         {
@@ -72,6 +75,7 @@ namespace Aurora.Modules.ObjectCache
                 {
                 }
             }
+            m_Enabled = false;
         }
 
         public virtual void AddRegion(IScene scene)
@@ -127,9 +131,9 @@ namespace Aurora.Modules.ObjectCache
         }
 
         /// <summary>
-        ///   Load the file for the client async so that we don't lock up the system for too long
+        ///     Load the file for the client async so that we don't lock up the system for too long
         /// </summary>
-        /// <param name = "o"></param>
+        /// <param name="o"></param>
         public void LoadFileOnNewClient(object o)
         {
             UUID agentID = (UUID) o;
@@ -248,11 +252,11 @@ namespace Aurora.Modules.ObjectCache
         #region IObjectCache
 
         /// <summary>
-        ///   Check whether we can send a CachedObjectUpdate to the client
+        ///     Check whether we can send a CachedObjectUpdate to the client
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "localID"></param>
-        /// <param name = "CurrentEntityCRC"></param>
+        /// <param name="AgentID"></param>
+        /// <param name="localID"></param>
+        /// <param name="CurrentEntityCRC"></param>
         /// <returns></returns>
         public bool UseCachedObject(UUID AgentID, uint localID, uint CurrentEntityCRC)
         {

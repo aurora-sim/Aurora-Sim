@@ -25,16 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
-using BitmapProcessing;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
 namespace Aurora.Modules.WorldMap
 {
@@ -347,16 +349,14 @@ namespace Aurora.Modules.WorldMap
         // take too long, as most assets should be cached
         private Bitmap fetchTexture(UUID id)
         {
-            using (AssetBase asset = m_scene.AssetService.Get(id.ToString()))
+            byte[] asset = m_scene.AssetService.GetData(id.ToString());
+            if (asset != null)
             {
-                //MainConsole.Instance.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
-                if (asset == null) return null;
-
                 try
                 {
-                    if (asset.Data != null)
+                    if (asset != null)
                     {
-                        Image image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(asset.Data);
+                        Image image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(asset);
                         if (image != null)
                             return new Bitmap(image);
                     }

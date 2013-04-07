@@ -29,27 +29,27 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace PrimMesher
+namespace Aurora.Physics.PrimMesher
 {
     public struct Quat
     {
         /// <summary>
-        ///   W value
+        ///     W value
         /// </summary>
         public float W;
 
         /// <summary>
-        ///   X value
+        ///     X value
         /// </summary>
         public float X;
 
         /// <summary>
-        ///   Y value
+        ///     Y value
         /// </summary>
         public float Y;
 
         /// <summary>
-        ///   Z value
+        ///     Z value
         /// </summary>
         public float Z;
 
@@ -134,6 +134,13 @@ namespace PrimMesher
             X = x;
             Y = y;
             Z = z;
+        }
+
+        public Coord(OpenMetaverse.Vector3 vec)
+        {
+            X = vec.X;
+            Y = vec.Y;
+            Z = vec.Z;
         }
 
         public float Length()
@@ -230,8 +237,6 @@ namespace PrimMesher
                            };
 
 
-
-
             return c2;
         }
     }
@@ -246,6 +251,13 @@ namespace PrimMesher
         {
             U = u;
             V = v;
+        }
+
+        public UVCoord Flip()
+        {
+            this.U = 1.0f - this.U;
+            this.V = 1.0f - this.V;
+            return this;
         }
     }
 
@@ -608,7 +620,7 @@ namespace PrimMesher
     }
 
     /// <summary>
-    ///   generates a profile for extrusion
+    ///     generates a profile for extrusion
     /// </summary>
     internal class Profile
     {
@@ -661,7 +673,6 @@ namespace PrimMesher
             faceNumbers = new List<int>();
 
             Coord center = new Coord(0.0f, 0.0f, 0.0f);
-            //bool hasCenter = false;
 
             List<Coord> hollowCoords = new List<Coord>();
             List<Coord> hollowNormals = new List<Coord>();
@@ -832,9 +843,6 @@ namespace PrimMesher
 
                 if (createFaces)
                 {
-                    //int numOuterVerts = this.coords.Count;
-                    //numOuterVerts = this.coords.Count;
-                    //int numHollowVerts = hollowCoords.Count;
                     int numTotalVerts = numOuterVerts + numHollowVerts;
 
                     if (numOuterVerts == numHollowVerts)
@@ -1129,7 +1137,7 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Changes order of the vertex indices and negates the center vertex normal. Does not alter vertex normals of radial vertices
+        ///     Changes order of the vertex indices and negates the center vertex normal. Does not alter vertex normals of radial vertices
         /// </summary>
         internal void FlipNormals()
         {
@@ -1260,6 +1268,15 @@ namespace PrimMesher
 
         public void Create(PathType pathType, int steps)
         {
+            if (this.taperX > 0.999f)
+                this.taperX = 0.999f;
+            if (this.taperX < -0.999f)
+                this.taperX = -0.999f;
+            if (this.taperY > 0.999f)
+                this.taperY = 0.999f;
+            if (this.taperY < -0.999f)
+                this.taperY = -0.999f;
+
             if (pathType == PathType.Linear || pathType == PathType.Flexible)
             {
                 int step = 0;
@@ -1480,7 +1497,7 @@ namespace PrimMesher
         public int numPrimFaces;
 
         /// <summary>
-        ///   Human readable string representation of the parameters used to create a mesh.
+        ///     Human readable string representation of the parameters used to create a mesh.
         /// </summary>
         /// <returns></returns>
         public string ParamsToDisplayString()
@@ -1537,13 +1554,13 @@ namespace PrimMesher
 
 
         /// <summary>
-        ///   Constructs a PrimMesh object and creates the profile for extrusion.
+        ///     Constructs a PrimMesh object and creates the profile for extrusion.
         /// </summary>
-        /// <param name = "sides"></param>
-        /// <param name = "profileStart"></param>
-        /// <param name = "profileEnd"></param>
-        /// <param name = "hollow"></param>
-        /// <param name = "hollowSides"></param>
+        /// <param name="sides"></param>
+        /// <param name="profileStart"></param>
+        /// <param name="profileEnd"></param>
+        /// <param name="hollow"></param>
+        /// <param name="hollowSides"></param>
         public PrimMesh(int sides, float profileStart, float profileEnd, float hollow, int hollowSides)
         {
             coords = new List<Coord>();
@@ -1571,17 +1588,10 @@ namespace PrimMesher
                 this.hollow = 0.99f;
             if (hollow < 0.0f)
                 this.hollow = 0.0f;
-
-            //if (sphereMode)
-            //    this.hasProfileCut = this.profileEnd - this.profileStart < 0.4999f;
-            //else
-            //    //this.hasProfileCut = (this.profileStart > 0.0f || this.profileEnd < 1.0f);
-            //    this.hasProfileCut = this.profileEnd - this.profileStart < 0.9999f;
-            //this.hasHollow = (this.hollow > 0.001f);
         }
 
         /// <summary>
-        ///   Extrudes a profile along a path.
+        ///     Extrudes a profile along a path.
         /// </summary>
         public void Extrude(PathType pathType)
         {
@@ -1615,9 +1625,8 @@ namespace PrimMesher
             if (sphereMode)
                 hasProfileCut = profileEnd - profileStart < 0.4999f;
             else
-                //hasProfileCut = (profileStart > 0.0f || profileEnd < 1.0f);
-                hasProfileCut = profileEnd - profileStart < 0.9999f;
-            hasHollow = (hollow > 0.001f);
+                this.hasProfileCut = this.profileEnd - this.profileStart < 0.9999f;
+            this.hasHollow = (this.hollow > 0.001f);
 
             float twistBegin2 = twistBegin/360.0f*twoPi;
             float twistEnd2 = twistEnd/360.0f*twoPi;
@@ -1687,21 +1696,6 @@ namespace PrimMesher
             errorMessage = profile.errorMessage;
 
             numPrimFaces = profile.numPrimFaces;
-
-            //profileOuterFaceNumber = profile.faceNumbers[0];
-            //if (!needEndFaces)
-            //    profileOuterFaceNumber--;
-            //profileOuterFaceNumber = needEndFaces ? 1 : 0;
-
-
-            //if (hasHollow)
-            //{
-            //    if (needEndFaces)
-            //        profileHollowFaceNumber = profile.faceNumbers[profile.numOuterVerts + 1];
-            //    else
-            //        profileHollowFaceNumber = profile.faceNumbers[profile.numOuterVerts] - 1;
-            //}
-
 
             profileOuterFaceNumber = profile.outerFaceNumber;
             //this is always true
@@ -1837,10 +1831,10 @@ namespace PrimMesher
                 // fill faces between layers
 
                 int numVerts = newLayer.coords.Count;
-                Face newFace = new Face();
-
                 if (nodeIndex > 0)
                 {
+                    Face newFace = new Face();
+
                     int startVert = coordsLen + 1;
                     int endVert = coords.Count;
 
@@ -1897,13 +1891,28 @@ namespace PrimMesher
                                     u1 -= (int) u1;
                                     if (u2 < 0.1f)
                                         u2 = 1.0f;
-                                    //this.profileOuterFaceNumber = primFaceNum;
                                 }
                                 else if (whichVert > profile.coords.Count - profile.numHollowVerts - 1)
                                 {
                                     u1 *= 2.0f;
                                     u2 *= 2.0f;
                                     //this.profileHollowFaceNumber = primFaceNum;
+                                }
+                            }
+
+                            if (this.sphereMode)
+                            {
+                                if (whichVert != cut1Vert && whichVert != cut2Vert)
+                                {
+                                    u1 = u1 * 2.0f - 1.0f;
+                                    u2 = u2 * 2.0f - 1.0f;
+
+                                    if (whichVert >= newLayer.numOuterVerts)
+                                    {
+                                        u1 -= hollow;
+                                        u2 -= hollow;
+                                    }
+
                                 }
                             }
 
@@ -2023,8 +2032,8 @@ namespace PrimMesher
 
 
         /// <summary>
-        ///   DEPRICATED - use Extrude(PathType.Linear) instead
-        ///   Extrudes a profile along a straight line path. Used for prim types box, cylinder, and prism.
+        ///     DEPRICATED - use Extrude(PathType.Linear) instead
+        ///     Extrudes a profile along a straight line path. Used for prim types box, cylinder, and prism.
         /// </summary>
         public void ExtrudeLinear()
         {
@@ -2033,8 +2042,8 @@ namespace PrimMesher
 
 
         /// <summary>
-        ///   DEPRICATED - use Extrude(PathType.Circular) instead
-        ///   Extrude a profile into a circular path prim mesh. Used for prim types torus, tube, and ring.
+        ///     DEPRICATED - use Extrude(PathType.Circular) instead
+        ///     Extrude a profile into a circular path prim mesh. Used for prim types torus, tube, and ring.
         /// </summary>
         public void ExtrudeCircular()
         {
@@ -2060,9 +2069,9 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Calculate the surface normal for a face in the list of faces
+        ///     Calculate the surface normal for a face in the list of faces
         /// </summary>
-        /// <param name = "faceIndex"></param>
+        /// <param name="faceIndex"></param>
         /// <returns></returns>
         public Coord SurfaceNormal(int faceIndex)
         {
@@ -2074,7 +2083,7 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Duplicates a PrimMesh object. All object properties are copied by value, including lists.
+        ///     Duplicates a PrimMesh object. All object properties are copied by value, including lists.
         /// </summary>
         /// <returns></returns>
         public PrimMesh Copy()
@@ -2113,7 +2122,7 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Calculate surface normals for all of the faces in the list of faces in this mesh
+        ///     Calculate surface normals for all of the faces in the list of faces in this mesh
         /// </summary>
         public void CalcNormals()
         {
@@ -2143,11 +2152,11 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Adds a value to each XYZ vertex coordinate in the mesh
+        ///     Adds a value to each XYZ vertex coordinate in the mesh
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
-        /// <param name = "z"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
         public void AddPos(float x, float y, float z)
         {
             int i;
@@ -2176,9 +2185,9 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Rotates the mesh
+        ///     Rotates the mesh
         /// </summary>
-        /// <param name = "q"></param>
+        /// <param name="q"></param>
         public void AddRot(Quat q)
         {
             int i;
@@ -2223,11 +2232,11 @@ namespace PrimMesher
 #endif
 
         /// <summary>
-        ///   Scales the mesh
+        ///     Scales the mesh
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
-        /// <param name = "z"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
         public void Scale(float x, float y, float z)
         {
             int i;
@@ -2253,11 +2262,11 @@ namespace PrimMesher
         }
 
         /// <summary>
-        ///   Dumps the mesh to a Blender compatible "Raw" format file
+        ///     Dumps the mesh to a Blender compatible "Raw" format file
         /// </summary>
-        /// <param name = "path"></param>
-        /// <param name = "name"></param>
-        /// <param name = "title"></param>
+        /// <param name="path"></param>
+        /// <param name="name"></param>
+        /// <param name="title"></param>
         public void DumpRaw(String path, String name, String title)
         {
             if (path == null)

@@ -27,28 +27,27 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.OnDemand
 {
     /// <summary>
-    ///   Some notes on this module, this module just modifies when/where the startup code is executed
-    ///   This module has a few different settings for the region to startup with, 
-    ///   Soft, Medium, and Normal (no change)
-    /// 
-    ///   -- Soft --
-    ///   Disables the heartbeats (not scripts, as its instance-wide)
-    ///   Only loads land and parcels, no prims
-    /// 
-    ///   -- Medium -- 
-    ///   Same as Soft, except it loads prims (same as normal, but no threads)
-    /// 
-    ///   -- Normal --
-    ///   Same as always
+    ///     Some notes on this module, this module just modifies when/where the startup code is executed
+    ///     This module has a few different settings for the region to startup with,
+    ///     Soft, Medium, and Normal (no change)
+    ///     -- Soft --
+    ///     Disables the heartbeats (not scripts, as its instance-wide)
+    ///     Only loads land and parcels, no prims
+    ///     -- Medium --
+    ///     Same as Soft, except it loads prims (same as normal, but no threads)
+    ///     -- Normal --
+    ///     Same as always
     /// </summary>
     public class OnDemandRegionModule : INonSharedRegionModule
     {
@@ -59,7 +58,6 @@ namespace Aurora.Modules.OnDemand
         private bool m_isShuttingDown;
         private bool m_isStartingUp;
         private IScene m_scene;
-        private int m_waitTime=0;
 
         #endregion
 
@@ -116,10 +114,6 @@ namespace Aurora.Modules.OnDemand
                 if (!m_isRunning)
                 {
                     m_isRunning = true;
-                    object[] obj = (object[]) parameters;
-                    OSDMap responseMap = (OSDMap) obj[0];
-                    //Tell the caller that we will have to wait a bit possibly
-                    responseMap["WaitTime"] = m_waitTime;
                     if (m_scene.RegionInfo.Startup == StartupType.Medium)
                     {
                         m_scene.AuroraEventManager.FireGenericEventHandler("MediumStartup", m_scene);
@@ -166,7 +160,7 @@ namespace Aurora.Modules.OnDemand
         }
 
         /// <summary>
-        ///   This shuts down the heartbeats so that everything is dead again
+        ///     This shuts down the heartbeats so that everything is dead again
         /// </summary>
         private void GenericShutdown()
         {
@@ -179,9 +173,9 @@ namespace Aurora.Modules.OnDemand
         #region Private Startup Methods
 
         /// <summary>
-        ///   We've already loaded prims/parcels/land earlier, 
-        ///   we don't have anything else to load, 
-        ///   so we just need to get the heartbeats back on track
+        ///     We've already loaded prims/parcels/land earlier,
+        ///     we don't have anything else to load,
+        ///     so we just need to get the heartbeats back on track
         /// </summary>
         private void MediumStartup()
         {
@@ -196,7 +190,7 @@ namespace Aurora.Modules.OnDemand
         }
 
         /// <summary>
-        ///   This sets up the heartbeats so that they are running again, which is needed
+        ///     This sets up the heartbeats so that they are running again, which is needed
         /// </summary>
         private void GenericStartup()
         {

@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.AbuseReports
 {
     public class AbuseReportsMigrator_0 : Migrator
     {
@@ -57,11 +57,11 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Active", ColumnTypes.String100),
                 ColDef("Checked", ColumnTypes.String100),
                 ColDef("Notes", ColumnTypes.String1024)
-            ),
-                IndexDefs(
-                    IndexDef(new string[1]{ "Number" }, IndexType.Primary)
-                )
-            );
+                                          ),
+                      IndexDefs(
+                          IndexDef(new string[1] {"Number"}, IndexType.Primary)
+                          )
+                );
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

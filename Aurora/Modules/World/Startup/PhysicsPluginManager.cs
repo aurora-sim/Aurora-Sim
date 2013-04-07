@@ -25,17 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
+using Nini.Config;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using Aurora.Framework;
-using Aurora.Framework.Physics;
-using Nini.Config;
 
 namespace Aurora.Modules.Startup
 {
     /// <summary>
-    ///   Description of MyClass.
+    ///     Description of MyClass.
     /// </summary>
     public class PhysicsPluginManager
     {
@@ -43,14 +45,15 @@ namespace Aurora.Modules.Startup
         private readonly Dictionary<string, IPhysicsPlugin> _PhysPlugins = new Dictionary<string, IPhysicsPlugin>();
 
         /// <summary>
-        ///   Get a physics scene for the given physics engine and mesher.
+        ///     Get a physics scene for the given physics engine and mesher.
         /// </summary>
-        /// <param name = "physEngineName"></param>
-        /// <param name = "meshEngineName"></param>
-        /// <param name = "config"></param>
+        /// <param name="physEngineName"></param>
+        /// <param name="meshEngineName"></param>
+        /// <param name="config"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config,
-                                            RegionInfo region, IRegistryCore registry)
+                                            IScene scene)
         {
             if (String.IsNullOrEmpty(physEngineName))
             {
@@ -77,7 +80,7 @@ namespace Aurora.Modules.Startup
             {
                 MainConsole.Instance.Debug("[Physics]: Loading physics engine: " + physEngineName);
                 PhysicsScene result = _PhysPlugins[physEngineName].GetScene();
-                result.Initialise(meshEngine, region, registry);
+                result.Initialise(meshEngine, scene);
                 result.PostInitialise(config);
                 return result;
             }
@@ -89,13 +92,15 @@ namespace Aurora.Modules.Startup
         }
 
         /// <summary>
-        ///   Load all plugins in assemblies at the given path
+        ///     Load all plugins in assemblies at the given path
         /// </summary>
-        /// <param name = "pluginsPath"></param>
+        /// <param name="assembliesPath"></param>
         public void LoadPluginsFromAssemblies(string assembliesPath)
         {
-            List<IPhysicsPlugin> physicsPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
-            List<IMeshingPlugin> meshingPlugins = Aurora.Framework.AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
+            List<IPhysicsPlugin> physicsPlugins =
+                AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
+            List<IMeshingPlugin> meshingPlugins =
+                AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
             meshingPlugins.AddRange(AuroraModuleLoader.LoadModules<IMeshingPlugin>(""));
 
             foreach (IPhysicsPlugin plug in physicsPlugins)
@@ -104,7 +109,9 @@ namespace Aurora.Modules.Startup
                 {
                     _PhysPlugins.Add(plug.GetName(), plug);
                 }
-                catch { }
+                catch
+                {
+                }
             }
             foreach (IMeshingPlugin plug in meshingPlugins)
             {
@@ -112,7 +119,9 @@ namespace Aurora.Modules.Startup
                 {
                     _MeshPlugins.Add(plug.GetName(), plug);
                 }
-                catch { }
+                catch
+                {
+                }
             }
         }
     }

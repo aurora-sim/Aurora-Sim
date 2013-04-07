@@ -25,19 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace Aurora.Modules.Entities.PhysicsMaterials
 {
@@ -84,21 +85,16 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
             OSDMap retVal = new OSDMap();
             retVal["GetObjectPhysicsData"] = CapsUtil.CreateCAPS("GetObjectPhysicsData", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["GetObjectPhysicsData"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return GetObjectPhysicsData(agentID, request);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return GetObjectPhysicsData(agentID, request); }));
             return retVal;
         }
 
@@ -111,15 +107,8 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
             IEventQueueService eqs = m_scene.RequestModuleInterface<IEventQueueService>();
             if (eqs != null)
             {
-#if (!ISWIN)
-                List<ISceneChildEntity> list = new List<ISceneChildEntity>();
-                foreach (OSD key in keys)
-                    list.Add(m_scene.GetSceneObjectPart(key.AsUUID()));
-                eqs.ObjectPhysicsProperties(list.ToArray(),
-                                            agentID, m_scene.RegionInfo.RegionHandle);
-#else
-                eqs.ObjectPhysicsProperties(keys.Select(key => m_scene.GetSceneObjectPart(key.AsUUID())).ToArray(), agentID, m_scene.RegionInfo.RegionHandle);
-#endif
+                eqs.ObjectPhysicsProperties(keys.Select(key => m_scene.GetSceneObjectPart(key.AsUUID())).ToArray(),
+                                            agentID, m_scene.RegionInfo.RegionID);
             }
             //Send back data
             return new byte[0];

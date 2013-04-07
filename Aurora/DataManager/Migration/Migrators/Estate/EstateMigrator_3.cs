@@ -27,12 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
-using Aurora.Framework;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.Estate
 {
     public class EstateMigrator_3 : Migrator
     {
@@ -46,10 +43,10 @@ namespace Aurora.DataManager.Migration.Migrators
             AddSchema("estateregions", ColDefs(
                 ColDef("RegionID", ColumnTypes.String36),
                 ColDef("EstateID", ColumnTypes.Integer11)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary),
-                IndexDef(new string[1]{ "EstateID" }, IndexType.Index)
-            ));
+                                           ), IndexDefs(
+                                               IndexDef(new string[1] {"RegionID"}, IndexType.Primary),
+                                               IndexDef(new string[1] {"EstateID"}, IndexType.Index)
+                                                  ));
 
             AddSchema("estatesettings", ColDefs(
                 ColDef("EstateID", ColumnTypes.Integer11),
@@ -57,11 +54,11 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("EstateOwner", ColumnTypes.String36),
                 ColDef("ParentEstateID", ColumnTypes.Integer11),
                 ColDef("Settings", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "EstateID" }, IndexType.Primary),
-                IndexDef(new string[1]{ "EstateOwner"}, IndexType.Index),
-                IndexDef(new string[2]{ "EstateName", "EstateOwner" }, IndexType.Index)
-            ));
+                                            ), IndexDefs(
+                                                IndexDef(new string[1] {"EstateID"}, IndexType.Primary),
+                                                IndexDef(new string[1] {"EstateOwner"}, IndexType.Index),
+                                                IndexDef(new string[2] {"EstateName", "EstateOwner"}, IndexType.Index)
+                                                   ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Aurora.Modules.Web.Translators
+﻿namespace Aurora.Modules.Web.Translators
 {
     public class EnglishTranslation : ITranslator
     {
-        public string LanguageName { get { return "en"; } }
+        public string LanguageName
+        {
+            get { return "en"; }
+        }
 
         public string GetTranslatedString(string key)
         {
@@ -102,8 +100,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Do you accept the Terms of Service as detailed above?";
                 case "Accept":
                     return "Accept";
-					
-				// news
+
+                    // news
                 case "OpenNewsManager":
                     return "Open the news manager";
                 case "NewsManager":
@@ -146,7 +144,7 @@ namespace Aurora.Modules.Web.Translators
                     return "User Status";
                 case "OnlineLocationText":
                     return "User Location";
-					
+
                 case "RegionInformationText":
                     return "Region Information";
                 case "OwnerNameText":
@@ -166,7 +164,7 @@ namespace Aurora.Modules.Web.Translators
                 case "ParcelOwnerText":
                     return "Parcel Owner's Name";
 
-				// Region Page
+                    // Region Page
                 case "RegionInfoText":
                     return "Region Info";
                 case "RegionListText":
@@ -204,7 +202,7 @@ namespace Aurora.Modules.Web.Translators
                 case "NumberOfUsersInRegionText":
                     return "Number of Users in region";
 
-				// Menu Buttons
+                    // Menu Buttons
                 case "MenuHome":
                     return "Home";
                 case "MenuLogin":
@@ -258,7 +256,7 @@ namespace Aurora.Modules.Web.Translators
                 case "MenuManager":
                     return "Admin";
 
-				// Tooltips Menu Buttons
+                    // Tooltips Menu Buttons
                 case "TooltipsMenuHome":
                     return "Home";
                 case "TooltipsMenuLogin":
@@ -308,33 +306,33 @@ namespace Aurora.Modules.Web.Translators
                 case "TooltipsMenuManager":
                     return "Admin Management";
 
-				// Menu Region
+                    // Menu Region
                 case "MenuRegionTitle":
                     return "Region";
                 case "MenuParcelTitle":
                     return "Parcel";
                 case "MenuOwnerTitle":
                     return "Owner";
-				
-				// Menu Profile
+
+                    // Menu Profile
                 case "MenuProfileTitle":
                     return "Profile";
                 case "MenuGroupTitle":
                     return "Group";
                 case "MenuPicksTitle":
                     return "Picks";
-				
-				// Urls
+
+                    // Urls
                 case "WelcomeScreen":
                     return "Welcome Screen";
-				
-				// Tooltips Urls
+
+                    // Tooltips Urls
                 case "TooltipsWelcomeScreen":
                     return "Welcome Screen";
                 case "TooltipsWorldMap":
                     return "World Map";
 
-				// Style Switcher
+                    // Style Switcher
                 case "styles1":
                     return "Default Minimalist";
                 case "styles2":
@@ -353,7 +351,7 @@ namespace Aurora.Modules.Web.Translators
                 case "StyleSwitcherChoiceText":
                     return "Choice";
 
-                // Language Switcher Tooltips
+                    // Language Switcher Tooltips
                 case "en":
                     return "English";
                 case "fr":
@@ -363,9 +361,9 @@ namespace Aurora.Modules.Web.Translators
                 case "it":
                     return "Italian";
                 case "es":
-                    return "Spanish";		
-			
-				// Index Page
+                    return "Spanish";
+
+                    // Index Page
                 case "HomeText":
                     return "Home";
                 case "HomeTextWelcome":
@@ -375,17 +373,17 @@ namespace Aurora.Modules.Web.Translators
                 case "WelcomeToText":
                     return "Welcome to";
 
-				// World Map Page
+                    // World Map Page
                 case "WorldMap":
                     return "World Map";
                 case "WorldMapText":
                     return "Full Screen";
 
-				// Chat Page
+                    // Chat Page
                 case "ChatText":
                     return "Chat Support";
-					
-                // Help Page
+
+                    // Help Page
                 case "HelpText":
                     return "Help";
                 case "HelpViewersConfigText":
@@ -404,14 +402,14 @@ namespace Aurora.Modules.Web.Translators
                     return "Singularity Viewer";
                 case "ZenViewer":
                     return "Zen Viewer";
-				
-                //Logout page
+
+                    //Logout page
                 case "Logout":
                     return "Logout";
                 case "LoggedOutSuccessfullyText":
                     return "You have been logged out successfully.";
 
-                //Change user information page
+                    //Change user information page
                 case "ChangeUserInformationText":
                     return "Change User Information";
                 case "ChangePasswordText":
@@ -429,27 +427,28 @@ namespace Aurora.Modules.Web.Translators
                 case "DeleteText":
                     return "Delete";
                 case "DeleteUserInfoText":
-                    return "This will remove all information about you in the grid and remove your access to this service. If you wish to continue, enter your name and password and click Delete.";
+                    return
+                        "This will remove all information about you in the grid and remove your access to this service. If you wish to continue, enter your name and password and click Delete.";
                 case "EditText":
                     return "Edit";
                 case "EditUserAccountText":
                     return "Edit User Account";
 
-                //Maintenance page
+                    //Maintenance page
                 case "WebsiteDownInfoText":
                     return "Website is currently down, please try again soon.";
                 case "WebsiteDownText":
                     return "Website offline";
-					
-                //http_404 page
+
+                    //http_404 page
                 case "Error404Text":
                     return "Error code";
                 case "Error404InfoText":
                     return "404 Page Not Found";
                 case "HomePage404Text":
                     return "home page";
-					
-                //http_505 page
+
+                    //http_505 page
                 case "Error505Text":
                     return "Error code";
                 case "Error505InfoText":
@@ -457,7 +456,7 @@ namespace Aurora.Modules.Web.Translators
                 case "HomePage505Text":
                     return "home page";
 
-                //user_search page
+                    //user_search page
                 case "Search":
                     return "Search";
                 case "SearchText":
@@ -469,7 +468,7 @@ namespace Aurora.Modules.Web.Translators
                 case "SearchResultForUserText":
                     return "Search Result For User";
 
-                //region_search page
+                    //region_search page
                 case "SearchForRegionText":
                     return "Search For A Region";
                 case "RegionSearchText":
@@ -477,7 +476,7 @@ namespace Aurora.Modules.Web.Translators
                 case "SearchResultForRegionText":
                     return "Search Result For Region";
 
-                //Edit user page
+                    //Edit user page
                 case "AdminDeleteUserText":
                     return "Delete User";
                 case "AdminDeleteUserInfoText":
@@ -500,8 +499,9 @@ namespace Aurora.Modules.Web.Translators
                     return "Removes temporary and permanent bans on the user.";
                 case "AdminLoginInAsUserText":
                     return "Login as User";
-	            case "AdminLoginInAsUserInfoText":
-                    return "You will be logged out of your admin account, and logged in as this user, and will see everything as they see it.";
+                case "AdminLoginInAsUserInfoText":
+                    return
+                        "You will be logged out of your admin account, and logged in as this user, and will see everything as they see it.";
                 case "TimeUntilUnbannedText":
                     return "Time until user is unbanned";
                 case "DaysText":
@@ -529,7 +529,7 @@ namespace Aurora.Modules.Web.Translators
                 case "MessageUserText":
                     return "Message User";
 
-                //factory_reset
+                    //factory_reset
                 case "FactoryReset":
                     return "Factory Reset";
                 case "ResetMenuText":
@@ -543,9 +543,10 @@ namespace Aurora.Modules.Web.Translators
                 case "Pages":
                     return "Pages";
                 case "DefaultsUpdated":
-                    return "defaults updated, go to Factory Reset to update or Settings Manager to disable this warning.";
+                    return
+                        "defaults updated, go to Factory Reset to update or Settings Manager to disable this warning.";
 
-                //page_manager
+                    //page_manager
                 case "PageManager":
                     return "Page Manager";
                 case "SaveMenuItemChanges":
@@ -579,7 +580,7 @@ namespace Aurora.Modules.Web.Translators
                 case "RequiresAdminLevelText":
                     return "Required Admin Level To View";
 
-                //settings manager page
+                    //settings manager page
                 case "Save":
                     return "Save";
                 case "GridCenterXText":
@@ -593,7 +594,7 @@ namespace Aurora.Modules.Web.Translators
                 case "IgnoreSettingsUpdatesText":
                     return "Ignore settings update warning until next update";
 
-                //Times
+                    //Times
                 case "Sun":
                     return "Sun";
                 case "Mon":
@@ -672,8 +673,8 @@ namespace Aurora.Modules.Web.Translators
                     return "November";
                 case "December":
                     return "December";
-				
-				// ColorBox
+
+                    // ColorBox
                 case "ColorBoxImageText":
                     return "Image";
                 case "ColorBoxOfText":
@@ -688,9 +689,9 @@ namespace Aurora.Modules.Web.Translators
                     return "Start Slide Show";
                 case "ColorBoxStopSlideshowText":
                     return "Stop Slide Show";
-				
 
-                // English only so far
+
+                    // English only so far
                 case "NoAccountFound":
                     return "No account found";
                 case "DisplayInMenu":
@@ -705,7 +706,6 @@ namespace Aurora.Modules.Web.Translators
                     return "Hide Language Selection Bar";
                 case "HideStyleBarText":
                     return "Hide Style Selection Bar";
-
             }
             return "UNKNOWN CHARACTER";
         }

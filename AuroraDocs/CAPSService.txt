@@ -1,9 +1,0 @@
-CAPS Service
-   
-    4/11/2010
-
-About the CAPS Service:
-	
-The CAPS Service is an internal Aurora.Service service that is used to control what CAPS the region has access to control.
-This service is used to provide grid-wide CAPS that are secure, even in an open-grid setting.
-By using this service, you (the grid operator) can control what CAPS the regions can use.

@@ -25,22 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Chat
 {
-    public class PresenceModule : ISharedRegionModule
+    public class PresenceModule : INonSharedRegionModule
     {
-        protected List<IScene> m_Scenes = new List<IScene>();
+        protected IScene m_Scene;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -48,7 +50,7 @@ namespace Aurora.Modules.Chat
 
         public void AddRegion(IScene scene)
         {
-            m_Scenes.Add(scene);
+            m_Scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -60,14 +62,10 @@ namespace Aurora.Modules.Chat
 
         public void RemoveRegion(IScene scene)
         {
-            m_Scenes.Remove(scene);
+            m_Scene = scene;
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -104,7 +102,7 @@ namespace Aurora.Modules.Chat
             IClientAPI client = (IClientAPI) sender;
             MainConsole.Instance.DebugFormat("[PRESENCE MODULE]: OnlineNotification requested by {0}", client.Name);
 
-            List<UserInfo> status = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfos(args);
+            List<UserInfo> status = m_Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfos(args);
 
             List<UUID> online = new List<UUID>();
             List<UUID> offline = new List<UUID>();

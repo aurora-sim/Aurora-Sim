@@ -25,24 +25,29 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Timers;
-using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Timers;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Land
 {
@@ -84,7 +89,7 @@ namespace Aurora.Modules.Land
         private readonly List<UUID> m_hasSentParcelOverLay = new List<UUID>();
 
         /// <value>
-        ///   Land objects keyed by local id
+        ///     Land objects keyed by local id
         /// </value>
         private readonly Dictionary<int, ILandObject> m_landList = new Dictionary<int, ILandObject>();
 
@@ -99,7 +104,7 @@ namespace Aurora.Modules.Land
         private string _godParcelOwner = "";
 
         /// <value>
-        ///   Local land ids at specified region co-ordinates (region size / 4)
+        ///     Local land ids at specified region co-ordinates (region size / 4)
         /// </value>
         private int[,] m_landIDList;
 
@@ -110,7 +115,7 @@ namespace Aurora.Modules.Land
         private IScene m_scene;
 
         private int m_update_land = 200;
-                    //Check whether we need to rebuild the parcel prim count and other land related functions
+        //Check whether we need to rebuild the parcel prim count and other land related functions
 
         public int[,] LandIDList
         {
@@ -137,10 +142,6 @@ namespace Aurora.Modules.Land
                 _godParcelOwner = config.GetString("GodParcelOwner", "");
                 UseDwell = config.GetBoolean("AllowDwell", true);
             }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void AddRegion(IScene scene)
@@ -232,7 +233,7 @@ namespace Aurora.Modules.Land
 
         #region MoneyModule pieces (for parcel directory payment)
 
-        bool moneyModule_OnCheckWhetherUserShouldPay(UUID agentID, string paymentTextThatFailed)
+        private bool moneyModule_OnCheckWhetherUserShouldPay(UUID agentID, string paymentTextThatFailed)
         {
             if (paymentTextThatFailed.StartsWith("Parcel Show in Search Fee - "))
             {
@@ -243,12 +244,12 @@ namespace Aurora.Modules.Land
             return true;
         }
 
-        void moneyModule_OnUserDidNotPay(UUID agentID, string paymentTextThatFailed)
+        private void moneyModule_OnUserDidNotPay(UUID agentID, string paymentTextThatFailed)
         {
             UUID parcelGlobalID = UUID.Parse(paymentTextThatFailed.Substring("Parcel Show in Search Fee - ".Length));
             ILandObject parcel;
             if ((parcel = GetLandObject(parcelGlobalID)) != null)
-                parcel.LandData.Flags &= (uint)ParcelFlags.ShowDirectory;
+                parcel.LandData.Flags &= (uint) ParcelFlags.ShowDirectory;
         }
 
         #endregion
@@ -258,34 +259,34 @@ namespace Aurora.Modules.Land
         private readonly HashSet<ISceneEntity> m_entitiesInAutoReturnQueue = new HashSet<ISceneEntity>();
 
         /// <summary>
-        ///   Return object to avatar Message
+        ///     Return object to avatar Message
         /// </summary>
-        /// <param name = "agentID">Avatar Unique Id</param>
-        /// <param name = "objectName">Name of object returned</param>
-        /// <param name = "location">Location of object returned</param>
-        /// <param name = "reason">Reasion for object return</param>
-        /// <param name = "groups">The objects to return</param>
+        /// <param name="agentID">Avatar Unique Id</param>
+        /// <param name="objectName">Name of object returned</param>
+        /// <param name="location">Location of object returned</param>
+        /// <param name="reason">Reasion for object return</param>
+        /// <param name="groups">The objects to return</param>
         public void AddReturns(UUID agentID, string objectName, Vector3 location, string reason,
-                               List<ISceneEntity> Groups)
+                               List<ISceneEntity> groups)
         {
             lock (m_returns)
             {
                 if (m_returns.ContainsKey(agentID))
                 {
                     ReturnInfo info = m_returns[agentID];
-                    info.count += Groups.Count;
-                    info.Groups.AddRange(Groups);
+                    info.count += groups.Count;
+                    info.Groups.AddRange(groups);
                     m_returns[agentID] = info;
                 }
                 else
                 {
                     ReturnInfo info = new ReturnInfo
                                           {
-                                              count = Groups.Count,
+                                              count = groups.Count,
                                               objectName = objectName,
                                               location = location,
                                               reason = reason,
-                                              Groups = Groups
+                                              Groups = groups
                                           };
                     m_returns[agentID] = info;
                 }
@@ -323,7 +324,7 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   This deals with sending the return IMs as well as actually returning the objects
+        ///     This deals with sending the return IMs as well as actually returning the objects
         /// </summary>
         protected internal void CheckFrameEvents()
         {
@@ -373,8 +374,9 @@ namespace Aurora.Modules.Land
                             tr.SendInstantMessage(msg);
 
                         if (ret.Value.Groups.Count > 1)
-                            MainConsole.Instance.InfoFormat("[LandManagement]: Returning {0} objects due to parcel auto return.",
-                                             ret.Value.Groups.Count);
+                            MainConsole.Instance.InfoFormat(
+                                "[LandManagement]: Returning {0} objects due to parcel auto return.",
+                                ret.Value.Groups.Count);
                         else
                             MainConsole.Instance.Info("[LandManagement]: Returning 1 object due to parcel auto return.");
                     }
@@ -395,24 +397,16 @@ namespace Aurora.Modules.Land
         protected void CheckPrimForTemperary()
         {
             HashSet<ISceneEntity> entitiesToRemove = new HashSet<ISceneEntity>();
-#if (!ISWIN)
-            foreach (ISceneEntity entity in m_entitiesInAutoReturnQueue)
-            {
-                if (entity.RootChild.Expires <= DateTime.Now)
-                {
-                    entitiesToRemove.Add(entity);
-                    //Temporary objects don't get a reason, they return quietly
-                    AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
-                }
-            }
-#else
-            foreach (ISceneEntity entity in m_entitiesInAutoReturnQueue.Where(entity => entity.RootChild.Expires <= DateTime.Now))
+
+            foreach (
+                ISceneEntity entity in
+                    m_entitiesInAutoReturnQueue.Where(entity => entity.RootChild.Expires <= DateTime.Now))
             {
                 entitiesToRemove.Add(entity);
                 //Temporary objects don't get a reason, they return quietly
                 AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
             }
-#endif
+
             foreach (ISceneEntity entity in entitiesToRemove)
             {
                 m_entitiesInAutoReturnQueue.Remove(entity);
@@ -434,23 +428,26 @@ namespace Aurora.Modules.Land
                                              from sog in primCount.GetPrimCounts(parcel.LandData.GlobalID).Objects
                                              where parcel.LandData.OwnerID != sog.OwnerID &&
                                                    ((parcel.LandData.GroupID == UUID.Zero) ||
-                                                 //If there is no group, don't check the groups part
+                                                    //If there is no group, don't check the groups part
                                                     ((parcel.LandData.GroupID != UUID.Zero) &&
-                                                 //If there is a group, check for group rezzed prims and group owned prims
-                                                     (parcel.LandData.GroupID != sog.GroupID && ///Allow prims set to the group
-                                                      parcel.LandData.GroupID != sog.OwnerID && //Allow group deeded prims!
-                                                      parcel.LandData.OwnerID != sog.GroupID) //Allow group deeded prims!
+                                                     //If there is a group, check for group rezzed prims and group owned prims
+                                                     (parcel.LandData.GroupID != sog.GroupID &&
+                                                      //Allow prims set to the group
+                                                      parcel.LandData.GroupID != sog.OwnerID &&
+                                                      //Allow group deeded prims!
+                                                      parcel.LandData.OwnerID != sog.GroupID)
+                                                    //Allow group deeded prims!
                                                     )) &&
                                                    !m_scene.Permissions.IsAdministrator(sog.OwnerID)
                                              where (DateTime.UtcNow - sog.RootChild.Rezzed).TotalSeconds >
-                                                   parcel.LandData.OtherCleanTime * 60
+                                                   parcel.LandData.OtherCleanTime*60
                                              select sog)
                 {
                     entities.Add(sog);
                 }
-                if(entities.Count > 0)
+                if (entities.Count > 0)
                     AddReturns(entities[0].OwnerID, entities[0].Name, entities[0].AbsolutePosition, "Auto Parcel Return",
-                           entities);
+                               entities);
             }
             catch (Exception e)
             {
@@ -488,7 +485,7 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Resets the sim to have no land objects
+        ///     Resets the sim to have no land objects
         /// </summary>
         public void ClearAllParcels()
         {
@@ -506,7 +503,7 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Resets the sim to the default land object (full sim piece of land owned by the default user)
+        ///     Resets the sim to the default land object (full sim piece of land owned by the default user)
         /// </summary>
         public ILandObject ResetSimLandObjects()
         {
@@ -535,7 +532,7 @@ namespace Aurora.Modules.Land
                     MainConsole.Instance.Warn("Could not find the user.");
             }
             MainConsole.Instance.Info("[ParcelManagement]: No land found for region " + m_scene.RegionInfo.RegionName +
-                       ", setting owner to " + fullSimParcel.LandData.OwnerID);
+                                      ", setting owner to " + fullSimParcel.LandData.OwnerID);
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch();
             fullSimParcel.SetInfoID();
             fullSimParcel.LandData.Bitmap =
@@ -586,15 +583,7 @@ namespace Aurora.Modules.Land
 
         public ILandObject GetLandObject(UUID GlobalID)
         {
-#if (!ISWIN)
-            foreach (ILandObject land in AllParcels())
-            {
-                if (land.LandData.GlobalID == GlobalID) return land;
-            }
-            return null;
-#else
             return AllParcels().FirstOrDefault(land => land.LandData.GlobalID == GlobalID);
-#endif
         }
 
         public ILandObject GetLandObject(float x, float y)
@@ -636,7 +625,7 @@ namespace Aurora.Modules.Land
 
         protected void AddLandObjectToSearch(ILandObject parcel)
         {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
                 if (m_UpdateDirectoryOnUpdate)
@@ -649,7 +638,7 @@ namespace Aurora.Modules.Land
 
         private void RemoveLandObjectFromSearch(ILandObject iLandObject)
         {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
                 if (m_UpdateDirectoryOnUpdate)
@@ -661,9 +650,9 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Adds a land object to the stored list and adds them to the landIDList to what they own
+        ///     Adds a land object to the stored list and adds them to the landIDList to what they own
         /// </summary>
-        /// <param name = "new_land">The land object being added</param>
+        /// <param name="land">The land object being added</param>
         public ILandObject AddLandObject(ILandObject land)
         {
             return AddLandObject(land, false);
@@ -716,39 +705,11 @@ namespace Aurora.Modules.Land
                 avatar.CurrentParcel.SendLandUpdateToClient(avatar.ControllingClient);
 
                 //Gotta kill all avatars outside the parcel
-#if (!ISWIN)
-                foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences())
-                {
-                    if (sp.UUID != avatar.UUID && !sp.IsChildAgent)
-                    {
-                        if (sp.CurrentParcel != null)
-                        {
-                            if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID) //Send full updates for those in the sim
-                            {
-                                if (avatar.CurrentParcel.LandData.Private || (oldParcel != null && oldParcel.LandData.Private))
-                                    //Either one, we gotta send an update
-                                {
-                                    sp.SceneViewer.RemoveAvatarFromView(avatar);
-                                    avatar.SceneViewer.RemoveAvatarFromView(sp);
-                                    sp.SceneViewer.QueuePresenceForFullUpdate(avatar, true);
-                                    avatar.SceneViewer.QueuePresenceForFullUpdate(sp, true);
-                                }
-                            }
-                            else //Kill those outside the parcel
-                            {
-                                if (sp.CurrentParcel.LandData.Private || avatar.CurrentParcel.LandData.Private)
-                                {
-                                    sp.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {avatar});
-                                    avatar.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {sp});
-                                    sp.SceneViewer.RemoveAvatarFromView(avatar);
-                                    avatar.SceneViewer.RemoveAvatarFromView(sp);
-                                }
-                            }
-                        }
-                    }
-                }
-#else
-                foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences().Where(sp => sp.UUID != avatar.UUID).Where(sp => sp.CurrentParcel != null))
+                foreach (
+                    IScenePresence sp in
+                        avatar.Scene.Entities.GetPresences()
+                              .Where(sp => sp.UUID != avatar.UUID)
+                              .Where(sp => sp.CurrentParcel != null))
                 {
                     if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID) //Send full updates for those in the sim
                     {
@@ -774,7 +735,6 @@ namespace Aurora.Modules.Land
                         }
                     }
                 }
-#endif
 
                 if (UseDwell)
                     avatar.CurrentParcel.LandData.Dwell += 1;
@@ -803,10 +763,14 @@ namespace Aurora.Modules.Land
             int multiple = 0;
             int result = 0;
             Vector3 spAbs = sp.AbsolutePosition;
-            foreach (ILandObject parcel in from parcel in AllParcels() let aamax = parcel.LandData.AABBMax let aamin = parcel.LandData.AABBMin where Math.Abs(aamax.X - spAbs.X) < 4 ||
-                                                                                                                                                     Math.Abs(aamax.Y - spAbs.Y) < 4 ||
-                                                                                                                                                     Math.Abs(aamin.X - spAbs.X) < 4 ||
-                                                                                                                                                     Math.Abs(aamin.Y - spAbs.Y) < 4 select parcel)
+            foreach (ILandObject parcel in from parcel in AllParcels()
+                                           let aamax = parcel.LandData.AABBMax
+                                           let aamin = parcel.LandData.AABBMin
+                                           where Math.Abs(aamax.X - spAbs.X) < 4 ||
+                                                 Math.Abs(aamax.Y - spAbs.Y) < 4 ||
+                                                 Math.Abs(aamin.X - spAbs.X) < 4 ||
+                                                 Math.Abs(aamin.Y - spAbs.Y) < 4
+                                           select parcel)
             {
                 //Do the & since we don't need to check again if we have already set the ban flag
                 if ((result & (int) ParcelPropertiesStatus.CollisionBanned) !=
@@ -920,10 +884,10 @@ namespace Aurora.Modules.Land
                             bool wasTemporary = ((group.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0);
                             bool wasPhantom = ((group.RootChild.Flags & PrimFlags.Phantom) != 0);
                             bool wasVD = group.RootChild.VolumeDetectActive;
-                            bool needsPhysicalRebuild = ((SceneObjectPart) group.RootChild).UpdatePrimFlags(false,
-                                                                                                            wasTemporary,
-                                                                                                            wasPhantom,
-                                                                                                            wasVD, null);
+                            bool needsPhysicalRebuild = group.RootChild.UpdatePrimFlags(false,
+                                                                                        wasTemporary,
+                                                                                        wasPhantom,
+                                                                                        wasVD, null);
                             if (needsPhysicalRebuild)
                                 group.RebuildPhysicalRepresentation(true);
                         }
@@ -977,9 +941,9 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Removes a land object from the list. Will not remove if local_id is still owning an area in landIDList
+        ///     Removes a land object from the list. Will not remove if local_id is still owning an area in landIDList
         /// </summary>
-        /// <param name = "local_id">Land.localID of the peice of land to remove.</param>
+        /// <param name="local_id">Land.localID of the peice of land to remove.</param>
         public void removeLandObject(int local_id)
         {
             lock (m_landListLock)
@@ -990,8 +954,9 @@ namespace Aurora.Modules.Land
                     {
                         if (m_landIDList[x, y] == local_id)
                         {
-                            MainConsole.Instance.WarnFormat("[LAND]: Not removing land object {0}; still being used at {1}, {2}",
-                                             local_id, x, y);
+                            MainConsole.Instance.WarnFormat(
+                                "[LAND]: Not removing land object {0}; still being used at {1}, {2}",
+                                local_id, x, y);
                             return;
                             //throw new Exception("Could not remove land object. Still being used at " + x + ", " + y);
                         }
@@ -1054,13 +1019,13 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Subdivides a piece of land
+        ///     Subdivides a piece of land
         /// </summary>
-        /// <param name = "start_x">West Point</param>
-        /// <param name = "start_y">South Point</param>
-        /// <param name = "end_x">East Point</param>
-        /// <param name = "end_y">North Point</param>
-        /// <param name = "attempting_user_id">UUID of user who is trying to subdivide</param>
+        /// <param name="start_x">West Point</param>
+        /// <param name="start_y">South Point</param>
+        /// <param name="end_x">East Point</param>
+        /// <param name="end_y">North Point</param>
+        /// <param name="attempting_user_id">UUID of user who is trying to subdivide</param>
         /// <returns>Returns true if successful</returns>
         private void subdivide(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id)
         {
@@ -1107,7 +1072,7 @@ namespace Aurora.Modules.Land
             //Lets create a new land object with bitmap activated at that point (keeping the old land objects info)
             ILandObject newLand = startLandObject.Copy();
             newLand.LandData.GlobalID = UUID.Random();
-            newLand.LandData.Dwell = 0;//Reset dwell info when splitting
+            newLand.LandData.Dwell = 0; //Reset dwell info when splitting
             startLandObject.ForceUpdateLandInfo();
 
             IPrimCountModule primCountsModule = m_scene.RequestModuleInterface<IPrimCountModule>();
@@ -1131,14 +1096,13 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Change a land bitmap at within a square and set those points to a specific value
+        ///     Change a land bitmap at within a square and set those points to a specific value
         /// </summary>
-        /// <param name = "land_bitmap"></param>
-        /// <param name = "start_x"></param>
-        /// <param name = "start_y"></param>
-        /// <param name = "end_x"></param>
-        /// <param name = "end_y"></param>
-        /// <param name = "set_value"></param>
+        /// <param name="start_x"></param>
+        /// <param name="start_y"></param>
+        /// <param name="end_x"></param>
+        /// <param name="end_y"></param>
+        /// <param name="localIDToSet"></param>
         /// <returns></returns>
         public void ModifyLandBitmapSquare(int start_x, int start_y, int end_x, int end_y, int localIDToSet)
         {
@@ -1175,7 +1139,7 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Rebuilds all of the parcel's bitmaps so that they are correct for saving and sending to clients
+        ///     Rebuilds all of the parcel's bitmaps so that they are correct for saving and sending to clients
         /// </summary>
         private void UpdateAllParcelBitmaps()
         {
@@ -1221,13 +1185,13 @@ namespace Aurora.Modules.Land
         }
 
         /// <summary>
-        ///   Join 2 land objects together
+        ///     Join 2 land objects together
         /// </summary>
-        /// <param name = "start_x">x value in first piece of land</param>
-        /// <param name = "start_y">y value in first piece of land</param>
-        /// <param name = "end_x">x value in second peice of land</param>
-        /// <param name = "end_y">y value in second peice of land</param>
-        /// <param name = "attempting_user_id">UUID of the avatar trying to join the land objects</param>
+        /// <param name="start_x">x value in first piece of land</param>
+        /// <param name="start_y">y value in first piece of land</param>
+        /// <param name="end_x">x value in second peice of land</param>
+        /// <param name="end_y">y value in second peice of land</param>
+        /// <param name="attempting_user_id">UUID of the avatar trying to join the land objects</param>
         /// <returns>Returns true if successful</returns>
         private void join(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id)
         {
@@ -1258,16 +1222,6 @@ namespace Aurora.Modules.Land
             }
             ILandObject masterLandObject = selectedLandObjects[0];
 
-#if (!ISWIN)
-            foreach (ILandObject p in selectedLandObjects)
-            {
-                if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) || (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide && !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false)))
-                {
-                    client.SendAlertMessage("Permissions: you cannot join these parcels");
-                    return;
-                }
-            }
-#else
             if (selectedLandObjects.Any(p => !m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) ||
                                              (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
                                               !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false))))
@@ -1275,7 +1229,6 @@ namespace Aurora.Modules.Land
                 client.SendAlertMessage("Permissions: you cannot join these parcels");
                 return;
             }
-#endif
 
             m_hasSentParcelOverLay.Clear(); //Clear everyone out
             selectedLandObjects.RemoveAt(0);
@@ -1310,9 +1263,9 @@ namespace Aurora.Modules.Land
         #region Parcel Updating
 
         /// <summary>
-        ///   Where we send the ParcelOverlay packet to the client
+        ///     Where we send the ParcelOverlay packet to the client
         /// </summary>
-        /// <param name = "remote_client">The object representing the client</param>
+        /// <param name="remote_client">The object representing the client</param>
         public void SendParcelOverlay(IClientAPI remote_client)
         {
             if (m_hasSentParcelOverLay.Contains(remote_client.AgentId))
@@ -1369,7 +1322,7 @@ namespace Aurora.Modules.Land
                                                    else if (currentParcelBlock.LandData.GroupID != UUID.Zero &&
                                                             m_scene.Permissions.IsInGroup(remote_client.AgentId,
                                                                                           currentParcelBlock.LandData.
-                                                                                              GroupID))
+                                                                                                             GroupID))
                                                    {
                                                        tempByte =
                                                            Convert.ToByte(tempByte |
@@ -1528,7 +1481,8 @@ namespace Aurora.Modules.Land
             }
             else
             {
-                MainConsole.Instance.WarnFormat("[PARCEL]: Invalid land object {0} passed for parcel object owner request", local_id);
+                MainConsole.Instance.WarnFormat(
+                    "[PARCEL]: Invalid land object {0} passed for parcel object owner request", local_id);
             }
         }
 
@@ -1625,8 +1579,10 @@ namespace Aurora.Modules.Land
             if (land != null)
             {
                 EventManager.LandBuyArgs args = new EventManager.LandBuyArgs(agentId, groupId, final, groupOwned,
-                                                                             removeContribution, parcelLocalID, parcelArea,
-                                                                             parcelPrice, authenticated, land.LandData.OwnerID);
+                                                                             removeContribution, parcelLocalID,
+                                                                             parcelArea,
+                                                                             parcelPrice, authenticated,
+                                                                             land.LandData.OwnerID);
                 // Make sure that we do all checking that we can sell this land
                 if (m_scene.EventManager.TriggerValidateBuyLand(args))
                 {
@@ -1817,25 +1773,25 @@ namespace Aurora.Modules.Land
             retVal["RemoteParcelRequest"] = CapsUtil.CreateCAPS("RemoteParcelRequest", remoteParcelRequestPath);
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["RemoteParcelRequest"],
-                                                       delegate(string path, Stream request, OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
-                                                       {
-                                                           return RemoteParcelRequest(request, agentID);
-                                                       }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return RemoteParcelRequest(request, agentID); }));
             retVal["ParcelPropertiesUpdate"] = CapsUtil.CreateCAPS("ParcelPropertiesUpdate", "");
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
-                                                       delegate(string path, Stream request, OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProcessPropertiesUpdate(request, agentID);
-                                                       }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return ProcessPropertiesUpdate(request, agentID); }));
             retVal["ParcelMediaURLFilterList"] = CapsUtil.CreateCAPS("ParcelMediaURLFilterList", "");
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
-                                                       delegate(string path, Stream request, OSHttpRequest httpRequest,
-                                                                    OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProcessParcelMediaURLFilterList(request, agentID);
-                                                       }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 {
+                                                                     return ProcessParcelMediaURLFilterList(request,
+                                                                                                            agentID);
+                                                                 }));
 
             return retVal;
         }
@@ -2189,13 +2145,13 @@ namespace Aurora.Modules.Land
 
         private void DoSearchUpdate()
         {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
                 DSC.AddRegion(AllParcels().ConvertAll(delegate(ILandObject o)
                                                           {
                                                               LandData d = o.LandData.Copy();
-                                                              if(d.UserLocation == Vector3.Zero)
-                                                                d.UserLocation = GetParcelCenterAtGround(o);
+                                                              if (d.UserLocation == Vector3.Zero)
+                                                                  d.UserLocation = GetParcelCenterAtGround(o);
                                                               d.RegionID = o.RegionUUID;
                                                               return d;
                                                           }));
@@ -2254,7 +2210,7 @@ namespace Aurora.Modules.Land
             }
         }
 
-        void client_OnGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
+        private void client_OnGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
         {
             if (Method == "claimpublicland")
             {
@@ -2270,7 +2226,7 @@ namespace Aurora.Modules.Land
             }
         }
 
-        void client_OnParcelGodMark(IClientAPI client, UUID agentID, int ParcelLocalID)
+        private void client_OnParcelGodMark(IClientAPI client, UUID agentID, int ParcelLocalID)
         {
             if (m_scene.Permissions.IsGod(client.AgentId))
             {
@@ -2330,8 +2286,8 @@ namespace Aurora.Modules.Land
             Util.ParseFakeParcelID(parcelID, out RegionHandle,
                                    out X, out Y, out Z);
             MainConsole.Instance.DebugFormat("[LAND] got parcelinfo request for regionHandle {0}, x/y {1}/{2}",
-                              RegionHandle, X, Y);
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                                             RegionHandle, X, Y);
+            IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
                 LandData data = DSC.GetParcelInfo(parcelID);
@@ -2355,12 +2311,13 @@ namespace Aurora.Modules.Land
                     }
                     if (info == null)
                     {
-                        MainConsole.Instance.WarnFormat("[LAND]: Failed to find region having parcel {0} @ {1} {2}", parcelID, X, Y);
+                        MainConsole.Instance.WarnFormat("[LAND]: Failed to find region having parcel {0} @ {1} {2}",
+                                                        parcelID, X, Y);
                         return;
                     }
                     // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
                     MainConsole.Instance.DebugFormat("[LAND] got parcelinfo for parcel {0} in region {1}; sending...",
-                                      data.Name, RegionHandle);
+                                                     data.Name, RegionHandle);
                     remoteClient.SendParcelInfo(data, parcelID, (uint) (info.RegionLocX + data.UserLocation.X),
                                                 (uint) (info.RegionLocY + data.UserLocation.Y), info.RegionName);
                 }

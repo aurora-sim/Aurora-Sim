@@ -25,12 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     /// <value>
-    ///   Which set of permissions a user has.
+    ///     Which set of permissions a user has.
     /// </value>
     public enum PermissionClass
     {
@@ -42,10 +43,10 @@ namespace Aurora.Framework
     public interface IPermissionsModule
     {
         /// <summary>
-        ///   Returns the type of permissions that the user has over an object.
+        ///     Returns the type of permissions that the user has over an object.
         /// </summary>
-        /// <param name = "user">The user</param>
-        /// <param name = "obj">The object</param>
+        /// <param name="user">The user</param>
+        /// <param name="obj">The object</param>
         /// <returns>The type of permissions the user has over the object</returns>
         PermissionClass GetPermissionClass(UUID user, ISceneChildEntity obj);
     }

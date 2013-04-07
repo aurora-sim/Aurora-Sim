@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Aurora.Framework;
-using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+﻿using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System;
 
 namespace Aurora.Modules.Avatar.Currency
 {
@@ -33,10 +31,11 @@ namespace Aurora.Modules.Avatar.Currency
         public void FinishedStartup()
         {
             IMoneyModule moneyModule = m_registry.RequestModuleInterface<IMoneyModule>();
-            if (moneyModule != null)//Only register if money is enabled
+            if (moneyModule != null) //Only register if money is enabled
             {
                 m_registry.RegisterModuleInterface<IScheduledMoneyModule>(this);
-                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("ScheduledPayment", ChargeNext);
+                m_registry.RequestModuleInterface<ISimulationBase>()
+                          .EventManager.RegisterEventHandler("ScheduledPayment", ChargeNext);
             }
         }
 
@@ -63,10 +62,10 @@ namespace Aurora.Modules.Avatar.Currency
                     itemInfo.Add("Amount", amount);
                     itemInfo.Add("Text", text);
                     SchedulerItem item = new SchedulerItem("ScheduledPayment",
-                        OSDParser.SerializeJsonString(itemInfo),false, DateTime.UtcNow, 1, RepeatType.months, agentID);
+                                                           OSDParser.SerializeJsonString(itemInfo), false,
+                                                           DateTime.UtcNow, 1, RepeatType.months, agentID);
                     itemInfo.Add("SchedulerID", item.id);
                     scheduler.Save(item);
-
                 }
             }
             return true;
@@ -76,7 +75,7 @@ namespace Aurora.Modules.Avatar.Currency
         {
             if (functionName == "ScheduledPayment")
             {
-                OSDMap itemInfo = (OSDMap)OSDParser.DeserializeJson(parameters.ToString());
+                OSDMap itemInfo = (OSDMap) OSDParser.DeserializeJson(parameters.ToString());
                 IMoneyModule moneyModule = m_registry.RequestModuleInterface<IMoneyModule>();
                 UUID agentID = itemInfo["AgentID"];
                 string scdID = itemInfo["SchedulerID"];

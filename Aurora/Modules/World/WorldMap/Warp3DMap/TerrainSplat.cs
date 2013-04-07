@@ -25,16 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
+using CSJ2K;
+using OpenMetaverse;
 using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Reflection;
-using CSJ2K;
-using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.WorldMap.Warp3DMap
 {
@@ -68,14 +71,19 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
         #endregion Constants
 
         /// <summary>
-        ///   Builds a composited terrain texture given the region texture
-        ///   and heightmap settings
+        ///     Builds a composited terrain texture given the region texture
+        ///     and heightmap settings
         /// </summary>
-        /// <param name = "heightmap">Terrain heightmap</param>
-        /// <param name = "regionInfo">Region information including terrain texture parameters</param>
+        /// <param name="heightmap">Terrain heightmap</param>
+        /// <param name="textureIDs"></param>
+        /// <param name="startHeights"></param>
+        /// <param name="heightRanges"></param>
+        /// <param name="regionPosition"></param>
+        /// <param name="assetService"></param>
+        /// <param name="textureTerrain"></param>
         /// <returns>A composited 256x256 RGB texture ready for rendering</returns>
         /// <remarks>
-        ///   Based on the algorithm described at http://opensimulator.org/wiki/Terrain_Splatting
+        ///     Based on the algorithm described at http://opensimulator.org/wiki/Terrain_Splatting
         /// </remarks>
         public static Bitmap Splat(ITerrainChannel heightmap, UUID[] textureIDs, float[] startHeights,
                                    float[] heightRanges, Vector3d regionPosition, IAssetService assetService,
@@ -114,23 +122,24 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                             catch (Exception ex)
                             {
                                 MainConsole.Instance.Warn("Failed to decode cached terrain texture " + cacheID +
-                                           " (textureID: " + textureIDs[i] + "): " + ex.Message);
+                                                          " (textureID: " + textureIDs[i] + "): " + ex.Message);
                             }
                         }
 
                         if (detailTexture[i] == null)
                         {
                             // Try to fetch the original JPEG2000 texture, resize if needed, and cache as PNG
-                            asset = assetService.Get(textureIDs[i].ToString());
+                            byte[] assetData = assetService.GetData(textureIDs[i].ToString());
                             if (asset != null)
                             {
                                 try
                                 {
-                                    detailTexture[i] = (Bitmap) J2kImage.FromBytes(asset.Data);
+                                    detailTexture[i] = (Bitmap) J2kImage.FromBytes(assetData);
                                 }
                                 catch (Exception ex)
                                 {
-                                    MainConsole.Instance.Warn("Failed to decode terrain texture " + asset.ID + ": " + ex.Message);
+                                    MainConsole.Instance.Warn("Failed to decode terrain texture " + asset.ID + ": " +
+                                                              ex.Message);
                                 }
                             }
 
@@ -162,7 +171,6 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                                                              Name = String.Empty,
                                                              TypeString = "image/png"
                                                          };
-                                newAsset.FillHash();
                                 newAsset.ID = assetService.Store(newAsset);
                             }
                         }
@@ -193,16 +201,16 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
 
             #region Layer Map
 
-            float diff = (float)heightmap.Height / (float)Constants.RegionSize;
+            float diff = (float) heightmap.Height/(float) Constants.RegionSize;
             float[] layermap = new float[Constants.RegionSize*Constants.RegionSize];
 
             for (float y = 0; y < heightmap.Height; y += diff)
             {
                 for (float x = 0; x < heightmap.Height; x += diff)
                 {
-                    float newX = x / diff;
-                    float newY = y / diff;
-                    float height = heightmap[(int)newX, (int)newY];
+                    float newX = x/diff;
+                    float newY = y/diff;
+                    float height = heightmap[(int) newX, (int) newY];
 
                     float pctX = newX/255f;
                     float pctY = newY/255f;
@@ -242,7 +250,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                     float layer = ((height + noise - startHeight)/heightRange)*4f;
                     if (Single.IsNaN(layer))
                         layer = 0f;
-                    layermap[(int)(newY * Constants.RegionSize + newX)] = Utils.Clamp(layer, 0f, 3f);
+                    layermap[(int) (newY*Constants.RegionSize + newX)] = Utils.Clamp(layer, 0f, 3f);
                 }
             }
 

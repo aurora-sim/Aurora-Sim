@@ -26,12 +26,14 @@
  */
 
 using System;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using OpenMetaverse;
 using Aurora.Framework;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class AssetMonitor : IMonitor, IAssetMonitor
+    public class AssetMonitor : IAssetMonitor
     {
         #region Declares
 
@@ -44,7 +46,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         private long texturesInCache;
 
         /// <value>
-        ///   Currently misleading since we can't currently subtract removed asset memory usage without a performance hit
+        ///     Currently misleading since we can't currently subtract removed asset memory usage without a performance hit
         /// </value>
         public long AssetCacheMemoryUsage
         {
@@ -52,7 +54,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         /// <value>
-        ///   Currently unused
+        ///     Currently unused
         /// </value>
         public long TextureCacheMemoryUsage
         {
@@ -60,9 +62,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   These statistics are being collected by push rather than pull.  Pull would be simpler, but I had the
-        ///   notion of providing some flow statistics (which pull wouldn't give us).  Though admittedly these
-        ///   haven't yet been implemented...
+        ///     These statistics are being collected by push rather than pull.  Pull would be simpler, but I had the
+        ///     notion of providing some flow statistics (which pull wouldn't give us).  Though admittedly these
+        ///     haven't yet been implemented...
         /// </summary>
         public long AssetsInCache
         {
@@ -70,7 +72,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         /// <value>
-        ///   Currently unused
+        ///     Currently unused
         /// </value>
         public long TexturesInCache
         {
@@ -78,7 +80,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   This is the time it took for the last asset request made in response to a cache miss.
+        ///     This is the time it took for the last asset request made in response to a cache miss.
         /// </summary>
         public TimeSpan AssetRequestTimeAfterCacheMiss
         {
@@ -86,10 +88,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   Number of persistent requests for missing textures we have started blocking from clients.  To some extent
-        ///   this is just a temporary statistic to keep this problem in view - the root cause of this lies either
-        ///   in a mishandling of the reply protocol, related to avatar appearance or may even originate in graphics
-        ///   driver bugs on clients (though this seems less likely).
+        ///     Number of persistent requests for missing textures we have started blocking from clients.  To some extent
+        ///     this is just a temporary statistic to keep this problem in view - the root cause of this lies either
+        ///     in a mishandling of the reply protocol, related to avatar appearance or may even originate in graphics
+        ///     driver bugs on clients (though this seems less likely).
         /// </summary>
         public long BlockedMissingTextureRequests
         {
@@ -97,9 +99,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   Record the number of times that an asset request has failed.  Failures are effectively exceptions, such as
-        ///   request timeouts.  If an asset service replies that a particular asset cannot be found, this is not counted
-        ///   as a failure
+        ///     Record the number of times that an asset request has failed.  Failures are effectively exceptions, such as
+        ///     request timeouts.  If an asset service replies that a particular asset cannot be found, this is not counted
+        ///     as a failure
         /// </summary>
         public long AssetServiceRequestFailures
         {
@@ -148,7 +150,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         /// <summary>
-        ///   Signal that the asset cache has been cleared.
+        ///     Signal that the asset cache has been cleared.
         /// </summary>
         public void ClearAssetCacheStatistics()
         {
@@ -175,6 +177,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "AssetMonitor";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IAssetMonitor";
         }
 
         public string GetFriendlyValue()

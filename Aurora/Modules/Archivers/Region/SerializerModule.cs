@@ -25,50 +25,59 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Xml;
-using Nini.Config;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Serialization;
+using Nini.Config;
+using System;
+using System.IO;
+using System.Xml;
 
 namespace Aurora.Modules.Archivers
 {
-    public class SerialiserModule : ISharedRegionModule, IRegionSerialiserModule
+    public class SerializerModule : INonSharedRegionModule, IRegionSerialiserModule
     {
         #region IRegionSerialiserModule Members
 
-        public void LoadPrimsFromXml2(IScene scene, string fileName)
+        public ISceneEntity DeserializeGroupFromXml2(string xmlString, IScene scene)
         {
-            SceneXmlLoader.LoadPrimsFromXml2(scene, new XmlTextReader(fileName), true);
+            XmlDocument doc = new XmlDocument();
+
+            XmlTextReader reader = new XmlTextReader(new StringReader(xmlString))
+                                       {
+                                           WhitespaceHandling =
+                                               WhitespaceHandling.None
+                                       };
+            doc.Load(reader);
+            reader.Close();
+            XmlNode rootNode = doc.FirstChild;
+
+            return SceneEntitySerializer.SceneObjectSerializer.FromXml2Format(rootNode.OuterXml, scene);
         }
 
-        public void SavePrimsToXml2(IScene scene, string fileName)
+        public ISceneEntity DeserializeGroupFromXml2(byte[] xml, IScene scene)
         {
-            SceneXmlLoader.SavePrimsToXml2(scene, fileName);
-        }
+            XmlDocument doc = new XmlDocument();
 
-        public ISceneObject DeserializeGroupFromXml2(string xmlString, IScene scene)
-        {
-            return SceneXmlLoader.DeserializeGroupFromXml2(xmlString, scene);
-        }
+            MemoryStream stream = new MemoryStream(xml);
+            XmlTextReader reader = new XmlTextReader(stream) {WhitespaceHandling = WhitespaceHandling.None};
+            doc.Load(reader);
+            reader.Close();
+            XmlNode rootNode = doc.FirstChild;
 
-        public ISceneObject DeserializeGroupFromXml2(byte[] xml, IScene scene)
-        {
-            return SceneXmlLoader.DeserializeGroupFromXml2(xml, scene);
+            return SceneEntitySerializer.SceneObjectSerializer.FromXml2Format(rootNode.OuterXml, scene);
         }
 
         public string SerializeGroupToXml2(ISceneEntity grp)
         {
-            if (grp is SceneObjectGroup)
-                return SceneXmlLoader.SaveGroupToXml2((SceneObjectGroup) grp);
-            return "";
+            return SceneEntitySerializer.SceneObjectSerializer.ToXml2Format(grp);
         }
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public Type ReplaceableInterface
         {
@@ -78,11 +87,6 @@ namespace Aurora.Modules.Archivers
         public void Initialise(IConfigSource source)
         {
         }
-
-        public void PostInitialise()
-        {
-        }
-
 
         public void AddRegion(IScene scene)
         {

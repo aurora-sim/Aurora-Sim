@@ -25,22 +25,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
+using OpenMetaverse;
 using System;
 using System.IO;
-using System.Reflection;
-using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Agent.AssetTransaction
 {
     public class AssetXferUploader
     {
         /// <summary>
-        /// Upload state.
+        ///     Upload state.
         /// </summary>
         /// <remarks>
-        /// New -> Uploading -> Complete
+        ///     New -> Uploading -> Complete
         /// </remarks>
         private enum UploadState
         {
@@ -50,10 +54,10 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         /// <summary>
-        /// Reference to the object that holds this uploader.  Used to remove ourselves from it's list if we
-        /// are performing a delayed update.
+        ///     Reference to the object that holds this uploader.  Used to remove ourselves from it's list if we
+        ///     are performing a delayed update.
         /// </summary>
-        AgentAssetTransactions m_transactions;
+        private AgentAssetTransactions m_transactions;
 
         private UploadState m_uploadState = UploadState.New;
 
@@ -85,17 +89,17 @@ namespace Aurora.Modules.Agent.AssetTransaction
         private IScene m_Scene;
 
         /// <summary>
-        /// AssetXferUploader constructor
+        ///     AssetXferUploader constructor
         /// </summary>
-        /// <param name='transactions'>/param>
+        /// <param name='transactions'></param>
         /// <param name='scene'></param>
         /// <param name='transactionID'></param>
         /// <param name='dumpAssetToFile'>
-        /// If true then when the asset is uploaded it is dumped to a file with the format
-        /// String.Format("{6}_{7}_{0:d2}{1:d2}{2:d2}_{3:d2}{4:d2}{5:d2}.dat",
-        ///   now.Year, now.Month, now.Day, now.Hour, now.Minute,
-        ///   now.Second, m_asset.Name, m_asset.Type);
-        /// for debugging purposes.
+        ///     If true then when the asset is uploaded it is dumped to a file with the format
+        ///     String.Format("{6}_{7}_{0:d2}{1:d2}{2:d2}_{3:d2}{4:d2}{5:d2}.dat",
+        ///     now.Year, now.Month, now.Day, now.Hour, now.Minute,
+        ///     now.Second, m_asset.Name, m_asset.Type);
+        ///     for debugging purposes.
         /// </param>
         public AssetXferUploader(
             AgentAssetTransactions transactions, IScene scene, UUID transactionID, bool dumpAssetToFile)
@@ -109,7 +113,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         /// <summary>
-        /// Process transfer data received from the client.
+        ///     Process transfer data received from the client.
         /// </summary>
         /// <param name="xferID"></param>
         /// <param name="packetID"></param>
@@ -150,15 +154,15 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         /// <summary>
-        /// Start asset transfer from the client
+        ///     Start asset transfer from the client
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="assetID"></param>
         /// <param name="transaction"></param>
         /// <param name="type"></param>
         /// <param name="data">
-        /// Optional data.  If present then the asset is created immediately with this data
-        /// rather than requesting an upload from the client.  The data must be longer than 2 bytes.
+        ///     Optional data.  If present then the asset is created immediately with this data
+        ///     rather than requesting an upload from the client.  The data must be longer than 2 bytes.
         /// </param>
         /// <param name="storeLocal"></param>
         /// <param name="tempFile"></param>
@@ -213,7 +217,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             //                "[ASSET XFER UPLOADER]: Requesting Xfer of asset {0}, type {1}, transfer id {2} from {3}",
             //                m_asset.FullID, m_asset.Type, XferID, ourClient.Name);
 
-            ourClient.SendXferRequest(XferID, (short)m_asset.Type, m_asset.ID, 0, new byte[0]);
+            ourClient.SendXferRequest(XferID, (short) m_asset.Type, m_asset.ID, 0, new byte[0]);
         }
 
         protected void SendCompleteMessage()
@@ -224,7 +228,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 m_uploadState = UploadState.Complete;
 
-                ourClient.SendAssetUploadCompleteMessage((sbyte)m_asset.Type, true, m_asset.ID);
+                ourClient.SendAssetUploadCompleteMessage((sbyte) m_asset.Type, true, m_asset.ID);
 
                 if (m_createItem)
                 {
@@ -252,9 +256,9 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 DateTime now = DateTime.Now;
                 string filename =
-                        String.Format("{6}_{7}_{0:d2}{1:d2}{2:d2}_{3:d2}{4:d2}{5:d2}.dat",
-                        now.Year, now.Month, now.Day, now.Hour, now.Minute,
-                        now.Second, m_asset.Name, m_asset.Type);
+                    String.Format("{6}_{7}_{0:d2}{1:d2}{2:d2}_{3:d2}{4:d2}{5:d2}.dat",
+                                  now.Year, now.Month, now.Day, now.Hour, now.Minute,
+                                  now.Second, m_asset.Name, m_asset.Type);
                 SaveAssetToFile(filename, m_asset.Data);
             }
         }
@@ -270,13 +274,12 @@ namespace Aurora.Modules.Agent.AssetTransaction
             BinaryWriter bw = new BinaryWriter(fs);
             bw.Write(data);
             bw.Close();
-            fs.Close();
         }
 
         public void RequestCreateInventoryItem(IClientAPI remoteClient,
-                UUID folderID, uint callbackID,
-                string description, string name, sbyte invType,
-                sbyte type, byte wearableType, uint nextOwnerMask)
+                                               UUID folderID, uint callbackID,
+                                               string description, string name, sbyte invType,
+                                               sbyte type, byte wearableType, uint nextOwnerMask)
         {
             InventFolder = folderID;
             m_name = name;
@@ -311,7 +314,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 m_asset.Name = item.Name;
                 m_asset.Description = item.Description;
-                m_asset.Type = (sbyte)item.AssetType;
+                m_asset.Type = (sbyte) item.AssetType;
 
                 // We must always store the item at this point even if the asset hasn't finished uploading, in order
                 // to avoid a race condition when the appearance module retrieves the item to set the asset id in
@@ -343,7 +346,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 m_asset.Name = taskItem.Name;
                 m_asset.Description = taskItem.Description;
-                m_asset.Type = (sbyte)taskItem.Type;
+                m_asset.Type = (sbyte) taskItem.Type;
                 taskItem.AssetID = m_asset.ID;
 
                 if (m_uploadState == UploadState.Complete)
@@ -359,7 +362,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         /// <summary>
-        /// Store the asset for the given item when it has been uploaded.
+        ///     Store the asset for the given item when it has been uploaded.
         /// </summary>
         /// <param name="item"></param>
         private void CompleteItemUpdate(InventoryItemBase item)
@@ -374,7 +377,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         /// <summary>
-        /// Store the asset for the given task item when it has been uploaded.
+        ///     Store the asset for the given task item when it has been uploaded.
         /// </summary>
         /// <param name="taskItem"></param>
         private void CompleteTaskItemUpdate(TaskInventoryItem taskItem)
@@ -407,10 +410,11 @@ namespace Aurora.Modules.Agent.AssetTransaction
             item.GroupPermissions = 0;
             item.EveryOnePermissions = 0;
             item.NextPermissions = nextPerm;
-            item.Flags = (uint)wearableType;
+            item.Flags = (uint) wearableType;
             item.CreationDate = Util.UnixTimeSinceEpoch();
 
-            m_Scene.InventoryService.AddItemAsync(item, (itm) => ourClient.SendInventoryItemCreateUpdate(itm, callbackID));
+            m_Scene.InventoryService.AddItemAsync(item,
+                                                  (itm) => ourClient.SendInventoryItemCreateUpdate(itm, callbackID));
             m_transactions.RemoveXferUploader(m_transactionID);
         }
     }

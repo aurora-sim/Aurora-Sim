@@ -25,11 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using System.Collections.Generic;
+using FriendInfo = Aurora.Framework.Services.FriendInfo;
 
 namespace Aurora.Services.DataService
 {
@@ -51,10 +53,11 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(connectionString, "Friends",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                if (GD != null)
+                    GD.ConnectToDatabase(connectionString, "Friends",
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -91,25 +94,28 @@ namespace Aurora.Services.DataService
 
             QueryTables tables = new QueryTables();
             tables.AddTable(m_realm, "my");
-            tables.AddTable(m_realm, "his", JoinType.Inner, new[,] { { "my.Friend", "his.PrincipalID" }, { "my.PrincipalID", "his.Friend" } });
+            tables.AddTable(m_realm, "his", JoinType.Inner,
+                            new[,] {{"my.Friend", "his.PrincipalID"}, {"my.PrincipalID", "his.Friend"}});
             QueryFilter filter = new QueryFilter();
             filter.andFilters["my.PrincipalID"] = principalID;
-            List<string> query = GD.Query(new string[]{
-                "my.Friend",
-                "my.Flags",
-                "his.Flags"
-            }, tables, filter, null, null, null);
+            List<string> query = GD.Query(new string[]
+                                              {
+                                                  "my.Friend",
+                                                  "my.Flags",
+                                                  "his.Flags"
+                                              }, tables, filter, null, null, null);
 
             //These are used to get the other flags below
 
             for (int i = 0; i < query.Count; i += 3)
             {
-                FriendInfo info = new FriendInfo{
-                    PrincipalID = principalID,
-                    Friend = query[i],
-                    MyFlags = int.Parse(query[i + 1]),
-                    TheirFlags = int.Parse(query[i + 2])
-                };
+                FriendInfo info = new FriendInfo
+                                      {
+                                          PrincipalID = principalID,
+                                          Friend = query[i],
+                                          MyFlags = int.Parse(query[i + 1]),
+                                          TheirFlags = int.Parse(query[i + 2])
+                                      };
                 infos.Add(info);
             }
             return infos.ToArray();
@@ -124,21 +130,22 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["my.PrincipalID"] = principalID;
             filter.andFilters["my.Flags"] = 0;
-            List<string> query = GD.Query(new string[]{
-                "my.Friend",
-                "my.Flags",
-            }, tables, filter, null, null, null);
+            List<string> query = GD.Query(new string[]
+                                              {
+                                                  "my.Friend",
+                                                  "my.Flags",
+                                              }, tables, filter, null, null, null);
 
             //These are used to get the other flags below
 
             for (int i = 0; i < query.Count; i += 2)
             {
                 FriendInfo info = new FriendInfo
-                {
-                    PrincipalID = principalID,
-                    Friend = query[i],
-                    MyFlags = int.Parse(query[i + 1]),
-                };
+                                      {
+                                          PrincipalID = principalID,
+                                          Friend = query[i],
+                                          MyFlags = int.Parse(query[i + 1]),
+                                      };
                 infos.Add(info);
             }
             return infos.ToArray();

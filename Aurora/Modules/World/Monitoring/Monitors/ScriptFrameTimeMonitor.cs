@@ -26,10 +26,12 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class ScriptFrameTimeMonitor : ITimeMonitor
+    public class ScriptFrameTimeMonitor : IScriptFrameTimeMonitor
     {
         private int MonitorScriptFrameTime;
 
@@ -47,6 +49,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Script Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IScriptFrameTimeMonitor";
         }
 
         public string GetFriendlyValue()

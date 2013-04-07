@@ -31,13 +31,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
     {
         bool IsChildAgent { get; }
 
-        //// <value>
-        /// Array of worn attachments, empty but not null, if no attachments are worn
+        /// <value>
+        ///     Array of worn attachments, empty but not null, if no attachments are worn
         /// </value>
         IAvatarAttachment[] Attachments { get; }
 
         /// <summary>
-        ///   Request to open an url clientside
+        ///     Request to open an url clientside
         /// </summary>
         void LoadUrl(IObject sender, string message, string url);
     }

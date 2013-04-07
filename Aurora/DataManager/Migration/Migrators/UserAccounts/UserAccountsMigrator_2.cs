@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.UserAccounts
 {
     public class UserAccountsMigrator_2 : Migrator
     {
@@ -55,14 +55,15 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("UserFlags", ColumnTypes.Integer11),
                 ColDef("UserTitle", ColumnTypes.String64),
                 ColDef("Name", ColumnTypes.String255)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "PrincipalID" }, IndexType.Primary),
-                IndexDef(new string[3]{ "ScopeID", "FirstName", "LastName" }, IndexType.Index),
-                IndexDef(new string[2]{ "FirstName", "LastName" }, IndexType.Index),
-                IndexDef(new string[2]{ "ScopeID", "PrincipalID" }, IndexType.Index),
-                IndexDef(new string[2]{ "ScopeID", "Name" }, IndexType.Index),
-                IndexDef(new string[1]{ "Name" }, IndexType.Index)
-            ));
+                                          ), IndexDefs(
+                                              IndexDef(new string[1] {"PrincipalID"}, IndexType.Primary),
+                                              IndexDef(new string[3] {"ScopeID", "FirstName", "LastName"},
+                                                       IndexType.Index),
+                                              IndexDef(new string[2] {"FirstName", "LastName"}, IndexType.Index),
+                                              IndexDef(new string[2] {"ScopeID", "PrincipalID"}, IndexType.Index),
+                                              IndexDef(new string[2] {"ScopeID", "Name"}, IndexType.Index),
+                                              IndexDef(new string[1] {"Name"}, IndexType.Index)
+                                                 ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -27,33 +27,31 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Physics
 {
     public interface IMesher
     {
         IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical);
         void RemoveMesh(ulong key);
-        void FinishedMeshing();
     }
 
     public interface IMesh
     {
         bool WasCached { get; set; }
         ulong Key { get; }
-        List<Vector3> getVertexList();
-        int[] getIndexListAsInt();
-        int[] getIndexListAsIntLocked();
-        float[] getVertexListAsFloatLocked();
         void getIndexListAsPtrToIntArray(out IntPtr indices, out int triStride, out int indexCount);
         void getVertexListAsPtrToFloatArray(out IntPtr vertexList, out int vertexStride, out int vertexCount);
         void releaseSourceMeshData();
         void releasePinned();
-        void Append(IMesh newMesh);
-        void TransformLinear(float[,] matrix, float[] offset);
         Vector3 GetCentroid();
 
         OpenMetaverse.StructuredData.OSD Serialize();
+
+        int[] getIndexListAsInt();
+        float[] getVertexListAsFloat();
+        List<Vector3> getVertexList();
     }
 }

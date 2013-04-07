@@ -25,15 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 //using Aurora.DataManager.MSSQL;
 using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Nini.Config;
-using OpenMetaverse;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Services.DataService
 {
@@ -59,7 +61,7 @@ namespace Aurora.Services.DataService
 
                 DataConnector = GenericData;
             }
-            /*else if (StorageProvider == "MSSQL2008")
+                /*else if (StorageProvider == "MSSQL2008")
             {
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
 
@@ -84,12 +86,70 @@ namespace Aurora.Services.DataService
             {
                 try
                 {
-                    plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
+                    plugin.Initialize(DataConnector == null ? null : DataConnector.Copy(), source, simBase,
+                                      ConnectionString);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     if (MainConsole.Instance != null)
-                        MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                        MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " +
+                                                  plugin.Name + ", " + ex.ToString());
+                }
+            }
+        }
+
+        public void Initialise(IConfigSource source, IRegistryCore simBase, List<Type> types)
+        {
+            IConfig m_config = source.Configs["AuroraData"];
+            if (m_config != null)
+            {
+                StorageProvider = m_config.GetString("StorageProvider", StorageProvider);
+                ConnectionString = m_config.GetString("ConnectionString", ConnectionString);
+            }
+
+            IGenericData DataConnector = null;
+            if (StorageProvider == "MySQL")
+                //Allow for fallback when AuroraData isn't set
+            {
+                MySQLDataLoader GenericData = new MySQLDataLoader();
+
+                DataConnector = GenericData;
+            }
+                /*else if (StorageProvider == "MSSQL2008")
+            {
+                MSSQLDataLoader GenericData = new MSSQLDataLoader();
+
+                DataConnector = GenericData;
+            }
+            else if (StorageProvider == "MSSQL7")
+            {
+                MSSQLDataLoader GenericData = new MSSQLDataLoader();
+
+                DataConnector = GenericData;
+            }*/
+            else if (StorageProvider == "SQLite")
+                //Allow for fallback when AuroraData isn't set
+            {
+                SQLiteLoader GenericData = new SQLiteLoader();
+
+                DataConnector = GenericData;
+            }
+
+            foreach (Type t in types)
+            {
+                List<dynamic> Plugins = AuroraModuleLoader.PickupModules(t);
+                foreach (dynamic plugin in Plugins)
+                {
+                    try
+                    {
+                        plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (MainConsole.Instance != null)
+                            MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " +
+                                                      plugin.Name + ", " + ex.ToString());
+                    }
                 }
             }
         }

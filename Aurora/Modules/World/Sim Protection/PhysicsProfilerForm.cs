@@ -25,16 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Aurora.Modules.SimProtection;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 using System.Windows.Forms;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
 using Timer = System.Timers.Timer;
-using Aurora.Modules.SimProtection;
 
 namespace Aurora.Modules
 {
@@ -86,22 +87,14 @@ namespace Aurora.Modules
 
         private void RegionNameSelector_SelectedIndexChanged(object sender, EventArgs e)
         {
-#if (!ISWIN)
-            foreach (IScene scene in m_scenes)
-            {
-                if (scene.RegionInfo.RegionName == RegionNameSelector.SelectedItem.ToString())
-                {
-                    SceneSelected = scene.RegionInfo.RegionID;
-                    break;
-                }
-            }
-#else
-            foreach (IScene scene in m_scenes.Where(scene => scene.RegionInfo.RegionName == RegionNameSelector.SelectedItem.ToString()))
+            foreach (
+                IScene scene in
+                    m_scenes.Where(scene => scene.RegionInfo.RegionName == RegionNameSelector.SelectedItem.ToString()))
             {
                 SceneSelected = scene.RegionInfo.RegionID;
                 break;
             }
-#endif
+
             UpdateStatsBars();
         }
 

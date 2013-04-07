@@ -25,6 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -33,17 +41,10 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Net;
-using System.Reflection;
-using BitmapProcessing;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class VectorRenderModule : ISharedRegionModule, IDynamicTextureRender
+    public class VectorRenderModule : INonSharedRegionModule, IDynamicTextureRender
     {
         private string m_fontName = "Arial";
         private Graphics m_graph;
@@ -51,11 +52,6 @@ namespace Aurora.Modules.Scripting
         private string m_name = "VectorRenderModule";
         private IScene m_scene;
         private IDynamicTextureManager m_textureManager;
-
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
 
         #region IDynamicTextureRender Members
 
@@ -100,17 +96,14 @@ namespace Aurora.Modules.Scripting
         {
             Font myFont = new Font(fontName, fontSize);
             SizeF stringSize = new SizeF();
-            lock (m_graph)
-            {
-                stringSize = m_graph.MeasureString(text, myFont);
-                xSize = stringSize.Width;
-                ySize = stringSize.Height;
-            }
+            stringSize = m_graph.MeasureString(text, myFont);
+            xSize = stringSize.Width;
+            ySize = stringSize.Height;
         }
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -123,16 +116,10 @@ namespace Aurora.Modules.Scripting
 
         public void AddRegion(IScene scene)
         {
-            if (m_scene == null)
-            {
-                m_scene = scene;
-            }
+            m_scene = scene;
 
-            if (m_graph == null)
-            {
-                Bitmap bitmap = new Bitmap(1024, 1024, PixelFormat.Format32bppArgb);
-                m_graph = Graphics.FromImage(bitmap);
-            }
+            Bitmap bitmap = new Bitmap(1024, 1024, PixelFormat.Format32bppArgb);
+            m_graph = Graphics.FromImage(bitmap);
         }
 
         public void RemoveRegion(IScene scene)
@@ -143,18 +130,12 @@ namespace Aurora.Modules.Scripting
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)
-            {
                 m_textureManager.RegisterRender(GetContentType(), this);
-            }
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -307,7 +288,9 @@ namespace Aurora.Modules.Scripting
 
             Bitmap bitmap;
 
-            bitmap = alpha == 256 ? new Bitmap(width, height, PixelFormat.Format32bppRgb) : new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            bitmap = alpha == 256
+                         ? new Bitmap(width, height, PixelFormat.Format32bppRgb)
+                         : new Bitmap(width, height, PixelFormat.Format32bppArgb);
 
             Graphics graph = Graphics.FromImage(bitmap);
             // this is really just to save people filling the 
@@ -632,7 +615,9 @@ namespace Aurora.Modules.Scripting
                     int hex = 0;
 
                     Color newColour;
-                    newColour = Int32.TryParse(nextLine, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out hex) ? Color.FromArgb(hex) : Color.FromName(nextLine);
+                    newColour = Int32.TryParse(nextLine, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out hex)
+                                    ? Color.FromArgb(hex)
+                                    : Color.FromName(nextLine);
 
                     myBrush.Color = newColour;
                     drawPen.Color = newColour;

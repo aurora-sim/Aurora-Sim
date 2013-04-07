@@ -26,10 +26,12 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class PhysicsUpdateFrameMonitor : ITimeMonitor
+    public class PhysicsUpdateFrameMonitor : IPhysicsUpdateFrameMonitor
     {
         private int MonitorPhysicsUpdateTime;
 
@@ -47,6 +49,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Physics Update Frame Time";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IPhysicsUpdateFrameMonitor";
         }
 
         public string GetFriendlyValue()

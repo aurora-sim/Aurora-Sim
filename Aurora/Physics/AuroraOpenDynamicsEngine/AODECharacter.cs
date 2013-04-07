@@ -26,15 +26,13 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Reflection;
-using OdeAPI;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Physics;
 using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
-    public class AuroraODECharacter : PhysicsCharacter
+    public class AuroraODECharacter : PhysicsActor
     {
         #region Declares
 
@@ -53,7 +51,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr Shell = IntPtr.Zero;
 
         protected Vector3 _position;
-        protected Vector3 _target_velocity;
         protected Vector3 _velocity;
         protected Vector3 _target_force = Vector3.Zero;
         protected Vector3 _target_vel_force = Vector3.Zero;
@@ -67,7 +64,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         // Default, Collide with Other Geometries, spaces, bodies and characters.
         protected const CollisionCategories m_collisionFlags = (CollisionCategories.Geom | CollisionCategories.Space
-            | CollisionCategories.Body | CollisionCategories.Character | CollisionCategories.Land);
+                                                                | CollisionCategories.Body |
+                                                                CollisionCategories.Character | CollisionCategories.Land);
 
         //        float m_UpdateTimecntr = 0;
         //        float m_UpdateFPScntr = 0.05f;
@@ -83,7 +81,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         protected float m_mass = 80f;
         protected string m_name = String.Empty;
-        protected bool m_pidControllerActive = true;
         protected int m_preJumpCounter;
         protected Vector3 m_preJumpForce = Vector3.Zero;
         protected Vector3 m_rotationalVelocity;
@@ -137,15 +134,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (pos.Z > 9999999f || pos.Z < -90f)
                 {
                     pos.Z =
-                        _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX * 0.5f,
-                                                          _parent_scene.Region.RegionSizeY * 0.5f) + 5.0f;
+                        _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX*0.5f,
+                                                           _parent_scene.Region.RegionSizeY*0.5f) + 5.0f;
                 }
                 _position = pos;
             }
             else
             {
-                _position.X = _parent_scene.Region.RegionSizeX * 0.5f;
-                _position.Y = _parent_scene.Region.RegionSizeY * 0.5f;
+                _position.X = _parent_scene.Region.RegionSizeX*0.5f;
+                _position.Y = _parent_scene.Region.RegionSizeY*0.5f;
                 _position.Z = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y) + 10f;
 
                 MainConsole.Instance.Warn("[PHYSICS]: Got NaN Position on Character Create");
@@ -162,8 +159,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero))
             {
                 MainConsole.Instance.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
-                           + (Shell != IntPtr.Zero ? "Shell " : "")
-                           + (Body != IntPtr.Zero ? "Body " : ""));
+                                          + (Shell != IntPtr.Zero ? "Shell " : "")
+                                          + (Body != IntPtr.Zero ? "Body " : ""));
             }
             _parent_ref.AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);
 
@@ -177,11 +174,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override int PhysicsActorType
         {
-            get { return (int)ActorTypes.Agent; }
+            get { return (int) ActorTypes.Agent; }
         }
 
         /// <summary>
-        ///   If this is set, the avatar will move faster
+        ///     If this is set, the avatar will move faster
         /// </summary>
         public override bool SetAlwaysRun
         {
@@ -197,7 +194,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override bool FloatOnWater
         {
-            set { return; }
+            set { }
         }
 
         public override bool IsPhysical
@@ -209,7 +206,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override bool ThrottleUpdates
         {
             get { return false; }
-            set { return; }
+            set { }
         }
 
         public override bool Flying
@@ -221,18 +218,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 flying = value;
 
                 if (!m_isPhysical)
-                    _parent_scene.AddSimulationChange(() => { flying = value; realFlying = value; });
+                    _parent_scene.AddSimulationChange(() =>
+                                                          {
+                                                              flying = value;
+                                                              realFlying = value;
+                                                          });
             }
         }
 
         public override bool IsTruelyColliding { get; set; }
 
         protected int m_colliderfilter;
+
         /// <summary>
-        ///   Returns if the avatar is colliding in general.
-        ///   This includes the ground and objects and avatar.
-        ///   in this and next collision sets there is a general set to false
-        ///   at begin of loop, so a false is 2 sets while a true is a false plus a 1
+        ///     Returns if the avatar is colliding in general.
+        ///     This includes the ground and objects and avatar.
+        ///     in this and next collision sets there is a general set to false
+        ///     at begin of loop, so a false is 2 sets while a true is a false plus a 1
         /// </summary>
         public override bool IsColliding
         {
@@ -257,9 +259,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   This 'puts' an avatar somewhere in the physics space.
-        ///   Not really a good choice unless you 'know' it's a good
-        ///   spot otherwise you're likely to orbit the avatar.
+        ///     This 'puts' an avatar somewhere in the physics space.
+        ///     Not really a good choice unless you 'know' it's a good
+        ///     spot otherwise you're likely to orbit the avatar.
         /// </summary>
         public override Vector3 Position
         {
@@ -271,8 +273,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (value.Z > 9999999f || value.Z < -90f)
                     {
                         value.Z =
-                            _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX * 0.5f,
-                                                               _parent_scene.Region.RegionSizeY * 0.5f) + 5;
+                            _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX*0.5f,
+                                                               _parent_scene.Region.RegionSizeY*0.5f) + 5;
                     }
 
                     _position.X = value.X;
@@ -280,10 +282,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _position.Z = value.Z;
 
                     _parent_scene.AddSimulationChange(() =>
-                    {
-                        if (!value.ApproxEquals(_position, 0.05f) && Body != null)
-                            _parent_ref.SetPositionLocked(value);
-                    });
+                                                          {
+                                                              if (!value.ApproxEquals(_position, 0.05f) && Body != null)
+                                                                  _parent_ref.SetPositionLocked(value);
+                                                          });
                 }
                 else
                 {
@@ -299,9 +301,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         private Vector3 _lastSetSize = Vector3.Zero;
+
         /// <summary>
-        ///   This property sets the height of the avatar only.  We use the height to make sure the avatar stands up straight
-        ///   and use it to offset landings properly
+        ///     This property sets the height of the avatar only.  We use the height to make sure the avatar stands up straight
+        ///     and use it to offset landings properly
         /// </summary>
         public override Vector3 Size
         {
@@ -319,9 +322,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     _lastSetSize = value;
 
-                    m_pidControllerActive = true;
                     CAPSULE_RADIUS = _parent_scene.avCapRadius;
-                    CAPSULE_LENGTH = (_lastSetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
+                    CAPSULE_LENGTH = (_lastSetSize.Z*1.1f) - CAPSULE_RADIUS*2.0f;
                     Velocity = Vector3.Zero;
 
                     _parent_scene.AddSimulationChange(() => RebuildAvatar());
@@ -335,8 +337,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         //
         /// <summary>
-        ///   Uses the capped cyllinder volume formula to calculate the avatar's mass.
-        ///   This may be used in calculations in the scene/scenepresence
+        ///     Uses the capped cyllinder volume formula to calculate the avatar's mass.
+        ///     This may be used in calculations in the scene/scenepresence
         /// </summary>
         public override float Mass
         {
@@ -345,8 +347,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override Vector3 Force
         {
-            get { return _target_velocity; }
-            set { return; }
+            get { return m_targetVelocity; }
+            set { }
         }
 
         public override Vector3 Velocity
@@ -363,10 +365,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 if (value.IsFinite())
-                {
-                    m_pidControllerActive = true;
-                    _target_velocity = value;
-                }
+                    m_targetVelocity = value;
                 else
                 {
                     MainConsole.Instance.Warn("[PHYSICS]: Got a NaN velocity from Scene in a Character");
@@ -387,21 +386,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 m_taintRotation = value;
                 _parent_scene.AddSimulationChange(() =>
-                {
-                    if (Body != IntPtr.Zero)
-                        _parent_ref.SetRotationLocked(value);
-                });
+                                                      {
+                                                          if (Body != IntPtr.Zero)
+                                                              _parent_ref.SetRotationLocked(value);
+                                                      });
             }
-        }
-
-        /// <summary>
-        ///   turn the PID controller on or off.
-        ///   The PID Controller will turn on all by itself in many situations
-        /// </summary>
-        /// <param name = "status"></param>
-        public void SetPidStatus(bool status)
-        {
-            m_pidControllerActive = status;
         }
 
         public override void ForceSetVelocity(Vector3 velocity)
@@ -416,56 +405,46 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastPosition = position;
         }
 
-        /// <summary>
-        ///   This adds to the force that will be used for moving the avatar in the next physics heartbeat iteration.
-        /// </summary>
-        /// <param name = "force"></param>
-        public override void AddMovementForce(Vector3 force)
+        public override Vector3 TargetVelocity
         {
-            _target_velocity += force;
-        }
-
-        /// <summary>
-        ///   This sets the force that will be used for moving the avatar in the next physics heartbeat iteration.
-        ///   Note: we do accept Vector3.Zero here as that is an overriding stop for the physics engine.
-        /// </summary>
-        /// <param name = "force"></param>
-        public override void SetMovementForce(Vector3 force)
-        {
-            if (_parent_scene.m_allowJump && !Flying && IsColliding && force.Z >= 0.5f)
+            get { return m_targetVelocity; }
+            set
             {
-                if (_parent_scene.m_usepreJump)
+                if (_parent_scene.m_allowJump && !Flying && IsColliding && value.Z >= 0.5f)
                 {
-                    if (!m_ispreJumping && !m_isJumping)
+                    if (_parent_scene.m_usepreJump)
                     {
-                        m_ispreJumping = true;
-                        m_preJumpForce = force;
-                        m_preJumpCounter = 0;
-                        TriggerMovementUpdate();
-                        return;
+                        if (!m_ispreJumping && !m_isJumping)
+                        {
+                            m_ispreJumping = true;
+                            m_preJumpForce = value;
+                            m_preJumpCounter = 0;
+                            TriggerMovementUpdate();
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (!m_isJumping)
+                        {
+                            m_isJumping = true;
+                            m_preJumpCounter = _parent_scene.m_preJumpTime;
+                            TriggerMovementUpdate();
+                            //Leave the / 2, its there so that the jump doesn't go crazy
+                            value.X *= _parent_scene.m_preJumpForceMultiplierX / 2;
+                            value.Y *= _parent_scene.m_preJumpForceMultiplierY / 2;
+                            value.Z *= _parent_scene.m_preJumpForceMultiplierZ;
+                        }
                     }
                 }
-                else
+                if (m_ispreJumping || m_isJumping)
                 {
-                    if (!m_isJumping)
-                    {
-                        m_isJumping = true;
-                        m_preJumpCounter = _parent_scene.m_preJumpTime;
-                        TriggerMovementUpdate();
-                        //Leave the / 2, its there so that the jump doesn't go crazy
-                        force.X *= _parent_scene.m_preJumpForceMultiplierX / 2;
-                        force.Y *= _parent_scene.m_preJumpForceMultiplierY / 2;
-                        force.Z *= _parent_scene.m_preJumpForceMultiplierZ;
-                    }
+                    TriggerMovementUpdate();
+                    return;
                 }
+                if (value != Vector3.Zero)
+                    m_targetVelocity = value;
             }
-            if (m_ispreJumping || m_isJumping)
-            {
-                TriggerMovementUpdate();
-                return;
-            }
-            if (force != Vector3.Zero)
-                _target_velocity = force;
         }
 
         #endregion
@@ -475,7 +454,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Move
 
         /// <summary>
-        ///   Updates the reported position and velocity.  This essentially sends the data up to ScenePresence.
+        ///     Updates the reported position and velocity.  This essentially sends the data up to ScenePresence.
         /// </summary>
         public void UpdatePositionAndVelocity(float timestep)
         {
@@ -493,7 +472,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _parent_scene.BadCharacter(this);
                 vec = new Vector3(_position.X, _position.Y, _position.Z);
                 base.RaiseOutOfBounds(_position); // Tells ScenePresence that there's a problem!
-                MainConsole.Instance.WarnFormat("[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", m_name, m_uuid);
+                MainConsole.Instance.WarnFormat(
+                    "[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", m_name, m_uuid);
             }
 
             // vec is a ptr into internal ode data better not mess with it
@@ -581,8 +561,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float VELOCITY_TOLERANCE = 0.025f*0.25f;
             if (_parent_scene.TimeDilation < 0.5)
             {
-                float percent = (1f - _parent_scene.TimeDilation) * 100;
-                VELOCITY_TOLERANCE *= percent * 2;
+                float percent = (1f - _parent_scene.TimeDilation)*100;
+                VELOCITY_TOLERANCE *= percent*2;
             }
             //const float ANG_VELOCITY_TOLERANCE = 0.05f;
             const float POSITION_TOLERANCE = 5.0f;
@@ -735,29 +715,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Forces
 
         /// <summary>
-        ///   Adds the force supplied to the Target Velocity
-        ///   The PID controller takes this target velocity and tries to make it a reality
+        ///     Adds the force supplied to the Target Velocity
+        ///     The PID controller takes this target velocity and tries to make it a reality
         /// </summary>
-        /// <param name = "force"></param>
+        /// <param name="force"></param>
+        /// <param name="pushforce"></param>
         public override void AddForce(Vector3 force, bool pushforce)
         {
             if (force.IsFinite())
             {
                 if (pushforce)
                 {
-                    m_pidControllerActive = false;
                     _parent_scene.AddSimulationChange(() =>
-                    {
-                        if (Body != IntPtr.Zero)
-                            _target_force = force;
-                    });
+                                                          {
+                                                              if (Body != IntPtr.Zero)
+                                                                  _target_force = force;
+                                                          });
                 }
                 else
                 {
-                    m_pidControllerActive = true;
-                    _target_velocity.X += force.X;
-                    _target_velocity.Y += force.Y;
-                    _target_velocity.Z += force.Z;
+                    m_targetVelocity.X += force.X;
+                    m_targetVelocity.Y += force.Y;
+                    m_targetVelocity.Z += force.Z;
                 }
             }
             else
@@ -772,11 +751,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Destroy
 
         /// <summary>
-        ///   Cleanup the things we use in the scene.
+        ///     Cleanup the things we use in the scene.
         /// </summary>
-        public override void Destroy()
+        public void Destroy()
         {
-            m_isPhysical = true;
             _parent_scene.AddSimulationChange(() =>
             {
                 _parent_scene.RemoveCharacter(this);
@@ -794,19 +772,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
-            CollisionEventsThisFrame.addCollider(CollidedWith, contact);
+            CollisionEventsThisFrame.AddCollider(CollidedWith, contact);
         }
 
-        public override void SendCollisions()
+        public override bool SendCollisions()
         {
             if (!IsPhysical)
-                return; //Not physical, its not supposed to be here
+                return false; //Not physical, its not supposed to be here
 
             if (!CollisionEventsThisFrame.Cleared)
             {
                 base.SendCollisionUpdate(CollisionEventsThisFrame.Copy());
                 CollisionEventsThisFrame.Clear();
             }
+            return true;
         }
 
         public override bool SubscribedEvents()

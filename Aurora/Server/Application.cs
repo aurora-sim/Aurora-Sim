@@ -30,7 +30,7 @@ using Aurora.Simulation.Base;
 namespace Aurora.Server
 {
     /// <summary>
-    ///   Starting class for the Aurora Server
+    ///     Starting class for the Aurora Server
     /// </summary>
     public class Application
     {

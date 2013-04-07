@@ -32,14 +32,16 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using OpenMetaverse;
+using ProtoBuf;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <summary>
-    ///   A dictionary for task inventory.
+    ///     A dictionary for task inventory.
     /// </summary>
     /// This class is not thread safe.  Callers must synchronize on Dictionary methods or Clone() this object before
     /// iterating over it.
+    [Serializable, ProtoContract()]
     public class TaskInventoryDictionary : Dictionary<UUID, TaskInventoryItem>,
                                            ICloneable, IXmlSerializable
     {
@@ -125,17 +127,17 @@ namespace Aurora.Framework
 
             lock (this)
             {
-#if (!ISWIN)
-                foreach (UUID uuid in Keys)
-                {
-                    clone.Add((TaskInventoryItem)this[uuid].Clone());
-                }
-#else
                 clone.AddRange(Keys.Select(uuid => (TaskInventoryItem) this[uuid].Clone()));
-#endif
             }
 
             return clone;
+        }
+
+        [XmlIgnore]
+        public List<TaskInventoryItem> Items
+        {
+            get { return Clone2List(); }
+            set { foreach (TaskInventoryItem itm in value) this.Add(itm.ItemID, itm); }
         }
 
         // see ICloneable

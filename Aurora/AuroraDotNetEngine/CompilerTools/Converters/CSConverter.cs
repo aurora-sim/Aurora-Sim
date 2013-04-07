@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.CSharp;
+
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
@@ -223,21 +224,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                                                  "OpenMetaverse.StructuredData.dll"));
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "Aurora.BotManager.dll"));
-#if (!ISWIN)
-                foreach (string line in m_includedAssemblies)
-                {
-                    if (!parameters.ReferencedAssemblies.Contains(line))
-                    {
-                        parameters.ReferencedAssemblies.Add(Path.Combine(rootPath, line));
-                    }
-                }
-#else
-                foreach (string line in m_includedAssemblies.Where(line => !parameters.ReferencedAssemblies.Contains(line)))
+                foreach (
+                    string line in m_includedAssemblies.Where(line => !parameters.ReferencedAssemblies.Contains(line)))
                 {
                     parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                      line));
                 }
-#endif
             }
             bool complete = false;
             bool retried = false;
@@ -346,9 +338,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                              "using Aurora.ScriptEngine.AuroraDotNetEngine;\n" +
                              "using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;\n" +
                              "using Aurora.Framework;\n" +
-                             "using OpenSim.Services.Interfaces;\n" +
-                             "using OpenSim.Region.Framework.Interfaces;\n" +
-                             "using OpenSim.Region.Framework.Scenes;\n" +
                              "using OpenMetaverse;\n" +
                              "using System;\n" +
                              "using System.Collections.Generic;\n" +

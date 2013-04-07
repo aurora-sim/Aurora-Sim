@@ -26,10 +26,12 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class SimFrameMonitor : IMonitor, ISimFrameMonitor
+    public class SimFrameMonitor : ISimFrameMonitor
     {
         #region Declares
 
@@ -68,6 +70,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "SimFrameStats";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "ISimFrameMonitor";
         }
 
         public string GetFriendlyValue()

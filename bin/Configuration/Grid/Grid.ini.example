@@ -27,22 +27,17 @@
     EmailConnector = LocalConnector
 
     DoRemoteCalls = True
-    CapsServiceDoRemoteCalls = False
     AllowRemoteCalls = False
 
 [Configuration]
-    UseRegistrationService = false
     OSDRequestTimeout = 10000
     OSDRequestTryCount = 5
-    RegisterRegionPassword = 
 
 [Handlers]
     AbuseReportHandler = AbuseReportsService
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
     AssetHandlerUseCache = true
-    AsyncMessageRequesterServiceHandler = AsyncMessageRequesterService
-    AsyncMessagePostServiceHandler = RemoteAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
     ConfigurationHandler = ConfigurationService
@@ -56,15 +51,13 @@
     UserAccountHandler = UserAccountService
 
     SimulationHandler = SimulationServiceConnector
-    SimulationInHandler = SimulationServiceInConnector
-    SimulationInHandlerPort = 0
-    ;; If you are in a secure closed grid, you can enable this safely, otherwise, enable at your own risk!
-    ;; Disables objects being moved into our regions from regions outside of this instance (works for the ones in our instance)
-    AllowIncomingForeignObjects = false
 
     SyncMessagePosterServiceOpenServerHandler = true
     SyncMessagePosterServiceServerHandlerPort = 0
-	SyncMessagePosterServiceDoRemote = true
+    SyncMessagePosterServiceDoRemote = true
 
 [WebInterface]
     Module = None
+
+[Includes]
+    Include-Data = Configuration/Data/FileBased.ini

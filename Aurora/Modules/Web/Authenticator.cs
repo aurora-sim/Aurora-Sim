@@ -1,11 +1,10 @@
-﻿using System;
+﻿using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using OpenMetaverse;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Net;
-using OpenMetaverse;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Web
 {
@@ -38,7 +37,9 @@ namespace Aurora.Modules.Web
         {
             if (request.Cookies["SessionID"] != null)
             {
-                var session = _authenticatedAdminUsers.FirstOrDefault((acc) => acc.Key == UUID.Parse(request.Cookies["SessionID"].Value));
+                var session =
+                    _authenticatedAdminUsers.FirstOrDefault(
+                        (acc) => acc.Key == UUID.Parse(request.Cookies["SessionID"].Value));
                 if (session.Value != null && session.Value.UserLevel >= adminLevelRequired)
                     return true;
             }

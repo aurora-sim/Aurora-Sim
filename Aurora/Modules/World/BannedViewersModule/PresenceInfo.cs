@@ -24,11 +24,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Services;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Ban
 {

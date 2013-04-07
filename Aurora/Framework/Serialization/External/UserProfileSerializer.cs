@@ -32,7 +32,7 @@ using OpenMetaverse;
 namespace Aurora.Framework.Serialization.External
 {
     /// <summary>
-    ///   Serialize and deserialize region settings as an external format.
+    ///     Serialize and deserialize region settings as an external format.
     /// </summary>
     public class UserProfileSerializer
     {
@@ -60,7 +60,6 @@ namespace Aurora.Framework.Serialization.External
             xtw.WriteEndElement();
 
             xtw.Close();
-            sw.Close();
 
             return sw.ToString();
         }

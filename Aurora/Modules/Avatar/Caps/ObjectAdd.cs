@@ -25,29 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.IO;
-using System.Text;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using System;
+using System.IO;
+using System.Text;
 
 namespace Aurora.Modules.Caps
 {
     public class ObjectAdd : INonSharedRegionModule
     {
         private IScene m_scene;
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
 
         #region INonSharedRegionModule Members
 
@@ -85,20 +84,15 @@ namespace Aurora.Modules.Caps
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
             OSDMap retVal = new OSDMap();
             retVal["ObjectAdd"] = CapsUtil.CreateCAPS("ObjectAdd", "");
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ObjectAdd"],
-                                                       delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProcessAdd(request, agentID);
-                                                       }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return ProcessAdd(request, agentID); }));
             return retVal;
         }
 
@@ -311,7 +305,7 @@ namespace Aurora.Modules.Caps
             pbs.Scale = scale;
             pbs.State = (byte) state;
 
-            SceneObjectGroup obj = null;
+            ISceneEntity obj = null;
 
             string reason;
             if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos, out reason))
@@ -319,7 +313,7 @@ namespace Aurora.Modules.Caps
                 // rez ON the ground, not IN the ground
                 // pos.Z += 0.25F;
 
-                obj = (SceneObjectGroup) m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
+                obj = m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
             }
             else
             {
@@ -330,14 +324,14 @@ namespace Aurora.Modules.Caps
             if (obj == null)
                 return MainServer.BadRequest;
 
-            SceneObjectPart rootpart = obj.RootPart;
+            ISceneChildEntity rootpart = obj.RootChild;
             rootpart.Shape = pbs;
             rootpart.Flags |= (PrimFlags) flags;
             rootpart.EveryoneMask = everyone_mask;
             rootpart.GroupID = group_id;
             rootpart.GroupMask = group_mask;
             rootpart.NextOwnerMask = next_owner_mask;
-            rootpart.Material = (byte) material;
+            rootpart.UpdateMaterial(material);
 
             OSDMap map = new OSDMap();
             map["local_id"] = obj.LocalId;

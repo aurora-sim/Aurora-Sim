@@ -26,9 +26,12 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     public interface ILandObject
     {
@@ -61,15 +64,15 @@ namespace Aurora.Framework
         void SetInfoID();
 
         /// <summary>
-        ///   Set the media url for this land parcel
+        ///     Set the media url for this land parcel
         /// </summary>
-        /// <param name = "url"></param>
+        /// <param name="url"></param>
         void SetMediaUrl(string url);
 
         /// <summary>
-        ///   Set the music url for this land parcel
+        ///     Set the music url for this land parcel
         /// </summary>
-        /// <param name = "url"></param>
+        /// <param name="url"></param>
         void SetMusicUrl(string url);
 
         List<ISceneEntity> GetPrimsOverByOwner(UUID targetID, int flags);

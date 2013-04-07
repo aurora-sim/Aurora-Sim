@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using BitmapProcessing;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.WorldShader
 {
-    public class WorldShader : ISharedRegionModule
+    public class WorldShader : INonSharedRegionModule
     {
         private readonly Dictionary<UUID, UUID> m_previouslyConverted = new Dictionary<UUID, UUID>();
         private readonly Dictionary<UUID, UUID> m_revertConverted = new Dictionary<UUID, UUID>();
@@ -20,10 +24,6 @@ namespace Aurora.Modules.WorldShader
         #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 
@@ -67,7 +67,7 @@ namespace Aurora.Modules.WorldShader
         {
             if (MainConsole.Instance.ConsoleScene == null)
             {
-                MainConsole.Instance.Output("Select a scene first");
+                MainConsole.Instance.Format(Level.Off, "Select a scene first");
                 return;
             }
             ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities();
@@ -95,7 +95,7 @@ namespace Aurora.Modules.WorldShader
         {
             if (MainConsole.Instance.ConsoleScene == null)
             {
-                MainConsole.Instance.Output("Select a scene first");
+                MainConsole.Instance.Format(Level.Off, "Select a scene first");
                 return;
             }
             bool greyScale = MainConsole.Instance.Prompt("Greyscale (yes or no)?").ToLower() == "yes";
@@ -211,7 +211,8 @@ namespace Aurora.Modules.WorldShader
 
         private UUID[] GetTextures(Primitive.TextureEntry textureEntry)
         {
-            List<UUID> textures = (from face in textureEntry.FaceTextures where face != null select face.TextureID).ToList();
+            List<UUID> textures =
+                (from face in textureEntry.FaceTextures where face != null select face.TextureID).ToList();
             textures.Add(textureEntry.DefaultTexture.TextureID);
             return textures.ToArray();
         }

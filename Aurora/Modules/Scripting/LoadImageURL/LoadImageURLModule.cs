@@ -25,31 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using System;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class LoadImageURLModule : ISharedRegionModule, IDynamicTextureRender
+    public class LoadImageURLModule : INonSharedRegionModule, IDynamicTextureRender
     {
         private string m_name = "LoadImageURL";
         private string m_proxyexcepts = "";
         private string m_proxyurl = "";
         private IScene m_scene;
         private IDynamicTextureManager m_textureManager;
-
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
 
         #region IDynamicTextureRender Members
 
@@ -98,7 +94,7 @@ namespace Aurora.Modules.Scripting
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -108,10 +104,7 @@ namespace Aurora.Modules.Scripting
 
         public void AddRegion(IScene scene)
         {
-            if (m_scene == null)
-            {
-                m_scene = scene;
-            }
+            m_scene = scene;
         }
 
         public void RemoveRegion(IScene scene)
@@ -122,18 +115,12 @@ namespace Aurora.Modules.Scripting
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)
-            {
                 m_textureManager.RegisterRender(GetContentType(), this);
-            }
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -224,7 +211,8 @@ namespace Aurora.Modules.Scripting
                         }
                         catch (Exception)
                         {
-                            MainConsole.Instance.Error("[LOADIMAGEURLMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
+                            MainConsole.Instance.Error(
+                                "[LOADIMAGEURLMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
                         }
                     }
                     else
@@ -247,7 +235,7 @@ namespace Aurora.Modules.Scripting
                 }
             }
             MainConsole.Instance.DebugFormat("[LOADIMAGEURLMODULE] Returning {0} bytes of image data for request {1}",
-                              imageJ2000.Length, state.RequestID);
+                                             imageJ2000.Length, state.RequestID);
             m_textureManager.ReturnData(state.RequestID, imageJ2000);
         }
 

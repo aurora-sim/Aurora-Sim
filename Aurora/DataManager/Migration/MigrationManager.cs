@@ -28,8 +28,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.DataManager.Migration
 {
@@ -50,23 +51,13 @@ namespace Aurora.DataManager.Migration
             this.migratorName = migratorName;
             this.validateTables = validateTables;
             List<IMigrator> allMigrators = AuroraModuleLoader.PickupModules<IMigrator>();
-#if (!ISWIN)
-            foreach (IMigrator m in allMigrators)
-            {
-                if (m.MigrationName != null)
-                {
-                    if (m.MigrationName == migratorName)
-                    {
-                        migrators.Add((Migrator)m);
-                    }
-                }
-            }
-#else
-            foreach (IMigrator m in allMigrators.Where(m => m.MigrationName != null).Where(m => m.MigrationName == migratorName))
+
+            foreach (
+                IMigrator m in
+                    allMigrators.Where(m => m.MigrationName != null).Where(m => m.MigrationName == migratorName))
             {
                 migrators.Add((Migrator) m);
             }
-#endif
         }
 
         public Version LatestVersion
@@ -125,18 +116,9 @@ namespace Aurora.DataManager.Migration
                 return null;
             }
 
-#if (!ISWIN)
-            foreach (Migrator migrator in (from m in migrators orderby m.Version ascending select m))
-            {
-                if (migrator.Version > version)
-                {
-                    return migrator;
-                }
-            }
-            return null;
-#else
-            return (from m in migrators orderby m.Version ascending select m).FirstOrDefault(migrator => migrator.Version > version);
-#endif
+            return
+                (from m in migrators orderby m.Version ascending select m).FirstOrDefault(
+                    migrator => migrator.Version > version);
         }
 
         private Migrator GetLatestVersionMigrator()
@@ -180,7 +162,7 @@ namespace Aurora.DataManager.Migration
                     //Try rerunning the migrator and then the validation
                     //prepare restore point if something goes wrong
                     MainConsole.Instance.Fatal(string.Format("Failed to validate migration {0}-{1}, retrying...",
-                                              currentMigrator.MigrationName, currentMigrator.Version));
+                                                             currentMigrator.MigrationName, currentMigrator.Version));
 
                     currentMigrator.Migrate(genericData);
                     validated = currentMigrator.Validate(genericData);
@@ -193,7 +175,7 @@ namespace Aurora.DataManager.Migration
                             currentMigrator.MigrationName,
                             currentMigrator.Version,
                             rec.Name + "_broken"
-                        ));
+                                                       ));
                         genericData.RenameTable(rec.Name, rec.Name + "_broken");
                         currentMigrator.Migrate(genericData);
                         validated = currentMigrator.Validate(genericData);
@@ -203,7 +185,7 @@ namespace Aurora.DataManager.Migration
                                 "Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.",
                                 currentMigrator.MigrationName,
                                 currentMigrator.Version
-                            ));
+                                                                      ));
                         }
                     }
                 }

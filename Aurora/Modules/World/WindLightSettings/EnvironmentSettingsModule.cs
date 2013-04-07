@@ -1,21 +1,24 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using Aurora.Framework;
+﻿using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Aurora.Modules
 {
     public class EnvironmentSettingsModule : IEnvironmentSettingsModule, INonSharedRegionModule
     {
-        private OSD m_info;
         private IScene m_scene;
 
         #region INonSharedRegionModule Members
@@ -61,18 +64,16 @@ namespace Aurora.Modules
             retVal["EnvironmentSettings"] = CapsUtil.CreateCAPS("EnvironmentSettings", "");
             //Sets the windlight settings
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["EnvironmentSettings"],
-                                                      delegate(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return SetEnvironment(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return SetEnvironment(request, agentID); }));
             //Sets the windlight settings
             server.AddStreamHandler(new GenericStreamHandler("GET", retVal["EnvironmentSettings"],
-                                                      delegate(string path, Stream request,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return EnvironmentSettings(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return EnvironmentSettings(request, agentID); }));
             return retVal;
         }
 
@@ -85,11 +86,7 @@ namespace Aurora.Modules
             string fail_reason = "";
             if (SP.Scene.Permissions.CanIssueEstateCommand(agentID, false))
             {
-                m_info = OSDParser.DeserializeLLSDXml(request);
-                IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                if (gc != null)
-                    gc.AddGeneric(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "",
-                                  (new OSDWrapper { Info = m_info }).ToOSD());
+                m_scene.RegionInfo.EnvironmentSettings = OSDParser.DeserializeLLSDXml(request);
                 success = true;
 
                 //Tell everyone about the changes
@@ -102,10 +99,10 @@ namespace Aurora.Modules
                     "You don't have the correct permissions to set the Windlight Settings");
             }
             OSDMap result = new OSDMap()
-            {
-                new KeyValuePair<string, OSD>("success", success),
-                new KeyValuePair<string, OSD>("regionID", SP.Scene.RegionInfo.RegionID)
-            };
+                                {
+                                    new KeyValuePair<string, OSD>("success", success),
+                                    new KeyValuePair<string, OSD>("regionID", SP.Scene.RegionInfo.RegionID)
+                                };
             if (fail_reason != "")
                 result["fail_reason"] = fail_reason;
 
@@ -118,18 +115,8 @@ namespace Aurora.Modules
             if (SP == null)
                 return new byte[0]; //They don't exist
 
-            if (m_info == null)
-            {
-                IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                if (gc != null)
-                {
-                    OSDWrapper d = gc.GetGeneric<OSDWrapper>(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "");
-                    if (d != null)
-                        m_info = d.Info;
-                }
-            }
-            if (m_info != null)
-                return OSDParser.SerializeLLSDXmlBytes(m_info);
+            if (m_scene.RegionInfo.EnvironmentSettings != null)
+                return OSDParser.SerializeLLSDXmlBytes(m_scene.RegionInfo.EnvironmentSettings);
             return new byte[0];
         }
 
@@ -140,11 +127,11 @@ namespace Aurora.Modules
                 OSD item = BuildEQM(interpolate);
                 IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
-                    eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionHandle);
+                    eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionID);
             }
         }
 
-        public OSD BuildEQM(int interpolate)
+        private OSD BuildEQM(int interpolate)
         {
             OSDMap map = new OSDMap();
 
@@ -155,6 +142,22 @@ namespace Aurora.Modules
             map.Add("body", body);
             map.Add("message", OSD.FromString("WindLightRefresh"));
             return map;
+        }
+
+        public WindlightDayCycle GetCurrentDayCycle()
+        {
+            if (m_scene.RegionInfo.EnvironmentSettings != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(m_scene.RegionInfo.EnvironmentSettings);
+                return cycle;
+            }
+            return null;
+        }
+
+        public void SetDayCycle(WindlightDayCycle cycle)
+        {
+            m_scene.RegionInfo.EnvironmentSettings = cycle.ToOSD();
         }
     }
 }

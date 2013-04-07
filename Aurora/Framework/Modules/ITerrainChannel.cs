@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Aurora.Framework
+using Aurora.Framework.SceneInfo;
+
+namespace Aurora.Framework.Modules
 {
     public interface ITerrainChannel
     {
@@ -35,7 +37,7 @@ namespace Aurora.Framework
         IScene Scene { get; set; }
 
         /// <summary>
-        ///   Squash the entire heightmap into a single dimensioned array
+        ///     Squash the entire heightmap into a single dimensioned array
         /// </summary>
         /// <returns></returns>
         short[] GetSerialised(IScene scene);
@@ -44,10 +46,10 @@ namespace Aurora.Framework
         ITerrainChannel MakeCopy();
 
         /// <summary>
-        ///   Gets the average height of the area +2 in both the X and Y directions from the given position
+        ///     Gets the average height of the area +2 in both the X and Y directions from the given position
         /// </summary>
-        /// <param name = "x"></param>
-        /// <param name = "y"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         /// <returns></returns>
         float GetNormalizedGroundHeight(int x, int y);
     }

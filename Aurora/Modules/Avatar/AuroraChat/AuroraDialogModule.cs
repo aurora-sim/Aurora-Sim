@@ -25,30 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Linq;
-using System.Reflection;
-using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Linq;
 
 namespace Aurora.Modules.Chat
 {
     /// <summary>
-    ///   This dialog module has support for mute lists
+    ///     This dialog module has support for mute lists
     /// </summary>
     public class AuroraDialogModule : INonSharedRegionModule, IDialogModule
     {
         protected bool m_enabled = true;
         protected IMuteListModule m_muteListModule;
         protected IScene m_scene;
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
 
         #region IDialogModule Members
 
@@ -75,9 +72,9 @@ namespace Aurora.Modules.Chat
                 sp.ControllingClient.SendAgentAlertMessage(message, modal);
         }
 
-        public void SendAlertToUser(string firstName, string lastName, string message, bool modal)
+        public void SendAlertToUser(string Name, string message, bool modal)
         {
-            IScenePresence presence = m_scene.SceneGraph.GetScenePresence(firstName, lastName);
+            IScenePresence presence = m_scene.SceneGraph.GetScenePresence(Name);
             if (presence != null && !presence.IsChildAgent)
                 presence.ControllingClient.SendAgentAlertMessage(message, modal);
         }
@@ -112,20 +109,11 @@ namespace Aurora.Modules.Chat
             if (m_muteListModule != null)
             {
                 bool cached = false; //Unneeded
-#if (!ISWIN)
-                foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
-                {
-                    if (mute.MuteID == ownerID)
-                    {
-                        return;
-                    }
-                }
-#else
+
                 if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                 {
                     return;
                 }
-#endif
             }
 
             IScenePresence sp = m_scene.GetScenePresence(avatarID);
@@ -143,20 +131,10 @@ namespace Aurora.Modules.Chat
             if (m_muteListModule != null)
             {
                 bool cached = false; //Unneeded
-#if (!ISWIN)
-                foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
-                {
-                    if (mute.MuteID == ownerID)
-                    {
-                        return;
-                    }
-                }
-#else
                 if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                 {
                     return;
                 }
-#endif
             }
 
             if (sp != null && !sp.IsChildAgent)
@@ -195,20 +173,11 @@ namespace Aurora.Modules.Chat
                 if (m_muteListModule != null)
                 {
                     bool cached = false; //Unneeded
-#if (!ISWIN)
-                    foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
-                    {
-                        if (mute.MuteID == ownerID)
-                        {
-                            return;
-                        }
-                    }
-#else
+
                     if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                     {
                         return;
                     }
-#endif
                 }
                 sp.ControllingClient.SendTextBoxRequest(message, chatChannel, name, ownerFirstName, ownerLastName,
                                                         objectID);
@@ -290,15 +259,10 @@ namespace Aurora.Modules.Chat
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         /// <summary>
-        ///   Handle an alert command from the console.
+        ///     Handle an alert command from the console.
         /// </summary>
-        /// <param name = "module"></param>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         public void HandleAlertConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene == null)
@@ -322,7 +286,7 @@ namespace Aurora.Modules.Chat
                 MainConsole.Instance.InfoFormat(
                     "[DIALOG]: Sending alert in region {0} to {1} {2} with message {3}",
                     m_scene.RegionInfo.RegionName, firstName, lastName, message);
-                SendAlertToUser(firstName, lastName, message, false);
+                SendAlertToUser(firstName + " " + lastName, message, false);
             }
         }
     }

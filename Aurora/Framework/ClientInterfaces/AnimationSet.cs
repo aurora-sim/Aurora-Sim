@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     [Serializable]
     public class AnimationSet
@@ -57,15 +57,7 @@ namespace Aurora.Framework
             if (m_defaultAnimation.AnimID == animID)
                 return true;
 
-#if (!ISWIN)
-            foreach (Animation t in m_animations)
-            {
-                if (t.AnimID == animID) return true;
-            }
-            return false;
-#else
             return m_animations.Any(t => t.AnimID == animID);
-#endif
         }
 
         public bool Add(UUID animID, int sequenceNum, UUID objectID)
@@ -111,8 +103,8 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   The default animation is reserved for "main" animations
-        ///   that are mutually exclusive, e.g. flying and sitting.
+        ///     The default animation is reserved for "main" animations
+        ///     that are mutually exclusive, e.g. flying and sitting.
         /// </summary>
         public bool SetDefaultAnimation(UUID animID, int sequenceNum, UUID objectID)
         {
@@ -131,7 +123,7 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Set the animation as the default animation if it's known
+        ///     Set the animation as the default animation if it's known
         /// </summary>
         public bool TrySetDefaultAnimation(string anim, int sequenceNum, UUID objectID)
         {

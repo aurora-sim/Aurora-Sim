@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenMetaverse;
+﻿using System.Collections.Generic;
 using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
+
     #region Delegates
 
     public delegate void NewScene(IScene scene);
+
     public delegate void NoParam();
 
     #endregion
@@ -17,72 +15,38 @@ namespace Aurora.Framework
     public interface ISceneManager
     {
         /// <summary>
-        /// Attempts to find a running region
+        ///     Starts a region
         /// </summary>
-        bool TryGetScene(string regionName, out IScene scene);
-        bool TryGetScene(int LocX, int LocY, out IScene scene);
-        bool TryGetScene(UUID regionID, out IScene scene);
+        /// <param name="newRegion"></param>
+        void StartRegion(out bool newRegion);
 
         /// <summary>
-        /// The number of regions in the instance
+        ///     Shuts down the given region
         /// </summary>
-        int AllRegions { get; set; }
-
-        /// <summary>
-        /// Starts a region
-        /// </summary>
-        /// <param name="region"></param>
-        IScene StartNewRegion(RegionInfo region);
-
-        /// <summary>
-        /// Shuts down the given region
-        /// </summary>
-        /// <param name="scene"></param>
         /// <param name="shutdownType"></param>
         /// <param name="p"></param>
-        void CloseRegion(IScene scene, ShutdownType shutdownType, int p);
+        void CloseRegion(ShutdownType shutdownType, int p);
 
         /// <summary>
-        /// Removes and resets terrain and objects from the database
+        ///     Removes and resets terrain and objects from the database
         /// </summary>
-        /// <param name="scene"></param>
-        void ResetRegion(IScene scene);
+        void ResetRegion();
 
         /// <summary>
-        /// Deletes a region's objects from the object database
+        ///     Restart the given region
         /// </summary>
-        /// <param name="regionID"></param>
-        void DeleteRegion(UUID regionID);
+        void RestartRegion();
 
-        /// <summary>
-        /// Get all currently running scenes
-        /// </summary>
-        /// <returns></returns>
-        List<IScene> GetAllScenes();
+        void HandleStartupComplete(List<string> data);
 
-        /// <summary>
-        /// Restart the given region
-        /// </summary>
-        /// <param name="m_scene"></param>
-        void RestartRegion(IScene scene);
-
-        IScene GetCurrentOrFirstScene();
-
-        void HandleStartupComplete(IScene scene, List<string> data);
-
-        ISimulationDataStore GetNewSimulationDataStore();
+        ISimulationDataStore GetSimulationDataStore();
 
         IConfigSource ConfigSource { get; }
 
-        void RemoveRegion(IScene scene, bool cleanup);
-
-        bool ChangeConsoleRegion(string regionName);
+        IScene Scene { get; }
 
         event NewScene OnCloseScene;
         event NewScene OnAddedScene;
-        
-        void ForEachCurrentScene(Action<IScene> func);
-
-        void ForEachScene(Action<IScene> func);
+        event NewScene OnFinishedAddingScene;
     }
 }

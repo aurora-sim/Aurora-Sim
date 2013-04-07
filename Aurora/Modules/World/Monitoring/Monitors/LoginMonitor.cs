@@ -27,10 +27,11 @@
 
 using System;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class LoginMonitor : IMonitor, ILoginMonitor
+    public class LoginMonitor : ILoginMonitor
     {
         #region Declares
 
@@ -44,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         private int successfulLoginsYesterday;
 
         /// <summary>
-        ///   Number of times that a client thread terminated because of an exception
+        ///     Number of times that a client thread terminated because of an exception
         /// </summary>
         public long AbnormalClientThreadTerminations
         {
@@ -134,6 +135,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "LoginMonitor";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "ILoginMonitor";
         }
 
         public string GetFriendlyValue()

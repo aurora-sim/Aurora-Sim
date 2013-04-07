@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.UserInfo
 {
     public class UserInfoMigrator_3 : Migrator
     {
@@ -61,9 +61,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("HomePosition", ColumnTypes.String36),
                 ColDef("HomeLookat", ColumnTypes.String36),
                 ColDef("CurrentRegionURI", ColumnTypes.String50)
-            ), IndexDefs(
-                IndexDef(new string[1]{ "UserID" }, IndexType.Primary)
-            ));
+                                      ), IndexDefs(
+                                          IndexDef(new string[1] {"UserID"}, IndexType.Primary)
+                                             ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

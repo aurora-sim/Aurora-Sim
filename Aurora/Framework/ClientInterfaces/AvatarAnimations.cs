@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.Xml;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public class AvatarAnimations
     {

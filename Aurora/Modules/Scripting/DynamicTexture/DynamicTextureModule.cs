@@ -25,20 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Reflection;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class DynamicTextureModule : ISharedRegionModule, IDynamicTextureManager
+    public class DynamicTextureModule : INonSharedRegionModule, IDynamicTextureManager
     {
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -55,11 +59,6 @@ namespace Aurora.Modules.Scripting
         private readonly Dictionary<UUID, DynamicTextureUpdater> Updaters =
             new Dictionary<UUID, DynamicTextureUpdater>();
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #region IDynamicTextureManager Members
 
         public void RegisterRender(string handleType, IDynamicTextureRender render)
@@ -71,10 +70,10 @@ namespace Aurora.Modules.Scripting
         }
 
         /// <summary>
-        ///   Called by code which actually renders the dynamic texture to supply texture data.
+        ///     Called by code which actually renders the dynamic texture to supply texture data.
         /// </summary>
-        /// <param name = "id"></param>
-        /// <param name = "data"></param>
+        /// <param name="id"></param>
+        /// <param name="data"></param>
         public void ReturnData(UUID id, byte[] data)
         {
             DynamicTextureUpdater updater = null;
@@ -224,7 +223,7 @@ namespace Aurora.Modules.Scripting
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -250,10 +249,6 @@ namespace Aurora.Modules.Scripting
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -293,7 +288,7 @@ namespace Aurora.Modules.Scripting
             }
 
             /// <summary>
-            ///   Called once new texture data has been received for this updater.
+            ///     Called once new texture data has been received for this updater.
             /// </summary>
             public void DataReceived(byte[] data, IScene scene)
             {
@@ -443,7 +438,8 @@ namespace Aurora.Modules.Scripting
                         }
                         catch (Exception)
                         {
-                            MainConsole.Instance.Error("[DYNAMICTEXTUREMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
+                            MainConsole.Instance.Error(
+                                "[DYNAMICTEXTUREMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
                         }
 
                         return result;

@@ -28,23 +28,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using GridRegion = Aurora.Framework.Services.GridRegion;
 
 namespace Aurora.Modules.Scripting
 {
-    public class ScriptControllerModule : ISharedRegionModule
+    public class ScriptControllerModule : INonSharedRegionModule
     {
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 
@@ -259,33 +258,23 @@ namespace Aurora.Modules.Scripting
                 {
                     scriptedcontrols.Clear();
 
-#if (!ISWIN)
-                    foreach (ControllerData c in controllerData)
-                    {
-                        ScriptControllers sc = new ScriptControllers
-                                                   {
-                                                       itemID = c.ItemID,
-                                                       part = m_sp.Scene.GetSceneObjectPart(c.ObjectID),
-                                                       ignoreControls = (ScriptControlled) c.IgnoreControls,
-                                                       eventControls = (ScriptControlled) c.EventControls
-                                                   };
-                        if (sc.part != null)
-                        {
-                            scriptedcontrols[sc.itemID] = sc;
-                        }
-                    }
-#else
                     foreach (ScriptControllers sc in controllerData.Select(c => new ScriptControllers
                                                                                     {
                                                                                         itemID = c.ItemID,
-                                                                                        part = m_sp.Scene.GetSceneObjectPart(c.ObjectID),
-                                                                                        ignoreControls = (ScriptControlled) c.IgnoreControls,
-                                                                                        eventControls = (ScriptControlled) c.EventControls
+                                                                                        part =
+                                                                                            m_sp.Scene
+                                                                                                .GetSceneObjectPart(
+                                                                                                    c.ObjectID),
+                                                                                        ignoreControls =
+                                                                                            (ScriptControlled)
+                                                                                            c.IgnoreControls,
+                                                                                        eventControls =
+                                                                                            (ScriptControlled)
+                                                                                            c.EventControls
                                                                                     }).Where(sc => sc.part != null))
                     {
                         scriptedcontrols[sc.itemID] = sc;
                     }
-#endif
                 }
             }
 
@@ -392,9 +381,9 @@ namespace Aurora.Modules.Scripting
                             ScriptControllers scriptControlData = kvp.Value;
 
                             ScriptControlled localHeld = allflags & scriptControlData.eventControls;
-                                // the flags interesting for us
+                            // the flags interesting for us
                             ScriptControlled localLast = LastCommands & scriptControlData.eventControls;
-                                // the activated controls in the last cycle
+                            // the activated controls in the last cycle
                             ScriptControlled localChange = localHeld ^ localLast; // the changed bits
                             if (localHeld != ScriptControlled.CONTROL_ZERO ||
                                 localChange != ScriptControlled.CONTROL_ZERO)

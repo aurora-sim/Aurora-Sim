@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using OpenSim.Services.Interfaces;
+using System.Collections.Generic;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
 
 namespace Aurora.Modules.Web
 {
@@ -19,17 +13,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/map/slmapapi.js"
-                       };
+                           {
+                               "html/map/slmapapi.js"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();

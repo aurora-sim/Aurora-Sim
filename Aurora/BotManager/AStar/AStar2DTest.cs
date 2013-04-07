@@ -32,15 +32,14 @@ using System.Collections.Generic;
 namespace Games.Pathfinding.AStar2DTest
 {
     /// <summary>
-    ///   A node class for doing pathfinding on a 2-dimensional map
-    /// 
-    ///   Christy Lock Note:
-    ///   Astar.cs, Heap.cs and Main.cs were originally written by Sune Trundslev 4 Jan 2004
-    ///   I has made small modifications to Astar. cs and Main.cs to handle the 3d Metaverse
-    ///   Specifically to return waypoints in generic string Lists broken into slope changes. These are returned to BotMe.cs. 
-    ///   You can find the original code at http://www.codeproject.com/KB/recipes/csharppathfind.aspx
-    ///   Note that there is no specific license in the code download and the author states " With this class, you should be able to implement your own 
-    ///   A* pathfinding to your own c# projects."
+    ///     A node class for doing pathfinding on a 2-dimensional map
+    ///     Christy Lock Note:
+    ///     Astar.cs, Heap.cs and Main.cs were originally written by Sune Trundslev 4 Jan 2004
+    ///     I has made small modifications to Astar. cs and Main.cs to handle the 3d Metaverse
+    ///     Specifically to return waypoints in generic string Lists broken into slope changes. These are returned to BotMe.cs.
+    ///     You can find the original code at http://www.codeproject.com/KB/recipes/csharppathfind.aspx
+    ///     Note that there is no specific license in the code download and the author states " With this class, you should be able to implement your own
+    ///     A* pathfinding to your own c# projects."
     /// </summary>
     public class AStarNode2D : AStarNode
     {
@@ -51,7 +50,7 @@ namespace Games.Pathfinding.AStar2DTest
         private readonly int FY;
 
         /// <summary>
-        ///   The X-coordinate of the node
+        ///     The X-coordinate of the node
         /// </summary>
         public int X
         {
@@ -59,7 +58,7 @@ namespace Games.Pathfinding.AStar2DTest
         }
 
         /// <summary>
-        ///   The Y-coordinate of the node
+        ///     The Y-coordinate of the node
         /// </summary>
         public int Y
         {
@@ -71,13 +70,13 @@ namespace Games.Pathfinding.AStar2DTest
         #region Constructors
 
         /// <summary>
-        ///   Constructor for a node in a 2-dimensional map
+        ///     Constructor for a node in a 2-dimensional map
         /// </summary>
-        /// <param name = "AParent">Parent of the node</param>
-        /// <param name = "AGoalNode">Goal node</param>
-        /// <param name = "ACost">Accumulative cost</param>
-        /// <param name = "AX">X-coordinate</param>
-        /// <param name = "AY">Y-coordinate</param>
+        /// <param name="AParent">Parent of the node</param>
+        /// <param name="AGoalNode">Goal node</param>
+        /// <param name="ACost">Accumulative cost</param>
+        /// <param name="AX">X-coordinate</param>
+        /// <param name="AY">Y-coordinate</param>
         public AStarNode2D(AStarNode AParent, AStarNode AGoalNode, double ACost, int AX, int AY)
             : base(AParent, AGoalNode, ACost)
         {
@@ -90,11 +89,11 @@ namespace Games.Pathfinding.AStar2DTest
         #region Private Methods
 
         /// <summary>
-        ///   Adds a successor to a list if it is not impassible or the parent node
+        ///     Adds a successor to a list if it is not impassible or the parent node
         /// </summary>
-        /// <param name = "ASuccessors">List of successors</param>
-        /// <param name = "AX">X-coordinate</param>
-        /// <param name = "AY">Y-coordinate</param>
+        /// <param name="ASuccessors">List of successors</param>
+        /// <param name="AX">X-coordinate</param>
+        /// <param name="AY">Y-coordinate</param>
         private void AddSuccessor(ArrayList ASuccessors, int AX, int AY)
         {
             int CurrentCost = StartPath.GetMap(AX, AY);
@@ -115,9 +114,9 @@ namespace Games.Pathfinding.AStar2DTest
         #region Overidden Methods
 
         /// <summary>
-        ///   Determines wheather the current node is the same state as the on passed.
+        ///     Determines wheather the current node is the same state as the on passed.
         /// </summary>
-        /// <param name = "ANode">AStarNode to compare the current node to</param>
+        /// <param name="ANode">AStarNode to compare the current node to</param>
         /// <returns>Returns true if they are the same state</returns>
         public override bool IsSameState(AStarNode ANode)
         {
@@ -130,7 +129,7 @@ namespace Games.Pathfinding.AStar2DTest
         }
 
         /// <summary>
-        ///   Calculates the estimated cost for the remaining trip to the goal.
+        ///     Calculates the estimated cost for the remaining trip to the goal.
         /// </summary>
         public override void Calculate()
         {
@@ -156,9 +155,9 @@ namespace Games.Pathfinding.AStar2DTest
         }
 
         /// <summary>
-        ///   Gets all successors nodes from the current node and adds them to the successor list
+        ///     Gets all successors nodes from the current node and adds them to the successor list
         /// </summary>
-        /// <param name = "ASuccessors">List in which the successors will be added</param>
+        /// <param name="ASuccessors">List in which the successors will be added</param>
         public override void GetSuccessors(ArrayList ASuccessors)
         {
             ASuccessors.Clear();
@@ -173,7 +172,7 @@ namespace Games.Pathfinding.AStar2DTest
         }
 
         /// <summary>
-        ///   Prints information about the current node
+        ///     Prints information about the current node
         /// </summary>
         public int[] PrintNodeInfo()
         {
@@ -197,8 +196,8 @@ namespace Games.Pathfinding.AStar2DTest
         public static int yLimit;
 
         /// <summary>
-        ///   Entry and Exit from BotMe is StartPath.Path
-        ///   CurrenMap is the map read from the file in ReadMap
+        ///     Entry and Exit from BotMe is StartPath.Path
+        ///     CurrenMap is the map read from the file in ReadMap
         /// </summary>
         public static int[,] Map
         {
@@ -207,7 +206,7 @@ namespace Games.Pathfinding.AStar2DTest
         }
 
         /// <summary>
-        ///   XL/YL comes from the map maker description - BotMe /gm ---> ReadMap sets this
+        ///     XL/YL comes from the map maker description - BotMe /gm ---> ReadMap sets this
         /// </summary>
         public static int xL
         {
@@ -226,11 +225,11 @@ namespace Games.Pathfinding.AStar2DTest
         #region Public Methods
 
         /// <summary>
-        ///   Gets movement cost from the 2-dimensional map
-        ///   -1 blocks off all movement there
+        ///     Gets movement cost from the 2-dimensional map
+        ///     -1 blocks off all movement there
         /// </summary>
-        /// <param name = "x">X-coordinate</param>
-        /// <param name = "y">Y-coordinate</param>
+        /// <param name="x">X-coordinate</param>
+        /// <param name="y">Y-coordinate</param>
         /// <returns>Returns movement cost at the specified point in the map</returns>
         public static int GetMap(int x, int y)
         {
@@ -250,11 +249,11 @@ namespace Games.Pathfinding.AStar2DTest
         #region Entry
 
         /// <summary>
-        ///   The main entry point for the pathfinding routines.
-        ///   AstarNode2D is derived from AStar then the StarPath class creates an instance of AStar and uses AstarNode2D 
-        ///   to override the methds in AStar.cs.
-        ///   Using Path method as an entry and return point from/to BotMe. Also StartPath is used to make maps and check limits
-        ///   as well as print the map out in a console if we use console apps.
+        ///     The main entry point for the pathfinding routines.
+        ///     AstarNode2D is derived from AStar then the StarPath class creates an instance of AStar and uses AstarNode2D
+        ///     to override the methds in AStar.cs.
+        ///     Using Path method as an entry and return point from/to BotMe. Also StartPath is used to make maps and check limits
+        ///     as well as print the map out in a console if we use console apps.
         /// </summary>
         [STAThread]
         public static int[,] ReadMap(string map, int mapx, int mapy)
@@ -323,7 +322,7 @@ namespace Games.Pathfinding.AStar2DTest
             int X1 = startx; //startx
             int Y1 = starty; //starty     
             int Z = endz;
-                //startz - we need this to make a vector but will override with current z in Botme enabling him to walk up hills
+            //startz - we need this to make a vector but will override with current z in Botme enabling him to walk up hills
 
             int xtemp = 0;
             int ytemp = 0;

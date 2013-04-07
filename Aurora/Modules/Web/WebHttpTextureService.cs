@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Aurora.Framework;
+﻿using Aurora.Framework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 
 namespace Aurora.Modules.Web
 {
@@ -35,12 +34,13 @@ namespace Aurora.Modules.Web
             _server = _registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
             if (_server != null)
             {
-                _server.AddHTTPHandler("GridTexture", OnHTTPGetTextureImage);
+                _server.AddHTTPHandler(new GenericStreamHandler("GET", "GridTexture", OnHTTPGetTextureImage));
                 _registry.RegisterModuleInterface<IWebHttpTextureService>(this);
             }
             IGridInfo gridInfo = _registry.RequestModuleInterface<IGridInfo>();
-            _gridNick = gridInfo != null ? gridInfo.GridName :
-                "No Grid Name Available, please set this";
+            _gridNick = gridInfo != null
+                            ? gridInfo.GridName
+                            : "No Grid Name Available, please set this";
         }
 
         public string GetTextureURL(UUID textureID)
@@ -48,11 +48,9 @@ namespace Aurora.Modules.Web
             return _server.ServerURI + "/index.php?method=GridTexture&uuid=" + textureID.ToString();
         }
 
-        public Hashtable OnHTTPGetTextureImage(Hashtable keysvals)
+        public byte[] OnHTTPGetTextureImage(string path, Stream request, OSHttpRequest httpRequest,
+                                            OSHttpResponse httpResponse)
         {
-            Hashtable reply = new Hashtable();
-
-            int statuscode = 200;
             byte[] jpeg = new byte[0];
             IAssetService m_AssetService = _registry.RequestModuleInterface<IAssetService>();
 
@@ -61,20 +59,21 @@ namespace Aurora.Modules.Web
                 // Taking our jpeg2000 data, decoding it, then saving it to a byte array with regular jpeg data
 
                 // non-async because we know we have the asset immediately.
-                AssetBase mapasset = m_AssetService.Get(keysvals["uuid"].ToString());
+                byte[] mapasset = m_AssetService.GetData(httpRequest.QueryString["uuid"]);
 
                 if (mapasset != null)
                 {
                     // Decode image to System.Drawing.Image
                     Image image = null;
                     ManagedImage managedImage;
-                    if (OpenJPEG.DecodeToImage(mapasset.Data, out managedImage, out image))
+                    if (OpenJPEG.DecodeToImage(mapasset, out managedImage, out image))
                     {
                         // Save to bitmap
                         using (Bitmap texture = ResizeBitmap(image, 256, 256))
                         {
                             EncoderParameters myEncoderParameters = new EncoderParameters();
-                            myEncoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 75L);
+                            myEncoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality,
+                                                                                75L);
 
                             // Save bitmap to stream
                             texture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
@@ -84,15 +83,12 @@ namespace Aurora.Modules.Web
                         }
                         image.Dispose();
                     }
-                    mapasset.Dispose();
                 }
             }
 
-            reply["str_response_string"] = Convert.ToBase64String(jpeg);
-            reply["int_response_code"] = statuscode;
-            reply["content_type"] = "image/jpeg";
+            httpResponse.ContentType = "image/jpeg";
 
-            return reply;
+            return jpeg;
         }
 
         private Bitmap ResizeBitmap(Image b, int nWidth, int nHeight)
@@ -102,7 +98,7 @@ namespace Aurora.Modules.Web
             temp.DrawImage(b, 0, 0, nWidth, nHeight);
             temp.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             temp.DrawString(_gridNick, new Font("Arial", 8, FontStyle.Regular),
-                new SolidBrush(Color.FromArgb(90, 255, 255, 50)), new Point(2, nHeight - 13));
+                            new SolidBrush(Color.FromArgb(90, 255, 255, 50)), new Point(2, nHeight - 13));
 
             return newsize;
         }

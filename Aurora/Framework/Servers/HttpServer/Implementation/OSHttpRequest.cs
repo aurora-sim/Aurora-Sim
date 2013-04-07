@@ -31,46 +31,43 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Web;
-using HttpServer;
-using log4net;
-using Aurora.Framework;
-using HTTPFile = HttpServer.HttpFile;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace Aurora.Framework.Servers.HttpServer.Implementation
 {
     public class OSHttpRequest
     {
-        protected IHttpRequest _request = null;
-        protected IHttpClientContext _context = null;
+        protected HttpListenerRequest _request = null;
+        protected HttpListenerContext _context = null;
         protected Dictionary<string, HttpFile> _files = new Dictionary<string, HttpFile>();
 
-        public class HttpFile : IDisposable
+        public sealed class HttpFile : IDisposable
         {
             /// <summary>
-            /// Gets or sets form element name
+            ///     Gets or sets form element name
             /// </summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Gets or sets client side file name
+            ///     Gets or sets client side file name
             /// </summary>
             public string OriginalFileName { get; set; }
 
             /// <summary>
-            /// Gets or sets mime content type
+            ///     Gets or sets mime content type
             /// </summary>
             public string ContentType { get; set; }
 
             /// <summary>
-            /// Gets or sets full path to local file
+            ///     Gets or sets full path to local file
             /// </summary>
             public string TempFileName { get; set; }
 
             /// <summary>
-            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
             /// </summary>
             /// <filterpriority>2</filterpriority>
             public void Dispose()
@@ -94,11 +91,12 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get { return _contentEncoding; }
         }
+
         private Encoding _contentEncoding;
 
         public long ContentLength
         {
-            get { return _request.ContentLength; }
+            get { return _request.ContentLength64; }
         }
 
         public long ContentLength64
@@ -110,23 +108,19 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get { return _contentType; }
         }
+
         private string _contentType;
 
         public HttpCookieCollection Cookies
         {
             get
             {
-                RequestCookies cookies = _request.Cookies;
+                CookieCollection cookies = _request.Cookies;
                 HttpCookieCollection httpCookies = new HttpCookieCollection();
-                foreach (RequestCookie cookie in cookies)
+                foreach (Cookie cookie in cookies)
                     httpCookies.Add(new HttpCookie(cookie.Name, cookie.Value));
                 return httpCookies;
             }
-        }
-
-        public bool HasEntityBody
-        {
-            get { return _request.ContentLength != 0; }
         }
 
         public NameValueCollection Headers
@@ -136,141 +130,87 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public string HttpMethod
         {
-            get { return _request.Method; }
+            get { return _request.HttpMethod; }
         }
 
         public Stream InputStream
         {
-            get { return _request.Body; }
-            set { _request.Body = value; }
-        }
-
-        public bool IsSecured
-        {
-            get { return _context.IsSecured; }
+            get { return _request.InputStream; }
         }
 
         public bool KeepAlive
         {
-            get { return ConnectionType.KeepAlive == _request.Connection; }
+            get { return _request.KeepAlive; }
         }
 
         public NameValueCollection QueryString
         {
             get { return _queryString; }
         }
+
         private NameValueCollection _queryString;
 
         public Hashtable Query
         {
             get { return _query; }
         }
+
         private Hashtable _query;
 
         /// <value>
-        /// POST request values, if applicable
+        ///     POST request values, if applicable
         /// </value>
         //        public Hashtable Form { get; private set; }
-
         public string RawUrl
         {
-            get { return _request.Uri.AbsolutePath; }
+            get { return _request.RawUrl; }
         }
 
         public IPEndPoint RemoteIPEndPoint
         {
-            get { return _remoteIPEndPoint; }
+            get { return _request.RemoteEndPoint; }
         }
-        private IPEndPoint _remoteIPEndPoint;
 
         public Uri Url
         {
-            get { return _request.Uri; }
+            get { return _request.Url; }
         }
 
-        public string UserAgent
+        public OSHttpRequest()
         {
-            get { return _userAgent; }
-        }
-        private string _userAgent;
-
-        internal IHttpRequest IHttpRequest
-        {
-            get { return _request; }
         }
 
-        internal IHttpClientContext IHttpClientContext
+        public OSHttpRequest(HttpListenerContext context)
         {
-            get { return _context; }
-        }
-
-        /// <summary>
-        /// Internal whiteboard for handlers to store temporary stuff
-        /// into.
-        /// </summary>
-        internal Dictionary<string, object> Whiteboard
-        {
-            get { return _whiteboard; }
-        }
-        private Dictionary<string, object> _whiteboard = new Dictionary<string, object>();
-
-        public OSHttpRequest() { }
-
-        public OSHttpRequest(IHttpClientContext context, IHttpRequest req)
-        {
-            _request = req;
+            _request = context.Request;
             _context = context;
 
-            if (null != req.Headers["content-encoding"])
+            if (null != _request.Headers["content-encoding"])
                 _contentEncoding = Encoding.GetEncoding(_request.Headers["content-encoding"]);
-            if (null != req.Headers["content-type"])
+            if (null != _request.Headers["content-type"])
                 _contentType = _request.Headers["content-type"];
-            if (null != req.Headers["user-agent"])
-                _userAgent = req.Headers["user-agent"];
-            if (null != req.Headers["remote_addr"])
-            {
-                try
-                {
-                    IPAddress addr = IPAddress.Parse(req.Headers["remote_addr"]);
-                    // sometimes req.Headers["remote_port"] returns a comma separated list, so use
-                    // the first one in the list and log it 
-                    string[] strPorts = req.Headers["remote_port"].Split(new char[] { ',' });
-                    if (strPorts.Length > 1)
-                    {
-                        MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
-                                     req.Headers["remote_addr"], req.Headers["remote_port"]);
-                    }
-                    int port = Int32.Parse(strPorts[0]);
-                    _remoteIPEndPoint = new IPEndPoint(addr, port);
-                }
-                catch (FormatException)
-                {
-                    MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
-                                     req.Headers["remote_addr"], req.Headers["remote_port"]);
-                }
-            }
-
             _queryString = new NameValueCollection();
             _query = new Hashtable();
             try
             {
-                foreach (HttpInputItem item in req.QueryString)
+                foreach (string item in _request.QueryString.Keys)
                 {
                     try
                     {
-                        _queryString.Add(item.Name, item.Value);
-                        _query[item.Name] = item.Value;
+                        _queryString.Add(item, _request.QueryString[item]);
+                        _query[item] = _request.QueryString[item];
                     }
                     catch (InvalidCastException)
                     {
-                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it", item.Name);
+                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it",
+                                                         item);
                         continue;
                     }
                 }
             }
             catch (Exception)
             {
-                MainConsole.Instance.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
+                MainConsole.Instance.Error("[OSHttpRequest]: Error parsing querystring");
             }
 
             if (ContentType != null && ContentType.StartsWith("multipart/form-data"))
@@ -293,7 +233,7 @@ namespace Aurora.Framework.Servers.HttpServer
                         // Read the file data
                         var buffer = new byte[element.Length];
                         InputStream.Seek(element.Start, SeekOrigin.Begin);
-                        InputStream.Read(buffer, 0, (int)element.Length);
+                        InputStream.Read(buffer, 0, (int) element.Length);
 
                         // Generate a filename
                         var originalFileName = element.Filename;
@@ -316,12 +256,12 @@ namespace Aurora.Framework.Servers.HttpServer
                         File.WriteAllBytes(element.Filename, buffer);
 
                         var file = new HttpFile
-                        {
-                            Name = element.Name,
-                            OriginalFileName = originalFileName,
-                            ContentType = element.ContentType,
-                            TempFileName = element.Filename
-                        };
+                                       {
+                                           Name = element.Name,
+                                           OriginalFileName = originalFileName,
+                                           ContentType = element.ContentType,
+                                           TempFileName = element.Filename
+                                       };
                         Files.Add(element.Name, file);
                     }
                     /*else

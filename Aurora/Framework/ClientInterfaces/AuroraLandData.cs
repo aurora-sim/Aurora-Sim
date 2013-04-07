@@ -25,9 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public class ExtendedLandData : IDataTransferable
     {
@@ -42,7 +44,7 @@ namespace Aurora.Framework
             GlobalPosX = map["GlobalPosX"];
             GlobalPosY = map["GlobalPosY"];
             LandData = new LandData();
-            LandData.FromOSD((OSDMap)map["LandData"]);
+            LandData.FromOSD((OSDMap) map["LandData"]);
             RegionName = map["RegionName"];
             RegionType = map["RegionType"];
         }

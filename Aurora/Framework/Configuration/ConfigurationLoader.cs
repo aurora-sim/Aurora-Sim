@@ -29,15 +29,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Xml;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using Nini.Ini;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Configuration
 {
     /// <summary>
-    ///   Loads the Configuration files into nIni
+    ///     Loads the Configuration files into nIni
     /// </summary>
     public class ConfigurationLoader
     {
@@ -46,21 +45,21 @@ namespace Aurora.Framework
         public string iniFilePath = "";
 
         /// <summary>
-        ///   Should we save all merging of the .ini files to the filesystem?
+        ///     Should we save all merging of the .ini files to the filesystem?
         /// </summary>
         protected bool inidbg;
 
         public Dictionary<string, string> m_defines = new Dictionary<string, string>();
 
         /// <summary>
-        ///   Should we show all the loading of the config files?
+        ///     Should we show all the loading of the config files?
         /// </summary>
         protected bool showIniLoading;
 
         /// <summary>
-        ///   Loads the region configuration
+        ///     Loads the region configuration
         /// </summary>
-        /// <param name = "argvSource">Parameters passed into the process when started</param>
+        /// <param name="argvSource">Parameters passed into the process when started</param>
         /// <returns>A configuration that gets passed to modules</returns>
         public IConfigSource LoadConfigSettings(IConfigSource argvSource)
         {
@@ -174,29 +173,23 @@ namespace Aurora.Framework
                     if (iniDirName != "" && Directory.Exists(iniDirName))
                     {
                         Console.WriteLine(string.Format("Searching folder {0} for config ini files",
-                                         iniDirName));
+                                                        iniDirName));
 
                         string[] fileEntries = Directory.GetFiles(iniDirName);
-#if (!ISWIN)
-                        foreach (string filePath in fileEntries)
+
+                        foreach (string filePath in fileEntries.Where(filePath =>
+                                                                          {
+                                                                              var extension = Path.GetExtension(filePath);
+                                                                              return extension != null &&
+                                                                                     extension.ToLower() == ".ini";
+                                                                          })
+                                                               .Where(
+                                                                   filePath =>
+                                                                   !sources.Contains(Path.Combine(iniDirName, filePath)))
+                            )
                         {
-                            string extension = Path.GetExtension(filePath);
-                            if (extension != null && extension.ToLower() == ".ini")
-                            {
-                                if (!sources.Contains(Path.Combine(iniDirName, filePath)))
-                                    sources.Add(Path.Combine(iniDirName, filePath));
-                            }
+                            sources.Add(Path.Combine(iniDirName, filePath));
                         }
-#else
-                    foreach (string filePath in fileEntries.Where(filePath =>
-                                                                      {
-                                                                          var extension = Path.GetExtension(filePath);
-                                                                          return extension != null && extension.ToLower() == ".ini";
-                                                                      }).Where(filePath => !sources.Contains(Path.Combine(iniDirName, filePath))))
-                    {
-                        sources.Add(Path.Combine(iniDirName, filePath));
-                    }
-#endif
                     }
                 }
                 else
@@ -250,7 +243,8 @@ namespace Aurora.Framework
             if (sources.Count == 0)
             {
                 Console.WriteLine(string.Format("[CONFIG]: Could not load any configuration"));
-                Console.WriteLine(string.Format("[CONFIG]: Did you copy the " + defaultIniFile + ".example file to " + defaultIniFile +
+                Console.WriteLine(
+                    string.Format("[CONFIG]: Did you copy the " + defaultIniFile + ".example file to " + defaultIniFile +
                                   "?"));
                 throw new NotSupportedException();
             }
@@ -270,6 +264,7 @@ namespace Aurora.Framework
             }
 
             //
+            sources.Reverse();
             for (int i = 0; i < sources.Count; i++)
             {
                 //Read all non .example files first, then read all the example ones
@@ -289,7 +284,7 @@ namespace Aurora.Framework
                 throw new NotSupportedException();
             }
             // Make sure command line options take precedence
-            if(argvSource != null)
+            if (argvSource != null)
                 m_config.Merge(argvSource);
 
             return m_config;
@@ -306,7 +301,11 @@ namespace Aurora.Framework
                 foreach (string value in config.GetValues())
                 {
                     string value1 = value;
-                    foreach (string newValue in from def in m_defines.Keys where value1.Contains(def) select value1.Replace(def, m_defines[def]))
+                    foreach (
+                        string newValue in
+                            from def in m_defines.Keys
+                            where value1.Contains(def)
+                            select value1.Replace(def, m_defines[def]))
                     {
                         config.Set(config.GetKeys()[i], newValue);
                     }
@@ -316,10 +315,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Adds the included files as ini configuration files
+        ///     Adds the included files as ini configuration files
         /// </summary>
-        /// <param name = "sources">List of URL strings or filename strings</param>
-        /// <param name = "cntr">Where should we start inserting sources into the list?</param>
+        /// <param name="sources">List of URL strings or filename strings</param>
+        /// <param name="basePath"></param>
+        /// <param name="cntr">Where should we start inserting sources into the list?</param>
+        /// <param name="triedPaths"></param>
+        /// <param name="configSource"></param>
         private void AddIncludes(List<string> sources, string basePath, ref int cntr, ref List<string> triedPaths,
                                  IConfigSource configSource)
         {
@@ -371,35 +373,20 @@ namespace Aurora.Framework
                                     paths.AddRange(Util.GetSubFiles(path));
                                     List<string> examplefiles =
                                         new List<string>(Util.GetSubFiles(path.Replace(".ini", ".ini.example")));
-#if (!ISWIN)
-                                    examplefiles.RemoveAll(delegate(string s)
-                                    {
-                                        return paths.Contains(s.Replace(".example", ""));
-                                    });
-#else
+
                                     examplefiles.RemoveAll(
                                         s => paths.Contains(s.Replace(".example", "")));
-#endif
+
                                     paths.AddRange(examplefiles);
                                 }
                                 else
                                     paths.AddRange(Util.GetSubFiles(path));
-#if (!ISWIN)
-                            foreach (string p in paths)
-                            {
-                                if (!sources.Contains(p))
-                                {
-                                    cn++;
-                                    sources.Insert(cn, p);
-                                }
-                            }
-#else
+
                             foreach (string p in paths.Where(p => !sources.Contains(p)))
                             {
                                 cn++;
                                 sources.Insert(cn, p);
                             }
-#endif
                         }
                     }
                     else if (k.StartsWith("RemoveInclude-"))
@@ -432,22 +419,12 @@ namespace Aurora.Framework
                             string[] paths = new string[1] {path};
                             if (path.Contains("*"))
                                 paths = Util.GetSubFiles(path);
-#if (!ISWIN)
-                            foreach (string p in paths)
-                            {
-                                if (!sources.Contains(p))
-                                {
-                                    cn--;
-                                    sources.Remove(p);
-                                }
-                            }
-#else
+
                             foreach (string p in paths.Where(p => !sources.Contains(p)))
                             {
                                 cn--;
                                 sources.Remove(p);
                             }
-#endif
                         }
                     }
                 }
@@ -455,9 +432,9 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check if we can convert the string to a URI
+        ///     Check if we can convert the string to a URI
         /// </summary>
-        /// <param name = "file">String uri to the remote resource</param>
+        /// <param name="file">String uri to the remote resource</param>
         /// <returns>true if we can convert the string to a Uri object</returns>
         private bool IsUri(string file)
         {
@@ -468,9 +445,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Provide same ini loader functionality for standard ini and master ini - file system or XML over http
+        ///     Provide same ini loader functionality for standard ini and master ini - file system or XML over http
         /// </summary>
-        /// <param name = "iniPath">Full path to the ini</param>
+        /// <param name="iniPath">Full path to the ini</param>
+        /// <param name="i"></param>
+        /// <param name="source"></param>
         /// <returns></returns>
         private bool ReadConfig(string iniPath, int i, IConfigSource source)
         {
@@ -479,7 +458,8 @@ namespace Aurora.Framework
             if (!IsUri(iniPath))
             {
                 if (showIniLoading)
-                    Console.WriteLine(string.Format("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath)));
+                    Console.WriteLine(string.Format("[CONFIG]: Reading configuration file {0}",
+                                                    Util.BasePathCombine(iniPath)));
 
                 source.Merge(new IniConfigSource(iniPath, IniFileType.AuroraStyle));
                 if (inidbg)
@@ -494,12 +474,13 @@ namespace Aurora.Framework
                 // Try to read it
                 try
                 {
-                    string file = Utilities.ReadExternalWebsite(iniPath);
+                    string file = Utilities.Utilities.ReadExternalWebsite(iniPath);
                     string filename = Path.GetTempFileName();
                     File.WriteAllText(filename, file);
 
                     if (showIniLoading)
-                        Console.WriteLine(string.Format("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath)));
+                        Console.WriteLine(string.Format("[CONFIG]: Reading configuration file {0}",
+                                                        Util.BasePathCombine(iniPath)));
 
                     source.Merge(new IniConfigSource(filename, IniFileType.AuroraStyle));
                     if (inidbg)

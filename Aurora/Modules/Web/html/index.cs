@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenMetaverse;
-using Aurora.Framework;
+﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Web
 {
@@ -16,18 +14,26 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-				{
-				    "html/index.html",
-                    "html/javascripts/menu.js"
-				};
+                           {
+                               "html/index.html",
+                               "html/javascripts/menu.js"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return false; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
+        public bool RequiresAuthentication
+        {
+            get { return false; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -36,7 +42,7 @@ namespace Aurora.Modules.Web
 
             List<Dictionary<string, object>> pages = new List<Dictionary<string, object>>();
 
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
             GridPage rootPage = generics.GetGeneric<GridPage>(UUID.Zero, "WebPages", "Root");
             rootPage.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));
@@ -58,30 +64,44 @@ namespace Aurora.Modules.Web
                         continue;
                     if (childPage.LoggedInRequired && !Authenticator.CheckAuthentication(httpRequest))
                         continue;
-                    if (childPage.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest, childPage.AdminLevelRequired))
+                    if (childPage.AdminRequired &&
+                        !Authenticator.CheckAdminAuthentication(httpRequest, childPage.AdminLevelRequired))
                         continue;
 
-                    childPages.Add(new Dictionary<string, object> {
-                        { "ChildMenuItemID", childPage.MenuID },
-                        { "ChildShowInMenu", childPage.ShowInMenu },
-                        { "ChildMenuItemLocation", childPage.Location }, 
-                        { "ChildMenuItemTitleHelp", GetTranslatedString(translator, childPage.MenuToolTip, childPage, true) },
-                        { "ChildMenuItemTitle", GetTranslatedString(translator, childPage.MenuTitle, childPage, false) } });
+                    childPages.Add(new Dictionary<string, object>
+                                       {
+                                           {"ChildMenuItemID", childPage.MenuID},
+                                           {"ChildShowInMenu", childPage.ShowInMenu},
+                                           {"ChildMenuItemLocation", childPage.Location},
+                                           {
+                                               "ChildMenuItemTitleHelp",
+                                               GetTranslatedString(translator, childPage.MenuToolTip, childPage, true)
+                                           },
+                                           {
+                                               "ChildMenuItemTitle",
+                                               GetTranslatedString(translator, childPage.MenuTitle, childPage, false)
+                                           }
+                                       });
 
                     //Add one for menu.js
-                    pages.Add(new Dictionary<string, object> {
-                        { "MenuItemID", childPage.MenuID },
-                        { "ShowInMenu", false },
-                        { "MenuItemLocation", childPage.Location } });
+                    pages.Add(new Dictionary<string, object>
+                                  {
+                                      {"MenuItemID", childPage.MenuID},
+                                      {"ShowInMenu", false},
+                                      {"MenuItemLocation", childPage.Location}
+                                  });
                 }
 
-                pages.Add(new Dictionary<string, object> { { "MenuItemID", page.MenuID }, 
-                    { "ShowInMenu", page.ShowInMenu },
-                    { "HasChildren", page.Children.Count > 0 },
-                    { "ChildrenMenuItems", childPages },
-                    { "MenuItemLocation", page.Location }, 
-                    { "MenuItemTitleHelp", GetTranslatedString(translator, page.MenuToolTip, page, true) },
-                    { "MenuItemTitle", GetTranslatedString(translator, page.MenuTitle, page, false) } });
+                pages.Add(new Dictionary<string, object>
+                              {
+                                  {"MenuItemID", page.MenuID},
+                                  {"ShowInMenu", page.ShowInMenu},
+                                  {"HasChildren", page.Children.Count > 0},
+                                  {"ChildrenMenuItems", childPages},
+                                  {"MenuItemLocation", page.Location},
+                                  {"MenuItemTitleHelp", GetTranslatedString(translator, page.MenuToolTip, page, true)},
+                                  {"MenuItemTitle", GetTranslatedString(translator, page.MenuTitle, page, false)}
+                              });
             }
             vars.Add("MenuItems", pages);
 
@@ -98,9 +118,9 @@ namespace Aurora.Modules.Web
             vars.Add("styles4", translator.GetTranslatedString("styles4"));
             vars.Add("styles5", translator.GetTranslatedString("styles5"));
 
-			vars.Add("StyleSwitcherStylesText", translator.GetTranslatedString("StyleSwitcherStylesText"));
-			vars.Add("StyleSwitcherLanguagesText", translator.GetTranslatedString("StyleSwitcherLanguagesText"));
-			vars.Add("StyleSwitcherChoiceText", translator.GetTranslatedString("StyleSwitcherChoiceText"));
+            vars.Add("StyleSwitcherStylesText", translator.GetTranslatedString("StyleSwitcherStylesText"));
+            vars.Add("StyleSwitcherLanguagesText", translator.GetTranslatedString("StyleSwitcherLanguagesText"));
+            vars.Add("StyleSwitcherChoiceText", translator.GetTranslatedString("StyleSwitcherChoiceText"));
 
             // Language Switcher
             vars.Add("en", translator.GetTranslatedString("en"));
@@ -116,15 +136,21 @@ namespace Aurora.Modules.Web
             vars.Add("WelcomeScreen", translator.GetTranslatedString("WelcomeScreen"));
             vars.Add("WelcomeToText", translator.GetTranslatedString("WelcomeToText"));
 
-            if (PagesMigrator.RequiresUpdate() && PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored))
-                vars.Add("PagesUpdateRequired", translator.GetTranslatedString("Pages") + " " + translator.GetTranslatedString("DefaultsUpdated"));
+            if (PagesMigrator.RequiresUpdate() &&
+                PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored))
+                vars.Add("PagesUpdateRequired",
+                         translator.GetTranslatedString("Pages") + " " +
+                         translator.GetTranslatedString("DefaultsUpdated"));
             else
                 vars.Add("PagesUpdateRequired", "");
-            if (SettingsMigrator.RequiresUpdate() && SettingsMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastSettingsVersionUpdateIgnored))
-                vars.Add("SettingsUpdateRequired", translator.GetTranslatedString("Settings") + " " + translator.GetTranslatedString("DefaultsUpdated"));
+            if (SettingsMigrator.RequiresUpdate() &&
+                SettingsMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastSettingsVersionUpdateIgnored))
+                vars.Add("SettingsUpdateRequired",
+                         translator.GetTranslatedString("Settings") + " " +
+                         translator.GetTranslatedString("DefaultsUpdated"));
             else
                 vars.Add("SettingsUpdateRequired", "");
-            
+
             vars.Add("ShowLanguageTranslatorBar", !settings.HideLanguageTranslatorBar);
             vars.Add("ShowStyleBar", !settings.HideStyleBar);
 

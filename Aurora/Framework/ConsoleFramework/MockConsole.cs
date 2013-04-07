@@ -25,22 +25,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net.Core;
+using System;
+using Aurora.Framework.Modules;
+using Nini.Config;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ConsoleFramework
 {
     /// <summary>
-    ///   This is a Fake console that's used when setting up the Scene in Unit Tests
-    ///   Don't use this except for Unit Testing or you're in for a world of hurt when the 
-    ///   sim gets to ReadLine
+    ///     This is a Fake console that's used when setting up the Scene in Unit Tests
+    ///     Don't use this except for Unit Testing or you're in for a world of hurt when the
+    ///     sim gets to ReadLine
     /// </summary>
     public class MockConsole : CommandConsole
     {
-        public override void Output(string text)
+        public override void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
+            if (source.Configs["Console"] == null ||
+                source.Configs["Console"].GetString("Console", String.Empty) != "MockConsole")
+            {
+                return;
+            }
+
+            baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
+            MainConsole.Instance = this;
+
+            m_Commands.AddCommand("help", "help", "Get a general command list", Help);
         }
 
-        public override void Output(string text, string level)
+        public override void Output(string text, Level level)
         {
         }
 

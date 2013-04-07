@@ -25,12 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using System.Reflection;
 using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 
 namespace Aurora.Services.DataService
 {
@@ -49,13 +53,14 @@ namespace Aurora.Services.DataService
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "Agent",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            if (GD != null)
+                GD.ConnectToDatabase(defaultConnectionString, "Agent",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
 
             Init(simBase, Name);
@@ -67,11 +72,11 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Gets the info about the agent (TOS data, maturity info, language, etc)
+        ///     Gets the info about the agent (TOS data, maturity info, language, etc)
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel=OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public IAgentInfo GetAgent(UUID agentID)
         {
             IAgentInfo agent = new IAgentInfo();
@@ -80,11 +85,11 @@ namespace Aurora.Services.DataService
             else
                 agent = new IAgentInfo();
 
-            object remoteValue = DoRemoteForUser(agentID, agentID);
+            object remoteValue = DoRemote(agentID);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                m_cache.Cache(agentID, (IAgentInfo)remoteValue);
-                return (IAgentInfo)remoteValue;
+                m_cache.Cache(agentID, (IAgentInfo) remoteValue);
+                return (IAgentInfo) remoteValue;
             }
 
             List<string> query = null;
@@ -93,7 +98,7 @@ namespace Aurora.Services.DataService
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["ID"] = agentID;
                 filter.andFilters["`Key`"] = "AgentInfo";
-                query = GD.Query(new string[1] { "`Value`" }, "userdata", filter, null, null, null);
+                query = GD.Query(new string[1] {"`Value`"}, "userdata", filter, null, null, null);
             }
             catch
             {
@@ -114,17 +119,17 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Updates the language and maturity params of the agent.
-        ///   Note: we only allow for this on the grid side
+        ///     Updates the language and maturity params of the agent.
+        ///     Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name = "agent"></param>
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        /// <param name="agent"></param>
+        //[CanBeReflected(ThreatLevel = ThreatLevel.Full)]
         public void UpdateAgent(IAgentInfo agent)
         {
             CacheAgent(agent);
-            object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
+            /*object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return;*/
 
             Dictionary<string, object> values = new Dictionary<string, object>(1);
             values["Value"] = OSDParser.SerializeLLSDXmlString(agent.ToOSD());
@@ -142,10 +147,10 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Creates a new database entry for the agent.
-        ///   Note: we only allow for this on the grid side
+        ///     Creates a new database entry for the agent.
+        ///     Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         public void CreateNewAgent(UUID agentID)
         {
             List<object> values = new List<object> {agentID, "AgentInfo"};

@@ -25,22 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading;
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Aurora.BotManager
 {
-    public class BotManager : ISharedRegionModule, IBotManager
+    public class BotManager : INonSharedRegionModule, IBotManager
     {
         private readonly Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot>();
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -57,10 +63,6 @@ namespace Aurora.BotManager
         }
 
         public void RegionLoaded(IScene scene)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 
@@ -84,40 +86,40 @@ namespace Aurora.BotManager
         #region IBotManager
 
         /// <summary>
-        ///   Creates a new bot inworld
+        ///     Creates a new bot inworld
         /// </summary>
-        /// <param name = "FirstName"></param>
-        /// <param name = "LastName"></param>
-        /// <param name = "cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="scene"></param>
+        /// <param name="cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
+        /// <param name="creatorID"></param>
+        /// <param name="startPos"></param>
         /// <returns>ID of the bot</returns>
-        public UUID CreateAvatar(string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom,
+        public UUID CreateAvatar(string firstName, string lastName, IScene scene, UUID cloneAppearanceFrom,
                                  UUID creatorID, Vector3 startPos)
         {
             AgentCircuitData m_aCircuitData = new AgentCircuitData
-                                                  {
-                                                      child = false,
-                                                      circuitcode = (uint) Util.RandomClass.Next(),
-                                                      Appearance = GetAppearance(cloneAppearanceFrom, scene)
-                                                  };
+            {
+                IsChildAgent = false,
+                CircuitCode = (uint) Util.RandomClass.Next()
+            };
 
             //Add the circuit data so they can login
 
             //Sets up appearance
-            if (m_aCircuitData.Appearance == null)
-            {
-                m_aCircuitData.Appearance = new AvatarAppearance {Wearables = AvatarWearable.DefaultWearables};
-            }
+            AvatarAppearance app = GetAppearance(cloneAppearanceFrom, scene) ?? new AvatarAppearance { Wearables = AvatarWearable.DefaultWearables };
             //Create the new bot data
-            BotClientAPI m_character = new BotClientAPI(scene, m_aCircuitData) { FirstName = FirstName, LastName = LastName };
+            BotClientAPI m_character = new BotClientAPI(scene, m_aCircuitData);
 
+            m_character.Name = firstName + " " + lastName;
             m_aCircuitData.AgentID = m_character.AgentId;
-            m_aCircuitData.Appearance.Owner = m_character.AgentId;
-            List<AvatarAttachment> attachments = m_aCircuitData.Appearance.GetAttachments();
+            app.Owner = m_character.AgentId;
+            List<AvatarAttachment> attachments = app.GetAttachments();
 
-            m_aCircuitData.Appearance.ClearAttachments();
+            app.ClearAttachments();
             foreach (AvatarAttachment t in attachments)
             {
-                InventoryItemBase item = scene.InventoryService.GetItem(new InventoryItemBase(t.ItemID));
+                InventoryItemBase item = scene.InventoryService.GetItem(cloneAppearanceFrom, t.ItemID);
                 if (item != null)
                 {
                     item.ID = UUID.Random();
@@ -125,7 +127,7 @@ namespace Aurora.BotManager
                     item.Folder = UUID.Zero;
                     scene.InventoryService.AddItemAsync(item, null);
                     //Now fix the ItemID
-                    m_aCircuitData.Appearance.SetAttachment(t.AttachPoint, item.ID, t.AssetID);
+                    app.SetAttachment(t.AttachPoint, item.ID, t.AssetID);
                 }
             }
 
@@ -142,21 +144,22 @@ namespace Aurora.BotManager
             //Move them
             SP.Teleport(startPos);
 
-            foreach(var presence in scene.GetScenePresences())
+            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
+            appearance.Appearance = app;
+            appearance.InitialHasWearablesBeenSent = true;
+
+            foreach (var presence in scene.GetScenePresences())
                 presence.SceneViewer.QueuePresenceForUpdate(SP, PrimUpdateFlags.ForcedFullUpdate);
             IAttachmentsModule attModule = SP.Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attModule != null)
                 foreach (AvatarAttachment att in attachments)
                     attModule.RezSingleAttachmentFromInventory(SP.ControllingClient, att.ItemID, att.AssetID, 0, true);
 
-            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
-            appearance.InitialHasWearablesBeenSent = true;
-
             //Save them in the bots list
             m_bots.Add(m_character.AgentId, bot);
             AddTagToBot(m_character.AgentId, "AllBots", bot.AvatarCreatorID);
 
-            MainConsole.Instance.Info("[RexBotManager]: Added bot " + m_character.Name + " to scene.");
+            MainConsole.Instance.Info("[BotManager]: Added bot " + m_character.Name + " to scene.");
             //Return their UUID
             return m_character.AgentId;
         }
@@ -177,7 +180,7 @@ namespace Aurora.BotManager
                 sp = scene.GetSceneObjectPart(avatarID);
                 if (sp == null)
                     return;
-                sp = ((ISceneChildEntity)sp).ParentEntity;
+                sp = ((ISceneChildEntity) sp).ParentEntity;
             }
             if (!CheckPermission(sp, userAttempting))
                 return;
@@ -215,32 +218,35 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   Sets up where the bot should be walking
+        ///     Sets up where the bot should be walking
         /// </summary>
-        /// <param name = "Bot">ID of the bot</param>
-        /// <param name = "Positions">List of positions the bot will move to</param>
-        /// <param name = "mode">List of what the bot should be doing inbetween the positions</param>
-        public void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags, UUID userAttempting)
+        /// <param name="botID">ID of the bot</param>
+        /// <param name="positions">List of positions the bot will move to</param>
+        /// <param name="mode">List of what the bot should be doing inbetween the positions</param>
+        /// <param name="flags"></param>
+        /// <param name="userAttempting"></param>
+        public void SetBotMap(UUID botID, List<Vector3> positions, List<TravelMode> mode, int flags, UUID userAttempting)
         {
             Bot bot;
             //Find the bot
-            if (m_bots.TryGetValue(Bot, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
                 if (!CheckPermission(bot, userAttempting))
                     return;
-                bot.SetPath(Positions, mode, flags);
+                bot.SetPath(positions, mode, flags);
             }
         }
 
         /// <summary>
-        ///   Speed up or slow down the bot
+        ///     Speed up or slow down the bot
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
-        public void SetMovementSpeedMod(UUID Bot, float modifier, UUID userAttempting)
+        /// <param name="botID"></param>
+        /// <param name="modifier"></param>
+        /// <param name="userAttempting"></param>
+        public void SetMovementSpeedMod(UUID botID, float modifier, UUID userAttempting)
         {
             Bot bot;
-            if (m_bots.TryGetValue(Bot, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
                 if (!CheckPermission(bot, userAttempting))
                     return;
@@ -323,22 +329,22 @@ namespace Aurora.BotManager
                     return;
             }
             List<string> tagsToRemove = new List<string>();
-            foreach(KeyValuePair<string, List<UUID>> kvp in m_botTags)
+            foreach (KeyValuePair<string, List<UUID>> kvp in m_botTags)
             {
                 if (kvp.Value.Contains(Bot))
                     tagsToRemove.Add(kvp.Key);
             }
-            foreach(string tag in tagsToRemove)
+            foreach (string tag in tagsToRemove)
                 m_botTags[tag].Remove(Bot);
         }
 
         #endregion
 
         /// <summary>
-        ///   Finds the given users appearance
+        ///     Finds the given users appearance
         /// </summary>
-        /// <param name = "target"></param>
-        /// <param name = "scene"></param>
+        /// <param name="target"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         private AvatarAppearance GetAppearance(UUID target, IScene scene)
         {
@@ -376,10 +382,15 @@ namespace Aurora.BotManager
         #region IBotManager
 
         /// <summary>
-        ///   Begins to follow the given user
+        ///     Begins to follow the given user
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
+        /// <param name="botID"></param>
+        /// <param name="avatarName"></param>
+        /// <param name="startFollowDistance"></param>
+        /// <param name="endFollowDistance"></param>
+        /// <param name="requireLOS"></param>
+        /// <param name="offsetFromAvatar"></param>
+        /// <param name="userAttempting"></param>
         public void FollowAvatar(UUID botID, string avatarName, float startFollowDistance, float endFollowDistance,
                                  bool requireLOS, Vector3 offsetFromAvatar, UUID userAttempting)
         {
@@ -393,10 +404,10 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   Stops following the given user
+        ///     Stops following the given user
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
+        /// <param name="botID"></param>
+        /// <param name="userAttempting"></param>
         public void StopFollowAvatar(UUID botID, UUID userAttempting)
         {
             Bot bot;
@@ -409,10 +420,13 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   Sends a chat message to all clients
+        ///     Sends a chat message to all clients
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
+        /// <param name="botID"></param>
+        /// <param name="message"></param>
+        /// <param name="sayType"></param>
+        /// <param name="channel"></param>
+        /// <param name="userAttempting"></param>
         public void SendChatMessage(UUID botID, string message, int sayType, int channel, UUID userAttempting)
         {
             Bot bot;
@@ -425,10 +439,12 @@ namespace Aurora.BotManager
         }
 
         /// <summary>
-        ///   Sends a chat message to all clients
+        ///     Sends a chat message to all clients
         /// </summary>
-        /// <param name = "Bot"></param>
-        /// <param name = "modifier"></param>
+        /// <param name="botID"></param>
+        /// <param name="toUser"></param>
+        /// <param name="message"></param>
+        /// <param name="userAttempting"></param>
         public void SendIM(UUID botID, UUID toUser, string message, UUID userAttempting)
         {
             Bot bot;
@@ -436,21 +452,21 @@ namespace Aurora.BotManager
             {
                 if (!CheckPermission(bot, userAttempting))
                     return;
-                bot.SendInstantMessage(new GridInstantMessage()
-                {
-                    binaryBucket = new byte[0],
-                    dialog = (byte)InstantMessageDialog.MessageFromAgent,
-                    message = message,
-                    fromAgentID = botID,
-                    fromAgentName = bot.Controller.Name,
-                    fromGroup = false,
-                    imSessionID = UUID.Random(), 
-                    offline = 0,
-                    ParentEstateID = 0,
-                    RegionID = bot.Controller.GetScene().RegionInfo.RegionID,
-                    timestamp = (uint)Util.UnixTimeSinceEpoch(),
-                    toAgentID = toUser
-                });
+                bot.SendInstantMessage(new GridInstantMessage
+                                           {
+                                               binaryBucket = new byte[0],
+                                               dialog = (byte) InstantMessageDialog.MessageFromAgent,
+                                               message = message,
+                                               fromAgentID = botID,
+                                               fromAgentName = bot.Controller.Name,
+                                               fromGroup = false,
+                                               imSessionID = UUID.Random(),
+                                               offline = 0,
+                                               ParentEstateID = 0,
+                                               RegionID = bot.Controller.GetScene().RegionInfo.RegionID,
+                                               timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                               toAgentID = toUser
+                                           });
             }
         }
 

@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Aurora.Framework.ClientInterfaces;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public interface IEnvironmentSettingsModule
     {
+        WindlightDayCycle GetCurrentDayCycle();
         void TriggerWindlightUpdate(int interpolate);
+
+        void SetDayCycle(WindlightDayCycle cycle);
     }
 }

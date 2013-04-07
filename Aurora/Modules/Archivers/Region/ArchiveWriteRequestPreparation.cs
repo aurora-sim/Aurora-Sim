@@ -25,22 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Serialization;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   Prepare to write out an archive.
+    ///     Prepare to write out an archive.
     /// </summary>
     public class ArchiveWriteRequestPreparation
     {
@@ -50,13 +51,14 @@ namespace Aurora.Modules.Archivers
         protected IScene m_scene;
 
         /// <summary>
-        ///   Constructor
+        ///     Constructor
         /// </summary>
-        /// <param name = "scene"></param>
-        /// <param name = "savePath">The path to which to save data.</param>
-        /// <param name = "requestId">The id associated with this request</param>
-        /// <exception cref = "System.IO.IOException">
-        ///   If there was a problem opening a stream for the file specified by the savePath
+        /// <param name="scene"></param>
+        /// <param name="savePath">The path to which to save data.</param>
+        /// <param name="requestId">The id associated with this request</param>
+        /// <param name="checkPermissions"></param>
+        /// <exception cref="System.IO.IOException">
+        ///     If there was a problem opening a stream for the file specified by the savePath
         /// </exception>
         public ArchiveWriteRequestPreparation(IScene scene, string savePath, Guid requestId, string checkPermissions)
         {
@@ -79,11 +81,11 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Constructor.
+        ///     Constructor.
         /// </summary>
-        /// <param name = "scene"></param>
-        /// <param name = "saveStream">The stream to which to save data.</param>
-        /// <param name = "requestId">The id associated with this request</param>
+        /// <param name="scene"></param>
+        /// <param name="saveStream">The stream to which to save data.</param>
+        /// <param name="requestId">The id associated with this request</param>
         public ArchiveWriteRequestPreparation(IScene scene, Stream saveStream, Guid requestId)
         {
             m_scene = scene;
@@ -92,9 +94,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Archive the region requested.
+        ///     Archive the region requested.
         /// </summary>
-        /// <exception cref = "System.IO.IOException">if there was an io problem with creating the file</exception>
+        /// <exception cref="System.IO.IOException">if there was an io problem with creating the file</exception>
         public void ArchiveRegion()
         {
             Dictionary<UUID, AssetType> assetUuids = new Dictionary<UUID, AssetType>();
@@ -106,19 +108,6 @@ namespace Aurora.Modules.Archivers
             // Filter entities so that we only have scene objects.
             // FIXME: Would be nicer to have this as a proper list in SceneGraph, since lots of methods
             // end up having to do this
-#if (!ISWIN)
-            foreach (ISceneEntity entity in entities)
-            {
-                if (!entity.IsDeleted && !entity.IsAttachment)
-                {
-                    if (!CanUserArchiveObject(m_scene.RegionInfo.EstateSettings.EstateOwner, entity, m_checkPermissions))
-                        // The user isn't allowed to copy/transfer this object, so it will not be included in the OAR.
-                        ++numObjectsSkippedPermissions;
-                    else
-                        sceneObjects.Add(entity);
-                }
-            }
-#else
             foreach (ISceneEntity entity in entities.Where(entity => !entity.IsDeleted && !entity.IsAttachment))
             {
                 if (!CanUserArchiveObject(m_scene.RegionInfo.EstateSettings.EstateOwner, entity, m_checkPermissions))
@@ -127,7 +116,6 @@ namespace Aurora.Modules.Archivers
                 else
                     sceneObjects.Add(entity);
             }
-#endif
 
             UuidGatherer assetGatherer = new UuidGatherer(m_scene.AssetService);
 
@@ -180,11 +168,11 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Checks whether the user has permission to export an object group to an OAR.
+        ///     Checks whether the user has permission to export an object group to an OAR.
         /// </summary>
-        /// <param name = "user">The user</param>
-        /// <param name = "objGroup">The object group</param>
-        /// <param name = "checkPermissions">Which permissions to check: "C" = Copy, "T" = Transfer</param>
+        /// <param name="user">The user</param>
+        /// <param name="objGroup">The object group</param>
+        /// <param name="checkPermissions">Which permissions to check: "C" = Copy, "T" = Transfer</param>
         /// <returns>Whether the user is allowed to export the object to an OAR</returns>
         private bool CanUserArchiveObject(UUID user, ISceneEntity objGroup, string checkPermissions)
         {

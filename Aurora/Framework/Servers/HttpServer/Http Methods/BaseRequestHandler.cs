@@ -27,6 +27,8 @@
 
 using System;
 using System.IO;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -90,19 +92,10 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             string param = GetParam(path);
 
-            return param.Split(new char[] { '/', '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
+            return param.Split(new char[] {'/', '?', '&'}, StringSplitOptions.RemoveEmptyEntries);
         }
 
         public abstract byte[] Handle(string path, Stream request,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-
-        #region Implementation of IDisposable
-
-        public void Dispose()
-        {
-            
-        }
-
-        #endregion
     }
 }

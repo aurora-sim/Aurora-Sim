@@ -28,10 +28,12 @@
 using System;
 using System.Security;
 using Aurora.Framework;
-using Nini.Config;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -383,11 +385,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                                                          out bool hasHollow,
                                                          out bool hasDimple, out bool hasProfileCut)
         {
-            if (primType == (int)PrimType.Box
+            if (primType == (int) PrimType.Box
                 ||
-                primType == (int)PrimType.Cylinder
+                primType == (int) PrimType.Cylinder
                 ||
-                primType == (int)PrimType.Prism)
+                primType == (int) PrimType.Prism)
 
                 hasCut = (shape.ProfileBegin > 0) || (shape.ProfileEnd > 0);
             else
@@ -401,34 +403,34 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         private static int getScriptPrimType(PrimitiveBaseShape primShape)
         {
             if (primShape.SculptEntry)
-                return (int)PrimType.Sculpt;
-            if ((primShape.ProfileCurve & 0x07) == (byte)ProfileShape.Square)
+                return (int) PrimType.Sculpt;
+            if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.Square)
             {
-                if (primShape.PathCurve == (byte)Extrusion.Straight)
-                    return (int)PrimType.Box;
-                if (primShape.PathCurve == (byte)Extrusion.Curve1)
-                    return (int)PrimType.Tube;
+                if (primShape.PathCurve == (byte) Extrusion.Straight)
+                    return (int) PrimType.Box;
+                if (primShape.PathCurve == (byte) Extrusion.Curve1)
+                    return (int) PrimType.Tube;
             }
-            else if ((primShape.ProfileCurve & 0x07) == (byte)ProfileShape.Circle)
+            else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.Circle)
             {
-                if (primShape.PathCurve == (byte)Extrusion.Straight)
-                    return (int)PrimType.Cylinder;
-                if (primShape.PathCurve == (byte)Extrusion.Curve1)
-                    return (int)PrimType.Torus;
+                if (primShape.PathCurve == (byte) Extrusion.Straight)
+                    return (int) PrimType.Cylinder;
+                if (primShape.PathCurve == (byte) Extrusion.Curve1)
+                    return (int) PrimType.Torus;
             }
-            else if ((primShape.ProfileCurve & 0x07) == (byte)ProfileShape.HalfCircle)
+            else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.HalfCircle)
             {
-                if (primShape.PathCurve == (byte)Extrusion.Curve1 || primShape.PathCurve == (byte)Extrusion.Curve2)
-                    return (int)PrimType.Sphere;
+                if (primShape.PathCurve == (byte) Extrusion.Curve1 || primShape.PathCurve == (byte) Extrusion.Curve2)
+                    return (int) PrimType.Sphere;
             }
-            else if ((primShape.ProfileCurve & 0x07) == (byte)ProfileShape.EquilateralTriangle)
+            else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.EquilateralTriangle)
             {
-                if (primShape.PathCurve == (byte)Extrusion.Straight)
-                    return (int)PrimType.Prism;
-                if (primShape.PathCurve == (byte)Extrusion.Curve1)
-                    return (int)PrimType.Ring;
+                if (primShape.PathCurve == (byte) Extrusion.Straight)
+                    return (int) PrimType.Prism;
+                if (primShape.PathCurve == (byte) Extrusion.Curve1)
+                    return (int) PrimType.Ring;
             }
-            return (int)PrimType.NotPrimitive;
+            return (int) PrimType.NotPrimitive;
         }
 
         private static int getNumberOfSides(ISceneChildEntity part)
@@ -446,22 +448,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             switch (primType)
             {
                 default:
-                case (int)PrimType.Box:
+                case (int) PrimType.Box:
                     ret = 6;
                     if (hasCut) ret += 2;
                     if (hasHollow) ret += 1;
                     break;
-                case (int)PrimType.Cylinder:
+                case (int) PrimType.Cylinder:
                     ret = 3;
                     if (hasCut) ret += 2;
                     if (hasHollow) ret += 1;
                     break;
-                case (int)PrimType.Prism:
+                case (int) PrimType.Prism:
                     ret = 5;
                     if (hasCut) ret += 2;
                     if (hasHollow) ret += 1;
                     break;
-                case (int)PrimType.Sphere:
+                case (int) PrimType.Sphere:
                     ret = 1;
                     if (hasCut) ret += 2;
                     if (hasDimple) ret += 2;
@@ -469,25 +471,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                         ret += 1; // GOTCHA: LSL shows 2 additional sides here. 
                     // This has been fixed, but may cause porting issues.
                     break;
-                case (int)PrimType.Torus:
+                case (int) PrimType.Torus:
                     ret = 1;
                     if (hasCut) ret += 2;
                     if (hasProfileCut) ret += 2;
                     if (hasHollow) ret += 1;
                     break;
-                case (int)PrimType.Tube:
+                case (int) PrimType.Tube:
                     ret = 4;
                     if (hasCut) ret += 2;
                     if (hasProfileCut) ret += 2;
                     if (hasHollow) ret += 1;
                     break;
-                case (int)PrimType.Ring:
+                case (int) PrimType.Ring:
                     ret = 3;
                     if (hasCut) ret += 2;
                     if (hasProfileCut) ret += 2;
                     if (hasHollow) ret += 1;
                     break;
-                case (int)PrimType.Sculpt:
+                case (int) PrimType.Sculpt:
                     ret = 1;
                     break;
             }
@@ -518,7 +520,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public double Density
         {
-            get { return (GetSOP().PhysActor.Mass / Scale.X * Scale.Y / Scale.Z); }
+            get { return (GetSOP().PhysActor.Mass/Scale.X*Scale.Y/Scale.Z); }
             set { throw new NotImplementedException(); }
         }
 
@@ -531,7 +533,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public double Buoyancy
         {
             get { return GetSOP().PhysActor.Buoyancy; }
-            set { GetSOP().PhysActor.Buoyancy = (float)value; }
+            set { GetSOP().PhysActor.Buoyancy = (float) value; }
         }
 
         public Vector3 GeometricCenter
@@ -664,7 +666,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                     return;
 
                 m_sculptMap = value;
-                SetPrimitiveSculpted(SculptMap, (byte)SculptType);
+                SetPrimitiveSculpted(SculptMap, (byte) SculptType);
             }
         }
 
@@ -677,7 +679,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                     return;
 
                 m_sculptType = value;
-                SetPrimitiveSculpted(SculptMap, (byte)SculptType);
+                SetPrimitiveSculpted(SculptMap, (byte) SculptType);
             }
         }
 
@@ -695,7 +697,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public PrimType PrimType
         {
-            get { return (PrimType)getScriptPrimType(GetSOP().Shape); }
+            get { return (PrimType) getScriptPrimType(GetSOP().Shape); }
             set { throw new NotImplementedException(); }
         }
 
@@ -747,8 +749,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         #endregion
 
         /// <summary>
-        ///   This needs to run very, very quickly.
-        ///   It is utilized in nearly every property and method.
+        ///     This needs to run very, very quickly.
+        ///     It is utilized in nearly every property and method.
         /// </summary>
         /// <returns></returns>
         private ISceneChildEntity GetSOP()

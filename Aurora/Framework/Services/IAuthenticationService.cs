@@ -27,7 +27,7 @@
 
 using OpenMetaverse;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework.Services
 {
     // Generic Authentication service used for identifying
     // and authenticating principals.
@@ -78,10 +78,10 @@ namespace OpenSim.Services.Interfaces
         bool SetPlainPassword(UUID principalID, string authType, string passwd);
 
         /// <summary>
-        ///   Check whether the given principalID has a password set
+        ///     Check whether the given principalID has a password set
         /// </summary>
-        /// <param name = "principalID"></param>
-        /// <param name = "authType"></param>
+        /// <param name="principalID"></param>
+        /// <param name="authType"></param>
         /// <returns></returns>
         bool CheckExists(UUID principalID, string authType);
 

@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using Nini.Config;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Web
 {
@@ -19,17 +14,25 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/change_user_information.html"
-                       };
+                           {
+                               "html/change_user_information.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return true; } }
-        public bool RequiresAdminAuthentication { get { return false; } }
-        
+        public bool RequiresAuthentication
+        {
+            get { return true; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return false; }
+        }
+
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
@@ -47,16 +50,19 @@ namespace Aurora.Modules.Web
                     response = "Passwords do not match";
                 else
                 {
-                    IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
+                    IAuthenticationService authService =
+                        webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
                     if (authService != null)
-                        error = authService.SetPassword(user.PrincipalID, "UserAccount", password) ? "" : "Failed to set your password, try again later";
+                        error = authService.SetPassword(user.PrincipalID, "UserAccount", password)
+                                    ? ""
+                                    : "Failed to set your password, try again later";
                     else
                         response = "No authentication service was available to change your password";
                 }
                 return null;
             }
             else if (requestParameters.ContainsKey("Submit") &&
-                requestParameters["Submit"].ToString() == "SubmitEmailChange")
+                     requestParameters["Submit"].ToString() == "SubmitEmailChange")
             {
                 string email = requestParameters["email"].ToString();
 
@@ -72,7 +78,7 @@ namespace Aurora.Modules.Web
                 return null;
             }
             else if (requestParameters.ContainsKey("Submit") &&
-                requestParameters["Submit"].ToString() == "SubmitDeleteUser")
+                     requestParameters["Submit"].ToString() == "SubmitDeleteUser")
             {
                 string username = requestParameters["username"].ToString();
                 string password = requestParameters["password"].ToString();
@@ -80,10 +86,11 @@ namespace Aurora.Modules.Web
                 ILoginService loginService = webInterface.Registry.RequestModuleInterface<ILoginService>();
                 if (loginService.VerifyClient(UUID.Zero, username, "UserAccount", password))
                 {
-                    IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
+                    IUserAccountService userService =
+                        webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                     if (userService != null)
                     {
-                        userService.DeleteUser(user.PrincipalID, password, true, false);
+                        userService.DeleteUser(user.PrincipalID, user.Name, password, true, false);
                         response = "Successfully deleted account.";
                     }
                     else

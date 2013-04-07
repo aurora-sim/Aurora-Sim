@@ -27,9 +27,11 @@
 
 using System;
 using System.Drawing;
+using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -58,7 +60,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                                       Description = "MRM Image",
                                       Flags = (temporary) ? AssetFlags.Temporary : 0
                                   };
-            asset.FillHash();
             asset.ID = m_scene.AssetService.Store(asset);
 
             return asset.ID;
@@ -66,10 +67,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public Bitmap LoadBitmap(UUID assetID)
         {
-            AssetBase bmp = m_scene.AssetService.Get(assetID.ToString());
+            byte[] bmp = m_scene.AssetService.GetData(assetID.ToString());
             ManagedImage outimg;
             Image img;
-            OpenJPEG.DecodeToImage(bmp.Data, out outimg, out img);
+            OpenJPEG.DecodeToImage(bmp, out outimg, out img);
 
             return new Bitmap(img);
         }

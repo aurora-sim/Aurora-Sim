@@ -28,6 +28,8 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse;
 
@@ -53,10 +55,11 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(connectionString, "Auth",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                if (GD != null)
+                    GD.ConnectToDatabase(connectionString, "Auth",
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -70,17 +73,17 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UUID"] = principalID;
             filter.andFilters["accountType"] = authType;
-            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
+            List<string> query = GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null);
             AuthData data = null;
             for (int i = 0; i < query.Count; i += 5)
             {
                 data = new AuthData
-                {
-                    PrincipalID = UUID.Parse(query[i]),
-                    PasswordHash = query[i + 1],
-                    PasswordSalt = query[i + 2],
-                    AccountType = query[i + 3]
-                };
+                           {
+                               PrincipalID = UUID.Parse(query[i]),
+                               PasswordHash = query[i + 1],
+                               PasswordSalt = query[i + 2],
+                               AccountType = query[i + 3]
+                           };
             }
             return data;
         }
@@ -129,7 +132,7 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> row = new Dictionary<string, object>(3);
             row["UUID"] = principalID;
             row["token"] = token;
-            row["validity"] = Utils.DateTimeToUnixTime(DateTime.Now) + (lifetime * 60);
+            row["validity"] = Utils.DateTimeToUnixTime(DateTime.Now) + (lifetime*60);
 
             return GD.Replace(m_tokensrealm, row);
         }
@@ -143,12 +146,12 @@ namespace Aurora.Services.DataService
 
             uint now = Utils.DateTimeToUnixTime(DateTime.Now);
             Dictionary<string, object> values = new Dictionary<string, object>(1);
-            values["validity"] = now + (lifetime * 60) ;
+            values["validity"] = now + (lifetime*60);
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UUID"] = principalID;
             filter.andFilters["token"] = token;
-            filter.andLessThanEqFilters["validity"] = (int)now;
+            filter.andLessThanEqFilters["validity"] = (int) now;
 
             return GD.Update(m_tokensrealm, values, null, filter, null, null);
         }

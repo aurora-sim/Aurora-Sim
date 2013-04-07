@@ -25,17 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Modules.Archivers;
+using Aurora.Region;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Modules.Archivers;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.DefaultInventoryIARLoader
 {
@@ -52,7 +55,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         {
             m_service = service;
             m_registry = registry;
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
+            m_Database = Framework.Utilities.DataManager.RequestPlugin<IInventoryData>();
 
             IConfig libConfig = source.Configs["InventoryIARLoader"];
             const string pLibrariesLocation = "DefaultInventory/";
@@ -61,7 +64,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
             {
                 if (libConfig.GetBoolean("WipeLibrariesOnNextLoad", false))
                 {
-                    service.ClearDefaultInventory();//Nuke it
+                    service.ClearDefaultInventory(); //Nuke it
                     libConfig.Set("WipeLibrariesOnNextLoad", false);
                     source.Save();
                 }
@@ -101,17 +104,16 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         }
 
         /// <summary>
-        ///   Use the asset set information at path to load assets
+        ///     Use the asset set information at path to load assets
         /// </summary>
-        /// <param name = "path"></param>
-        /// <param name = "assets"></param>
+        /// <param name="iarFileName"></param>
         protected void LoadLibraries(string iarFileName)
         {
             RegionInfo regInfo = new RegionInfo();
             IScene m_MockScene = null;
             //Make the scene for the IAR loader
             if (m_registry is IScene)
-                m_MockScene = (IScene)m_registry;
+                m_MockScene = (IScene) m_registry;
             else
             {
                 m_MockScene = new Scene();
@@ -124,7 +126,8 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
             if (uinfo == null)
             {
                 MainConsole.Instance.Warn("Creating user " + m_service.LibraryOwnerName);
-                m_MockScene.UserAccountService.CreateUser(m_service.LibraryOwner, UUID.Zero, m_service.LibraryOwnerName, "", "");
+                m_MockScene.UserAccountService.CreateUser(m_service.LibraryOwner, UUID.Zero, m_service.LibraryOwnerName,
+                                                          "", "");
                 uinfo = m_MockScene.UserAccountService.GetUserAccount(null, m_service.LibraryOwner);
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
             }
@@ -133,22 +136,12 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
 
             List<InventoryFolderBase> rootFolders = m_MockScene.InventoryService.GetFolderFolders(uinfo.PrincipalID,
                                                                                                   UUID.Zero);
-#if (!ISWIN)
-            bool alreadyExists = false;
-            foreach (InventoryFolderBase folder in rootFolders)
-            {
-                if (folder.Name == iarFileName)
-                {
-                    alreadyExists = true;
-                    break;
-                }
-            }
-#else
             bool alreadyExists = rootFolders.Any(folder => folder.Name == iarFileName);
-#endif
+
             if (alreadyExists)
             {
-                MainConsole.Instance.InfoFormat("[LIBRARY INVENTORY]: Found previously loaded iar file {0}, ignoring.", iarFileName);
+                MainConsole.Instance.InfoFormat("[LIBRARY INVENTORY]: Found previously loaded iar file {0}, ignoring.",
+                                                iarFileName);
                 return;
             }
 
@@ -166,11 +159,11 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
 
             try
             {
-                archread.ReplaceAssets = true;//Replace any old assets
+                archread.ReplaceAssets = true; //Replace any old assets
                 List<InventoryNodeBase> nodes = new List<InventoryNodeBase>(archread.Execute(true));
                 if (nodes.Count == 0)
                     return;
-                InventoryFolderBase f = (InventoryFolderBase)nodes[0];
+                InventoryFolderBase f = (InventoryFolderBase) nodes[0];
                 UUID IARRootID = f.ID;
 
                 TraverseFolders(IARRootID, m_MockScene);
@@ -178,14 +171,15 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                 f.Name = iarFileName;
                 f.ParentID = UUID.Zero;
                 f.ID = m_service.LibraryRootFolderID;
-                f.Type = (int)AssetType.RootFolder;
+                f.Type = (int) AssetType.RootFolder;
                 f.Version = 1;
                 m_MockScene.InventoryService.UpdateFolder(f);
             }
             catch (Exception e)
             {
-                MainConsole.Instance.DebugFormat("[LIBRARY MODULE]: Exception when processing archive {0}: {1}", iarFileName,
-                                  e.StackTrace);
+                MainConsole.Instance.DebugFormat("[LIBRARY MODULE]: Exception when processing archive {0}: {1}",
+                                                 iarFileName,
+                                                 e.StackTrace);
             }
             finally
             {
@@ -199,28 +193,20 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
             foreach (InventoryFolderBase folder in folders)
             {
                 InventoryFolderBase folder1 = folder;
-#if (!ISWIN)
-                foreach (KeyValuePair<string, AssetType> type in m_assetTypes)
-                {
-                    if (folder1.Name.ToLower().StartsWith(type.Key.ToLower()))
-                    {
-                        if (folder.Type == (short)type.Value) break;
-                        folder.Type = (short)type.Value;
-                        m_MockScene.InventoryService.UpdateFolder(folder);
-                        break;
-                    }
-                }
-#else
-                foreach (KeyValuePair<string, AssetType> type in m_assetTypes.Where(type => folder1.Name.ToLower().StartsWith(type.Key.ToLower())).TakeWhile(type => folder.Type != (short) type.Value))
+
+                foreach (
+                    KeyValuePair<string, AssetType> type in
+                        m_assetTypes.Where(type => folder1.Name.ToLower().StartsWith(type.Key.ToLower()))
+                                    .TakeWhile(type => folder.Type != (short) type.Value))
                 {
                     folder.Type = (short) type.Value;
                     m_MockScene.InventoryService.UpdateFolder(folder);
                     break;
                 }
-#endif
+
                 if (folder.Type == -1)
                 {
-                    folder.Type = (int)AssetType.Folder;
+                    folder.Type = (int) AssetType.Folder;
                     m_MockScene.InventoryService.UpdateFolder(folder);
                 }
                 TraverseFolders(folder.ID, m_MockScene);
@@ -244,7 +230,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         {
             if (node is InventoryItemBase)
             {
-                InventoryItemBase item = (InventoryItemBase)node;
+                InventoryItemBase item = (InventoryItemBase) node;
                 item.BasePermissions = 0x7FFFFFFF;
                 item.EveryOnePermissions = 0x7FFFFFFF;
                 item.CurrentPermissions = 0x7FFFFFFF;
@@ -254,7 +240,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
 
         private string GetInventoryPathFromName(string name)
         {
-            string[] parts = name.Split(new[] { ' ' });
+            string[] parts = name.Split(new[] {' '});
             if (parts.Length == 3)
             {
                 name = string.Empty;

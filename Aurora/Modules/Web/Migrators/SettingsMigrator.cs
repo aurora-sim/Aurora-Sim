@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using OpenMetaverse;
-using Aurora.Framework;
 
 namespace Aurora.Modules.Web
 {
@@ -15,12 +12,17 @@ namespace Aurora.Modules.Web
 
         public static void InitializeDefaults()
         {
-            _settings = new GridSettings { MapCenter = new Vector2(1000, 1000), LastSettingsVersionUpdateIgnored = CurrentVersion, LastPagesVersionUpdateIgnored = PagesMigrator.GetVersion() };
+            _settings = new GridSettings
+                            {
+                                MapCenter = new Vector2(1000, 1000),
+                                LastSettingsVersionUpdateIgnored = CurrentVersion,
+                                LastPagesVersionUpdateIgnored = PagesMigrator.GetVersion()
+                            };
         }
 
         public static bool RequiresUpdate()
         {
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
 
             OSDWrapper version = generics.GetGeneric<OSDWrapper>(UUID.Zero, Schema + "Version", "");
             return version == null || version.Info.AsInteger() < CurrentVersion;
@@ -28,15 +30,15 @@ namespace Aurora.Modules.Web
 
         public static uint GetVersion()
         {
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
 
             OSDWrapper version = generics.GetGeneric<OSDWrapper>(UUID.Zero, Schema + "Version", "");
-            return version == null ? 0 : (uint)version.Info.AsInteger();
+            return version == null ? 0 : (uint) version.Info.AsInteger();
         }
 
         public static bool RequiresInitialUpdate()
         {
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
 
             OSDWrapper version = generics.GetGeneric<OSDWrapper>(UUID.Zero, Schema + "Version", "");
             return version == null || version.Info.AsInteger() < 1;
@@ -46,13 +48,13 @@ namespace Aurora.Modules.Web
         {
             InitializeDefaults();
 
-            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector generics = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
 
             //Remove all pages
             generics.RemoveGeneric(UUID.Zero, Schema);
 
             generics.AddGeneric(UUID.Zero, Schema, "Settings", _settings.ToOSD());
-            generics.AddGeneric(UUID.Zero, Schema + "Version", "", new OSDWrapper { Info = CurrentVersion }.ToOSD());
+            generics.AddGeneric(UUID.Zero, Schema + "Version", "", new OSDWrapper {Info = CurrentVersion}.ToOSD());
         }
 
         public static bool CheckWhetherIgnoredVersionUpdate(uint version)

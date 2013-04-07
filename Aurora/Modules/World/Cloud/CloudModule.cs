@@ -26,9 +26,11 @@
  */
 
 using System;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Cloud
 {
@@ -44,11 +46,6 @@ namespace Aurora.Modules.Cloud
         private int m_frameUpdateRate = 1000;
         private bool m_ready;
         private IScene m_scene;
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
 
         #region ICloudModule Members
 
@@ -135,10 +132,6 @@ namespace Aurora.Modules.Cloud
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         private void UpdateCloudCover()
         {
             float[] newCover = new float[16*16];
@@ -215,7 +208,7 @@ namespace Aurora.Modules.Cloud
 
 
         /// <summary>
-        ///   Calculate the cloud cover over the region.
+        ///     Calculate the cloud cover over the region.
         /// </summary>
         private void GenerateCloudCover()
         {

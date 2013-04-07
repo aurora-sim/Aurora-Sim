@@ -31,10 +31,10 @@ using System.Collections.Generic;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
     /// <summary>
-    ///   A container for all of the reserved C# words that are not also reserved words in LSL.
-    ///   The words must be maintained in alphabetical order.
-    ///   The words that are key words in lsl are picked up by the lsl compiler as errors.
-    ///   The LSL reserved words have been left in the list as comments for completeness
+    ///     A container for all of the reserved C# words that are not also reserved words in LSL.
+    ///     The words must be maintained in alphabetical order.
+    ///     The words that are key words in lsl are picked up by the lsl compiler as errors.
+    ///     The LSL reserved words have been left in the list as comments for completeness
     /// </summary>
     internal class CSReservedWords
     {
@@ -79,8 +79,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                                                                   });
 
         /// <summary>
-        ///   Returns true if the passed string is in the list of reserved words with
-        ///   a little simple pre-filtering.
+        ///     Returns true if the passed string is in the list of reserved words with
+        ///     a little simple pre-filtering.
         /// </summary>
         internal static bool IsReservedWord(string word)
         {

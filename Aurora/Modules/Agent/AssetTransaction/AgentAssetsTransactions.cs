@@ -25,17 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using OpenMetaverse;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Agent.AssetTransaction
 {
     /// <summary>
-    ///   Manage asset transactions for a single agent.
+    ///     Manage asset transactions for a single agent.
     /// </summary>
     public class AgentAssetTransactions
     {
@@ -46,18 +48,18 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
         // Methods
         public AgentAssetTransactions(UUID agentID, IScene scene,
-                bool dumpAssetsToFile)
+                                      bool dumpAssetsToFile)
         {
             m_Scene = scene;
             m_dumpAssetsToFile = dumpAssetsToFile;
         }
 
         /// <summary>
-        /// Return the xfer uploader for the given transaction.
+        ///     Return the xfer uploader for the given transaction.
         /// </summary>
         /// <remarks>
-        /// If an uploader does not already exist for this transaction then it is created, otherwise the existing
-        /// uploader is returned.
+        ///     If an uploader does not already exist for this transaction then it is created, otherwise the existing
+        ///     uploader is returned.
         /// </remarks>
         /// <param name="transactionID"></param>
         /// <returns>The asset xfer uploader</returns>
@@ -80,6 +82,13 @@ namespace Aurora.Modules.Agent.AssetTransaction
                 {
                     uploader = XferUploaders[transactionID];
                 }
+            }
+
+            IMonitorModule monitorModule = m_Scene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>();
+                networkMonitor.AddPendingUploads(1);
             }
 
             return uploader;
@@ -113,12 +122,6 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
                 foundUploader.HandleXferPacket(xferID, packetID, data);
             }
-            else
-            {
-                MainConsole.Instance.ErrorFormat(
-                    "[AGENT ASSET TRANSACTIONS]: Could not find uploader for xfer id {0}, packet id {1}, data length {2}",
-                    xferID, packetID, data.Length);
-            }
         }
 
         public bool RemoveXferUploader(UUID transactionID)
@@ -140,9 +143,9 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         public void RequestCreateInventoryItem(IClientAPI remoteClient,
-                UUID transactionID, UUID folderID, uint callbackID,
-                string description, string name, sbyte invType,
-               sbyte type, byte wearableType, uint nextOwnerMask)
+                                               UUID transactionID, UUID folderID, uint callbackID,
+                                               string description, string name, sbyte invType,
+                                               sbyte type, byte wearableType, uint nextOwnerMask)
         {
             AssetXferUploader uploader = RequestXferUploader(transactionID);
 
@@ -152,8 +155,8 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         public void RequestUpdateTaskInventoryItem(IClientAPI remoteClient,
-                ISceneChildEntity part, UUID transactionID,
-                TaskInventoryItem item)
+                                                   ISceneChildEntity part, UUID transactionID,
+                                                   TaskInventoryItem item)
         {
             AssetXferUploader uploader = RequestXferUploader(transactionID);
 
@@ -161,7 +164,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         }
 
         public void RequestUpdateInventoryItem(IClientAPI remoteClient,
-                UUID transactionID, InventoryItemBase item)
+                                               UUID transactionID, InventoryItemBase item)
         {
             AssetXferUploader uploader = RequestXferUploader(transactionID);
 

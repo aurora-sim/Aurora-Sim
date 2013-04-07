@@ -1,35 +1,42 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using Nini.Config;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Web
 {
     public class SettingsManagerPage : IWebInterfacePage
     {
-        public string[] FilePath { get
+        public string[] FilePath
         {
-            return new[]
-                       {
-                           "html/admin/settings_manager.html"
-                       };
-        } }
+            get
+            {
+                return new[]
+                           {
+                               "html/admin/settings_manager.html"
+                           };
+            }
+        }
 
-        public bool RequiresAuthentication { get { return true; } }
-        public bool RequiresAdminAuthentication { get { return true; } }
+        public bool RequiresAuthentication
+        {
+            get { return true; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return true; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector connector = Framework.Utilities.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = connector.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
             if (requestParameters.ContainsKey("Submit"))
@@ -60,8 +67,12 @@ namespace Aurora.Modules.Web
             vars.Add("HideLanguageBarYes", settings.HideLanguageTranslatorBar ? "selected=\"selected\"" : "");
             vars.Add("HideStyleBarNo", !settings.HideStyleBar ? "selected=\"selected\"" : "");
             vars.Add("HideStyleBarYes", settings.HideStyleBar ? "selected=\"selected\"" : "");
-            vars.Add("IgnorePagesUpdates", PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored) ? "" : "checked");
-            vars.Add("IgnoreSettingsUpdates", settings.LastSettingsVersionUpdateIgnored != SettingsMigrator.CurrentVersion ? "" : "checked");
+            vars.Add("IgnorePagesUpdates",
+                     PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored)
+                         ? ""
+                         : "checked");
+            vars.Add("IgnoreSettingsUpdates",
+                     settings.LastSettingsVersionUpdateIgnored != SettingsMigrator.CurrentVersion ? "" : "checked");
 
             vars.Add("SettingsManager", translator.GetTranslatedString("SettingsManager"));
             vars.Add("IgnorePagesUpdatesText", translator.GetTranslatedString("IgnorePagesUpdatesText"));

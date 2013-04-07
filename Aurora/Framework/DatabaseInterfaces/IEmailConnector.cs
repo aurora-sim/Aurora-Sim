@@ -26,10 +26,12 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public class Email : IDataTransferable
     {
@@ -66,16 +68,15 @@ namespace Aurora.Framework
     public interface IEmailConnector : IAuroraDataPlugin
     {
         /// <summary>
-        ///   Adds an email to the database for the prim to get later
+        ///     Adds an email to the database for the prim to get later
         /// </summary>
-        /// <param name = "email"></param>
+        /// <param name="email"></param>
         void InsertEmail(Email email);
 
         /// <summary>
-        ///   Finds previously saved AA data.
+        ///     Finds previously saved AA data.
         /// </summary>
-        /// <param name = "token"></param>
-        /// <param name = "key"></param>
+        /// <param name="primID"></param>
         /// <returns></returns>
         List<Email> GetEmails(UUID primID);
     }

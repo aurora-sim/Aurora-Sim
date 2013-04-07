@@ -28,10 +28,10 @@
 using System;
 using System.Collections;
 using System.Threading;
-using System.Reflection;
-using log4net;
-using HttpServer;
-using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using System.Text;
+using Aurora.Framework.ConsoleFramework;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -39,7 +39,7 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private readonly BaseHttpServer m_server;
+        private readonly IHttpServer m_server;
         private static Queue m_requests = Queue.Synchronized(new Queue());
         private uint m_WorkerThreadCount = 0;
         private Thread[] m_workerThreads;
@@ -49,7 +49,12 @@ namespace Aurora.Framework.Servers.HttpServer
         private int m_pollTimeout;
         private readonly object m_queueSync = new object();
 
-        public PollServiceRequestManager(BaseHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
+        public bool Started
+        {
+            get { return m_running; }
+        }
+
+        public PollServiceRequestManager(IHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
         {
             m_server = pSrv;
             m_WorkerThreadCount = pWorkerThreadCount;
@@ -68,9 +73,9 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, m_pollTimeout);
                 m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
-                
+
                 m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart)
-                                            {Name = String.Format("PollServiceWorkerThread{0}", i)};
+                                         {Name = String.Format("PollServiceWorkerThread{0}", i)};
                 m_workerThreads[i].Start();
             }
 
@@ -117,7 +122,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 //                m_log.DebugFormat("[POLL SERVICE REQUEST MANAGER]: Processing {0} requests", m_requests.Count);
 
-                int reqperthread = (int)(m_requests.Count / m_WorkerThreadCount) + 1;
+                int reqperthread = (int) (m_requests.Count/m_WorkerThreadCount) + 1;
 
                 // For Each WorkerThread
                 for (int tc = 0; tc < m_WorkerThreadCount && m_requests.Count > 0; tc++)
@@ -127,19 +132,17 @@ namespace Aurora.Framework.Servers.HttpServer
                     {
                         try
                         {
-                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest)m_requests.Dequeue());
+                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest) m_requests.Dequeue());
                         }
                         catch (InvalidOperationException)
                         {
                             // The queue is empty, we did our calculations wrong!
                             return true;
                         }
-
                     }
                 }
                 return true;
             }
-
         }
 
         public void Stop()
@@ -147,9 +150,40 @@ namespace Aurora.Framework.Servers.HttpServer
             m_running = false;
             foreach (object o in m_requests)
             {
-                PollServiceHttpRequest req = (PollServiceHttpRequest)o;
-                PollServiceWorkerThread.DoHTTPGruntWork(
-                    m_server, req, req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id));
+                PollServiceHttpRequest req = (PollServiceHttpRequest) o;
+
+                OSHttpResponse response = new OSHttpResponse(req.Context);
+
+                byte[] buffer = req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id, response);
+
+                response.SendChunked = false;
+                response.ContentLength64 = buffer.Length;
+                response.ContentEncoding = Encoding.UTF8;
+
+                try
+                {
+                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
+                }
+                finally
+                {
+                    //response.OutputStream.Close();
+                    try
+                    {
+                        response.OutputStream.Close();
+                        response.Send();
+
+                        //if (!response.KeepAlive && response.ReuseContext)
+                        //    response.FreeContext();
+                    }
+                    catch (Exception e)
+                    {
+                        MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
+                    }
+                }
             }
 
             m_requests.Clear();

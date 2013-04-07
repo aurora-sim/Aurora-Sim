@@ -25,26 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
+using Nini.Config;
+using Nwc.XmlRpc;
+using OpenMetaverse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
-using Nini.Config;
-using Nwc.XmlRpc;
-using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.SampleCurrencyModule
 {
-    /// <summary>
-    ///   This is a demo for you to use when making one that works for you.
-    ///   // To use the following you need to add:
-    ///   -helperuri <ADDRESS TO HERE OR grid MONEY SERVER>
-    ///                to the command line parameters you use to start up your client
-    ///                This commonly looks like -helperuri http://127.0.0.1:9000/
-    /// </summary>
-    public class CurrencyModule : IMoneyModule, ISharedRegionModule
+    public class CurrencyModule : IMoneyModule, INonSharedRegionModule
     {
         private bool m_enabled;
         private IConfigSource m_config;
@@ -63,10 +59,7 @@ namespace Aurora.Modules.SampleCurrencyModule
 
         public int ClientPort
         {
-            get
-            {
-                return m_config.Configs["Handlers"].GetInt("LLLoginHandlerPort", (int)MainServer.Instance.Port);
-            }
+            get { return m_config.Configs["Handlers"].GetInt("LLLoginHandlerPort", (int) MainServer.Instance.Port); }
         }
 
 #pragma warning disable 67
@@ -98,13 +91,12 @@ namespace Aurora.Modules.SampleCurrencyModule
 
 #pragma warning restore 67
 
-        #region IRegionModuleBase Members
+        #region INonSharedRegionModule Members
 
         /// <summary>
-        ///   Startup
+        ///     Startup
         /// </summary>
-        /// <param name = "scene"></param>
-        /// <param name = "config"></param>
+        /// <param name="config"></param>
         public void Initialise(IConfigSource config)
         {
             m_config = config;
@@ -149,10 +141,6 @@ namespace Aurora.Modules.SampleCurrencyModule
             get { return null; }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         public void Close()
         {
         }
@@ -187,9 +175,9 @@ namespace Aurora.Modules.SampleCurrencyModule
         #endregion
 
         /// <summary>
-        ///   New Client Event Handler
+        ///     New Client Event Handler
         /// </summary>
-        /// <param name = "client"></param>
+        /// <param name="client"></param>
         protected void OnNewClient(IClientAPI client)
         {
             // Subscribe to Money messages
@@ -207,12 +195,12 @@ namespace Aurora.Modules.SampleCurrencyModule
         }
 
         /// <summary>
-        ///   Sends the the stored money balance to the client
+        ///     Sends the the stored money balance to the client
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "agentID"></param>
-        /// <param name = "SessionID"></param>
-        /// <param name = "TransactionID"></param>
+        /// <param name="client"></param>
+        /// <param name="agentID"></param>
+        /// <param name="SessionID"></param>
+        /// <param name="TransactionID"></param>
         protected void SendMoneyBalance(IClientAPI client, UUID agentID, UUID SessionID, UUID TransactionID)
         {
             client.SendMoneyBalance(TransactionID, true, new byte[0], 0);
@@ -325,9 +313,9 @@ namespace Aurora.Modules.SampleCurrencyModule
         #region event Handlers
 
         /// <summary>
-        ///   Event called Economy Data Request handler.
+        ///     Event called Economy Data Request handler.
         /// </summary>
-        /// <param name = "agentId"></param>
+        /// <param name="remoteClient"></param>
         public void EconomyDataRequestHandler(IClientAPI remoteClient)
         {
             remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity, 0, 0, 0,
@@ -343,14 +331,15 @@ namespace Aurora.Modules.SampleCurrencyModule
 
         #endregion
 
-        public List<GroupAccountHistory> GetTransactions(UUID groupID, UUID agentID, int currentInterval, int intervalDays)
+        public List<GroupAccountHistory> GetTransactions(UUID groupID, UUID agentID, int currentInterval,
+                                                         int intervalDays)
         {
             return new List<GroupAccountHistory>();
         }
 
         public GroupBalance GetGroupBalance(UUID groupID)
         {
-            return new GroupBalance() { StartingDate = DateTime.Now.AddDays(-4) };
+            return new GroupBalance() {StartingDate = DateTime.Now.AddDays(-4)};
         }
     }
 }

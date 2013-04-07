@@ -25,32 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Timers;
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Timers;
 
 namespace Aurora.Modules.ActivityDetectors
 {
-    public class ActivityDetector : ISharedRegionModule
+    public class ActivityDetector : INonSharedRegionModule
     {
-        private readonly List<IScene> m_scenes = new List<IScene>();
+        private IScene m_scene;
         private readonly List<UUID> m_zombieAgents = new List<UUID>();
         private Timer m_presenceUpdateTimer;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void PostInitialise()
         {
         }
 
@@ -69,16 +68,16 @@ namespace Aurora.Modules.ActivityDetectors
         {
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
-                syncMessage.PostToServer(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionHandle));
+                syncMessage.PostToServer(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionID));
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
-            m_scenes.Remove(scene);
+            m_scene = null;
         }
 
         public void RegionLoaded(IScene scene)
         {
             scene.EventManager.OnStartupFullyComplete += EventManager_OnStartupFullyComplete;
-            m_scenes.Add(scene);
+            m_scene = scene;
             if (m_presenceUpdateTimer == null)
             {
                 m_presenceUpdateTimer = new Timer {Interval = 1000*60*28};
@@ -103,23 +102,14 @@ namespace Aurora.Modules.ActivityDetectors
 
         private void m_presenceUpdateTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            IAgentInfoService service = m_scenes[0].RequestModuleInterface<IAgentInfoService>();
+            IAgentInfoService service = m_scene.RequestModuleInterface<IAgentInfoService>();
             if (service == null)
                 return;
-#if (!ISWIN)
-            foreach (IScene scene in m_scenes)
-                foreach (IScenePresence sp in scene.GetScenePresences())
-                {
-                    //This causes the last pos to be updated in the database, along with the last seen time
-                    sp.AddChildAgentUpdateTaint(1);
-                }
-#else
-            foreach (IScenePresence sp in m_scenes.SelectMany(scene => scene.GetScenePresences()))
+            foreach (IScenePresence sp in m_scene.GetScenePresences())
             {
                 //This causes the last pos to be updated in the database, along with the last seen time
                 sp.AddChildAgentUpdateTaint(1);
             }
-#endif
         }
 
         private void EventManager_OnStartupFullyComplete(IScene scene, List<string> data)
@@ -127,7 +117,7 @@ namespace Aurora.Modules.ActivityDetectors
             //Just send the RegionIsOnline message, it will log out all the agents for the region as well
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
-                syncMessage.PostToServer(SyncMessageHelper.RegionIsOnline(scene.RegionInfo.RegionHandle));
+                syncMessage.PostToServer(SyncMessageHelper.RegionIsOnline(scene.RegionInfo.RegionID));
         }
 
         public void OnNewClient(IClientAPI client)
@@ -152,8 +142,9 @@ namespace Aurora.Modules.ActivityDetectors
             client.Scene.TryGetScenePresence(client.AgentId, out sp);
             if (client.IsLoggingOut && sp != null & !sp.IsChildAgent)
             {
-                MainConsole.Instance.InfoFormat("[ActivityDetector]: Detected logout of user {0} in region {1}", client.Name,
-                                 client.Scene.RegionInfo.RegionName);
+                MainConsole.Instance.InfoFormat("[ActivityDetector]: Detected logout of user {0} in region {1}",
+                                                client.Name,
+                                                client.Scene.RegionInfo.RegionName);
 
                 //Inform the grid service about it
 
@@ -192,11 +183,8 @@ namespace Aurora.Modules.ActivityDetectors
                 //Send the child agent data update
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
-                {
-                    syncPoster.PostToServer(SyncMessageHelper.SendChildAgentUpdate(agentpos, sp.Scene.RegionInfo.RegionHandle));
-                    syncPoster.PostToServer(
-                        SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle));
-                }
+                    syncPoster.PostToServer(SyncMessageHelper.AgentLoggedOut(client.AgentId,
+                                                                             client.Scene.RegionInfo.RegionID, agentpos));
             }
         }
     }

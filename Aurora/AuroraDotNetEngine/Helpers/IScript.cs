@@ -30,6 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
 using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -46,13 +47,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         string Name { get; }
 
         /// <summary>
-        ///   Whether this script needs a state save performed
+        ///     Whether this script needs a state save performed
         /// </summary>
         bool NeedsStateSaved { get; set; }
 
         void InitApi(IScriptApi data);
 
-        void UpdateLease(TimeSpan time);
         long GetStateEventFlags(string state);
 
         EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start,
@@ -65,25 +65,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         void ResetVars();
 
         /// <summary>
-        ///   Find the initial variables so that we can reset the state later if needed
+        ///     Find the initial variables so that we can reset the state later if needed
         /// </summary>
         void UpdateInitialValues();
 
         void Close();
 
         /// <summary>
-        ///   Gives a ref to the scene the script is in and its parent object
+        ///     Gives a ref to the scene the script is in and its parent object
         /// </summary>
-        /// <param name = "iScene"></param>
-        /// <param name = "iSceneChildEntity"></param>
-        /// <param name = "useStateSaves"></param>
+        /// <param name="iScene"></param>
+        /// <param name="iSceneChildEntity"></param>
+        /// <param name="useStateSaves"></param>
         void SetSceneRefs(IScene iScene, ISceneChildEntity iSceneChildEntity, bool useStateSaves);
 
         /// <summary>
-        ///   Fires a generic event by the given name
+        ///     Fires a generic event by the given name
         /// </summary>
-        /// <param name = "evName"></param>
-        /// <param name = "parameters"></param>
+        /// <param name="evName"></param>
+        /// <param name="parameters"></param>
         IEnumerator FireEvent(string evName, object[] parameters);
     }
 }

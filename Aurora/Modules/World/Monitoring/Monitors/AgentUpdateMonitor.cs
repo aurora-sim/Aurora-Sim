@@ -26,10 +26,12 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
-    public class AgentUpdateMonitor : IMonitor, IAgentUpdateMonitor
+    public class AgentUpdateMonitor : IAgentUpdateMonitor
     {
         private int agentTime;
         private int agentUpdates;
@@ -48,6 +50,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Agent Update Count";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "IAgentUpdateMonitor";
         }
 
         public string GetFriendlyValue()

@@ -25,14 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Sun
 {
@@ -73,7 +75,7 @@ namespace Aurora.Modules.Sun
         private double d_day_length = 4; // A VW day is 4 RW hours long
 
         private double d_day_night = 0.5;
-                       // axis offset: Default Hoizon shift to try and closely match the sun model in LL Viewer
+        // axis offset: Default Hoizon shift to try and closely match the sun model in LL Viewer
 
         private int d_frame_mod = 25; // Every 2 seconds (actually less)
         private string d_mode = "SL";
@@ -162,13 +164,6 @@ namespace Aurora.Modules.Sun
         #endregion
 
         #region IRegion Methods
-
-        // Called immediately after the module is loaded for a given region
-        // i.e. Immediately after instance creation.
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
 
         public void Initialise(IConfigSource config)
         {
@@ -329,10 +324,6 @@ namespace Aurora.Modules.Sun
             get { return "SunModule"; }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         private void EventManager_OnStartupComplete(IScene scene, List<string> data)
         {
             //Get the old sun data
@@ -379,11 +370,10 @@ namespace Aurora.Modules.Sun
         }
 
         /// <summary>
-        ///   When an avatar enters the region, it's probably a good idea to send them the current sun info
+        ///     When an avatar enters the region, it's probably a good idea to send them the current sun info
         /// </summary>
-        /// <param name = "avatar"></param>
-        /// <param name = "localLandID"></param>
-        /// <param name = "regionID"></param>
+        /// <param name="avatar"></param>
+        /// <param name="oldParcel"></param>
         private void AvatarEnteringParcel(IScenePresence avatar, ILandObject oldParcel)
         {
             SunToClient(avatar.ControllingClient);
@@ -391,24 +381,24 @@ namespace Aurora.Modules.Sun
 
         /// <summary>
         /// </summary>
-        /// <param name = "regionHandle"></param>
-        /// <param name = "FixedTime">Is the sun's position fixed?</param>
-        /// <param name = "useEstateTime">Use the Region or Estate Sun hour?</param>
-        /// <param name = "FixedSunHour">What hour of the day is the Sun Fixed at?</param>
-        public void EstateToolsSunUpdate(ulong regionHandle, bool FixedSun, bool useEstateTime, float FixedSunHour)
+        /// <param name="regionHandle"></param>
+        /// <param name="fixedSun">Is the sun's position fixed?</param>
+        /// <param name="useEstateTime">Use the Region or Estate Sun hour?</param>
+        /// <param name="fixedSunHour">What hour of the day is the Sun Fixed at?</param>
+        public void EstateToolsSunUpdate(ulong regionHandle, bool fixedSun, bool useEstateTime, float fixedSunHour)
         {
             if (m_scene.RegionInfo.RegionHandle == regionHandle)
             {
                 // Must limit the Sun Hour to 0 ... 24
-                while (FixedSunHour > 24.0f)
-                    FixedSunHour -= 24;
+                while (fixedSunHour > 24.0f)
+                    fixedSunHour -= 24;
 
-                while (FixedSunHour < 0)
-                    FixedSunHour += 24;
+                while (fixedSunHour < 0)
+                    fixedSunHour += 24;
 
 
-                m_SunFixedHour = FixedSunHour;
-                m_SunFixed = FixedSun;
+                m_SunFixedHour = fixedSunHour;
+                m_SunFixed = fixedSun;
 
                 //MainConsole.Instance.DebugFormat("[SUN]: Sun Settings Update: Fixed Sun? : {0}", m_SunFixed.ToString());
                 //MainConsole.Instance.DebugFormat("[SUN]: Sun Settings Update: Sun Hour   : {0}", m_SunFixedHour.ToString());
@@ -427,7 +417,7 @@ namespace Aurora.Modules.Sun
         #endregion
 
         /// <summary>
-        ///   Calculate the sun's orbital position and its velocity.
+        ///     Calculate the sun's orbital position and its velocity.
         /// </summary>
         private void GenSunPos()
         {
@@ -489,9 +479,9 @@ namespace Aurora.Modules.Sun
             // OrbitalPosition         = (float) (TotalDistanceTravelled%SunCycle);
 
             SeasonalOffset = SeasonSpeed*PosTime;
-                // Present season determined as total radians travelled around season cycle
+            // Present season determined as total radians travelled around season cycle
             Tilt.W = (float) (m_AverageTilt + (m_SeasonalTilt*Math.Sin(SeasonalOffset)));
-                // Calculate seasonal orbital N/S tilt
+            // Calculate seasonal orbital N/S tilt
 
             // MainConsole.Instance.Debug("[SUN] Total distance travelled = "+TotalDistanceTravelled+", present position = "+OrbitalPosition+".");
             // MainConsole.Instance.Debug("[SUN] Total seasonal progress = "+SeasonalOffset+", present tilt = "+Tilt.W+".");
@@ -575,11 +565,11 @@ namespace Aurora.Modules.Sun
                                                         {
                                                             "update_interval",
                                                             "how often to update the sun's position in frames"
-                                                            },
+                                                        },
                                                         {
                                                             "day_time_sun_hour_scale",
                                                             "scales day light vs nite hours to change day/night ratio"
-                                                            }
+                                                        }
                                                     };
 
             return Params;
@@ -592,14 +582,7 @@ namespace Aurora.Modules.Sun
             if ((args.Length == 1) || (args[1].ToLower() == "help") || (args[1].ToLower() == "list"))
             {
                 Output.Add("The following parameters can be changed or viewed:");
-#if (!ISWIN)
-                foreach (KeyValuePair<string, string> kvp in GetParamList())
-                {
-                    Output.Add(String.Format("{0} - {1}", kvp.Key, kvp.Value));
-                }
-#else
                 Output.AddRange(GetParamList().Select(kvp => String.Format("{0} - {1}", kvp.Key, kvp.Value)));
-#endif
                 return Output;
             }
 

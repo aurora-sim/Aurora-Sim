@@ -25,11 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
-using Aurora.Framework;
+using System.Collections.Generic;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Modules
 {
     public enum TravelMode
     {
@@ -46,7 +46,7 @@ namespace Aurora.Framework
     {
         #region Create/Remove bot
 
-        UUID CreateAvatar(string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID,
+        UUID CreateAvatar(string firstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID,
                           Vector3 startPos);
 
         void RemoveAvatar(UUID Bot, IScene iScene, UUID userAttempting);
@@ -63,7 +63,7 @@ namespace Aurora.Framework
 
         #region Basic Movement
 
-        void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags, UUID userAttempting);
+        void SetBotMap(UUID Bot, List<Vector3> positions, List<TravelMode> mode, int flags, UUID userAttempting);
         void SetMovementSpeedMod(UUID Bot, float modifier, UUID userAttempting);
         void SetBotShouldFly(UUID botID, bool shouldFly, UUID userAttempting);
         void PauseMovement(UUID botID, UUID userAttempting);

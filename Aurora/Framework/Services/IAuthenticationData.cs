@@ -25,10 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.Framework;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.Services
 {
     public class AuthData
     {
@@ -39,7 +38,7 @@ namespace Aurora.Framework
     }
 
     /// <summary>
-    ///   An interface for connecting to the authentication datastore
+    ///     An interface for connecting to the authentication datastore
     /// </summary>
     public interface IAuthenticationData : IAuroraDataPlugin
     {

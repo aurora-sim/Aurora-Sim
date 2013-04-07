@@ -1,0 +1,22 @@
+[Handlers]
+    AvatarServiceOpenServerHandler = true
+    AvatarServiceServerHandlerPort = 8011
+
+	SyncMessagePosterServiceHandler = SyncMessagePosterService
+    SyncMessagePosterServiceOpenServerHandler = true
+    SyncMessagePosterServiceServerHandlerPort = 8011
+	SyncMessagePosterServiceDoRemote = true
+	
+[SSAService]
+    ;; This controls options about the v3 Server Side Appearance, which allows v3 viewers to have an appearance
+    ;; Should we allow the use of this service?
+    Enabled = true
+    ;; The port to run the SSAService on
+    ;; Default is 8011
+    Port = 8011
+	
+[ExternalCaps]
+	CapsHandlers = AppearanceCAPS
+
+[Includes]
+	Include-Base = Aurora.ServersBase.ini

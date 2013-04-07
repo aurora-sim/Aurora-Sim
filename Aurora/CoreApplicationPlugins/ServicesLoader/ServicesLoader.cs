@@ -25,12 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.ModuleLoader;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
 using Nini.Config;
-using Aurora.Simulation.Base;
+using System.Collections.Generic;
 
-namespace OpenSim.CoreApplicationPlugins
+namespace Aurora.CoreApplicationPlugins.ServicesLoader
 {
     public class ServicesLoader : IApplicationPlugin
     {

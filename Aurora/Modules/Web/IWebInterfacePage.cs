@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using Aurora.Framework.Servers.HttpServer;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 
 namespace Aurora.Modules.Web
 {
@@ -14,7 +11,8 @@ namespace Aurora.Modules.Web
         bool RequiresAdminAuthentication { get; }
 
         Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest request,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translation, out string response);
+                                        OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                        ITranslator translation, out string response);
 
         bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text);
     }

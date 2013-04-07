@@ -25,21 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework.Services
 {
     /// <summary>
-    ///   This gets the HTTP based Map Service set up
+    ///     This gets the HTTP based Map Service set up
     /// </summary>
     public interface IMapService
     {
         /// <summary>
-        ///   Get the URL to the HTTP based Map Service
+        ///     Get the URL to the HTTP based Map Service
         /// </summary>
         /// <returns></returns>
         string MapServiceURL { get; }
 
         /// <summary>
-        ///   Get the URL to the HTTP based Map Service API
+        ///     Get the URL to the HTTP based Map Service API
         /// </summary>
         /// <returns></returns>
         string MapServiceAPIURL { get; }

@@ -25,13 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Agent.Xfer
 {
@@ -87,12 +89,12 @@ namespace Aurora.Modules.Agent.Xfer
         #region IXfer Members
 
         /// <summary>
-        ///   Let the Xfer module know about a file that the client is about to request.
-        ///   Caller is responsible for making sure that the file is here before
-        ///   the client starts the XferRequest.
+        ///     Let the Xfer module know about a file that the client is about to request.
+        ///     Caller is responsible for making sure that the file is here before
+        ///     the client starts the XferRequest.
         /// </summary>
-        /// <param name = "fileName"></param>
-        /// <param name = "data"></param>
+        /// <param name="fileName"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
         public bool AddNewFile(string fileName, byte[] data)
         {
@@ -115,10 +117,6 @@ namespace Aurora.Modules.Agent.Xfer
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         public void NewClient(IClientAPI client)
         {
             client.OnRequestXfer += RequestXfer;
@@ -131,11 +129,11 @@ namespace Aurora.Modules.Agent.Xfer
             client.OnConfirmXfer -= AckPacket;
         }
 
-        ///<summary>
-        ///</summary>
-        ///<param name = "remoteClient"></param>
-        ///<param name = "xferID"></param>
-        ///<param name = "fileName"></param>
+        /// <summary>
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="xferID"></param>
+        /// <param name="fileName"></param>
         public void RequestXfer(IClientAPI remoteClient, ulong xferID, string fileName)
         {
             lock (NewFiles)
@@ -250,7 +248,7 @@ namespace Aurora.Modules.Agent.Xfer
             }
 
             /// <summary>
-            ///   Start a transfer
+            ///     Start a transfer
             /// </summary>
             /// <returns>True if the transfer is complete, false if not</returns>
             public bool StartSend()
@@ -278,9 +276,9 @@ namespace Aurora.Modules.Agent.Xfer
             }
 
             /// <summary>
-            ///   Respond to an ack packet from the client
+            ///     Respond to an ack packet from the client
             /// </summary>
-            /// <param name = "packet"></param>
+            /// <param name="packet"></param>
             /// <returns>True if the transfer is complete, false otherwise</returns>
             public bool AckPacket(uint packet)
             {

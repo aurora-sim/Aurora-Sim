@@ -26,6 +26,8 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using Aurora.Framework;
 
@@ -34,6 +36,6 @@ namespace Aurora.Modules.Terrain
     public interface ITerrainPaintableEffect
     {
         void PaintEffect(ITerrainChannel map, UUID userID, float x, float y, float z, float strength, float duration,
-                         float BrushSize, List<IScene> scene);
+                         float BrushSize);
     }
 }

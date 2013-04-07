@@ -6,31 +6,31 @@
 namespace RunTimeCompiler
 {
     /// <summary>
-    ///   This class should keep a list of known file extenstions and 
-    ///   the registered IProjectReader for each extenstion.
-    ///   When a project file is loaded the ReadProject method is called 
-    ///   to read that project and get all data needed for the UI and 
-    ///   compilation.
-    ///   This class is implemented as a singleton.
+    ///     This class should keep a list of known file extenstions and
+    ///     the registered IProjectReader for each extenstion.
+    ///     When a project file is loaded the ReadProject method is called
+    ///     to read that project and get all data needed for the UI and
+    ///     compilation.
+    ///     This class is implemented as a singleton.
     /// </summary>
     public class ProjectReader
     {
         #region Singleton pattern
 
         /// <summary>
-        ///   Private reference to a ProjectReader instance.
+        ///     Private reference to a ProjectReader instance.
         /// </summary>
         private static ProjectReader _instance;
 
         /// <summary>
-        ///   Private constructor.
+        ///     Private constructor.
         /// </summary>
         private ProjectReader()
         {
         }
 
         /// <summary>
-        ///   The only accessor for a ProjectReader instance.
+        ///     The only accessor for a ProjectReader instance.
         /// </summary>
         public static ProjectReader Instance
         {
@@ -44,12 +44,12 @@ namespace RunTimeCompiler
         #endregion
 
         /// <summary>
-        ///   This method is used to read the content of a project file and get
-        ///   all the data neededfor UI and compilation.
-        ///   Current implementation always use CsprojReader. It will be changed
-        ///   as more project-readers will be developed.
+        ///     This method is used to read the content of a project file and get
+        ///     all the data neededfor UI and compilation.
+        ///     Current implementation always use CsprojReader. It will be changed
+        ///     as more project-readers will be developed.
         /// </summary>
-        /// <param name = "filename"></param>
+        /// <param name="filename"></param>
         /// <returns></returns>
         public BasicProject ReadProject(string filename)
         {

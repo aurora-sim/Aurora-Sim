@@ -27,22 +27,26 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo.Entities;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
     /// <value>
-    ///   Indicate what action to take on an object derez request
+    ///     Indicate what action to take on an object derez request
     /// </value>
     public enum DeRezAction : byte
     {
         SaveToExistingUserInventoryItem = 0,
 
         /// <summary>
-        /// try to leave copy in world
+        ///     try to leave copy in world
         /// </summary>
         AcquireToUserInventory = 1,
         SaveIntoTaskInventory = 2,
@@ -50,7 +54,7 @@ namespace Aurora.Framework
         Take = 4,
 
         /// <summary>
-        /// force take copy
+        ///     force take copy
         /// </summary>
         GodTakeCopy = 5,
         Delete = 6,
@@ -58,12 +62,12 @@ namespace Aurora.Framework
         AttachmentExists = 8,
 
         /// <summary>
-        /// back to owner's inventory
+        ///     back to owner's inventory
         /// </summary>
         Return = 9,
 
         /// <summary>
-        /// deeded object back to last owner's inventory
+        ///     deeded object back to last owner's inventory
         /// </summary>
         ReturnToLastOwner = 10
     };
@@ -105,12 +109,12 @@ namespace Aurora.Framework
         #region Physics methods
 
         /// <summary>
-        ///   Reload the last saved physics state to the Physics Scene
+        ///     Reload the last saved physics state to the Physics Scene
         /// </summary>
         void StartPhysicsScene();
 
         /// <summary>
-        ///   Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
+        ///     Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
         /// </summary>
         void StopPhysicsScene();
 

@@ -26,10 +26,10 @@
  */
 
 using System.Collections.Generic;
-using Aurora.Framework;
-using OpenMetaverse;
+using Aurora.Framework.Services.ClassHelpers.Other;
+using Aurora.Framework.Utilities;
 
-namespace OpenSim.Services.Interfaces
+namespace Aurora.Framework.Services
 {
     public interface ISchedulerDataPlugin : IAuroraDataPlugin
     {
@@ -52,7 +52,6 @@ namespace OpenSim.Services.Interfaces
         SchedulerItem Get(string id);
 
         SchedulerItem Get(string scheduleFor, string fireFunction);
-
     }
 
     public interface IScheduleService

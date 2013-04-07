@@ -27,7 +27,7 @@
 
 using System;
 
-namespace Aurora.DataManager
+namespace Aurora.DataManager.Migration
 {
     public class MigrationOperationException : Exception
     {

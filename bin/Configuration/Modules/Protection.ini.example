@@ -147,21 +147,3 @@
 	;; Should we bother with maturity check on this region?
 	;; Default is true
 	CheckMaturityLevel = true
-
-[CrossRegionBanSystem]
-    ;; This module allows for the combining of region ban lists across instances, so you can create larger ban lists with others across the grid you are in.
-    ;; Default is false
-    Enabled = false;
-
-    ;; Password that others will need to know to be able to access/update our ban lists
-    ;; Default is ""
-    OurPassword = ""
-
-    ;; URL's to call to access other instance's ban lists
-    ;; Ex. "http://0.0.0.0:9000/"
-    ;; Default is ""
-    URLs = ""
-
-    ;; Passwords to access the ban lists of the URL's in the same order    ; Ex. "TestPassword"
-    ;; Default is ""
-    Passwords = ""

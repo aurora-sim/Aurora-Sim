@@ -25,26 +25,29 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ClientInterfaces;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Inventory
 {
-    public class InventoryTransferModule : ISharedRegionModule
+    public class InventoryTransferModule : INonSharedRegionModule
     {
-        private readonly List<IScene> m_Scenelist = new List<IScene>();
+        private IScene m_Scene;
 
         private bool m_Enabled = true;
         private IMessageTransferModule m_TransferModule;
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -67,7 +70,7 @@ namespace Aurora.Modules.Inventory
             if (!m_Enabled)
                 return;
 
-            m_Scenelist.Add(scene);
+            m_Scene = scene;
 
             scene.RegisterModuleInterface(this);
 
@@ -80,13 +83,14 @@ namespace Aurora.Modules.Inventory
         {
             if (m_TransferModule == null)
             {
-                m_TransferModule = m_Scenelist[0].RequestModuleInterface<IMessageTransferModule>();
+                m_TransferModule = m_Scene.RequestModuleInterface<IMessageTransferModule>();
                 if (m_TransferModule == null)
                 {
-                    MainConsole.Instance.Error("[INVENTORY TRANSFER]: No Message transfer module found, transfers will be local only");
+                    MainConsole.Instance.Error(
+                        "[INVENTORY TRANSFER]: No Message transfer module found, transfers will be local only");
                     m_Enabled = false;
 
-                    m_Scenelist.Clear();
+                    m_Scene = null;
                     scene.EventManager.OnNewClient -= OnNewClient;
                     scene.EventManager.OnClosingClient -= OnClosingClient;
                     scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
@@ -96,14 +100,10 @@ namespace Aurora.Modules.Inventory
 
         public void RemoveRegion(IScene scene)
         {
-            m_Scenelist.Remove(scene);
+            m_Scene = null;
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -133,26 +133,9 @@ namespace Aurora.Modules.Inventory
             client.OnInstantMessage -= OnInstantMessage;
         }
 
-        private IScene FindClientScene(UUID agentId)
-        {
-            lock (m_Scenelist)
-            {
-                foreach (IScene scene in from scene in m_Scenelist let presence = scene.GetScenePresence(agentId) where presence != null select scene)
-                {
-                    return scene;
-                }
-            }
-            return null;
-        }
-
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             //MainConsole.Instance.InfoFormat("[INVENTORY TRANSFER]: OnInstantMessage {0}", im.dialog);
-
-            IScene scene = FindClientScene(client.AgentId);
-
-            if (scene == null) // Something seriously wrong here.
-                return;
 
             if (im.dialog == (byte) InstantMessageDialog.InventoryOffered)
             {
@@ -162,7 +145,7 @@ namespace Aurora.Modules.Inventory
                     return;
 
                 UUID receipientID = im.toAgentID;
-                IScenePresence user = scene.GetScenePresence(receipientID);
+                IScenePresence user = m_Scene.GetScenePresence(receipientID);
                 UUID copyID;
 
                 // Send the IM to the recipient. The item is already
@@ -179,33 +162,64 @@ namespace Aurora.Modules.Inventory
                         UUID folderID = new UUID(im.binaryBucket, 1);
 
                         MainConsole.Instance.DebugFormat("[INVENTORY TRANSFER]: Inserting original folder {0} " +
-                                          "into agent {1}'s inventory",
-                                          folderID, im.toAgentID);
+                                                         "into agent {1}'s inventory",
+                                                         folderID, im.toAgentID);
 
-                        scene.InventoryService.GiveInventoryFolderAsync(receipientID, client.AgentId,
-                            folderID, UUID.Zero, (folder) =>
-                            {
+                        m_Scene.InventoryService.GiveInventoryFolderAsync(receipientID, client.AgentId,
+                                                                          folderID, UUID.Zero, (folder) =>
+                                                                                                   {
+                                                                                                       if (folder ==
+                                                                                                           null)
+                                                                                                       {
+                                                                                                           client
+                                                                                                               .SendAgentAlertMessage
+                                                                                                               ("Can't find folder to give. Nothing given.",
+                                                                                                                false);
+                                                                                                           return;
+                                                                                                       }
 
-                                if (folder == null)
-                                {
-                                    client.SendAgentAlertMessage("Can't find folder to give. Nothing given.", false);
-                                    return;
-                                }
+                                                                                                       // The outgoing binary bucket should contain only the byte which signals an asset folder is
+                                                                                                       // being copied and the following bytes for the copied folder's UUID
+                                                                                                       copyID =
+                                                                                                           folder.ID;
+                                                                                                       byte[]
+                                                                                                           copyIDBytes =
+                                                                                                               copyID
+                                                                                                                   .GetBytes
+                                                                                                                   ();
+                                                                                                       im.binaryBucket =
+                                                                                                           new byte[
+                                                                                                               1 +
+                                                                                                               copyIDBytes
+                                                                                                                   .Length
+                                                                                                               ];
+                                                                                                       im.binaryBucket[0
+                                                                                                           ] =
+                                                                                                           (byte)
+                                                                                                           AssetType
+                                                                                                               .Folder;
+                                                                                                       Array.Copy(
+                                                                                                           copyIDBytes,
+                                                                                                           0,
+                                                                                                           im
+                                                                                                               .binaryBucket,
+                                                                                                           1,
+                                                                                                           copyIDBytes
+                                                                                                               .Length);
 
-                                // The outgoing binary bucket should contain only the byte which signals an asset folder is
-                                // being copied and the following bytes for the copied folder's UUID
-                                copyID = folder.ID;
-                                byte[] copyIDBytes = copyID.GetBytes();
-                                im.binaryBucket = new byte[1 + copyIDBytes.Length];
-                                im.binaryBucket[0] = (byte)AssetType.Folder;
-                                Array.Copy(copyIDBytes, 0, im.binaryBucket, 1, copyIDBytes.Length);
+                                                                                                       if (user != null)
+                                                                                                           user
+                                                                                                               .ControllingClient
+                                                                                                               .SendBulkUpdateInventory
+                                                                                                               (folder);
 
-                                if (user != null)
-                                    user.ControllingClient.SendBulkUpdateInventory(folder);
-
-                                im.imSessionID = copyID;
-                                user.ControllingClient.SendInstantMessage(im);
-                            });
+                                                                                                       im.imSessionID =
+                                                                                                           copyID;
+                                                                                                       user
+                                                                                                           .ControllingClient
+                                                                                                           .SendInstantMessage
+                                                                                                           (im);
+                                                                                                   });
                     }
                     else
                     {
@@ -215,30 +229,35 @@ namespace Aurora.Modules.Inventory
                         UUID itemID = new UUID(im.binaryBucket, 1);
 
                         MainConsole.Instance.DebugFormat("[INVENTORY TRANSFER]: (giving) Inserting item {0} " +
-                                          "into agent {1}'s inventory",
-                                          itemID, im.toAgentID);
+                                                         "into agent {1}'s inventory",
+                                                         itemID, im.toAgentID);
 
-                        scene.InventoryService.GiveInventoryItemAsync(
-                                im.toAgentID,
-                                im.fromAgentID, itemID, UUID.Zero, false, (itemCopy) =>
-                        {
-                            if (itemCopy == null)
-                            {
-                                client.SendAgentAlertMessage("Can't find item to give. Nothing given.", false);
-                                return;
-                            }
+                        m_Scene.InventoryService.GiveInventoryItemAsync(
+                            im.toAgentID,
+                            im.fromAgentID, itemID, UUID.Zero, false, (itemCopy) =>
+                                                                          {
+                                                                              if (itemCopy == null)
+                                                                              {
+                                                                                  client.SendAgentAlertMessage(
+                                                                                      "Can't find item to give. Nothing given.",
+                                                                                      false);
+                                                                                  return;
+                                                                              }
 
-                            copyID = itemCopy.ID;
-                            Array.Copy(copyID.GetBytes(), 0, im.binaryBucket, 1, 16);
+                                                                              copyID = itemCopy.ID;
+                                                                              Array.Copy(copyID.GetBytes(), 0,
+                                                                                         im.binaryBucket, 1, 16);
 
-                            if (user != null)
-                            {
-                                user.ControllingClient.SendBulkUpdateInventory(itemCopy);
-                            }
+                                                                              if (user != null)
+                                                                              {
+                                                                                  user.ControllingClient
+                                                                                      .SendBulkUpdateInventory(itemCopy);
+                                                                              }
 
-                            im.imSessionID = itemCopy.ID;
-                            user.ControllingClient.SendInstantMessage(im);
-                        });
+                                                                              im.imSessionID = itemCopy.ID;
+                                                                              user.ControllingClient.SendInstantMessage(
+                                                                                  im);
+                                                                          });
                     }
                 }
                 else
@@ -249,7 +268,7 @@ namespace Aurora.Modules.Inventory
             }
             else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
             {
-                IScenePresence user = scene.GetScenePresence(im.toAgentID);
+                IScenePresence user = m_Scene.GetScenePresence(im.toAgentID);
 
                 if (user != null) // Local
                 {
@@ -267,15 +286,14 @@ namespace Aurora.Modules.Inventory
                 // inventory is loaded. Courtesy of the above bulk update,
                 // It will have been pushed to the client, too
                 //
-                IInventoryService invService = scene.InventoryService;
+                IInventoryService invService = m_Scene.InventoryService;
 
                 InventoryFolderBase trashFolder =
                     invService.GetFolderForType(client.AgentId, InventoryType.Unknown, AssetType.TrashFolder);
 
                 UUID inventoryID = im.imSessionID; // The inventory item/folder, back from it's trip
 
-                InventoryItemBase item = new InventoryItemBase(inventoryID, client.AgentId);
-                item = invService.GetItem(item);
+                InventoryItemBase item = invService.GetItem(client.AgentId, inventoryID);
                 InventoryFolderBase folder = null;
 
                 if (item != null && trashFolder != null)
@@ -287,7 +305,7 @@ namespace Aurora.Modules.Inventory
                     invService.DeleteItems(item.Owner, uuids);
                     ILLClientInventory inventory = client.Scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventory != null)
-                        inventory.AddInventoryItem(client, item);
+                        inventory.AddInventoryItemAsync(client, item);
                 }
                 else
                 {
@@ -317,7 +335,7 @@ namespace Aurora.Modules.Inventory
                                                  "received inventory" + reason, false);
                 }
 
-                IScenePresence user = scene.GetScenePresence(im.toAgentID);
+                IScenePresence user = m_Scene.GetScenePresence(im.toAgentID);
 
                 if (user != null) // Local
                 {
@@ -331,21 +349,14 @@ namespace Aurora.Modules.Inventory
             }
         }
 
-        ///<summary>
-        ///</summary>
-        ///<param name = "msg"></param>
+        /// <summary>
+        /// </summary>
+        /// <param name="msg"></param>
         private void OnGridInstantMessage(GridInstantMessage msg)
         {
-            // Check if this is ours to handle
-            //
-            IScene scene = FindClientScene(msg.toAgentID);
-
-            if (scene == null)
-                return;
-
             // Find agent to deliver to
             //
-            IScenePresence user = scene.GetScenePresence(msg.toAgentID);
+            IScenePresence user = m_Scene.GetScenePresence(msg.toAgentID);
 
             // Just forward to local handling
             OnInstantMessage(user.ControllingClient, msg);

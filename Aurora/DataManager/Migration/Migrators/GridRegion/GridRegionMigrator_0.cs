@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.GridRegion
 {
     public class GridRegionMigrator_0 : Migrator
     {
@@ -60,9 +60,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Flags", ColumnTypes.Integer11),
                 ColDef("SessionID", ColumnTypes.String45),
                 ColDef("Info", ColumnTypes.Text)
-            ), IndexDefs(
-                IndexDef(new string[1] { "RegionUUID" }, IndexType.Primary)
-            ));
+                                         ), IndexDefs(
+                                             IndexDef(new string[1] {"RegionUUID"}, IndexType.Primary)
+                                                ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

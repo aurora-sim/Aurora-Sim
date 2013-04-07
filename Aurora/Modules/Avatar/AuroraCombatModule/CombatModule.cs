@@ -28,11 +28,14 @@
 using System;
 using System.Collections.Generic;
 using System.Timers;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.Combat
 {
@@ -225,14 +228,7 @@ namespace Aurora.Modules.Combat
         private void OnLandObjectAdded(LandData newParcel)
         {
             //If a new land object is added or updated, we need to redo the check for the avatars invulnerability
-#if (!ISWIN)
-            m_scene.ForEachScenePresence(delegate(IScenePresence sp)
-            {
-                AvatarEnteringParcel(sp, null);
-            });
-#else
             m_scene.ForEachScenePresence(sp => AvatarEnteringParcel(sp, null));
-#endif
         }
 
         public void AddDamageToPrim(ISceneEntity entity)
@@ -336,7 +332,7 @@ namespace Aurora.Modules.Combat
                 */
                 if (e == null)
                     return;
-                
+
                 /*CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
                 Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
@@ -538,7 +534,7 @@ namespace Aurora.Modules.Combat
                     return;
 
                 CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
-                Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
+                Dictionary<uint, ContactPoint> coldata = collisionData.GetCollisionEvents();
 
                 float starthealth = Health;
                 IScenePresence killingAvatar = null;
@@ -625,7 +621,7 @@ namespace Aurora.Modules.Combat
                     {
                         if (deadAvatarMessage != "")
                             m_SP.ControllingClient.SendAgentAlertMessage(deadAvatarMessage, true);
-                                //Send it as a blue box at the bottom of the screen rather than as a full popup
+                        //Send it as a blue box at the bottom of the screen rather than as a full popup
                         if (killingAvatar != null && killingAvatarMessage != "")
                             killingAvatar.ControllingClient.SendAlertMessage(killingAvatarMessage);
                     }

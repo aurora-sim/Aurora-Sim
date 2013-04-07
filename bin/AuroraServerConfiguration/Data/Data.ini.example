@@ -7,6 +7,30 @@
     ;; If you want to use MySQL, select this file.
     ;Include-MySQL = AuroraServerConfiguration/Data/MySQL.ini
 
+[RedisConnection]
+	;; If you're running this on the same computer as Aurora.Server, 
+	;;  and you haven't changed the port for it, leave this alone
+	ConnectionString = localhost:6379
+	
+	;; If you've set a password (which is recommended) on Redis server, 
+	;;  set it here
+	;ConnectionPassword =
+	
+	DoConversion = true
+	
+[FileBasedAssetService]
+	;; The path to where the assets will be stored on the hard drive
+	;;  for file based assets (if enabled)
+	;; The default path is the root of the hard drive that this is running on
+	;;  in a folder called assets (e.g. C:/assets/)
+	;; If you want to set this, set the full path to the folder you want to
+	;;  have assets be stored in.
+	;AssetFolderPath = 
+	
+[AssetService]
+    ;; Whether or not we should do conversion from an older SQL asset database
+	DoConversion = true
+	
 [AuroraConnectors]
     ;; If you want to disable the verification and backup of tables before running migrations, set this to false
     ;; Default is true

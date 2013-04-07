@@ -28,9 +28,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -42,7 +42,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
-        public bool RemoveOnStateChange { get { return true; } }
+        public bool RemoveOnStateChange
+        {
+            get { return true; }
+        }
 
         public void Initialize(ScriptEngine engine)
         {
@@ -77,19 +80,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 // Go through all timers
                 int TickCount = Environment.TickCount;
-#if (!ISWIN)
-                foreach (TimerClass ts in Timers.Values)
-                {
-                    if (ts.next < TickCount)
-                    {
-                        // Add it to queue
-                        m_ScriptEngine.PostScriptEvent(ts.itemID, ts.ID, new EventParams("timer", new Object[0], new DetectParams[0]), EventPriority.Continued);
-                        // set next interval
-
-                        ts.next = TickCount + ts.interval;
-                    }
-                }
-#else
                 foreach (TimerClass ts in Timers.Values.Where(ts => ts.next < TickCount))
                 {
                     // Add it to queue
@@ -100,7 +90,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                     ts.next = TickCount + ts.interval;
                 }
-#endif
             }
             return Timers.Count > 0;
         }
@@ -121,8 +110,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public void CreateFromData(UUID itemID, UUID objectID,
                                    OSD data)
         {
-            OSDMap save = (OSDMap)data;
-            TimerClass ts = new TimerClass { ID = objectID, itemID = itemID, interval = save["Interval"].AsLong() };
+            OSDMap save = (OSDMap) data;
+            TimerClass ts = new TimerClass {ID = objectID, itemID = itemID, interval = save["Interval"].AsLong()};
 
             if (ts.interval == 0) // Disabling timer
                 return;
@@ -159,7 +148,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
 
             // Add to timer
-            TimerClass ts = new TimerClass { ID = m_ID, itemID = m_itemID, interval = (long)(sec * 1000) };
+            TimerClass ts = new TimerClass {ID = m_ID, itemID = m_itemID, interval = (long) (sec*1000)};
 
             //ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
             ts.next = Environment.TickCount + ts.interval;

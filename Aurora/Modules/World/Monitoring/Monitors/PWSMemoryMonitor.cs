@@ -27,8 +27,9 @@
 
 using System.Diagnostics;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 
-namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
+namespace Aurora.Modules.Monitoring.Monitors
 {
     internal class PWSMemoryMonitor : IMonitor
     {
@@ -42,6 +43,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetName()
         {
             return "Private Working Set Memory";
+        }
+
+        public string GetInterfaceName()
+        {
+            return "";
         }
 
         public string GetFriendlyValue()

@@ -1,25 +1,14 @@
 ;; These are the initialization settings for running Aurora with a SQLite database
 ;;
 [AuroraData]
-    StorageProvider = SQLite
     ConnectionString = "Data Source=file://Aurora.db"
-
-[IScriptDataConnector]
-    ConnectionString = "Data Source=file://ScriptData.db"
+    StorageProvider = SQLite
 
 [IAvatarData]
-    ConnectionString = "UTF16;Data Source=file://avatars.db"
+    ConnectionString = "Data Source=file://avatars.db"
 
 [IAssetDataPlugin]
     ConnectionString = "Data Source=file://Asset.db"
-
-[SimulationDataStore]
-    LegacyDatabaseLoaderName = "SQLite"
-    ConnectionString = "Data Source=file://OpenSim.db"
-
-[IRegionInfoConnector]
-    ConnectionString = "UTF16;Data Source=file://OpenSim.db"
-
 [EstateService]
     ConnectionString = "Data Source=file://estates.db"
 
@@ -33,4 +22,4 @@
     ConnectionString = "Data Source=file://friends.db"
 
 [IInventoryData]
-    ConnectionString = "UTF16;Data Source=file://inventory.db"
+    ConnectionString = "Data Source=file://inventory.db"

@@ -25,15 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Timers;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using System;
+using System.Collections.Generic;
+using System.Timers;
 
 namespace Aurora.Modules.Restart
 {
@@ -156,22 +156,12 @@ namespace Aurora.Modules.Restart
         }
 
         /// <summary>
-        ///   This causes the region to restart immediatley.
+        ///     This causes the region to restart immediatley.
         /// </summary>
         public void RestartScene()
         {
-            IConfig startupConfig = m_scene.Config.Configs["Startup"];
-            if (startupConfig != null)
-            {
-                if (startupConfig.GetBoolean("InworldRestartShutsDown", false))
-                {
-                    //This will kill it asyncly
-                    MainConsole.Instance.EndConsoleProcessing();
-                    return;
-                }
-            }
             MainConsole.Instance.Error("[Scene]: Restaring Now");
-            m_scene.RequestModuleInterface<ISceneManager>().RestartRegion(m_scene);
+            m_scene.RequestModuleInterface<ISceneManager>().RestartRegion();
         }
 
         #endregion

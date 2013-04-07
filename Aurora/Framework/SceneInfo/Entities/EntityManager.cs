@@ -28,11 +28,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo.Entities
 {
     public class EntityManager
     {
@@ -166,15 +167,10 @@ namespace Aurora.Framework
             lock (m_presenceEntitiesLock)
             {
                 List<IScenePresence> tmp = new List<IScenePresence>(m_presenceEntities.Count);
-#if (!ISWIN)
-                foreach (IScenePresence entity in m_presenceEntities.Values)
-                {
-                    if ((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
-                        tmp.Add(entity);
-                }
-#else
-                tmp.AddRange(m_presenceEntities.Values.Where(entity => (entity.AbsolutePosition - pos).LengthSquared() < radius * radius));
-#endif
+
+                tmp.AddRange(
+                    m_presenceEntities.Values.Where(
+                        entity => (entity.AbsolutePosition - pos).LengthSquared() < radius*radius));
 
                 return tmp.ToArray();
             }
@@ -184,9 +180,7 @@ namespace Aurora.Framework
         {
             lock (m_objectEntitiesLock)
             {
-                List<ISceneEntity> tmp = new List<ISceneEntity>(m_objectEntities.Count);
-                m_objectEntities.ForEach(tmp.Add);
-                return tmp.ToArray();
+                return m_objectEntities.Values;
             }
         }
 
@@ -278,10 +272,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Retrives the SceneObjectGroup of this child
+        ///     Retrives the SceneObjectGroup of this child
         /// </summary>
-        /// <param name = "childkey"></param>
-        /// <param name = "obj"></param>
+        /// <param name="childkey"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
         public virtual bool TryGetChildPrimParent(UUID childkey, out IEntity obj)
         {
@@ -298,10 +292,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Retrives the SceneObjectGroup of this child
+        ///     Retrives the SceneObjectGroup of this child
         /// </summary>
-        /// <param name = "childkey"></param>
-        /// <param name = "obj"></param>
+        /// <param name="childkey"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
         public virtual bool TryGetChildPrimParent(uint childkey, out IEntity obj)
         {

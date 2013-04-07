@@ -28,10 +28,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework;
+using Aurora.Framework.SceneInfo;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -44,7 +44,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
-        public bool RemoveOnStateChange { get { return true; } }
+        public bool RemoveOnStateChange
+        {
+            get { return true; }
+        }
 
         public void Initialize(ScriptEngine engine)
         {
@@ -59,15 +62,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             lock (DataserverRequests)
             {
-#if (!ISWIN)
-                List<DataserverRequest> ToRemove = new List<DataserverRequest>();
-                foreach (DataserverRequest ds in DataserverRequests.Values)
-                {
-                    if (ds.itemID == itemID) ToRemove.Add(ds);
-                }
-#else
                 List<DataserverRequest> ToRemove = DataserverRequests.Values.Where(ds => ds.itemID == itemID).ToList();
-#endif
                 foreach (DataserverRequest re in ToRemove)
                 {
                     DataserverRequests.Remove(re.handle);
@@ -132,8 +127,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                        };
 
 
-
-
             lock (DataserverRequests)
             {
                 if (DataserverRequests.ContainsKey(identifier))
@@ -176,7 +169,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 if (DataserverRequests.TryGetValue(handle, out request))
                 {
                     //Wait for the value to be returned in LSL_Api
-                    request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait / 1000 + 0.1);
+                    request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait/1000 + 0.1);
                     request.Reply = reply;
                     //Make sure that the cmd handler thread is running
                     m_ScriptEngine.MaintenanceThread.PokeThreads(request.itemID);

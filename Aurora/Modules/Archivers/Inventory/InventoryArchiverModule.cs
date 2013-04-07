@@ -25,36 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using Aurora.Simulation.Base;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
-    ///   This module loads and saves OpenSimulator inventory archives
+    ///     This module loads and saves OpenSimulator inventory archives
     /// </summary>
     public class InventoryArchiverModule : IService, IInventoryArchiverModule
     {
         /// <summary>
-        ///   The file to load and save inventory if no filename has been specified
+        ///     The file to load and save inventory if no filename has been specified
         /// </summary>
         protected const string DEFAULT_INV_BACKUP_FILENAME = "user-inventory.iar";
 
         /// <value>
-        ///   All scenes that this module knows about
+        ///     All scenes that this module knows about
         /// </value>
         private readonly Dictionary<UUID, IScene> m_scenes = new Dictionary<UUID, IScene>();
 
         /// <value>
-        ///   Pending save completions initiated from the console
+        ///     Pending save completions initiated from the console
         /// </value>
         protected List<Guid> m_pendingConsoleSaves = new List<Guid>();
 
@@ -70,16 +71,17 @@ namespace Aurora.Modules.Archivers
         public event InventoryArchiveSaved OnInventoryArchiveSaved;
 
         public bool ArchiveInventory(
-            Guid id, string firstName, string lastName, string invPath, string pass, Stream saveStream)
+            Guid id, string firstName, string lastName, string invPath, Stream saveStream)
         {
-            return ArchiveInventory(id, firstName, lastName, invPath, pass, saveStream, new Dictionary<string, object>());
+            return ArchiveInventory(id, firstName, lastName, invPath, saveStream, new Dictionary<string, object>());
         }
 
         public bool ArchiveInventory(
-            Guid id, string firstName, string lastName, string invPath, string pass, Stream saveStream,
+            Guid id, string firstName, string lastName, string invPath, Stream saveStream,
             Dictionary<string, object> options)
         {
-            UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
+            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>()
+                                             .GetUserAccount(null, firstName, lastName);
 
             if (userInfo != null)
             {
@@ -111,44 +113,6 @@ namespace Aurora.Modules.Archivers
             return false;
         }
 
-        public bool DearchiveInventory(string firstName, string lastName, string invPath, string pass, Stream loadStream)
-        {
-            return DearchiveInventory(firstName, lastName, invPath, pass, loadStream, new Dictionary<string, object>());
-        }
-
-        public bool DearchiveInventory(
-            string firstName, string lastName, string invPath, string pass, Stream loadStream,
-            Dictionary<string, object> options)
-        {
-            UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
-
-            if (userInfo != null)
-            {
-                InventoryArchiveReadRequest request;
-                bool merge = (options.ContainsKey("merge") && (bool)options["merge"]);
-
-                try
-                {
-                    request = new InventoryArchiveReadRequest(m_registry, userInfo, invPath, loadStream, merge, UUID.Zero);
-                }
-                catch (EntryPointNotFoundException e)
-                {
-                    MainConsole.Instance.ErrorFormat(
-                        "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
-                        + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
-                    MainConsole.Instance.Error(e);
-
-                    return false;
-                }
-
-                request.Execute(false);
-
-                return true;
-            }
-
-            return false;
-        }
-
         #endregion
 
         #region IService Members
@@ -165,7 +129,7 @@ namespace Aurora.Modules.Archivers
                 {
                     MainConsole.Instance.Commands.AddCommand(
                         "load iar",
-                        "load iar <first> <last> <inventory path> <password> [<IAR path>]",
+                        "load iar <first> <last> <inventory path> [<IAR path>]",
                         //"load iar [--merge] <first> <last> <inventory path> <password> [<IAR path>]",
                         "Load user inventory archive (IAR). "
                         +
@@ -174,7 +138,6 @@ namespace Aurora.Modules.Archivers
                         + "<last> is user's last name." + Environment.NewLine
                         + "<inventory path> is the path inside the user's inventory where the IAR should be loaded." +
                         Environment.NewLine
-                        + "<password> is the user's password." + Environment.NewLine
                         + "<IAR path> is the filesystem path or URI from which to load the IAR."
                         +
                         string.Format("  If this is not given then the filename {0} in the current directory is used",
@@ -183,7 +146,7 @@ namespace Aurora.Modules.Archivers
 
                     MainConsole.Instance.Commands.AddCommand(
                         "save iar",
-                        "save iar <first> <last> <inventory path> <password> [<IAR path>]",
+                        "save iar <first> <last> <inventory path> [<IAR path>]",
                         "Save user inventory archive (IAR). <first> is the user's first name." + Environment.NewLine
                         + "<last> is the user's last name." + Environment.NewLine
                         + "<inventory path> is the path inside the user's inventory for the folder/item to be saved." +
@@ -196,7 +159,7 @@ namespace Aurora.Modules.Archivers
 
                     MainConsole.Instance.Commands.AddCommand(
                         "save iar withoutassets",
-                        "save iar withoutassets <first> <last> <inventory path> <password> [<IAR path>]",
+                        "save iar withoutassets <first> <last> <inventory path> [<IAR path>]",
                         "Save user inventory archive (IAR) withOUT assets. This version will NOT load on another grid/standalone other than the current grid/standalone! " +
                         "<first> is the user's first name." + Environment.NewLine
                         + "<last> is the user's last name." + Environment.NewLine
@@ -222,7 +185,7 @@ namespace Aurora.Modules.Archivers
         #endregion
 
         /// <summary>
-        ///   Trigger the inventory archive saved event.
+        ///     Trigger the inventory archive saved event.
         /// </summary>
         protected internal void TriggerInventoryArchiveSaved(
             Guid id, bool succeeded, UserAccount userInfo, string invPath, Stream saveStream,
@@ -234,10 +197,11 @@ namespace Aurora.Modules.Archivers
         }
 
         public bool ArchiveInventory(
-            Guid id, string firstName, string lastName, string invPath, string pass, string savePath,
+            Guid id, string firstName, string lastName, string invPath, string savePath,
             Dictionary<string, object> options)
         {
-            UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
+            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>()
+                                             .GetUserAccount(null, firstName, lastName);
 
             if (userInfo != null)
             {
@@ -270,15 +234,16 @@ namespace Aurora.Modules.Archivers
         }
 
         public bool DearchiveInventory(
-            string firstName, string lastName, string invPath, string pass, string loadPath,
+            string firstName, string lastName, string invPath, string loadPath,
             Dictionary<string, object> options)
         {
-            UserAccount userInfo = GetUserInfo(firstName, lastName, pass);
+            UserAccount userInfo = m_registry.RequestModuleInterface<IUserAccountService>()
+                                             .GetUserAccount(null, firstName, lastName);
 
             if (userInfo != null)
             {
                 InventoryArchiveReadRequest request;
-                bool merge = (options.ContainsKey("merge") && (bool)options["merge"]);
+                bool merge = (options.ContainsKey("merge") && (bool) options["merge"]);
 
                 try
                 {
@@ -303,14 +268,15 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Load inventory from an inventory file archive
+        ///     Load inventory from an inventory file archive
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         protected void HandleLoadInvConsoleCommand(string[] cmdparams)
         {
             try
             {
-                MainConsole.Instance.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
+                MainConsole.Instance.Info(
+                    "[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 
                 Dictionary<string, object> options = new Dictionary<string, object>();
                 List<string> newParams = new List<string>(cmdparams);
@@ -328,7 +294,7 @@ namespace Aurora.Modules.Archivers
                     }
                 }
 
-                if (newParams.Count < 6)
+                if (newParams.Count < 5)
                 {
                     MainConsole.Instance.Error(
                         "[INVENTORY ARCHIVER]: usage is load iar [--merge] <first name> <last name> <inventory path> <user password> [<load file path>]");
@@ -338,14 +304,13 @@ namespace Aurora.Modules.Archivers
                 string firstName = newParams[2];
                 string lastName = newParams[3];
                 string invPath = newParams[4];
-                string pass = newParams[5];
-                string loadPath = (newParams.Count > 6 ? newParams[6] : DEFAULT_INV_BACKUP_FILENAME);
+                string loadPath = (newParams.Count > 5 ? newParams[5] : DEFAULT_INV_BACKUP_FILENAME);
 
                 MainConsole.Instance.InfoFormat(
                     "[INVENTORY ARCHIVER]: Loading archive {0} to inventory path {1} for {2} {3}",
                     loadPath, invPath, firstName, lastName);
 
-                if (DearchiveInventory(firstName, lastName, invPath, pass, loadPath, options))
+                if (DearchiveInventory(firstName, lastName, invPath, loadPath, options))
                     MainConsole.Instance.InfoFormat(
                         "[INVENTORY ARCHIVER]: Loaded archive {0} for {1} {2}",
                         loadPath, firstName, lastName);
@@ -357,9 +322,9 @@ namespace Aurora.Modules.Archivers
         }
 
         /// <summary>
-        ///   Save inventory to a file archive
+        ///     Save inventory to a file archive
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         protected void HandleSaveInvWOAssetsConsoleCommand(string[] cmdparams)
         {
             if (cmdparams.Length < 7)
@@ -369,41 +334,41 @@ namespace Aurora.Modules.Archivers
                 return;
             }
 
-            MainConsole.Instance.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
+            MainConsole.Instance.Info(
+                "[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 
             string firstName = cmdparams[3];
             string lastName = cmdparams[4];
             string invPath = cmdparams[5];
-            string pass = cmdparams[6];
-            string savePath = (cmdparams.Length > 7 ? cmdparams[7] : DEFAULT_INV_BACKUP_FILENAME);
+            string savePath = (cmdparams.Length > 6 ? cmdparams[6] : DEFAULT_INV_BACKUP_FILENAME);
 
             MainConsole.Instance.InfoFormat(
                 "[INVENTORY ARCHIVER]: Saving archive {0} using inventory path {1} for {2} {3} without assets",
                 savePath, invPath, firstName, lastName);
 
             Guid id = Guid.NewGuid();
-            Dictionary<string, object> options = new Dictionary<string, object> { { "Assets", false } };
-            ArchiveInventory(id, firstName, lastName, invPath, pass, savePath, options);
+            Dictionary<string, object> options = new Dictionary<string, object> {{"Assets", false}};
+            ArchiveInventory(id, firstName, lastName, invPath, savePath, options);
 
             lock (m_pendingConsoleSaves)
                 m_pendingConsoleSaves.Add(id);
         }
 
         /// <summary>
-        ///   Save inventory to a file archive
+        ///     Save inventory to a file archive
         /// </summary>
-        /// <param name = "cmdparams"></param>
+        /// <param name="cmdparams"></param>
         protected void HandleSaveInvConsoleCommand(string[] cmdparams)
         {
             try
             {
-                MainConsole.Instance.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
+                MainConsole.Instance.Info(
+                    "[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 
                 string firstName = cmdparams[2];
                 string lastName = cmdparams[3];
                 string invPath = cmdparams[4];
-                string pass = cmdparams[5];
-                string savePath = (cmdparams.Length > 6 ? cmdparams[6] : DEFAULT_INV_BACKUP_FILENAME);
+                string savePath = (cmdparams.Length > 5 ? cmdparams[5] : DEFAULT_INV_BACKUP_FILENAME);
 
                 MainConsole.Instance.InfoFormat(
                     "[INVENTORY ARCHIVER]: Saving archive {0} using inventory path {1} for {2} {3}",
@@ -411,8 +376,8 @@ namespace Aurora.Modules.Archivers
 
                 Guid id = Guid.NewGuid();
 
-                Dictionary<string, object> options = new Dictionary<string, object> { { "Assets", true } };
-                ArchiveInventory(id, firstName, lastName, invPath, pass, savePath, options);
+                Dictionary<string, object> options = new Dictionary<string, object> {{"Assets", true}};
+                ArchiveInventory(id, firstName, lastName, invPath, savePath, options);
 
                 lock (m_pendingConsoleSaves)
                     m_pendingConsoleSaves.Add(id);
@@ -438,58 +403,13 @@ namespace Aurora.Modules.Archivers
             if (succeeded)
             {
                 MainConsole.Instance.InfoFormat("[INVENTORY ARCHIVER]: Saved archive for {0} {1}", userInfo.FirstName,
-                                 userInfo.LastName);
+                                                userInfo.LastName);
             }
             else
             {
                 MainConsole.Instance.ErrorFormat(
                     "[INVENTORY ARCHIVER]: Archive save for {0} {1} failed - {2}",
                     userInfo.FirstName, userInfo.LastName, reportedException.Message);
-            }
-        }
-
-        /// <summary>
-        ///   Get user information for the given name.
-        /// </summary>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
-        /// <param name = "pass">User password</param>
-        /// <returns></returns>
-        protected UserAccount GetUserInfo(string firstName, string lastName, string pass)
-        {
-            UserAccount account
-                = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, firstName, lastName);
-
-            if (null == account)
-            {
-                MainConsole.Instance.ErrorFormat(
-                    "[INVENTORY ARCHIVER]: Failed to find user info for {0} {1}",
-                    firstName, lastName);
-                return null;
-            }
-
-            try
-            {
-                string encpass = Util.Md5Hash(pass);
-                if (
-                    m_registry.RequestModuleInterface<IAuthenticationService>().Authenticate(account.PrincipalID,
-                                                                                             "UserAccount", encpass, 1) !=
-                    string.Empty)
-                {
-                    return account;
-                }
-                else
-                {
-                    MainConsole.Instance.ErrorFormat(
-                        "[INVENTORY ARCHIVER]: Password for user {0} {1} incorrect.  Please try again.",
-                        firstName, lastName);
-                    return null;
-                }
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.ErrorFormat("[INVENTORY ARCHIVER]: Could not authenticate password, {0}", e.Message);
-                return null;
             }
         }
     }

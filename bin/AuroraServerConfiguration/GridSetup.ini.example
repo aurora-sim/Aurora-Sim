@@ -1,0 +1,4 @@
+[Configuration]
+	;; If you have the Aurora.*Server.exe applications running over multiple
+	;;  servers, change the 127.0.0.1 below to your external IP or DNS name
+    ServerURI = "http://127.0.0.1:8003/server/"

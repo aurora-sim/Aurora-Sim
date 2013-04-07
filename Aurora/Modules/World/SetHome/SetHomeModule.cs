@@ -25,21 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using Aurora.Framework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework.Capabilities;
-using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace Aurora.Modules.SetHome
 {
@@ -90,10 +91,6 @@ namespace Aurora.Modules.SetHome
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         private void EventManager_OnNewClient(IClientAPI client)
         {
             client.OnSetStartLocationRequest += SetHomeRezPoint;
@@ -110,20 +107,18 @@ namespace Aurora.Modules.SetHome
             retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ServerReleaseNotes"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return ProcessServerReleaseNotes(agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return ProcessServerReleaseNotes(agentID); }));
 
             retVal["CopyInventoryFromNotecard"] = CapsUtil.CreateCAPS("CopyInventoryFromNotecard", "");
 
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["CopyInventoryFromNotecard"],
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return CopyInventoryFromNotecard(request, agentID);
-                                                      }));
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                                 { return CopyInventoryFromNotecard(request, agentID); }));
             return retVal;
         }
 
@@ -140,7 +135,7 @@ namespace Aurora.Modules.SetHome
             UUID ItemID = rm["item-id"].AsUUID();
             UUID NotecardID = rm["notecard-id"].AsUUID();
             UUID ObjectID = rm["object-id"].AsUUID();
-            InventoryItemBase notecardItem = null;
+            UUID notecardAssetID = UUID.Zero;
             if (ObjectID != UUID.Zero)
             {
                 ISceneChildEntity part = m_scene.GetSceneObjectPart(ObjectID);
@@ -148,23 +143,23 @@ namespace Aurora.Modules.SetHome
                 {
                     TaskInventoryItem item = part.Inventory.GetInventoryItem(NotecardID);
                     if (m_scene.Permissions.CanCopyObjectInventory(NotecardID, ObjectID, agentID))
-                    {
-                        notecardItem = new InventoryItemBase(NotecardID, agentID) {AssetID = item.AssetID};
-                    }
+                        notecardAssetID = item.AssetID;
                 }
             }
             else
-                notecardItem = m_scene.InventoryService.GetItem(new InventoryItemBase(NotecardID));
-            if (notecardItem != null && notecardItem.Owner == agentID)
+                notecardAssetID = m_scene.InventoryService.GetItemAssetID(agentID, NotecardID);
+            if (notecardAssetID != UUID.Zero)
             {
-                AssetBase asset = m_scene.AssetService.Get(notecardItem.AssetID.ToString());
+                byte[] asset = m_scene.AssetService.GetData(notecardAssetID.ToString());
                 if (asset != null)
                 {
-                    AssetNotecard noteCardAsset = new AssetNotecard(UUID.Zero, asset.Data);
+                    AssetNotecard noteCardAsset = new AssetNotecard(UUID.Zero, asset);
                     noteCardAsset.Decode();
                     bool found = false;
                     UUID lastOwnerID = UUID.Zero;
-                    foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems.Where(notecardObjectItem => notecardObjectItem.UUID == ItemID))
+                    foreach (
+                        InventoryItem notecardObjectItem in
+                            noteCardAsset.EmbeddedItems.Where(notecardObjectItem => notecardObjectItem.UUID == ItemID))
                     {
                         //Make sure that it exists
                         found = true;
@@ -174,15 +169,17 @@ namespace Aurora.Modules.SetHome
                     if (found)
                     {
                         m_scene.InventoryService.GiveInventoryItemAsync(agentID, lastOwnerID, ItemID, FolderID, false,
-                            (item) =>
-                        {
-                            IClientAPI client;
-                            m_scene.ClientManager.TryGetValue(agentID, out client);
-                            if (item != null)
-                                client.SendBulkUpdateInventory(item);
-                            else
-                                client.SendAlertMessage("Failed to retrieve item");
-                        });
+                                                                        (item) =>
+                                                                            {
+                                                                                IClientAPI client;
+                                                                                m_scene.ClientManager.TryGetValue(
+                                                                                    agentID, out client);
+                                                                                if (item != null)
+                                                                                    client.SendBulkUpdateInventory(item);
+                                                                                else
+                                                                                    client.SendAlertMessage(
+                                                                                        "Failed to retrieve item");
+                                                                            });
                     }
                 }
             }
@@ -191,13 +188,13 @@ namespace Aurora.Modules.SetHome
         }
 
         /// <summary>
-        ///   Sets the Home Point. The LoginService uses this to know where to put a user when they log-in
+        ///     Sets the Home Point. The LoginService uses this to know where to put a user when they log-in
         /// </summary>
-        /// <param name = "remoteClient"></param>
-        /// <param name = "regionHandle"></param>
-        /// <param name = "position"></param>
-        /// <param name = "lookAt"></param>
-        /// <param name = "flags"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="position"></param>
+        /// <param name="lookAt"></param>
+        /// <param name="flags"></param>
         public void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt,
                                     uint flags)
         {

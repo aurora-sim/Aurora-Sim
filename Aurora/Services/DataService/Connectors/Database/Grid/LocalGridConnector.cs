@@ -25,15 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.DatabaseInterfaces;
+using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using RegionFlags = Aurora.Framework.RegionFlags;
+using System;
+using System.Collections.Generic;
+using GridRegion = Aurora.Framework.Services.GridRegion;
+using RegionFlags = Aurora.Framework.Services.RegionFlags;
 
 namespace Aurora.Services.DataService
 {
@@ -44,24 +49,30 @@ namespace Aurora.Services.DataService
 
         #region IRegionData Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("GridConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
-                string connectionString = (source.Configs[Name] != null) ? connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString) : defaultConnectionString;
+                string connectionString = (source.Configs[Name] != null)
+                                              ? connectionString =
+                                                source.Configs[Name].GetString("ConnectionString",
+                                                                               defaultConnectionString)
+                                              : defaultConnectionString;
 
-                GD.ConnectToDatabase(connectionString, "GridRegions", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                if (GD != null)
+                    GD.ConnectToDatabase(connectionString, "GridRegions",
+                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                Framework.Utilities.DataManager.RegisterPlugin(this);
 
                 if (MainConsole.Instance != null)
                 {
-                    MainConsole.Instance.Commands.AddCommand("fix missing region owner", "fix missing region owner", "Attempts to fix missing region owners in the database.", delegate(string[] cmd)
-                    {
-                        FixMissingRegionOwners();
-                    });
+                    MainConsole.Instance.Commands.AddCommand("fix missing region owner", "fix missing region owner",
+                                                             "Attempts to fix missing region owners in the database.",
+                                                             delegate(string[] cmd) { FixMissingRegionOwners(); });
                 }
             }
         }
@@ -76,18 +87,24 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = UUID.Zero;
 
-            List<GridRegion> borked = ParseQuery(null, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+            List<GridRegion> borked = ParseQuery(null, GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null));
 
-            if(borked.Count < 1){
+            if (borked.Count < 1)
+            {
                 MainConsole.Instance.Debug("[LocalGridConnector] No regions found with missing owners.");
             }
-            IEstateConnector estatePlugin = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            IEstateConnector estatePlugin = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
 
-            if(estatePlugin == null){
-                MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, but could not get IEstateConnector plugin.");
+            if (estatePlugin == null)
+            {
+                MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count +
+                                           " regions found with missing owners, but could not get IEstateConnector plugin.");
                 return;
-            }else{
-                MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, attempting fix.");
+            }
+            else
+            {
+                MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count +
+                                           " regions found with missing owners, attempting fix.");
             }
 
             Dictionary<int, List<GridRegion>> borkedByEstate = new Dictionary<int, List<GridRegion>>();
@@ -108,10 +125,13 @@ namespace Aurora.Services.DataService
                 EstateSettings es = estatePlugin.GetEstateSettings(estateID);
                 if (es == null)
                 {
-                    MainConsole.Instance.Error("[LocalGridConnector] Cannot fix missing owner for regions in Estate " + estateID + ", could not get estate settings.");
-                }else if (es.EstateOwner == UUID.Zero)
+                    MainConsole.Instance.Error("[LocalGridConnector] Cannot fix missing owner for regions in Estate " +
+                                               estateID + ", could not get estate settings.");
+                }
+                else if (es.EstateOwner == UUID.Zero)
                 {
-                    MainConsole.Instance.Error("[LocalGridConnector] Cannot fix missing owner for regions in Estate " + estateID + ", Estate Owner is also missing.");
+                    MainConsole.Instance.Error("[LocalGridConnector] Cannot fix missing owner for regions in Estate " +
+                                               estateID + ", Estate Owner is also missing.");
                 }
                 if (es == null || es.EstateOwner == UUID.Zero)
                 {
@@ -125,12 +145,15 @@ namespace Aurora.Services.DataService
             {
                 if (estateFail == borkedByEstate.Count)
                 {
-                    MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, could not locate any estate settings from IEstateConnector plugin.");
+                    MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count +
+                                               " regions found with missing owners, could not locate any estate settings from IEstateConnector plugin.");
                     return;
                 }
                 else
                 {
-                    MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, could not locate estate settings for " + estateFail + " estates.");
+                    MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count +
+                                               " regions found with missing owners, could not locate estate settings for " +
+                                               estateFail + " estates.");
                 }
             }
 
@@ -145,9 +168,12 @@ namespace Aurora.Services.DataService
                     region.EstateOwner = kvp.Value;
                     if (!Store(region))
                     {
-                        MainConsole.Instance.Error("[LocalGridConnector] Failed to fix missing region for " + region.RegionName + " (" + region.RegionID + ")");
+                        MainConsole.Instance.Error("[LocalGridConnector] Failed to fix missing region for " +
+                                                   region.RegionName + " (" + region.RegionID + ")");
                         ++storeFail;
-                    }else{
+                    }
+                    else
+                    {
                         ++storeSuccess;
                         borked.Remove(region);
                     }
@@ -156,23 +182,30 @@ namespace Aurora.Services.DataService
 
             if (storeFail > 0)
             {
-                MainConsole.Instance.Error("[LocalGridConnector] " + borkedCount + " regions found with missing owners, fix failed on " + storeFail + " regions, fix attempted on " + storeSuccess + " regions.");
+                MainConsole.Instance.Error("[LocalGridConnector] " + borkedCount +
+                                           " regions found with missing owners, fix failed on " + storeFail +
+                                           " regions, fix attempted on " + storeSuccess + " regions.");
             }
             else if (storeSuccess != borked.Count)
             {
-                MainConsole.Instance.Error("[LocalGridConnector] " + borkedCount + " regions found with missing owners, fix attempted on " + storeSuccess + " regions.");
+                MainConsole.Instance.Error("[LocalGridConnector] " + borkedCount +
+                                           " regions found with missing owners, fix attempted on " + storeSuccess +
+                                           " regions.");
             }
             else
             {
-                MainConsole.Instance.Info("[LocalGridConnector] All regions found with missing owners should have their owners restored.");
+                MainConsole.Instance.Info(
+                    "[LocalGridConnector] All regions found with missing owners should have their owners restored.");
             }
-            if(borked.Count > 0){
+            if (borked.Count > 0)
+            {
                 List<string> blurbs = new List<string>(borked.Count);
                 foreach (GridRegion region in borked)
                 {
                     blurbs.Add(region.RegionName + " (" + region.RegionID + ")");
                 }
-                MainConsole.Instance.Info("[LocalGridConnector] Failed to fix missing region owners for regions " + string.Join(", ", blurbs.ToArray()));
+                MainConsole.Instance.Info("[LocalGridConnector] Failed to fix missing region owners for regions " +
+                                          string.Join(", ", blurbs.ToArray()));
             }
         }
 
@@ -181,7 +214,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andLikeFilters["RegionName"] = regionName;
 
-            return uint.Parse(GD.Query(new[] { "COUNT(*)" }, m_realm, filter, null, null, null)[0]);
+            return uint.Parse(GD.Query(new[] {"COUNT(*)"}, m_realm, filter, null, null, null)[0]);
         }
 
         public List<GridRegion> Get(string regionName, List<UUID> scopeIDs, uint? start, uint? count)
@@ -189,7 +222,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andLikeFilters["RegionName"] = regionName;
 
-            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, start, count);
+            List<string> query = GD.Query(new string[1] {"*"}, m_realm, filter, null, start, count);
 
             return (query.Count == 0) ? null : ParseQuery(scopeIDs, query);
         }
@@ -197,8 +230,8 @@ namespace Aurora.Services.DataService
         public List<GridRegion> Get(RegionFlags flags)
         {
             QueryFilter filter = new QueryFilter();
-            filter.andBitfieldAndFilters["Flags"] = (uint)flags;
-            return ParseQuery(null, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+            filter.andBitfieldAndFilters["Flags"] = (uint) flags;
+            return ParseQuery(null, GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null));
         }
 
         public GridRegion GetZero(int posX, int posY, List<UUID> scopeIDs)
@@ -207,7 +240,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["LocX"] = posX;
             filter.andFilters["LocY"] = posY;
 
-            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
+            List<string> query = GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null);
 
             return (query.Count == 0) ? null : ParseQuery(scopeIDs, query)[0];
         }
@@ -221,7 +254,7 @@ namespace Aurora.Services.DataService
             Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
             sort["LocZ"] = true;
 
-            return ParseQuery(scopeIDs, GD.Query(new string[1] { "*" }, m_realm, filter, sort, null, null));
+            return ParseQuery(scopeIDs, GD.Query(new string[1] {"*"}, m_realm, filter, sort, null, null));
         }
 
         public GridRegion Get(UUID regionID, List<UUID> scopeIDs)
@@ -231,10 +264,10 @@ namespace Aurora.Services.DataService
 
             where["RegionUUID"] = regionID;
 
-            query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            query = GD.Query(new string[1] {"*"}, m_realm, new QueryFilter
+                                                               {
+                                                                   andFilters = where
+                                                               }, null, null, null);
 
             return (query.Count == 0) ? null : ParseQuery(scopeIDs, query)[0];
         }
@@ -260,7 +293,7 @@ namespace Aurora.Services.DataService
             filter.andGreaterThanEqFilters["LocY"] = startY;
             filter.andLessThanEqFilters["LocY"] = endY;
 
-            return ParseQuery(scopeIDs, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+            return ParseQuery(scopeIDs, GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null));
         }
 
         public List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort)
@@ -268,25 +301,27 @@ namespace Aurora.Services.DataService
             return Get(flags, 0, null, null, sort);
         }
 
-        public List<GridRegion> Get(uint start, uint count, uint estateID, RegionFlags flags, Dictionary<string, bool> sort)
+        public List<GridRegion> Get(uint start, uint count, uint estateID, RegionFlags flags,
+                                    Dictionary<string, bool> sort)
         {
             List<GridRegion> resp = new List<GridRegion>();
-            IEstateConnector estates = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            IEstateConnector estates = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
 
             if (count == 0 || estates == null)
             {
                 return resp;
             }
 
-            EstateSettings es = estates.GetEstateSettings((int)estateID);
+            EstateSettings es = estates.GetEstateSettings((int) estateID);
 
             QueryFilter filter = new QueryFilter();
-            filter.andBitfieldAndFilters["Flags"] = (uint)flags;
+            filter.andBitfieldAndFilters["Flags"] = (uint) flags;
 
             while (resp.Count < count)
             {
-                uint limit = count - (uint)resp.Count;
-                List<GridRegion> query = ParseQuery(null, GD.Query(new string[] { "*" }, m_realm, filter, sort, start, count));
+                uint limit = count - (uint) resp.Count;
+                List<GridRegion> query = ParseQuery(null,
+                                                    GD.Query(new string[] {"*"}, m_realm, filter, sort, start, count));
 
                 if (query.Count == 0)
                 {
@@ -294,12 +329,13 @@ namespace Aurora.Services.DataService
                 }
 
                 query.ForEach(delegate(GridRegion region)
-                {
-                    if (region.EstateOwner == es.EstateOwner && estates.GetEstateID(region.RegionID) == es.EstateID)
-                    {
-                        resp.Add(region);
-                    }
-                });
+                                  {
+                                      if (region.EstateOwner == es.EstateOwner &&
+                                          estates.GetEstateID(region.RegionID) == es.EstateID)
+                                      {
+                                          resp.Add(region);
+                                      }
+                                  });
 
                 start += limit;
             }
@@ -307,19 +343,20 @@ namespace Aurora.Services.DataService
             return resp;
         }
 
-        public List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count, Dictionary<string, bool> sort)
+        public List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count,
+                                    Dictionary<string, bool> sort)
         {
             QueryFilter filter = new QueryFilter();
             if (includeFlags > 0)
             {
-                filter.andBitfieldAndFilters["Flags"] = (uint)includeFlags;
+                filter.andBitfieldAndFilters["Flags"] = (uint) includeFlags;
             }
             if (excludeFlags > 0)
             {
-                filter.andBitfieldNandFilters["Flags"] = (uint)excludeFlags;
+                filter.andBitfieldNandFilters["Flags"] = (uint) excludeFlags;
             }
 
-            return ParseQuery(null, GD.Query(new string[1] { "*" }, m_realm, filter, sort, start, count));
+            return ParseQuery(null, GD.Query(new string[1] {"*"}, m_realm, filter, sort, start, count));
         }
 
         public uint Count(RegionFlags includeFlags, RegionFlags excludeFlags)
@@ -327,14 +364,14 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             if (includeFlags > 0)
             {
-                filter.andBitfieldAndFilters["Flags"] = (uint)includeFlags;
+                filter.andBitfieldAndFilters["Flags"] = (uint) includeFlags;
             }
             if (excludeFlags > 0)
             {
-                filter.andBitfieldNandFilters["Flags"] = (uint)excludeFlags;
+                filter.andBitfieldNandFilters["Flags"] = (uint) excludeFlags;
             }
 
-            return uint.Parse(GD.Query(new string[1] { "COUNT(*)" }, m_realm, filter, null, null, null)[0]);
+            return uint.Parse(GD.Query(new string[1] {"COUNT(*)"}, m_realm, filter, null, null, null)[0]);
         }
 
         public List<GridRegion> GetNeighbours(UUID regionID, List<UUID> scopeIDs, uint squareRangeFromCenterInMeters)
@@ -344,8 +381,8 @@ namespace Aurora.Services.DataService
 
             if (region != null)
             {
-                int centerX = region.RegionLocX + (region.RegionSizeX / 2); // calculate center of region
-                int centerY = region.RegionLocY + (region.RegionSizeY / 2); // calculate center of region
+                int centerX = region.RegionLocX + (region.RegionSizeX/2); // calculate center of region
+                int centerY = region.RegionLocY + (region.RegionSizeY/2); // calculate center of region
 
                 regions = Get(scopeIDs, region.RegionID, centerX, centerY, squareRangeFromCenterInMeters);
             }
@@ -353,7 +390,8 @@ namespace Aurora.Services.DataService
             return regions;
         }
 
-        public List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters)
+        public List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY,
+                                    uint squareRangeFromCenterInMeters)
         {
             QueryFilter filter = new QueryFilter();
 
@@ -371,33 +409,34 @@ namespace Aurora.Services.DataService
             sort["LocX"] = true;
             sort["LocY"] = true;
 
-            return ParseQuery(scopeIDs, GD.Query(new string[] { "*" }, m_realm, filter, sort, null, null));
+            return ParseQuery(scopeIDs, GD.Query(new string[] {"*"}, m_realm, filter, sort, null, null));
         }
 
         public uint Count(uint estateID, RegionFlags flags)
         {
-            IEstateConnector estates = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            IEstateConnector estates = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
 
             if (estates == null)
             {
                 return 0;
             }
 
-            EstateSettings es = estates.GetEstateSettings((int)estateID);
+            EstateSettings es = estates.GetEstateSettings((int) estateID);
 
             QueryFilter filter = new QueryFilter();
-            filter.andBitfieldAndFilters["Flags"] = (uint)flags;
+            filter.andBitfieldAndFilters["Flags"] = (uint) flags;
 
-            List<GridRegion> query = ParseQuery(null, GD.Query(new string[] { "*" }, m_realm, filter, null, null, null));
+            List<GridRegion> query = ParseQuery(null, GD.Query(new string[] {"*"}, m_realm, filter, null, null, null));
 
             uint count = 0;
             query.ForEach(delegate(GridRegion region)
-            {
-                if (region.EstateOwner == es.EstateOwner && estates.GetEstateID(region.RegionID) == es.EstateID)
-                {
-                    ++count;
-                }
-            });
+                              {
+                                  if (region.EstateOwner == es.EstateOwner &&
+                                      estates.GetEstateID(region.RegionID) == es.EstateID)
+                                  {
+                                      ++count;
+                                  }
+                              });
 
             return count;
         }
@@ -406,7 +445,7 @@ namespace Aurora.Services.DataService
         {
             if (region.EstateOwner == UUID.Zero)
             {
-                IEstateConnector EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                IEstateConnector EstateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
                 EstateSettings ES = null;
                 if (EstateConnector != null)
                 {
@@ -416,7 +455,9 @@ namespace Aurora.Services.DataService
                 }
                 if (region.EstateOwner == UUID.Zero && ES != null && ES.EstateID != 0)
                 {
-                    MainConsole.Instance.Error("[LocalGridConnector] Attempt to store region with owner of UUID.Zero detected:" + (new System.Diagnostics.StackTrace()).GetFrame(1).ToString());
+                    MainConsole.Instance.Error(
+                        "[LocalGridConnector] Attempt to store region with owner of UUID.Zero detected:" +
+                        (new System.Diagnostics.StackTrace()).GetFrame(1).ToString());
                 }
             }
 
@@ -489,23 +530,27 @@ namespace Aurora.Services.DataService
         private List<GridRegion> Get(int regionFlags, List<UUID> scopeIDs)
         {
             QueryFilter filter = new QueryFilter();
-            filter.andBitfieldAndFilters["Flags"] = (uint)regionFlags;
+            filter.andBitfieldAndFilters["Flags"] = (uint) regionFlags;
 
-            return ParseQuery(scopeIDs, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+            return ParseQuery(scopeIDs, GD.Query(new string[1] {"*"}, m_realm, filter, null, null, null));
         }
 
         protected List<GridRegion> ParseQuery(List<UUID> scopeIDs, List<string> query)
         {
             List<GridRegion> regionData = new List<GridRegion>();
 
-            if ((query.Count % 14) == 0)
+            if ((query.Count%14) == 0)
             {
                 for (int i = 0; i < query.Count; i += 14)
                 {
                     GridRegion data = new GridRegion();
-                    OSDMap map = (OSDMap)OSDParser.DeserializeJson(query[i + 13]);
-                    map["owner_uuid"] = (!map.ContainsKey("owner_uuid") || map["owner_uuid"].AsUUID() == UUID.Zero) ? OSD.FromUUID(UUID.Parse(query[i + 6])) : map["owner_uuid"];
-                    map["EstateOwner"] = (!map.ContainsKey("EstateOwner") || map["EstateOwner"].AsUUID() == UUID.Zero) ? OSD.FromUUID(UUID.Parse(query[i + 6])) : map["EstateOwner"];
+                    OSDMap map = (OSDMap) OSDParser.DeserializeJson(query[i + 13]);
+                    map["owner_uuid"] = (!map.ContainsKey("owner_uuid") || map["owner_uuid"].AsUUID() == UUID.Zero)
+                                            ? OSD.FromUUID(UUID.Parse(query[i + 6]))
+                                            : map["owner_uuid"];
+                    map["EstateOwner"] = (!map.ContainsKey("EstateOwner") || map["EstateOwner"].AsUUID() == UUID.Zero)
+                                             ? OSD.FromUUID(UUID.Parse(query[i + 6]))
+                                             : map["EstateOwner"];
                     data.FromOSD(map);
 
                     if (!regionData.Contains(data))

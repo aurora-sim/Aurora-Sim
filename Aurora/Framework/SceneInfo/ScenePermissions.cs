@@ -28,9 +28,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.SceneInfo
 {
 
     #region Delegates
@@ -181,7 +183,6 @@ namespace Aurora.Framework
         public event ReturnObjectsHandler OnReturnObjects;
         public event InstantMessageHandler OnInstantMessage;
         public event CanGodTpHandler OnCanGodTp;
-        public event InventoryTransferHandler OnInventoryTransfer;
         public event ViewScriptHandler OnViewScript;
         public event ViewNotecardHandler OnViewNotecard;
         public event EditScriptHandler OnEditScript;
@@ -257,12 +258,8 @@ namespace Aurora.Framework
             if (handlerGenerateClientFlags != null)
             {
                 Delegate[] list = handlerGenerateClientFlags.GetInvocationList();
-#if (!ISWIN)
-                foreach (GenerateClientFlagsHandler handler in list)
-                    perms = perms & handler(userID, part);
-#else
-                perms = list.Cast<GenerateClientFlagsHandler>().Aggregate(perms, (current, check) => current & check(userID, part));
-#endif
+                perms = list.Cast<GenerateClientFlagsHandler>()
+                            .Aggregate(perms, (current, check) => current & check(userID, part));
             }
             return perms;
         }
@@ -280,15 +277,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (BypassPermissionsHandler h in list)
-                {
-                    if (h() == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<BypassPermissionsHandler>().All(h => h() != false);
-#endif
             }
             return true;
         }
@@ -299,15 +288,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (PropagatePermissionsHandler h in list)
-                {
-                    if (h() == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<PropagatePermissionsHandler>().All(h => h() != false);
-#endif
             }
             return true;
         }
@@ -318,15 +299,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (ReclaimParcelHandler h in list)
-                {
-                    if (h(user, parcel, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<ReclaimParcelHandler>().All(h => h(user, parcel, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -337,15 +310,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (DeedParcelHandler h in list)
-                {
-                    if (h(user, parcel, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<DeedParcelHandler>().All(h => h(user, parcel, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -356,15 +321,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (DeedObjectHandler h in list)
-                {
-                    if (h(user, group, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<DeedObjectHandler>().All(h => h(user, group, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -375,15 +332,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (BuyLandHandler h in list)
-                {
-                    if (h(user, parcel, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<BuyLandHandler>().All(h => h(user, parcel, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -394,15 +343,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (LinkObjectHandler h in list)
-                {
-                    if (h(user, objectID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<LinkObjectHandler>().All(h => h(user, objectID) != false);
-#endif
             }
             return true;
         }
@@ -413,15 +354,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (DelinkObjectHandler h in list)
-                {
-                    if (h(user, objectID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<DelinkObjectHandler>().All(h => h(user, objectID) != false);
-#endif
             }
             return true;
         }
@@ -432,15 +365,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (DelinkObjectHandler h in list)
-                {
-                    if (h(user, groupID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<DelinkObjectHandler>().All(h => h(user, groupID) != false);
-#endif
             }
             return true;
         }
@@ -473,15 +398,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (DeleteObjectHandler h in list)
-                {
-                    if (h(objectID, deleter, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<DeleteObjectHandler>().All(h => h(objectID, deleter, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -496,15 +413,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (TakeObjectHandler h in list)
-                {
-                    if (h(objectID, AvatarTakingUUID, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<TakeObjectHandler>().All(h => h(objectID, AvatarTakingUUID, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -519,15 +428,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (TakeCopyObjectHandler h in list)
-                {
-                    if (h(objectID, userID, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<TakeCopyObjectHandler>().All(h => h(objectID, userID, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -542,15 +443,9 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (DuplicateObjectHandler h in list)
-                {
-                    if (h(objectCount, objectID, owner, m_scene, objectPosition) == false) return false;
-                }
-                return true;
-#else
-                return list.Cast<DuplicateObjectHandler>().All(h => h(objectCount, objectID, owner, m_scene, objectPosition) != false);
-#endif
+                return
+                    list.Cast<DuplicateObjectHandler>()
+                        .All(h => h(objectCount, objectID, owner, m_scene, objectPosition) != false);
             }
             return true;
         }
@@ -565,15 +460,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditObjectHandler h in list)
-                {
-                    if (h(objectID, editorID, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditObjectHandler>().All(h => h(objectID, editorID, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -584,15 +471,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditObjectInventoryHandler h in list)
-                {
-                    if (h(objectID, editorID, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditObjectInventoryHandler>().All(h => h(objectID, editorID, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -607,15 +486,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (MoveObjectHandler h in list)
-                {
-                    if (h(objectID, moverID, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<MoveObjectHandler>().All(h => h(objectID, moverID, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -630,15 +501,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (ObjectEntryHandler h in list)
-                {
-                    if (h(objectID, enteringRegion, newPoint, OwnerID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<ObjectEntryHandler>().All(h => h(objectID, enteringRegion, newPoint, OwnerID) != false);
-#endif
             }
             return true;
         }
@@ -653,15 +516,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (ReturnObjectsHandler h in list)
-                {
-                    if (h(land, user, objects, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<ReturnObjectsHandler>().All(h => h(land, user, objects, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -676,23 +531,16 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (InstantMessageHandler h in list)
-                {
-                    if (h(user, target, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<InstantMessageHandler>().All(h => h(user, target, m_scene) != false);
-#endif
             }
             return true;
         }
 
         /// <summary>
-        ///   Checks whether the user is in god mode
+        ///     Checks whether the user is in god mode
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
+        /// <param name="target"></param>
         /// <returns></returns>
         public bool CanGodTeleport(UUID user, UUID target)
         {
@@ -700,38 +548,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (CanGodTpHandler h in list)
-                {
-                    if (h(user, target) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<CanGodTpHandler>().All(h => h(user, target) != false);
-#endif
-            }
-            return true;
-        }
-
-        #endregion
-
-        #region INVENTORY TRANSFER
-
-        public bool CanInventoryTransfer(UUID user, UUID target)
-        {
-            InventoryTransferHandler handler = OnInventoryTransfer;
-            if (handler != null)
-            {
-                Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (InventoryTransferHandler h in list)
-                {
-                    if (h(user, target, m_scene) == false) return false;
-                }
-                return true;
-#else
-                return list.Cast<InventoryTransferHandler>().All(h => h(user, target, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -746,15 +563,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (ViewScriptHandler h in list)
-                {
-                    if (h(script, objectID, user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<ViewScriptHandler>().All(h => h(script, objectID, user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -765,15 +574,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (ViewNotecardHandler h in list)
-                {
-                    if (h(script, objectID, user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<ViewNotecardHandler>().All(h => h(script, objectID, user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -788,15 +589,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditScriptHandler h in list)
-                {
-                    if (h(script, objectID, user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditScriptHandler>().All(h => h(script, objectID, user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -807,15 +600,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditNotecardHandler h in list)
-                {
-                    if (h(script, objectID, user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditNotecardHandler>().All(h => h(script, objectID, user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -830,15 +615,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (RunScriptHandler h in list)
-                {
-                    if (h(script, objectID, user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<RunScriptHandler>().All(h => h(script, objectID, user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -853,15 +630,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (CompileScriptHandler h in list)
-                {
-                    if (h(ownerUUID, scriptType, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<CompileScriptHandler>().All(h => h(ownerUUID, scriptType, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -876,15 +645,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (StartScriptHandler h in list)
-                {
-                    if (h(script, user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<StartScriptHandler>().All(h => h(script, user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -899,15 +660,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (StopScriptHandler h in list)
-                {
-                    if (h(script, user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<StopScriptHandler>().All(h => h(script, user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -922,15 +675,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (ResetScriptHandler h in list)
-                {
-                    if (h(prim, script, user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<ResetScriptHandler>().All(h => h(prim, script, user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -945,15 +690,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (TerraformLandHandler h in list)
-                {
-                    if (h(user, pos, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<TerraformLandHandler>().All(h => h(user, pos, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -968,15 +705,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (RunConsoleCommandHandler h in list)
-                {
-                    if (h(user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<RunConsoleCommandHandler>().All(h => h(user, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -991,15 +720,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (IssueEstateCommandHandler h in list)
-                {
-                    if (h(user, m_scene, ownerCommand) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<IssueEstateCommandHandler>().All(h => h(user, m_scene, ownerCommand) != false);
-#endif
             }
             return true;
         }
@@ -1009,9 +730,9 @@ namespace Aurora.Framework
         #region CAN BE GODLIKE
 
         /// <summary>
-        ///   Checks whether the user is in god mode
+        ///     Checks whether the user is in god mode
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         public bool IsGod(UUID user)
         {
@@ -1019,23 +740,15 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (IsGodHandler h in list)
-                {
-                    if (h(user, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<IsGodHandler>().All(h => h(user, m_scene) != false);
-#endif
             }
             return true;
         }
 
         /// <summary>
-        ///   Checks whether the user can be in god mode
+        ///     Checks whether the user can be in god mode
         /// </summary>
-        /// <param name = "user"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         public bool IsAdministrator(UUID user)
         {
@@ -1043,15 +756,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (IsAdministratorHandler h in list)
-                {
-                    if (h(user) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<IsAdministratorHandler>().All(h => h(user) != false);
-#endif
             }
             return true;
         }
@@ -1066,15 +771,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditParcelPropertiesHandler h in list)
-                {
-                    if (h(user, parcel, groupPowers, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditParcelPropertiesHandler>().All(h => h(user, parcel, groupPowers, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -1085,15 +782,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditParcelHandler h in list)
-                {
-                    if (h(user, parcel, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditParcelHandler>().All(h => h(user, parcel, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -1104,15 +793,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditParcelHandler h in list)
-                {
-                    if (h(user, parcel, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditParcelHandler>().All(h => h(user, parcel, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -1127,15 +808,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (SellParcelHandler h in list)
-                {
-                    if (h(user, parcel, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<SellParcelHandler>().All(h => h(user, parcel, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -1150,15 +823,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (AbandonParcelHandler h in list)
-                {
-                    if (h(user, parcel, m_scene) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<AbandonParcelHandler>().All(h => h(user, parcel, m_scene) != false);
-#endif
             }
             return true;
         }
@@ -1167,12 +832,13 @@ namespace Aurora.Framework
 
         #endregion
 
-        /// Check whether the specified user is allowed to directly create the given inventory type in a prim's
-        /// inventory (e.g. the New Script button in the 1.21 Linden Lab client).
+        /// <summary>
+        ///     Check whether the specified user is allowed to directly create the given inventory type in a prim's
+        ///     inventory (e.g. the New Script button in the 1.21 Linden Lab client).
         /// </summary>
-        /// <param name = "invType"></param>
-        /// <param name = "objectID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="invType"></param>
+        /// <param name="objectID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanCreateObjectInventory(int invType, UUID objectID, UUID userID)
         {
@@ -1180,15 +846,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (CreateObjectInventoryHandler h in list)
-                {
-                    if (h(invType, objectID, userID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<CreateObjectInventoryHandler>().All(h => h(invType, objectID, userID) != false);
-#endif
             }
             return true;
         }
@@ -1199,15 +857,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (CopyObjectInventoryHandler h in list)
-                {
-                    if (h(itemID, objectID, userID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<CopyObjectInventoryHandler>().All(h => h(itemID, objectID, userID) != false);
-#endif
             }
             return true;
         }
@@ -1218,24 +868,16 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (DeleteObjectInventoryHandler h in list)
-                {
-                    if (h(itemID, objectID, userID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<DeleteObjectInventoryHandler>().All(h => h(itemID, objectID, userID) != false);
-#endif
             }
             return true;
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to create the given inventory type in their inventory.
+        ///     Check whether the specified user is allowed to create the given inventory type in their inventory.
         /// </summary>
-        /// <param name = "invType"></param>
-        /// <param name = "userID"></param>
+        /// <param name="invType"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanCreateUserInventory(int invType, UUID userID)
         {
@@ -1243,24 +885,16 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (CreateUserInventoryHandler h in list)
-                {
-                    if (h(invType, userID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<CreateUserInventoryHandler>().All(h => h(invType, userID) != false);
-#endif
             }
             return true;
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to edit the given inventory item within their own inventory.
+        ///     Check whether the specified user is allowed to edit the given inventory item within their own inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanEditUserInventory(UUID itemID, UUID userID)
         {
@@ -1268,24 +902,16 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditUserInventoryHandler h in list)
-                {
-                    if (h(itemID, userID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditUserInventoryHandler>().All(h => h(itemID, userID) != false);
-#endif
             }
             return true;
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to copy the given inventory item from their own inventory.
+        ///     Check whether the specified user is allowed to copy the given inventory item from their own inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanCopyUserInventory(UUID itemID, UUID userID)
         {
@@ -1293,24 +919,16 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (CopyUserInventoryHandler h in list)
-                {
-                    if (h(itemID, userID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<CopyUserInventoryHandler>().All(h => h(itemID, userID) != false);
-#endif
             }
             return true;
         }
 
         /// <summary>
-        ///   Check whether the specified user is allowed to edit the given inventory item within their own inventory.
+        ///     Check whether the specified user is allowed to edit the given inventory item within their own inventory.
         /// </summary>
-        /// <param name = "itemID"></param>
-        /// <param name = "userID"></param>
+        /// <param name="itemID"></param>
+        /// <param name="userID"></param>
         /// <returns></returns>
         public bool CanDeleteUserInventory(UUID itemID, UUID userID)
         {
@@ -1318,24 +936,16 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (DeleteUserInventoryHandler h in list)
-                {
-                    if (h(itemID, userID) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<DeleteUserInventoryHandler>().All(h => h(itemID, userID) != false);
-#endif
             }
             return true;
         }
 
         /// <summary>
-        ///   Check to make sure the user is allowed to teleport within this region
+        ///     Check to make sure the user is allowed to teleport within this region
         /// </summary>
-        /// <param name = "userID">The user that is attempting to leave</param>
-        /// <param name = "reason">If this check fails, this is the reason why</param>
+        /// <param name="userID">The user that is attempting to leave</param>
+        /// <param name="reason">If this check fails, this is the reason why</param>
         /// <returns>Whether the user is allowed to teleport locally</returns>
         public bool AllowedOutgoingLocalTeleport(UUID userID, out string reason)
         {
@@ -1354,11 +964,11 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check to make sure the user can be teleporting out of the region to a remote region.
-        ///   If this is false, the user is denied the ability to leave the region at all.
+        ///     Check to make sure the user can be teleporting out of the region to a remote region.
+        ///     If this is false, the user is denied the ability to leave the region at all.
         /// </summary>
-        /// <param name = "userID">The user that is attempting to leave the region</param>
-        /// <param name = "reason">If this fails, this explains why it failed</param>
+        /// <param name="userID">The user that is attempting to leave the region</param>
+        /// <param name="reason">If this fails, this explains why it failed</param>
         /// <returns>Whether the user is allowed to teleport to remote regions</returns>
         public bool AllowedOutgoingRemoteTeleport(UUID userID, out string reason)
         {
@@ -1377,13 +987,13 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check to make sure this user has the ability to have an agent in this region.
-        ///   This checks whether they exist in the grid, whether they are banned from the region and more.
-        ///   It is called by the SimulationService in CreateAgent mainly.
+        ///     Check to make sure this user has the ability to have an agent in this region.
+        ///     This checks whether they exist in the grid, whether they are banned from the region and more.
+        ///     It is called by the SimulationService in CreateAgent mainly.
         /// </summary>
-        /// <param name = "agent">The Agent that is coming in</param>
-        /// <param name = "isRootAgent">Whether this agent will be a root agent</param>
-        /// <param name = "reason">If it fails, this explains why they cannot enter</param>
+        /// <param name="agent">The Agent that is coming in</param>
+        /// <param name="isRootAgent">Whether this agent will be a root agent</param>
+        /// <param name="reason">If it fails, this explains why they cannot enter</param>
         /// <returns>Whether this user is allowed to have an agent in this region</returns>
         public bool AllowedIncomingAgent(AgentCircuitData agent, bool isRootAgent, out string reason)
         {
@@ -1402,13 +1012,14 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        ///   Check to see whether the user is actually in this region 
-        ///   and then figure out if they can be where they want to be
+        ///     Check to see whether the user is actually in this region
+        ///     and then figure out if they can be where they want to be
         /// </summary>
-        /// <param name = "userID">The user who is teleporting (can be either incoming from a remote region, or a local teleport)</param>
-        /// <param name = "Position">The position the user has requested</param>
-        /// <param name = "newPosition">The position the user is going to get</param>
-        /// <param name = "reason">If the check fails, this will tell why</param>
+        /// <param name="userID">The user who is teleporting (can be either incoming from a remote region, or a local teleport)</param>
+        /// <param name="Position">The position the user has requested</param>
+        /// <param name="TeleportFlags"></param>
+        /// <param name="newPosition">The position the user is going to get</param>
+        /// <param name="reason">If the check fails, this will tell why</param>
         /// <returns>Whether this user can teleport into/around this region</returns>
         public bool AllowedIncomingTeleport(UUID userID, Vector3 Position, uint TeleportFlags, out Vector3 newPosition,
                                             out string reason)
@@ -1434,15 +1045,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (PushObjectHandler h in list)
-                {
-                    if (h(uUID, targetlandObj) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<PushObjectHandler>().All(h => h(uUID, targetlandObj) != false);
-#endif
             }
             return true;
         }
@@ -1453,15 +1056,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (PushObjectHandler h in list)
-                {
-                    if (h(uUID, targetlandObj) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<PushObjectHandler>().All(h => h(uUID, targetlandObj) != false);
-#endif
             }
             return true;
         }
@@ -1472,15 +1067,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (EditParcelAccessListHandler h in list)
-                {
-                    if (h(uUID, land, flags) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<EditParcelAccessListHandler>().All(h => h(uUID, land, flags) != false);
-#endif
             }
             return true;
         }
@@ -1491,15 +1078,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (GenericParcelHandler h in list)
-                {
-                    if (h(user, parcel, groupPowers) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<GenericParcelHandler>().All(h => h(user, parcel, groupPowers) != false);
-#endif
             }
             return true;
         }
@@ -1510,15 +1089,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (TakeLandmark h in list)
-                {
-                    if (h(user) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<TakeLandmark>().All(h => h(user) != false);
-#endif
             }
             return true;
         }
@@ -1529,11 +1100,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
                 return list.Cast<TakeLandmark>().All(h => h(userID) != false);
-#else
-                return list.Cast<TakeLandmark>().All(h => h(userID) != false);
-#endif
             }
             return true;
         }
@@ -1544,15 +1111,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (ControlPrimMediaHandler h in list)
-                {
-                    if (h(userID, primID, face) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<ControlPrimMediaHandler>().All(h => h(userID, primID, face) != false);
-#endif
             }
             return true;
         }
@@ -1563,15 +1122,7 @@ namespace Aurora.Framework
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-#if (!ISWIN)
-                foreach (InteractWithPrimMediaHandler h in list)
-                {
-                    if (h(userID, primID, face) == false) return false;
-                }
-                return true;
-#else
                 return list.Cast<InteractWithPrimMediaHandler>().All(h => h(userID, primID, face) != false);
-#endif
             }
             return true;
         }

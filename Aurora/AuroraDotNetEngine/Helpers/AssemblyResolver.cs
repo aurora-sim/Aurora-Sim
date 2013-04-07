@@ -31,7 +31,6 @@ using System.Reflection;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
-    [Serializable]
     public class AssemblyResolver
     {
         private readonly string PathToSearch = "";

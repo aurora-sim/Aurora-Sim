@@ -25,24 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Reflection;
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using System;
 
 namespace Aurora.Modules.Gestures
 {
     public class GesturesModule : INonSharedRegionModule
     {
         protected IScene m_scene;
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
 
         #region INonSharedRegionModule Members
 
@@ -84,10 +82,6 @@ namespace Aurora.Modules.Gestures
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
-
         private void OnNewClient(IClientAPI client)
         {
             client.OnActivateGesture += ActivateGesture;
@@ -104,11 +98,10 @@ namespace Aurora.Modules.Gestures
         {
             IInventoryService invService = m_scene.InventoryService;
 
-            InventoryItemBase item = new InventoryItemBase(gestureId, client.AgentId);
-            item = invService.GetItem(item);
+            InventoryItemBase item = invService.GetItem(client.AgentId, gestureId);
             if (item != null)
             {
-                item.Flags |= (uint)1;
+                item.Flags |= (uint) 1;
                 invService.UpdateItem(item);
             }
             else
@@ -120,11 +113,10 @@ namespace Aurora.Modules.Gestures
         {
             IInventoryService invService = m_scene.InventoryService;
 
-            InventoryItemBase item = new InventoryItemBase(gestureId, client.AgentId);
-            item = invService.GetItem(item);
+            InventoryItemBase item = invService.GetItem(client.AgentId, gestureId);
             if (item != null)
             {
-                item.Flags &= ~(uint)1;
+                item.Flags &= ~(uint) 1;
                 invService.UpdateItem(item);
             }
             else

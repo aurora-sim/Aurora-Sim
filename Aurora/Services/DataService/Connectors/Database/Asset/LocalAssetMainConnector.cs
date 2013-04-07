@@ -1,11 +1,13 @@
-﻿using System;
-using System.Data;
-using System.Reflection;
-using System.Collections.Generic;
-using Aurora.Framework;
+﻿using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Data;
 
 namespace Aurora.Services.DataService.Connectors.Database.Asset
 {
@@ -30,9 +32,10 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            genericData.ConnectToDatabase(defaultConnectionString, "Asset",
-                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-            DataManager.DataManager.RegisterPlugin(this);
+            if (genericData != null)
+                genericData.ConnectToDatabase(defaultConnectionString, "Asset",
+                                              source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            Framework.Utilities.DataManager.RegisterPlugin(this);
         }
 
         #endregion
@@ -60,7 +63,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     return LoadAssetFromDataRead(dr.DataReader);
                 }
-                if(MainConsole.Instance != null)
+                if (MainConsole.Instance != null)
                     MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetMeta({0}) - Asset was not found.", uuid);
             }
             catch (Exception e)
@@ -95,14 +98,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     if (oldAsset == null || (oldAsset.Flags & AssetFlags.Rewritable) == AssetFlags.Rewritable)
                     {
                         if (MainConsole.Instance != null)
-                            MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
+                            MainConsole.Instance.Debug(
+                                "[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
                         Delete(asset.ID, true);
                         InsertAsset(asset, asset.ID);
                     }
                     else
                     {
                         if (MainConsole.Instance != null)
-                            MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
+                            MainConsole.Instance.Debug(
+                                "[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
                         InsertAsset(asset, UUID.Random());
                     }
                 }
@@ -114,8 +119,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             catch (Exception e)
             {
                 if (MainConsole.Instance != null)
-                    MainConsole.Instance.ErrorFormat("[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
-                                  asset.ID, asset.Name, e);
+                    MainConsole.Instance.ErrorFormat(
+                        "[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
+                        asset.ID, asset.Name, e);
             }
             return true;
         }
@@ -157,17 +163,17 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private void InsertAsset(AssetBase asset, UUID assetID)
         {
-            int now = (int)Utils.DateTimeToUnixTime(DateTime.UtcNow);
+            int now = (int) Utils.DateTimeToUnixTime(DateTime.UtcNow);
             Dictionary<string, object> row = new Dictionary<string, object>(11);
             row["id"] = assetID;
             row["name"] = asset.Name;
             row["description"] = asset.Description;
-            row["assetType"] = (sbyte)asset.TypeAsset;
+            row["assetType"] = (sbyte) asset.TypeAsset;
             row["local"] = (asset.Flags & AssetFlags.Local) == AssetFlags.Local;
             row["temporary"] = (asset.Flags & AssetFlags.Temporary) == AssetFlags.Temporary;
             row["create_time"] = now;
             row["access_time"] = now;
-            row["asset_flags"] = (int)asset.Flags;
+            row["asset_flags"] = (int) asset.Flags;
             row["creatorID"] = asset.CreatorID;
             row["data"] = asset.Data;
 
@@ -180,12 +186,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             {
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["id"] = uuid;
-                return m_Gd.Query(new string[] { "id" }, "assets", filter, null, null, null).Count > 0;
+                return m_Gd.Query(new string[] {"id"}, "assets", filter, null, null, null).Count > 0;
             }
             catch (Exception e)
             {
                 if (MainConsole.Instance != null)
-                    MainConsole.Instance.ErrorFormat("[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e, uuid);
+                    MainConsole.Instance.ErrorFormat(
+                        "[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e, uuid);
             }
             return false;
         }
@@ -228,7 +235,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             {
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "data");
                 if (dr != null)
-                    return (byte[])dr.DataReader["data"];
+                    return (byte[]) dr.DataReader["data"];
                 if (MainConsole.Instance != null)
                     MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetData({0}) - Asset was not found.", uuid);
             }

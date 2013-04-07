@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using Aurora.Framework;
+using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Servers.HttpServer;
-using Aurora.Framework;
-using Nini.Config;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Profile;
+using Aurora.Framework.Utilities;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.Web
 {
@@ -19,27 +18,36 @@ namespace Aurora.Modules.Web
             get
             {
                 return new[]
-                       {
-                           "html/admin/edit_user.html"
-                       };
+                           {
+                               "html/admin/edit_user.html"
+                           };
             }
         }
 
-        public bool RequiresAuthentication { get { return true; } }
-        public bool RequiresAdminAuthentication { get { return true; } }
+        public bool RequiresAuthentication
+        {
+            get { return true; }
+        }
+
+        public bool RequiresAdminAuthentication
+        {
+            get { return true; }
+        }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
+                                               OSHttpResponse httpResponse, Dictionary<string, object> requestParameters,
+                                               ITranslator translator, out string response)
         {
             response = null;
             var vars = new Dictionary<string, object>();
 
             string error = "";
-            UUID user = httpRequest.Query.ContainsKey("userid") ? UUID.Parse(httpRequest.Query["userid"].ToString()) :
-                 UUID.Parse(requestParameters["userid"].ToString());
+            UUID user = httpRequest.Query.ContainsKey("userid")
+                            ? UUID.Parse(httpRequest.Query["userid"].ToString())
+                            : UUID.Parse(requestParameters["userid"].ToString());
 
             IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
-            var agentService = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            var agentService = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
             UserAccount account = userService.GetUserAccount(null, user);
             IAgentInfo agent = agentService.GetAgent(user);
             if (requestParameters.ContainsKey("Submit") &&
@@ -52,16 +60,19 @@ namespace Aurora.Modules.Web
                     response = "Passwords do not match";
                 else
                 {
-                    IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
+                    IAuthenticationService authService =
+                        webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
                     if (authService != null)
-                        response = authService.SetPassword(user, "UserAccount", password) ? "Successfully set password" : "Failed to set your password, try again later";
+                        response = authService.SetPassword(user, "UserAccount", password)
+                                       ? "Successfully set password"
+                                       : "Failed to set your password, try again later";
                     else
                         response = "No authentication service was available to change your password";
                 }
                 return null;
             }
             else if (requestParameters.ContainsKey("Submit") &&
-                requestParameters["Submit"].ToString() == "SubmitEmailChange")
+                     requestParameters["Submit"].ToString() == "SubmitEmailChange")
             {
                 string email = requestParameters["email"].ToString();
 
@@ -76,12 +87,12 @@ namespace Aurora.Modules.Web
                 return null;
             }
             else if (requestParameters.ContainsKey("Submit") &&
-                requestParameters["Submit"].ToString() == "SubmitDeleteUser")
+                     requestParameters["Submit"].ToString() == "SubmitDeleteUser")
             {
                 string username = requestParameters["username"].ToString();
                 response = "Deleted user successfully";
                 if (username == account.Name)
-                    userService.DeleteUser(user, "", false, false);
+                    userService.DeleteUser(account.PrincipalID, account.Name, "", false, false);
                 else
                     response = "The user name did not match";
                 return null;
@@ -125,7 +136,8 @@ namespace Aurora.Modules.Web
                 requestParameters["Submit"].ToString() == "SubmitKickUser")
             {
                 string message = requestParameters["KickMessage"].ToString();
-                IGridWideMessageModule messageModule = webInterface.Registry.RequestModuleInterface<IGridWideMessageModule>();
+                IGridWideMessageModule messageModule =
+                    webInterface.Registry.RequestModuleInterface<IGridWideMessageModule>();
                 if (messageModule != null)
                     messageModule.KickUser(account.PrincipalID, message);
                 response = "User has been kicked.";
@@ -135,18 +147,23 @@ namespace Aurora.Modules.Web
                 requestParameters["Submit"].ToString() == "SubmitMessageUser")
             {
                 string message = requestParameters["Message"].ToString();
-                IGridWideMessageModule messageModule = webInterface.Registry.RequestModuleInterface<IGridWideMessageModule>();
+                IGridWideMessageModule messageModule =
+                    webInterface.Registry.RequestModuleInterface<IGridWideMessageModule>();
                 if (messageModule != null)
                     messageModule.MessageUser(account.PrincipalID, message);
                 response = "User has been sent the message.";
                 return null;
             }
             string bannedUntil = "";
-            bool userBanned = agent == null ? false : ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan);
+            bool userBanned = agent == null
+                                  ? false
+                                  : ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan ||
+                                     (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan);
             bool TempUserBanned = false;
             if (userBanned)
             {
-                if ((agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan && agent.OtherAgentInformation["TemperaryBanInfo"].AsDate() < DateTime.Now)
+                if ((agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan &&
+                    agent.OtherAgentInformation["TemperaryBanInfo"].AsDate() < DateTime.Now.ToUniversalTime())
                 {
                     userBanned = false;
                     agent.Flags &= ~IAgentFlags.TempBan;
@@ -162,9 +179,12 @@ namespace Aurora.Modules.Web
                 }
             }
             bool userOnline = false;
-            ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
-            if (capsService != null)
-                userOnline = capsService.GetClientCapsService(account.PrincipalID) != null;
+            IAgentInfoService agentInfoService = webInterface.Registry.RequestModuleInterface<IAgentInfoService>();
+            if (agentInfoService != null)
+            {
+                UserInfo info = agentInfoService.GetUserInfo(account.PrincipalID.ToString());
+                userOnline = info != null ? info.IsOnline : false;
+            }
             vars.Add("UserOnline", userOnline);
             vars.Add("NotUserBanned", !userBanned);
             vars.Add("UserBanned", userBanned);
@@ -190,7 +210,7 @@ namespace Aurora.Modules.Web
             vars.Add("TypeUserNameToConfirm", translator.GetTranslatedString("TypeUserNameToConfirm"));
 
             vars.Add("AdminLoginInAsUserText", translator.GetTranslatedString("AdminLoginInAsUserText"));
-			vars.Add("AdminLoginInAsUserInfoText", translator.GetTranslatedString("AdminLoginInAsUserInfoText"));
+            vars.Add("AdminLoginInAsUserInfoText", translator.GetTranslatedString("AdminLoginInAsUserInfoText"));
             vars.Add("AdminDeleteUserText", translator.GetTranslatedString("AdminDeleteUserText"));
             vars.Add("AdminDeleteUserInfoText", translator.GetTranslatedString("AdminDeleteUserInfoText"));
             vars.Add("AdminUnbanUserText", translator.GetTranslatedString("AdminUnbanUserText"));
@@ -215,15 +235,15 @@ namespace Aurora.Modules.Web
 
             List<Dictionary<string, object>> daysArgs = new List<Dictionary<string, object>>();
             for (int i = 0; i <= 100; i++)
-                daysArgs.Add(new Dictionary<string, object> { { "Value", i } });
+                daysArgs.Add(new Dictionary<string, object> {{"Value", i}});
 
             List<Dictionary<string, object>> hoursArgs = new List<Dictionary<string, object>>();
             for (int i = 0; i <= 23; i++)
-                hoursArgs.Add(new Dictionary<string, object> { { "Value", i } });
+                hoursArgs.Add(new Dictionary<string, object> {{"Value", i}});
 
             List<Dictionary<string, object>> minutesArgs = new List<Dictionary<string, object>>();
             for (int i = 0; i <= 59; i++)
-                minutesArgs.Add(new Dictionary<string, object> { { "Value", i } });
+                minutesArgs.Add(new Dictionary<string, object> {{"Value", i}});
 
             vars.Add("Days", daysArgs);
             vars.Add("Hours", hoursArgs);

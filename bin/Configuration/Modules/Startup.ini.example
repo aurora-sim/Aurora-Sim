@@ -15,41 +15,9 @@
     ;; What should all new objects be named?
     ;; Default: "Primitive"
     DefaultObjectName = "Object"
-
-    ;; How many objects should be allowed in all regions? (Will be overridden by settings per region)
-    ObjectCapacity = 80000
 	
 	;; Adding this password allows people to remotely manage regions and the console, must not be blank
 	RemoteAccessPassword = ""
-
-[Update]
-
-    ;; Should we check for updates?
-    ;; Default: true
-    Enabled = false
-
-	;; Which module to use ?
-	;; GitHubUpdater (default), AuroraDataStartupPlugin
-	Module = GitHubUpdater
-
-    ;; Should we notify you when there is an update?
-    ;; Default: true
-    NotifyOnNewRelease = true
-
-    ;; Version that blocks updates until the update has past this.
-    LatestRelease = 0.5.1
-
-    ;; URL to ask whether there is an update. Comment to use the default Aurora URL. Not currently used GitHubUpdater
-    ;URLToCheckForUpdates =
-
-[ErrorReporting]
-
-    ;; Should error reports automatically be forwarded on to the Aurora developing team?
-    ;; Default: true
-    SendErrorReports = true
-
-    ;; What URL should the report be sent to? (Defaults to Aurora automatically, there should be no reason to set this).
-    ; ErrorReportingURL =
 
 [Animations]
 

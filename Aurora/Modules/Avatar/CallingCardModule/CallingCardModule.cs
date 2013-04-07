@@ -25,28 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services.ClassHelpers.Inventory;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace Aurora.Modules.CallingCards
 {
-    public class CallingCardModule : ISharedRegionModule, ICallingCardModule
+    public class CallingCardModule : INonSharedRegionModule, ICallingCardModule
     {
         #region Declares
 
         protected bool m_Enabled = true;
         protected Dictionary<UUID, UUID> m_pendingCallingcardRequests = new Dictionary<UUID, UUID>();
-        protected List<IScene> m_scenes = new List<IScene>();
+        protected IScene m_Scene;
 
         #endregion
 
-        #region ISharedRegionModule
+        #region INonSharedRegionModule
 
         public void Initialise(IConfigSource source)
         {
@@ -60,7 +63,7 @@ namespace Aurora.Modules.CallingCards
             if (!m_Enabled)
                 return;
 
-            m_scenes.Add(scene);
+            m_Scene = scene;
 
             scene.RegisterModuleInterface<ICallingCardModule>(this);
         }
@@ -70,7 +73,8 @@ namespace Aurora.Modules.CallingCards
             if (!m_Enabled)
                 return;
 
-            m_scenes.Remove(scene);
+            m_Scene = null;
+
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
 
@@ -83,10 +87,6 @@ namespace Aurora.Modules.CallingCards
                 return;
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -127,12 +127,12 @@ namespace Aurora.Modules.CallingCards
         #region ICallingCardModule interface
 
         /// <summary>
-        ///   Create the calling card inventory item in the user's inventory
+        ///     Create the calling card inventory item in the user's inventory
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "creator"></param>
-        /// <param name = "folder"></param>
-        /// <param name = "name"></param>
+        /// <param name="client"></param>
+        /// <param name="creator"></param>
+        /// <param name="folder"></param>
+        /// <param name="name"></param>
         public void CreateCallingCard(IClientAPI client, UUID creator, UUID folder, string name)
         {
             MainConsole.Instance.Debug("[AURORA CALLING CARD MODULE]: Creating calling card for " + client.Name);
@@ -142,7 +142,7 @@ namespace Aurora.Modules.CallingCards
                                              AssetType = (int) AssetType.CallingCard,
                                              BasePermissions = (uint) (PermissionMask.Copy | PermissionMask.Modify),
                                              CurrentPermissions = (uint) (PermissionMask.Copy | PermissionMask.Modify),
-                                             NextPermissions = (uint)PermissionMask.None,
+                                             NextPermissions = (uint) PermissionMask.None,
                                              CreationDate = Util.UnixTimeSinceEpoch(),
                                              CreatorId = creator.ToString(),
                                              Description = "",
@@ -160,22 +160,22 @@ namespace Aurora.Modules.CallingCards
                                          };
 
 
-            
             ILLClientInventory inventory = client.Scene.RequestModuleInterface<ILLClientInventory>();
             if (inventory != null)
-                inventory.AddInventoryItem(client, item);
+                inventory.AddInventoryItemAsync(client, item);
         }
 
         /// <summary>
-        ///   This comes from the Friends module when a friend is added or when a user gives another user a calling card
+        ///     This comes from the Friends module when a friend is added or when a user gives another user a calling card
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "destID"></param>
-        /// <param name = "transactionID"></param>
+        /// <param name="client"></param>
+        /// <param name="destID"></param>
+        /// <param name="transactionID"></param>
         private void OnOfferCallingCard(IClientAPI client, UUID destID, UUID transactionID)
         {
-            MainConsole.Instance.DebugFormat("[AURORA CALLING CARD MODULE]: got offer from {0} for {1}, transaction {2}",
-                              client.AgentId, destID, transactionID);
+            MainConsole.Instance.DebugFormat(
+                "[AURORA CALLING CARD MODULE]: got offer from {0} for {1}, transaction {2}",
+                client.AgentId, destID, transactionID);
 
             IClientAPI friendClient = LocateClientObject(destID);
             if (friendClient == null)
@@ -193,17 +193,18 @@ namespace Aurora.Modules.CallingCards
         }
 
         /// <summary>
-        ///   Accept the user's calling card and add the card to their inventory
+        ///     Accept the user's calling card and add the card to their inventory
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "transactionID"></param>
-        /// <param name = "folderID"></param>
+        /// <param name="client"></param>
+        /// <param name="transactionID"></param>
+        /// <param name="folderID"></param>
         private void OnAcceptCallingCard(IClientAPI client, UUID transactionID, UUID folderID)
         {
-            MainConsole.Instance.DebugFormat("[AURORA CALLING CARD MODULE]: User {0} ({1} {2}) accepted tid {3}, folder {4}",
-                              client.AgentId,
-                              client.FirstName, client.LastName,
-                              transactionID, folderID);
+            MainConsole.Instance.DebugFormat(
+                "[AURORA CALLING CARD MODULE]: User {0} ({1}) accepted tid {2}, folder {3}",
+                client.AgentId,
+                client.Name,
+                transactionID, folderID);
             UUID destID;
             lock (m_pendingCallingcardRequests)
             {
@@ -229,14 +230,14 @@ namespace Aurora.Modules.CallingCards
         }
 
         /// <summary>
-        ///   Remove the potential calling card and notify the other user
+        ///     Remove the potential calling card and notify the other user
         /// </summary>
-        /// <param name = "client"></param>
-        /// <param name = "transactionID"></param>
+        /// <param name="client"></param>
+        /// <param name="transactionID"></param>
         private void OnDeclineCallingCard(IClientAPI client, UUID transactionID)
         {
             MainConsole.Instance.DebugFormat("[AURORA CALLING CARD MODULE]: User {0} (ID:{1}) declined card, tid {2}",
-                              client.Name, client.AgentId, transactionID);
+                                             client.Name, client.AgentId, transactionID);
             UUID destID;
             lock (m_pendingCallingcardRequests)
             {
@@ -262,31 +263,17 @@ namespace Aurora.Modules.CallingCards
         #region Helpers
 
         /// <summary>
-        ///   Find the client for a ID
+        ///     Find the client for a ID
         /// </summary>
-        /// <param name = "agentID"></param>
+        /// <param name="agentID"></param>
         /// <returns></returns>
         public IClientAPI LocateClientObject(UUID agentID)
         {
-            IScene scene = GetClientScene(agentID);
-            if (scene == null)
-                return null;
-
-            IScenePresence presence = scene.GetScenePresence(agentID);
+            IScenePresence presence = m_Scene.GetScenePresence(agentID);
             if (presence == null)
                 return null;
 
             return presence.ControllingClient;
-        }
-
-        /// <summary>
-        ///   Find the scene for an agent
-        /// </summary>
-        /// <param name = "agentId"></param>
-        /// <returns></returns>
-        private IScene GetClientScene(UUID agentId)
-        {
-            return (from scene in m_scenes let presence = scene.GetScenePresence(agentId) where presence != null where !presence.IsChildAgent select scene).FirstOrDefault();
         }
 
         #endregion

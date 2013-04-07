@@ -25,69 +25,44 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Services;
 using OpenMetaverse;
-using Aurora.Framework;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.DatabaseInterfaces
 {
     public interface IRegionInfoConnector : IAuroraDataPlugin
-	{
+    {
         /// <summary>
-        /// Gets RegionInfos for the database region connector
+        ///     Gets RegionInfos for the database region connector
         /// </summary>
         /// <returns></returns>
         RegionInfo[] GetRegionInfos(bool nonDisabledOnly);
-        
+
         /// <summary>
-        /// Gets a specific region info for the given region ID
+        ///     Gets a specific region info for the given region ID
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
         RegionInfo GetRegionInfo(UUID regionID);
 
         /// <summary>
-        /// Gets a specific region info for the given region name
+        ///     Gets a specific region info for the given region name
         /// </summary>
         /// <param name="regionName"></param>
         /// <returns></returns>
-        RegionInfo GetRegionInfo (string regionName);
+        RegionInfo GetRegionInfo(string regionName);
 
         /// <summary>
-        /// Updates the region info for the given region
+        ///     Updates the region info for the given region
         /// </summary>
         /// <param name="region"></param>
         void UpdateRegionInfo(RegionInfo region);
 
         /// <summary>
-        /// Delete the region from the loader
+        ///     Delete the region from the loader
         /// </summary>
         /// <param name="regionInfo"></param>
         void Delete(RegionInfo regionInfo);
-
-        /// <summary>
-        /// Loads stored WindLight settings for the given region
-        /// </summary>
-        /// <param name="regionUUID"></param>
-        /// <returns></returns>
-        Dictionary<float, RegionLightShareData> LoadRegionWindlightSettings(UUID regionUUID);
-
-        /// <summary>
-        /// Stores WindLight settings for the given region
-        /// </summary>
-        void StoreRegionWindlightSettings (UUID RegionID, UUID ID, RegionLightShareData lsd);
-
-        /// <summary>
-        /// Store the given regions settings (this includes some of the Region/Estate pieces)
-        /// </summary>
-        /// <param name="rs"></param>
-        void StoreRegionSettings (RegionSettings rs);
-
-        /// <summary>
-        /// Load stored region settings from the database
-        /// </summary>
-        /// <param name="regionUUID"></param>
-        /// <returns></returns>
-        RegionSettings LoadRegionSettings (UUID regionUUID);
     }
 }

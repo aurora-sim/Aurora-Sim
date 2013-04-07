@@ -26,12 +26,12 @@
  */
 
 using System;
-using System.Collections;
 using System.IO;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace Aurora.Framework.Servers.HttpServer.Interfaces
 {
-    public interface IStreamedRequestHandler : IDisposable
+    public interface IStreamedRequestHandler
     {
         // Return response content type
         string ContentType { get; }

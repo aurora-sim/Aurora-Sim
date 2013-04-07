@@ -26,6 +26,8 @@
  */
 
 using System;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
 using Aurora.Simulation.Base;
 using Aurora.Framework;
 
@@ -34,7 +36,7 @@ namespace Aurora.Server
     public class AuroraBase : SimulationBase
     {
         /// <summary>
-        ///   Performs initialisation of the scene, such as loading configuration from disk.
+        ///     Performs initialisation of the scene, such as loading configuration from disk.
         /// </summary>
         public override void Startup()
         {
@@ -42,9 +44,11 @@ namespace Aurora.Server
 
             //Fix the default prompt
             if (MainConsole.Instance != null)
-                MainConsole.Instance.DefaultPrompt = "Aurora.Server ";
-
-            MainConsole.Instance.Info("[AURORASTARTUP]: Startup completed in " + (DateTime.Now - this.StartupTime).TotalSeconds);
+			{
+				MainConsole.Instance.DefaultPrompt = "Aurora.Server ";
+				MainConsole.Instance.Info ("[AURORASTARTUP]: Startup completed in " +
+					(DateTime.Now - this.StartupTime).TotalSeconds);
+			}
         }
 
         public override ISimulationBase Copy()

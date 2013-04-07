@@ -28,46 +28,46 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using OdeAPI;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Physics;
 using OpenMetaverse;
-using Aurora.Framework;
+
 //using Ode.NET;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     /// <summary>
-    ///   Processes raycast requests as ODE is in a state to be able to do them.
-    ///   This ensures that it's thread safe and there will be no conflicts.
-    ///   Requests get returned by a different thread then they were requested by.
+    ///     Processes raycast requests as ODE is in a state to be able to do them.
+    ///     This ensures that it's thread safe and there will be no conflicts.
+    ///     Requests get returned by a different thread then they were requested by.
     /// </summary>
     public class AuroraODERayCastRequestManager
     {
         /// <summary>
-        ///   ODE contact array to be filled by the collision testing
+        ///     ODE contact array to be filled by the collision testing
         /// </summary>
         private readonly d.ContactGeom[] contacts = new d.ContactGeom[5];
 
         private readonly List<ContactResult> m_contactResults = new List<ContactResult>();
 
         /// <summary>
-        ///   ODE near callback delegate
+        ///     ODE near callback delegate
         /// </summary>
         private readonly d.NearCallback nearCallback;
 
         /// <summary>
-        ///   Pending Raycast Requests
+        ///     Pending Raycast Requests
         /// </summary>
         protected List<ODERayRequest> m_PendingRayRequests = new List<ODERayRequest>();
 
         /// <summary>
-        ///   Pending Raycast Requests
+        ///     Pending Raycast Requests
         /// </summary>
         protected List<ODERayCastRequest> m_PendingRequests = new List<ODERayCastRequest>();
 
         /// <summary>
-        ///   Scene that created this object.
+        ///     Scene that created this object.
         /// </summary>
         private AuroraODEPhysicsScene m_scene;
 
@@ -79,12 +79,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Queues a raycast
+        ///     Queues a raycast
         /// </summary>
-        /// <param name = "position">Origin of Ray</param>
-        /// <param name = "direction">Ray normal</param>
-        /// <param name = "length">Ray length</param>
-        /// <param name = "retMethod">Return method to send the results</param>
+        /// <param name="position">Origin of Ray</param>
+        /// <param name="direction">Ray normal</param>
+        /// <param name="length">Ray length</param>
+        /// <param name="retMethod">Return method to send the results</param>
         public void QueueRequest(Vector3 position, Vector3 direction, float length, RaycastCallback retMethod)
         {
             lock (m_PendingRequests)
@@ -102,12 +102,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Queues a raycast
+        ///     Queues a raycast
         /// </summary>
-        /// <param name = "position">Origin of Ray</param>
-        /// <param name = "direction">Ray normal</param>
-        /// <param name = "length">Ray length</param>
-        /// <param name = "retMethod">Return method to send the results</param>
+        /// <param name="position">Origin of Ray</param>
+        /// <param name="direction">Ray normal</param>
+        /// <param name="length">Ray length</param>
+        /// <param name="count">Ray count</param>
+        /// <param name="retMethod">Return method to send the results</param>
         public void QueueRequest(Vector3 position, Vector3 direction, float length, int count, RayCallback retMethod)
         {
             lock (m_PendingRayRequests)
@@ -126,7 +127,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Process all queued raycast requests
+        ///     Process all queued raycast requests
         /// </summary>
         /// <returns>Time in MS the raycasts took to process.</returns>
         public int ProcessQueuedRequests()
@@ -169,9 +170,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Method that actually initiates the raycast
+        ///     Method that actually initiates the raycast
         /// </summary>
-        /// <param name = "req"></param>
+        /// <param name="req"></param>
         private void RayCast(ODERayCastRequest req)
         {
             // Create the ray
@@ -195,20 +196,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Find closest contact and object.
             lock (m_contactResults)
             {
-#if (!ISWIN)
-                foreach (ContactResult cResult in m_contactResults)
-                {
-                    if (Vector3.Distance(req.Origin, cResult.Pos) < Vector3.Distance(req.Origin, closestcontact[0]))
-                    {
-                        closestcontact[0] = cResult.Pos;
-                        hitConsumerID = cResult.ConsumerID;
-                        distance = cResult.Depth;
-                        hitYN = true;
-                        snormal = cResult.Normal;
-                    }
-                }
-#else
-                foreach (ContactResult cResult in m_contactResults.Where(cResult => Vector3.Distance(req.Origin, cResult.Pos) < Vector3.Distance(req.Origin, closestcontact[0])))
+                foreach (
+                    ContactResult cResult in
+                        m_contactResults.Where(
+                            cResult =>
+                            Vector3.Distance(req.Origin, cResult.Pos) < Vector3.Distance(req.Origin, closestcontact[0]))
+                    )
                 {
                     closestcontact[0] = cResult.Pos;
                     hitConsumerID = cResult.ConsumerID;
@@ -216,7 +209,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     hitYN = true;
                     snormal = cResult.Normal;
                 }
-#endif
 
                 m_contactResults.Clear();
             }
@@ -227,9 +219,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Method that actually initiates the raycast
+        ///     Method that actually initiates the raycast
         /// </summary>
-        /// <param name = "req"></param>
+        /// <param name="req"></param>
         private void RayCast(ODERayRequest req)
         {
             // Create the ray
@@ -433,7 +425,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
-        ///   Dereference the creator scene so that it can be garbage collected if needed.
+        ///     Dereference the creator scene so that it can be garbage collected if needed.
         /// </summary>
         internal void Dispose()
         {

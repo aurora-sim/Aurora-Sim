@@ -25,26 +25,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
+using Aurora.Framework.Modules;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Framework
+namespace Aurora.Framework.ClientInterfaces
 {
     public class MuteList : IDataTransferable
     {
         /// <summary>
-        ///   UUID of the person muted
+        ///     UUID of the person muted
         /// </summary>
         public UUID MuteID;
 
         /// <summary>
-        ///   Name of the person muted
+        ///     Name of the person muted
         /// </summary>
         public string MuteName;
 
         /// <summary>
-        ///   Are they an object, person, group?
+        ///     Are they an object, person, group?
         /// </summary>
         public string MuteType;
 
@@ -59,16 +59,6 @@ namespace Aurora.Framework
         {
             OSDMap map = new OSDMap {{"MuteName", MuteName}, {"MuteID", MuteID}, {"MuteType", MuteType}};
             return map;
-        }
-
-        public override Dictionary<string, object> ToKVP()
-        {
-            return Util.OSDToDictionary(ToOSD());
-        }
-
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-            FromOSD(Util.DictionaryToOSD(KVP));
         }
     }
 }

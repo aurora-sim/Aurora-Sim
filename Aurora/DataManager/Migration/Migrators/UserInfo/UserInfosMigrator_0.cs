@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using Aurora.Framework;
+using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.DataManager.Migration.Migrators.UserInfo
 {
     public class UserInfoMigrator_0 : Migrator
     {
@@ -54,9 +54,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("LastLogin", ColumnTypes.String50),
                 ColDef("LastLogout", ColumnTypes.String50),
                 ColDef("Info", ColumnTypes.String512)
-            ), IndexDefs(
-                IndexDef(new string[2]{ "UserID", "RegionID" }, IndexType.Primary)
-            ));
+                                      ), IndexDefs(
+                                          IndexDef(new string[2] {"UserID", "RegionID"}, IndexType.Primary)
+                                             ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

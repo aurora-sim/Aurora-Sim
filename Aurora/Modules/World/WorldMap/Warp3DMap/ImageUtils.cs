@@ -34,14 +34,14 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
     public static class ImageUtils
     {
         /// <summary>
-        ///   Performs bilinear interpolation between four values
+        ///     Performs bilinear interpolation between four values
         /// </summary>
-        /// <param name = "v00">First, or top left value</param>
-        /// <param name = "v01">Second, or top right value</param>
-        /// <param name = "v10">Third, or bottom left value</param>
-        /// <param name = "v11">Fourth, or bottom right value</param>
-        /// <param name = "xPercent">Interpolation value on the X axis, between 0.0 and 1.0</param>
-        /// <param name = "yPercent">Interpolation value on fht Y axis, between 0.0 and 1.0</param>
+        /// <param name="v00">First, or top left value</param>
+        /// <param name="v01">Second, or top right value</param>
+        /// <param name="v10">Third, or bottom left value</param>
+        /// <param name="v11">Fourth, or bottom right value</param>
+        /// <param name="xPercent">Interpolation value on the X axis, between 0.0 and 1.0</param>
+        /// <param name="yPercent">Interpolation value on fht Y axis, between 0.0 and 1.0</param>
         /// <returns>The bilinearly interpolated result</returns>
         public static float Bilinear(float v00, float v01, float v10, float v11, float xPercent, float yPercent)
         {
@@ -49,11 +49,11 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
         }
 
         /// <summary>
-        ///   Performs a high quality image resize
+        ///     Performs a high quality image resize
         /// </summary>
-        /// <param name = "image">Image to resize</param>
-        /// <param name = "width">New width</param>
-        /// <param name = "height">New height</param>
+        /// <param name="image">Image to resize</param>
+        /// <param name="width">New width</param>
+        /// <param name="height">New height</param>
         /// <returns>Resized image</returns>
         public static Bitmap ResizeImage(Image image, int width, int height)
         {

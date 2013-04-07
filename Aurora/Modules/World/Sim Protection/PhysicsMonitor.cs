@@ -25,22 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
+using Aurora.Framework.Physics;
+using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
+using Nini.Config;
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Timers;
 using System.Windows.Forms;
-using Aurora.Framework;
-using Nini.Config;
-using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Modules.SimProtection
 {
-    public class PhysicsMonitor : ISharedRegionModule, IPhysicsMonitor
+    public class PhysicsMonitor : INonSharedRegionModule, IPhysicsMonitor
     {
         #region Private class
 
@@ -68,7 +70,7 @@ namespace Aurora.Modules.SimProtection
         protected Dictionary<UUID, PhysicsStats> m_lastPhysicsStats = new Dictionary<UUID, PhysicsStats>();
         protected DateTime m_lastUpdated = DateTime.Now;
         protected Timer m_physicsStatTimer;
-        protected List<IScene> m_scenes = new List<IScene>();
+        protected IScene m_Scene;
         protected int m_waitingForCollectionOfStats;
 
         #endregion
@@ -156,7 +158,7 @@ namespace Aurora.Modules.SimProtection
 
         #endregion
 
-        #region ISharedRegionModule Members
+        #region INonSharedRegionModule Members
 
         public string Name
         {
@@ -177,19 +179,15 @@ namespace Aurora.Modules.SimProtection
             }
         }
 
-        public void PostInitialise()
-        {
-        }
-
         public void Close()
         {
         }
 
         public void AddRegion(IScene scene)
         {
-            m_scenes.Add(scene);
+            m_Scene = scene;
             scene.RegisterModuleInterface<IPhysicsMonitor>(this);
-            if (MainConsole.Instance != null && m_scenes.Count == 1)
+            if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand(
                     "physics stats", "physics stats", "physics stats <region>", PhysicsStatsCommand);
@@ -204,7 +202,7 @@ namespace Aurora.Modules.SimProtection
 
         public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove(scene);
+            m_Scene = null;
             scene.UnregisterModuleInterface<IPhysicsMonitor>(this);
         }
 
@@ -216,27 +214,15 @@ namespace Aurora.Modules.SimProtection
 
         protected virtual void PhysicsStatsCommand(string[] cmd)
         {
-            List<IScene> scenesToRun = new List<IScene>();
             if (cmd.Length == 3)
             {
-#if (!ISWIN)
-                foreach (IScene scene in m_scenes)
-                {
-                    if (scene.RegionInfo.RegionName == cmd[2])
-                        scenesToRun.Add(scene);
-                }
-#else
-                scenesToRun.AddRange(m_scenes.Where(scene => scene.RegionInfo.RegionName == cmd[2]));
-#endif
-                if (scenesToRun.Count == 0)
-                    scenesToRun = m_scenes;
+                if (m_Scene.RegionInfo.RegionName != cmd[2])
+                    return;
             }
-            else
-                scenesToRun.AddRange(m_scenes);
 
             //Set all the bools to true
             m_collectingStats = true;
-            m_waitingForCollectionOfStats = m_scenes.Count;
+            m_waitingForCollectionOfStats = 1;
             //Start the timer as well
             m_physicsStatTimer.Start();
             MainConsole.Instance.Info("Collecting Stats Now... Please wait...");
@@ -245,40 +231,25 @@ namespace Aurora.Modules.SimProtection
                 Thread.Sleep(50);
             }
 
-            foreach (IScene scene in scenesToRun)
+            PhysicsStats stats = null;
+            while (stats == null)
             {
-                PhysicsStats stats = null;
-                while (stats == null)
-                {
-                    m_lastPhysicsStats.TryGetValue(scene.RegionInfo.RegionID, out stats);
-                }
-                DumpStatsToConsole(scene, stats);
+                m_lastPhysicsStats.TryGetValue(m_Scene.RegionInfo.RegionID, out stats);
             }
+            DumpStatsToConsole(m_Scene, stats);
         }
 
         protected virtual void PhysicsProfilerCommand(string[] cmd)
         {
-            List<IScene> scenesToRun = new List<IScene>();
             if (cmd.Length == 3)
             {
-#if (!ISWIN)
-                foreach (IScene scene in m_scenes)
-                {
-                    if (scene.RegionInfo.RegionName == cmd[2])
-                        scenesToRun.Add(scene);
-                }
-#else
-                scenesToRun.AddRange(m_scenes.Where(scene => scene.RegionInfo.RegionName == cmd[2]));
-#endif
-                if (scenesToRun.Count == 0)
-                    scenesToRun = m_scenes;
+                if (m_Scene.RegionInfo.RegionName != cmd[2])
+                    return;
             }
-            else
-                scenesToRun.AddRange(m_scenes);
 
             //Set all the bools to true
             m_collectingStats = true;
-            m_waitingForCollectionOfStats = m_scenes.Count;
+            m_waitingForCollectionOfStats = 1;
             //Start the timer as well
             m_physicsStatTimer.Start();
             MainConsole.Instance.Info("Collecting Stats Now... Please wait...");
@@ -288,7 +259,7 @@ namespace Aurora.Modules.SimProtection
             }
 
             Thread thread = new Thread(StartThread);
-            thread.Start(scenesToRun);
+            thread.Start(new List<IScene>() {m_Scene});
         }
 
         private void StartThread(object scenes)
@@ -307,27 +278,15 @@ namespace Aurora.Modules.SimProtection
 
         protected virtual void CurrentPhysicsStatsCommand(string[] cmd)
         {
-            List<IScene> scenesToRun = new List<IScene>();
             if (cmd.Length == 3)
             {
-#if (!ISWIN)
-                foreach (IScene scene in m_scenes)
-                {
-                    if (scene.RegionInfo.RegionName == cmd[2])
-                        scenesToRun.Add(scene);
-                }
-#else
-                scenesToRun.AddRange(m_scenes.Where(scene => scene.RegionInfo.RegionName == cmd[2]));
-#endif
-                if (scenesToRun.Count == 0)
-                    scenesToRun = m_scenes;
+                if (m_Scene.RegionInfo.RegionName != cmd[2])
+                    return;
             }
-            else
-                scenesToRun.AddRange(m_scenes);
 
             //Set all the bools to true
             m_collectingStats = true;
-            m_waitingForCollectionOfStats = m_scenes.Count;
+            m_waitingForCollectionOfStats = 1;
             //Start the timer as well
             m_physicsStatTimer.Start();
             MainConsole.Instance.Info("Collecting Stats Now... Please wait...");
@@ -336,15 +295,12 @@ namespace Aurora.Modules.SimProtection
                 Thread.Sleep(50);
             }
 
-            foreach (IScene scene in scenesToRun)
+            PhysicsStats stats = null;
+            while (stats == null)
             {
-                PhysicsStats stats = null;
-                while (stats == null)
-                {
-                    m_currentPhysicsStats.TryGetValue(scene.RegionInfo.RegionID, out stats);
-                }
-                DumpStatsToConsole(scene, stats);
+                m_currentPhysicsStats.TryGetValue(m_Scene.RegionInfo.RegionID, out stats);
             }
+            DumpStatsToConsole(m_Scene, stats);
         }
 
         protected virtual void DumpStatsToConsole(IScene scene, PhysicsStats stats)
