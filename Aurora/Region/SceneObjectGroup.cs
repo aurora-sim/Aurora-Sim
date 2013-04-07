@@ -2652,8 +2652,8 @@ namespace Aurora.Region
             bool isPhantom = ((RootPart.Flags & PrimFlags.Phantom) != 0);
             bool physical = isPhysical & !isPhantom;
 
-            RootPart.PhysActor = m_scene.PhysicsScene.AddPrimShape(RootPart.Name, RootPart.PhysicsType, RootPart.Shape, RootPart.AbsolutePosition, RootPart.Scale,
-                RootPart.GetWorldRotation(), physical);
+            RootPart.PhysActor = m_scene.PhysicsScene.AddPrimShape(RootPart.UUID, RootPart.LocalId, RootPart.Name, RootPart.PhysicsType,
+                RootPart.Shape, RootPart.AbsolutePosition, RootPart.Scale, RootPart.GetWorldRotation(), physical);
             if (RootPart.PhysActor == null)
                 return;
             //                    RootPart.PhysActor.BuildingRepresentation = true;
@@ -2704,8 +2704,8 @@ namespace Aurora.Region
                 isPhantom = ((part.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
                 physical = isPhysical & !isPhantom;
 
-                part.PhysActor = m_scene.PhysicsScene.AddPrimShape(part.Name, RootPart.PhysicsType, part.Shape, part.AbsolutePosition, part.Scale,
-                    part.GetWorldRotation(), physical);
+                part.PhysActor = m_scene.PhysicsScene.AddPrimShape(part.UUID, part.LocalId, part.Name, RootPart.PhysicsType, 
+                    part.Shape, part.AbsolutePosition, part.Scale, part.GetWorldRotation(), physical);
                 if (part.PhysActor == null)
                     continue;
                 //                    part.PhysActor.BuildingRepresentation = true;
@@ -4072,7 +4072,7 @@ namespace Aurora.Region
             }
             m_rootPart.UpdateRotation(rot);
 
-            PhysicsObject actor = m_rootPart.PhysActor;
+            PhysicsActor actor = m_rootPart.PhysActor;
             if (actor != null)
                 actor.Orientation = m_rootPart.GetRotationOffset();
 
@@ -4092,7 +4092,7 @@ namespace Aurora.Region
             }
             m_rootPart.UpdateRotation(rot);
 
-            PhysicsObject actor = m_rootPart.PhysActor;
+            PhysicsActor actor = m_rootPart.PhysActor;
             if (actor != null)
                 actor.Orientation = m_rootPart.GetRotationOffset();
 

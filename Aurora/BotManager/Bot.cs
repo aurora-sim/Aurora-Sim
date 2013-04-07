@@ -653,8 +653,7 @@ namespace Aurora.BotManager
             TravelMode state;
             bool teleport;
             if (!ForceCloseToPoint)
-                m_closeToPoint = m_controller.PhysicsActor is PhysicsCharacter &&
-                                 ((PhysicsCharacter) m_controller.PhysicsActor).Flying
+                m_closeToPoint = m_controller.PhysicsActor.Flying
                                      ? 1.5f
                                      : 1.0f;
             if (m_nodeGraph.GetNextPosition(m_controller.AbsolutePosition, m_closeToPoint, 60, out pos, out state,
@@ -918,8 +917,7 @@ namespace Aurora.BotManager
                 //If we were having to fly to here, stop flying
                 if (jumpTry > 0)
                 {
-                    if (m_controller.PhysicsActor is PhysicsCharacter)
-                        ((PhysicsCharacter) m_controller.PhysicsActor).Flying = false;
+                    m_controller.PhysicsActor.Flying = false;
                     walkTo(m_controller.AbsolutePosition);
                     //Fix the animation from flying > walking
                     m_controller.UpdateMovementAnimations(false);

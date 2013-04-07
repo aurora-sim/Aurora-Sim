@@ -41,7 +41,7 @@ namespace Aurora.Framework.PresenceInfo
 
         IAnimator Animator { get; }
 
-        PhysicsCharacter PhysicsActor { get; set; }
+        PhysicsActor PhysicsActor { get; set; }
 
         /// <summary>
         ///     Is this client really in this region?

@@ -180,7 +180,7 @@ namespace Aurora.Region
         protected byte[] m_particleSystem = Utils.EmptyBytes;
         private int m_passTouches;
 
-        private PhysicsObject m_physActor;
+        private PhysicsActor m_physActor;
         private bool m_pidActive;
         private bool m_pidhoverActive;
         private UndoStack<UndoState> m_redo = new UndoStack<UndoState>(5);
@@ -294,7 +294,7 @@ namespace Aurora.Region
         }
 
         [XmlIgnore]
-        public PhysicsObject PhysActor
+        public PhysicsActor PhysActor
         {
             get { return m_physActor; }
             set
@@ -897,7 +897,7 @@ namespace Aurora.Region
         public Vector3 GetGroupPosition()
         {
             // If this is a linkset, we don't want the physics engine mucking up our group position here.
-            PhysicsObject actor = PhysActor;
+            PhysicsActor actor = PhysActor;
             if (actor != null && _parentID == 0)
             {
                 m_groupPosition = actor.Position;
@@ -929,7 +929,7 @@ namespace Aurora.Region
 
         public Quaternion GetRotationOffset()
         {
-            PhysicsObject actor = m_physActor;
+            PhysicsActor actor = m_physActor;
             if (_parentID == 0 && (m_shape.PCode != 9 || m_shape.State == 0) && actor != null)
             {
                 if (actor.Orientation.X != 0f || actor.Orientation.Y != 0f
@@ -950,7 +950,7 @@ namespace Aurora.Region
         {
             get
             {
-                PhysicsObject actor = PhysActor;
+                PhysicsActor actor = PhysActor;
                 if (actor != null)
                 {
                     if (actor.IsPhysical)
@@ -964,7 +964,7 @@ namespace Aurora.Region
 
             set
             {
-                PhysicsObject actor = PhysActor;
+                PhysicsActor actor = PhysActor;
                 if (actor != null)
                 {
                     if (actor.IsPhysical)
@@ -987,7 +987,7 @@ namespace Aurora.Region
         {
             get
             {
-                PhysicsObject actor = PhysActor;
+                PhysicsActor actor = PhysActor;
                 if ((actor != null) && actor.IsPhysical)
                 {
                     m_angularVelocity = actor.RotationalVelocity;
@@ -1753,7 +1753,7 @@ namespace Aurora.Region
             if (ParentGroup != null && !ParentGroup.IsDeleted)
             {
                 ParentGroup.HasGroupChanged = true;
-                PhysicsObject actor = PhysActor;
+                PhysicsActor actor = PhysActor;
                 if (_parentID != 0 && actor != null && (single || !actor.IsPhysical))
                 {
                     actor.Position = GetWorldPosition();
@@ -3279,7 +3279,7 @@ namespace Aurora.Region
                 {
                     // Remove VolumeDetect in any case. Note, it's safe to call SetVolumeDetect as often as you like
                     // (mumbles, well, at least if you have infinte CPU powers :-))
-                    PhysicsObject pa = this.PhysActor;
+                    PhysicsActor pa = this.PhysActor;
                     if (pa != null)
                         PhysActor.VolumeDetect = false;
 
@@ -3573,7 +3573,7 @@ namespace Aurora.Region
 
             RotationOffset = value;
 
-            PhysicsObject actor = PhysActor;
+            PhysicsActor actor = PhysActor;
             if (actor != null)
             {
                 if (value.W == 0) //We have an issue here... try to normalize it
@@ -3639,7 +3639,7 @@ namespace Aurora.Region
 
             m_groupPosition = value;
 
-            PhysicsObject actor = PhysActor;
+            PhysicsActor actor = PhysActor;
 
             if (actor != null)
             {

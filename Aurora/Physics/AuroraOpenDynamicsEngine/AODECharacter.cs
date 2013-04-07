@@ -32,7 +32,7 @@ using OpenMetaverse;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
-    public class AuroraODECharacter : PhysicsCharacter
+    public class AuroraODECharacter : PhysicsActor
     {
         #region Declares
 
@@ -81,7 +81,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         protected float m_mass = 80f;
         protected string m_name = String.Empty;
-        protected bool m_pidControllerActive = true;
         protected int m_preJumpCounter;
         protected Vector3 m_preJumpForce = Vector3.Zero;
         protected Vector3 m_rotationalVelocity;
@@ -323,7 +322,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     _lastSetSize = value;
 
-                    m_pidControllerActive = true;
                     CAPSULE_RADIUS = _parent_scene.avCapRadius;
                     CAPSULE_LENGTH = (_lastSetSize.Z*1.1f) - CAPSULE_RADIUS*2.0f;
                     Velocity = Vector3.Zero;
@@ -367,10 +365,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 if (value.IsFinite())
-                {
-                    m_pidControllerActive = true;
                     m_targetVelocity = value;
-                }
                 else
                 {
                     MainConsole.Instance.Warn("[PHYSICS]: Got a NaN velocity from Scene in a Character");
@@ -396,16 +391,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                               _parent_ref.SetRotationLocked(value);
                                                       });
             }
-        }
-
-        /// <summary>
-        ///     turn the PID controller on or off.
-        ///     The PID Controller will turn on all by itself in many situations
-        /// </summary>
-        /// <param name="status"></param>
-        public void SetPidStatus(bool status)
-        {
-            m_pidControllerActive = status;
         }
 
         public override void ForceSetVelocity(Vector3 velocity)
@@ -741,7 +726,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (pushforce)
                 {
-                    m_pidControllerActive = false;
                     _parent_scene.AddSimulationChange(() =>
                                                           {
                                                               if (Body != IntPtr.Zero)
@@ -750,7 +734,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    m_pidControllerActive = true;
                     m_targetVelocity.X += force.X;
                     m_targetVelocity.Y += force.Y;
                     m_targetVelocity.Z += force.Z;
@@ -789,19 +772,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
-            CollisionEventsThisFrame.addCollider(CollidedWith, contact);
+            CollisionEventsThisFrame.AddCollider(CollidedWith, contact);
         }
 
-        public override void SendCollisions()
+        public override bool SendCollisions()
         {
             if (!IsPhysical)
-                return; //Not physical, its not supposed to be here
+                return false; //Not physical, its not supposed to be here
 
             if (!CollisionEventsThisFrame.Cleared)
             {
                 base.SendCollisionUpdate(CollisionEventsThisFrame.Copy());
                 CollisionEventsThisFrame.Clear();
             }
+            return true;
         }
 
         public override bool SubscribedEvents()

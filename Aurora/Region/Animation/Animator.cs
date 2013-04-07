@@ -221,7 +221,7 @@ namespace Aurora.Region.Animation
                 return "SIT_GROUND_CONSTRAINED";
             }
             AgentManager.ControlFlags controlFlags = (AgentManager.ControlFlags) m_scenePresence.AgentControlFlags;
-            PhysicsCharacter actor = m_scenePresence.PhysicsActor;
+            PhysicsActor actor = m_scenePresence.PhysicsActor;
 
             // Create forward and left vectors from the current avatar rotation
             Vector3 fwd = Vector3.UnitX*m_scenePresence.Rotation;

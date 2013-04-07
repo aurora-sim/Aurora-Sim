@@ -763,7 +763,7 @@ namespace Aurora.ClientStack
                                             new RegionHandshakePacket.RegionInfo4Block
                                                 {
                                                     RegionFlagsExtended = args.regionFlags,
-                                                    RegionProtocols = (ulong) RegionProtocols.AgentAppearanceService
+                                                    RegionProtocols = (ulong) RegionProtocols.None //(ulong) RegionProtocols.AgentAppearanceService
                                                 }
                                         };
             handshake.RegionInfo3 = new RegionHandshakePacket.RegionInfo3Block

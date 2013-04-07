@@ -36,7 +36,6 @@ namespace Aurora.Framework.Physics
     {
         IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical);
         void RemoveMesh(ulong key);
-        void FinishedMeshing();
     }
 
     public interface IMesh
@@ -51,10 +50,8 @@ namespace Aurora.Framework.Physics
 
         OpenMetaverse.StructuredData.OSD Serialize();
 
-        /*int[] getIndexListAsInt();
-
+        int[] getIndexListAsInt();
         float[] getVertexListAsFloat();
-
-        List<Vector3> getVertexList();*/
+        List<Vector3> getVertexList();
     }
 }

@@ -48,14 +48,12 @@ using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 
-//using Ode.NET;
-
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     /// <summary>
     ///     Various properties that ODE uses for AMotors but isn't exposed in ODE.NET so we must define them ourselves.
     /// </summary>
-    public class AuroraODEPrim : PhysicsObject
+    public class AuroraODEPrim : PhysicsActor
     {
         private const CollisionCategories m_default_collisionFlags = (CollisionCategories.Geom
                                                                       | CollisionCategories.Space
@@ -79,7 +77,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 _acceleration;
         private float _mass; // prim or object mass
         private Quaternion _orientation;
-        private PhysicsObject _parent;
+        private PhysicsActor _parent;
         private PrimitiveBaseShape _pbs;
         private Vector3 _position;
         private Vector3 _size;
@@ -219,7 +217,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public PhysicsObject Parent
+        public PhysicsActor Parent
         {
             get { return _parent; }
         }
@@ -2171,7 +2169,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override void link(PhysicsObject obj)
+        public override void link(PhysicsActor obj)
         {
             _parent_scene.AddSimulationChange(() => changelink((AuroraODEPrim) obj));
         }
@@ -2339,16 +2337,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (CollisionEventsThisFrame == null)
                     CollisionEventsThisFrame = new CollisionEventUpdate();
-                CollisionEventsThisFrame.addCollider(CollidedWith, contact);
+                CollisionEventsThisFrame.AddCollider(CollidedWith, contact);
             }
         }
 
-        public override void SendCollisions()
+        public override bool SendCollisions()
         {
             if (CollisionEventsThisFrame == null || m_frozen) //No collisions or frozen, don't mess with it
-                return;
+                return false;
             base.SendCollisionUpdate(CollisionEventsThisFrame.Copy());
             CollisionEventsThisFrame = CollisionEventsThisFrame.Count == 0 ? null : new CollisionEventUpdate();
+            return true;
         }
 
         public override bool SubscribedEvents()

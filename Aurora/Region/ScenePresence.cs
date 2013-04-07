@@ -243,7 +243,7 @@ namespace Aurora.Region
         /// <summary>
         ///     Physical scene representation of this Avatar.
         /// </summary>
-        public PhysicsCharacter PhysicsActor
+        public PhysicsActor PhysicsActor
         {
             get { return m_physicsActor; }
             set { m_physicsActor = value; }
@@ -420,7 +420,7 @@ namespace Aurora.Region
         /// </summary>
         private readonly IClientAPI m_controllingClient;
 
-        protected PhysicsCharacter m_physicsActor;
+        protected PhysicsActor m_physicsActor;
 
         /// <value>
         ///     The client controlling this presence
@@ -446,7 +446,7 @@ namespace Aurora.Region
             get { return GetAbsolutePosition(); }
             set
             {
-                PhysicsCharacter actor = m_physicsActor;
+                PhysicsActor actor = m_physicsActor;
                 if (actor != null)
                 {
                     try
@@ -515,7 +515,7 @@ namespace Aurora.Region
         {
             get
             {
-                PhysicsCharacter actor = m_physicsActor;
+                PhysicsActor actor = m_physicsActor;
                 if (actor != null)
                     return actor.Velocity;
 
@@ -525,7 +525,7 @@ namespace Aurora.Region
             }
             set
             {
-                PhysicsCharacter actor = m_physicsActor;
+                PhysicsActor actor = m_physicsActor;
                 if (actor != null)
                 {
                     try
@@ -1224,7 +1224,7 @@ namespace Aurora.Region
             m_headrotation = agentData.HeadRotation;
             m_state = agentData.State;
 
-            PhysicsCharacter actor = PhysicsActor;
+            PhysicsActor actor = PhysicsActor;
             if (actor == null)
             {
                 //This happens while sitting, don't spam it
@@ -2057,7 +2057,7 @@ namespace Aurora.Region
                 return;
             }
 
-            PhysicsCharacter actor = m_physicsActor;
+            PhysicsActor actor = m_physicsActor;
             if (actor != null)
             {
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec*rotation));

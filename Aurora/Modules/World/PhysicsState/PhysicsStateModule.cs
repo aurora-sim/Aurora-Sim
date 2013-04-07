@@ -105,7 +105,7 @@ namespace Aurora.Modules.PhysicsState
         {
             WorldPhysicsState state = new WorldPhysicsState();
             //Add all active objects in the scene
-            foreach (PhysicsObject prm in m_scene.PhysicsScene.ActiveObjects)
+            foreach (PhysicsActor prm in m_scene.PhysicsScene.ActiveObjects)
             {
                 state.AddPrim(prm);
             }
@@ -148,7 +148,7 @@ namespace Aurora.Modules.PhysicsState
         {
             private readonly Dictionary<UUID, PhysicsState> m_activePrims = new Dictionary<UUID, PhysicsState>();
 
-            public void AddPrim(PhysicsObject prm)
+            public void AddPrim(PhysicsActor prm)
             {
                 PhysicsState state = new PhysicsState
                                          {
@@ -160,7 +160,7 @@ namespace Aurora.Modules.PhysicsState
                 m_activePrims[prm.UUID] = state;
             }
 
-            public void AddAvatar(PhysicsCharacter prm)
+            public void AddAvatar(PhysicsActor prm)
             {
                 PhysicsState state = new PhysicsState
                                          {
@@ -188,7 +188,7 @@ namespace Aurora.Modules.PhysicsState
                 }
             }
 
-            private void ResetPrim(PhysicsObject physicsObject, PhysicsState physicsState, float direction)
+            private void ResetPrim(PhysicsActor physicsObject, PhysicsState physicsState, float direction)
             {
                 physicsObject.Position = physicsState.Position;
                 physicsObject.Orientation = physicsState.Rotation;
@@ -198,7 +198,7 @@ namespace Aurora.Modules.PhysicsState
                 physicsObject.RequestPhysicsterseUpdate();
             }
 
-            private void ResetAvatar(PhysicsCharacter physicsObject, PhysicsState physicsState, float direction)
+            private void ResetAvatar(PhysicsActor physicsObject, PhysicsState physicsState, float direction)
             {
                 physicsObject.Position = physicsState.Position;
                 physicsObject.ForceSetPosition(physicsState.Position);

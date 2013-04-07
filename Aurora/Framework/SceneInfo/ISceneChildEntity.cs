@@ -129,7 +129,7 @@ namespace Aurora.Framework.SceneInfo
 
         Quaternion GetWorldRotation();
 
-        PhysicsObject PhysActor { get; set; }
+        PhysicsActor PhysActor { get; set; }
 
         TaskInventoryDictionary TaskInventory { get; set; }
 

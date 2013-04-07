@@ -611,10 +611,6 @@ namespace Aurora.Physics.Meshing
             return mesh;
         }
 
-        public void FinishedMeshing()
-        {
-        }
-
         public void RemoveMesh(ulong key)
         {
         }

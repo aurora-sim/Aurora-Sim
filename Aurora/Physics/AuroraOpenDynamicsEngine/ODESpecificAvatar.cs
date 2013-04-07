@@ -11,7 +11,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Declares
 
         public d.Mass ShellMass;
-        protected Vector3 _zeroPosition;
 
         #endregion
 
@@ -47,9 +46,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Flight Ceiling
 
             // rex, added height check
-
-            if (m_pidControllerActive == false)
-                _zeroPosition = tempPos;
 
             if (_parent_scene.m_useFlightCeilingHeight && tempPos.Z > _parent_scene.m_flightCeilingHeight)
             {

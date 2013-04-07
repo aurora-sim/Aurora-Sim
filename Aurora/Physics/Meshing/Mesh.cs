@@ -223,5 +223,21 @@ namespace Aurora.Physics.Meshing
                                  new Coord(triangleArray[2].AsVector3())));
             }*/
         }
+
+
+        public int[] getIndexListAsInt()
+        {
+            throw new NotImplementedException();
+        }
+
+        public float[] getVertexListAsFloat()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Vector3> getVertexList()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -53,7 +53,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float gravityz = -9.8f;
         public Vector3 gravityVector;
         public Vector3 gravityVectorNormalized;
-        public bool m_hasSetUpPrims;
 
         protected readonly IntPtr contactgroup;
 
@@ -110,9 +109,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected readonly object _activeprimsLock = new object();
         protected readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
 
-        public override List<PhysicsObject> ActiveObjects
+        public override List<PhysicsActor> ActiveObjects
         {
-            get { return new List<AuroraODEPrim>(_activeprims).ConvertAll<PhysicsObject>(prim => prim); }
+            get { return new List<AuroraODEPrim>(_activeprims).ConvertAll<PhysicsActor>(prim => prim); }
         }
 
         public ConcurrentQueue<NoParam> SimulationChangesQueue = new ConcurrentQueue<NoParam>();
@@ -187,8 +186,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         protected AuroraODERayCastRequestManager m_rayCastManager;
         protected bool IsLocked;
-        protected ConcurrentQueue<PhysicsObject> RemoveQueue = new ConcurrentQueue<PhysicsObject>();
-        protected ConcurrentQueue<PhysicsObject> DeleteQueue = new ConcurrentQueue<PhysicsObject>();
+        protected ConcurrentQueue<PhysicsActor> RemoveQueue = new ConcurrentQueue<PhysicsActor>();
+        protected ConcurrentQueue<PhysicsActor> DeleteQueue = new ConcurrentQueue<PhysicsActor>();
 
         internal float AvDecayTime = 0.95f;
 
@@ -610,8 +609,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // appears to be phantom for the world
 
             // No collision on volume detect prims
-            if ((p1 is PhysicsObject && ((PhysicsObject) p1).VolumeDetect) ||
-                (p2 is PhysicsObject && ((PhysicsObject) p2).VolumeDetect))
+            if ((p1 is AuroraODEPrim && p1.VolumeDetect) ||
+                (p2 is AuroraODEPrim && p2.VolumeDetect))
                 return;
 
             if (curContact.depth < 0f)
@@ -921,7 +920,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Add/Remove Entities
 
-        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
+        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint localID, UUID UUID)
         {
             Vector3 pos;
@@ -960,7 +959,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _characters.Remove(chr);
         }
 
-        public override void RemoveAvatar(PhysicsCharacter actor)
+        public override void RemoveAvatar(PhysicsActor actor)
         {
             //MainConsole.Instance.Debug("[PHYSICS]:ODELOCK");
             ((AuroraODECharacter) actor).Destroy();
@@ -984,10 +983,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //AddPrimShape(auroraODEPrim.ParentEntity);
         }
 
-        public override PhysicsObject AddPrimShape(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation,
-                                                  bool isPhysical)
+        public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, 
+                                                    Vector3 size, Quaternion rotation, bool isPhysical)
         {
             AuroraODEPrim newPrim = new AuroraODEPrim(name, physicsType, shape, position, size, rotation, this);
+            newPrim.UUID = primID;
+            newPrim.LocalID = localID;
 
             if (isPhysical)
                 newPrim.IsPhysical = isPhysical;
@@ -1020,13 +1021,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _activeprims.Remove(deactivatePrim);
         }
 
-        public override void RemovePrim(PhysicsObject prim)
+        public override void RemovePrim(PhysicsActor prim)
         {
             //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
             RemoveQueue.Enqueue(prim);
         }
 
-        public override void DeletePrim(PhysicsObject prim)
+        public override void DeletePrim(PhysicsActor prim)
         {
             //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
             DeleteQueue.Enqueue(prim);
@@ -1429,16 +1430,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     while (SimulationChangesQueue.TryDequeue(out del) && m_scene.ShouldRunHeartbeat)
                         try {  del(); } catch { }
 
-                    if (SimulationChangesQueue.Count == 0 && !m_hasSetUpPrims)
-                    {
-                        //Tell the mesher that we are done with the initialization 
-                        //  of prim meshes and that it can clear it's in memory cache
-                        m_hasSetUpPrims = true;
-                        mesher.FinishedMeshing();
-                    }
-                    else if (!m_hasSetUpPrims)
-                        return; //Don't do physics until the sim is completely set up
-
                     // Move characters
                     foreach (
                         ODESpecificAvatar actor in _characters.Where(actor => actor != null).Cast<ODESpecificAvatar>())
@@ -1469,7 +1460,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             IsLocked = false;
 
-            PhysicsObject prm;
+            PhysicsActor prm;
             while (RemoveQueue.TryDequeue(out prm))
             {
                 AuroraODEPrim p = (AuroraODEPrim) prm;

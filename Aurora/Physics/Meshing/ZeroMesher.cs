@@ -76,10 +76,6 @@ namespace Aurora.Physics.Meshing
         {
         }
 
-        public void FinishedMeshing()
-        {
-        }
-
         #endregion
     }
 }

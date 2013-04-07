@@ -69,7 +69,7 @@ namespace Aurora.Framework.Physics
 
         public virtual bool DisableCollisions { get; set; }
 
-        public virtual List<PhysicsObject> ActiveObjects
+        public virtual List<PhysicsActor> ActiveObjects
         {
             get { return null; }
         }
@@ -102,15 +102,16 @@ namespace Aurora.Framework.Physics
         public abstract void Initialise(IMesher meshmerizer, IScene scene);
         public abstract void PostInitialise(IConfigSource config);
 
-        public abstract PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
+        public abstract PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint LocalID, UUID UUID);
 
-        public abstract void RemoveAvatar(PhysicsCharacter actor);
+        public abstract void RemoveAvatar(PhysicsActor actor);
 
-        public abstract void RemovePrim(PhysicsObject prim);
-        public abstract void DeletePrim(PhysicsObject prim);
+        public abstract void RemovePrim(PhysicsActor prim);
+        public abstract void DeletePrim(PhysicsActor prim);
 
-        public abstract PhysicsObject AddPrimShape(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical);
+        public abstract PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
+            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical);
 
         public abstract void Simulate(float timeStep);
 
@@ -211,22 +212,22 @@ namespace Aurora.Framework.Physics
         {
         }
 
-        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
+        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint localID, UUID UUID)
         {
             MainConsole.Instance.InfoFormat("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
             return new NullCharacterPhysicsActor();
         }
 
-        public override void RemoveAvatar(PhysicsCharacter actor)
+        public override void RemoveAvatar(PhysicsActor actor)
         {
         }
 
-        public override void RemovePrim(PhysicsObject prim)
+        public override void RemovePrim(PhysicsActor prim)
         {
         }
 
-        public override void DeletePrim(PhysicsObject prim)
+        public override void DeletePrim(PhysicsActor prim)
         {
         }
 
@@ -242,7 +243,8 @@ namespace Aurora.Framework.Physics
                     }
         */
 
-        public override PhysicsObject AddPrimShape(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
+        public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
+            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
         {
             return new NullObjectPhysicsActor();
         }

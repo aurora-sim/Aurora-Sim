@@ -631,7 +631,7 @@ namespace Aurora.Region
                 physicsState.SavePhysicsState();
 
             //Then clear all the velocity and stuff on objects
-            foreach (PhysicsObject o in PhysicsScene.ActiveObjects)
+            foreach (PhysicsActor o in PhysicsScene.ActiveObjects)
             {
                 o.ClearVelocity();
                 o.RequestPhysicsterseUpdate();
