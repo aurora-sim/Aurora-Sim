@@ -3193,7 +3193,7 @@ namespace Aurora.Region
                 linkPart.CreateSelected = true;
                 linkPart.FixOffsetPosition(linkPart.OffsetPosition, true); // nasty let all know about where this is
                 // let physics link it
-                if (linkPart.PhysActor != null && m_rootPart.PhysActor != null && (linkPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
+                if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
                 {
                     if (linkPart.PhysicsType != (byte) PhysicsShapeType.None)
                         linkPart.PhysActor.link(m_rootPart.PhysActor);

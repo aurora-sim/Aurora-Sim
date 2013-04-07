@@ -66,6 +66,8 @@ public class BSPrimLinkable : BSPrimDisplaced
 
     public override void link(PhysicsActor obj)
     {
+        if (!this.IsPhysical)
+            return;
         BSPrimLinkable parent = obj as BSPrimLinkable;
         if (parent != null)
         {
