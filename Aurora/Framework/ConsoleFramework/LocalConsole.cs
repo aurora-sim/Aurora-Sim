@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading;
 using Aurora.Framework.Modules;
 using Nini.Config;
+using System.IO;
 
 namespace Aurora.Framework.ConsoleFramework
 {

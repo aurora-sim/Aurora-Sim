@@ -31,6 +31,7 @@ using Aurora.Framework.Utilities;
 using Nini.Config;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Aurora.Framework.ConsoleFramework
@@ -480,7 +481,7 @@ namespace Aurora.Framework.ConsoleFramework
     {
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
-        protected System.IO.StreamWriter m_logFile;
+        protected System.IO.TextWriter m_logFile;
         public List<string> m_promptOptions = new List<string>();
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
@@ -500,7 +501,7 @@ namespace Aurora.Framework.ConsoleFramework
 
         protected void InitializeLog(string filename)
         {
-            m_logFile = new System.IO.StreamWriter(filename ?? System.IO.Path.ChangeExtension(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName, ".log"), true);
+            m_logFile = StreamWriter.Synchronized(new StreamWriter(filename ?? System.IO.Path.ChangeExtension(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName, ".log"), true));
         }
 
         public void Dispose()
