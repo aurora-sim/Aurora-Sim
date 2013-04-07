@@ -110,7 +110,7 @@ namespace Aurora.Framework.Physics
         public abstract void RemovePrim(PhysicsObject prim);
         public abstract void DeletePrim(PhysicsObject prim);
 
-        public abstract PhysicsObject AddPrimShape(ISceneChildEntity entity);
+        public abstract PhysicsObject AddPrimShape(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical);
 
         public abstract void Simulate(float timeStep);
 
@@ -242,7 +242,7 @@ namespace Aurora.Framework.Physics
                     }
         */
 
-        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
+        public override PhysicsObject AddPrimShape(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
         {
             return new NullObjectPhysicsActor();
         }

@@ -2648,7 +2648,12 @@ namespace Aurora.Region
             }
 
             // create the root part
-            RootPart.PhysActor = m_scene.PhysicsScene.AddPrimShape(RootPart);
+            bool isPhysical = ((RootPart.Flags & PrimFlags.Physics) != 0);
+            bool isPhantom = ((RootPart.Flags & PrimFlags.Phantom) != 0);
+            bool physical = isPhysical & !isPhantom;
+
+            RootPart.PhysActor = m_scene.PhysicsScene.AddPrimShape(RootPart.Name, RootPart.PhysicsType, RootPart.Shape, RootPart.AbsolutePosition, RootPart.Scale,
+                RootPart.GetWorldRotation(), physical);
             if (RootPart.PhysActor == null)
                 return;
             //                    RootPart.PhysActor.BuildingRepresentation = true;
@@ -2663,7 +2668,7 @@ namespace Aurora.Region
             //Force deselection here so that it isn't stuck forever
             RootPart.PhysActor.Selected = keepSelectedStatuses && RootPart.IsSelected;
 
-            RootPart.PhysActor.SetMaterial(RootPart.Material, false);
+            RootPart.PhysActor.SetMaterial(RootPart.Material, RootPart.Friction, RootPart.Restitution, RootPart.GravityMultiplier, RootPart.Density);
 
             //            bool rootIsPhysical;
 
@@ -2695,7 +2700,12 @@ namespace Aurora.Region
                 }
 
                 //Now read the physics actor to the physics scene
-                part.PhysActor = m_scene.PhysicsScene.AddPrimShape(part);
+                isPhysical = ((part.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);
+                isPhantom = ((part.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
+                physical = isPhysical & !isPhantom;
+
+                part.PhysActor = m_scene.PhysicsScene.AddPrimShape(part.Name, RootPart.PhysicsType, part.Shape, part.AbsolutePosition, part.Scale,
+                    part.GetWorldRotation(), physical);
                 if (part.PhysActor == null)
                     continue;
                 //                    part.PhysActor.BuildingRepresentation = true;
@@ -2711,7 +2721,7 @@ namespace Aurora.Region
                 //Force deselection here so that it isn't stuck forever
                 part.PhysActor.Selected = keepSelectedStatuses && part.IsSelected;
 
-                part.PhysActor.SetMaterial(part.Material, false);
+                part.PhysActor.SetMaterial(part.Material, part.Friction, part.Restitution, part.GravityMultiplier, part.Density);
                 if ((part.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                     part.PhysActor.IsPhysical = true;
 
@@ -3251,6 +3261,7 @@ namespace Aurora.Region
             if (linkPart.PhysActor != null)
             {
                 m_scene.PhysicsScene.RemovePrim(linkPart.PhysActor);
+                linkPart.PhysActor = null;
             }
 
             // We need to reset the child part's position

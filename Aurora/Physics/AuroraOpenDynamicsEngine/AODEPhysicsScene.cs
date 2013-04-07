@@ -984,15 +984,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //AddPrimShape(auroraODEPrim.ParentEntity);
         }
 
-        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
+        public override PhysicsObject AddPrimShape(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation,
+                                                  bool isPhysical)
         {
-            bool isPhysical = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);
-            bool isPhantom = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
-            bool physical = isPhysical & !isPhantom;
-            AuroraODEPrim newPrim = new AuroraODEPrim(entity, this, false);
+            AuroraODEPrim newPrim = new AuroraODEPrim(name, physicsType, shape, position, size, rotation, this);
 
-            if (physical)
-                newPrim.IsPhysical = physical;
+            if (isPhysical)
+                newPrim.IsPhysical = isPhysical;
 
             lock (_prims)
                 _prims.Add(newPrim);
@@ -1076,8 +1074,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     foreach (AuroraODEPrim prm in prim.childrenPrim)
                         RemovePrimThreadLocked(prm);
             }
-            if (prim.ParentEntity != null)
-                prim.ParentEntity.PhysActor = null; //Delete it
             lock (_prims)
                 _prims.Remove(prim);
         }
@@ -1258,9 +1254,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        internal bool needsMeshing(ISceneChildEntity entity)
+        internal bool needsMeshing(AuroraODEPrim prim, byte physicalType)
         {
-            PrimitiveBaseShape pbs = entity.Shape;
+            PrimitiveBaseShape pbs = prim.Shape;
             // most of this is redundant now as the mesher will return null if it cant mesh a prim
             // but we still need to check for sculptie meshing being enabled so this is the most
             // convenient place to do it for now...
@@ -1296,7 +1292,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             else if (pbs.SculptType == (byte) SculptType.Mesh)
             {
                 //Mesh, we need to see what the prims says to do with it
-                if (entity.PhysicsType == (byte) PhysicsShapeType.Prim)
+                if (physicalType == (byte) PhysicsShapeType.Prim)
                     return false; //Supposed to be a simple box, nothing more
                 else
                     return true; //Mesh it!
@@ -1826,25 +1822,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             pointGravityInUse = true;
             m_pointGravityPositions[identifier] = pointGrav;
-        }
-
-        #endregion
-
-        #region Wind Calcs
-
-        public void AddWindForce(float mass, d.Vector3 AbsolutePosition, ref Vector3 force)
-        {
-            if (!DoPhyWind)
-                return;
-            if (m_windModule == null)
-                m_windModule = m_scene.RequestModuleInterface<IWindModule>();
-
-            if (m_windModule == null)
-                return;
-            Vector3 windSpeed = m_windModule.WindSpeed((int) AbsolutePosition.X, (int) AbsolutePosition.Y,
-                                                       (int) AbsolutePosition.Z);
-            force = (windSpeed)/(mass);
-            force /= 20f; //Constant that doesn't make it too windy
         }
 
         #endregion

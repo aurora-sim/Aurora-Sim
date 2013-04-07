@@ -781,8 +781,42 @@ namespace Aurora.Region
                 ParentGroup.HasGroupChanged = true;
 
             Material = val;
+            switch (val)
+            {
+                case (int)OpenMetaverse.Material.Flesh:
+                    Friction = 0.9f;
+                    Restitution = 0.3f;
+                    break;
+                case (int)OpenMetaverse.Material.Glass:
+                    Friction = 0.2f;
+                    Restitution = 0.7f;
+                    break;
+                case (int)OpenMetaverse.Material.Metal:
+                    Friction = 0.3f;
+                    Restitution = 0.4f;
+                    break;
+                case (int)OpenMetaverse.Material.Plastic:
+                    Friction = 0.4f;
+                    Restitution = 0.7f;
+                    break;
+                case (int)OpenMetaverse.Material.Rubber:
+                    Friction = 0.9f;
+                    Restitution = 0.9f;
+                    break;
+                case (int)OpenMetaverse.Material.Stone:
+                    Friction = 0.8f;
+                    Restitution = 0.4f;
+                    break;
+                case (int)OpenMetaverse.Material.Wood:
+                    Friction = 0.6f;
+                    Restitution = 0.5f;
+                    break;
+                default:
+                    //?????
+                    break;
+            }
             if (PhysActor != null)
-                PhysActor.SetMaterial(val, true);
+                PhysActor.SetMaterial(val, Friction, Restitution, GravityMultiplier, Density);
         }
 
         [ProtoMember(10)]

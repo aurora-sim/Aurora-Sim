@@ -100,7 +100,7 @@ namespace Aurora.Physics.BasicPhysicsPlugin
         }
 */
 
-        public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
+        public override PhysicsObject AddPrimShape(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
         {
             return null;
         }

@@ -2065,7 +2065,7 @@ namespace Aurora.Region
                 direc.Normalize();
                 if (!actor.Flying && direc.Z > 0f && direc.Z < 0.2f)
                     direc.Z = 0; //Disable walking up into the air unless we are attempting to jump
-                actor.SetMovementForce(direc*1.2f);
+                actor.TargetVelocity = (direc*1.2f);
             }
         }
 

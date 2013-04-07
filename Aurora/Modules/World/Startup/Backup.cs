@@ -516,8 +516,7 @@ namespace Aurora.Modules.Startup
                 {
                     //Remove us from the physics sim
                     m_scene.PhysicsScene.DeletePrim(group.RootChild.PhysActor);
-                    //We MUST leave this to the PhysicsScene or it will hate us forever!
-                    //group.RootChild.PhysActor = null;
+                    group.RootChild.PhysActor = null;
                 }
 
                 if (!group.IsAttachment)

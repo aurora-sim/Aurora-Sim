@@ -80,7 +80,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float _mass; // prim or object mass
         private Quaternion _orientation;
         private PhysicsObject _parent;
-        private ISceneChildEntity _parent_entity;
         private PrimitiveBaseShape _pbs;
         private Vector3 _position;
         private Vector3 _size;
@@ -97,7 +96,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_angularforceacc;
         private Vector3 m_angularlock = Vector3.One;
         private bool m_blockPhysicalReconstruction;
-        private bool m_buildingRepresentation;
 
         // KF: These next 7 params apply to llSetHoverHeight(float height, integer water, float tau),
         // and are for non-VEHICLES only.
@@ -148,9 +146,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr prim_geom;
         private d.Mass primdMass; // prim inertia information on it's own referencial
         private Quaternion showorientation; // tmp hack see showposition
+        private string _name;
         private Vector3 showposition; // a temp hack for now rest of code expects position to be changed immediately
 
-        public AuroraODEPrim(ISceneChildEntity entity, AuroraODEPhysicsScene parent_scene, bool pisPhysical)
+        public AuroraODEPrim(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation, 
+                            AuroraODEPhysicsScene parent_scene)
         {
             m_vehicle = new AuroraODEDynamics();
 
@@ -162,13 +162,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             prim_geom = IntPtr.Zero;
 
-            _size = entity.Scale;
-            _position = entity.AbsolutePosition;
+            _name = name;
+            PhysicsShapeType = physicsType;
+            _size = size;
+            _position = position;
             fakepos = 0;
-            _orientation = entity.GetWorldRotation();
+            _orientation = rotation;
             fakeori = 0;
-            _pbs = entity.Shape;
-            _parent_entity = entity;
+            _pbs = shape;
 
             _parent_scene = parent_scene;
             m_targetSpace = IntPtr.Zero;
@@ -189,23 +190,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             CalcPrimBodyData();
 
             _parent_scene.AddSimulationChange(() => changeadd());
-        }
-
-        public ISceneChildEntity ParentEntity
-        {
-            get { return _parent_entity; }
-        }
-
-        public override bool BuildingRepresentation
-        {
-            get { return m_buildingRepresentation; }
-            set
-            {
-                if (value)
-                    m_buildingRepresentation = value;
-                //else
-                //    _parent_scene.AddSimulationChange(() => m_buildingRepresentation = false);
-            }
         }
 
         public override bool BlockPhysicalReconstruction
@@ -406,6 +390,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override PrimitiveBaseShape Shape
         {
+            get { return _pbs; }
             set { _parent_scene.AddSimulationChange(() => changeshape(value)); }
         }
 
@@ -1154,7 +1139,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             bool havemesh = false;
             //Console.WriteLine("CreateGeom:");
-            if (_parent_scene.needsMeshing(_parent_entity))
+            if (_parent_scene.needsMeshing(this, PhysicsShapeType))
             {
                 havemesh = true;
                 Vector3 centroid = Vector3.Zero;
@@ -1171,13 +1156,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     int vertexStride, triStride;
 
                     // Don't need to re-enable body..   it's done in SetMesh
-                    IMesh mesh = _parent_scene.mesher.CreateMesh(_parent_entity.Name, _pbs, _size,
+                    IMesh mesh = _parent_scene.mesher.CreateMesh(_name, _pbs, _size,
                                                             _parent_scene.meshSculptLOD, true);
 
                     //Tell things above if they want to cache it or something
                     if (mesh != null)
                     {
-                        _parent_entity.ParentEntity.GeneratedMesh(_parent_entity, mesh);
                         // createmesh returns null when it's a shape that isn't a cube.
                         // MainConsole.Instance.Debug(m_localID);
 
@@ -1561,7 +1545,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     Vector3 gravForce = new Vector3();
                     _parent_scene.CalculateGravity(_mass, dcpos, true,
-                                                   (1.0f - m_buoyancy)*_parent_entity.GravityMultiplier, ref gravForce);
+                                                   (1.0f - m_buoyancy)*GravityMultiplier, ref gravForce);
 
                     fx *= _mass;
                     fy *= _mass;
@@ -2182,8 +2166,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else if (m_crossingfailures == _parent_scene.geomCrossingFailuresBeforeOutofbounds)
             {
-                MainConsole.Instance.Warn("[PHYSICS]: Too many crossing failures for: " + _parent_entity.Name + " @ " +
-                                          _parent_entity.AbsolutePosition);
+                MainConsole.Instance.Warn("[PHYSICS]: Too many crossing failures for: " + _name + " @ " +
+                                          Position);
             }
         }
 
@@ -2478,48 +2462,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Material/Contact setting/getting
 
-        public override void SetMaterial(int pMaterial, bool forceMaterialSettings)
+        public override void SetMaterial(int pMaterial, float friction, float restitution, float gravityMultiplier, float density)
         {
-            Material oldMaterial = (Material) m_material;
             m_material = pMaterial;
-            Material m = (Material) pMaterial;
-            if (!forceMaterialSettings || oldMaterial == m)
-                return;
-            //Fix restitution and friction values as well
-            switch (m)
-            {
-                case Material.Flesh:
-                    _parent_entity.Friction = 0.9f;
-                    _parent_entity.Restitution = 0.3f;
-                    break;
-                case Material.Glass:
-                    _parent_entity.Friction = 0.2f;
-                    _parent_entity.Restitution = 0.7f;
-                    break;
-                case Material.Metal:
-                    _parent_entity.Friction = 0.3f;
-                    _parent_entity.Restitution = 0.4f;
-                    break;
-                case Material.Plastic:
-                    _parent_entity.Friction = 0.4f;
-                    _parent_entity.Restitution = 0.7f;
-                    break;
-                case Material.Rubber:
-                    _parent_entity.Friction = 0.9f;
-                    _parent_entity.Restitution = 0.9f;
-                    break;
-                case Material.Stone:
-                    _parent_entity.Friction = 0.8f;
-                    _parent_entity.Restitution = 0.4f;
-                    break;
-                case Material.Wood:
-                    _parent_entity.Friction = 0.6f;
-                    _parent_entity.Restitution = 0.5f;
-                    break;
-                default:
-                    //?????
-                    break;
-            }
+            Friction = friction;
+            Restitution = restitution;
+            GravityMultiplier = gravityMultiplier;
+            Density = density;
         }
 
         public void GetContactParam(PhysicsActor actor, ref d.Contact contact)
@@ -2555,7 +2504,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                float restSquared = _parent_entity.Restitution*_parent_entity.Restitution*_parent_entity.Restitution;
+                float restSquared = Restitution*Restitution*Restitution;
                 float maxVel = Velocity.Z < -1f ? -1f : Velocity.Z > 1f ? 1f : Velocity.Z;
                 contact.surface.bounce = (maxVel*-(restSquared));
                     //Its about 1:1 surprisingly, even though this constant was for havok
@@ -2575,7 +2524,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                     contact.surface.mode &= d.ContactFlags.Bounce;
                 if (actor.PhysicsActorType == (int) ActorTypes.Prim)
-                    contact.surface.mu *= _parent_entity.Friction;
+                    contact.surface.mu *= Friction;
                 else if (actor.PhysicsActorType == (int) ActorTypes.Ground)
                     contact.surface.mu *= 2;
                 else
@@ -2890,7 +2839,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // keep using basic shape mass for now
             float volume = CalculatePrimVolume();
 
-            primMass = _parent_entity.Density*volume*0.01f; //Divide by 100 as its a bit high for ODE....
+            primMass = Density*volume*0.01f; //Divide by 100 as its a bit high for ODE....
 
             if (primMass <= 0)
                 primMass = 0.0001f; //ckrinke: Mass must be greater then zero.

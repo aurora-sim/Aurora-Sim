@@ -60,8 +60,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vel.Z = 0.0f;
                     d.BodySetLinearVel(Body, vel.X, vel.Y, vel.Z);
                 }
-                if (_target_velocity.Z > 0.0f)
-                    _target_velocity.Z = 0.0f;
+                if (m_targetVelocity.Z > 0.0f)
+                    m_targetVelocity.Z = 0.0f;
             }
 
             // endrex
@@ -124,14 +124,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_isJumping = false;
                     m_preJumpCounter = 0;
-                    _target_velocity.X /= 2;
-                    _target_velocity.Y /= 2;
-                    _target_velocity.Z = -0.5f;
+                    m_targetVelocity.X /= 2;
+                    m_targetVelocity.Y /= 2;
+                    m_targetVelocity.Z = -0.5f;
                 }
                 else
                 {
-                    _target_velocity.X = m_preJumpForce.X*_parent_scene.m_preJumpForceMultiplierX/2.5f;
-                    _target_velocity.Y = m_preJumpForce.Y*_parent_scene.m_preJumpForceMultiplierY/2.5f;
+                    m_targetVelocity.X = m_preJumpForce.X * _parent_scene.m_preJumpForceMultiplierX / 2.5f;
+                    m_targetVelocity.Y = m_preJumpForce.Y * _parent_scene.m_preJumpForceMultiplierY / 2.5f;
                     m_preJumpCounter++;
                 }
             }
@@ -140,9 +140,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_preJumpCounter == _parent_scene.m_preJumpTime)
                 {
                     m_ispreJumping = false;
-                    _target_velocity.X = m_preJumpForce.X;
-                    _target_velocity.Y = m_preJumpForce.Y;
-                    _target_velocity.Z = m_preJumpForce.Z*
+                    m_targetVelocity.X = m_preJumpForce.X;
+                    m_targetVelocity.Y = m_preJumpForce.Y;
+                    m_targetVelocity.Z = m_preJumpForce.Z *
                                          (m_alwaysRun
                                               ? _parent_scene.m_preJumpForceMultiplierZ/2.5f
                                               : _parent_scene.m_preJumpForceMultiplierZ/2.25f);
@@ -183,8 +183,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 float depth = groundHeight - chrminZ;
 
-                if (_target_velocity.Z < 0)
-                    _target_velocity.Z = 0;
+                if (m_targetVelocity.Z < 0)
+                    m_targetVelocity.Z = 0;
 
                 if (!flying)
                 {
@@ -231,7 +231,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!flying)
                 vec.Z += -9.8f*35*Mass*(_appliedFallingForce > 100 ? 1 : _appliedFallingForce++/100f)*
                          (this.IsTruelyColliding ? 0.5f : 1.0f);
-            else if (_parent_scene.AllowAvGravity && _target_velocity.Z > 0 &&
+            else if (_parent_scene.AllowAvGravity && m_targetVelocity.Z > 0 &&
                      tempPos.Z > _parent_scene.AvGravityHeight) //Should be stop avies from flying upwards
             {
                 //How much should we force them down?
@@ -250,7 +250,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (Multiplier > maxpower)
                     Multiplier = maxpower;
 
-                _target_velocity.Z /= Multiplier;
+                m_targetVelocity.Z /= Multiplier;
                 vel.Z /= Multiplier;
             }
             if (IsColliding)
@@ -267,10 +267,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 // Revolution: If the avatar is going down, they are trying to land (probably), so don't push them up to make it harder
                 //   Only if they are moving around sideways do we need to push them up
-                if (_target_velocity.X != 0 || _target_velocity.Y != 0)
+                if (m_targetVelocity.X != 0 || m_targetVelocity.Y != 0)
                 {
-                    Vector3 forwardVel = new Vector3(_target_velocity.X > 0 ? 2 : (_target_velocity.X < 0 ? -2 : 0),
-                                                     _target_velocity.Y > 0 ? 2 : (_target_velocity.Y < 0 ? -2 : 0),
+                    Vector3 forwardVel = new Vector3(m_targetVelocity.X > 0 ? 2 : (m_targetVelocity.X < 0 ? -2 : 0),
+                                                     m_targetVelocity.Y > 0 ? 2 : (m_targetVelocity.Y < 0 ? -2 : 0),
                                                      0);
                     float target_altitude = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y) +
                                             MinimumGroundFlightOffset;
@@ -280,7 +280,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         (tempPos.Z - CAPSULE_LENGTH) <
                         _parent_scene.GetTerrainHeightAtXY(tempPos.X + forwardVel.X, tempPos.Y + forwardVel.Y)
                         + MinimumGroundFlightOffset)
-                        if (_target_velocity.Z < 0)
+                        if (m_targetVelocity.Z < 0)
                             vec.Z += (target_altitude - tempPos.Z) * PID_D * 0.5f; //Don't apply so much
                         else if ((tempPos.Z - CAPSULE_LENGTH) + 5 < target_altitude)
                             vec.Z += (target_altitude - tempPos.Z) * PID_D * 3.05f;
@@ -331,20 +331,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!flying && !IsTruelyColliding)
             {
                 //Falling, and haven't yet hit the ground
-                vec.X += ((_target_velocity.X + m_forceAppliedBeforeFalling.X)*movementmult - vel.X)*PID_D*2;
-                vec.Y += ((_target_velocity.Y + m_forceAppliedBeforeFalling.Y)*movementmult - vel.Y)*PID_D*2;
-                vec.Z += ((_target_velocity.Z + m_forceAppliedBeforeFalling.Z)*movementmult - vel.Z)*PID_D;
+                vec.X += ((m_targetVelocity.X + m_forceAppliedBeforeFalling.X) * movementmult - vel.X) * PID_D * 2;
+                vec.Y += ((m_targetVelocity.Y + m_forceAppliedBeforeFalling.Y) * movementmult - vel.Y) * PID_D * 2;
+                vec.Z += ((m_targetVelocity.Z + m_forceAppliedBeforeFalling.Z) * movementmult - vel.Z) * PID_D;
             }
             else
             {
-                m_forceAppliedBeforeFalling = !flying ? Vector3.Zero : _target_velocity;
+                m_forceAppliedBeforeFalling = !flying ? Vector3.Zero : m_targetVelocity;
 
-                vec.X += (_target_velocity.X*movementmult - vel.X)*PID_D*2;
-                vec.Y += (_target_velocity.Y*movementmult - vel.Y)*PID_D*2;
-                vec.Z += (_target_velocity.Z*movementmult - vel.Z)*PID_D;
+                vec.X += (m_targetVelocity.X * movementmult - vel.X) * PID_D * 2;
+                vec.Y += (m_targetVelocity.Y * movementmult - vel.Y) * PID_D * 2;
+                vec.Z += (m_targetVelocity.Z * movementmult - vel.Z) * PID_D;
             }
 
-            Vector3 combinedForceVelocity = _target_velocity + _target_vel_force;
+            Vector3 combinedForceVelocity = m_targetVelocity + _target_vel_force;
             if ((combinedForceVelocity == Vector3.Zero ||
                  (Math.Abs(combinedForceVelocity.X) < 0.01f &&
                   Math.Abs(combinedForceVelocity.Y) < 0.01f &&
@@ -353,14 +353,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Math.Abs(vel.Z) < 0.1 && !(_appliedFallingForce > 0) && !noDisable)
             {
                 //Body isn't moving, disable it
-                _target_velocity = Vector3.Zero;
+                m_targetVelocity = Vector3.Zero;
                 _target_vel_force = Vector3.Zero;
                 d.BodySetLinearVel(Body, 0, 0, 0);
                 d.BodyDisable(Body);
             }
             else
             {
-                _target_velocity *= _parent_scene.AvDecayTime;
+                m_targetVelocity *= _parent_scene.AvDecayTime;
                 _target_vel_force *= _parent_scene.AvDecayTime;
                 d.BodyEnable(Body);
                 d.BodyAddForce(Body, vec.X, vec.Y, vec.Z);

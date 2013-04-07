@@ -51,7 +51,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr Shell = IntPtr.Zero;
 
         protected Vector3 _position;
-        protected Vector3 _target_velocity;
         protected Vector3 _velocity;
         protected Vector3 _target_force = Vector3.Zero;
         protected Vector3 _target_vel_force = Vector3.Zero;
@@ -350,7 +349,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override Vector3 Force
         {
-            get { return _target_velocity; }
+            get { return m_targetVelocity; }
             set { }
         }
 
@@ -370,7 +369,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (value.IsFinite())
                 {
                     m_pidControllerActive = true;
-                    _target_velocity = value;
+                    m_targetVelocity = value;
                 }
                 else
                 {
@@ -421,47 +420,46 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastPosition = position;
         }
 
-        /// <summary>
-        ///     This sets the force that will be used for moving the avatar in the next physics heartbeat iteration.
-        ///     Note: we do accept Vector3.Zero here as that is an overriding stop for the physics engine.
-        /// </summary>
-        /// <param name="force"></param>
-        public override void SetMovementForce(Vector3 force)
+        public override Vector3 TargetVelocity
         {
-            if (_parent_scene.m_allowJump && !Flying && IsColliding && force.Z >= 0.5f)
+            get { return m_targetVelocity; }
+            set
             {
-                if (_parent_scene.m_usepreJump)
+                if (_parent_scene.m_allowJump && !Flying && IsColliding && value.Z >= 0.5f)
                 {
-                    if (!m_ispreJumping && !m_isJumping)
+                    if (_parent_scene.m_usepreJump)
                     {
-                        m_ispreJumping = true;
-                        m_preJumpForce = force;
-                        m_preJumpCounter = 0;
-                        TriggerMovementUpdate();
-                        return;
+                        if (!m_ispreJumping && !m_isJumping)
+                        {
+                            m_ispreJumping = true;
+                            m_preJumpForce = value;
+                            m_preJumpCounter = 0;
+                            TriggerMovementUpdate();
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (!m_isJumping)
+                        {
+                            m_isJumping = true;
+                            m_preJumpCounter = _parent_scene.m_preJumpTime;
+                            TriggerMovementUpdate();
+                            //Leave the / 2, its there so that the jump doesn't go crazy
+                            value.X *= _parent_scene.m_preJumpForceMultiplierX / 2;
+                            value.Y *= _parent_scene.m_preJumpForceMultiplierY / 2;
+                            value.Z *= _parent_scene.m_preJumpForceMultiplierZ;
+                        }
                     }
                 }
-                else
+                if (m_ispreJumping || m_isJumping)
                 {
-                    if (!m_isJumping)
-                    {
-                        m_isJumping = true;
-                        m_preJumpCounter = _parent_scene.m_preJumpTime;
-                        TriggerMovementUpdate();
-                        //Leave the / 2, its there so that the jump doesn't go crazy
-                        force.X *= _parent_scene.m_preJumpForceMultiplierX/2;
-                        force.Y *= _parent_scene.m_preJumpForceMultiplierY/2;
-                        force.Z *= _parent_scene.m_preJumpForceMultiplierZ;
-                    }
+                    TriggerMovementUpdate();
+                    return;
                 }
+                if (value != Vector3.Zero)
+                    m_targetVelocity = value;
             }
-            if (m_ispreJumping || m_isJumping)
-            {
-                TriggerMovementUpdate();
-                return;
-            }
-            if (force != Vector3.Zero)
-                _target_velocity = force;
         }
 
         #endregion
@@ -753,9 +751,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                 {
                     m_pidControllerActive = true;
-                    _target_velocity.X += force.X;
-                    _target_velocity.Y += force.Y;
-                    _target_velocity.Z += force.Z;
+                    m_targetVelocity.X += force.X;
+                    m_targetVelocity.Y += force.Y;
+                    m_targetVelocity.Z += force.Z;
                 }
             }
             else
@@ -772,16 +770,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <summary>
         ///     Cleanup the things we use in the scene.
         /// </summary>
-        public override void Destroy()
+        public void Destroy()
         {
-            m_isPhysical = true;
             _parent_scene.AddSimulationChange(() =>
-                                                  {
-                                                      _parent_scene.RemoveCharacter(this);
-                                                      // destroy avatar capsule and related ODE data
-                                                      _parent_ref.DestroyBodyThreadLocked();
-                                                      m_isPhysical = false;
-                                                  });
+            {
+                _parent_scene.RemoveCharacter(this);
+                // destroy avatar capsule and related ODE data
+                _parent_ref.DestroyBodyThreadLocked();
+                m_isPhysical = false;
+            });
         }
 
         #endregion

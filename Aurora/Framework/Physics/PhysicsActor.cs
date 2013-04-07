@@ -140,12 +140,22 @@ namespace Aurora.Framework.Physics
         public abstract bool Flying { get; set; }
         public abstract bool SetAlwaysRun { get; set; }
 
-        public virtual void SetMovementForce(Vector3 force)
+        /// <summary>
+        /// The desired velocity of this actor.
+        /// </summary>
+        /// <remarks>
+        /// Setting this provides a target velocity for physics scene updates.
+        /// Getting this returns the last set target. Fetch Velocity to get the current velocity.
+        /// </remarks>
+        protected Vector3 m_targetVelocity;
+        public virtual Vector3 TargetVelocity
         {
-        }
-
-        public virtual void Destroy()
-        {
+            get { return m_targetVelocity; }
+            set
+            {
+                m_targetVelocity = value;
+                Velocity = m_targetVelocity;
+            }
         }
 
         public delegate bool checkForRegionCrossing();
@@ -167,22 +177,17 @@ namespace Aurora.Framework.Physics
 
     public abstract class PhysicsObject : PhysicsActor
     {
-        public virtual void link(PhysicsObject obj)
-        {
-        }
+        public virtual void link(PhysicsObject obj) { }
 
-        public virtual void delink()
-        {
-        }
+        public virtual void delink() { }
 
         public virtual bool LinkSetIsColliding { get; set; }
 
-        public virtual void LockAngularMotion(Vector3 axis)
-        {
-        }
+        public virtual void LockAngularMotion(Vector3 axis) { }
 
         public virtual PrimitiveBaseShape Shape
         {
+            get { return null; }
             set { if (value == null) throw new ArgumentNullException("value"); }
         }
 
@@ -190,38 +195,24 @@ namespace Aurora.Framework.Physics
 
         public abstract void CrossingFailure();
 
-        public virtual void SetMaterial(int material, bool forceMaterialSettings)
+        public virtual void SetMaterial(int material, float friction, float restitution, float gravityMultiplier, float density)
         {
         }
 
-        // set never appears to be called
-        public virtual int VehicleType
-        {
-            get { return 0; }
-            set { return; }
-        }
+        public virtual float Friction { get; set; }
+        public virtual float Restitution { get; set; }
+        public virtual float GravityMultiplier { get; set; }
+        public virtual float Density { get; set; }
+        public virtual byte PhysicsShapeType { get; set; }
 
-        public virtual void VehicleFloatParam(int param, float value)
-        {
-        }
+        public virtual int VehicleType { get; set; }
+        public virtual void VehicleFloatParam(int param, float value) { }
+        public virtual void VehicleVectorParam(int param, Vector3 value) { }
+        public virtual void VehicleRotationParam(int param, Quaternion rotation) { } 
+        public virtual void VehicleFlags(int param, bool remove) { }
 
-        public virtual void VehicleVectorParam(int param, Vector3 value)
-        {
-        }
+        public virtual void SetCameraPos(Quaternion CameraRotation) { }
 
-        public virtual void VehicleRotationParam(int param, Quaternion rotation)
-        {
-        }
-
-        public virtual void VehicleFlags(int param, bool remove)
-        {
-        }
-
-        public virtual void SetCameraPos(Quaternion CameraRotation)
-        {
-        }
-
-        public virtual bool BuildingRepresentation { get; set; }
         public virtual bool BlockPhysicalReconstruction { get; set; }
         public abstract float Buoyancy { get; set; }
         public abstract Vector3 CenterOfMass { get; }
@@ -229,13 +220,7 @@ namespace Aurora.Framework.Physics
         public abstract void SubscribeEvents(int ms);
         public abstract void UnSubscribeEvents();
 
-        //set never appears to be called
-        public virtual bool VolumeDetect
-        {
-            get { return false; }
-            set { return; }
-        }
-
+        public virtual bool VolumeDetect { get; set; }
         public abstract Vector3 Acceleration { get; }
         public abstract void AddAngularForce(Vector3 force, bool pushforce);
 
@@ -250,10 +235,6 @@ namespace Aurora.Framework.Physics
             if (OnPhysicalRepresentationChanged != null)
                 OnPhysicalRepresentationChanged();
         }
-
-        public virtual void Destroy()
-        {
-        }
     }
 
     public abstract class PhysicsActor
@@ -261,9 +242,7 @@ namespace Aurora.Framework.Physics
         // disable warning: public events
 #pragma warning disable 67
         public delegate void RequestTerseUpdate();
-
         public delegate void CollisionUpdate(EventArgs e);
-
         public delegate void OutOfBounds(Vector3 pos);
 
         public event RequestTerseUpdate OnRequestTerseUpdate;
