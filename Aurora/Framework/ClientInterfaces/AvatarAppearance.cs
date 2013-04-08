@@ -579,6 +579,8 @@ namespace Aurora.Framework.ClientInterfaces
 
         public void SetCachedWearables(PresenceInfo.WearableCache[] wearables)
         {
+            if (wearables.Length == 0)
+                return;
             m_wearableCache.Clear();
             foreach (var w in wearables)
                 m_wearableCache.Add(w.TextureIndex.ToString(), w.CacheID);
