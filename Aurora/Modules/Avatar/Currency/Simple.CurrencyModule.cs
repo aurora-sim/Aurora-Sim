@@ -21,7 +21,7 @@ namespace Simple.Currency
             get { return m_connector.GetConfig(); }
         }
         private IScene m_scene;
-        private ISimpleCurrencyConnector m_connector;
+        private SimpleCurrencyConnector m_connector;
         private IRegistryCore m_registry;
 
         #endregion
@@ -35,7 +35,7 @@ namespace Simple.Currency
                 return;
 
             m_registry = registry;
-            m_connector = DataManager.RequestPlugin<ISimpleCurrencyConnector>();
+            m_connector = DataManager.RequestPlugin<ISimpleCurrencyConnector>() as SimpleCurrencyConnector;
 
             registry.RegisterModuleInterface<IMoneyModule>(this);
         }

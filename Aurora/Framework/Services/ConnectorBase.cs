@@ -133,8 +133,13 @@ namespace Aurora.Framework.Services
             ConnectorRegistry.RegisterConnector(this);
 
             ServerHandlerName = serverHandlerName;
-            ServerHandlerPort = serverHandlerPort == 0 ? MainServer.Instance.Port : serverHandlerPort;
-            ServerHandlerPath = serverPath;
+            if (MainServer.Instance == null && serverHandlerPort == 0)
+                openServerHandler = false;
+            else
+            {
+                ServerHandlerPort = serverHandlerPort == 0 ? MainServer.Instance.Port : serverHandlerPort;
+                ServerHandlerPath = serverPath;
+            }
 
             if (openServerHandler)
                 CreateServerHandler(serverHandlerPort, serverPath, serverHandlerName);
