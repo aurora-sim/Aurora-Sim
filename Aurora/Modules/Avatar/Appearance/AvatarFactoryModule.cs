@@ -301,6 +301,7 @@ textures 1
                  select new CachedAgentArgs 
                  {
                      ID = app.Appearance.Texture.FaceTextures[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex))] == null ||
+                          app.Appearance.WearableCache.Count == 0 ||
                           !app.Appearance.WearableCache.ContainsKey(((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex)).ToString()) ||
                           app.Appearance.WearableCache[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex)).ToString()] != arg.ID ?
                           UUID.Zero : app.Appearance.Texture.FaceTextures[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex))].TextureID, 
