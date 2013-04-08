@@ -49,35 +49,6 @@ namespace Aurora.Framework.Physics
 
     public delegate void OnCollisionEvent(PhysicsActor actor, PhysicsActor collidedActor, ContactPoint contact);
 
-    public enum RayFilterFlags : ushort
-    {
-        // the flags
-        water = 0x01,
-        land = 0x02,
-        agent = 0x04,
-        nonphysical = 0x08,
-        physical = 0x10,
-        phantom = 0x20,
-        volumedtc = 0x40,
-
-        // ray cast colision control (may only work for meshs)
-        ContactsUnImportant = 0x2000,
-        BackFaceCull = 0x4000,
-        ClosestHit = 0x8000,
-
-        // some combinations
-        LSLPhantom = phantom | volumedtc,
-        PrimsNonPhantom = nonphysical | physical,
-        PrimsNonPhantomAgents = nonphysical | physical | agent,
-
-        AllPrims = nonphysical | phantom | volumedtc | physical,
-        AllButLand = agent | nonphysical | physical | phantom | volumedtc,
-
-        ClosestAndBackCull = ClosestHit | BackFaceCull,
-
-        All = 0x3f
-    }
-
     public abstract class PhysicsScene
     {
         public virtual float TimeDilation

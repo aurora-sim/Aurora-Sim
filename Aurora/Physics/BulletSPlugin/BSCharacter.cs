@@ -100,6 +100,8 @@ public sealed class BSCharacter : BSPhysObject
             PhysicsScene.Shapes.GetBodyAndShape(true, PhysicsScene.World, this);
 
             SetPhysicalProperties();
+
+            SubscribeEvents(1000);
         });
         return;
     }
@@ -545,7 +547,7 @@ public sealed class BSCharacter : BSPhysObject
 
     public override OMV.Vector3 CenterOfMass { get { return OMV.Vector3.Zero; } }
 
-    protected bool m_disallowTargetVelocitySet;
+    protected bool m_disallowTargetVelocitySet, m_jumpFallState;
     protected int m_preJumpStart, m_jumpStart;
     protected OMV.Vector3 m_jumpDirection = OMV.Vector3.Zero;
 
@@ -559,42 +561,8 @@ public sealed class BSCharacter : BSPhysObject
         set
         {
             if (m_disallowTargetVelocitySet)
-            {
-                if (m_preJumpStart != 0 && Util.EnvironmentTickCountSubtract(m_preJumpStart) > 500)
-                {
-                    IsPreJumping = false;
-                    IsJumping = true;
-                    m_preJumpStart = 0;
-
-                    m_targetVelocity = m_jumpDirection * (1f / PhysicsScene.TimeDilation);
-                    m_targetVelocity.Z *= 1.5f;
-
-                    PhysicsScene.TaintedObject("BSCharacter.setTargetVelocity", delegate()
-                    {
-                        _velocityMotor.Reset();
-                        _velocityMotor.SetTarget(m_targetVelocity);
-                        _velocityMotor.SetCurrent(_velocity);
-                        _velocityMotor.TargetValueDecayTimeScale = 3; 
-                        _velocityMotor.Enabled = true;
-                    });
-                    m_jumpStart = Util.EnvironmentTickCount();
-                }
-                if (IsJumping && m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 1000)
-                {
-                    _velocityMotor.Reset();
-                    OMV.Vector3 newTarget = _velocity;
-                    newTarget.Z *= -0.5f;
-                    _velocityMotor.SetTarget(newTarget);
-                    _velocityMotor.SetCurrent(_velocity);
-                    IsJumping = false;
-                }
-                else if (!IsJumping && m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 3000)
-                {
-                    m_disallowTargetVelocitySet = false;
-                    m_jumpStart = 0;
-                }
                 return;
-            }
+
             DetailLog("{0},BSCharacter.setTargetVelocity,call,vel={1}", LocalID, value);
             OMV.Vector3 targetVel = value;
             targetVel *= 3.84f;
@@ -603,12 +571,63 @@ public sealed class BSCharacter : BSPhysObject
             if (_flying)
                 targetVel *= 4f;
 
-            if(!Flying/* && IsColliding*/ && value.Z >= 0.5f)
+            if(!Flying && IsColliding && value.Z >= 0.5f)
             {
                 IsPreJumping = true;
                 m_disallowTargetVelocitySet = true;
                 m_jumpDirection = targetVel;
                 m_preJumpStart = Util.EnvironmentTickCount();
+
+                this.RegisterPreStepAction(UUID + "-prejump", 0, (o) =>
+                    {
+                        if (m_preJumpStart != 0 && Util.EnvironmentTickCountSubtract(m_preJumpStart) > 300)
+                        {
+                            IsPreJumping = false;
+                            IsJumping = true;
+                            m_preJumpStart = 0;
+
+                            m_targetVelocity = m_jumpDirection;
+                            m_targetVelocity.Z *= 1.5f;//Scale so that we actually jump
+
+                            PhysicsScene.TaintedObject("BSCharacter.setTargetVelocity", delegate()
+                            {
+                                _velocityMotor.Reset();
+                                _velocityMotor.SetTarget(m_targetVelocity);
+                                _velocityMotor.SetCurrent(_velocity);
+                                _velocityMotor.TargetValueDecayTimeScale = 1;
+                                _velocityMotor.Enabled = true;
+                            });
+                            m_jumpStart = Util.EnvironmentTickCount();
+                        }
+                        if (!m_jumpFallState && m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 1000)
+                        {
+                            PhysicsScene.TaintedObject("BSCharacter.setTargetVelocity", delegate()
+                            {
+                                _velocityMotor.Reset();
+                                OMV.Vector3 newTarget = _velocity;
+                                newTarget.X *= 1.5f;//Scale so that the jump looks correct
+                                newTarget.Y *= 1.5f;
+                                newTarget.Z *= -0.2f;
+                                _velocityMotor.SetTarget(newTarget);
+                                _velocityMotor.SetCurrent(_velocity);
+                                _velocityMotor.TargetValueDecayTimeScale = 3;
+                                _velocityMotor.Enabled = true;
+                            });
+                            m_jumpFallState = true;
+                        }
+                        else if (m_jumpFallState && m_jumpStart != 0 && IsColliding && Util.EnvironmentTickCountSubtract(m_jumpStart) > 1500
+                            || (m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 10000))
+                        {
+                            //Reset everything in case something went wrong
+                            m_disallowTargetVelocitySet = false;
+                            m_jumpFallState = false;
+                            IsPreJumping = false;
+                            IsJumping = false;
+                            m_jumpStart = 0;
+                            m_preJumpStart = 0;
+                            this.UnRegisterPreStepAction(UUID + "-prejump", 0);
+                        }
+                    });
                 return;
             }
             m_targetVelocity = targetVel * (1f / PhysicsScene.TimeDilation);
