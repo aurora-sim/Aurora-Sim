@@ -60,4 +60,4 @@
 	
 [Handlers]
 	ISimpleCurrencyConnectorOpenServerHandler = true
-	ISimpleCurrencyConnectorServerHandlerPort = 8002
+	ISimpleCurrencyConnectorServerHandlerPort = 0
