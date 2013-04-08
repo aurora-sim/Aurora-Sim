@@ -101,6 +101,7 @@ namespace Aurora.Framework.Physics
 
         public abstract void Initialise(IMesher meshmerizer, IScene scene);
         public abstract void PostInitialise(IConfigSource config);
+        public abstract string EngineType { get; }
 
         public abstract PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint LocalID, UUID UUID);
@@ -197,6 +198,8 @@ namespace Aurora.Framework.Physics
             get { return false; }
             set { }
         }
+
+        public override string EngineType { get { return "NullPhysics"; } }
 
         public override bool UseUnderWaterPhysics
         {

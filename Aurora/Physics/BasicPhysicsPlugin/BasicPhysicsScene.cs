@@ -44,6 +44,8 @@ namespace Aurora.Physics.BasicPhysicsPlugin
         {
         }
 
+        public override string EngineType { get { return "BasicScene"; } }
+
         public override bool DisableCollisions
         {
             get { return false; }

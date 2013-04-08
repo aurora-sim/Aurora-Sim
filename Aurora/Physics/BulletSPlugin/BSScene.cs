@@ -166,6 +166,8 @@ public sealed class BSScene : PhysicsScene
     public bool VehiclePhysicalLoggingEnabled { get; private set; }
     public IScene Scene { get; private set; }
 
+    public override string EngineType { get { return "BulletSim"; } }
+
     #region Construction and Initialization
 
     public override void Initialise(IMesher meshmerizer, IScene scene)

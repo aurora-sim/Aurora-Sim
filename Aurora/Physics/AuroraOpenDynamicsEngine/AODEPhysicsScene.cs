@@ -196,6 +196,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return AllowUnderwaterPhysics; }
         }
 
+        public override string EngineType { get { return "OpenDynamicsEngine"; } }
+
         #region Stats
 
         public override int StatPhysicsTaintTime { get; protected set; }
