@@ -897,7 +897,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 case "control":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (0.5f*TicksPerMillisecond);
+                    NextEventDelay[functionName] = NowTicks + (long) (0.05f*TicksPerMillisecond);
                     break;
                 default: //Default is 0.05 seconds for event limiting
                     if (!NextEventDelay.ContainsKey(functionName))

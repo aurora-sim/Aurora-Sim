@@ -1,37 +1,42 @@
-//Simple car that works with the new SLFeeling Physics Engine (mod from encog)
+// Encog's Magic Wagon
+// Very simple vehicle script
 
-float forward_power = 15; 
-float reverse_power = -15; 
-float turning_ratio = 2.0; 
-string sit_message = "Ride"; 
-string not_owner_message = "You are not the owner of this vehicle ..."; 
+float forward_power = 15; //Power used to go forward (1 to 30)
+float reverse_power = -15; //Power ued to go reverse (-1 to -30)
+float turning_ratio = 2.0; //How sharply the vehicle turns. Less is more sharply. (.1 to 10)
+string sit_message = "Ride"; //Sit message
+string not_owner_message = "You are not the owner of this vehicle ..."; //Not owner message
 
 default
 {
     state_entry()
     {
         llSetSitText(sit_message);
+        // forward-back,left-right,updown
         llSitTarget(<0.2,0,0.45>, ZERO_ROTATION );
         
         llSetCameraEyeOffset(<-8, 0.0, 5.0>);
         llSetCameraAtOffset(<1.0, 0.0, 2.0>);
-              
         
         llSetVehicleType(VEHICLE_TYPE_CAR);
-        llSetVehicleFloatParam(VEHICLE_ANGULAR_DEFLECTION_EFFICIENCY, 0.1);
-        llSetVehicleFloatParam(VEHICLE_LINEAR_DEFLECTION_EFFICIENCY, 0.2);
-        llSetVehicleFloatParam(VEHICLE_ANGULAR_DEFLECTION_TIMESCALE, 0.2);
+        llSetVehicleFloatParam(VEHICLE_ANGULAR_DEFLECTION_EFFICIENCY, 0.2);
+        llSetVehicleFloatParam(VEHICLE_LINEAR_DEFLECTION_EFFICIENCY, 0.80);
+        llSetVehicleFloatParam(VEHICLE_ANGULAR_DEFLECTION_TIMESCALE, 0.10);
         llSetVehicleFloatParam(VEHICLE_LINEAR_DEFLECTION_TIMESCALE, 0.10);
-        llSetVehicleFloatParam(VEHICLE_LINEAR_MOTOR_TIMESCALE, 0.2);
+        llSetVehicleFloatParam(VEHICLE_LINEAR_MOTOR_TIMESCALE, 1.0);
         llSetVehicleFloatParam(VEHICLE_LINEAR_MOTOR_DECAY_TIMESCALE, 0.2);
         llSetVehicleFloatParam(VEHICLE_ANGULAR_MOTOR_TIMESCALE, 0.1);
         llSetVehicleFloatParam(VEHICLE_ANGULAR_MOTOR_DECAY_TIMESCALE, 0.5);
-        
+        llSetVehicleVectorParam(VEHICLE_LINEAR_FRICTION_TIMESCALE, <1000.0, 2.0, 1000.0>);
+        llSetVehicleVectorParam(VEHICLE_ANGULAR_FRICTION_TIMESCALE, <10.0, 10.0, 1000.0>);
+        llSetVehicleFloatParam(VEHICLE_VERTICAL_ATTRACTION_EFFICIENCY, 0.50);
+        llSetVehicleFloatParam(VEHICLE_VERTICAL_ATTRACTION_TIMESCALE, 0.50);
     }
     
     changed(integer change)
     {
-                
+        
+        
         if (change & CHANGED_LINK)
         {
             
@@ -46,7 +51,8 @@ default
                 }
                 else
                 {
-                                
+                    llTriggerSound("car_start",1);
+                    
                     
                     llMessageLinked(LINK_ALL_CHILDREN , 0, "WHEEL_DRIVING", NULL_KEY);
                     llSleep(.4);
@@ -54,7 +60,7 @@ default
                     llSleep(.1);
                     llRequestPermissions(agent, PERMISSION_TRIGGER_ANIMATION | PERMISSION_TAKE_CONTROLS);
 
-                    
+                    llLoopSound("car_run",1);
                 }
             }
             else
@@ -86,9 +92,11 @@ default
         integer reverse=1;
         vector angular_motor;
         
+        //get current speed
         vector vel = llGetVel();
         float speed = llVecMag(vel);
 
+        //car controls
         if(level & CONTROL_FWD)
         {
             llSetVehicleVectorParam(VEHICLE_LINEAR_MOTOR_DIRECTION, <forward_power,0,0>);
@@ -112,7 +120,5 @@ default
 
         llSetVehicleVectorParam(VEHICLE_ANGULAR_MOTOR_DIRECTION, angular_motor);
 
-    }    
-    
-    
-} 
+    } //end control   
+} //end default
