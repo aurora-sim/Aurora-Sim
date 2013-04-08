@@ -23,7 +23,7 @@ namespace Simple.Currency
     {
         #region Declares
 
-        private ISimpleCurrencyConnector m_connector;
+        private SimpleCurrencyConnector m_connector;
         private ISyncMessagePosterService m_syncMessagePoster;
         private IAgentInfoService m_agentInfoService;
 
@@ -43,7 +43,7 @@ namespace Simple.Currency
             if (!config.Configs["Currency"].GetBoolean("RunServer", false))
                 return;
 
-            m_connector = DataManager.RequestPlugin<ISimpleCurrencyConnector>();
+            m_connector = DataManager.RequestPlugin<ISimpleCurrencyConnector>() as SimpleCurrencyConnector;
             IHttpServer server =
                 registry.RequestModuleInterface<ISimulationBase>()
                         .GetHttpServer((uint) m_connector.GetConfig().ClientPort);

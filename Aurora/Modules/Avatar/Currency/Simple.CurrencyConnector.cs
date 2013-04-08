@@ -12,17 +12,7 @@ using System.Collections.Generic;
 
 namespace Simple.Currency
 {
-    public interface ISimpleCurrencyConnector : IAuroraDataPlugin
-    {
-        SimpleCurrencyConfig GetConfig();
-        UserCurrency GetUserCurrency(UUID agentId);
-        bool UserCurrencyUpdate(UserCurrency agent);
-        GroupBalance GetGroupBalance(UUID groupID);
-
-        bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount,
-                                  string description, TransactionType type, UUID transactionID);
-    }
-
+    
     public class SimpleCurrencyConnector : ConnectorBase, ISimpleCurrencyConnector
     {
         #region Declares
