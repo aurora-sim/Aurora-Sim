@@ -123,7 +123,6 @@ public class BSShapeNull : BSShape
 
 public class BSShapeNative : BSShape
 {
-    private static string LogHeader = "[BULLETSIM SHAPE NATIVE]";
     public BSShapeNative() : base()
     {
     }
@@ -181,7 +180,6 @@ public class BSShapeNative : BSShape
 
 public class BSShapeMesh : BSShape
 {
-    private static string LogHeader = "[BULLETSIM SHAPE MESH]";
     private static Dictionary<System.UInt64, BSShapeMesh> Meshes = new Dictionary<System.UInt64, BSShapeMesh>();
 
     public BSShapeMesh() : base()
@@ -193,7 +191,6 @@ public class BSShapeMesh : BSShape
 
 public class BSShapeHull : BSShape
 {
-    private static string LogHeader = "[BULLETSIM SHAPE HULL]";
     private static Dictionary<System.UInt64, BSShapeHull> Hulls = new Dictionary<System.UInt64, BSShapeHull>();
 
     public BSShapeHull() : base()
@@ -205,7 +202,6 @@ public class BSShapeHull : BSShape
 
 public class BSShapeCompound : BSShape
 {
-    private static string LogHeader = "[BULLETSIM SHAPE COMPOUND]";
     public BSShapeCompound() : base()
     {
     }
@@ -218,7 +214,6 @@ public class BSShapeCompound : BSShape
 
 public class BSShapeAvatar : BSShape
 {
-    private static string LogHeader = "[BULLETSIM SHAPE AVATAR]";
     public BSShapeAvatar() : base()
     {
     }

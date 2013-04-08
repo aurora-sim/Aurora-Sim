@@ -59,7 +59,6 @@ public class BSPrim : BSPhysObject
     private OMV.Vector3 _torque;
     private OMV.Vector3 _acceleration;
     private OMV.Quaternion _orientation;
-    private int _physicsActorType;
     private bool _isPhysical;
     private bool _flying;
     private bool _setAlwaysRun;
@@ -87,7 +86,6 @@ public class BSPrim : BSPhysObject
             : base(parent_scene, localID, primName, "BSPrim")
     {
         // MainConsole.Instance.DebugFormat("{0}: BSPrim creation of {1}, id={2}", LogHeader, primName, localID);
-        _physicsActorType = (int)ActorTypes.Prim;
         _position = pos;
         _size = size;
         Scale = size;   // prims are the size the user wants them to be (different for BSCharactes).
@@ -1611,10 +1609,25 @@ public class BSPrim : BSPhysObject
         // Assign directly to the local variables so the normal set actions do not happen
         _position = entprop.Position;
         _orientation = entprop.Rotation;
+
+        bool terseUpdate = false;
+
+        if (entprop.Velocity != OMV.Vector3.Zero && entprop.Velocity.ApproxEquals(OMV.Vector3.Zero, 0.01f) && Velocity != OMV.Vector3.Zero)
+        {
+            entprop.Velocity = OMV.Vector3.Zero;
+            entprop.Acceleration = OMV.Vector3.Zero;
+            entprop.RotationalVelocity = OMV.Vector3.Zero;
+            Velocity = OMV.Vector3.Zero;
+            terseUpdate = true;
+        }
+
         // DEBUG DEBUG DEBUG -- smooth velocity changes a bit. The simulator seems to be
         //    very sensitive to velocity changes.
         if (entprop.Velocity == OMV.Vector3.Zero || !entprop.Velocity.ApproxEquals(_velocity, BSParam.UpdateVelocityChangeThreshold))
+        {
+            terseUpdate = true;
             _velocity = entprop.Velocity;
+        }
         _acceleration = entprop.Acceleration;
         _rotationalVelocity = entprop.RotationalVelocity;
 
@@ -1636,7 +1649,8 @@ public class BSPrim : BSPhysObject
         LastEntityProperties = CurrentEntityProperties;
         CurrentEntityProperties = entprop;
 
-        base.RequestPhysicsterseUpdate();
+        if (terseUpdate)
+            base.RequestPhysicsterseUpdate();
             /*
         else
         {

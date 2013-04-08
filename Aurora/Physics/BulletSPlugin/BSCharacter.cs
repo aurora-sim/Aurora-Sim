@@ -547,9 +547,9 @@ public sealed class BSCharacter : BSPhysObject
 
     public override OMV.Vector3 CenterOfMass { get { return OMV.Vector3.Zero; } }
 
-    protected bool m_disallowTargetVelocitySet, m_jumpFallState;
-    protected int m_preJumpStart, m_jumpStart;
-    protected OMV.Vector3 m_jumpDirection = OMV.Vector3.Zero;
+    private bool m_disallowTargetVelocitySet, m_jumpFallState;
+    private int m_preJumpStart, m_jumpStart;
+    private OMV.Vector3 m_jumpDirection = OMV.Vector3.Zero;
 
     // Sets the target in the motor. This starts the changing of the avatar's velocity.
     public override OMV.Vector3 TargetVelocity
@@ -616,7 +616,7 @@ public sealed class BSCharacter : BSPhysObject
                             m_jumpFallState = true;
                         }
                         else if (m_jumpFallState && m_jumpStart != 0 && IsColliding && Util.EnvironmentTickCountSubtract(m_jumpStart) > 1500
-                            || (m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 10000))
+                            || (m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 10000))//Fallback
                         {
                             //Reset everything in case something went wrong
                             m_disallowTargetVelocitySet = false;
@@ -637,7 +637,7 @@ public sealed class BSCharacter : BSPhysObject
                 _velocityMotor.Reset();
                 _velocityMotor.SetTarget(m_targetVelocity);
                 _velocityMotor.SetCurrent(_velocity);
-                _velocityMotor.TargetValueDecayTimeScale = 3;
+                _velocityMotor.TargetValueDecayTimeScale = 3;//Decay properly
                 _velocityMotor.Enabled = true;
             });
         }
@@ -902,7 +902,7 @@ public sealed class BSCharacter : BSPhysObject
 
         _orientation = entprop.Rotation;
 
-        if (entprop.Velocity.ApproxEquals(OMV.Vector3.Zero, 0.01f))
+        if (entprop.Velocity != OMV.Vector3.Zero && entprop.Velocity.ApproxEquals(OMV.Vector3.Zero, 0.01f) && Velocity != OMV.Vector3.Zero)
         {
             entprop.Velocity = OMV.Vector3.Zero;
             entprop.Acceleration = OMV.Vector3.Zero;

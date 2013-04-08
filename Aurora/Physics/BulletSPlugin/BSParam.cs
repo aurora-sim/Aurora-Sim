@@ -513,7 +513,7 @@ public static class BSParam
             (s) => { return AvatarStandingFriction; },
             (s,v) => { AvatarStandingFriction = v; } ),
         new ParameterDefn<float>("AvatarAlwaysRunFactor", "Speed multiplier if avatar is set to always run",
-            1.3f,
+            1.7f,
             (s) => { return AvatarAlwaysRunFactor; },
             (s,v) => { AvatarAlwaysRunFactor = v; } ),
         new ParameterDefn<float>("AvatarDensity", "Density of an avatar. Changed on avatar recreation.",

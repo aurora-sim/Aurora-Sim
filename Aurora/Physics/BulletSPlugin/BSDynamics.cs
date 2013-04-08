@@ -41,8 +41,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 {
     public sealed class BSDynamics : BSActor
     {
-        private static string LogHeader = "[BULLETSIM VEHICLE]";
-
         // the prim this dynamic controller belongs to
         private BSPrim ControllingPrim { get; set; }
 

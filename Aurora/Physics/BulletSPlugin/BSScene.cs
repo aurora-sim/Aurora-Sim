@@ -503,7 +503,6 @@ public sealed class BSScene : PhysicsScene
         int collidersCount = 0;
 
         int beforeTime = 0;
-        int simTime = 0;
 
         // update the prim states while we know the physics engine is not busy
         int numTaints = _taintOperations.Count;
