@@ -3,6 +3,7 @@ using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services;
@@ -44,6 +45,9 @@ namespace Simple.Currency
                 return;
 
             m_connector = DataManager.RequestPlugin<ISimpleCurrencyConnector>() as SimpleCurrencyConnector;
+
+            if (m_connector.GetConfig().ClientPort == 0 && MainServer.Instance == null)
+                return;
             IHttpServer server =
                 registry.RequestModuleInterface<ISimulationBase>()
                         .GetHttpServer((uint) m_connector.GetConfig().ClientPort);
