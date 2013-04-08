@@ -288,5 +288,10 @@ namespace Aurora.Framework.SceneInfo.Entities
         void UpdateGroupRotationR(Quaternion rot);
 
         void ApplyPermissions(uint p);
+
+        EntityIntersection TestIntersection(Ray hRay, bool frontFacesOnly, bool faceCenters);
+
+        void GetAxisAlignedBoundingBoxRaw(out float minX, out float maxX, out float minY, out float maxY,
+                                                 out float minZ, out float maxZ);
     }
 }
