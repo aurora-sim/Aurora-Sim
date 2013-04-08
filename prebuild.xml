@@ -270,7 +270,7 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Region"/>
       <Reference name="Aurora.Physics.Meshing"/>
-      <Reference name="OpenSim.Region.Physics.ConvexDecompositionDotNet"/>
+      <Reference name="Aurora.Physics.ConvexDecompositionDotNet"/>
       <Reference name="BulletXNA.dll" path="../../../bin/"/>
 
       <Files>
