@@ -16,6 +16,7 @@ namespace Aurora.Services.GenericServices
     {
         protected Dictionary<string, List<string>> m_gridURIs = new Dictionary<string, List<string>>();
         protected bool m_remoteCalls = false, m_enabled = false;
+        protected ManualResetEventSlim m_retrievedInternalCalls = new ManualResetEventSlim(false);
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -47,6 +48,7 @@ namespace Aurora.Services.GenericServices
         private void SendGridURIsAsync(object state)
         {
             SendGridURIs((Dictionary<string, string>)state);
+            m_retrievedInternalCalls.Set();
         }
 
         public List<string> GetGridURIs(string key)
@@ -69,6 +71,8 @@ namespace Aurora.Services.GenericServices
             if (m_remoteCalls)
                 return (Dictionary<string, List<string>>)base.DoRemoteCallGet(true, "ServerURI", secure);
 
+            m_retrievedInternalCalls.Wait();
+
             if (secure)
                 return m_gridURIs;
             else
@@ -81,7 +85,7 @@ namespace Aurora.Services.GenericServices
             }
         }
 
-        [CanBeReflected(ThreatLevel=ThreatLevel.High)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public void SendGridURIs(Dictionary<string, string> uri)
         {
             if (m_remoteCalls)
@@ -98,7 +102,6 @@ namespace Aurora.Services.GenericServices
             }
 
             m_registry.RequestModuleInterface<IGridInfo>().UpdateGridInfo();
-            IGridInfo info = m_registry.RequestModuleInterface<IGridInfo>();
         }
 
         public void AddURI(string key, string value)
