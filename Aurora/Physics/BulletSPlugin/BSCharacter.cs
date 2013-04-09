@@ -51,7 +51,6 @@ public sealed class BSCharacter : BSPhysObject
     private float _collisionScore;
     private OMV.Vector3 _acceleration;
     private OMV.Quaternion _orientation;
-    private bool _isPhysical;
     private bool _flying;
     private bool _setAlwaysRun;
     private bool _throttleUpdates;
@@ -561,7 +560,23 @@ public sealed class BSCharacter : BSPhysObject
         set
         {
             if (m_disallowTargetVelocitySet)
+            {
+                if (Flying && (IsJumping || IsPreJumping))//They started flying while jumping
+                {
+                    PhysicsScene.TaintedObject("BSCharacter.setTargetVelocity", delegate()
+                    {
+                                //Reset everything in case something went wrong
+                        m_disallowTargetVelocitySet = false;
+                        m_jumpFallState = false;
+                        IsPreJumping = false;
+                        IsJumping = false;
+                        m_jumpStart = 0;
+                        m_preJumpStart = 0;
+                        this.UnRegisterPreStepAction(UUID + "-prejump", 0);
+                    });
+                }
                 return;
+            }
 
             DetailLog("{0},BSCharacter.setTargetVelocity,call,vel={1}", LocalID, value);
             OMV.Vector3 targetVel = value;
@@ -731,9 +746,8 @@ public sealed class BSCharacter : BSPhysObject
         get { return (int)ActorTypes.Agent; }
     }
     public override bool IsPhysical {
-        get { return _isPhysical; }
-        set { _isPhysical = value;
-        }
+        get { return true; }
+        set { }
     }
     public override bool IsSolid {
         get { return true; }

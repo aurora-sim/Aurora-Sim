@@ -335,7 +335,6 @@ namespace Aurora.Region.Animation
 
             #region Flying
 
-//            if (actor != null && actor.Flying)
             if (actor != null &&
                 (m_scenePresence.AgentControlFlags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY) ==
                 (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY || m_scenePresence.ForceFly)
