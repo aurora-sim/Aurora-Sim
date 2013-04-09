@@ -339,6 +339,7 @@ namespace Aurora.Region.Animation
                 (m_scenePresence.AgentControlFlags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY) ==
                 (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY || m_scenePresence.ForceFly)
             {
+                m_animTickWalk = 0;
                 m_animTickFall = 0;
                 if (move.X != 0f || move.Y != 0f)
                 {
@@ -441,8 +442,8 @@ namespace Aurora.Region.Animation
             #region Falling/Floating/Landing
 
             float walkElapsed = (Util.EnvironmentTickCount() - m_animTickWalk)/1000f;
-            if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && actor.Velocity.Z < -2 &&
-                walkElapsed > FALL_AFTER_MOVE_TIME)
+            if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && !actor.Flying && actor.Velocity != Vector3.Zero/* && actor.Velocity.Z < -2*/ &&
+                (walkElapsed > FALL_AFTER_MOVE_TIME || m_animTickWalk == 0))//For if they user is walking off something, or they are falling
             {
                 //Always return falldown immediately as there shouldn't be a waiting period
                 if (m_animTickFall == 0)
