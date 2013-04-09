@@ -714,7 +714,7 @@ namespace Aurora.Framework.ClientInterfaces
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat("[AVATAR APPEARANCE]: unpack failed badly: {0}{1}", e, e.StackTrace);
+                MainConsole.Instance.ErrorFormat("[AVATAR APPEARANCE]: unpack failed badly: {0}, {1}", e.ToString(), OSDParser.SerializeJsonString(data));
             }
         }
 
