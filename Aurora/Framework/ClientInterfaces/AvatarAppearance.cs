@@ -661,7 +661,8 @@ namespace Aurora.Framework.ClientInterfaces
                 {
                     OSDArray wears = (OSDArray) (data["wearables"]);
                     for (int i = 0; i < wears.Count; i++)
-                        m_wearables[i] = new AvatarWearable((OSDArray) wears[i]);
+                        if(wears[i] is OSDArray)
+                            m_wearables[i] = new AvatarWearable((OSDArray) wears[i]);
                 }
                 else
                 {
