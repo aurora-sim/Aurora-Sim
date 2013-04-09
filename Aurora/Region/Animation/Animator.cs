@@ -442,7 +442,7 @@ namespace Aurora.Region.Animation
             #region Falling/Floating/Landing
 
             float walkElapsed = (Util.EnvironmentTickCount() - m_animTickWalk)/1000f;
-            if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && !actor.Flying && actor.Velocity != Vector3.Zero/* && actor.Velocity.Z < -2*/ &&
+            if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && !actor.Flying && actor.TargetVelocity != Vector3.Zero/* && actor.Velocity.Z < -2*/ &&
                 (walkElapsed > FALL_AFTER_MOVE_TIME || m_animTickWalk == 0))//For if they user is walking off something, or they are falling
             {
                 //Always return falldown immediately as there shouldn't be a waiting period

@@ -1636,16 +1636,16 @@ namespace Aurora.Region
                     if (part.SitTargetAvatar.Contains(UUID))
                         part.RemoveAvatarOnSitTarget(UUID);
 
-                    m_parentPosition = part.GetWorldPosition();
+                    /*m_parentPosition = part.GetWorldPosition();
                     Vector3 MovePos = new Vector3 {X = 1};
                     //TODO: Make this configurable
                     MovePos *= Rotation;
                     m_parentPosition += MovePos;
                     ControllingClient.SendClearFollowCamProperties(part.ParentUUID);
                     if (part.PhysActor != null)
-                        part.PhysActor.Selected = false;
+                        part.PhysActor.Selected = false;*/
                 }
-                m_pos += m_parentPosition + new Vector3(0.0f, 0.0f, 2.0f*m_sitAvatarHeight);
+                m_pos += m_parentPosition;// +new Vector3(0.0f, 0.0f, 2.0f * m_sitAvatarHeight);
                 m_parentPosition = Vector3.Zero;
                 Rotation = Quaternion.Identity;
             }
