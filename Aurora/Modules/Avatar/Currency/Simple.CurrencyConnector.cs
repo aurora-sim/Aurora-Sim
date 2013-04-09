@@ -171,6 +171,7 @@ namespace Simple.Currency
 
                 UserCurrencyUpdate(fromCurrency, true);
             }
+            if (fromID == toID) toCurrency = GetUserCurrency(toID);
 
             //Update the user whose getting paid
             toCurrency.Amount += amount;
@@ -190,29 +191,49 @@ namespace Simple.Currency
                                                   .GetUserAccount(null, toID);
                 UserAccount fromAccount = m_registry.RequestModuleInterface<IUserAccountService>()
                                                     .GetUserAccount(null, fromID);
-                if (toUserInfo != null && toUserInfo.IsOnline)
+                if (fromID == toID)
                 {
-                    OSDMap map = new OSDMap();
-                    map["Method"] = "UpdateMoneyBalance";
-                    map["AgentID"] = toID;
-                    map["Amount"] = toCurrency.Amount;
-                    if (fromAccount != null)
-                        map["Message"] = fromAccount.Name + " paid you $" + amount +
-                                         (description == "" ? "" : ": " + description);
-                    else
-                        map["Message"] = "";
-                    map["TransactionID"] = transactionID;
-                    m_syncMessagePoster.Post(toUserInfo.CurrentRegionURI, map);
+                    if (toUserInfo != null && toUserInfo.IsOnline)
+                    {
+                        OSDMap map = new OSDMap();
+                        map["Method"] = "UpdateMoneyBalance";
+                        map["AgentID"] = toID;
+                        map["Amount"] = toCurrency.Amount;
+                        if (fromAccount != null)
+                            map["Message"] = fromAccount.Name + " paid you $" + amount +
+                                             (description == "" ? "" : ": " + description);
+                        else
+                            map["Message"] = "";
+                        map["TransactionID"] = transactionID;
+                        m_syncMessagePoster.Post(toUserInfo.CurrentRegionURI, map);
+                    }
                 }
-                if (fromUserInfo != null && fromUserInfo.IsOnline)
+                else
                 {
-                    OSDMap map = new OSDMap();
-                    map["Method"] = "UpdateMoneyBalance";
-                    map["AgentID"] = fromID;
-                    map["Amount"] = fromCurrency.Amount;
-                    map["Message"] = "You paid " + (toAccount == null ? "" : toAccount.Name) + " $" + amount;
-                    map["TransactionID"] = transactionID;
-                    m_syncMessagePoster.Post(fromUserInfo.CurrentRegionURI, map);
+                    if (toUserInfo != null && toUserInfo.IsOnline)
+                    {
+                        OSDMap map = new OSDMap();
+                        map["Method"] = "UpdateMoneyBalance";
+                        map["AgentID"] = toID;
+                        map["Amount"] = toCurrency.Amount;
+                        if (fromAccount != null)
+                            map["Message"] = fromAccount.Name + " paid you $" + amount +
+                                             (description == "" ? "" : ": " + description);
+                        else
+                            map["Message"] = "";
+                        map["TransactionID"] = transactionID;
+                        m_syncMessagePoster.Post(toUserInfo.CurrentRegionURI, map);
+                    }
+                    if (fromUserInfo != null && fromUserInfo.IsOnline)
+                    {
+                        OSDMap map = new OSDMap();
+                        map["Method"] = "UpdateMoneyBalance";
+                        map["AgentID"] = fromID;
+                        map["Amount"] = fromCurrency.Amount;
+                        map["Message"] = "You paid " + (toAccount == null ? "" : toAccount.Name) + " $" + amount;
+                        map["TransactionID"] = transactionID;
+                        m_syncMessagePoster.Post(fromUserInfo.CurrentRegionURI, map);
+                    }
                 }
             }
             return true;
