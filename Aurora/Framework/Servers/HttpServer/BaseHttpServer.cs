@@ -62,7 +62,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public Action<HttpListenerContext> OnOverrideRequest = null;
         protected bool m_isSecure;
-        protected uint m_port;
+        protected uint m_port, m_threadCount;
         protected string m_hostName;
         protected int NotSocketErrors;
 
@@ -122,11 +122,12 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        public BaseHttpServer(uint port, string hostName, bool isSecure)
+        public BaseHttpServer(uint port, string hostName, bool isSecure, uint threadCount)
         {
             m_hostName = hostName;
             m_port = port;
             m_isSecure = isSecure;
+            m_threadCount = threadCount;
         }
 
         /// <summary>
@@ -565,9 +566,6 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US",
                                                                                                             true);
-
-                //response.KeepAlive = true;
-                response.SendChunked = false;
 
                 string path = request.RawUrl;
                 string handlerKey = GetHandlerKey(request.HttpMethod, path);
@@ -1021,7 +1019,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 string responseString = GetHTTP500();
                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-                response.SendChunked = false;
                 response.ContentLength64 = buffer.Length;
                 response.ContentEncoding = Encoding.UTF8;
                 return buffer;
@@ -1042,7 +1039,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 //m_httpListener = new HttpListener();
 
                 NotSocketErrors = 0;
-                m_internalServer = new HttpListenerManager(1, Secure);
+                m_internalServer = new HttpListenerManager(m_threadCount, Secure);
                 if (OnOverrideRequest != null)
                     m_internalServer.ProcessRequest += OnOverrideRequest;
                 else

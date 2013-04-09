@@ -3,6 +3,7 @@ using Aurora.Framework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Services;
 using Nini.Config;
 
@@ -81,7 +82,7 @@ namespace Aurora.Region
             List<IClientNetworkServer> allClientServers = new List<IClientNetworkServer>();
             foreach (IClientNetworkServer clientServer in clientServers)
             {
-                clientServer.Initialise(regionInfo.InternalEndPoint.Port, m_configSource, circuitManager);
+                clientServer.Initialise(MainServer.Instance.Port, m_configSource, circuitManager);
                 allClientServers.Add(clientServer);
             }
 

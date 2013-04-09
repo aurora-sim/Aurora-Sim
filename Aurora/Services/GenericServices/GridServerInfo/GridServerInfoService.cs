@@ -16,7 +16,7 @@ namespace Aurora.Services.GenericServices
     {
         protected Dictionary<string, List<string>> m_gridURIs = new Dictionary<string, List<string>>();
         protected bool m_remoteCalls = false, m_enabled = false;
-        protected ManualResetEventSlim m_retrievedInternalCalls = new ManualResetEventSlim(false);
+        protected int m_defaultURICount = 11;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -26,6 +26,7 @@ namespace Aurora.Services.GenericServices
             m_enabled = true;
             registry.RegisterModuleInterface<IGridServerInfoService>(this);
             m_remoteCalls = conf.GetBoolean("DoRemote");
+            m_defaultURICount = conf.GetInt("DefaultURICount", m_defaultURICount);
             Init(registry, GetType().Name);
         }
 
@@ -42,13 +43,12 @@ namespace Aurora.Services.GenericServices
                 uris.Add(connector.ServerHandlerName, MainServer.Instance.FullHostName + ":" +
                     connector.ServerHandlerPort + connector.ServerHandlerPath);
             }
-            new Timer(SendGridURIsAsync, uris, 2000, System.Threading.Timeout.Infinite);
+            new Timer(SendGridURIsAsync, uris, 3000, System.Threading.Timeout.Infinite);
         }
 
         private void SendGridURIsAsync(object state)
         {
             SendGridURIs((Dictionary<string, string>)state);
-            m_retrievedInternalCalls.Set();
         }
 
         public List<string> GetGridURIs(string key)
@@ -71,7 +71,8 @@ namespace Aurora.Services.GenericServices
             if (m_remoteCalls)
                 return (Dictionary<string, List<string>>)base.DoRemoteCallGet(true, "ServerURI", secure);
 
-            m_retrievedInternalCalls.Wait();
+            if (m_gridURIs.Count < m_defaultURICount)
+                return new Dictionary<string, List<string>>();
 
             if (secure)
                 return m_gridURIs;
