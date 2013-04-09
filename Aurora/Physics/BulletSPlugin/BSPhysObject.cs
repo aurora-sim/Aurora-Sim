@@ -99,6 +99,7 @@ public abstract class BSPhysObject : PhysicsActor
         CollisionsLastTick = CollisionCollection;
         SubscribedEventsMs = 0;
         CollidingStep = 0;
+        TrueCollidingStep = 0;
         CollisionAccumulation = 0;
         ColliderIsMoving = false;
         CollisionScore = 0;
@@ -247,6 +248,8 @@ public abstract class BSPhysObject : PhysicsActor
     protected int NextCollisionOkTime { get; set; }
     // The simulation step that last had a collision
     protected long CollidingStep { get; set; }
+    // The simulation step that last had a collision
+    protected long TrueCollidingStep { get; set; }
     // The collision flags we think are set in Bullet
     protected CollisionFlags CurrentCollisionFlags { get; set; }
     // On a collision, check the collider and remember if the last collider was moving
@@ -262,21 +265,33 @@ public abstract class BSPhysObject : PhysicsActor
         set
         {
             if (value)
+            {
+                TrueCollidingStep = PhysicsScene.SimulationStep;
                 CollidingStep = PhysicsScene.SimulationStep;
+            }
             else
+            {
+                TrueCollidingStep = 0;
                 CollidingStep = 0;
+            }
         }
     }
 
     public override bool IsTruelyColliding
     {
-        get { return (CollidingStep == PhysicsScene.SimulationStep); }
+        get { return (TrueCollidingStep == PhysicsScene.SimulationStep); }
         set
         {
             if (value)
+            {
+                TrueCollidingStep = PhysicsScene.SimulationStep;
                 CollidingStep = PhysicsScene.SimulationStep;
+            }
             else
+            {
+                TrueCollidingStep = 0;
                 CollidingStep = 0;
+            }
         }
     }
 
@@ -294,9 +309,20 @@ public abstract class BSPhysObject : PhysicsActor
                     OMV.Vector3 contactPoint, OMV.Vector3 contactNormal, float pentrationDepth)
     {
         bool ret = false;
+        bool p2col = true;
+
+        // We only need to test p2 for 'jump crouch purposes'
+        if (this.TypeName == "BSCharacter" && collidee is BSPrim)
+        {
+            // Testing if the collision is at the feet of the avatar
+            if ((this.Position.Z - contactPoint.Z) < (this.Size.Z * 0.5f))
+                p2col = false;
+        }
 
         // The following lines make IsColliding(), CollidingGround() and CollidingObj work
-        CollidingStep = PhysicsScene.SimulationStep;
+        if (p2col)
+            CollidingStep = PhysicsScene.SimulationStep;
+        TrueCollidingStep = PhysicsScene.SimulationStep;
 
         CollisionAccumulation++;
 
