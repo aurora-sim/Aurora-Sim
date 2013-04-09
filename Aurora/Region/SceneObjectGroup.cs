@@ -2597,8 +2597,8 @@ namespace Aurora.Region
             SceneObjectPart part;
             int i;
 
-            lock (m_partsLock)
-                parts = m_partsList.ToArray();
+            lock (m_partsLock)//Force the root to be deleted last
+                parts = m_partsList.OrderBy((sop)=>-sop.LinkNum).ToArray();
 
             if (RootPart.PhysActor != null)
                 RootPart.PhysActor.BlockPhysicalReconstruction = true;
