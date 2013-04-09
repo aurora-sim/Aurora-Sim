@@ -1999,6 +1999,7 @@ namespace Aurora.Region
 
                 m_parentID = m_requestedSitTargetUUID;
                 Velocity = Vector3.Zero;
+                m_AngularVelocity = Vector3.Zero;
                 //Force send a full update
                 ControllingClient.SendAvatarDataImmediate(this);
                 foreach (IScenePresence sp in m_scene.GetScenePresences())

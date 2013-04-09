@@ -268,12 +268,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                     m_preJumpStart = 0;
 
                     OMV.Vector3 target = m_jumpDirection;
-                    target.Z *= 1.5f;//Scale so that we actually jump
+                    target.X *= 1.5f;
+                    target.Y *= 1.5f;
+                    target.Z *= 2.5f;//Scale so that we actually jump
 
                     SetVelocityAndTargetInternal(m_controllingPrim.RawVelocity, target, false, 1);
                     m_jumpStart = Util.EnvironmentTickCount();
                 }
-                if (!m_jumpFallState && m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 1000)
+                if (!m_jumpFallState && m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 500)
                 {
                     OMV.Vector3 newTarget = m_controllingPrim.RawVelocity;
                     newTarget.X *= 1.5f;//Scale so that the jump looks correct

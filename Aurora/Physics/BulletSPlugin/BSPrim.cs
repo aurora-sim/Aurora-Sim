@@ -1419,7 +1419,8 @@ public class BSPrim : BSPhysObject
 
         // DEBUG DEBUG DEBUG -- smooth velocity changes a bit. The simulator seems to be
         //    very sensitive to velocity changes.
-        if (entprop.Velocity == OMV.Vector3.Zero || !entprop.Velocity.ApproxEquals(RawVelocity, BSParam.UpdateVelocityChangeThreshold))
+        if (entprop.Velocity == OMV.Vector3.Zero || (VehicleType != 0 && !entprop.Velocity.ApproxEquals(RawVelocity, BSParam.UpdateVelocityChangeThreshold/5f)) ||
+            !entprop.Velocity.ApproxEquals(RawVelocity, BSParam.UpdateVelocityChangeThreshold))
         {
             terseUpdate = true;
             RawVelocity = entprop.Velocity;
