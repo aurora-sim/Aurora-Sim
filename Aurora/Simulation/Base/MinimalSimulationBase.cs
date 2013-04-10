@@ -264,13 +264,14 @@ namespace Aurora.Simulation.Base
             string hostName =
                 m_config.Configs["Network"].GetString("HostName",
                                                       "http" + (useHTTPS ? "s" : "") + "://" + Utilities.GetExternalIp());
+            uint threadCount = m_config.Configs["Network"].GetUInt("HttpThreadCount", 5);
             //Clean it up a bit
             if (hostName.StartsWith("http://") || hostName.StartsWith("https://"))
                 hostName = hostName.Replace("https://", "").Replace("http://", "");
             if (hostName.EndsWith("/"))
                 hostName = hostName.Remove(hostName.Length - 1, 1);
 
-            server = new BaseHttpServer(port, hostName, useHTTPS);
+            server = new BaseHttpServer(port, hostName, useHTTPS, threadCount);
 
             try
             {

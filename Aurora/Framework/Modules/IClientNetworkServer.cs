@@ -33,7 +33,7 @@ namespace Aurora.Framework.Modules
 {
     public interface IClientNetworkServer
     {
-        void Initialise(int port, IConfigSource configSource, AgentCircuitManager authenticateClass);
+        void Initialise(uint port, IConfigSource configSource, AgentCircuitManager authenticateClass);
         void AddScene(IScene x);
         void Start();
         void Stop();

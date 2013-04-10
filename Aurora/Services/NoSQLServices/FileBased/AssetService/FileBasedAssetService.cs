@@ -374,6 +374,7 @@ namespace Aurora.FileBasedServices.AssetService
                     assetStream = File.OpenWrite(GetPathForID(asset.IDString));
                     asset.HashCode = hash;
                     ProtoBuf.Serializer.Serialize<AssetBase>(assetStream, asset);
+                    assetStream.SetLength(assetStream.Position);
                     assetStream.Close();
                     asset.Data = data;
 

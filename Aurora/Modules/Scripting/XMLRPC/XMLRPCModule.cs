@@ -136,7 +136,7 @@ namespace Aurora.Modules.Scripting
                                           "Starting up XMLRPC Server on port " + m_remoteDataPort +
                                           " for llRemoteData commands.");
                 IHttpServer httpServer = new BaseHttpServer((uint) m_remoteDataPort, MainServer.Instance.HostName,
-                                                            false);
+                                                            false, 1);
                 httpServer.AddXmlRPCHandler("llRemoteData", XmlRpcRemoteData);
                 httpServer.Start();
             }

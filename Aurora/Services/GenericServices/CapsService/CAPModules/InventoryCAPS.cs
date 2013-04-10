@@ -49,6 +49,16 @@ namespace Aurora.Services
 {
     public class InventoryCAPS : IExternalCapsRequestHandler
     {
+        #region Static Constructor
+
+        static InventoryCAPS()
+        {
+            Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer =
+                new Aurora.Region.Serialization.SceneObjectSerializer();
+        }
+
+        #endregion
+        
         private IAssetService m_assetService;
         private IInventoryService m_inventoryService;
         private ILibraryService m_libraryService;

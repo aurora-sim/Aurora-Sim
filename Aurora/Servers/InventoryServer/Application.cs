@@ -47,7 +47,9 @@ namespace Aurora.Servers.InventoryServer
                                                                    {
                                                                        typeof (IInventoryData),
                                                                        typeof (IUserAccountData),
-                                                                       typeof (IAssetDataPlugin)
+                                                                       typeof (IAssetDataPlugin),
+                                                                       typeof (ISimpleCurrencyConnector),
+                                                                       typeof (IAgentInfoConnector)
                                                                    },
                                                                new List<Type>
                                                                    {
@@ -58,6 +60,7 @@ namespace Aurora.Servers.InventoryServer
                                                                        typeof (IMoneyModule),
                                                                        typeof (ISyncMessagePosterService),
                                                                        typeof (ISyncMessageRecievedService),
+                                                                       typeof (IAgentInfoService),
                                                                        typeof (IExternalCapsHandler),
                                                                        typeof (IConfigurationService),
                                                                        typeof (IGridServerInfoService)

@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
+using Aurora.Framework.Services;
 
 namespace Aurora.Framework.Modules
 {
@@ -140,5 +141,16 @@ namespace Aurora.Framework.Modules
         event UserDidNotPay OnUserDidNotPay;
         event CheckWhetherUserShouldPay OnCheckWhetherUserShouldPay;
         bool Charge(UUID agentID, int amount, string text, int daysUntilNextCharge);
+    }
+
+    public interface ISimpleCurrencyConnector : IAuroraDataPlugin
+    {
+        /*SimpleCurrencyConfig GetConfig();
+        UserCurrency GetUserCurrency(UUID agentId);
+        bool UserCurrencyUpdate(UserCurrency agent);
+        GroupBalance GetGroupBalance(UUID groupID);
+
+        bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount,
+                                  string description, TransactionType type, UUID transactionID);*/
     }
 }

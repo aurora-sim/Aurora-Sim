@@ -199,6 +199,13 @@ namespace Aurora.Modules.Startup
                 if (input == "cancel")
                     Environment.Exit(0);
             }
+            else if (error.Error == "Grid is not fully ready yet, please try again shortly")
+            {
+                MainConsole.Instance.Error("[RegisterRegionWithGrid]: Registration of region " +
+                                           scene.RegionInfo.RegionName +
+                                           " with the grid failed - " + error.Error + ", retrying... ");
+                System.Threading.Thread.Sleep(3000);//Sleep for a bit and try again
+            }
             else
             {
                 MainConsole.Instance.Error("[RegisterRegionWithGrid]: Registration of region " +

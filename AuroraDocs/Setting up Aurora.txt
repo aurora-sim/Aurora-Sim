@@ -25,7 +25,6 @@
 	  Aurora.AvatarServer.exe
 	  Aurora.GridServer.exe
 	  Aurora.InventoryServer.exe
-	  Aurora.UserServer.exe
   These do what the names suggest they do, and help balance the load of the regions on your grid.
   Next, you'll start Aurora.exe, and enter yes to allow it to configure itself (make sure to set it
       up in grid mode!) with the inputs from you. 

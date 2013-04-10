@@ -1522,7 +1522,7 @@ namespace Aurora.Region
             }
 
             if ((update_movementflag || update_rotation) && (m_parentID == UUID.Zero))
-                Animator.UpdateMovementAnimations(true);
+                Animator.UpdateMovementAnimations(false);
 
 
             IAgentUpdateMonitor reporter =
@@ -2228,12 +2228,12 @@ namespace Aurora.Region
                 posLastSignificantMove = AbsolutePosition;
                 Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.SignificantMovement);
             }
-            if (Vector3.DistanceSquared(AbsolutePosition, posLastTerseUpdate) >
+            /*if (Vector3.DistanceSquared(AbsolutePosition, posLastTerseUpdate) >
                 TERSE_UPDATE_MOVEMENT*TERSE_UPDATE_MOVEMENT)
             {
                 posLastTerseUpdate = AbsolutePosition;
                 Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.Movement);
-            }
+            }*/
             if (m_sceneViewer == null || m_sceneViewer.Prioritizer == null)
                 return;
 

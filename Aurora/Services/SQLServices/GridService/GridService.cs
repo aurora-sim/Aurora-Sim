@@ -541,15 +541,19 @@ namespace Aurora.Services.SQLServices.GridService
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
                                                      regionInfos.RegionName, regionInfos.RegionLocX,
                                                      regionInfos.RegionLocY);
+
+                    Dictionary<string, List<string>> uris = m_gridServerInfo == null ? null : m_gridServerInfo.RetrieveAllGridURIs(false);
+                    if (uris != null && uris.Count == 0)//We don't have all of them yet
+                        return new RegisterRegion { Error = "Grid is not fully ready yet, please try again shortly" };
                     return new RegisterRegion
-                               {
-                                   Error = "",
-                                   Neighbors = neighbors,
-                                   RegionFlags = regionInfos.Flags,
-                                   SessionID = SessionID,
-                                   Region = regionInfos,
-                                   URIs = m_gridServerInfo == null ? null : m_gridServerInfo.RetrieveAllGridURIs(false)
-                               };
+                    {
+                        Error = "",
+                        Neighbors = neighbors,
+                        RegionFlags = regionInfos.Flags,
+                        SessionID = SessionID,
+                        Region = regionInfos,
+                        URIs = m_gridServerInfo == null ? null : m_gridServerInfo.RetrieveAllGridURIs(false)
+                    };
                 }
             }
             catch (Exception e)

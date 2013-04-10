@@ -4880,7 +4880,7 @@ namespace Aurora.ClientStack
                 collisionPlane = presence.CollisionPlane;
                 position = presence.OffsetPosition;
                 velocity = presence.Velocity;
-                acceleration = Vector3.Zero;
+                acceleration = presence.PhysicsActor == null ? Vector3.Zero : presence.PhysicsActor.Acceleration;
                 angularVelocity = presence.AngularVelocity;
                 rotation = presence.Rotation;
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();

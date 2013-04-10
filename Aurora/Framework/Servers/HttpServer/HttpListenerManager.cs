@@ -17,7 +17,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private bool _isSecure = false;
         private bool _isRunning = false;
 
-        public HttpListenerManager(int maxThreads, bool isSecure)
+        public HttpListenerManager(uint maxThreads, bool isSecure)
         {
             _workers = new Thread[maxThreads];
             _queue = new ConcurrentQueue<HttpListenerContext>();
