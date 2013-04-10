@@ -1,4 +1,5 @@
-﻿using Aurora.Framework.Modules;
+﻿using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
@@ -72,7 +73,10 @@ namespace Aurora.Services.GenericServices
                 return (Dictionary<string, List<string>>)base.DoRemoteCallGet(true, "ServerURI", secure);
 
             if (m_gridURIs.Count < m_defaultURICount)
+            {
+                MainConsole.Instance.WarnFormat("[GridServerInfoService]: Retrieve URIs failed, only had {0} of {1} URIs needed", m_gridURIs.Count, m_defaultURICount);
                 return new Dictionary<string, List<string>>();
+            }
 
             if (secure)
                 return m_gridURIs;
@@ -94,6 +98,9 @@ namespace Aurora.Services.GenericServices
                 base.DoRemoteCallPost(true, "ServerURI", uri);
                 return;
             }
+
+
+            MainConsole.Instance.InfoFormat("[GridServerInfoService]: Adding {0} uris", uri.Count);
 
             foreach (KeyValuePair<string, string> kvp in uri)
             {
@@ -129,6 +136,8 @@ namespace Aurora.Services.GenericServices
                 m_gridURIs.Add(key, new List<string>());
             m_gridURIs[key].Add(value);
             m_registry.RequestModuleInterface<IGridInfo>().UpdateGridInfo();
+
+            MainConsole.Instance.InfoFormat("[GridServerInfoService]: Adding 1 uri");
         }
     }
 }
