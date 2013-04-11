@@ -19,7 +19,7 @@
 
     ; Terrain Implementation {1|0} 0 for HeightField, 1 for Mesh terrain.  If you're using the bulletxna engine, 
     ;  you will want to switch to the heightfield option
-    TerrainImplementation = 0
+    TerrainImplementation = 1
 
     Gravity = -9.80665
 
@@ -42,7 +42,7 @@
     CollisionMargin = 0.04
 
     ; Linkset implmentation
-    LinkImplementation = 1      ; 0=constraint, 1=compound
+    LinksetImplementation = 3      ; 0=constraint, 1=compound, 3=groupcompound
 
     ; Whether to mesh sculpties
     MeshSculptedPrim = true

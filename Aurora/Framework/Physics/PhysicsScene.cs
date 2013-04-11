@@ -108,7 +108,17 @@ namespace Aurora.Framework.Physics
 
         public abstract void RemoveAvatar(PhysicsActor actor);
 
+        /// <summary>
+        /// Removes a single prim from the group that it is in 
+        /// (or removes it entirely from the scene if it is as single prim)
+        /// </summary>
+        /// <param name="prim"></param>
         public abstract void RemovePrim(PhysicsActor prim);
+
+        /// <summary>
+        /// Removes an entire group from the physics scene
+        /// </summary>
+        /// <param name="prim"></param>
         public abstract void DeletePrim(PhysicsActor prim);
 
         public abstract PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,

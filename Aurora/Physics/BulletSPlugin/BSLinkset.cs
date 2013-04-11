@@ -1,4 +1,5 @@
-﻿/*
+﻿using Aurora.Framework.ConsoleFramework;
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -27,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-
 using OMV = OpenMetaverse;
 
 namespace OpenSim.Region.Physics.BulletSPlugin
@@ -49,7 +49,8 @@ public abstract class BSLinkset
     {
         Constraint   = 0,   // linkset tied together with constraints
         Compound     = 1,   // linkset tied together as a compound object
-        Manual       = 2    // linkset tied together manually (code moves all the pieces)
+        Manual       = 2,   // linkset tied together manually (code moves all the pieces)
+        CompoundGroup= 3    // linkset tied together as a compound object
     }
     // Create the correct type of linkset for this child
     public static BSLinkset Factory(BSScene physScene, BSPrimLinkable parent)
@@ -66,6 +67,9 @@ public abstract class BSLinkset
                 break;
             case (int)LinksetImplementation.Manual:
                 // ret = new BSLinksetManual(physScene, parent);
+                break;
+            case (int)LinksetImplementation.CompoundGroup:
+                ret = new BSLinksetGroupCompound(physScene, parent);
                 break;
             default:
                 ret = new BSLinksetCompound(physScene, parent);
@@ -178,6 +182,20 @@ public abstract class BSLinkset
 
     // Return 'true' if this linkset has any children (more than the root member)
     public bool HasAnyChildren { get { return (m_children.Count > 0); } }
+
+    public List<BSPrimLinkable> Children
+    {
+        get
+        {
+            List<BSPrimLinkable> children = new List<BSPrimLinkable>();
+            lock (m_linksetActivityLock)
+            {
+                foreach (BSPrimLinkable prm in m_children)
+                    children.Add(prm);
+            }
+            return children;
+        }
+    }
 
     // Return 'true' if this child is in this linkset
     public bool HasChild(BSPrimLinkable child)
@@ -324,7 +342,8 @@ public abstract class BSLinkset
     protected void DetailLog(string msg, params Object[] args)
     {
         //if (PhysicsScene.PhysicsLogging.Enabled)
-            PhysicsScene.DetailLog(msg, args);
+        //    PhysicsScene.DetailLog(msg, args);
+        MainConsole.Instance.InfoFormat("[BSLINKSET]: " + msg, args);
     }
 
 }

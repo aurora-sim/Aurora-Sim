@@ -418,6 +418,15 @@ public sealed class BSScene : PhysicsScene
 
     public override void DeletePrim(PhysicsActor prim)
     {
+        BSPrimLinkable linkablePrim = prim as BSPrimLinkable;
+        if (linkablePrim != null && linkablePrim.Linkset.HasAnyChildren)
+        {
+            //Remove all the children prims first, then kill the root
+            foreach (BSPrimLinkable childPrim in linkablePrim.Linkset.Children)
+                RemovePrim(childPrim);
+            //TODO: DISABLE LINKSET REBUILDING DURING THIS PROCESS
+        }
+        
         RemovePrim(prim);
     }
 

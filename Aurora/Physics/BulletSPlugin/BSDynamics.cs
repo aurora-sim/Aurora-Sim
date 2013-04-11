@@ -120,7 +120,10 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         // Just some recomputed constants:
         static readonly float PIOverFour = ((float)Math.PI) / 4f;
+
+#pragma warning disable 414
         static readonly float PIOverTwo = ((float)Math.PI) / 2f;
+#pragma warning restore 414
 
         // For debugging, flags to turn on and off individual corrections.
         public bool enableAngularVerticalAttraction;

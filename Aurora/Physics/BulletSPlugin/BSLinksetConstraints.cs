@@ -116,6 +116,8 @@ public sealed class BSLinksetConstraints : BSLinkset
     // Called while LinkActivity is locked.
     protected override void AddChildToLinkset(BSPrimLinkable child)
     {
+        if (!this.LinksetRoot.IsPhysical)
+            return;
         if (!HasChild(child))
         {
             m_children.Add(child);
