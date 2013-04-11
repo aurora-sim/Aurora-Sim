@@ -474,7 +474,7 @@ namespace Aurora.Modules.WorldMap
 
             foreach (ILandObject land in parcels)
             {
-                // m_log.DebugFormat("[WORLD MAP]: Parcel {0} flags {1}", land.LandData.Name, land.LandData.Flags);
+                // MainConsole.Instance.DebugFormat("[WORLD MAP]: Parcel {0} flags {1}", land.LandData.Name, land.LandData.Flags);
                 if ((land.LandData.Flags & (uint) ParcelFlags.ForSale) != 0)
                 {
                     landForSale = true;
