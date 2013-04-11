@@ -2227,6 +2227,7 @@ namespace Aurora.Region
             {
                 posLastSignificantMove = AbsolutePosition;
                 Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.SignificantMovement);
+                Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.Movement);
             }
             /*if (Vector3.DistanceSquared(AbsolutePosition, posLastTerseUpdate) >
                 TERSE_UPDATE_MOVEMENT*TERSE_UPDATE_MOVEMENT)
@@ -2847,8 +2848,8 @@ namespace Aurora.Region
         protected void UpdatePosAndVelocity()
         {
             //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
-            if (Animator != null && m_parentID == UUID.Zero)
-                Animator.UpdateMovementAnimations(true);
+            //if (Animator != null && m_parentID == UUID.Zero)
+            //    Animator.UpdateMovementAnimations(true);
             m_scene.EventManager.TriggerClientMovement(this);
         }
 
