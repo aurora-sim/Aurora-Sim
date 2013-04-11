@@ -91,8 +91,7 @@ namespace Aurora.Services.GenericServices
             {
                 Dictionary<string, List<string>> uris = new Dictionary<string, List<string>>();
                 foreach (KeyValuePair<string, List<string>> kvp in m_gridURIs)
-                    if (kvp.Key != "ExternalCaps")
-                        uris.Add(kvp.Key, new List<string>(kvp.Value));
+                    uris.Add(kvp.Key, new List<string>(kvp.Value));
                 return uris;
             }
         }

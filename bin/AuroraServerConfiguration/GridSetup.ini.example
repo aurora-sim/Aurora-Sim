@@ -14,4 +14,3 @@
     GridServerURI = http://ServersHostname:8012/grid/                    ; Aurora.GridServer
     InventoryServerURI = http://ServersHostname:8013/inventory/          ; Aurora.InventoryServer
     AvatarServerURI = http://ServersHostname:8011/avatar/                ; Aurora.AvatarServer
-    ExternalCaps = http://ServersHostname:8011, http://ServersHostname:8012, http://ServersHostname:8010, http://ServersHostname:8013

@@ -293,7 +293,8 @@ namespace Aurora.Services
             if (externalService != null)
             {
                 foreach (KeyValuePair<string, OSD> kvp in externalService.GetExternalCaps(AgentID, Region))
-                    registeredCAPS.Add(kvp.Key, kvp.Value);
+                    if (kvp.Key != null && kvp.Value != null && !registeredCAPS.ContainsKey(kvp.Key))
+                        registeredCAPS.Add(kvp.Key, kvp.Value);
             }
         }
 
