@@ -29,6 +29,13 @@ namespace Aurora.Services.GenericServices
             m_remoteCalls = conf.GetBoolean("DoRemote");
             m_defaultURICount = conf.GetInt("DefaultURICount", m_defaultURICount);
             Init(registry, GetType().Name);
+
+
+            conf = config.Configs["Configuration"];
+            if (conf == null)
+                return;
+            foreach (string key in conf.GetKeys())
+                m_gridURIs.Add(key, Util.ConvertToList(conf.GetString(key)));
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -106,7 +113,8 @@ namespace Aurora.Services.GenericServices
             {
                 if (!m_gridURIs.ContainsKey(kvp.Key))
                     m_gridURIs.Add(kvp.Key, new List<string>());
-                m_gridURIs[kvp.Key].Add(kvp.Value);
+                if(!m_gridURIs[kvp.Key].Contains(kvp.Value))
+                    m_gridURIs[kvp.Key].Add(kvp.Value);
             }
 
             m_registry.RequestModuleInterface<IGridInfo>().UpdateGridInfo();

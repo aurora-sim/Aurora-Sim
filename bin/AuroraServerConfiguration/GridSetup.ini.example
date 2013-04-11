@@ -1,4 +1,17 @@
 [Configuration]
 	;; If you have the Aurora.*Server.exe applications running over multiple
 	;;  servers, change the 127.0.0.1 below to your external IP or DNS name
-    ServerURI = "http://127.0.0.1:8003/server/"
+    Define-ServersHostname = 127.0.0.1
+    ServerURI = "http://ServersHostname:8003/server/"                    ; Aurora.Server
+    MapAPIService = http://ServersHostname:8012/MapAPI/                  ; Aurora.GridServer
+    MapService = http://ServersHostname:8012/MapService/                 ; Aurora.GridServer
+    SSAService = http://ServersHostname:8011/                            ; Aurora.AvatarServer
+    CurrencyServerURI = http://ServersHostname:8003/currency/            ; Aurora.Server
+    InstantMessageServerURI = http://ServersHostname:8003/im/            ; Aurora.Server
+    SyncMessageServerURI = http://ServersHostname:8003/syncmessage/      ; Aurora.Server
+    UserAccountServerURI = http://ServersHostname:8003/user/             ; Aurora.Server
+    AssetServerURI = http://ServersHostname:8010/asset/                  ; Aurora.AssetServer
+    GridServerURI = http://ServersHostname:8012/grid/                    ; Aurora.GridServer
+    InventoryServerURI = http://ServersHostname:8013/inventory/          ; Aurora.InventoryServer
+    AvatarServerURI = http://ServersHostname:8011/avatar/                ; Aurora.AvatarServer
+    ExternalCaps = http://ServersHostname:8011, http://ServersHostname:8012, http://ServersHostname:8010, http://ServersHostname:8013
