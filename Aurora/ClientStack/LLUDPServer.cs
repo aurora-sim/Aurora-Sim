@@ -194,7 +194,7 @@ namespace Aurora.ClientStack
 
         #region IClientNetworkServer Members
 
-        public void Initialise(int port, IConfigSource configSource, AgentCircuitManager circuitManager)
+        public void Initialise(uint port, IConfigSource configSource, AgentCircuitManager circuitManager)
         {
             IConfig networkConfig = configSource.Configs["Network"];
             IPAddress internalIP = IPAddress.Any;
@@ -203,7 +203,7 @@ namespace Aurora.ClientStack
 
             InitThreadPool(15);
 
-            base.Initialise(internalIP, port);
+            base.Initialise(internalIP, (int)port);
 
             #region Environment.TickCount Measurement
 

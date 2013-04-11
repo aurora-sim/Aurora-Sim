@@ -120,7 +120,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 if (m_requests.Count == 0)
                     return false;
 
-                //                m_log.DebugFormat("[POLL SERVICE REQUEST MANAGER]: Processing {0} requests", m_requests.Count);
+                //                MainConsole.Instance.DebugFormat("[POLL SERVICE REQUEST MANAGER]: Processing {0} requests", m_requests.Count);
 
                 int reqperthread = (int) (m_requests.Count/m_WorkerThreadCount) + 1;
 

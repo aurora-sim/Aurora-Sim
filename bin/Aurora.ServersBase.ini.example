@@ -1,6 +1,11 @@
 [Network]
 	;; HTTPS configs (See HTTPS.txt in AuroraDocs/)
 	use_https = false
+	
+	;; The number of threads to concurrently process incoming http requests
+	;; 5 is the recommended, but more can be set if the http server is being
+	;; overloaded, or you could run more servers instead
+	HttpThreadCount = 5
 
     ;; Only change this if you are having issues with connecting clients
     ;; The default is your external IP

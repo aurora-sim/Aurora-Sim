@@ -48,6 +48,11 @@
 	;; HTTPS configs (See HTTPS.txt in AuroraDocs/)
 	use_https = false
 	
+	;; The number of threads to concurrently process incoming http requests
+	;; 5 is the recommended, but more can be set if the http server is being
+	;; overloaded, or you could run more servers instead
+	HttpThreadCount = 5
+	
 	;; This doesn't require any changes if you wish to use the automatic finding of the external IP
     ;HostName = 127.0.0.1
 

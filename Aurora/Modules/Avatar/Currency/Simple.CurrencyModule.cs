@@ -240,8 +240,26 @@ namespace Simple.Currency
 
         private void ProcessMoneyTransferRequest(UUID fromID, UUID toID, int amount, int type, string description)
         {
-            m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint) amount, description,
-                                             (TransactionType) type, UUID.Random());
+            if (toID != UUID.Zero)
+            {
+                ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
+                if (manager != null && manager.Scene != null)
+                {
+                    ISceneChildEntity ent = manager.Scene.GetSceneObjectPart(toID);
+                    if (ent != null)
+                    {
+                        bool success = m_connector.UserCurrencyTransfer(ent.OwnerID, fromID, UUID.Zero, UUID.Zero, (uint)amount, description,
+                                             (TransactionType)type, UUID.Random());
+                        if (success)
+                            FirePostObjectPaid(ent.LocalId, manager.Scene.RegionInfo.RegionHandle, fromID, amount);
+                    }
+                    else
+                    {
+                        m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint)amount, description,
+                                                 (TransactionType)type, UUID.Random());
+                    }
+                }
+            }
         }
 
         private bool ValidateLandBuy(EventManager.LandBuyArgs e)
@@ -353,7 +371,7 @@ namespace Simple.Currency
                     if (sp != null)
                     {
                         sp.ControllingClient.SendMoneyBalance(TransactionID, true, Utils.StringToBytes(Message), Amount);
-                        dialogModule.SendAlertToUser(agentID, message);
+                        dialogModule.SendAlertToUser(agentID, Message);
                     }
                 }
             }

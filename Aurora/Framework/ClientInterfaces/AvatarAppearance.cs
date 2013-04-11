@@ -579,6 +579,8 @@ namespace Aurora.Framework.ClientInterfaces
 
         public void SetCachedWearables(PresenceInfo.WearableCache[] wearables)
         {
+            if (wearables.Length == 0)
+                return;
             m_wearableCache.Clear();
             foreach (var w in wearables)
                 m_wearableCache.Add(w.TextureIndex.ToString(), w.CacheID);
@@ -659,7 +661,8 @@ namespace Aurora.Framework.ClientInterfaces
                 {
                     OSDArray wears = (OSDArray) (data["wearables"]);
                     for (int i = 0; i < wears.Count; i++)
-                        m_wearables[i] = new AvatarWearable((OSDArray) wears[i]);
+                        if(wears[i] is OSDArray)
+                            m_wearables[i] = new AvatarWearable((OSDArray) wears[i]);
                 }
                 else
                 {
@@ -711,7 +714,7 @@ namespace Aurora.Framework.ClientInterfaces
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat("[AVATAR APPEARANCE]: unpack failed badly: {0}{1}", e, e.StackTrace);
+                MainConsole.Instance.ErrorFormat("[AVATAR APPEARANCE]: unpack failed badly: {0}, {1}", e.ToString(), OSDParser.SerializeJsonString(data));
             }
         }
 

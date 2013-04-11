@@ -1,4 +1,5 @@
-﻿using Aurora.Framework.Modules;
+﻿using Aurora.Framework.ConsoleFramework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
@@ -16,6 +17,7 @@ namespace Aurora.Services.GenericServices
     {
         protected Dictionary<string, List<string>> m_gridURIs = new Dictionary<string, List<string>>();
         protected bool m_remoteCalls = false, m_enabled = false;
+        protected int m_defaultURICount = 11;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -25,7 +27,15 @@ namespace Aurora.Services.GenericServices
             m_enabled = true;
             registry.RegisterModuleInterface<IGridServerInfoService>(this);
             m_remoteCalls = conf.GetBoolean("DoRemote");
+            m_defaultURICount = conf.GetInt("DefaultURICount", m_defaultURICount);
             Init(registry, GetType().Name);
+
+
+            conf = config.Configs["Configuration"];
+            if (conf == null)
+                return;
+            foreach (string key in conf.GetKeys())
+                m_gridURIs.Add(key, Util.ConvertToList(conf.GetString(key)));
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -41,7 +51,7 @@ namespace Aurora.Services.GenericServices
                 uris.Add(connector.ServerHandlerName, MainServer.Instance.FullHostName + ":" +
                     connector.ServerHandlerPort + connector.ServerHandlerPath);
             }
-            new Timer(SendGridURIsAsync, uris, 2000, System.Threading.Timeout.Infinite);
+            new Timer(SendGridURIsAsync, uris, 3000, System.Threading.Timeout.Infinite);
         }
 
         private void SendGridURIsAsync(object state)
@@ -69,19 +79,24 @@ namespace Aurora.Services.GenericServices
             if (m_remoteCalls)
                 return (Dictionary<string, List<string>>)base.DoRemoteCallGet(true, "ServerURI", secure);
 
+            if (m_gridURIs.Count < m_defaultURICount)
+            {
+                MainConsole.Instance.WarnFormat("[GridServerInfoService]: Retrieve URIs failed, only had {0} of {1} URIs needed", m_gridURIs.Count, m_defaultURICount);
+                return new Dictionary<string, List<string>>();
+            }
+
             if (secure)
                 return m_gridURIs;
             else
             {
                 Dictionary<string, List<string>> uris = new Dictionary<string, List<string>>();
                 foreach (KeyValuePair<string, List<string>> kvp in m_gridURIs)
-                    if (kvp.Key != "ExternalCaps")
-                        uris.Add(kvp.Key, new List<string>(kvp.Value));
+                    uris.Add(kvp.Key, new List<string>(kvp.Value));
                 return uris;
             }
         }
 
-        [CanBeReflected(ThreatLevel=ThreatLevel.High)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public void SendGridURIs(Dictionary<string, string> uri)
         {
             if (m_remoteCalls)
@@ -90,15 +105,18 @@ namespace Aurora.Services.GenericServices
                 return;
             }
 
+
+            MainConsole.Instance.InfoFormat("[GridServerInfoService]: Adding {0} uris", uri.Count);
+
             foreach (KeyValuePair<string, string> kvp in uri)
             {
                 if (!m_gridURIs.ContainsKey(kvp.Key))
                     m_gridURIs.Add(kvp.Key, new List<string>());
-                m_gridURIs[kvp.Key].Add(kvp.Value);
+                if(!m_gridURIs[kvp.Key].Contains(kvp.Value))
+                    m_gridURIs[kvp.Key].Add(kvp.Value);
             }
 
             m_registry.RequestModuleInterface<IGridInfo>().UpdateGridInfo();
-            IGridInfo info = m_registry.RequestModuleInterface<IGridInfo>();
         }
 
         public void AddURI(string key, string value)
@@ -125,6 +143,8 @@ namespace Aurora.Services.GenericServices
                 m_gridURIs.Add(key, new List<string>());
             m_gridURIs[key].Add(value);
             m_registry.RequestModuleInterface<IGridInfo>().UpdateGridInfo();
+
+            MainConsole.Instance.InfoFormat("[GridServerInfoService]: Adding 1 uri");
         }
     }
 }

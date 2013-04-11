@@ -43,8 +43,6 @@ namespace Aurora.Services.GenericServices.CapsService
             registry.RegisterModuleInterface<IExternalCapsHandler>(this);
 
             Init(registry, GetType().Name);
-            if (m_allowedCapsModules.Count > 0)
-                ConnectorRegistry.ServerHandlerConnectors.Add(this);
         }
 
         public void FinishedStartup()

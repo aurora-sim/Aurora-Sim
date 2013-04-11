@@ -296,16 +296,22 @@ textures 1
             IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             IAvatarAppearanceModule app = sp.RequestModuleInterface<IAvatarAppearanceModule>();
             // Look up hashes to make sure that the request is valid
-            List<CachedAgentArgs> resp =
-                (from arg in args
-                 select new CachedAgentArgs 
-                 {
-                     ID = app.Appearance.Texture.FaceTextures[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex))] == null ||
-                          !app.Appearance.WearableCache.ContainsKey(((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex)).ToString()) ||
-                          app.Appearance.WearableCache[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex)).ToString()] != arg.ID ?
-                          UUID.Zero : app.Appearance.Texture.FaceTextures[((int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex))].TextureID, 
-                     TextureIndex = arg.TextureIndex
-                 }).ToList();
+
+            List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
+            foreach (CachedAgentArgs arg in args)
+            {
+                CachedAgentArgs r = new CachedAgentArgs();
+                r.TextureIndex = arg.TextureIndex;
+                //V2 changed to send the actual texture index, and not the baked texture index
+                int index = arg.TextureIndex >= 5 ? arg.TextureIndex :
+                    (int)AppearanceManager.BakeTypeToAgentTextureIndex((BakeType)arg.TextureIndex);
+                r.ID = app.Appearance.Texture.FaceTextures[index] == null ||
+                    app.Appearance.WearableCache.Count == 0 ||
+                    !app.Appearance.WearableCache.ContainsKey(index.ToString()) ||
+                    app.Appearance.WearableCache[index.ToString()] != arg.ID ?
+                    UUID.Zero : app.Appearance.Texture.FaceTextures[index].TextureID;
+                resp.Add(r);
+            }
 
             client.SendAgentCachedTexture(resp);
         }
