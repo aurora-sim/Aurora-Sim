@@ -261,41 +261,41 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                 m_controllingPrim.LocalID, stepVelocity, m_controllingPrim.RawVelocity, m_controllingPrim.Mass, moveForce);
                 if(moveForce.IsFinite())
                     m_physicsScene.PE.ApplyCentralImpulse(m_controllingPrim.PhysBody, moveForce);
+            }
 
-                if (m_preJumpStart != 0 && Util.EnvironmentTickCountSubtract(m_preJumpStart) > 300)
-                {
-                    m_controllingPrim.IsPreJumping = false;
-                    m_controllingPrim.IsJumping = true;
-                    m_preJumpStart = 0;
+            if (m_preJumpStart != 0 && Util.EnvironmentTickCountSubtract(m_preJumpStart) > 300)
+            {
+                m_controllingPrim.IsPreJumping = false;
+                m_controllingPrim.IsJumping = true;
+                m_preJumpStart = 0;
 
-                    OMV.Vector3 target = m_jumpDirection;
-                    target.X *= 1.5f;
-                    target.Y *= 1.5f;
-                    target.Z *= 2.5f;//Scale so that we actually jump
+                OMV.Vector3 target = m_jumpDirection;
+                target.X *= 1.5f;
+                target.Y *= 1.5f;
+                target.Z *= 2.5f;//Scale so that we actually jump
 
-                    SetVelocityAndTargetInternal(m_controllingPrim.RawVelocity, target, false, 1);
-                    m_jumpStart = Util.EnvironmentTickCount();
-                }
-                if (!m_jumpFallState && m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 500)
-                {
-                    OMV.Vector3 newTarget = m_controllingPrim.RawVelocity;
-                    newTarget.X *= 1.5f;//Scale so that the jump looks correct
-                    newTarget.Y *= 1.5f;
-                    newTarget.Z *= -0.2f;
-                    SetVelocityAndTargetInternal(m_controllingPrim.RawVelocity, newTarget, false, 3);
-                    m_jumpFallState = true;
-                }
-                else if (m_jumpFallState && m_jumpStart != 0 && m_controllingPrim.IsColliding && Util.EnvironmentTickCountSubtract(m_jumpStart) > 1500
-                    || (m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 10000))//Fallback
-                {
-                    //Reset everything in case something went wrong
-                    m_disallowTargetVelocitySet = false;
-                    m_jumpFallState = false;
-                    m_controllingPrim.IsPreJumping = false;
-                    m_controllingPrim.IsJumping = false;
-                    m_jumpStart = 0;
-                    m_preJumpStart = 0;
-                }
+                SetVelocityAndTargetInternal(m_controllingPrim.RawVelocity, target, false, 1);
+                m_jumpStart = Util.EnvironmentTickCount();
+            }
+            if (!m_jumpFallState && m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 500)
+            {
+                OMV.Vector3 newTarget = m_controllingPrim.RawVelocity;
+                newTarget.X *= 1.5f;//Scale so that the jump looks correct
+                newTarget.Y *= 1.5f;
+                newTarget.Z *= -0.2f;
+                SetVelocityAndTargetInternal(m_controllingPrim.RawVelocity, newTarget, false, 3);
+                m_jumpFallState = true;
+            }
+            else if (m_jumpFallState && m_jumpStart != 0 && m_controllingPrim.IsColliding && Util.EnvironmentTickCountSubtract(m_jumpStart) > 1500
+                || (m_jumpStart != 0 && Util.EnvironmentTickCountSubtract(m_jumpStart) > 10000))//Fallback
+            {
+                //Reset everything in case something went wrong
+                m_disallowTargetVelocitySet = false;
+                m_jumpFallState = false;
+                m_controllingPrim.IsPreJumping = false;
+                m_controllingPrim.IsJumping = false;
+                m_jumpStart = 0;
+                m_preJumpStart = 0;
             }
         }
 
