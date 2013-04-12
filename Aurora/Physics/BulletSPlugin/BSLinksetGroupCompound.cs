@@ -96,7 +96,7 @@ public sealed class BSLinksetGroupCompound : BSLinkset
         if (IsRoot(child))
         {
             // The root is going dynamic. Rebuild the linkset so parts and mass get computed properly.
-            //ScheduleRebuild(LinksetRoot);
+            ScheduleRebuild(LinksetRoot);
         }
         /*else
         {
@@ -126,7 +126,7 @@ public sealed class BSLinksetGroupCompound : BSLinkset
         DetailLog("{0},BSLinksetCompound.MakeStatic,call,IsRoot={1}", child.LocalID, IsRoot(child));
         if (IsRoot(child))
         {
-            //ScheduleRebuild(LinksetRoot);
+            ScheduleRebuild(LinksetRoot);
         }
         /*else
         {
@@ -345,14 +345,13 @@ public sealed class BSLinksetGroupCompound : BSLinkset
     // Constraint linksets are rebuilt every time.
     // Note that this works for rebuilding just the root after a linkset is taken apart.
     // Called at taint time!!
-    private bool disableCOM = true;     // DEBUG DEBUG: disable until we get this debugged
+    private bool disableCOM = false;
     private void RecomputeLinksetCompound()
     {
         try
         {
             // Suppress rebuilding while rebuilding. (We know rebuilding is on only one thread.)
             Rebuilding = true;
-
 
             if (LinksetRoot.IsPhysical)
             {
@@ -373,7 +372,8 @@ public sealed class BSLinksetGroupCompound : BSLinkset
 
                 // 'centerDisplacement' is the value to subtract from children to give physical offset position
                 OMV.Vector3 centerDisplacement = (centerOfMassW - LinksetRoot.RawPosition) * invRootOrientation;
-                LinksetRoot.SetEffectiveCenterOfMassW(centerDisplacement);
+                //Set the COM in bullet
+                PhysicsScene.PE.SetCenterOfMassByPosRot(LinksetRoot.PhysBody, centerDisplacement, OMV.Quaternion.Identity);
 
                 // This causes the physical position of the root prim to be offset to accomodate for the displacements
                 LinksetRoot.ForcePosition = LinksetRoot.RawPosition;
@@ -419,12 +419,10 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                             OMV.Vector3 offsetPos = (cPrim.RawPosition - LinksetRoot.RawPosition) * invRootOrientation - centerDisplacement;
                             OMV.Quaternion offsetRot = cPrim.RawOrientation * invRootOrientation;
                             PhysicsScene.PE.AddChildShapeToCompoundShape(LinksetRoot.PhysShape, newShape, offsetPos, offsetRot);
+                            //Set the COM for this part
+                            PhysicsScene.PE.SetCenterOfMassByPosRot(cPrim.PhysBody, centerDisplacement, OMV.Quaternion.Identity);
                             DetailLog("{0},BSLinksetCompound.RecomputeLinksetCompound,addNative,indx={1},rShape={2},cShape={3},offPos={4},offRot={5}",
                                         LinksetRoot.LocalID, memberIndex, LinksetRoot.PhysShape, newShape, offsetPos, offsetRot);
-
-                            PhysicsScene.PE.RemoveFromCollisionFlags(cPrim.PhysBody, CollisionFlags.CF_NO_CONTACT_RESPONSE);
-                            PhysicsScene.PE.AddToCollisionFlags(cPrim.PhysBody, CollisionFlags.BS_SUBSCRIBE_COLLISION_EVENTS);
-                            PhysicsScene.PE.Activate(cPrim.PhysBody, true);
                         }
                         else
                         {
@@ -439,6 +437,8 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                             OMV.Vector3 offsetPos = (cPrim.RawPosition - LinksetRoot.RawPosition) * invRootOrientation - centerDisplacement;
                             OMV.Quaternion offsetRot = cPrim.RawOrientation * invRootOrientation;
                             PhysicsScene.PE.AddChildShapeToCompoundShape(LinksetRoot.PhysShape, cPrim.PhysShape, offsetPos, offsetRot);
+                            //Set the COM for this part
+                            PhysicsScene.PE.SetCenterOfMassByPosRot(cPrim.PhysBody, centerDisplacement, OMV.Quaternion.Identity);
                             DetailLog("{0},BSLinksetCompound.RecomputeLinksetCompound,addNonNative,indx={1},rShape={2},cShape={3},offPos={4},offRot={5}",
                                         LinksetRoot.LocalID, memberIndex, LinksetRoot.PhysShape, cPrim.PhysShape, offsetPos, offsetRot);
 

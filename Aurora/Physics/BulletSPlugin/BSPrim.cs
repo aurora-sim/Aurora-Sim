@@ -177,8 +177,22 @@ public class BSPrim : BSPhysObject
                 _isSelected = value;
                 PhysicsScene.TaintedObject("BSPrim.setSelected", delegate()
                 {
-                    DetailLog("{0},BSPrim.selected,taint,selected={1}", LocalID, _isSelected);
-                    SetObjectDynamic(_isSelected);
+                    if (!_isSelected)
+                    {
+                        PhysicsScene.PE.RemoveFromCollisionFlags(PhysBody, CollisionFlags.CF_NO_CONTACT_RESPONSE);
+                        PhysicsScene.PE.AddToCollisionFlags(PhysBody, CollisionFlags.BS_SUBSCRIBE_COLLISION_EVENTS);
+                        PhysicsScene.PE.ForceActivationState(PhysBody, ActivationState.ACTIVE_TAG);
+
+                        // Don't force activation so setting of DISABLE_SIMULATION can stay if used.
+                        PhysicsScene.PE.Activate(PhysBody, false);
+                    }
+                    else
+                    {
+                        PhysicsScene.PE.AddToCollisionFlags(PhysBody, CollisionFlags.CF_NO_CONTACT_RESPONSE);
+                        PhysicsScene.PE.ForceActivationState(PhysBody, ActivationState.DISABLE_SIMULATION);
+                        // We don't want collisions from the old linkset children.
+                        PhysicsScene.PE.RemoveFromCollisionFlags(PhysBody, CollisionFlags.BS_SUBSCRIBE_COLLISION_EVENTS);
+                    }
                 });
             }
         }
@@ -550,6 +564,7 @@ public class BSPrim : BSPhysObject
                 {
                     // DetailLog("{0},setVolumeDetect,taint,volDetect={1}", LocalID, _isVolumeDetect);
                     SetObjectDynamic(true);
+                    ZeroMotion(true);
                 });
             }
         }
@@ -686,6 +701,7 @@ public class BSPrim : BSPhysObject
     private void SetObjectDynamic(bool forceRebuild)
     {
         // Recreate the physical object if necessary
+        //UpdatePhysicalParameters();
         CreateGeomAndObject(forceRebuild);
     }
 
@@ -1413,14 +1429,15 @@ public class BSPrim : BSPhysObject
             entprop.Velocity = OMV.Vector3.Zero;
             entprop.Acceleration = OMV.Vector3.Zero;
             entprop.RotationalVelocity = OMV.Vector3.Zero;
-            Velocity = OMV.Vector3.Zero;
+            Velocity = RawVelocity = OMV.Vector3.Zero;
+            ZeroMotion(true);
             terseUpdate = true;
         }
 
         // DEBUG DEBUG DEBUG -- smooth velocity changes a bit. The simulator seems to be
         //    very sensitive to velocity changes.
         if (entprop.Velocity == OMV.Vector3.Zero || (VehicleType != 0 && !entprop.Velocity.ApproxEquals(RawVelocity, BSParam.UpdateVelocityChangeThreshold/7f)) ||
-            !entprop.Velocity.ApproxEquals(RawVelocity, BSParam.UpdateVelocityChangeThreshold))
+            !entprop.Velocity.ApproxEquals(RawVelocity, BSParam.UpdateVelocityChangeThreshold/2f))
         {
             terseUpdate = true;
             RawVelocity = entprop.Velocity;
@@ -1457,6 +1474,14 @@ public class BSPrim : BSPhysObject
                     entprop.Acceleration, entprop.RotationalVelocity);
         }
              */
+    }
+
+    // High performance detailed logging routine used by the physical objects.
+    protected new void DetailLog(string msg, params Object[] args)
+    {
+        //if (PhysicsScene.PhysicsLogging.Enabled)
+        PhysicsScene.DetailLog(msg, args);
+        Aurora.Framework.ConsoleFramework.MainConsole.Instance.InfoFormat("[BulletPrim]: " + msg, args);
     }
 }
 }

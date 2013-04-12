@@ -2612,7 +2612,6 @@ namespace Aurora.Region
                 {
                     part.PhysActor.RotationalVelocity = Vector3.Zero;
                     part.m_hasSubscribedToCollisionEvent = false;
-                    part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
                     part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
                     part.PhysActor.OnSignificantMovement -= part.ParentGroup.CheckForSignificantMovement;
                     part.PhysActor.OnOutOfBounds -= part.PhysicsOutOfBounds;
@@ -2709,7 +2708,6 @@ namespace Aurora.Region
                     part.PhysActor.IsPhysical = true;
 
                 //Add collision updates
-                //part.PhysActor.OnCollisionUpdate += part.PhysicsCollision;
                 part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
                 part.PhysActor.OnSignificantMovement += part.ParentGroup.CheckForSignificantMovement;
                 part.PhysActor.OnOutOfBounds += part.PhysicsOutOfBounds;
