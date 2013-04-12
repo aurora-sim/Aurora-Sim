@@ -586,7 +586,7 @@ public static class BSParam
             (s) => { return VehicleRestitution; },
             (s,v) => { VehicleRestitution = v; } ),
         new ParameterDefn<float>("VehicleGroundGravityFudge", "Factor to multiply gravity if a ground vehicle is probably on the ground (0.0 - 1.0)",
-            0.2f,
+            0.1f,
             (s) => { return VehicleGroundGravityFudge; },
             (s,v) => { VehicleGroundGravityFudge = v; } ),
         new ParameterDefn<float>("VehicleAngularBankingTimescaleFudge", "Factor to multiple angular banking timescale. Tune to increase realism.",
