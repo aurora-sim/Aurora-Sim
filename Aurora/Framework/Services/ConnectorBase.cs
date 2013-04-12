@@ -221,10 +221,15 @@ namespace Aurora.Framework.Services
         private bool PrepRemoteCall(string url, object[] o, out MethodInfo method, out OSDMap map, out string serverURL)
         {
             StackTrace stackTrace = new StackTrace();
-            int upStack = 2;
-            StackFrame frame = stackTrace.GetFrame(2);
+            int upStack = 1;
+            StackFrame frame = stackTrace.GetFrame(1);
             if (frame.GetMethod().Name.Contains("DoRemote"))
-                upStack = 3;
+            {
+                upStack = 2;
+                frame = stackTrace.GetFrame(2);
+                if (frame.GetMethod().Name.Contains("DoRemote"))
+                    upStack = 3;
+            }
 
             CanBeReflected reflection;
             GetReflection(upStack, stackTrace, out method, out reflection);
