@@ -25,14 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using System.Collections;
 
 namespace Aurora.Framework.Services
 {
     public interface IFreeswitchService
     {
-        Hashtable HandleDirectoryRequest(Hashtable requestBody);
-        Hashtable HandleDialplanRequest(Hashtable requestBody);
+        byte[] HandleDirectoryRequest(Hashtable requestBody, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+        byte[] HandleDialplanRequest(Hashtable requestBody, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
         string GetJsonConfig();
     }
 }

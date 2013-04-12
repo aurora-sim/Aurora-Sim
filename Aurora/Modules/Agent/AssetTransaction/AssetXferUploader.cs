@@ -121,7 +121,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         /// <returns>True if the transfer is complete, false otherwise or if the xferID was not valid</returns>
         public bool HandleXferPacket(ulong xferID, uint packetID, byte[] data)
         {
-            //            m_log.DebugFormat(
+            //            MainConsole.Instance.DebugFormat(
             //                "[ASSET XFER UPLOADER]: Received packet {0} for xfer {1} (data length {2})",
             //                packetID, xferID, data.Length);
 
@@ -170,7 +170,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type, byte[] data, bool storeLocal,
             bool tempFile)
         {
-            //            m_log.DebugFormat(
+            //            MainConsole.Instance.DebugFormat(
             //                "[ASSET XFER UPLOADER]: Initialised xfer from {0}, asset {1}, transaction {2}, type {3}, storeLocal {4}, tempFile {5}, already received data length {6}",
             //                remoteClient.Name, assetID, transaction, type, storeLocal, tempFile, data.Length);
 
@@ -213,7 +213,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         {
             XferID = Util.GetNextXferID();
 
-            //            m_log.DebugFormat(
+            //            MainConsole.Instance.DebugFormat(
             //                "[ASSET XFER UPLOADER]: Requesting Xfer of asset {0}, type {1}, transfer id {2} from {3}",
             //                m_asset.FullID, m_asset.Type, XferID, ourClient.Name);
 
@@ -329,7 +329,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
                 }
                 else
                 {
-                    //                    m_log.DebugFormat(
+                    //                    MainConsole.Instance.DebugFormat(
                     //                        "[ASSET XFER UPLOADER]: Holding update inventory item request {0} for {1} pending completion of asset xfer for transaction {2}",
                     //                        item.Name, remoteClient.Name, transactionID);
 
@@ -367,7 +367,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         /// <param name="item"></param>
         private void CompleteItemUpdate(InventoryItemBase item)
         {
-            //            m_log.DebugFormat(
+            //            MainConsole.Instance.DebugFormat(
             //                "[ASSET XFER UPLOADER]: Storing asset {0} for earlier item update for {1} for {2}",
             //                m_asset.FullID, item.Name, ourClient.Name);
 
@@ -382,7 +382,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         /// <param name="taskItem"></param>
         private void CompleteTaskItemUpdate(TaskInventoryItem taskItem)
         {
-            //            m_log.DebugFormat(
+            //            MainConsole.Instance.DebugFormat(
             //                "[ASSET XFER UPLOADER]: Storing asset {0} for earlier task item update for {1} for {2}",
             //                m_asset.FullID, taskItem.Name, ourClient.Name);
 

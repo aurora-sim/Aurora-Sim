@@ -73,7 +73,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
                 {
                     uploader = new AssetXferUploader(this, m_Scene, transactionID, m_dumpAssetsToFile);
 
-                    //                    m_log.DebugFormat(
+                    //                    MainConsole.Instance.DebugFormat(
                     //                        "[AGENT ASSETS TRANSACTIONS]: Adding asset xfer uploader {0} since it didn't previously exist", transactionID);
 
                     XferUploaders.Add(transactionID, uploader);
@@ -102,7 +102,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 foreach (AssetXferUploader uploader in XferUploaders.Values)
                 {
-                    //                    m_log.DebugFormat(
+                    //                    MainConsole.Instance.DebugFormat(
                     //                        "[AGENT ASSETS TRANSACTIONS]: In HandleXfer, inspect xfer upload with xfer id {0}",
                     //                        uploader.XferID);
 
@@ -116,7 +116,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
             if (foundUploader != null)
             {
-                //                m_log.DebugFormat(
+                //                MainConsole.Instance.DebugFormat(
                 //                    "[AGENT ASSETS TRANSACTIONS]: Found xfer uploader for xfer id {0}, packet id {1}, data length {2}",
                 //                    xferID, packetID, data.Length);
 
@@ -135,7 +135,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
                         "[AGENT ASSET TRANSACTIONS]: Received request to remove xfer uploader with transaction ID {0} but none found",
                         transactionID);
                 //                else
-                //                    m_log.DebugFormat(
+                //                    MainConsole.Instance.DebugFormat(
                 //                        "[AGENT ASSET TRANSACTIONS]: Removed xfer uploader with transaction ID {0}", transactionID);
 
                 return removed;

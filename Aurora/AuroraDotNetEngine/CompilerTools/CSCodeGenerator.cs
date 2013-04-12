@@ -1866,6 +1866,7 @@ public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.Script
             else if (kid is UnaryExpression)
             {
                 UnaryExpression c = kid as UnaryExpression;
+                globalVarValue = Generate(c.UnarySymbol, c);
                 foreach (SYMBOL k in c.kids)
                 {
                     globalVarValue += CheckIfGlobalVariable(varName, type, k);

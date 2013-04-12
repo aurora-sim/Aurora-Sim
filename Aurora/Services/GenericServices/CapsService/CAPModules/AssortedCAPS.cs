@@ -176,7 +176,7 @@ namespace Aurora.Services
                                           ? account.Name
                                           : profileInfo.DisplayName;
                 map["username"] = account.Name;
-                map["slid"] = account.PrincipalID;
+                map["id"] = account.PrincipalID;
                 map["born_on"] = Util.ToDateTime(account.Created).ToShortDateString();
                 map["profile"] = "stuff";
                 array.Add(map);

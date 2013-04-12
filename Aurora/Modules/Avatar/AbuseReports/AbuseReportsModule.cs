@@ -30,12 +30,19 @@ using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
+using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Utilities;
 using Aurora.Modules.AbuseReportsGUI;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -113,7 +120,7 @@ namespace Aurora.Modules.AbuseReports
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
             //Disabled until complete
-            //scene.EventManager.OnRegisterCaps += OnRegisterCaps;
+            scene.EventManager.OnRegisterCaps += OnRegisterCaps;
         }
 
         public void RemoveRegion(IScene scene)
@@ -257,20 +264,30 @@ namespace Aurora.Modules.AbuseReports
 
         #region Disabled CAPS code
 
-        /*private void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        private OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
-            caps.AddStreamHandler("SendUserReportWithScreenshot",
-                                new GenericStreamHandler("POST", CapsUtil.CreateCAPS("SendUserReportWithScreenshot", ""),
-                                                      delegate(string path, Stream request,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                      {
-                                                          return ProcessSendUserReportWithScreenshot(request, agentID);
-                                                      }));
+            OSDMap retVal = new OSDMap();
+            retVal["SendUserReportWithScreenshot"] = CapsUtil.CreateCAPS("SendUserReportWithScreenshot", "");
+            retVal["SendUserReport"] = retVal["SendUserReportWithScreenshot"];
+
+            //Region Server bound
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["SendUserReportWithScreenshot"],
+                                                             delegate(string path, Stream request,
+                                                                      OSHttpRequest httpRequest,
+                                                                      OSHttpResponse httpResponse)
+                                                             {
+                                                                 return ProcessSendUserReportWithScreenshot(agentID, path, request,
+                                                                                            httpRequest,
+                                                                                            httpResponse);
+                                                             }));
+
+            return retVal;
         }
 
-        private byte[] ProcessSendUserReportWithScreenshot(Stream request, UUID agentID)
+        private  byte[] ProcessSendUserReportWithScreenshot(UUID AgentID, string path, Stream request, OSHttpRequest httpRequest,
+                                          OSHttpResponse httpResponse) 
         {
-            IScenePresence SP = findScenePresence(agentID);
+            IScenePresence SP = findScenePresence(AgentID);
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             string RegionName = map["abuse-region-name"];
             UUID AbuserID = map["abuser-id"];
@@ -282,11 +299,76 @@ namespace Aurora.Modules.AbuseReports
             uint ReportType = map["report-type"];
             UUID ScreenShotID = map["screenshot-id"];
             string summary = map["summary"];
-            //UserReport(SP.ControllingClient, RegionName, AbuserID, Category, CheckFlags,
-            //           details, objectID, position, ReportType, ScreenShotID, summary, SP.UUID);
-            //TODO: Figure this out later
-            return new byte[0];
-        }*/
+            UserReport(SP.ControllingClient, SP.Scene.RegionInfo.RegionName, AbuserID, (byte)Category, (byte)CheckFlags,
+                       details, objectID, position, (byte)ReportType, ScreenShotID, summary, SP.UUID);
+
+            if (ScreenShotID != UUID.Zero)
+            {
+                string uploadpath = "/CAPS/Upload/" + UUID.Random() + "/";
+                AbuseTextureUploader uploader = new AbuseTextureUploader(uploadpath, SP.UUID, ScreenShotID);
+                uploader.OnUpLoad += AbuseTextureUploaded;
+
+                MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uploadpath,
+                                                                    uploader.uploaderCaps));
+
+                string uploaderURL = MainServer.Instance.ServerURI + uploadpath;
+                OSDMap resp = new OSDMap();
+                resp["uploader"] = uploaderURL;
+                resp["state"] = "upload";
+                return OSDParser.SerializeLLSDXmlBytes(resp);
+            }
+            else
+                return MainServer.BlankResponse;
+        }
+
+
+        public delegate void UploadedAbuseTexture(UUID agentID, UUID assetID, byte[] data);
+
+        public class AbuseTextureUploader
+        {
+            public event UploadedAbuseTexture OnUpLoad;
+            private UploadedAbuseTexture handlerUpLoad = null;
+            private UUID m_agentID, m_assetID;
+
+            private readonly string uploaderPath = String.Empty;
+
+            public AbuseTextureUploader(string path, UUID agentID, UUID assetID)
+            {
+                uploaderPath = path;
+                m_agentID = agentID;
+                m_assetID = assetID;
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="path"></param>
+            /// <param name="request"></param>
+            /// <param name="httpRequest"></param>
+            /// <param name="httpResponse"></param>
+            /// <returns></returns>
+            public byte[] uploaderCaps(string path, Stream request,
+                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                handlerUpLoad = OnUpLoad;
+                handlerUpLoad(m_agentID, m_assetID, HttpServerHandlerHelpers.ReadFully(request));
+
+                OSDMap map = new OSDMap();
+                map["new_asset"] = m_assetID.ToString();
+                map["item_id"] = UUID.Zero;
+                map["state"] = "complete";
+                MainServer.Instance.RemoveStreamHandler("POST", uploaderPath);
+
+                return OSDParser.SerializeLLSDXmlBytes(map);
+            }
+        }
+
+        public void AbuseTextureUploaded(UUID agentID, UUID assetID, byte[] data)
+        {
+            //MainConsole.Instance.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
+            AssetBase asset = new AssetBase(assetID, "Abuse Texture", AssetType.Texture, agentID) { Data = data };
+            asset.ID = m_Scene.AssetService.Store(asset);
+            MainConsole.Instance.DebugFormat("[AbuseCAPS]: texture new id {0}", assetID.ToString());
+        }
 
         #endregion
 

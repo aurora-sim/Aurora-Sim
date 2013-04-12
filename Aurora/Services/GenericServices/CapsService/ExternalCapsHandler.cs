@@ -42,9 +42,7 @@ namespace Aurora.Services.GenericServices.CapsService
             m_registry = registry;
             registry.RegisterModuleInterface<IExternalCapsHandler>(this);
 
-            Init(registry, GetType().Name, serverHandlerName: "ExternalCaps");
-            if (m_allowedCapsModules.Count > 0)
-                ConnectorRegistry.ServerHandlerConnectors.Add(this);
+            Init(registry, GetType().Name);
         }
 
         public void FinishedStartup()
