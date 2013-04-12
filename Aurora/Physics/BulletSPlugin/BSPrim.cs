@@ -709,7 +709,6 @@ public class BSPrim : BSPhysObject
     private void SetObjectDynamic(bool forceRebuild)
     {
         // Recreate the physical object if necessary
-        //UpdatePhysicalParameters();
         CreateGeomAndObject(forceRebuild);
     }
 
@@ -733,7 +732,7 @@ public class BSPrim : BSPhysObject
         PhysicsScene.PE.RemoveObjectFromWorld(PhysicsScene.World, PhysBody);
 
         // Set up the object physicalness (does gravity and collisions move this object)
-        MakeDynamic(!IsPhysical);
+        MakeDynamic(IsStatic);
 
         // Update vehicle specific parameters (after MakeDynamic() so can change physical parameters)
         PhysicalActors.Refresh();
@@ -752,8 +751,8 @@ public class BSPrim : BSPhysObject
         // Rebuild its shape
         PhysicsScene.PE.UpdateSingleAabb(PhysicsScene.World, PhysBody);
 
-        DetailLog("{0},BSPrim.UpdatePhysicalParameters,taintExit,static={1},solid={2},mass={3},collide={4},cf={5:X},cType={6},body={7},shape={8}",
-                        LocalID, IsStatic, IsSolid, Mass, SubscribedEvents(), CurrentCollisionFlags, PhysBody.collisionType, PhysBody, PhysShape);
+        DetailLog("{0},BSPrim.UpdatePhysicalParameters,taintExit,static={1},solid={2},mass={3},collide={4},cf={5:X},cType={6},body={7},shape={8},pos={9}",
+                        LocalID, IsStatic, IsSolid, Mass, SubscribedEvents(), CurrentCollisionFlags, PhysBody.collisionType, PhysBody, PhysShape,PhysicsScene.PE.GetPosition(PhysBody));
     }
 
     // "Making dynamic" means changing to and from static.
@@ -1069,6 +1068,7 @@ public class BSPrim : BSPhysObject
         }
     }
 
+    // BSPhysObject.AddAngularForce()
     public override void AddAngularForce(OMV.Vector3 force, bool pushforce, bool inTaintTime)
     {
         if (force.IsFinite())
@@ -1468,7 +1468,7 @@ public class BSPrim : BSPhysObject
         }
 
         OMV.Vector3 direction = OMV.Vector3.UnitX * _orientation;   // DEBUG DEBUG DEBUG
-        DetailLog("{0},BSPrim.UpdateProperties,call,entProp={1},dir={2}", LocalID, entprop, direction);
+        //DetailLog("{0},BSPrim.UpdateProperties,call,entProp={1},dir={2}", LocalID, entprop, direction);
 
         // remember the current and last set values
         LastEntityProperties = CurrentEntityProperties;

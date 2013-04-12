@@ -3734,9 +3734,6 @@ namespace Aurora.Region
                     obPart.IgnoreUndoUpdate = false;
                 }
 
-                if (part.PhysActor != null)
-                    part.PhysActor.Size = prevScale;
-
                 part.IgnoreUndoUpdate = false;
                 m_rootPart.IgnoreUndoUpdate = false;
                 HasGroupChanged = true;

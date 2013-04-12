@@ -259,7 +259,8 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
                 m_physicsScene.DetailLog("{0},BSCharacter.MoveMotor,move,stepVel={1},vel={2},mass={3},moveForce={4}",
                                 m_controllingPrim.LocalID, stepVelocity, m_controllingPrim.RawVelocity, m_controllingPrim.Mass, moveForce);
-                m_physicsScene.PE.ApplyCentralImpulse(m_controllingPrim.PhysBody, moveForce);
+                if(moveForce.IsFinite())
+                    m_physicsScene.PE.ApplyCentralImpulse(m_controllingPrim.PhysBody, moveForce);
 
                 if (m_preJumpStart != 0 && Util.EnvironmentTickCountSubtract(m_preJumpStart) > 300)
                 {
