@@ -3966,8 +3966,8 @@ namespace Aurora.Region
                 (CollisionSound != UUID.Zero) ||
                 PassCollisions != 2)
             {
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision_start) != 0 ||
-                    (m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision) != 0)
+                if ((AggregateScriptEvents & scriptEvents.collision_start) != 0 ||
+                    (AggregateScriptEvents & scriptEvents.collision) != 0)
                 {
                     // do event notification
                     if (startedColliders.Count > 0)
@@ -4135,7 +4135,7 @@ namespace Aurora.Region
                     }
                 }
 
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision) != 0)
+                if ((AggregateScriptEvents & scriptEvents.collision) != 0)
                 {
                     if (m_lastColliders.Count > 0)
                     {
@@ -4294,7 +4294,7 @@ namespace Aurora.Region
                     }
                 }
 
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision_end) != 0)
+                if ((AggregateScriptEvents & scriptEvents.collision_end) != 0)
                 {
                     if (endedColliders.Count > 0)
                     {
@@ -4460,8 +4460,8 @@ namespace Aurora.Region
                         }
                     }
                 }
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision_start) != 0 ||
-                    (m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision) != 0)
+                if ((AggregateScriptEvents & scriptEvents.land_collision_start) != 0 ||
+                    (AggregateScriptEvents & scriptEvents.land_collision) != 0)
                 {
                     if (startedColliders.Count > 0)
                     {
@@ -4518,7 +4518,7 @@ namespace Aurora.Region
                         }
                     }
                 }
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision) != 0)
+                if ((AggregateScriptEvents & scriptEvents.land_collision) != 0)
                 {
                     if (m_lastColliders.Count > 0)
                     {
@@ -4581,7 +4581,7 @@ namespace Aurora.Region
                         }
                     }
                 }
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision_end) != 0)
+                if ((AggregateScriptEvents & scriptEvents.land_collision_end) != 0)
                 {
                     if (endedColliders.Count > 0)
                     {
