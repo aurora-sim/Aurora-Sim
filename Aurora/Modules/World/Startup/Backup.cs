@@ -64,6 +64,8 @@ namespace Aurora.Modules.Startup
             {
                 MainConsole.Instance.Commands.AddCommand("edit scale", "edit scale <name> <X> <Y> <Z>",
                                                          "Change the scale of a named prim", EditScale);
+                MainConsole.Instance.Commands.AddCommand("offset region prims", "offset region prims <X> <Y> <Z>",
+                                                         "Offset all prims by the same amount", OffsetPrims);
                 MainConsole.Instance.Commands.AddCommand("backup", "backup",
                                                          "Persist objects to the database now, if [all], will force the persistence of all prims",
                                                          RunCommand);
@@ -136,6 +138,22 @@ namespace Aurora.Modules.Startup
                                                            }
                                                        }
                                                    });
+        }
+
+        public void OffsetPrims(string[] cmdParams)
+        {
+            if (cmdParams.Length < 6)
+            {
+                MainConsole.Instance.Info("Not enough parameters");
+                return;
+            }
+            Vector3 offset = new Vector3(float.Parse(cmdParams[3]), float.Parse(cmdParams[4]), float.Parse(cmdParams[5]));
+            m_manager.Scene.ForEachSceneEntity(delegate(ISceneEntity entity)
+            {
+                entity.AbsolutePosition += offset;
+                entity.ScheduleGroupTerseUpdate();
+            });
+            MainConsole.Instance.Info("Region has been offset");
         }
 
         public void DisableBackup(string[] cmdparams)

@@ -215,8 +215,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (rootPath != null)
             {
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                                                                 "OpenSim.Region.Framework.dll"));
-                parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "OpenMetaverse.dll"));
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "OpenMetaverseTypes.dll"));
@@ -331,13 +329,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
                 compileScript = string.Join("\n", lines);
             }
-
             string compiledScript = "";
             compiledScript = String.Empty +
                              "using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;\n" +
                              "using Aurora.ScriptEngine.AuroraDotNetEngine;\n" +
                              "using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;\n" +
                              "using Aurora.Framework;\n" +
+                             "using Aurora.Framework.ClientInterfaces;\n" +
+                             "using Aurora.Framework.ConsoleFramework;\n" +
+                             "using Aurora.Framework.DatabaseInterfaces;\n" +
+                             "using Aurora.Framework.Modules;\n" +
+                             "using Aurora.Framework.Physics;\n" +
+                             "using Aurora.Framework.PresenceInfo;\n" +
+                             "using Aurora.Framework.SceneInfo;\n" +
+                             "using Aurora.Framework.Servers;\n" +
+                             "using Aurora.Framework.Services;\n" +
+                             "using Aurora.Framework.Utilities;\n" +
                              "using OpenMetaverse;\n" +
                              "using System;\n" +
                              "using System.Collections.Generic;\n" +
