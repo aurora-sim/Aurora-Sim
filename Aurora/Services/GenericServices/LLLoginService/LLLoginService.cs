@@ -1025,6 +1025,8 @@ namespace Aurora.Services
             LoginAgentArgs args = null;
             foreach (GridRegion r in regions)
             {
+                if (r == null)
+                    continue;
                 args = m_registry.RequestModuleInterface<IAgentProcessing>().
                                   LoginAgent(r, aCircuit);
                 if (args.Success)
