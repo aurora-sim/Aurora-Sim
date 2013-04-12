@@ -80,7 +80,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             libraries.Add("OpenMetaverseTypes.dll");
-            libraries.Add("log4net.dll");
 
 
             bool complete = false;
