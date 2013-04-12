@@ -188,12 +188,8 @@ namespace Aurora.Modules.Selection
                         // similar changes on deselect
                         // part.IsSelect is on SceneObjectPart.cs
                         // Ubit
-                        //if (prim.IsRoot)
-                        {
-                            //prim.ParentGroup.IsSelected = true;
-                            prim.IsSelected = true;
-                            scene.AuroraEventManager.FireGenericEventHandler("ObjectSelected", prim);
-                        }
+                        prim.IsSelected = true;
+                        scene.AuroraEventManager.FireGenericEventHandler("ObjectSelected", prim);
                     }
                 }
                 //Check for avies! They arn't prims!

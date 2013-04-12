@@ -177,24 +177,32 @@ public class BSPrim : BSPhysObject
                 _isSelected = value;
                 PhysicsScene.TaintedObject("BSPrim.setSelected", delegate()
                 {
-                    if (!_isSelected)
-                    {
-                        PhysicsScene.PE.RemoveFromCollisionFlags(PhysBody, CollisionFlags.CF_NO_CONTACT_RESPONSE);
-                        PhysicsScene.PE.AddToCollisionFlags(PhysBody, CollisionFlags.BS_SUBSCRIBE_COLLISION_EVENTS);
-                        PhysicsScene.PE.ForceActivationState(PhysBody, ActivationState.ACTIVE_TAG);
-
-                        // Don't force activation so setting of DISABLE_SIMULATION can stay if used.
-                        PhysicsScene.PE.Activate(PhysBody, false);
-                    }
-                    else
-                    {
-                        PhysicsScene.PE.AddToCollisionFlags(PhysBody, CollisionFlags.CF_NO_CONTACT_RESPONSE);
-                        PhysicsScene.PE.ForceActivationState(PhysBody, ActivationState.DISABLE_SIMULATION);
-                        // We don't want collisions from the old linkset children.
-                        PhysicsScene.PE.RemoveFromCollisionFlags(PhysBody, CollisionFlags.BS_SUBSCRIBE_COLLISION_EVENTS);
-                    }
+                    SelectObject(_isSelected);
                 });
             }
+        }
+    }
+    protected virtual void SelectObject(bool val)
+    {
+        if (!val)
+        {
+            //Don't make objects phantom when selecting
+            //PhysicsScene.PE.RemoveFromCollisionFlags(PhysBody, CollisionFlags.CF_NO_CONTACT_RESPONSE);
+            //Reenable collision events
+            if (SubscribedEvents())
+                EnableCollisions(true);
+            PhysicsScene.PE.ForceActivationState(PhysBody, ActivationState.ACTIVE_TAG);
+
+            // Don't force activation so setting of DISABLE_SIMULATION can stay if used.
+            PhysicsScene.PE.Activate(PhysBody, false);
+        }
+        else
+        {
+            //Don't make objects phantom when selecting
+            //PhysicsScene.PE.AddToCollisionFlags(PhysBody, CollisionFlags.CF_NO_CONTACT_RESPONSE);
+            PhysicsScene.PE.ForceActivationState(PhysBody, ActivationState.DISABLE_SIMULATION);
+            //Disable collision events
+            EnableCollisions(false);
         }
     }
     public override bool IsSelected
@@ -681,7 +689,7 @@ public class BSPrim : BSPhysObject
     // An object is static (does not move) if selected or not physical
     public override bool IsStatic
     {
-        get { return _isSelected || !IsPhysical; }
+        get { return /*_isSelected ||*/ !IsPhysical; }
     }
 
     // An object is solid if it's not phantom and if it's not doing VolumeDetect
@@ -725,7 +733,7 @@ public class BSPrim : BSPhysObject
         PhysicsScene.PE.RemoveObjectFromWorld(PhysicsScene.World, PhysBody);
 
         // Set up the object physicalness (does gravity and collisions move this object)
-        MakeDynamic(IsStatic);
+        MakeDynamic(!IsPhysical);
 
         // Update vehicle specific parameters (after MakeDynamic() so can change physical parameters)
         PhysicalActors.Refresh();
@@ -737,6 +745,9 @@ public class BSPrim : BSPhysObject
         MakeSolid(IsSolid);
 
         AddObjectToPhysicalWorld();
+
+        //Force selection properties
+        SelectObject(IsSelected);
 
         // Rebuild its shape
         PhysicsScene.PE.UpdateSingleAabb(PhysicsScene.World, PhysBody);

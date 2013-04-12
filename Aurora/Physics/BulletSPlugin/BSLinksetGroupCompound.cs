@@ -362,7 +362,7 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                 // Compute a displacement for each component so it is relative to the center-of-mass.
                 // Bullet presumes an object's origin (relative <0,0,0>) is its center-of-mass
                 OMV.Vector3 centerOfMassW = LinksetRoot.RawPosition;
-                if (!disableCOM)                             // DEBUG DEBUG
+                if (!disableCOM)
                 {
                     // Compute a center-of-mass in world coordinates.
                     centerOfMassW = ComputeLinksetCenterOfMass();
@@ -479,7 +479,6 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                                                     false /* shouldRecalculateLocalAabb (is done later after linkset built) */);
                 lock (m_linksetActivityLock)
                 {
-                    int memberIndex = 1;
                     foreach (BSPrimLinkable cPrim in m_children)
                     {
                         OMV.Vector3 offsetPos = (cPrim.RawPosition - LinksetRoot.RawPosition) * invRootOrientation - centerDisplacement;
