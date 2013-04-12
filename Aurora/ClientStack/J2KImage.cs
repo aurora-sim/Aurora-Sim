@@ -163,7 +163,7 @@ namespace Aurora.ClientStack
                     // Check for missing image asset data
                     if (m_asset == null)
                     {
-                        MainConsole.Instance.Warn(
+                        MainConsole.Instance.Debug(
                             "[J2KIMAGE]: RunUpdate() called with missing asset data (no missing image texture?). Canceling texture transfer");
                         m_currentPacket = m_stopPacket;
                         return;
@@ -365,15 +365,15 @@ namespace Aurora.ClientStack
 
             if (asset == null || asset.Data == null || asset.Type == (int) AssetType.Mesh)
             {
-                if (m_imageManager.MissingImage != null)
+                /*if (m_imageManager.MissingImage != null)
                 {
                     m_asset = m_imageManager.MissingImage.Data;
                 }
                 else
-                {
+                {*/
                     m_asset = null;
                     IsDecoded = true;
-                }
+                //}
             }
             else
             {
@@ -389,22 +389,6 @@ namespace Aurora.ClientStack
             UUID assetID = UUID.Zero;
             if (asset != null)
                 assetID = asset.ID;
-            else if ((InventoryAccessModule != null) && (sender != InventoryAccessModule))
-            {
-                // Unfortunately we need this here, there's no other way.
-                // This is due to the fact that textures opened directly from the agent's inventory
-                // don't have any distinguishing feature. As such, in order to serve those when the
-                // foreign user is visiting, we need to try again after the first fail to the local
-                // asset service.
-                string assetServerURL = string.Empty;
-                if (InventoryAccessModule.IsForeignUser(AgentID, out assetServerURL))
-                {
-                    MainConsole.Instance.DebugFormat(
-                        "[J2KIMAGE]: texture {0} not found in local asset storage. Trying user's storage.", id);
-                    AssetService.Get(assetServerURL + "/" + id, InventoryAccessModule, AssetReceived);
-                    return;
-                }
-            }
 
             AssetDataCallback(assetID, asset);
         }
