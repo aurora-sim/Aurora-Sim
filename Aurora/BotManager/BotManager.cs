@@ -138,15 +138,15 @@ namespace Aurora.BotManager
             IScenePresence SP = scene.GetScenePresence(m_character.AgentId);
             if (SP == null)
                 return UUID.Zero; //Failed!
+
+            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
+            appearance.Appearance = app;
+            appearance.InitialHasWearablesBeenSent = true;
             Bot bot = new Bot();
             bot.Initialize(SP, creatorID);
             SP.MakeRootAgent(startPos, false, true);
             //Move them
             SP.Teleport(startPos);
-
-            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
-            appearance.Appearance = app;
-            appearance.InitialHasWearablesBeenSent = true;
 
             foreach (var presence in scene.GetScenePresences())
                 presence.SceneViewer.QueuePresenceForUpdate(SP, PrimUpdateFlags.ForcedFullUpdate);
