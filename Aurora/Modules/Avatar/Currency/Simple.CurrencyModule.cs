@@ -365,7 +365,7 @@ namespace Simple.Currency
                 string Message = message["Message"];
                 UUID TransactionID = message["TransactionID"];
                 IDialogModule dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
-                if (dialogModule != null)
+                if (dialogModule != null && !string.IsNullOrEmpty(Message))
                 {
                     IScenePresence sp = m_scene.GetScenePresence(agentID);
                     if (sp != null)
