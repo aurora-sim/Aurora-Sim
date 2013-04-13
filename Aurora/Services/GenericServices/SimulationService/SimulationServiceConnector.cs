@@ -61,10 +61,7 @@ namespace Aurora.Services
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
-            {
-                MainConsole.Instance.Error("SIMULATION SERVICE IS ENABLED!");
                 registry.RegisterModuleInterface<ISimulationService>(this);
-            }
 
             m_registry = registry;
         }

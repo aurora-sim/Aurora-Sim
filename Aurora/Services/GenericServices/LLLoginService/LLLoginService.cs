@@ -888,14 +888,7 @@ namespace Aurora.Services
                 if (region != null && region.RegionName == regionName)
                     //Make sure the region name is right too... it could just be a similar name
                     return region;
-                ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService>();
-                if (service != null)
-                {
-                    region = service.GetRegionForGrid(regionName, domainLocator);
 
-                    if (region != null)
-                        return region;
-                }
                 List<GridRegion> defaults = m_GridService.GetDefaultRegions(account.AllScopeIDs);
                 if (defaults != null && defaults.Count > 0)
                 {

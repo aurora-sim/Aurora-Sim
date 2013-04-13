@@ -192,7 +192,8 @@ namespace Aurora.Framework.Utilities
             }
             try
             {
-                thread.Abort("Shutdown");
+                if(thread != null)
+                    thread.Abort("Shutdown");
             }
             catch
             {

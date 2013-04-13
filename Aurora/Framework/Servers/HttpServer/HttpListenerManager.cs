@@ -75,6 +75,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             try
             {
+                if (!_listener.IsListening) return;
                 _queue.Enqueue(_listener.EndGetContext(ar));
                 _ready.Set();
             }
