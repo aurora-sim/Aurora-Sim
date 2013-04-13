@@ -645,9 +645,25 @@ namespace Aurora.Framework.Servers.HttpServer
                     MainConsole.Instance.WarnFormat(
                         "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
                 }
-                response.OutputStream.Close();
+                try
+                {
+                    response.OutputStream.Close();
+                }
+                catch(Exception ex)
+                {
+                    MainConsole.Instance.WarnFormat(
+                        "[BASE HTTP SERVER]: HandleRequest failed to close the output stream: {0}", ex.ToString());
+                }
 
-                response.Close();
+                try
+                {
+                    response.Close();
+                }
+                catch(Exception ex)
+                {
+                    MainConsole.Instance.WarnFormat(
+                        "[BASE HTTP SERVER]: HandleRequest failed to send the response: {0}", ex.ToString());
+                }
 
                 requestEndTick = Environment.TickCount;
             }
