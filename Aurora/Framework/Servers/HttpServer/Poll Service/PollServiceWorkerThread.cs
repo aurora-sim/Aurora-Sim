@@ -88,13 +88,13 @@ namespace Aurora.Framework.Servers.HttpServer
                         byte[] buffer = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
                                                                                str.ReadToEnd(), response);
 
-                        response.SendChunked = false;
-                        response.ContentLength64 = buffer.Length;
-                        response.ContentEncoding = Encoding.UTF8;
+                        req.Context.Response.SendChunked = false;
+                        req.Context.Response.ContentLength64 = buffer.Length;
+                        req.Context.Response.ContentEncoding = Encoding.UTF8;
 
                         try
                         {
-                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                            req.Context.Response.OutputStream.Write(buffer, 0, buffer.Length);
                         }
                         catch (Exception ex)
                         {
@@ -102,14 +102,10 @@ namespace Aurora.Framework.Servers.HttpServer
                         }
                         finally
                         {
-                            //response.OutputStream.Close();
                             try
                             {
-                                response.OutputStream.Close();
-                                response.Send();
-
-                                //if (!response.KeepAlive && response.ReuseContext)
-                                //    response.FreeContext();
+                                req.Context.Response.OutputStream.Close();
+                                req.Context.Response.Close();
                             }
                             catch (Exception e)
                             {
@@ -125,13 +121,13 @@ namespace Aurora.Framework.Servers.HttpServer
 
                             byte[] buffer = req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id, response);
 
-                            response.SendChunked = false;
-                            response.ContentLength64 = buffer.Length;
-                            response.ContentEncoding = Encoding.UTF8;
+                            req.Context.Response.SendChunked = false;
+                            req.Context.Response.ContentLength64 = buffer.Length;
+                            req.Context.Response.ContentEncoding = Encoding.UTF8;
 
                             try
                             {
-                                response.OutputStream.Write(buffer, 0, buffer.Length);
+                                req.Context.Response.OutputStream.Write(buffer, 0, buffer.Length);
                             }
                             catch (Exception ex)
                             {
@@ -142,8 +138,8 @@ namespace Aurora.Framework.Servers.HttpServer
                                 //response.OutputStream.Close();
                                 try
                                 {
-                                    response.OutputStream.Close();
-                                    response.Send();
+                                    req.Context.Response.OutputStream.Close();
+                                    req.Context.Response.Close();
 
                                     //if (!response.KeepAlive && response.ReuseContext)
                                     //    response.FreeContext();

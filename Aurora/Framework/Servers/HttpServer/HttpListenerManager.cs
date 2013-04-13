@@ -102,7 +102,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    Console.Error.WriteLine(e);
+                    MainConsole.Instance.ErrorFormat("[HttpListenerManager]: Exception occured: {0}", e.ToString());
                 }
             }
         }

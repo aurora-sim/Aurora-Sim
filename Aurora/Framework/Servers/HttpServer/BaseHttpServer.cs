@@ -544,7 +544,7 @@ namespace Aurora.Framework.Servers.HttpServer
             OSHttpResponse resp = new OSHttpResponse(context);
             if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
             {
-                byte[] buffer = SendHTML500(response);
+                byte[] buffer = GetHTML500(response);
                 if (buffer != null)
                     response.OutputStream.Write(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
@@ -630,15 +630,23 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 request.InputStream.Close();
 
-                if (buffer != null)
+                try
                 {
-                    if (!response.SendChunked)
-                        response.ContentLength64 = buffer.LongLength;
+                    if (buffer != null)
+                    {
+                        if (!response.SendChunked)
+                            response.ContentLength64 = buffer.LongLength;
 
-                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                        response.OutputStream.Write(buffer, 0, buffer.Length);
+                    }
                 }
-
+                catch(Exception ex)
+                {
+                    MainConsole.Instance.WarnFormat(
+                        "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
+                }
                 response.OutputStream.Close();
+
                 response.Close();
 
                 requestEndTick = Environment.TickCount;
@@ -661,8 +669,12 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-                response.Close();
+                try
+                {
+                    MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
+                    response.Close();
+                }
+                catch { }
             }
             finally
             {
@@ -694,7 +706,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             if (request.HttpMethod == "OPTIONS")
             {
-                response.StatusCode = (int) OSHttpStatusCode.SuccessOk;
+                response.StatusCode = (int) HttpStatusCode.OK;
                 return null;
             }
 
@@ -714,7 +726,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 else
                 {
                     //                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Handler Not Found");
-                    buffer = SendHTML404(response);
+                    buffer = GetHTML404(response);
                 }
             }
             else
@@ -727,7 +739,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 else
                 {
                     //                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Handler Not Found2");
-                    buffer = SendHTML404(response);
+                    buffer = GetHTML404(response);
                 }
             }
 
@@ -850,7 +862,6 @@ namespace Aurora.Framework.Servers.HttpServer
             byte[] buffer = Encoding.UTF8.GetBytes(responseString);
 
             response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
             response.ContentEncoding = Encoding.UTF8;
 
             return buffer;
@@ -934,7 +945,6 @@ namespace Aurora.Framework.Servers.HttpServer
             }
 
             response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
             response.ContentEncoding = Encoding.UTF8;
             response.KeepAlive = true;
 
@@ -993,7 +1003,7 @@ namespace Aurora.Framework.Servers.HttpServer
             return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
         }
 
-        public byte[] SendHTML404(OSHttpResponse response)
+        public byte[] GetHTML404(OSHttpResponse response)
         {
             // I know this statuscode is dumb, but the client doesn't respond to 404s and 500s
             response.StatusCode = 404;
@@ -1003,23 +1013,21 @@ namespace Aurora.Framework.Servers.HttpServer
             byte[] buffer = Encoding.UTF8.GetBytes(responseString);
 
             response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
             response.ContentEncoding = Encoding.UTF8;
 
             return buffer;
         }
 
-        public byte[] SendHTML500(HttpListenerResponse response)
+        public byte[] GetHTML500(HttpListenerResponse response)
         {
             try
             {
                 // I know this statuscode is dumb, but the client doesn't respond to 404s and 500s
-                response.StatusCode = (int)OSHttpStatusCode.SuccessOk;
+                response.StatusCode = (int)HttpStatusCode.OK;
                 response.AddHeader("Content-type", "text/html");
 
                 string responseString = GetHTTP500();
                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-                response.ContentLength64 = buffer.Length;
                 response.ContentEncoding = Encoding.UTF8;
                 return buffer;
             }
