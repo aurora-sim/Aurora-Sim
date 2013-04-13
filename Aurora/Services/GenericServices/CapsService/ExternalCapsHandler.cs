@@ -75,7 +75,8 @@ namespace Aurora.Services.GenericServices.CapsService
                     });
                     events.Add(even);
                 }
-                ManualResetEvent.WaitAll(events.ToArray());
+                if(events.Count > 0)
+                    ManualResetEvent.WaitAll(events.ToArray());
             }
             foreach (var h in GetHandlers(agentID, region.RegionID))
             {
