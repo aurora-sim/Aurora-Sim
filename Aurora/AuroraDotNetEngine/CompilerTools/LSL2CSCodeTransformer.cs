@@ -210,7 +210,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     Declaration d = child as Declaration;
                     if (d != null)
                     {
-                        m_duplicatedLocalVariableValues[m_currentState + "_" + m_currentEvent][d.Id] = null;
+                        m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][d.Id] = null;
                     }
                 }
                 //m_duplicatedLocalVariableValues.Add(m_currentState + "_" + evt.Name, new Dictionary<string, SYMBOL>());
