@@ -93,6 +93,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                         try
                         {
+                            req.Context.Response.ContentLength64 = buffer.LongLength;
                             req.Context.Response.OutputStream.Write(buffer, 0, buffer.Length);
                         }
                         catch (Exception ex)
@@ -125,6 +126,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                             try
                             {
+                                req.Context.Response.ContentLength64 = buffer.LongLength;
                                 req.Context.Response.OutputStream.Write(buffer, 0, buffer.Length);
                             }
                             catch (Exception ex)

@@ -546,7 +546,10 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 byte[] buffer = GetHTML500(response);
                 if (buffer != null)
+                {
+                    response.ContentLength64 = buffer.LongLength;
                     response.OutputStream.Write(buffer, 0, buffer.Length);
+                }
                 response.OutputStream.Close();
                 response.Close();
                 return;
@@ -633,7 +636,10 @@ namespace Aurora.Framework.Servers.HttpServer
                 try
                 {
                     if (buffer != null)
+                    {
+                        response.ContentLength64 = buffer.LongLength;
                         response.OutputStream.Write(buffer, 0, buffer.Length);
+                    }
                 }
                 catch(Exception ex)
                 {
