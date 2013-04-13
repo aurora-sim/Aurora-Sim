@@ -89,7 +89,6 @@ namespace Aurora.Framework.Servers.HttpServer
                                                                                str.ReadToEnd(), response);
 
                         req.Context.Response.SendChunked = false;
-                        req.Context.Response.ContentLength64 = buffer.Length;
                         req.Context.Response.ContentEncoding = Encoding.UTF8;
 
                         try
@@ -122,7 +121,6 @@ namespace Aurora.Framework.Servers.HttpServer
                             byte[] buffer = req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id, response);
 
                             req.Context.Response.SendChunked = false;
-                            req.Context.Response.ContentLength64 = buffer.Length;
                             req.Context.Response.ContentEncoding = Encoding.UTF8;
 
                             try

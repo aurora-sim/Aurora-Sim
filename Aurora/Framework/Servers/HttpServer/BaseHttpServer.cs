@@ -633,12 +633,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 try
                 {
                     if (buffer != null)
-                    {
-                        if (!response.SendChunked)
-                            response.ContentLength64 = buffer.LongLength;
-
                         response.OutputStream.Write(buffer, 0, buffer.Length);
-                    }
                 }
                 catch(Exception ex)
                 {

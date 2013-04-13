@@ -158,7 +158,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 
                 req.Context.Response.SendChunked = false;
-                req.Context.Response.ContentLength64 = buffer.Length;
                 req.Context.Response.ContentEncoding = Encoding.UTF8;
 
                 try
