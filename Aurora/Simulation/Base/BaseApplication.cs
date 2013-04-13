@@ -112,6 +112,7 @@ namespace Aurora.Simulation.Base
             configSource.AddSwitch("Startup", "secondaryIniFileName");
             configSource.AddSwitch("Startup", "RegionDataFileName");
             configSource.AddSwitch("Console", "Console");
+            configSource.AddSwitch("Console", "LogAppendName");
 
             configSource.AddConfig("Network");
 

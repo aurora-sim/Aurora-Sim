@@ -92,7 +92,10 @@ namespace Aurora.Framework.ConsoleFramework
             m_Commands.AddCommand("help", "help",
                                   "Get a general command list", base.Help);
 
-            InitializeLog(null);
+            string logName = "";
+            if (source.Configs["Console"] != null)
+                logName = source.Configs["Console"].GetString("LogAppendName", "");
+            InitializeLog(logName);
         }
 
         private static ConsoleColor DeriveColor(string input)
