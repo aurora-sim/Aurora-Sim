@@ -36,6 +36,10 @@
 	;;   shut down this instance?
 	;;   Default is true, as restarts work
 	RegionRestartCausesShutdown = false
+	
+	;; The name of the file to load for the region data
+	;; Default is sim (.sim is automatically appended after this)
+	RegionDataFileName = "sim"
 
 [Network]
 	

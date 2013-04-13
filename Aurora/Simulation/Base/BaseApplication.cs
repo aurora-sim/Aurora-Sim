@@ -110,6 +110,8 @@ namespace Aurora.Simulation.Base
             configSource.AddSwitch("Startup", "mainIniDirectory");
             configSource.AddSwitch("Startup", "mainIniFileName");
             configSource.AddSwitch("Startup", "secondaryIniFileName");
+            configSource.AddSwitch("Startup", "RegionDataFileName");
+            configSource.AddSwitch("Console", "Console");
 
             configSource.AddConfig("Network");
 

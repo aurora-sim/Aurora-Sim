@@ -325,7 +325,10 @@ namespace Aurora.Modules
                 m_backupSaveTimer.Start();
             }
 
+            config = simBase.ConfigSource.Configs["Startup"];
             m_fileName = "sim";
+            if (config != null)
+                m_fileName = config.GetString("RegionDataFileName", m_fileName);
         }
 
         /// <summary>
