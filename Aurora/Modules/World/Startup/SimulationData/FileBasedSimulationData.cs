@@ -140,15 +140,6 @@ namespace Aurora.Modules
             info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: ", info.RegionSizeX.ToString()));
             info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: ", info.RegionSizeY.ToString()));
             
-            if (info.InternalEndPoint == null)
-                info.InternalEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse("0.0.0.0"), (int)MainServer.Instance.Port);
-            System.Net.IPAddress intAdd =
-                System.Net.IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP: ",
-                                                                       info.InternalEndPoint.Address.ToString()));
-            int intPort =
-                int.Parse(MainConsole.Instance.Prompt("Internal port: ", info.InternalEndPoint.Port.ToString()));
-            info.InternalEndPoint = new System.Net.IPEndPoint(intAdd, intPort);
-            
             info.RegionType = MainConsole.Instance.Prompt("Region Type: ",
                                                           (info.RegionType == "" ? "Mainland" : info.RegionType));
             
@@ -334,7 +325,10 @@ namespace Aurora.Modules
                 m_backupSaveTimer.Start();
             }
 
+            config = simBase.ConfigSource.Configs["Startup"];
             m_fileName = "sim";
+            if (config != null)
+                m_fileName = config.GetString("RegionDataFileName", m_fileName);
         }
 
         /// <summary>

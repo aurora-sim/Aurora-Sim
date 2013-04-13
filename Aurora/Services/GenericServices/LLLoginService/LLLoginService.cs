@@ -888,14 +888,7 @@ namespace Aurora.Services
                 if (region != null && region.RegionName == regionName)
                     //Make sure the region name is right too... it could just be a similar name
                     return region;
-                ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService>();
-                if (service != null)
-                {
-                    region = service.GetRegionForGrid(regionName, domainLocator);
 
-                    if (region != null)
-                        return region;
-                }
                 List<GridRegion> defaults = m_GridService.GetDefaultRegions(account.AllScopeIDs);
                 if (defaults != null && defaults.Count > 0)
                 {
@@ -946,6 +939,7 @@ namespace Aurora.Services
             aCircuit = MakeAgent(destination, account, session, secureSession, circuitCode, position,
                                  clientIP);
             aCircuit.TeleportFlags = (uint) tpFlags;
+            MainConsole.Instance.DebugFormat("[LoginService]: Attempting to log {0} into {1} at {2}...", account.Name, destination.RegionName, destination.ServerURI);
             LoginAgentArgs args = m_registry.RequestModuleInterface<IAgentProcessing>().
                                              LoginAgent(destination, aCircuit);
             aCircuit.CachedUserInfo = args.CircuitData.CachedUserInfo;
@@ -957,6 +951,7 @@ namespace Aurora.Services
             bool success = args.Success;
             if (!success && m_GridService != null)
             {
+                MainConsole.Instance.DebugFormat("[LoginService]: Failed to log {0} into {1} at {2}...", account.Name, destination.RegionName, destination.ServerURI);
                 //Remove the landmark flag (landmark is used for ignoring the landing points in the region)
                 aCircuit.TeleportFlags &= ~(uint) TeleportFlags.ViaLandmark;
                 m_GridService.SetRegionUnsafe(destination.RegionID);
@@ -1009,6 +1004,7 @@ namespace Aurora.Services
 
             if (success)
             {
+                MainConsole.Instance.DebugFormat("[LoginService]: Successfully logged {0} into {1} at {2}...", account.Name, destination.RegionName, destination.ServerURI);
                 //Set the region to safe since we got there
                 m_GridService.SetRegionSafe(destination.RegionID);
                 return aCircuit;
@@ -1025,6 +1021,9 @@ namespace Aurora.Services
             LoginAgentArgs args = null;
             foreach (GridRegion r in regions)
             {
+                if (r == null)
+                    continue;
+                MainConsole.Instance.DebugFormat("[LoginService]: Attempting to log {0} into {1} at {2}...", account.Name, r.RegionName, r.ServerURI);
                 args = m_registry.RequestModuleInterface<IAgentProcessing>().
                                   LoginAgent(r, aCircuit);
                 if (args.Success)
@@ -1055,7 +1054,7 @@ namespace Aurora.Services
                                              UUID session, UUID secureSession, uint circuit,
                                              Vector3 position, IPEndPoint clientIP)
         {
-            AgentCircuitData aCircuit = new AgentCircuitData
+            return new AgentCircuitData
                                             {
                                                 AgentID = account.PrincipalID,
                                                 IsChildAgent = false,
@@ -1065,11 +1064,6 @@ namespace Aurora.Services
                                                 StartingPosition = position,
                                                 IPAddress = clientIP.Address.ToString()
                                             };
-
-
-            // the first login agent is root
-
-            return aCircuit;
         }
 
         #region Console Commands

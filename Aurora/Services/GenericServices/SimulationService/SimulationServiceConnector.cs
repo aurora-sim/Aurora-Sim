@@ -64,11 +64,11 @@ namespace Aurora.Services
                 registry.RegisterModuleInterface<ISimulationService>(this);
 
             m_registry = registry;
-            m_syncMessagePoster = registry.RequestModuleInterface<ISyncMessagePosterService>();
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
+            m_syncMessagePoster = registry.RequestModuleInterface<ISyncMessagePosterService>();
         }
 
         public void FinishedStartup()
@@ -82,6 +82,13 @@ namespace Aurora.Services
         public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, out CreateAgentResponse response)
         {
             response = null;
+            if (destination == null)
+            {
+                response = new CreateAgentResponse();
+                response.Reason = "Could not connect to destination";
+                response.Success = false;
+                return false;
+            }
             CreateAgentRequest request = new CreateAgentRequest();
             request.CircuitData = aCircuit;
             request.Destination = destination;
@@ -89,6 +96,7 @@ namespace Aurora.Services
 
             AutoResetEvent resetEvent = new AutoResetEvent(false);
             OSDMap result = null;
+            MainConsole.Instance.DebugFormat("[SimulationServiceConnector]: Sending Create Agent to " + destination.ServerURI);
             m_syncMessagePoster.Get(destination.ServerURI, request.ToOSD(), (osdresp) =>
             {
                 result = osdresp;

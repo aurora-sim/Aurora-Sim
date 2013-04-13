@@ -123,7 +123,10 @@ namespace Aurora.Services
             if (remote)
             {
                 if (url != "")
-                    return DoRemoteCallGet(true, url + "/syncmessage/", false, url, request) as OSDMap;
+                {
+                    url = (url.EndsWith("/syncmessage/") ? url : (url + "/syncmessage/"));
+                    return DoRemoteCallGet(true, url, false, url, request) as OSDMap;
+                }
                 else
                     return DoRemoteCallGet(true, "SyncMessageServerURI", false, url, request) as OSDMap;
             }

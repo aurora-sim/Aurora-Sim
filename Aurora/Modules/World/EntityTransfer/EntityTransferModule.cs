@@ -846,7 +846,7 @@ namespace Aurora.Modules.EntityTransfer
         public bool NewUserConnection(IScene scene, AgentCircuitData agent, uint teleportFlags, out CreateAgentResponse response)
         {
             response = new CreateAgentResponse();
-            response.RequestedUDPPort = scene.RegionInfo.InternalEndPoint.Port;
+            response.RequestedUDPPort = (int)MainServer.Instance.Port;
             IScenePresence sp = scene.GetScenePresence(agent.AgentID);
 
             // Don't disable this log message - it's too helpful

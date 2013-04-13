@@ -36,6 +36,10 @@
 	;;   shut down this instance?
 	;;   Default is true, as restarts work
 	RegionRestartCausesShutdown = false
+	
+	;; The name of the file to load for the region data
+	;; Default is sim (.sim is automatically appended after this)
+	RegionDataFileName = "sim"
 
 [Network]
 	
@@ -64,6 +68,10 @@
     ;; CommandConsole = Default black and white console
     ;; GUIConsole = Special interface to allow i/o redirection to work for GUI applications.
     Console = LocalConsole
+	
+	;; If you want to append a string to the log file name
+	;; Default is commented out
+	;LogAppendName = 
 
 ;; Please note that all the configuration files have been moved to the Configuration folder and organized from there.
 ;; Please do NOT edit below this line unless you know what you are doing with it!

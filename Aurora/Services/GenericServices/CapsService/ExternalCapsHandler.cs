@@ -62,7 +62,7 @@ namespace Aurora.Services.GenericServices.CapsService
                 req["Method"] = "GetCaps";
 
                 List<ManualResetEvent> events = new List<ManualResetEvent>();
-                foreach (string uri in m_servers)
+                foreach (string uri in m_servers.Where((u)=>(!u.Contains(MainServer.Instance.Port.ToString()))))
                 {
                     ManualResetEvent even = new ManualResetEvent(false);
                     m_syncPoster.Get(uri, req, (r) =>
@@ -75,7 +75,8 @@ namespace Aurora.Services.GenericServices.CapsService
                     });
                     events.Add(even);
                 }
-                ManualResetEvent.WaitAll(events.ToArray());
+                if(events.Count > 0)
+                    ManualResetEvent.WaitAll(events.ToArray());
             }
             foreach (var h in GetHandlers(agentID, region.RegionID))
             {
