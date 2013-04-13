@@ -113,8 +113,7 @@ namespace Aurora.Simulation.Base
             configSource.AddSwitch("Startup", "RegionDataFileName");
             configSource.AddSwitch("Console", "Console");
             configSource.AddSwitch("Console", "LogAppendName");
-
-            configSource.AddConfig("Network");
+            configSource.AddSwitch("Network", "http_listener_port");
 
             IConfigSource m_configSource = Configuration(configSource, defaultIniFile);
 
