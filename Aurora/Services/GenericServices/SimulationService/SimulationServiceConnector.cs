@@ -96,6 +96,7 @@ namespace Aurora.Services
 
             AutoResetEvent resetEvent = new AutoResetEvent(false);
             OSDMap result = null;
+            MainConsole.Instance.DebugFormat("[SimulationServiceConnector]: Sending Create Agent to " + destination.ServerURI);
             m_syncMessagePoster.Get(destination.ServerURI, request.ToOSD(), (osdresp) =>
             {
                 result = osdresp;
