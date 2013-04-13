@@ -50,7 +50,6 @@ namespace Aurora.Framework.SceneInfo
         protected string m_regionType = String.Empty;
         protected uint m_httpPort;
         protected string m_regionName = String.Empty;
-        protected IPEndPoint m_internalEndPoint;
         protected int m_regionLocX;
         protected int m_regionLocY;
         protected int m_regionLocZ;
@@ -143,13 +142,6 @@ namespace Aurora.Framework.SceneInfo
             set { m_regionName = value; }
         }
 
-        [ProtoMember(20)]
-        public IPEndPoint InternalEndPoint
-        {
-            get { return m_internalEndPoint; }
-            set { m_internalEndPoint = value; }
-        }
-
         [ProtoMember(21)]
         public int RegionLocX
         {
@@ -184,8 +176,6 @@ namespace Aurora.Framework.SceneInfo
                 args["region_name"] = OSD.FromString(RegionName);
             args["region_xloc"] = OSD.FromString(RegionLocX.ToString());
             args["region_yloc"] = OSD.FromString(RegionLocY.ToString());
-            args["internal_ep_address"] = OSD.FromString(InternalEndPoint.Address.ToString());
-            args["internal_ep_port"] = OSD.FromString(InternalEndPoint.Port.ToString());
             if (RegionType != String.Empty)
                 args["region_type"] = OSD.FromString(RegionType);
             args["region_size_x"] = OSD.FromInteger(RegionSizeX);
@@ -226,17 +216,6 @@ namespace Aurora.Framework.SceneInfo
                 Int32.TryParse(args["region_yloc"].AsString(), out locy);
                 RegionLocY = locy;
             }
-            IPAddress ip_addr = null;
-            if (args.ContainsKey("internal_ep_address"))
-            {
-                IPAddress.TryParse(args["internal_ep_address"].AsString(), out ip_addr);
-            }
-            int port = 0;
-            if (args.ContainsKey("internal_ep_port"))
-            {
-                Int32.TryParse(args["internal_ep_port"].AsString(), out port);
-            }
-            InternalEndPoint = new IPEndPoint(ip_addr, port);
             if (args.ContainsKey("region_type"))
                 m_regionType = args["region_type"].AsString();
 

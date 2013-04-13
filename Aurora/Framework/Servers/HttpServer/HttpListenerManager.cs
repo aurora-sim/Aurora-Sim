@@ -75,6 +75,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             try
             {
+                if (!_listener.IsListening) return;
                 _queue.Enqueue(_listener.EndGetContext(ar));
                 _ready.Set();
             }
@@ -102,7 +103,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    Console.Error.WriteLine(e);
+                    MainConsole.Instance.ErrorFormat("[HttpListenerManager]: Exception occured: {0}", e.ToString());
                 }
             }
         }

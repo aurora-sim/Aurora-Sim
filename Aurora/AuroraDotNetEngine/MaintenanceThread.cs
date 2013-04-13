@@ -536,7 +536,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             {
                                 QIS.RunningNumber = 1;
                                 SleepingScriptEvents.Enqueue(QIS, QIS.EventsProcData.TimeCheck.Ticks);
-                                QIS = SleepingScriptEvents.Dequeue().Value;
                                 numSleepScriptsProcessed++;found = false;
                                 found = false;
                                 goto restart;

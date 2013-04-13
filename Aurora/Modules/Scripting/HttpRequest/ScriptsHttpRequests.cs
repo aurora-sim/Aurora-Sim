@@ -195,7 +195,7 @@ namespace Aurora.Modules.Scripting
             if (r.Number++ > MaxNumberOfHTTPRequestsPerSecond)
             {
                 ShouldProcess = false; //Too many for this prim, return status 499
-                htc.Status = (int) OSHttpStatusCode.ClientErrorJoker;
+                htc.Status = (int) 499;
                 htc.Finished = true;
             }
 
@@ -548,7 +548,8 @@ namespace Aurora.Modules.Scripting
             }
             catch (Exception e)
             {
-                Status = (int) OSHttpStatusCode.ClientErrorJoker;
+                //Too many for this prim, return status 499
+                Status = (int)499;
                 ResponseBody = e.Message;
 
                 _finished = true;

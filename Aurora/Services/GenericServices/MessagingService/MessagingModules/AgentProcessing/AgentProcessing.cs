@@ -1078,13 +1078,6 @@ namespace Aurora.Services
                     clientCaps = m_capsService.GetClientCapsService(aCircuit.AgentID);
                     regionClientCaps = clientCaps.GetCapsService(region.RegionID);
                 }
-
-
-                ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
-                if (commsService != null)
-                    commsService.GetUrlsForUser(region, aCircuit.AgentID);
-                //Make sure that we make userURLs if we need to
-
                 int requestedUDPPort = 0;
                 CreateAgentResponse createAgentResponse;
                 // As we are creating the agent, we must also initialize the CapsService for the agent
@@ -1131,6 +1124,8 @@ namespace Aurora.Services
                     regionClientCaps.RootAgent = true;
                 }
             }
+            else
+                MainConsole.Instance.ErrorFormat("[AgentProcessing]: No simulation service found! Could not log in user!");
             return new LoginAgentArgs {Success = success, CircuitData = aCircuit, Reason = reason, SeedCap = seedCap};
         }
 
