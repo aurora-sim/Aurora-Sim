@@ -1748,6 +1748,7 @@ public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.Script
 
         private string GetValue(Constant identEx)
         {
+            if (identEx == null) return null;
             if (identEx.Value != null)
                 return identEx.Value;
             StringBuilder retVal = new StringBuilder();
@@ -2103,7 +2104,20 @@ public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.Script
                                 if (a.kids.Count == 2)
                                 {
                                     SYMBOL assignmentChild = (SYMBOL) a.kids[1];
-                                    if (assignmentChild is IdentExpression)
+                                tryAgain:
+                                    if (assignmentChild is TypecastExpression)
+                                    {
+                                        TypecastExpression typecast = (TypecastExpression)assignmentChild;
+                                        assignmentChild = (SYMBOL)typecast.kids[0];
+                                        goto tryAgain;
+                                    }
+                                    else if (assignmentChild is FunctionCall || assignmentChild is FunctionCallExpression)
+                                    {
+                                        retStrChanged = true;
+                                        retVal.Append(dec.Id);
+                                        a.kids.Pop();
+                                    }
+                                    else if (assignmentChild is IdentExpression)
                                     {
                                         IdentExpression identEx = (IdentExpression) assignmentChild;
                                     }
@@ -2142,10 +2156,11 @@ public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.Script
                                         string value = GetValue(identEx);
                                         Constant dupConstant =
                                             (Constant) DuplicatedLocalVariables[GetLocalDeclarationKey()][dec.Id];
-                                        dupConstant.Value = dupConstant.Value == null
-                                                                ? GetValue(dupConstant)
-                                                                : dupConstant.Value;
-                                        if (value != dupConstant.Value)
+                                        if(dupConstant != null)
+                                            dupConstant.Value = (dupConstant == null || dupConstant.Value == null)
+                                                                    ? GetValue(dupConstant)
+                                                                    : dupConstant.Value;
+                                        if (dupConstant == null || value != dupConstant.Value)
                                         {
                                             retStrChanged = true;
                                             retVal.Append(dec.Id);

@@ -2,6 +2,7 @@
 using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
@@ -131,7 +132,12 @@ namespace Simple.Currency
 
         public int ClientPort
         {
-            get { return Config.ClientPort; }
+            get 
+            {
+                int port = Config.ClientPort;
+                if (port == 0) return (int)MainServer.Instance.Port;
+                return port;
+            }
         }
 
         public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)

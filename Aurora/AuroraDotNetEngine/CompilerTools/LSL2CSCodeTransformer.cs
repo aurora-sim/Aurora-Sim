@@ -202,9 +202,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 scopeCurrent = s.pos;
                 scopesParent.Add(scopeCurrent);
             }
+            else if (s is ArgumentDeclarationList)
+            {
+                ArgumentDeclarationList adl = (ArgumentDeclarationList)s;
+                foreach (SYMBOL child in adl.kids)
+                {
+                    Declaration d = child as Declaration;
+                    if (d != null)
+                    {
+                        m_duplicatedLocalVariableValues[m_currentState + "_" + m_currentEvent][d.Id] = null;
+                    }
+                }
+                //m_duplicatedLocalVariableValues.Add(m_currentState + "_" + evt.Name, new Dictionary<string, SYMBOL>());
+            }
             else if (s is GlobalVariableDeclaration)
             {
-                GlobalVariableDeclaration gvd = (GlobalVariableDeclaration) s;
+                GlobalVariableDeclaration gvd = (GlobalVariableDeclaration)s;
                 foreach (SYMBOL child in gvd.kids)
                 {
                     if (child is Assignment)
@@ -215,13 +228,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         {
                             if (assignmentChild is Declaration)
                             {
-                                Declaration d = (Declaration) assignmentChild;
+                                Declaration d = (Declaration)assignmentChild;
                                 decID = d.Id;
                                 isDeclaration = true;
                             }
                             else if (assignmentChild is IdentExpression)
                             {
-                                IdentExpression identEx = (IdentExpression) assignmentChild;
+                                IdentExpression identEx = (IdentExpression)assignmentChild;
                                 if (isDeclaration)
                                 {
                                     if (m_globalVariableValues.ContainsKey(decID))
@@ -231,12 +244,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                             else if (assignmentChild is ListConstant)
                             {
-                                ListConstant listConst = (ListConstant) assignmentChild;
+                                ListConstant listConst = (ListConstant)assignmentChild;
                                 foreach (SYMBOL listChild in listConst.kids)
                                 {
                                     if (listChild is ArgumentList)
                                     {
-                                        ArgumentList argList = (ArgumentList) listChild;
+                                        ArgumentList argList = (ArgumentList)listChild;
                                         int i = 0;
                                         bool changed = false;
                                         object[] p = new object[argList.kids.Count];
@@ -245,7 +258,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                             p[i] = objChild;
                                             if (objChild is IdentExpression)
                                             {
-                                                IdentExpression identEx = (IdentExpression) objChild;
+                                                IdentExpression identEx = (IdentExpression)objChild;
                                                 if (m_globalVariableValues.ContainsKey(identEx.Name))
                                                 {
                                                     changed = true;
@@ -276,7 +289,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                             else if (assignmentChild is VectorConstant || assignmentChild is RotationConstant)
                             {
-                                Constant listConst = (Constant) assignmentChild;
+                                Constant listConst = (Constant)assignmentChild;
                                 int i = 0;
                                 bool changed = false;
                                 object[] p = new object[listConst.kids.Count];
@@ -285,7 +298,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     p[i] = objChild;
                                     if (objChild is IdentExpression)
                                     {
-                                        IdentExpression identEx = (IdentExpression) objChild;
+                                        IdentExpression identEx = (IdentExpression)objChild;
                                         if (m_globalVariableValues.ContainsKey(identEx.Name))
                                         {
                                             changed = true;
@@ -314,7 +327,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                             else if (assignmentChild is Constant)
                             {
-                                Constant identEx = (Constant) assignmentChild;
+                                Constant identEx = (Constant)assignmentChild;
                                 if (isDeclaration)
                                 {
                                     if (m_globalVariableValues.ContainsKey(decID))
@@ -328,20 +341,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else if (s is Assignment && m_currentEvent != "")
             {
-                Assignment ass = (Assignment) s;
+                Assignment ass = (Assignment)s;
                 bool isDeclaration = false;
                 string decID = "";
                 foreach (SYMBOL assignmentChild in ass.kids)
                 {
                     if (assignmentChild is Declaration)
                     {
-                        Declaration d = (Declaration) assignmentChild;
+                        Declaration d = (Declaration)assignmentChild;
                         decID = d.Id;
                         isDeclaration = true;
                     }
                     else if (assignmentChild is IdentExpression)
                     {
-                        IdentExpression identEx = (IdentExpression) assignmentChild;
+                        IdentExpression identEx = (IdentExpression)assignmentChild;
                         if (isDeclaration)
                         {
                             if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
@@ -356,12 +369,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                     else if (assignmentChild is ListConstant)
                     {
-                        ListConstant listConst = (ListConstant) assignmentChild;
+                        ListConstant listConst = (ListConstant)assignmentChild;
                         foreach (SYMBOL listChild in listConst.kids)
                         {
                             if (listChild is ArgumentList)
                             {
-                                ArgumentList argList = (ArgumentList) listChild;
+                                ArgumentList argList = (ArgumentList)listChild;
                                 int i = 0;
                                 bool changed = false;
                                 object[] p = new object[argList.kids.Count];
@@ -370,7 +383,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     p[i] = objChild;
                                     if (objChild is IdentExpression)
                                     {
-                                        IdentExpression identEx = (IdentExpression) objChild;
+                                        IdentExpression identEx = (IdentExpression)objChild;
                                         if (
                                             m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(
                                                 identEx.Name))
@@ -412,7 +425,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                     else if (assignmentChild is VectorConstant || assignmentChild is RotationConstant)
                     {
-                        Constant listConst = (Constant) assignmentChild;
+                        Constant listConst = (Constant)assignmentChild;
                         int i = 0;
                         bool changed = false;
                         object[] p = new object[listConst.kids.Count];
@@ -421,7 +434,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             p[i] = objChild;
                             if (objChild is IdentExpression)
                             {
-                                IdentExpression identEx = (IdentExpression) objChild;
+                                IdentExpression identEx = (IdentExpression)objChild;
                                 if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(identEx.Name))
                                 {
                                     changed = true;
@@ -456,7 +469,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                     else if (assignmentChild is Constant)
                     {
-                        Constant identEx = (Constant) assignmentChild;
+                        Constant identEx = (Constant)assignmentChild;
                         if (isDeclaration)
                         {
                             if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
