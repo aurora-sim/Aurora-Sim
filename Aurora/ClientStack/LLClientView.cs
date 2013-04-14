@@ -13228,6 +13228,7 @@ namespace Aurora.ClientStack
 
             ScriptDialogPacket.ButtonsBlock[] buttons = new ScriptDialogPacket.ButtonsBlock[1];
             buttons[0] = new ScriptDialogPacket.ButtonsBlock {ButtonLabel = Util.StringToBytes256("!!llTextBox!!")};
+            dialog.OwnerData = new ScriptDialogPacket.OwnerDataBlock[1];
             dialog.OwnerData[0] = new ScriptDialogPacket.OwnerDataBlock();
             dialog.OwnerData[0].OwnerID = ownerID;
             dialog.Buttons = buttons;
