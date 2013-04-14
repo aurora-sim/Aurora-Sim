@@ -113,7 +113,6 @@ namespace Aurora.Framework.Servers.HttpServer
                 if (Interlocked.CompareExchange(ref _lockedQueue, 1, 0) == 0)
                 {
                     _queue.TryDequeue(out context);
-                    MainConsole.Instance.Warn("Thread: " + Thread.CurrentThread.ManagedThreadId);
                     //All done
                     Interlocked.Exchange(ref _lockedQueue, 0);
                 }
