@@ -378,6 +378,7 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                 LinksetRoot.ForcePosition = LinksetRoot.RawPosition;
 
                 // Update the local transform for the root child shape so it is offset from the <0,0,0> which is COM
+                //Not necessary, as the COM is set in bullet now, and this was always Vector3.Zero beforehand, which is of no use
                 //PhysicsScene.PE.UpdateChildTransform(LinksetRoot.PhysShape, 0 /* childIndex */,
                 //                                    -centerDisplacement,
                 //                                    OMV.Quaternion.Identity, // LinksetRoot.RawOrientation,
@@ -428,11 +429,9 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                                 PhysicsScene.Logger.ErrorFormat("{0} Rebuilt sharable shape when building linkset! Region={1}, primID={2}, shape={3}",
                                                     LogHeader, PhysicsScene.RegionName, cPrim.LocalID, cPrim.PhysShape);
                             }
-                            OMV.Vector3 offsetPos = (cPrim.RawPosition - LinksetRoot.RawPosition) * invRootOrientation - centerDisplacement;
+                            OMV.Vector3 offsetPos = (cPrim.RawPosition - LinksetRoot.RawPosition) * invRootOrientation;
                             OMV.Quaternion offsetRot = cPrim.RawOrientation * invRootOrientation;
                             PhysicsScene.PE.AddChildShapeToCompoundShape(LinksetRoot.PhysShape, cPrim.PhysShape, offsetPos, offsetRot);
-                            //Set the COM for this part
-                            PhysicsScene.PE.SetCenterOfMassByPosRot(cPrim.PhysBody, centerDisplacement, OMV.Quaternion.Identity);
                             DetailLog("{0},BSLinksetCompound.RecomputeLinksetCompound,addNonNative,indx={1},rShape={2},cShape={3},offPos={4},offRot={5}",
                                         LinksetRoot.LocalID, memberIndex, LinksetRoot.PhysShape, cPrim.PhysShape, offsetPos, offsetRot);
 

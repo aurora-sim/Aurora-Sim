@@ -217,29 +217,6 @@ namespace Aurora.Modules.Land
                 m_Tainted = true;
         }
 
-        private void SelectObject(ISceneEntity obj, bool IsNowSelected)
-        {
-            if (obj.IsAttachment)
-                return;
-            if (((obj.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0))
-                return;
-
-            Vector3 pos = obj.AbsolutePosition;
-            ILandObject landObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(pos.X,
-                                                                                                             pos.Y);
-            LandData landData = landObject.LandData;
-
-            ParcelCounts parcelCounts;
-            if (m_ParcelCounts.TryGetValue(landData.GlobalID, out parcelCounts))
-            {
-                int partCount = obj.ChildrenEntities().Count;
-                if (IsNowSelected)
-                    parcelCounts.Selected += partCount;
-                else
-                    parcelCounts.Selected -= partCount;
-            }
-        }
-
         // NOTE: Call under Taint Lock
         private void AddObject(ISceneEntity obj)
         {
@@ -550,12 +527,6 @@ namespace Aurora.Modules.Land
 
         private object OnGenericEvent(string FunctionName, object parameters)
         {
-            //The 'select' part of prim counts isn't for this type of selection
-            //if (FunctionName == "ObjectSelected" || FunctionName == "ObjectDeselected")
-            //{
-            //    //Select the object now
-            //    SelectObject(((SceneObjectPart)parameters).ParentGroup, FunctionName == "ObjectSelected");
-            //}
             if (FunctionName == "ObjectChangedOwner")
             {
                 TaintPrimCount((int) ((ISceneEntity) parameters).AbsolutePosition.X,

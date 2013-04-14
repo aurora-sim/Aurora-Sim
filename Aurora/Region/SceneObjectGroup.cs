@@ -2661,7 +2661,7 @@ namespace Aurora.Region
             RootPart.PhysActor.VolumeDetect = RootPart.VolumeDetectActive;
 
             //Force deselection here so that it isn't stuck forever
-            RootPart.PhysActor.Selected = keepSelectedStatuses && RootPart.IsSelected;
+            RootPart.PhysActor.Selected = keepSelectedStatuses && IsSelected;
 
             RootPart.PhysActor.SetMaterial(RootPart.Material, RootPart.Friction, RootPart.Restitution, RootPart.GravityMultiplier, RootPart.Density);
 
@@ -2701,7 +2701,7 @@ namespace Aurora.Region
                 part.PhysActor.VolumeDetect = part.VolumeDetectActive;
 
                 //Force deselection here so that it isn't stuck forever
-                part.PhysActor.Selected = keepSelectedStatuses && part.IsSelected;
+                part.PhysActor.Selected = keepSelectedStatuses && IsSelected;
 
                 part.PhysActor.SetMaterial(part.Material, part.Friction, part.Restitution, part.GravityMultiplier, part.Density);
                 if ((part.Flags & PrimFlags.Physics) == PrimFlags.Physics)

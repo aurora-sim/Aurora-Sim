@@ -188,8 +188,7 @@ namespace Aurora.Modules.Selection
                         // similar changes on deselect
                         // part.IsSelect is on SceneObjectPart.cs
                         // Ubit
-                        prim.IsSelected = true;
-                        scene.AuroraEventManager.FireGenericEventHandler("ObjectSelected", prim);
+                        prim.ParentEntity.IsSelected = true;
                     }
                 }
                 //Check for avies! They arn't prims!
@@ -263,7 +262,7 @@ namespace Aurora.Modules.Selection
             //                return;
 
             //            part.ParentGroup.IsSelected = false;
-            part.IsSelected = false;
+            part.ParentEntity.IsSelected = false;
 
             if (!part.ParentEntity.IsAttachment)
                 //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
@@ -271,8 +270,6 @@ namespace Aurora.Modules.Selection
                 if (part.AngularVelocity != Vector3.Zero && !part.ParentEntity.IsDeleted)
                     SP.SceneViewer.QueuePartForUpdate(part, PrimUpdateFlags.ForcedFullUpdate);
             }
-
-            scene.AuroraEventManager.FireGenericEventHandler("ObjectDeselected", part);
         }
 
         protected void ProcessViewerEffect(IClientAPI remoteClient, List<ViewerEffectEventHandlerArg> args)

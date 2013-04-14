@@ -1210,28 +1210,6 @@ namespace Aurora.Region
         [XmlIgnore]
         public bool CreateSelected { get; set; }
 
-        [XmlIgnore]
-        public bool IsSelected
-        {
-            get { return m_IsSelected; }
-            set
-            {
-                if (m_IsSelected != value)
-                {
-                    if (PhysActor != null)
-                    {
-                        PhysActor.Selected = value;
-                    }
-                    if (ParentID != 0 && ParentGroup != null &&
-                        ParentGroup.RootPart != null && ParentGroup.RootPart != this &&
-                        ParentGroup.RootPart.IsSelected != value)
-                        ParentGroup.RootPart.IsSelected = value;
-
-                    m_IsSelected = value;
-                }
-            }
-        }
-
         #endregion
 
         #region Public Properties with only Get
