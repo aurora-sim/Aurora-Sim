@@ -739,7 +739,7 @@ namespace Aurora.Region
                 m_uuid = value;
 
                 // This is necessary so that TaskInventoryItem parent ids correctly reference the new uuid of this part
-                if (Inventory != null)
+                if (ParentGroup != null && Inventory != null)
                     Inventory.ResetObjectID();
             }
         }
