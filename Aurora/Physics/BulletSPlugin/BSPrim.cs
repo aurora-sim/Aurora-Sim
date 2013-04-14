@@ -328,8 +328,21 @@ public class BSPrim : BSPhysObject
             _position = value;
             if (PhysBody.HasPhysicalBody)
             {
+                bool selected = IsSelected;
+                if (selected)
+                {
+                    _isSelected = false;
+                    SelectObject(_isSelected);
+                }
                 PhysicsScene.PE.SetTranslation(PhysBody, _position, _orientation);
                 ActivateIfPhysical(false);
+                if (selected)
+                {
+                    if (IsPhysicallyActive && PhysBody.collisionType != CollisionType.Static)
+                        PhysicsScene.PE.UpdateSingleAabb(PhysicsScene.World, PhysBody);
+                    _isSelected = true;
+                    SelectObject(_isSelected);
+                }
             }
         }
     }

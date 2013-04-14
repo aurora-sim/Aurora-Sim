@@ -255,13 +255,6 @@ namespace Aurora.Modules.Selection
             if (null == part.ParentEntity.RootChild)
                 return;
 
-            // A deselect packet contains all the local prims being deselected.  However, since selection is still
-            // group based we only want the root prim to trigger a full update - otherwise on objects with many prims
-            // we end up sending many duplicate ObjectUpdates
-            //            if (part.ParentGroup.RootPart.LocalId != part.LocalId)
-            //                return;
-
-            //            part.ParentGroup.IsSelected = false;
             part.ParentEntity.IsSelected = false;
 
             if (!part.ParentEntity.IsAttachment)
