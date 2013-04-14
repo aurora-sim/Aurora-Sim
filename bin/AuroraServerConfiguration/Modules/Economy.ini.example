@@ -34,8 +34,8 @@
 	PriceGroupCreate = 0
 	
 	;;The port to start the server on
-	;; Default is 8002
-	ClientPort = 8002
+	;; Default is 0
+	ClientPort = 0
 	
 	;;Should users be able to buy currency inworld?
 	;; Default is true
