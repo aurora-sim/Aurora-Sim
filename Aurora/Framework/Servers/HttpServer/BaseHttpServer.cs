@@ -424,13 +424,8 @@ namespace Aurora.Framework.Servers.HttpServer
             if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
             {
                 byte[] buffer = GetHTML500(response);
-                if (buffer != null)
-                {
-                    response.ContentLength64 = buffer.LongLength;
-                    response.OutputStream.Write(buffer, 0, buffer.Length);
-                }
-                response.OutputStream.Close();
-                response.Close();
+                response.ContentLength64 = buffer.LongLength;
+                response.Close(buffer, true);
                 return;
             }
 
@@ -507,7 +502,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     if (buffer != null)
                     {
                         response.ContentLength64 = buffer.LongLength;
-                        response.OutputStream.Write(buffer, 0, buffer.Length);
+                        response.Close(buffer, true);
                     }
                 }
                 catch(Exception ex)
@@ -515,52 +510,13 @@ namespace Aurora.Framework.Servers.HttpServer
                     MainConsole.Instance.WarnFormat(
                         "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
                 }
-                try
-                {
-                    response.OutputStream.Close();
-                }
-                catch(Exception ex)
-                {
-                    MainConsole.Instance.WarnFormat(
-                        "[BASE HTTP SERVER]: HandleRequest failed to close the output stream: {0}", ex.ToString());
-                }
-
-                try
-                {
-                    response.Close();
-                }
-                catch(Exception ex)
-                {
-                    MainConsole.Instance.WarnFormat(
-                        "[BASE HTTP SERVER]: HandleRequest failed to send the response: {0}", ex.ToString());
-                }
 
                 requestEndTick = Environment.TickCount;
             }
-            catch (SocketException e)
-            {
-                // At least on linux, it appears that if the client makes a request without requiring the response,
-                // an unconnected socket exception is thrown when we close the response output stream.  There's no
-                // obvious way to tell if the client didn't require the response, so instead we'll catch and ignore
-                // the exception instead.
-                //
-                // An alternative may be to turn off all response write exceptions on the HttpListener, but let's go
-                // with the minimum first
-                MainConsole.Instance.WarnFormat(
-                    "[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux ", e.ToString());
-            }
-            catch (IOException e)
-            {
-                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-            }
             catch (Exception e)
             {
-                try
-                {
-                    MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-                    response.Close();
-                }
-                catch { }
+                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
+                response.Close(new byte[0], false);
             }
             finally
             {

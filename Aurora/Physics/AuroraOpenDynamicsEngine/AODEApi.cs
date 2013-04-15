@@ -1973,8 +1973,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             try
             {
-                string fileName = System.IntPtr.Size == 4 ? "odex86.dll" : "odex64.dll";
-                System.IO.File.Copy(fileName, "ode.dll");
+                if (!System.IO.File.Exists("ode.dll"))
+                {
+                    string fileName = System.IntPtr.Size == 4 ? "odex86.dll" : "odex64.dll";
+                    System.IO.File.Copy(fileName, "ode.dll");
+                }
             }
             catch (Exception ex)
             {
