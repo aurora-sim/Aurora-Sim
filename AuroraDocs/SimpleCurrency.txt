@@ -1,0 +1,20 @@
+Setting up Simple.Currency:
+
+If you want a currency module that has support for buying/selling land and objects
+   with fake inworld currency, then Simple.Currency is fine for you.
+   
+How to enable for regions:
+
+   1. Open Configuration/Modules/Economy.ini.example
+   2. Make sure that you read the WARNING in Economy.ini before running this module!
+   3. Comment the line "Module = BaseCurrency"
+   4. Uncomment the line "Module = SimpleCurrency"
+   5. Change any configuration options as needed (standalone only)
+   
+Additional setup for grids:
+
+   1. Open AuroraServerConfiguration/Modules/Economy.ini.example
+   2. Make sure that you read the WARNING in Economy.ini before running this module!
+   3. Comment the line "Module = BaseCurrency"
+   4. Uncomment the line "Module = SimpleCurrency"
+   5. Change any configuration options as needed

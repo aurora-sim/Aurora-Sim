@@ -1,0 +1,34 @@
+The chat module allows for words written in-world to be commands on the server side. These are the documented commands that are currently in the chat module.
+
+Admin Chat Plugin Commands (automatically work for grid admins, other users can be added with Chat.AddToAuth)
+Chat.SayDistance.
+– Changes the Say Distance to the distance given.
+Chat.WhisperDistance.
+– Changes the Whisper Distance to the distance given.
+Chat.ShoutDistance.
+– Changes the Shout Distance to the distance given.
+Chat.ShoutDistance.
+– Changes the Shout Distance to the distance given.
+Chat.AddToAuth.
+– Adds the given name to the list of speakers who can use the admin chat functions.
+Chat.RemoveFromAuth.
+– Removes the given name from the list of speakers who can use the admin chat functions.
+Chat.BlockChat
+– Blocks chat from incoming speakers. (Does not remove speaking priviledges from people already in-world.
+Chat.AllowChat
+– Allows incoming speakers to speak.
+Chat.RevokeSpeakingRights.
+– Disallows the given name to chat.
+Chat.GiveSpeakingRights.
+– Allows the given name to chat.
+
+
+Start Calc Chat Plugin Commands
+calc.Add 1 1
+– Adds 1 and 1 together.
+calc.Subtract 2 1
+– Subtracts 1 from 2.
+calc.Multiply 2 1
+– Multiplys 2 and 1 together.
+calc.Divide 1 1
+– Divides 1 and 1.
