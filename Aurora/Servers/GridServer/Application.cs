@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Aurora.Simulation.Base;
 using System;
@@ -60,7 +61,8 @@ namespace Aurora.Servers.AssetServer
                                                                        typeof (IExternalCapsHandler),
                                                                        typeof (IUserAccountService),
                                                                        typeof (IGridServerInfoService),
-                                                                       typeof (IMapService)
+                                                                       typeof (IMapService),
+                                                                       typeof (IJ2KDecoder)
                                                                    }));
         }
     }

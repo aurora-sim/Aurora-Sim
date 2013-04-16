@@ -36,10 +36,13 @@ namespace Aurora.Modules.Web
             response = null;
             var vars = new Dictionary<string, object>();
 
-            IMapService mapService = webInterface.Registry.RequestModuleInterface<IMapService>();
+            IGridServerInfoService infoService = webInterface.Registry.RequestModuleInterface<IGridServerInfoService>();
 
-            vars.Add("WorldMapServiceURL", mapService.MapServiceURL.Remove(mapService.MapServiceURL.Length - 1));
-            vars.Add("WorldMapAPIServiceURL", mapService.MapServiceAPIURL.Remove(mapService.MapServiceAPIURL.Length - 1));
+            string mapService = infoService.GetGridURI("MapService");
+            string mapAPIService = infoService.GetGridURI("MapAPIService");
+
+            vars.Add("WorldMapServiceURL", mapService.Remove(mapService.Length - 1));
+            vars.Add("WorldMapAPIServiceURL", mapAPIService.Remove(mapAPIService.Length - 1));
 
             return vars;
         }

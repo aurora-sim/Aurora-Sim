@@ -209,7 +209,6 @@ namespace Aurora.Region
                             }
                         }
                     }*/
-                    item.ResetIDs(m_part.UUID);
                     Items.Add(item.ItemID, item);
                 }
             }

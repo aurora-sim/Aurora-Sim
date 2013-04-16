@@ -608,7 +608,7 @@ namespace Aurora.Modules.Scripting
                         }
                     }
                 }
-                else if (nextLine.StartsWith("PenColour"))
+                else if (nextLine.StartsWith("PenColour") || nextLine.StartsWith("PenColor"))
                 {
                     nextLine = nextLine.Remove(0, 9);
                     nextLine = nextLine.Trim();

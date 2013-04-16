@@ -63,6 +63,9 @@ namespace Simple.Currency
                 MainConsole.Instance.Commands.AddCommand("money get", "money get",
                                                          "Gets the amount of money a user has.",
                                                          GetMoney);
+
+                if ((m_config.GiveStipends) && (m_config.Stipend > 0))
+                    new GiveStipends(m_config, m_registry, this);
             }
         }
 
@@ -194,49 +197,35 @@ namespace Simple.Currency
                 if (fromID == toID)
                 {
                     if (toUserInfo != null && toUserInfo.IsOnline)
-                    {
-                        OSDMap map = new OSDMap();
-                        map["Method"] = "UpdateMoneyBalance";
-                        map["AgentID"] = toID;
-                        map["Amount"] = toCurrency.Amount;
-                        if (fromAccount != null)
-                            map["Message"] = fromAccount.Name + " paid you $" + amount +
-                                             (description == "" ? "" : ": " + description);
-                        else
-                            map["Message"] = "";
-                        map["TransactionID"] = transactionID;
-                        m_syncMessagePoster.Post(toUserInfo.CurrentRegionURI, map);
-                    }
+                        SendUpdateMoneyBalanceToClient(toID, transactionID, toUserInfo.CurrentRegionURI, toCurrency.Amount,
+                            toAccount == null ? "" : (toAccount.Name + " paid you $" + amount + (description == "" ? "" : ": " + description)));
                 }
                 else
                 {
                     if (toUserInfo != null && toUserInfo.IsOnline)
                     {
-                        OSDMap map = new OSDMap();
-                        map["Method"] = "UpdateMoneyBalance";
-                        map["AgentID"] = toID;
-                        map["Amount"] = toCurrency.Amount;
-                        if (fromAccount != null)
-                            map["Message"] = fromAccount.Name + " paid you $" + amount +
-                                             (description == "" ? "" : ": " + description);
-                        else
-                            map["Message"] = "";
-                        map["TransactionID"] = transactionID;
-                        m_syncMessagePoster.Post(toUserInfo.CurrentRegionURI, map);
+                        SendUpdateMoneyBalanceToClient(toID, transactionID, toUserInfo.CurrentRegionURI, toCurrency.Amount,
+                            fromAccount == null ? "" : (fromAccount.Name + " paid you $" + amount + (description == "" ? "" : ": " + description)));
                     }
                     if (fromUserInfo != null && fromUserInfo.IsOnline)
                     {
-                        OSDMap map = new OSDMap();
-                        map["Method"] = "UpdateMoneyBalance";
-                        map["AgentID"] = fromID;
-                        map["Amount"] = fromCurrency.Amount;
-                        map["Message"] = "You paid " + (toAccount == null ? "" : toAccount.Name) + " $" + amount;
-                        map["TransactionID"] = transactionID;
-                        m_syncMessagePoster.Post(fromUserInfo.CurrentRegionURI, map);
+                        SendUpdateMoneyBalanceToClient(fromID, transactionID, fromUserInfo.CurrentRegionURI, fromCurrency.Amount,
+                            "You paid " + (toAccount == null ? "" : toAccount.Name) + " $" + amount);
                     }
                 }
             }
             return true;
+        }
+
+        private void SendUpdateMoneyBalanceToClient(UUID toID, UUID transactionID, string serverURI, uint balance, string message)
+        {
+            OSDMap map = new OSDMap();
+            map["Method"] = "UpdateMoneyBalance";
+            map["AgentID"] = toID;
+            map["Amount"] = balance;
+            map["Message"] = message;
+            map["TransactionID"] = transactionID;
+            m_syncMessagePoster.Post(serverURI, map);
         }
 
         #endregion
@@ -325,6 +314,18 @@ namespace Simple.Currency
                                                  new Dictionary<string, object> {{"PrincipalID", account.PrincipalID}}
                                          }, null, null);
             MainConsole.Instance.Info(account.Name + " now has $" + (currency.Amount + amount));
+
+            if (m_syncMessagePoster == null)
+            {
+                m_syncMessagePoster = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+                m_userInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+            }
+            if (m_syncMessagePoster != null)
+            {
+                UserInfo toUserInfo = m_userInfoService.GetUserInfo(account.PrincipalID.ToString());
+                if (toUserInfo != null && toUserInfo.IsOnline)
+                    SendUpdateMoneyBalanceToClient(account.PrincipalID, UUID.Zero, toUserInfo.CurrentRegionURI, (currency.Amount + amount), "");
+            }
         }
 
         public void SetMoney(string[] cmd)
@@ -355,6 +356,18 @@ namespace Simple.Currency
                                                  new Dictionary<string, object> {{"PrincipalID", account.PrincipalID}}
                                          }, null, null);
             MainConsole.Instance.Info(account.Name + " now has $" + amount);
+
+            if (m_syncMessagePoster == null)
+            {
+                m_syncMessagePoster = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+                m_userInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+            }
+            if (m_syncMessagePoster != null)
+            {
+                UserInfo toUserInfo = m_userInfoService.GetUserInfo(account.PrincipalID.ToString());
+                if (toUserInfo != null && toUserInfo.IsOnline)
+                    SendUpdateMoneyBalanceToClient(account.PrincipalID, UUID.Zero, toUserInfo.CurrentRegionURI, amount, "");
+            }
         }
 
         public void GetMoney(string[] cmd)

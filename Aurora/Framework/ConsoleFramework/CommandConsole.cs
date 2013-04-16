@@ -496,12 +496,15 @@ namespace Aurora.Framework.ConsoleFramework
             MainConsole.Instance = this;
 
             m_Commands.AddCommand("help", "help", "Get a general command list", Help);
-            InitializeLog(null);
+            string logName = "";
+            if (source.Configs["Console"] != null)
+                logName = source.Configs["Console"].GetString("LogAppendName", "");
+            InitializeLog(logName);
         }
 
         protected void InitializeLog(string filename)
         {
-            m_logFile = StreamWriter.Synchronized(new StreamWriter(filename ?? System.IO.Path.ChangeExtension(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName, ".log"), true));
+            m_logFile = StreamWriter.Synchronized(new StreamWriter(System.IO.Path.GetFileNameWithoutExtension(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName) + filename + ".log", true));
         }
 
         public void Dispose()

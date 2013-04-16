@@ -1570,15 +1570,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.ParentEntity.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (WSModule != null)
             {
+                float minSize = 0.01f;
                 if (WSModule.MinimumPrimScale != -1)
-                {
-                    if (scale.x < WSModule.MinimumPrimScale)
-                        scale.x = WSModule.MinimumPrimScale;
-                    if (scale.y < WSModule.MinimumPrimScale)
-                        scale.y = WSModule.MinimumPrimScale;
-                    if (scale.z < WSModule.MinimumPrimScale)
-                        scale.z = WSModule.MinimumPrimScale;
-                }
+                    minSize = WSModule.MinimumPrimScale;
+                if (scale.x < minSize)
+                    scale.x = minSize;
+                if (scale.y < minSize)
+                    scale.y = minSize;
+                if (scale.z < minSize)
+                    scale.z = minSize;
 
                 if (part.ParentEntity.RootChild.PhysActor != null && part.ParentEntity.RootChild.PhysActor.IsPhysical &&
                     WSModule.MaximumPhysPrimScale != -1)

@@ -223,8 +223,7 @@ namespace Aurora.Region
                    m_regInfo.RegionLocX/Constants.RegionSize + "," +
                    m_regInfo.RegionLocY/Constants.RegionSize + ", Size: " +
                    m_regInfo.RegionSizeX + "," +
-                   m_regInfo.RegionSizeY +
-                   ", Port: " + m_regInfo.InternalEndPoint.Port;
+                   m_regInfo.RegionSizeY;
         }
 
         #region Services

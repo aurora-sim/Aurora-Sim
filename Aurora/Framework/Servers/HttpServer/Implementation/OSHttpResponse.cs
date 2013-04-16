@@ -51,37 +51,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
             set { _httpResponse.ContentType = value; }
         }
 
-        // public bool IsContentTypeSet
-        // {
-        //     get { return _contentTypeSet; }
-        // }
-        // private bool _contentTypeSet;
-        /// <summary>
-        ///     Boolean property indicating whether the content type
-        ///     property actively has been set.
-        /// </summary>
-        /// <remarks>
-        ///     IsContentTypeSet will go away together with .NET base.
-        /// </remarks>
-        /// <summary>
-        ///     Length of the body content; 0 if there is no body.
-        /// </summary>
-        public long ContentLength
-        {
-            get { return _httpResponse.ContentLength64; }
-
-            set { _httpResponse.ContentLength64 = value; }
-        }
-
-        /// <summary>
-        ///     Alias for ContentLength.
-        /// </summary>
-        public long ContentLength64
-        {
-            get { return ContentLength; }
-            set { ContentLength = value; }
-        }
-
         /// <summary>
         ///     Encoding of the body content.
         /// </summary>
@@ -97,17 +66,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
             get { return _httpResponse.KeepAlive; }
 
             set { _httpResponse.KeepAlive = value; }
-        }
-
-        /// <summary>
-        ///     Return the output stream feeding the body.
-        /// </summary>
-        /// <remarks>
-        ///     On its way out...
-        /// </remarks>
-        public Stream OutputStream
-        {
-            get { return _httpResponse.OutputStream; }
         }
 
         public string ProtocolVersion
@@ -203,14 +161,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
         public void AddHeader(string key, string value)
         {
             _httpResponse.AddHeader(key, value);
-        }
-
-        /// <summary>
-        ///     Send the response back to the remote client
-        /// </summary>
-        public void Send()
-        {
-            _httpResponse.Close();
         }
     }
 }

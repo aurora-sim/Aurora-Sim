@@ -1599,7 +1599,7 @@ namespace Aurora.Framework.PresenceInfo
         void SendChangeUserRights(UUID agentID, UUID friendID, int rights);
 
         void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName,
-                                string ownerLastName, UUID objectId);
+                                string ownerLastName, UUID ownerID, UUID objectId);
 
         void SendPlacesQuery(ExtendedLandData[] LandData, UUID queryID, UUID transactionID);
         void FireUpdateParcel(LandUpdateArgs args, int LocalID);

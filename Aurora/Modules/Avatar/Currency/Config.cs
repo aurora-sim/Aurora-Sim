@@ -27,6 +27,8 @@ namespace Simple.Currency
         private bool m_stipendsPremiumOnly = false;
         private int m_StipendsEvery = 1;
         private uint m_clientPort = 8002;
+        private bool m_StipendsLoadOldUsers = true;
+        private bool m_GiveStipendsOnlyWhenLoggedIn = false;
 
         #endregion
 
@@ -205,6 +207,18 @@ namespace Simple.Currency
         {
             get { return m_CanBuyCurrencyInworld; }
             set { m_CanBuyCurrencyInworld = value; }
+        }
+
+        public bool StipendsLoadOldUsers
+        {
+            get { return m_StipendsLoadOldUsers; }
+            set { m_StipendsLoadOldUsers = value; }
+        }
+
+        public bool GiveStipendsOnlyWhenLoggedIn
+        {
+            get { return m_GiveStipendsOnlyWhenLoggedIn; }
+            set { m_GiveStipendsOnlyWhenLoggedIn = value; }
         }
 
         #endregion

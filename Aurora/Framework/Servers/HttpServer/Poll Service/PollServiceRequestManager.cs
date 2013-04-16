@@ -156,33 +156,18 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 byte[] buffer = req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id, response);
 
-                response.SendChunked = false;
-                response.ContentLength64 = buffer.Length;
-                response.ContentEncoding = Encoding.UTF8;
+                
+                req.Context.Response.SendChunked = false;
+                req.Context.Response.ContentEncoding = Encoding.UTF8;
 
                 try
                 {
-                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                    req.Context.Response.ContentLength64 = buffer.LongLength;
+                    req.Context.Response.Close(buffer, true);
                 }
                 catch (Exception ex)
                 {
                     MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
-                }
-                finally
-                {
-                    //response.OutputStream.Close();
-                    try
-                    {
-                        response.OutputStream.Close();
-                        response.Send();
-
-                        //if (!response.KeepAlive && response.ReuseContext)
-                        //    response.FreeContext();
-                    }
-                    catch (Exception e)
-                    {
-                        MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
-                    }
                 }
             }
 

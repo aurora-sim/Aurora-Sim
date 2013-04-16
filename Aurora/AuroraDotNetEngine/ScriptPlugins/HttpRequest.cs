@@ -93,7 +93,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                           };
 
                     m_ScriptEngine.AddToObjectQueue(info.PrimID, "http_response", new DetectParams[0], resobj);
-                    if (info.Status == (int) OSHttpStatusCode.ClientErrorJoker &&
+                    if (info.Status == (int)499 && //Too many for this prim
                         info.VerbroseThrottle)
                     {
                         ISceneChildEntity part = m_ScriptEngine.Scene.GetSceneObjectPart(info.PrimID);

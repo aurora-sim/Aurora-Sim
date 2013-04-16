@@ -42,8 +42,8 @@
 	PriceGroupCreate = 0
 	
 	;;The port to start the server on
-	;; Default is 8002
-	ClientPort = 8002
+	;; Default is 0
+	ClientPort = 0
 	
 	;;Should users be able to buy currency inworld?
 	;; Default is true
@@ -65,3 +65,10 @@
 	;; Number of type (set above) before a stipid is given out
 	;; Default is 1
 	StipendsEvery = 1
+	;; You might want to do this the first time it runs.. let it run at least 30 minutes
+	;; If you change StipendsPremiumOnly to true you will want to run this as well
+	;; Default is false
+	StipendsLoadOldUsers = false
+	;; Should stipends only be given when a user is logged in?
+	;; Default is false
+	GiveStipendsOnlyWhenLoggedIn = false

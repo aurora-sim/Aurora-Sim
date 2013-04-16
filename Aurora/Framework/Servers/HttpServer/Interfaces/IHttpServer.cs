@@ -82,21 +82,12 @@ namespace Aurora.Framework.Servers.HttpServer.Interfaces
         bool AddPollServiceHTTPHandler(string methodName, PollServiceEventArgs args);
 
         /// <summary>
-        ///     Adds a LLSD handler
-        /// </summary>
-        /// <param name="path">/resource/ path</param>
-        /// <param name="handler">handle the LLSD response</param>
-        /// <returns></returns>
-        bool AddLLSDHandler(string path, LLSDMethod handler);
-
-        /// <summary>
         ///     Add a stream handler to the http server.  If the handler already exists, then nothing happens.
         /// </summary>
         /// <param name="handler"></param>
         void AddStreamHandler(IStreamedRequestHandler handler);
 
         bool AddXmlRPCHandler(string method, XmlRpcMethod handler);
-        bool AddXmlRPCHandler(string method, XmlRpcMethod handler, bool keepAlive);
 
         /// <summary>
         ///     Gets the XML RPC handler for given method name
@@ -106,8 +97,6 @@ namespace Aurora.Framework.Servers.HttpServer.Interfaces
         XmlRpcMethod GetXmlRPCHandler(string method);
 
         void RemovePollServiceHTTPHandler(string httpMethod, string path);
-
-        bool RemoveLLSDHandler(string path, LLSDMethod handler);
 
         void RemoveStreamHandler(string httpMethod, string path);
 
