@@ -63,6 +63,9 @@ namespace Simple.Currency
                 MainConsole.Instance.Commands.AddCommand("money get", "money get",
                                                          "Gets the amount of money a user has.",
                                                          GetMoney);
+
+                if ((m_config.GiveStipends) && (m_config.Stipend > 0))
+                    new GiveStipends(m_config, m_registry, this);
             }
         }
 
