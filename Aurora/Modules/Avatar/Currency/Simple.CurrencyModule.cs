@@ -77,6 +77,12 @@ namespace Simple.Currency
                                                 m_scene = null;
                                             };
             }
+
+            if (!m_connector.DoRemoteCalls)
+            {
+                if ((m_connector.GetConfig().GiveStipends) && (m_connector.GetConfig().Stipend > 0))
+                    new GiveStipends(m_connector.GetConfig(), m_registry, m_connector);
+            }
         }
 
         private bool EventManager_OnValidateBuyLand(EventManager.LandBuyArgs e)

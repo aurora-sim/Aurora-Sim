@@ -75,6 +75,8 @@ namespace Aurora.Framework.Services
         protected int m_OSDRequestTryCount = 7;
         protected string m_password = "";
 
+        public bool DoRemoteCalls { get { return m_doRemoteCalls; } }
+
         public string ServerHandlerName
         {
             get;
