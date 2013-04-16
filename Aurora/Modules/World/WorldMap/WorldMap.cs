@@ -655,7 +655,8 @@ namespace Aurora.Modules.WorldMap
                 return block;
             }
             block.Access = r.Access;
-            if ((r.Access & (byte) SimAccess.Down) == (byte) SimAccess.Down)
+            if ((r.Flags & (int)RegionFlags.RegionOnline) !=
+                (int)RegionFlags.RegionOnline)
                 block.Name = r.RegionName + " (offline)";
             else
                 block.Name = r.RegionName;
@@ -679,7 +680,8 @@ namespace Aurora.Modules.WorldMap
             }
             block.Access = r.Access;
             block.MapImageID = r.TerrainMapImage;
-            if ((r.Access & (byte) SimAccess.Down) == (byte) SimAccess.Down)
+            if ((r.Flags & (int)RegionFlags.RegionOnline) !=
+                (int)RegionFlags.RegionOnline)
                 block.Name = r.RegionName + " (offline)";
             else
                 block.Name = r.RegionName;

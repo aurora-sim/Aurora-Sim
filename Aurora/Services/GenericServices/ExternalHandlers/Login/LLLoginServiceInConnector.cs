@@ -201,36 +201,6 @@ namespace Aurora.Services
             return failResponse;
         }
 
-        public OSD HandleLLSDLogin(string path, OSD request, IPEndPoint remoteClient)
-        {
-            if (request.Type == OSDType.Map)
-            {
-                OSDMap map = (OSDMap) request;
-
-                if (map.ContainsKey("first") && map.ContainsKey("last") && map.ContainsKey("passwd"))
-                {
-                    string startLocation = string.Empty;
-
-                    if (map.ContainsKey("start"))
-                        startLocation = map["start"].AsString();
-
-                    MainConsole.Instance.Info("[LOGIN]: LLSD Login Requested for: '" + map["first"].AsString() + "' '" +
-                                              map["last"].AsString() + "' / " + startLocation);
-
-                    LoginResponse reply = null;
-                    string loginName = map["name"].AsString() == ""
-                                           ? map["first"].AsString() + " " + map["last"].AsString()
-                                           : map["name"].AsString();
-                    reply = m_loginService.Login(UUID.Zero, loginName, "UserAccount", map["passwd"].AsString(),
-                                                 startLocation,
-                                                 "", "", "", "", remoteClient, new Hashtable());
-                    return reply.ToOSDMap();
-                }
-            }
-
-            return FailedOSDResponse();
-        }
-
         private XmlRpcResponse FailedXMLRPCResponse()
         {
             Hashtable hash = new Hashtable();
@@ -253,17 +223,6 @@ namespace Aurora.Services
             XmlRpcResponse response = new XmlRpcResponse {Value = hash};
 
             return response;
-        }
-
-        private OSD FailedOSDResponse()
-        {
-            OSDMap map = new OSDMap();
-
-            map["reason"] = OSD.FromString("key");
-            map["message"] = OSD.FromString("Invalid login credentials. Check your username and passwd.");
-            map["login"] = OSD.FromString("false");
-
-            return map;
         }
     }
 }
