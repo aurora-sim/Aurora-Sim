@@ -163,23 +163,11 @@ namespace Aurora.Framework.Servers.HttpServer
                 try
                 {
                     req.Context.Response.ContentLength64 = buffer.LongLength;
-                    req.Context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                    req.Context.Response.Close(buffer, true);
                 }
                 catch (Exception ex)
                 {
                     MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
-                }
-                finally
-                {
-                    try
-                    {
-                        req.Context.Response.OutputStream.Close();
-                        req.Context.Response.Close();
-                    }
-                    catch (Exception e)
-                    {
-                        MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
-                    }
                 }
             }
 

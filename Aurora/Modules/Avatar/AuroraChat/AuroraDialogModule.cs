@@ -180,7 +180,7 @@ namespace Aurora.Modules.Chat
                     }
                 }
                 sp.ControllingClient.SendTextBoxRequest(message, chatChannel, name, ownerFirstName, ownerLastName,
-                                                        objectID);
+                                                        ownerID, objectID);
             }
         }
 

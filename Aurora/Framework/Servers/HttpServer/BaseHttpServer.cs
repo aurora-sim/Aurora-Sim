@@ -48,8 +48,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
         protected HttpListenerManager m_internalServer;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
-        protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
-        protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
 
         protected Dictionary<string, IStreamedRequestHandler> m_streamHandlers =
             new Dictionary<string, IStreamedRequestHandler>();
@@ -65,15 +63,13 @@ namespace Aurora.Framework.Servers.HttpServer
         protected uint m_port, m_threadCount;
         protected string m_hostName;
         protected int NotSocketErrors;
-
         protected IPAddress m_listenIPAddress = IPAddress.Any;
+        private PollServiceRequestManager m_PollServiceManager;
 
         internal PollServiceRequestManager PollServiceManager
         {
             get { return m_PollServiceManager; }
         }
-
-        private PollServiceRequestManager m_PollServiceManager;
 
         public uint Port
         {
@@ -159,17 +155,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public bool AddXmlRPCHandler(string method, XmlRpcMethod handler)
         {
-            return AddXmlRPCHandler(method, handler, true);
-        }
-
-        public bool AddXmlRPCHandler(string method, XmlRpcMethod handler, bool keepAlive)
-        {
             lock (m_rpcHandlers)
-            {
                 m_rpcHandlers[method] = handler;
-                m_rpcHandlersKeepAlive[method] = keepAlive; // default
-            }
-
             return true;
         }
 
@@ -204,58 +191,9 @@ namespace Aurora.Framework.Servers.HttpServer
             return false;
         }
 
-        public bool AddLLSDHandler(string path, LLSDMethod handler)
-        {
-            lock (m_llsdHandlers)
-            {
-                if (!m_llsdHandlers.ContainsKey(path))
-                {
-                    m_llsdHandlers.Add(path, handler);
-                    return true;
-                }
-            }
-            return false;
-        }
-
         #endregion
 
         #region Finding Handlers
-
-        /// <summary>
-        ///     Checks if we have an Exact path in the LLSD handlers for the path provided
-        /// </summary>
-        /// <param name="path">URI of the request</param>
-        /// <returns>true if we have one, false if not</returns>
-        internal bool DoWeHaveALLSDHandler(string path)
-        {
-            string[] pathbase = path.Split('/');
-            string searchquery = "/";
-
-            if (pathbase.Length < 1)
-                return false;
-
-            for (int i = 1; i < pathbase.Length; i++)
-            {
-                searchquery += pathbase[i];
-                if (pathbase.Length - 1 != i)
-                    searchquery += "/";
-            }
-
-            string bestMatch = null;
-
-            foreach (string pattern in m_llsdHandlers.Keys)
-                if (searchquery.StartsWith(pattern) && searchquery.Length >= pattern.Length)
-                    bestMatch = pattern;
-
-            // extra kicker to remove the default XMLRPC login case..  just in case..
-            if (path != "/" && bestMatch == "/" && searchquery != "/")
-                return false;
-
-            if (path == "/")
-                return false;
-
-            return !String.IsNullOrEmpty(bestMatch);
-        }
 
         internal bool TryGetStreamHandler(string handlerKey, out IStreamedRequestHandler streamHandler)
         {
@@ -353,69 +291,10 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        internal bool TryGetLLSDHandler(string path, out LLSDMethod llsdHandler)
-        {
-            llsdHandler = null;
-            // Pull out the first part of the path
-            // splitting the path by '/' means we'll get the following return..
-            // {0}/{1}/{2}
-            // where {0} isn't something we really control 100%
-
-            string[] pathbase = path.Split('/');
-            string searchquery = "/";
-
-            if (pathbase.Length < 1)
-                return false;
-
-            for (int i = 1; i < pathbase.Length; i++)
-            {
-                searchquery += pathbase[i];
-                if (pathbase.Length - 1 != i)
-                    searchquery += "/";
-            }
-
-            // while the matching algorithm below doesn't require it, we're expecting a query in the form
-            //
-            //   [] = optional
-            //   /resource/UUID/action[/action]
-            //
-            // now try to get the closest match to the reigstered path
-            // at least for OGP, registered path would probably only consist of the /resource/
-
-            string bestMatch = null;
-
-            foreach (string pattern in m_llsdHandlers.Keys)
-            {
-                if (searchquery.ToLower().StartsWith(pattern.ToLower()))
-                {
-                    if (String.IsNullOrEmpty(bestMatch) || searchquery.Length > bestMatch.Length)
-                    {
-                        // You have to specifically register for '/' and to get it, you must specificaly request it
-                        //
-                        if (pattern == "/" && searchquery == "/" || pattern != "/")
-                            bestMatch = pattern;
-                    }
-                }
-            }
-
-            if (String.IsNullOrEmpty(bestMatch))
-            {
-                llsdHandler = null;
-                return false;
-            }
-            llsdHandler = m_llsdHandlers[bestMatch];
-            return true;
-        }
-
         internal bool TryGetXMLHandler(string methodName, out XmlRpcMethod handler)
         {
             lock (m_rpcHandlers)
                 return m_rpcHandlers.TryGetValue(methodName, out handler);
-        }
-
-        internal bool GetXMLHandlerIsKeepAlive(string methodName)
-        {
-            return m_rpcHandlersKeepAlive[methodName];
         }
 
         public XmlRpcMethod GetXmlRPCHandler(string method)
@@ -545,13 +424,8 @@ namespace Aurora.Framework.Servers.HttpServer
             if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
             {
                 byte[] buffer = GetHTML500(response);
-                if (buffer != null)
-                {
-                    response.ContentLength64 = buffer.LongLength;
-                    response.OutputStream.Write(buffer, 0, buffer.Length);
-                }
-                response.OutputStream.Close();
-                response.Close();
+                response.ContentLength64 = buffer.LongLength;
+                response.Close(buffer, true);
                 return;
             }
 
@@ -590,12 +464,6 @@ namespace Aurora.Framework.Servers.HttpServer
                             buffer = HandleHTTPRequest(req, resp);
                             break;
 
-                        case "application/llsd+xml":
-                        case "application/xml+llsd":
-                        case "application/llsd+json":
-                            buffer = HandleLLSDRequests(req, resp);
-                            break;
-
                         case "text/xml":
                         case "application/xml":
                         case "application/json":
@@ -607,11 +475,7 @@ namespace Aurora.Framework.Servers.HttpServer
                             //                            int i = 1;
                             //                        }
                             //MainConsole.Instance.Info("[Debug BASE HTTP SERVER]: Checking for LLSD Handler");
-                            if (DoWeHaveALLSDHandler(request.RawUrl))
-                            {
-                                buffer = HandleLLSDRequests(req, resp);
-                            }
-                            else if (GetXmlRPCHandler(request.RawUrl) != null)
+                            if (GetXmlRPCHandler(request.RawUrl) != null)
                             {
                                 // generic login request.
                                 buffer = HandleXmlRpcRequests(req, resp);
@@ -638,7 +502,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     if (buffer != null)
                     {
                         response.ContentLength64 = buffer.LongLength;
-                        response.OutputStream.Write(buffer, 0, buffer.Length);
+                        response.Close(buffer, true);
                     }
                 }
                 catch(Exception ex)
@@ -646,52 +510,13 @@ namespace Aurora.Framework.Servers.HttpServer
                     MainConsole.Instance.WarnFormat(
                         "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
                 }
-                try
-                {
-                    response.OutputStream.Close();
-                }
-                catch(Exception ex)
-                {
-                    MainConsole.Instance.WarnFormat(
-                        "[BASE HTTP SERVER]: HandleRequest failed to close the output stream: {0}", ex.ToString());
-                }
-
-                try
-                {
-                    response.Close();
-                }
-                catch(Exception ex)
-                {
-                    MainConsole.Instance.WarnFormat(
-                        "[BASE HTTP SERVER]: HandleRequest failed to send the response: {0}", ex.ToString());
-                }
 
                 requestEndTick = Environment.TickCount;
             }
-            catch (SocketException e)
-            {
-                // At least on linux, it appears that if the client makes a request without requiring the response,
-                // an unconnected socket exception is thrown when we close the response output stream.  There's no
-                // obvious way to tell if the client didn't require the response, so instead we'll catch and ignore
-                // the exception instead.
-                //
-                // An alternative may be to turn off all response write exceptions on the HttpListener, but let's go
-                // with the minimum first
-                MainConsole.Instance.WarnFormat(
-                    "[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux ", e.ToString());
-            }
-            catch (IOException e)
-            {
-                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-            }
             catch (Exception e)
             {
-                try
-                {
-                    MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-                    response.Close();
-                }
-                catch { }
+                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
+                response.Close(new byte[0], false);
             }
             finally
             {
@@ -802,11 +627,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     bool methodWasFound;
                     bool keepAlive = false;
                     lock (m_rpcHandlers)
-                    {
                         methodWasFound = m_rpcHandlers.TryGetValue(methodName, out method);
-                        if (methodWasFound)
-                            keepAlive = m_rpcHandlersKeepAlive[methodName];
-                    }
 
                     if (methodWasFound)
                     {
@@ -882,142 +703,6 @@ namespace Aurora.Framework.Servers.HttpServer
             response.ContentEncoding = Encoding.UTF8;
 
             return buffer;
-        }
-
-        private byte[] HandleLLSDRequests(OSHttpRequest request, OSHttpResponse response)
-        {
-            //MainConsole.Instance.Warn("[BASE HTTP SERVER]: We've figured out it's a LLSD Request");
-            Stream requestStream = request.InputStream;
-
-            Encoding encoding = Encoding.UTF8;
-            StreamReader reader = new StreamReader(requestStream, encoding);
-
-            string requestBody = reader.ReadToEnd();
-            reader.Close();
-
-            //MainConsole.Instance.DebugFormat("[OGP]: {0}:{1}", request.RawUrl, requestBody);
-            response.KeepAlive = true;
-
-            OSD llsdRequest = null;
-            OSD llsdResponse = null;
-
-            bool LegacyLLSDLoginLibOMV = (requestBody.Contains("passwd") && requestBody.Contains("mac") &&
-                                          requestBody.Contains("viewer_digest"));
-
-            if (requestBody.Length == 0)
-                // Get Request
-            {
-                requestBody =
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><llsd><map><key>request</key><string>get</string></map></llsd>";
-            }
-            try
-            {
-                llsdRequest = OSDParser.Deserialize(requestBody);
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex.Message);
-            }
-
-            if (llsdRequest != null) // && m_defaultLlsdHandler != null)
-            {
-                LLSDMethod llsdhandler = null;
-
-                if (TryGetLLSDHandler(request.RawUrl, out llsdhandler) && !LegacyLLSDLoginLibOMV)
-                {
-                    // we found a registered llsd handler to service this request
-                    llsdResponse = llsdhandler(request.RawUrl, llsdRequest, request.RemoteIPEndPoint);
-                }
-                else
-                {
-                    //Attempt to use the base one
-                    if (LegacyLLSDLoginLibOMV && TryGetLLSDHandler("/", out llsdhandler))
-                    {
-                        llsdResponse = llsdhandler(request.RawUrl, llsdRequest, request.RemoteIPEndPoint);
-                    }
-                    else
-                        // we didn't find a registered llsd handler to service this request
-                        llsdResponse = GenerateNoLLSDHandlerResponse();
-                }
-            }
-            else
-            {
-                llsdResponse = GenerateNoLLSDHandlerResponse();
-            }
-
-            byte[] buffer = new byte[0];
-
-            if (llsdResponse.ToString() == "shutdown404!")
-            {
-                response.ContentType = "text/plain";
-                response.StatusCode = 404;
-                response.StatusDescription = "Not Found";
-                response.ProtocolVersion = "1.0";
-                buffer = Encoding.UTF8.GetBytes("Not found");
-            }
-            else
-            {
-                // Select an appropriate response format
-                buffer = BuildLLSDResponse(request, response, llsdResponse);
-            }
-
-            response.SendChunked = false;
-            response.ContentEncoding = Encoding.UTF8;
-            response.KeepAlive = true;
-
-            return buffer;
-        }
-
-        private OSDMap GenerateNoLLSDHandlerResponse()
-        {
-            OSDMap map = new OSDMap();
-            map["reason"] = OSD.FromString("LLSDRequest");
-            map["message"] = OSD.FromString("No handler registered for LLSD Requests");
-            map["login"] = OSD.FromString("false");
-            return map;
-        }
-
-        private byte[] BuildLLSDResponse(OSHttpRequest request, OSHttpResponse response, OSD llsdResponse)
-        {
-            if (request.AcceptTypes != null && request.AcceptTypes.Length > 0)
-            {
-                foreach (string strAccept in request.AcceptTypes)
-                {
-                    switch (strAccept)
-                    {
-                        case "application/llsd+xml":
-                        case "application/xml":
-                        case "text/xml":
-                            response.ContentType = strAccept;
-                            return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
-                        case "application/llsd+json":
-                        case "application/json":
-                            response.ContentType = strAccept;
-                            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
-                    }
-                }
-            }
-
-            if (!String.IsNullOrEmpty(request.ContentType))
-            {
-                switch (request.ContentType)
-                {
-                    case "application/llsd+xml":
-                    case "application/xml":
-                    case "text/xml":
-                        response.ContentType = request.ContentType;
-                        return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
-                    case "application/llsd+json":
-                    case "application/json":
-                        response.ContentType = request.ContentType;
-                        return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
-                }
-            }
-
-            // response.ContentType = "application/llsd+json";
-            // return Util.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
-            response.ContentType = "application/llsd+xml";
-            return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
         }
 
         public byte[] GetHTML404(OSHttpResponse response)
@@ -1145,24 +830,6 @@ namespace Aurora.Framework.Servers.HttpServer
                     m_rpcHandlers.Remove(method);
                 }
             }
-        }
-
-        public bool RemoveLLSDHandler(string path, LLSDMethod handler)
-        {
-            try
-            {
-                if (handler == m_llsdHandlers[path])
-                {
-                    m_llsdHandlers.Remove(path);
-                    return true;
-                }
-            }
-            catch (KeyNotFoundException)
-            {
-                // This is an exception to prevent crashing because of invalid code
-            }
-
-            return false;
         }
 
         #endregion

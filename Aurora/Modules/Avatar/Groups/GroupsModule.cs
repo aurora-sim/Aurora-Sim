@@ -51,25 +51,6 @@ namespace Aurora.Modules.Groups
 {
     public class GroupsModule : INonSharedRegionModule, IGroupsModule
     {
-        /// <summary>
-        ///     ; To use this module, you must specify the following in your Aurora.ini
-        ///     [GROUPS]
-        ///     Enabled = true
-        ///     Module   = GroupsModule
-        ///     NoticesEnabled = true
-        ///     DebugEnabled   = true
-        ///     GroupsServicesConnectorModule = XmlRpcGroupsServicesConnector
-        ///     XmlRpcServiceURL      = http://osflotsam.org/xmlrpc.php
-        ///     XmlRpcServiceReadKey  = 1234
-        ///     XmlRpcServiceWriteKey = 1234
-        ///     MessagingModule  = GroupsMessagingModule
-        ///     MessagingEnabled = true
-        ///     ; Disables HTTP Keep-Alive for Groups Module HTTP Requests, work around for
-        ///     ; a problem discovered on some Windows based region servers.  Only disable
-        ///     ; if you see a large number (dozens) of the following Exceptions:
-        ///     ; System.Net.WebException: The request was aborted: The request was canceled.
-        ///     XmlRpcDisableKeepAlive = false
-        /// </summary>
         private readonly Dictionary<UUID, GroupMembershipData> m_cachedGroupTitles =
             new Dictionary<UUID, GroupMembershipData>();
 

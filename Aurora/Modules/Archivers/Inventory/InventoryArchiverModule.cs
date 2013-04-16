@@ -297,7 +297,7 @@ namespace Aurora.Modules.Archivers
                 if (newParams.Count < 5)
                 {
                     MainConsole.Instance.Error(
-                        "[INVENTORY ARCHIVER]: usage is load iar [--merge] <first name> <last name> <inventory path> <user password> [<load file path>]");
+                        "[INVENTORY ARCHIVER]: usage is load iar [--merge] <first name> <last name> <inventory path> [<load file path>]");
                     return;
                 }
 

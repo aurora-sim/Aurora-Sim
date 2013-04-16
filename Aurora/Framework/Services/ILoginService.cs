@@ -38,7 +38,6 @@ namespace Aurora.Framework.Services
     public abstract class LoginResponse
     {
         public abstract Hashtable ToHashtable();
-        public abstract OSD ToOSDMap();
     }
 
     public class LoginResponseEnum
@@ -120,17 +119,6 @@ namespace Aurora.Framework.Services
             loginError["message"] = m_value;
             loginError["login"] = m_login.ToString().ToLower();
             return loginError;
-        }
-
-        public override OSD ToOSDMap()
-        {
-            OSDMap map = new OSDMap();
-
-            map["reason"] = OSD.FromString(m_key);
-            map["message"] = OSD.FromString(m_value);
-            map["login"] = OSD.FromString(m_login.ToString().ToLower());
-
-            return map;
         }
     }
 

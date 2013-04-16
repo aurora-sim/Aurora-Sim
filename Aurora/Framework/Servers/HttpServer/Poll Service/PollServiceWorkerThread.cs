@@ -68,6 +68,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 try
                 {
+                    byte[] buffer = null;
                     if (req.PollServiceArgs.HasEvents(req.RequestID, req.PollServiceArgs.Id))
                     {
                         StreamReader str;
@@ -85,33 +86,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
                         OSHttpResponse response = new OSHttpResponse(req.Context);
 
-                        byte[] buffer = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
+                        buffer = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
                                                                                str.ReadToEnd(), response);
-
-                        req.Context.Response.SendChunked = false;
-                        req.Context.Response.ContentEncoding = Encoding.UTF8;
-
-                        try
-                        {
-                            req.Context.Response.ContentLength64 = buffer.LongLength;
-                            req.Context.Response.OutputStream.Write(buffer, 0, buffer.Length);
-                        }
-                        catch (Exception ex)
-                        {
-                            MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
-                        }
-                        finally
-                        {
-                            try
-                            {
-                                req.Context.Response.OutputStream.Close();
-                                req.Context.Response.Close();
-                            }
-                            catch (Exception e)
-                            {
-                                MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
-                            }
-                        }
                     }
                     else
                     {
@@ -119,42 +95,28 @@ namespace Aurora.Framework.Servers.HttpServer
                         {
                             OSHttpResponse response = new OSHttpResponse(req.Context);
 
-                            byte[] buffer = req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id, response);
-
-                            req.Context.Response.SendChunked = false;
-                            req.Context.Response.ContentEncoding = Encoding.UTF8;
-
-                            try
-                            {
-                                req.Context.Response.ContentLength64 = buffer.LongLength;
-                                req.Context.Response.OutputStream.Write(buffer, 0, buffer.Length);
-                            }
-                            catch (Exception ex)
-                            {
-                                MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
-                            }
-                            finally
-                            {
-                                //response.OutputStream.Close();
-                                try
-                                {
-                                    req.Context.Response.OutputStream.Close();
-                                    req.Context.Response.Close();
-
-                                    //if (!response.KeepAlive && response.ReuseContext)
-                                    //    response.FreeContext();
-                                }
-                                catch (Exception e)
-                                {
-                                    MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", e.ToString());
-                                }
-                            }
+                            buffer = req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id, response);
                         }
                         else
                         {
                             ReQueuePollServiceItem reQueueItem = ReQueue;
                             if (reQueueItem != null)
                                 reQueueItem(req);
+                        }
+                    }
+                    if (buffer != null)
+                    {
+                        req.Context.Response.SendChunked = false;
+                        req.Context.Response.ContentEncoding = Encoding.UTF8;
+
+                        try
+                        {
+                            req.Context.Response.ContentLength64 = buffer.LongLength;
+                            req.Context.Response.Close(buffer, true);
+                        }
+                        catch (Exception ex)
+                        {
+                            MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
                         }
                     }
                 }

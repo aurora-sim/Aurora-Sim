@@ -50,8 +50,6 @@
     SyncMessagePosterServiceHandler = SyncMessagePosterService
     UserAccountHandler = UserAccountService
 
-    SimulationHandler = SimulationServiceConnector
-
     SyncMessagePosterServiceOpenServerHandler = true
     SyncMessagePosterServiceServerHandlerPort = 0
     SyncMessagePosterServiceDoRemote = true

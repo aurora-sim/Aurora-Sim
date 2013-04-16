@@ -19,7 +19,7 @@
 
     ; Terrain Implementation {1|0} 0 for HeightField, 1 for Mesh terrain.  If you're using the bulletxna engine, 
     ;  you will want to switch to the heightfield option
-    TerrainImplementation = 1
+    TerrainImplementation = 0
 
     Gravity = -9.80665
 

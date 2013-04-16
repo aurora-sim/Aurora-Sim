@@ -2,6 +2,7 @@
 using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
@@ -76,6 +77,12 @@ namespace Simple.Currency
                                                 m_scene = null;
                                             };
             }
+
+            if (!m_connector.DoRemoteCalls)
+            {
+                if ((m_connector.GetConfig().GiveStipends) && (m_connector.GetConfig().Stipend > 0))
+                    new GiveStipends(m_connector.GetConfig(), m_registry, m_connector);
+            }
         }
 
         private bool EventManager_OnValidateBuyLand(EventManager.LandBuyArgs e)
@@ -131,7 +138,12 @@ namespace Simple.Currency
 
         public int ClientPort
         {
-            get { return Config.ClientPort; }
+            get 
+            {
+                int port = Config.ClientPort;
+                if (port == 0) return (int)MainServer.Instance.Port;
+                return port;
+            }
         }
 
         public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)
@@ -365,7 +377,7 @@ namespace Simple.Currency
                 string Message = message["Message"];
                 UUID TransactionID = message["TransactionID"];
                 IDialogModule dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
-                if (dialogModule != null)
+                if (dialogModule != null && !string.IsNullOrEmpty(Message))
                 {
                     IScenePresence sp = m_scene.GetScenePresence(agentID);
                     if (sp != null)

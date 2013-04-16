@@ -11,18 +11,17 @@ namespace Aurora.Framework.Servers.HttpServer
         private readonly HttpListener _listener;
         private readonly Thread _listenerThread;
         private readonly Thread[] _workers;
-        private readonly ManualResetEvent _stop, _ready;
         private ConcurrentQueue<HttpListenerContext> _queue;
         public event Action<HttpListenerContext> ProcessRequest;
+        private ManualResetEvent _newQueueItem = new ManualResetEvent(false);
         private bool _isSecure = false;
         private bool _isRunning = false;
+        private int _lockedQueue = 0;
 
         public HttpListenerManager(uint maxThreads, bool isSecure)
         {
             _workers = new Thread[maxThreads];
             _queue = new ConcurrentQueue<HttpListenerContext>();
-            _stop = new ManualResetEvent(false);
-            _ready = new ManualResetEvent(false);
             _listener = new HttpListener();
             _listenerThread = new Thread(HandleRequests);
             _isSecure = isSecure;
@@ -52,13 +51,31 @@ namespace Aurora.Framework.Servers.HttpServer
             if (!_isRunning)
                 return;
             _isRunning = false;
-            _stop.Set();
+#if true //LINUX
+            _listenerThread.Abort();
+            foreach (Thread worker in _workers)
+                worker.Abort();
+#else
             _listenerThread.Join();
             foreach (Thread worker in _workers)
                 worker.Join();
+#endif
             _listener.Stop();
             _listener.Close();
         }
+
+#if true //LINUX
+
+        private void HandleRequests()
+        {
+            while (_listener.IsListening)
+            {
+                _queue.Enqueue(_listener.GetContext());
+                _newQueueItem.Set();
+            }
+        }
+
+#else
 
         private void HandleRequests()
         {
@@ -77,7 +94,7 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 if (!_listener.IsListening) return;
                 _queue.Enqueue(_listener.EndGetContext(ar));
-                _ready.Set();
+                _newQueueItem.Set();
             }
             catch
             {
@@ -85,21 +102,25 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
+#endif
+
         private void Worker()
         {
-            WaitHandle[] wait = new[] {_ready, _stop};
-            while (0 == WaitHandle.WaitAny(wait))
+            while ((_queue.Count > 0 || _newQueueItem.WaitOne()) && _listener.IsListening)
             {
-                HttpListenerContext context;
-                if (!_queue.TryDequeue(out context))
+                _newQueueItem.Reset();
+                HttpListenerContext context = null;
+                if (Interlocked.CompareExchange(ref _lockedQueue, 1, 0) == 0)
                 {
-                    _ready.Reset();
-                    continue;
+                    _queue.TryDequeue(out context);
+                    //All done
+                    Interlocked.Exchange(ref _lockedQueue, 0);
                 }
 
                 try
                 {
-                    ProcessRequest(context);
+                    if(context != null)
+                        ProcessRequest(context);
                 }
                 catch (Exception e)
                 {
