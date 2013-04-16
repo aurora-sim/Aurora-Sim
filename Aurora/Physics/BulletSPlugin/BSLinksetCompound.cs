@@ -120,7 +120,7 @@ public sealed class BSLinksetCompound : BSLinkset
     }
 
     // Schedule a refresh to happen after all the other taint processing.
-    private void ScheduleRebuild(BSPrimLinkable requestor)
+    protected override void ScheduleRebuild(BSPrimLinkable requestor)
     {
         DetailLog("{0},BSLinksetCompound.ScheduleRebuild,,rebuilding={1},hasChildren={2},actuallyScheduling={3}", 
                             requestor.LocalID, Rebuilding, HasAnyChildren, (!Rebuilding && HasAnyChildren));
@@ -346,7 +346,7 @@ public sealed class BSLinksetCompound : BSLinkset
 
     // Add a new child to the linkset.
     // Called while LinkActivity is locked.
-    protected override void AddChildToLinkset(BSPrimLinkable child)
+    protected override void AddChildToLinkset(BSPrimLinkable child, bool scheduleRebuild)
     {
         if (!this.LinksetRoot.IsPhysical)
             return;
@@ -357,7 +357,8 @@ public sealed class BSLinksetCompound : BSLinkset
             DetailLog("{0},BSLinksetCompound.AddChildToLinkset,call,child={1}", LinksetRoot.LocalID, child.LocalID);
 
             // Rebuild the compound shape with the new child shape included
-            ScheduleRebuild(child);
+            if(scheduleRebuild)
+                ScheduleRebuild(child);
         }
         return;
     }

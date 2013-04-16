@@ -2174,6 +2174,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _parent_scene.AddSimulationChange(() => changelink((AuroraODEPrim) obj));
         }
 
+        public override void linkGroupToThis(PhysicsActor[] objs)
+        {
+            for(int i = 0 ; i < objs.Length; i++)
+                _parent_scene.AddSimulationChange(() => ((AuroraODEPrim) objs[i]).changelink(this));
+        }
+
         public override void delink()
         {
             _parent_scene.AddSimulationChange(() => changelink(null));

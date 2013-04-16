@@ -7,8 +7,6 @@ Enable vehicle border crossings (at least as poorly as ODE)
 	Avatar created in previous region and not new region when crossing border
 	Vehicle recreated in new sim at small Z value (offset from root value?) (DONE)
 Lock axis
-Deleting a linkset while standing on the root will leave the physical shape of the root behind.
-	Not sure if it is because standing on it. Done with large prim linksets.
 Linkset child rotations.
 	Nebadon spiral tube has middle sections which are rotated wrong.
 	Select linked spiral tube. Delink and note where the middle section ends up.
@@ -27,13 +25,11 @@ llRotLookAt
 llLookAt
 Avatars walking up stairs (HALF DONE)
 Avatar movement
-	flying into a wall doesn't stop avatar who keeps appearing to move through the obstacle (DONE)
 	walking up stairs is not calibrated correctly (stairs out of Kepler cabin)
 	avatar capsule rotation completed (NOT DONE - Bullet's capsule shape is not the solution)
 Vehicle script tuning/debugging
 	Avanti speed script
 	Weapon shooter script
-Move material definitions (friction, ...) into simulator.
 Add material densities to the material types.
 Terrain detail: double terrain mesh detail
 One sided meshes? Should terrain be built into a closed shape?
@@ -119,16 +115,11 @@ Implement ShapeCollection.Dispose()
 Implement water as a plain so raycasting and collisions can happen with same.
 Add collision penetration return
 	Add field passed back by BulletSim.dll and fill with info in ManifoldConstact.GetDistance()
-Add osGetPhysicsEngineName() so scripters can tell whether BulletSim or ODE
-	Also osGetPhysicsEngineVerion() maybe.
 Linkset.Position and Linkset.Orientation requre rewrite to properly return
 	child position. LinksetConstraint acts like it's at taint time!!
 Implement LockAngularMotion -- implements llSetStatus(ROTATE_AXIS_*, T/F)
 Should the different PID factors have non-equal contributions for different
 	values of Efficiency?
-Selecting and deselecting physical objects causes CPU processing time to jump
-	http://www.youtube.com/watch?v=Hjg57fWg8yI&hd=1
-	put thousand physical objects, select and deselect same. CPU time will be large.
 Re-implement buoyancy as a separate force on the object rather than diddling gravity.
 	Register a pre-step event to add the force.
 More efficient memory usage when passing hull information from BSPrim to BulletSim

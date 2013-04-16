@@ -65,7 +65,7 @@ public sealed class BSLinksetGroupCompound : BSLinkset
     }
 
     // Schedule a refresh to happen after all the other taint processing.
-    private void ScheduleRebuild(BSPrimLinkable requestor)
+    protected override void ScheduleRebuild(BSPrimLinkable requestor)
     {
         DetailLog("{0},BSLinksetCompound.ScheduleRebuild,,rebuilding={1},hasChildren={2},actuallyScheduling={3}",
                             requestor.LocalID, Rebuilding, HasAnyChildren, (!Rebuilding && HasAnyChildren));
@@ -293,7 +293,7 @@ public sealed class BSLinksetGroupCompound : BSLinkset
 
     // Add a new child to the linkset.
     // Called while LinkActivity is locked.
-    protected override void AddChildToLinkset(BSPrimLinkable child)
+    protected override void AddChildToLinkset(BSPrimLinkable child, bool scheduleRebuild)
     {
         if (!HasChild(child))
         {
@@ -302,7 +302,8 @@ public sealed class BSLinksetGroupCompound : BSLinkset
             DetailLog("{0},BSLinksetCompound.AddChildToLinkset,call,child={1}", LinksetRoot.LocalID, child.LocalID);
 
             // Rebuild the compound shape with the new child shape included
-            ScheduleRebuild(child);
+            if (scheduleRebuild)
+                ScheduleRebuild(child);
         }
         return;
     }
@@ -399,6 +400,12 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                     {
                         cPrim.LinksetChildIndex = memberIndex;
 
+                        if (cPrim.PhysBody.AddrString == "unknown")
+                        {
+                            if (!PhysicsScene.Shapes.GetBodyAndShape(true, PhysicsScene.World, cPrim))
+                            {
+                            }
+                        }
                         if (cPrim.PhysShape.isNativeShape)
                         {
                             // A native shape is turned into a hull collision shape because native
@@ -462,22 +469,10 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                 // Cause the root shape to be rebuilt as a compound object with just the root in it
                 LinksetRoot.ForceBodyShapeRebuild(true /* inTaintTime */);
 
-                // The center of mass for the linkset is the geometric center of the group.
-                // Compute a displacement for each component so it is relative to the center-of-mass.
-                // Bullet presumes an object's origin (relative <0,0,0>) is its center-of-mass
-                OMV.Vector3 centerOfMassW = LinksetRoot.RawPosition;
-                if (!disableCOM)                             // DEBUG DEBUG
-                {
-                    // Compute a center-of-mass in world coordinates.
-                    //centerOfMassW = ComputeLinksetCenterOfMass();
-                }
+                //Update the AABB so that things will collide properly
+                PhysicsScene.PE.UpdateSingleAabb(PhysicsScene.World, LinksetRoot.PhysBody);
 
                 OMV.Quaternion invRootOrientation = OMV.Quaternion.Inverse(LinksetRoot.RawOrientation);
-
-                // 'centerDisplacement' is the value to subtract from children to give physical offset position
-                OMV.Vector3 centerDisplacement = (centerOfMassW - LinksetRoot.RawPosition) * invRootOrientation;
-
-                PhysicsScene.PE.UpdateSingleAabb(PhysicsScene.World, LinksetRoot.PhysBody);
                 
                 // This causes the physical position of the root prim to be offset to accomodate for the displacements
                 LinksetRoot.ForcePosition = LinksetRoot.RawPosition;
@@ -487,16 +482,17 @@ public sealed class BSLinksetGroupCompound : BSLinkset
                 {
                     foreach (BSPrimLinkable cPrim in m_children)
                     {
-                        OMV.Vector3 offsetPos = (cPrim.RawPosition - LinksetRoot.RawPosition) * invRootOrientation - centerDisplacement;
+                        OMV.Vector3 offsetPos = (cPrim.RawPosition - LinksetRoot.RawPosition) * invRootOrientation;
                         OMV.Quaternion offsetRot = cPrim.RawOrientation * invRootOrientation;
 
-                        // Cause the root shape to be rebuilt as a compound object with just the root in it
+                        // Build a simple shape for this child prim (given that we aren't allowing it to be dynamic
                         cPrim.ForceBodyShapeRebuild(true);
 
                         // This causes the physical position of the root prim to be offset to accomodate for the displacements
                         cPrim.ForcePosition = cPrim.RawPosition;
                         cPrim.LinksetChildIndex = memberIndex++;
 
+                        //Update AABB for collisions
                         PhysicsScene.PE.UpdateSingleAabb(PhysicsScene.World, cPrim.PhysBody);
                     }
                 }

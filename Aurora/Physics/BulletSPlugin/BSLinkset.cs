@@ -145,10 +145,30 @@ public abstract class BSLinkset
         {
             // Don't add the root to its own linkset
             if (!IsRoot(child))
-                AddChildToLinkset(child);
+                AddChildToLinkset(child, true);
             LinksetMass = ComputeLinksetMass();
         }
         return this;
+    }
+
+    // Link to a linkset where the child knows the parent.
+    // Parent changing should not happen so do some sanity checking.
+    // We return the parent's linkset so the child can track its membership.
+    // Called at runtime.
+    public void AddGroupToLinkset(BSPrimLinkable[] children)
+    {
+        lock (m_linksetActivityLock)
+        {
+            for (int i = 0; i < children.Length; i++)
+            {
+                // Don't add the root to its own linkset
+                if (!IsRoot(children[i]))
+                    AddChildToLinkset(children[i], false);
+                children[i].Linkset = this;
+            }
+            ScheduleRebuild(LinksetRoot);
+            LinksetMass = ComputeLinksetMass();
+        }
     }
 
     // Remove a child from a linkset.
@@ -238,11 +258,13 @@ public abstract class BSLinkset
 
     // I am the root of a linkset and a new child is being added
     // Called while LinkActivity is locked.
-    protected abstract void AddChildToLinkset(BSPrimLinkable child);
+    protected abstract void AddChildToLinkset(BSPrimLinkable child, bool scheduleRebuild);
     
     // I am the root of a linkset and one of my children is being removed.
     // Safe to call even if the child is not really in my linkset.
     protected abstract void RemoveChildFromLinkset(BSPrimLinkable child);
+
+    protected abstract void ScheduleRebuild(BSPrimLinkable requestor);
 
     // When physical properties are changed the linkset needs to recalculate
     //   its internal properties.

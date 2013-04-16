@@ -246,6 +246,7 @@ namespace Aurora.Framework.Physics
         #region Object Declares
 
         public virtual void link(PhysicsActor obj) { }
+        public virtual void linkGroupToThis(PhysicsActor[] objs) { }
         public virtual void delink() { }
         public virtual bool LinkSetIsColliding { get; set; }
         public virtual void LockAngularMotion(Vector3 axis) { }

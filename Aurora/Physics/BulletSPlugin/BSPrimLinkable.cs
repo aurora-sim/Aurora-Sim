@@ -43,6 +43,8 @@ public class BSPrimLinkable : BSPrimDisplaced
 
     public BSLinksetInfo LinksetInfo { get; set; }
 
+    public bool DisableRebuild { get; set; }
+
     public BSPrimLinkable(uint localID, String primName, BSScene parent_scene, OMV.Vector3 pos, OMV.Vector3 size,
                        OMV.Quaternion rotation, PrimitiveBaseShape pbs, bool pisPhysical)
         : base(localID, primName, parent_scene, pos, size, rotation, pbs, pisPhysical)
@@ -57,12 +59,13 @@ public class BSPrimLinkable : BSPrimDisplaced
 
     public override void Destroy()
     {
-        Linkset = Linkset.RemoveMeFromLinkset(this);
+        if(!DisableRebuild)//If we are disabled, this entire linkset is being removed, so allow it to happen
+            Linkset = Linkset.RemoveMeFromLinkset(this);
         base.Destroy();
     }
 
     public override BSPhysicsShapeType PreferredPhysicalShape
-        { get { return Linkset.PreferredPhysicalShape(this); } }
+    { get { return Linkset.PreferredPhysicalShape(this); } }
 
     public override void link(PhysicsActor obj)
     {
@@ -78,6 +81,14 @@ public class BSPrimLinkable : BSPrimDisplaced
                 LocalID, parentBefore.LocalID, childrenBefore, Linkset.LinksetRoot.LocalID, Linkset.NumberOfChildren);
         }
         return;
+    }
+
+    public override void linkGroupToThis(PhysicsActor[] objs)
+    {
+        Linkset.AddGroupToLinkset(objs.Cast<BSPrimLinkable>().ToArray());
+
+        DetailLog("{0},BSPrimLinkset.linkGroupToThis,call, childrenAdded={1}, childrenAfter={2}",
+            LocalID, objs.Length, Linkset.NumberOfChildren);
     }
 
     public override void delink()

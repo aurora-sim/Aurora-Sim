@@ -421,9 +421,13 @@ public sealed class BSScene : PhysicsScene
         BSPrimLinkable linkablePrim = prim as BSPrimLinkable;
         if (linkablePrim != null && linkablePrim.Linkset.HasAnyChildren)
         {
+            linkablePrim.DisableRebuild = true;
             //Remove all the children prims first, then kill the root
             foreach (BSPrimLinkable childPrim in linkablePrim.Linkset.Children)
+            {
+                childPrim.DisableRebuild = true;
                 RemovePrim(childPrim);
+            }
             //TODO: DISABLE LINKSET REBUILDING DURING THIS PROCESS
         }
         
@@ -644,11 +648,6 @@ public sealed class BSScene : PhysicsScene
         // Only enable this in a limited test world with few objects.
         if (m_physicsPhysicalDumpEnabled)
             PE.DumpAllInfo(World);
-
-        // The physics engine returns the number of milliseconds it simulated this call.
-        // These are summed and normalized to one second and divided by 1000 to give the reported physics FPS.
-        // Multiply by a fixed nominal frame rate to give a rate similar to the simulator (usually 55).
-        //return (float)numSubSteps * m_fixedTimeStep * 1000f * NominalFrameRate;
     }
 
     // Something has collided

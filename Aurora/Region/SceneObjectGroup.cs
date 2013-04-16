@@ -2674,6 +2674,7 @@ namespace Aurora.Region
             RootPart.FireOnAddedPhysics();
             RootPart.aggregateScriptEvents();
 
+            PhysicsActor[] actors = new PhysicsActor[parts.Length - 1];
             for (i = 0; i < parts.Length; i++)
             {
                 part = parts[i];
@@ -2714,10 +2715,9 @@ namespace Aurora.Region
 
                 part.FireOnAddedPhysics();
                 part.aggregateScriptEvents();
-                //Link the prim then
-                //                if(rootIsPhysical)
-                part.PhysActor.link(RootPart.PhysActor);
+                actors[i] = part.PhysActor;
             }
+            RootPart.PhysActor.linkGroupToThis(actors);
 
             Scene.AuroraEventManager.FireGenericEventHandler("ObjectChangedPhysicalStatus", this);
 

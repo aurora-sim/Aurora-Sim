@@ -228,6 +228,8 @@ public class BSPrim : BSPhysObject
     public override void link(PhysicsActor obj) {
     }
 
+    public override void linkGroupToThis(PhysicsActor[] objs) { }
+
     // delink me from my linkset
     public override void delink() {
     }

@@ -114,7 +114,7 @@ public sealed class BSLinksetConstraints : BSLinkset
 
     // Add a new child to the linkset.
     // Called while LinkActivity is locked.
-    protected override void AddChildToLinkset(BSPrimLinkable child)
+    protected override void AddChildToLinkset(BSPrimLinkable child, bool scheduleRebuild)
     {
         if (!this.LinksetRoot.IsPhysical)
             return;
@@ -125,9 +125,15 @@ public sealed class BSLinksetConstraints : BSLinkset
             DetailLog("{0},BSLinksetConstraints.AddChildToLinkset,call,child={1}", LinksetRoot.LocalID, child.LocalID);
 
             // Cause constraints and assorted properties to be recomputed before the next simulation step.
-            Refresh(LinksetRoot);
+            if(scheduleRebuild)
+                Refresh(LinksetRoot);
         }
         return;
+    }
+
+    protected override void ScheduleRebuild(BSPrimLinkable requestor)
+    {
+        Refresh(requestor);
     }
 
     // Remove the specified child from the linkset.
