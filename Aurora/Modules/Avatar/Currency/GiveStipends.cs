@@ -33,6 +33,7 @@ namespace Simple.Currency
             taskTimer.Interval = 360000;
             taskTimer.Elapsed += TimerElasped;
             m_scheduler = registry.RequestModuleInterface<IScheduleService>();
+            if (m_scheduler == null) return;
             m_scheduler.Register("StipendsPayout", StupendsPayOutEvent);
             if (m_options.StipendsLoadOldUsers) taskTimer.Enabled = true;
             registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);
