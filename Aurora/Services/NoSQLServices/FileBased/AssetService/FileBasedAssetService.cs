@@ -294,7 +294,7 @@ namespace Aurora.FileBasedServices.AssetService
         public AssetBase FileGetAsset(string id)
         {
             AssetBase asset = null;
-#if DEBUG
+#if ASSET_DEBUG
             long startTime = System.Diagnostics.Stopwatch.GetTimestamp();
 #endif
             try
@@ -319,7 +319,7 @@ namespace Aurora.FileBasedServices.AssetService
             }
             finally
             {
-#if DEBUG
+#if ASSET_DEBUG
                 long endTime = System.Diagnostics.Stopwatch.GetTimestamp();
                 if (MainConsole.Instance != null && asset != null)
                     MainConsole.Instance.Warn("[FILE BASED ASSET SERVICE]: Took " + (endTime - startTime)/10000 +
