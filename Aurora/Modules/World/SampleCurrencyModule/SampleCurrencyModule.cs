@@ -65,7 +65,6 @@ namespace Aurora.Modules.SampleCurrencyModule
 #pragma warning disable 67
 
         public event ObjectPaid OnObjectPaid;
-        public event PostObjectPaid OnPostObjectPaid;
 
         public bool Transfer(UUID toID, UUID fromID, int amount, string description)
         {
@@ -80,7 +79,7 @@ namespace Aurora.Modules.SampleCurrencyModule
         public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
                              TransactionType type)
         {
-            if ((type == TransactionType.PayIntoObject) && (OnObjectPaid != null))
+            if ((type == TransactionType.PayObject) && (OnObjectPaid != null))
                 OnObjectPaid((fromObjectID == UUID.Zero) ? toObjectID : fromObjectID, fromID, amount);
             return true;
         }
