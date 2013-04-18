@@ -5,18 +5,18 @@
 Steps:
  * runprebuild.bat
 
-=== If you have Visual Studio .NET ===
+=== If you have Visual Studio ===
 
- * Load Aurora.sln into Visual Studio .NET and build the solution.
+ * Load Aurora.sln into Visual Studio and build the solution.
 
-=== If you do not have Visual Studio .NET ===
+=== If you do not have Visual Studio ===
 
  * run compile.bat
 
 === Both ===
 
- * chdir bin 
- * run Aurora.exe
+ * cd bin 
+ * Aurora.exe
 
 === Building on Linux ===
 
@@ -30,7 +30,7 @@ From the distribution type:
  * ./runprebuild.sh
  * xbuild Aurora.sln
  * cd bin 
- * run mono Aurora.exe --gc=sgen
+ * mono Aurora.exe --gc=sgen
 
 === References ===
  
