@@ -33,6 +33,7 @@ using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
+using Aurora.Framework.Modules;
 
 namespace Aurora.Framework.SceneInfo.Entities
 {
@@ -48,7 +49,7 @@ namespace Aurora.Framework.SceneInfo.Entities
     }
 
     [Serializable, ProtoContract()]
-    public class KeyframeAnimation
+    public class KeyframeAnimation : IDataTransferable
     {
         public enum Modes
         {
