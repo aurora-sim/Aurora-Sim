@@ -11,6 +11,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -130,7 +131,7 @@ namespace Aurora.Modules.Web
                                          OSHttpResponse httpResponse)
         {
             byte[] response = MainServer.BlankResponse;
-            string filename = GetFileNameFromHTMLPath(path);
+            string filename = GetFileNameFromHTMLPath(path, httpRequest.Query);
             if (filename == null)
                 return MainServer.BlankResponse;
             if (httpRequest.HttpMethod == "POST")
@@ -157,7 +158,7 @@ namespace Aurora.Modules.Web
                     AuroraXmlDocument vars = GetXML(filename, httpRequest, httpResponse, requestParameters);
 
                     var xslt = new XslCompiledTransform();
-                    if (File.Exists(path)) xslt.Load(GetFileNameFromHTMLPath(path));
+                    if (File.Exists(path)) xslt.Load(GetFileNameFromHTMLPath(path, httpRequest.Query));
                     else if (text != "")
                     {
                         xslt.Load(new XmlTextReader(new StringReader(text)));
@@ -303,7 +304,7 @@ namespace Aurora.Modules.Web
                                                 StringSplitOptions.RemoveEmptyEntries);
                     for (int i = 0; i < split.Length; i += 2)
                     {
-                        string filename = GetFileNameFromHTMLPath(split[i]);
+                        string filename = GetFileNameFromHTMLPath(split[i], request.Query);
                         string response = null;
                         Dictionary<string, object> newVars = AddVarsForPage(filename, originalFileName,
                                                                             request, httpResponse, requestParameters,
@@ -319,7 +320,7 @@ namespace Aurora.Modules.Web
                                                 StringSplitOptions.RemoveEmptyEntries);
                     for (int i = split.Length%2 == 0 ? 0 : 1; i < split.Length; i += 2)
                     {
-                        string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html", "");
+                        string filename = GetFileNameFromHTMLPath(split[i], request.Query).Replace("index.html", "");
                         if (Directory.Exists(filename))
                         {
                             string response = null;
@@ -477,14 +478,22 @@ namespace Aurora.Modules.Web
             return "text/plain";
         }
 
-        protected string GetFileNameFromHTMLPath(string path)
+        protected string GetFileNameFromHTMLPath(string path, Hashtable query)
         {
             try
             {
                 string file = Path.Combine("html/", path.StartsWith("/") ? path.Remove(0, 1) : path);
-                if (!Path.GetFullPath(file).StartsWith(Path.GetFullPath("html/"))) return "html/index.html";
+                if (!Path.GetFullPath(file).StartsWith(Path.GetFullPath("html/")))
+                {
+                    return "html/index.html";
+                }
                 if (Path.GetFileName(file) == "")
                     file = Path.Combine(file, "index.html");
+
+                if (query.ContainsKey("page") && _pages.ContainsKey("html/" + query["page"].ToString() + ".html"))
+                {
+                    file = _pages["html/" + query["page"].ToString() + ".html"].FilePath[0];
+                }
                 return file;
             }
             catch
