@@ -66,9 +66,12 @@ namespace Aurora.Modules.ActivityDetectors
 
         public void RemoveRegion(IScene scene)
         {
-            ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
-            if (syncMessage != null)
-                syncMessage.PostToServer(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionID));
+            if (!scene.CloseQuietly)
+            {
+                ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
+                if (syncMessage != null)
+                    syncMessage.PostToServer(SyncMessageHelper.LogoutRegionAgents(scene.RegionInfo.RegionID));
+            }
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             m_scene = null;

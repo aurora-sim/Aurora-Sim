@@ -314,7 +314,7 @@ namespace Aurora.Region
         {
             if (type == ShutdownType.Immediate)
             {
-                m_scene.Close();
+                m_scene.Close(true);
                 if (OnCloseScene != null)
                     OnCloseScene(m_scene);
                 CloseModules();

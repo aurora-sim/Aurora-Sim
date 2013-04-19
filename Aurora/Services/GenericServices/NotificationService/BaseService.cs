@@ -114,8 +114,11 @@ namespace Aurora.Services
         {
             string rawLevel = cmd[3];
 
-            MainConsole.Instance.Threshold = (Level)Enum.Parse(typeof(Level), rawLevel, true);
-
+            try
+            {
+                MainConsole.Instance.Threshold = (Level)Enum.Parse(typeof(Level), rawLevel, true);
+            }
+            catch { } 
             MainConsole.Instance.Format(Level.Off, "Console log level is {0}", MainConsole.Instance.Threshold);
         }
 

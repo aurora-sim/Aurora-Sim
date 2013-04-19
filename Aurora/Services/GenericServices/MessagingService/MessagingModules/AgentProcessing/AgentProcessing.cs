@@ -124,7 +124,8 @@ namespace Aurora.Services
                 //This gets fired when the scene is fully finished starting up
             {
                 //Log out all the agents first, then add any child agents that should be in this region
-                LogOutAllAgentsForRegion(requestingRegion);
+                //Don't do this, we don't need to kill all the clients right now
+                //LogOutAllAgentsForRegion(requestingRegion);
                 IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                 if (GridService != null)
                 {
