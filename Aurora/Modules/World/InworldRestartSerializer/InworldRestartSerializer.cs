@@ -2,6 +2,7 @@
 using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -17,7 +18,8 @@ namespace Aurora.Modules
     public class InworldRestartSerializer : INonSharedRegionModule
     {
         private IScene m_scene;
-        private const string FILE_NAME = "sceneagents.siminfo";
+        private string m_fileName = "sceneagents";
+        private string m_storeDirectory = "";
 
         public string Name
         {
@@ -31,6 +33,12 @@ namespace Aurora.Modules
 
         public void Initialise(IConfigSource source)
         {
+            IConfig config = source.Configs["FileBasedSimulationData"];
+            if (config != null)
+                m_storeDirectory = PathHelpers.ComputeFullPath(config.GetString("StoreBackupDirectory", m_storeDirectory));
+            config = source.Configs["Startup"];
+            if (config != null)
+                m_fileName = config.GetString("RegionDataFileName", m_fileName);
             MainConsole.Instance.Commands.AddCommand("quit serialized", "quit serialized", "Closes the scene and saves all agents", quitSerialized);
         }
 
@@ -84,14 +92,14 @@ namespace Aurora.Modules
             }
 
 
-            File.WriteAllText(FILE_NAME, OSDParser.SerializeJsonString(userMap));
+            File.WriteAllText(BuildSaveFileName(), OSDParser.SerializeJsonString(userMap));
         }
 
         private void DeserializeUsers()
         {
-            if (!File.Exists(FILE_NAME))
+            if (!File.Exists(BuildSaveFileName()))
                 return;
-            foreach (OSD o in ((OSDMap)OSDParser.DeserializeJson(File.ReadAllText(FILE_NAME))).Values)
+            foreach (OSD o in ((OSDMap)OSDParser.DeserializeJson(File.ReadAllText(BuildSaveFileName()))).Values)
             {
                 AgentCircuitData data = new AgentCircuitData();
                 OSDMap user = (OSDMap)o;
@@ -105,7 +113,14 @@ namespace Aurora.Modules
                 sp.SceneViewer.SendPresenceFullUpdate(sp);
             }
 
-            File.Delete(FILE_NAME);
+            File.Delete(BuildSaveFileName());
+        }
+
+        private string BuildSaveFileName()
+        {
+            return (m_storeDirectory == "" || m_storeDirectory == "/")
+                       ? m_fileName + ".siminfo"
+                       : Path.Combine(m_storeDirectory, m_fileName + ".siminfo");
         }
     }
 }
