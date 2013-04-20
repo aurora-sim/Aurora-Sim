@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
@@ -34,7 +35,9 @@ using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.Imaging;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -55,6 +58,9 @@ namespace Aurora.Services
         private float m_cacheExpires = 24;
         private IAssetService m_assetService;
         private IGridService m_gridService;
+        private static Bitmap m_blankRegionTile = null;
+        private MapTileIndex m_blankTiles = new MapTileIndex();
+        private byte[] m_blankRegionTileData;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -78,6 +84,22 @@ namespace Aurora.Services
             m_server.AddHTTPHandler(new GenericStreamHandler("GET", "/MapAPI/", MapAPIRequest));
 
             registry.RegisterModuleInterface<IMapService>(this);
+
+            m_blankRegionTile = new Bitmap(256, 256);
+            m_blankRegionTile.Tag = "StaticBlank";
+            using (Graphics g = Graphics.FromImage(m_blankRegionTile))
+            {
+                SolidBrush sea = new SolidBrush(Color.FromArgb(29, 71, 95));
+                g.FillRectangle(sea, 0, 0, 256, 256);
+            }
+            m_blankRegionTileData = CacheMapTexture(1, 0, 0, m_blankRegionTile, true);
+            /*string path = Path.Combine("assetcache", Path.Combine("mapzoomlevels", "blankMap.index"));
+            if(File.Exists(path))
+            {
+                FileStream stream = File.OpenRead(path);
+                m_blankTiles = ProtoBuf.Serializer.Deserialize<MapTileIndex>(stream);
+                stream.Close();
+            }*/
         }
 
         private void CreateCacheDirectories()
@@ -213,9 +235,8 @@ namespace Aurora.Services
                                                                                                           uri.Remove
                                                                                                               (4));
                     if (region == null)
-                    {
                         region = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null, OpenMetaverse.UUID.Parse(uri.Remove(uri.Length - 4)));
-                    }
+
                     // non-async because we know we have the asset immediately.
                     byte[] mapasset = m_assetService.GetData(region.TerrainMapImage.ToString());
                     if (mapasset != null)
@@ -254,9 +275,17 @@ namespace Aurora.Services
                 int mapView = (int) Math.Pow(2, (mapLayer - 1));
                 int regionX = int.Parse(splitUri[2]);
                 int regionY = int.Parse(splitUri[3]);
-                Bitmap mapTexture = BuildMapTile(mapLayer, regionX, regionY);
+                int distance = (int)Math.Pow(2, mapLayer);
+                int maxRegionSize = m_gridService.GetMaxRegionSize();
+                if (maxRegionSize == 0) maxRegionSize = 8192;
+                List<GridRegion> regions = m_gridService.GetRegionRange(null,
+                                                                    ((regionX) * Constants.RegionSize) - maxRegionSize,
+                                                                    ((regionX + distance) * Constants.RegionSize) + maxRegionSize,
+                                                                    ((regionY) * Constants.RegionSize) - maxRegionSize,
+                                                                    ((regionY + distance) * Constants.RegionSize) + maxRegionSize);
+                Bitmap mapTexture = BuildMapTile(mapLayer, regionX, regionY, regions);
                 jpeg = CacheMapTexture(mapLayer, regionX, regionY, mapTexture);
-                mapTexture.Dispose();
+                DisposeTexture(mapTexture);
             }
             catch
             {
@@ -265,15 +294,34 @@ namespace Aurora.Services
             return jpeg;
         }
 
-        private Bitmap BuildMapTile(int mapView, int regionX, int regionY)
+        private Bitmap BuildMapTile(int mapView, int regionX, int regionY, List<GridRegion> regions)
         {
             Bitmap mapTexture = FindCachedImage(mapView, regionX, regionY);
-            if (mapTexture != null) return mapTexture;
+            if (mapTexture != null) 
+                return mapTexture;
             if (mapView == 1)
-            {
-                return BuildMapTile(regionX, regionY);
-            }
+                return BuildMapTile(regionX, regionY, regions.ToList());
+
             const int SizeOfImage = 256;
+
+            List<Bitmap> generatedMapTiles = new List<Bitmap>();
+            int offset = (int)(Math.Pow(2, mapView - 1) / 2f);
+            generatedMapTiles.Add(BuildMapTile(mapView - 1, regionX, regionY, regions));
+            generatedMapTiles.Add(BuildMapTile(mapView - 1, regionX + offset, regionY, regions));
+            generatedMapTiles.Add(BuildMapTile(mapView - 1, regionX, regionY + offset, regions));
+            generatedMapTiles.Add(BuildMapTile(mapView - 1, regionX + offset, regionY + offset, regions));
+            bool isStatic = true;
+            for (int i = 0; i < 4; i++)
+                if (!IsStaticBlank(generatedMapTiles[i]))
+                    isStatic = false;
+                else
+                    generatedMapTiles[i] = null;
+            if (isStatic)
+            {
+                lock (m_blankTiles.BlankTilesLayers)
+                    m_blankTiles.BlankTilesLayers.Add(((long)Util.IntsToUlong(regionX, regionY) << 8) + mapView);
+                return m_blankRegionTile;
+            }
 
             mapTexture = new Bitmap(SizeOfImage, SizeOfImage);
             using (Graphics g = Graphics.FromImage(mapTexture))
@@ -281,33 +329,51 @@ namespace Aurora.Services
                 SolidBrush sea = new SolidBrush(Color.FromArgb(29, 71, 95));
                 g.FillRectangle(sea, 0, 0, SizeOfImage, SizeOfImage);
 
-                Bitmap texture = BuildMapTile(mapView - 1, regionX, regionY);
-                texture = ResizeBitmap(texture, texture.Width / 2, texture.Height / 2);
-                g.DrawImage(texture, new Point(0, 128));
-                texture.Dispose();
+                if (generatedMapTiles[0] != null)
+                {
+                    Bitmap texture = ResizeBitmap(generatedMapTiles[0], 128, 128);
+                    g.DrawImage(texture, new Point(0, 128));
+                    DisposeTexture(texture);
+                }
+                
+                if (generatedMapTiles[1] != null)
+                {
+                    Bitmap texture = ResizeBitmap(generatedMapTiles[1], 128, 128);
+                    g.DrawImage(texture, new Point(128, 128));
+                    DisposeTexture(texture);
+                }
 
-                int offset = (int)(Math.Pow(2, mapView - 1) / 2f);
-                texture = BuildMapTile(mapView - 1, regionX + offset, regionY);
-                texture = ResizeBitmap(texture, texture.Width / 2, texture.Height / 2);
-                g.DrawImage(texture, new Point(128, 128));
-                texture.Dispose();
+                if (generatedMapTiles[2] != null)
+                {
+                    Bitmap texture = ResizeBitmap(generatedMapTiles[2], 128, 128);
+                    g.DrawImage(texture, new Point(0, 0));
+                    DisposeTexture(texture);
+                }
 
-                texture = BuildMapTile(mapView - 1, regionX, regionY + offset);
-                texture = ResizeBitmap(texture, texture.Width / 2, texture.Height / 2);
-                g.DrawImage(texture, new Point(0, 0));
-                texture.Dispose();
-
-                texture = BuildMapTile(mapView - 1, regionX + offset, regionY + offset);
-                texture = ResizeBitmap(texture, texture.Width / 2, texture.Height / 2);
-                g.DrawImage(texture, new Point(128, 0));
-                texture.Dispose();
+                if (generatedMapTiles[3] != null)
+                {
+                    Bitmap texture = ResizeBitmap(generatedMapTiles[3], 128, 128);
+                    g.DrawImage(texture, new Point(128, 0));
+                    DisposeTexture(texture);
+                }
             }
 
             CacheMapTexture(mapView, regionX, regionY, mapTexture);
             return mapTexture;
         }
 
-        private Bitmap ResizeBitmap(Image b, int nWidth, int nHeight)
+        private void DisposeTexture(Bitmap bitmap)
+        {
+            if (!IsStaticBlank(bitmap))
+                bitmap.Dispose();
+        }
+
+        private bool IsStaticBlank(Bitmap bitmap)
+        {
+            return bitmap.Tag != null && (bitmap.Tag is string) && ((string)bitmap.Tag) == "StaticBlank";
+        }
+
+        private Bitmap ResizeBitmap(Bitmap b, int nWidth, int nHeight)
         {
             Bitmap newsize = new Bitmap(nWidth, nHeight);
             using (Graphics temp = Graphics.FromImage(newsize))
@@ -315,22 +381,38 @@ namespace Aurora.Services
                 temp.DrawImage(b, 0, 0, nWidth, nHeight);
                 temp.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             }
-            b.Dispose();
+            DisposeTexture(b);
             return newsize;
         }
 
-        private Bitmap BuildMapTile(int regionX, int regionY)
+        private Bitmap BuildMapTile(int regionX, int regionY, List<GridRegion> regions)
         {
             byte[] jpeg = new byte[0];
-            int maxRegionSize = m_gridService.GetMaxRegionSize();
-            if (maxRegionSize == 0) maxRegionSize = 8192;
-            List<GridRegion> regions = m_gridService.GetRegionRange(null,
+            if (regions == null)
+            {
+                int maxRegionSize = m_gridService.GetMaxRegionSize();
+                if (maxRegionSize == 0) maxRegionSize = 8192;
+                regions = m_gridService.GetRegionRange(null,
                                                                     (regionX * Constants.RegionSize) - maxRegionSize,
                                                                     (regionX * Constants.RegionSize) + maxRegionSize,
                                                                     (regionY * Constants.RegionSize) - maxRegionSize,
                                                                     (regionY * Constants.RegionSize) + maxRegionSize);
+            }
+
             List<Image> bitImages = new List<Image>();
             List<GridRegion> badRegions = new List<GridRegion>();
+            int newregionX = regionX * Constants.RegionSize;
+            int newregionY = regionY * Constants.RegionSize;
+            Rectangle mapRect = new Rectangle(regionX * Constants.RegionSize, regionY * Constants.RegionSize, Constants.RegionSize, Constants.RegionSize);
+            foreach (GridRegion r in regions)
+            {
+                Rectangle regionRect = new Rectangle(r.RegionLocX, r.RegionLocY, r.RegionSizeX, r.RegionSizeY);
+                if (!mapRect.IntersectsWith(regionRect))
+                    badRegions.Add(r);
+            }
+            foreach (GridRegion r in badRegions)
+                regions.Remove(r);
+            badRegions.Clear();
             IJ2KDecoder decoder = m_registry.RequestModuleInterface<IJ2KDecoder>();
             foreach (GridRegion r in regions)
             {
@@ -349,6 +431,13 @@ namespace Aurora.Services
             }
             foreach (GridRegion r in badRegions)
                 regions.Remove(r);
+
+            if (regions.Count == 0)
+            {
+                lock (m_blankTiles.BlankTiles)
+                    m_blankTiles.BlankTiles.Add(Util.IntsToUlong(regionX, regionY));
+                return m_blankRegionTile;
+            }
 
             const int SizeOfImage = 256;
 
@@ -379,10 +468,10 @@ namespace Aurora.Services
             }
 
             foreach (var bmp in bitImages)
-            {
                 bmp.Dispose();
-            }
+
             CacheMapTexture(1, regionX, regionY, mapTexture);
+            //mapTexture = ResizeBitmap(mapTexture, 128, 128);
             return mapTexture;
         }
 
@@ -413,6 +502,19 @@ namespace Aurora.Services
             if (!m_cacheEnabled)
                 return null;
 
+            if (maplayer == 1)
+            {
+                lock (m_blankTiles.BlankTiles)
+                    if (m_blankTiles.BlankTiles.Contains(Util.IntsToUlong(regionX, regionY)))
+                        return m_blankRegionTile;
+            }
+            else
+            {
+                lock (m_blankTiles.BlankTilesLayers)
+                    if (m_blankTiles.BlankTilesLayers.Contains(((long)Util.IntsToUlong(regionX, regionY) << 8) + maplayer))
+                        return m_blankRegionTile;
+            }
+
             string name = string.Format("map-{0}-{1}-{2}-objects.jpg", maplayer, regionX, regionY);
             string fullPath = Path.Combine("assetcache", Path.Combine("mapzoomlevels", name));
             if (File.Exists(fullPath))
@@ -429,8 +531,11 @@ namespace Aurora.Services
             return null;
         }
 
-        private byte[] CacheMapTexture(int maplayer, int regionX, int regionY, Bitmap mapTexture)
+        private byte[] CacheMapTexture(int maplayer, int regionX, int regionY, Bitmap mapTexture, bool forced = false)
         {
+            if (!forced && IsStaticBlank(mapTexture))
+                return m_blankRegionTileData;
+
             byte[] jpeg;
             EncoderParameters myEncoderParameters = new EncoderParameters();
             myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
@@ -438,7 +543,8 @@ namespace Aurora.Services
             using (MemoryStream imgstream = new MemoryStream())
             {
                 // Save bitmap to stream
-                mapTexture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
+                lock(mapTexture)
+                    mapTexture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
 
                 // Write the stream to a byte array for output
                 jpeg = imgstream.ToArray();
@@ -456,5 +562,14 @@ namespace Aurora.Services
             string fullPath = Path.Combine("assetcache", Path.Combine("mapzoomlevels", name));
             File.WriteAllBytes(fullPath, data);
         }
+    }
+
+    [ProtoContract()]
+    internal class MapTileIndex
+    {
+        [ProtoMember(1)]
+        public HashSet<ulong> BlankTiles = new HashSet<ulong>();
+        [ProtoMember(2)]
+        public HashSet<long> BlankTilesLayers = new HashSet<long>();
     }
 }
