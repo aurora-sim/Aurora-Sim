@@ -79,10 +79,17 @@ namespace Aurora.Modules.WorldShader
                     foreach (UUID t in textures)
                     {
                         UUID oldID = t;
+                        AssetBase oldAsset = null;
                         while (m_revertConverted.ContainsKey(oldID))
                         {
                             child.Shape.Textures = SetTexture(child.Shape, m_revertConverted[oldID], oldID);
                             oldID = m_revertConverted[oldID];
+                        }
+
+                        UUID newID;
+                        while ((oldAsset = MainConsole.Instance.ConsoleScene.AssetService.Get(oldID.ToString())) != null && UUID.TryParse(oldAsset.Description, out newID))
+                        {
+                            child.Shape.Textures = SetTexture(child.Shape, newID, oldID);
                         }
                     }
                 }
@@ -138,6 +145,7 @@ namespace Aurora.Modules.WorldShader
                                 a.ID = UUID.Random();
                                 texture = Shade(texture, shader, percent, greyScale);
                                 a.Data = OpenJPEG.EncodeFromImage(texture, false);
+                                a.Description = t.ToString();
                                 texture.Dispose();
                                 a.ID = MainConsole.Instance.ConsoleScene.AssetService.Store(a);
                                 child.Shape.Textures = SetTexture(child.Shape, a.ID, t);
@@ -148,6 +156,7 @@ namespace Aurora.Modules.WorldShader
                     }
                 }
             }
+            MainConsole.Instance.Warn("WARNING: You may not be able to revert this once you restart the instance");
         }
 
         private Primitive.TextureEntry SetTexture(PrimitiveBaseShape shape, UUID newID, UUID oldID)
