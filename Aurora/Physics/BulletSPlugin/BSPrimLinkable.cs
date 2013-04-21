@@ -43,23 +43,27 @@ public class BSPrimLinkable : BSPrimDisplaced
 
     public BSLinksetInfo LinksetInfo { get; set; }
 
-    public bool DisableRebuild { get; set; }
-
     public BSPrimLinkable(uint localID, String primName, BSScene parent_scene, OMV.Vector3 pos, OMV.Vector3 size,
-                       OMV.Quaternion rotation, PrimitiveBaseShape pbs, bool pisPhysical)
+                       OMV.Quaternion rotation, PrimitiveBaseShape pbs, bool pisPhysical, int material, float friction, 
+                       float restitution, float gravityMultiplier, float density)
         : base(localID, primName, parent_scene, pos, size, rotation, pbs, pisPhysical)
     {
         Linkset = BSLinkset.Factory(PhysicsScene, this);
 
         PhysicsScene.TaintedObject("BSPrimLinksetCompound.Refresh", delegate()
         {
+            base.SetMaterial(material);
+            base.Friction = friction;
+            base.Restitution = restitution;
+            base.GravityMultiplier = gravityMultiplier;
+            base.Density = density;
             Linkset.Refresh(this);
         });
     }
 
     public override void Destroy()
     {
-        if(!DisableRebuild)//If we are disabled, this entire linkset is being removed, so allow it to happen
+        if (!Linkset.LinksetRoot.BlockPhysicalReconstruction)//If we are disabled, this entire linkset is being removed, so allow it to happen
             Linkset = Linkset.RemoveMeFromLinkset(this);
         base.Destroy();
     }

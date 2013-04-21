@@ -67,6 +67,8 @@ public sealed class BSScene : PhysicsScene
     // let my minuions use my logger
     public ICommandConsole Logger { get { return MainConsole.Instance; } }
 
+    public override bool AllowGroupLink { get { return true; } }
+
     public IMesher mesher;
     public uint WorldID { get; private set; }
     public BulletWorld World { get; private set; }
@@ -421,11 +423,11 @@ public sealed class BSScene : PhysicsScene
         BSPrimLinkable linkablePrim = prim as BSPrimLinkable;
         if (linkablePrim != null && linkablePrim.Linkset.HasAnyChildren)
         {
-            linkablePrim.DisableRebuild = true;
+            linkablePrim.BlockPhysicalReconstruction = true;
             //Remove all the children prims first, then kill the root
             foreach (BSPrimLinkable childPrim in linkablePrim.Linkset.Children)
             {
-                childPrim.DisableRebuild = true;
+                childPrim.BlockPhysicalReconstruction = true;
                 RemovePrim(childPrim);
             }
             //TODO: DISABLE LINKSET REBUILDING DURING THIS PROCESS
@@ -461,7 +463,8 @@ public sealed class BSScene : PhysicsScene
     }
 
     public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
-                                            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
+                                            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical, int material,
+                                            float friction, float restitution, float gravityMultiplier, float density)
     {
         // MainConsole.Instance.DebugFormat("{0}: AddPrimShape2: {1}", LogHeader, primName);
 
@@ -469,7 +472,7 @@ public sealed class BSScene : PhysicsScene
 
         // DetailLog("{0},BSScene.AddPrimShape,call", localID);
 
-        BSPhysObject prim = new BSPrimLinkable(localID, name, this, position, size, rotation, shape, isPhysical);
+        BSPhysObject prim = new BSPrimLinkable(localID, name, this, position, size, rotation, shape, false, material, friction, restitution, gravityMultiplier, density);
         prim.UUID = primID;
         lock (PhysObjects) PhysObjects.Add(localID, prim);
         return prim;

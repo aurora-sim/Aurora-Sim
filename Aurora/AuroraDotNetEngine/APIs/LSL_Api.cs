@@ -8874,7 +8874,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (part is ISceneChildEntity)
                         if ((part as ISceneChildEntity).UpdatePrimFlags(UsePhysics,
                                                                         IsTemporary, IsPhantom, IsVolumeDetect, blocks))
-                            (part as ISceneChildEntity).ParentEntity.RebuildPhysicalRepresentation(true);
+                            (part as ISceneChildEntity).ParentEntity.RebuildPhysicalRepresentation(true, null);
                 }
                 else if (code == (int) ScriptBaseClass.PRIM_LINK_TARGET)
                 {
@@ -9644,7 +9644,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             bool IsVolumeDetect = m_host.VolumeDetectActive;
             blocks[0].PhysicsShapeType = m_host.PhysicsType;
             if (m_host.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks))
-                m_host.ParentEntity.RebuildPhysicalRepresentation(true);
+                m_host.ParentEntity.RebuildPhysicalRepresentation(true, null);
         }
 
         //  <remarks>

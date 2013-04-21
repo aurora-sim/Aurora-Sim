@@ -62,6 +62,8 @@ namespace Aurora.Framework.Physics
             get { return 0; }
         }
 
+        public virtual bool AllowGroupLink { get { return false; } }
+
         public virtual bool IsThreaded
         {
             get { return false; }
@@ -122,7 +124,8 @@ namespace Aurora.Framework.Physics
         public abstract void DeletePrim(PhysicsActor prim);
 
         public abstract PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
-            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical);
+            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical, int material, float friction, float restitution,
+            float gravityMultiplier, float density);
 
         public abstract void Simulate(float timeStep);
 
@@ -257,7 +260,8 @@ namespace Aurora.Framework.Physics
         */
 
         public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
-            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
+            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical, int material, float friction, float restitution, 
+            float gravityMultiplier, float density)
         {
             return new NullObjectPhysicsActor();
         }

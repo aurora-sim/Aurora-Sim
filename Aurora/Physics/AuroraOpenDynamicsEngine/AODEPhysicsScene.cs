@@ -985,10 +985,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //AddPrimShape(auroraODEPrim.ParentEntity);
         }
 
-        public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, 
-                                                    Vector3 size, Quaternion rotation, bool isPhysical)
+        public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position,
+                                                    Vector3 size, Quaternion rotation, bool isPhysical, int material, float friction, float restitution,
+                                                    float gravityMultiplier, float density)
         {
-            AuroraODEPrim newPrim = new AuroraODEPrim(name, physicsType, shape, position, size, rotation, this);
+            AuroraODEPrim newPrim = new AuroraODEPrim(name, physicsType, shape, position, size, rotation, material, friction, restitution, gravityMultiplier, density, this);
             newPrim.UUID = primID;
             newPrim.LocalID = localID;
 

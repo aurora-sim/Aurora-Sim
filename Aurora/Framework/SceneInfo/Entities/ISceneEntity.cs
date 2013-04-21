@@ -194,7 +194,7 @@ namespace Aurora.Framework.SceneInfo.Entities
 
         void ForcePersistence();
 
-        void RebuildPhysicalRepresentation(bool keepSelectedStatus);
+        void RebuildPhysicalRepresentation(bool keepSelectedStatus, Action actionToDoWhilePhysActorNull);
 
         void ScheduleGroupTerseUpdate();
 

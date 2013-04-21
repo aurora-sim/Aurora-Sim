@@ -464,7 +464,7 @@ namespace Aurora.Region
             //Trigger our event
             Scene.EventManager.TriggerObjectBeingAddedToScene(this);
 
-            RebuildPhysicalRepresentation(false);
+            RebuildPhysicalRepresentation(false, null);
 
             m_ValidgrpOOB = false;
         }
@@ -1335,7 +1335,7 @@ namespace Aurora.Region
 
             m_rootPart.SetParentLocalId(0);
             SetAttachmentPoint(0);
-            RebuildPhysicalRepresentation(false);
+            RebuildPhysicalRepresentation(false, null);
             HasGroupChanged = true;
             m_ValidgrpOOB = false;
             RootPart.Rezzed = DateTime.UtcNow;
@@ -2590,7 +2590,7 @@ namespace Aurora.Region
         ///     Rebuild the physical representation of all the prims.
         ///     This is used after copying the prim so that all of the object is readded to the physics scene.
         /// </summary>
-        public void RebuildPhysicalRepresentation(bool keepSelectedStatuses)
+        public void RebuildPhysicalRepresentation(bool keepSelectedStatuses, Action actionWhileNoPhysActor)
         {
             // long lock or array copy?  in this case lets try array
             SceneObjectPart[] parts;
@@ -2631,6 +2631,9 @@ namespace Aurora.Region
                 part.GenerateRotationalVelocityFromOmega();
             }
 
+            if(actionWhileNoPhysActor != null)
+                actionWhileNoPhysActor();
+
             //Check for meshes and stuff
             CheckSculptAndLoad();
 
@@ -2652,18 +2655,13 @@ namespace Aurora.Region
             bool physical = isPhysical & !isPhantom;
 
             RootPart.PhysActor = m_scene.PhysicsScene.AddPrimShape(RootPart.UUID, RootPart.LocalId, RootPart.Name, RootPart.PhysicsType,
-                RootPart.Shape, RootPart.AbsolutePosition, RootPart.Scale, RootPart.GetWorldRotation(), physical);
+                RootPart.Shape, RootPart.AbsolutePosition, RootPart.Scale, RootPart.GetWorldRotation(), physical, RootPart.Material,
+                RootPart.Friction, RootPart.Restitution, RootPart.GravityMultiplier, RootPart.Density);
             if (RootPart.PhysActor == null)
                 return;
-            RootPart.PhysActor.BlockPhysicalReconstruction = true;
             //Don't let it rebuild it until we have all the links done
 
             RootPart.PhysActor.VolumeDetect = RootPart.VolumeDetectActive;
-
-            //Force deselection here so that it isn't stuck forever
-            RootPart.PhysActor.Selected = keepSelectedStatuses && IsSelected;
-
-            RootPart.PhysActor.SetMaterial(RootPart.Material, RootPart.Friction, RootPart.Restitution, RootPart.GravityMultiplier, RootPart.Density);
 
             //Add collision updates
             //part.PhysActor.OnCollisionUpdate += RootPart.PhysicsCollision;
@@ -2673,7 +2671,7 @@ namespace Aurora.Region
 
             RootPart.FireOnAddedPhysics();
             RootPart.aggregateScriptEvents();
-
+            
             PhysicsActor[] actors = new PhysicsActor[parts.Length - 1];
             for (i = 0; i < parts.Length; i++)
             {
@@ -2690,23 +2688,16 @@ namespace Aurora.Region
                 isPhantom = ((part.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
                 physical = isPhysical & !isPhantom;
 
-                part.PhysActor = m_scene.PhysicsScene.AddPrimShape(part.UUID, part.LocalId, part.Name, RootPart.PhysicsType, 
-                    part.Shape, part.AbsolutePosition, part.Scale, part.GetWorldRotation(), physical);
+                part.PhysActor = m_scene.PhysicsScene.AddPrimShape(part.UUID, part.LocalId, part.Name, RootPart.PhysicsType,
+                    part.Shape, part.AbsolutePosition, part.Scale, part.GetWorldRotation(), physical, part.Material,
+                    part.Friction, part.Restitution, part.GravityMultiplier, part.Density);
                 if (part.PhysActor == null)
                     continue;
                 //                    part.PhysActor.BuildingRepresentation = true;
                 //                    if(part.IsRoot)
-                part.PhysActor.BlockPhysicalReconstruction = true;
                 //Don't let it rebuild it until we have all the links done
 
                 part.PhysActor.VolumeDetect = part.VolumeDetectActive;
-
-                //Force deselection here so that it isn't stuck forever
-                part.PhysActor.Selected = keepSelectedStatuses && IsSelected;
-
-                part.PhysActor.SetMaterial(part.Material, part.Friction, part.Restitution, part.GravityMultiplier, part.Density);
-                if ((part.Flags & PrimFlags.Physics) == PrimFlags.Physics)
-                    part.PhysActor.IsPhysical = true;
 
                 //Add collision updates
                 part.PhysActor.OnRequestTerseUpdate += part.PhysicsRequestingTerseUpdate;
@@ -2716,15 +2707,29 @@ namespace Aurora.Region
                 part.FireOnAddedPhysics();
                 part.aggregateScriptEvents();
                 actors[i] = part.PhysActor;
+                
+                if(!m_scene.PhysicsScene.AllowGroupLink)
+                    part.PhysActor.link(RootPart.PhysActor);
             }
-            RootPart.PhysActor.linkGroupToThis(actors);
+            if (m_scene.PhysicsScene.AllowGroupLink)
+                RootPart.PhysActor.linkGroupToThis(actors);
 
             Scene.AuroraEventManager.FireGenericEventHandler("ObjectChangedPhysicalStatus", this);
 
-            RootPart.PhysActor.BlockPhysicalReconstruction = false; // this sets children also (in AODE at least)
-            //            RootPart.PhysActor.BuildingRepresentation = false;
-
             FixVehicleParams(RootPart);
+
+            /*if (physical != RootPart.PhysActor.IsPhysical)
+            {
+                RootPart.PhysActor.IsPhysical = physical;
+                foreach (SceneObjectPart p in parts)
+                {
+                    if(!p.IsRoot)
+                        p.PhysActor.IsPhysical = physical;
+                }
+            }*/
+
+            //Force deselection here so that it isn't stuck forever
+            IsSelected = keepSelectedStatuses && IsSelected;
 
             if (OnFinishedPhysicalRepresentationBuilding != null)
                 OnFinishedPhysicalRepresentationBuilding();
@@ -3551,7 +3556,7 @@ namespace Aurora.Region
                 }
 
                 if (needsPhysicalRebuild)
-                    RebuildPhysicalRepresentation(true);
+                    RebuildPhysicalRepresentation(true, null);
             }
         }
 
@@ -3708,37 +3713,46 @@ namespace Aurora.Region
                 float y = (scale.Y/part.Scale.Y);
                 float z = (scale.Z/part.Scale.Z);
 
+                if (x == 1.0f && y == 1.0f && z == 1.0f)
+                    return;
+
                 foreach (SceneObjectPart obPart in m_partsList)
                 {
                     obPart.StoreUndoState();
                 }
-                Vector3 prevScale = part.Scale;
-                prevScale.X *= x;
-                prevScale.Y *= y;
-                prevScale.Z *= z;
-                part.Resize(prevScale);
 
-                foreach (SceneObjectPart obPart in m_partsList.Where(obPart => obPart.UUID != m_rootPart.UUID))
-                {
-                    obPart.IgnoreUndoUpdate = true;
-                    Vector3 currentpos = new Vector3(obPart.OffsetPosition);
-                    currentpos.X *= x;
-                    currentpos.Y *= y;
-                    currentpos.Z *= z;
-                    Vector3 newSize = new Vector3(obPart.Scale);
-                    newSize.X *= x;
-                    newSize.Y *= y;
-                    newSize.Z *= z;
-                    obPart.Resize(newSize);
-                    obPart.UpdateOffSet(currentpos);
-                    obPart.IgnoreUndoUpdate = false;
-                }
+                part.PhysActor.BlockPhysicalReconstruction = true;
 
-                part.IgnoreUndoUpdate = false;
-                m_rootPart.IgnoreUndoUpdate = false;
-                HasGroupChanged = true;
-                ScheduleGroupTerseUpdate();
-                m_ValidgrpOOB = false;
+                RebuildPhysicalRepresentation(true, () =>
+                    {
+                        Vector3 prevScale = part.Scale;
+                        prevScale.X *= x;
+                        prevScale.Y *= y;
+                        prevScale.Z *= z;
+                        part.Resize(prevScale);
+
+                        foreach (SceneObjectPart obPart in m_partsList.Where(obPart => obPart.UUID != m_rootPart.UUID))
+                        {
+                            obPart.IgnoreUndoUpdate = true;
+                            Vector3 currentpos = new Vector3(obPart.OffsetPosition);
+                            currentpos.X *= x;
+                            currentpos.Y *= y;
+                            currentpos.Z *= z;
+                            Vector3 newSize = new Vector3(obPart.Scale);
+                            newSize.X *= x;
+                            newSize.Y *= y;
+                            newSize.Z *= z;
+                            obPart.Resize(newSize);
+                            obPart.UpdateOffSet(currentpos);
+                            obPart.IgnoreUndoUpdate = false;
+                        }
+
+                        part.IgnoreUndoUpdate = false;
+                        m_rootPart.IgnoreUndoUpdate = false;
+                        HasGroupChanged = true;
+                        ScheduleGroupTerseUpdate();
+                        m_ValidgrpOOB = false;
+                    });
             }
         }
 
