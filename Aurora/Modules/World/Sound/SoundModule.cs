@@ -263,8 +263,8 @@ namespace Aurora.Modules.Sound
                                                  if (sp.IsChildAgent)
                                                      return;
 
-                                                 double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
-                                                 if (dis > 100.0) // Max audio distance
+                                                 float dis = (float)Util.GetDistanceTo(sp.AbsolutePosition, position);
+                                                 if (dis > 100.0f) // Max audio distance
                                                      return;
 
                                                  //Check to see if the person is local and the av is in the same parcel
@@ -272,14 +272,15 @@ namespace Aurora.Modules.Sound
                                                      return;
 
                                                  // Scale by distance
+                                                 float thisSPGain;
                                                  if (radius == 0)
-                                                     gain = (float) (gain*((100.0 - dis)/100.0));
+                                                     thisSPGain = (float)(gain * ((100.0f - dis) / 100.0f));
                                                  else
-                                                     gain = (float) (gain*((radius - dis)/radius));
+                                                     thisSPGain = (float)(gain * ((radius - dis) / radius));
 
                                                  sp.ControllingClient.SendTriggeredSound(
                                                      soundId, ownerID, objectID, parentID, handle, position,
-                                                     (float) gain);
+                                                     thisSPGain);
                                              });
         }
 
