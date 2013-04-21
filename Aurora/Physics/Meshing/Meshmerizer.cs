@@ -47,6 +47,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using zlib;
+using Aurora.Framework.Modules;
 
 namespace Aurora.Physics.Meshing
 {
@@ -59,9 +60,9 @@ namespace Aurora.Physics.Meshing
             return "Meshmerizer";
         }
 
-        public IMesher GetMesher(IConfigSource config)
+        public IMesher GetMesher(IConfigSource config, IRegistryCore registry)
         {
-            return new Meshmerizer(config);
+            return new Meshmerizer(config, registry);
         }
 
         #endregion
@@ -84,9 +85,10 @@ namespace Aurora.Physics.Meshing
         private readonly bool UseMeshesPhysicsMesh;
 
         private float minSizeForComplexMesh = 0.2f;
+        private IJ2KDecoder m_j2kDecoder = null;
         // prims with all dimensions smaller than this will have a bounding box mesh
 
-        public Meshmerizer(IConfigSource config)
+        public Meshmerizer(IConfigSource config, IRegistryCore registry)
         {
             IConfig start_config = config.Configs["Meshing"];
 
@@ -95,7 +97,7 @@ namespace Aurora.Physics.Meshing
             UseMeshesPhysicsMesh = start_config.GetBoolean("UseMeshesPhysicsMesh", UseMeshesPhysicsMesh);
 
             cacheSculptAlphaMaps = Environment.OSVersion.Platform != PlatformID.Unix && cacheSculptMaps;
-
+            m_j2kDecoder = registry.RequestModuleInterface<IJ2KDecoder>();
             try
             {
                 if (!Directory.Exists(decodedSculptMapPath))
@@ -384,17 +386,14 @@ namespace Aurora.Physics.Meshing
 
                         try
                         {
-                            ManagedImage unusedData;
-                            OpenJPEG.DecodeToImage(primShape.SculptData, out unusedData, out idata);
-                            unusedData = null;
+                            idata = m_j2kDecoder.DecodeToImage(primShape.SculptData);
 
-                            if (cacheSculptMaps &&
+                            if (idata != null && cacheSculptMaps &&
                                 (cacheSculptAlphaMaps || (((ImageFlags) (idata.Flags) & ImageFlags.HasAlpha) == 0)))
                             {
                                 try
                                 {
-                                    if (idata != null)
-                                        idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp);
+                                    idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp);
                                 }
                                 catch (Exception e)
                                 {

@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using Aurora.Framework;
 using Aurora.Framework.Services;
 using Aurora.Simulation.Base;
+using Aurora.Framework.Modules;
 
 namespace Aurora.Servers.AssetServer
 {
@@ -50,7 +51,8 @@ namespace Aurora.Servers.AssetServer
                                                                     typeof (ISyncMessageRecievedService),
                                                                     typeof (IExternalCapsHandler),
                                                                     typeof (IConfigurationService),
-                                                                    typeof (IGridServerInfoService)
+                                                                    typeof (IGridServerInfoService),
+                                                                    typeof (IJ2KDecoder)
                                                                }));
         }
     }

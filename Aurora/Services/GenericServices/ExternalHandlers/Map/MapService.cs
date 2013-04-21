@@ -58,6 +58,7 @@ namespace Aurora.Services
         private float m_cacheExpires = 24;
         private IAssetService m_assetService;
         private IGridService m_gridService;
+        private IJ2KDecoder m_j2kDecoder;
         private static Bitmap m_blankRegionTile = null;
         private MapTileIndex m_blankTiles = new MapTileIndex();
         private byte[] m_blankRegionTileData;
@@ -115,6 +116,7 @@ namespace Aurora.Services
             if (!m_enabled) return;
             m_assetService = m_registry.RequestModuleInterface<IAssetService>();
             m_gridService = m_registry.RequestModuleInterface<IGridService>();
+            m_j2kDecoder = m_registry.RequestModuleInterface<IJ2KDecoder>();
         }
 
         public void FinishedStartup()
@@ -241,26 +243,29 @@ namespace Aurora.Services
                     byte[] mapasset = m_assetService.GetData(region.TerrainMapImage.ToString());
                     if (mapasset != null)
                     {
-                        Image image;
-                        ManagedImage mImage;
-                        if (!OpenJPEG.DecodeToImage(mapasset, out mImage, out image) || image == null)
-                            return null;
-                        // Decode image to System.Drawing.Image
+                        try
+                        {
+                            Image image = m_j2kDecoder.DecodeToImage(mapasset);
+                            if (image == null)
+                                return new byte[0];
+                            // Decode image to System.Drawing.Image
 
-                        EncoderParameters myEncoderParameters = new EncoderParameters();
-                        myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
+                            EncoderParameters myEncoderParameters = new EncoderParameters();
+                            myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
 
-                        // Save bitmap to stream
-                        image.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
+                            // Save bitmap to stream
+                            image.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
 
-                        image.Dispose();
+                            image.Dispose();
 
-                        // Write the stream to a byte array for output
-                        return imgstream.ToArray();
+                            // Write the stream to a byte array for output
+                            return imgstream.ToArray();
+                        }
+                        catch { }
 
                     }
                 }
-                return null;
+                return new byte[0];
             }
             string[] splitUri = uri.Split('-');
             byte[] jpeg = FindCachedImage(uri);
