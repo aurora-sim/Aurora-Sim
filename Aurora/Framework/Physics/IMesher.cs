@@ -52,6 +52,5 @@ namespace Aurora.Framework.Physics
 
         int[] getIndexListAsInt();
         float[] getVertexListAsFloat();
-        List<Vector3> getVertexList();
     }
 }

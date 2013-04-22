@@ -801,7 +801,7 @@ namespace Aurora.Modules.EntityTransfer
                 sceneObject.IsInTransit = false; //Reset this now that it's entering here
                 if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
-                    if (sceneObject.RootChild.IsSelected)
+                    if (sceneObject.IsSelected)
                         sceneObject.RootChild.CreateSelected = true;
                     sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                     return true;

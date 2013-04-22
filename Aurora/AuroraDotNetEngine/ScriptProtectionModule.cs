@@ -529,32 +529,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (perm != "")
                 {
                     string[] ids = perm.Split(',');
-
-                    foreach (string current in ids.Select(id => id.Trim()))
+                    m_allowedUsers = ids.Select(id =>
                     {
                         UUID uuid;
-
-                        if (UUID.TryParse(current, out uuid))
-                        {
-                            if (uuid != UUID.Zero)
-                                m_allowedUsers.Add(uuid);
-                        }
-                    }
-                }
+                        if (UUID.TryParse(id.Trim(), out uuid))
+                            return uuid;
+                        else
+                            return UUID.Zero;
+                    }).Where((id) => id != UUID.Zero).ToList();
+                } 
                 perm = m_scriptProtectionModule.m_config.GetString("Allow_All", "");
                 if (perm != "")
                 {
                     string[] ids = perm.Split(',');
-                    foreach (string current in ids.Select(id => id.Trim()))
+                    m_allowedUsers = ids.Select(id =>
                     {
                         UUID uuid;
-
-                        if (UUID.TryParse(current, out uuid))
-                        {
-                            if (uuid != UUID.Zero)
-                                m_allowedUsers.Add(uuid);
-                        }
-                    }
+                        if (UUID.TryParse(id.Trim(), out uuid))
+                            return uuid;
+                        else
+                            return UUID.Zero;
+                    }).Where((id) => id != UUID.Zero).ToList();
                 }
             }
 

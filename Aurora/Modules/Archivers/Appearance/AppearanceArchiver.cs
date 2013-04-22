@@ -226,12 +226,22 @@ namespace Aurora.Modules.Archivers
             string foldername = "/";
             UUID snapshotUUID = UUID.Zero;
             bool isPublic = true;
-            if (cmdparams.Length > 5)
-                foldername = OSD.FromString(cmdparams[6]);
             if (cmdparams.Length > 6)
-                snapshotUUID = UUID.Parse(cmdparams[7]);
+                foldername = OSD.FromString(cmdparams[6]);
             if (cmdparams.Length > 7)
-                isPublic = cmdparams[8] == "1";
+            {
+                if (cmdparams[7].StartsWith("--public"))
+                    isPublic = true;
+                else
+                    snapshotUUID = UUID.Parse(cmdparams[7]);
+            }
+            if (cmdparams.Length > 8)
+            {
+                if (cmdparams[8].StartsWith("--public"))
+                    isPublic = true;
+                else
+                    snapshotUUID = UUID.Parse(cmdparams[9]);
+            }
 
             SaveAvatarArchive(cmdparams[5], account.PrincipalID, foldername, snapshotUUID, isPublic);
         }

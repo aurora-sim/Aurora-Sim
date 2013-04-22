@@ -111,48 +111,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Scene.EventManager.OnRezScripts += rez_scripts;
 
 
-            IMoneyModule money =
+            IMoneyModule moneyModule =
                 Scene.RequestModuleInterface<IMoneyModule>();
-            if (money != null)
-            {
-                money.OnObjectPaid += HandleObjectPaid;
-                money.OnPostObjectPaid += HandlePostObjectPaid;
-            }
-        }
-
-        //private void HandleObjectPaid(UUID objectID, UUID agentID, int amount)
-        private bool HandleObjectPaid(UUID objectID, UUID agentID, int amount)
-        {
-            //bool ret = false;
-            //ISceneChildEntity part = m_scriptEngine.findPrim(objectID);
-
-            //if (part == null)
-            //    return;
-
-            //MainConsole.Instance.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
-            //if (part.ParentGroup != null)
-            //    part = part.ParentGroup.RootPart;
-
-            //if (part != null)
-            //{
-            //    money(part.LocalId, agentID, amount);
-            //}
-            //if (part != null)
-            //{
-            //    MainConsole.Instance.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
-            //    if (part.ParentEntity != null) part = part.ParentEntity.RootChild;
-            //    if (part != null)
-            //    {
-            //        ret = money(part.LocalId, agentID, amount);
-            //    }
-            //}
-            //return ret;
-            return true;
-        }
-
-        private bool HandlePostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount)
-        {
-            return money(localID, agentID, amount);
+            if (moneyModule != null)
+                moneyModule.OnObjectPaid += money;
         }
 
         public void changed(ISceneChildEntity part, uint change)
@@ -300,10 +262,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         //public void money(uint localID, UUID agentID, int amount)
-        public bool money(uint localID, UUID agentID, int amount)
+        public bool money(UUID primID, UUID agentID, int amount)
         {
             bool ret = false;
-            ISceneChildEntity part = m_scriptEngine.findPrim(localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(primID);
             if (part == null) return ret;
 
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);

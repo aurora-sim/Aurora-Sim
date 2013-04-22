@@ -39,7 +39,7 @@
 	
 	;; The name of the file to load for the region data
 	;; Default is sim (.sim is automatically appended after this)
-	RegionDataFileName = "sim"
+	;RegionDataFileName = "sim"
 
 [Network]
 	

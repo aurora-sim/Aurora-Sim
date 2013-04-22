@@ -763,7 +763,7 @@ namespace Aurora.ClientStack
                                             new RegionHandshakePacket.RegionInfo4Block
                                                 {
                                                     RegionFlagsExtended = args.regionFlags,
-                                                    RegionProtocols = (ulong) RegionProtocols.None //(ulong) RegionProtocols.AgentAppearanceService
+                                                    RegionProtocols = (ulong) RegionProtocols.AgentAppearanceService
                                                 }
                                         };
             handshake.RegionInfo3 = new RegionHandshakePacket.RegionInfo3Block
@@ -4563,14 +4563,6 @@ namespace Aurora.ClientStack
             rinfopack.HasVariableBlocks = true;
             rinfopack.RegionInfo = rinfoblk;
             rinfopack.AgentData = new RegionInfoPacket.AgentDataBlock {AgentID = AgentId, SessionID = SessionId};
-            rinfopack.RegionInfo3 = new RegionInfoPacket.RegionInfo3Block[1]
-                                        {
-                                            new RegionInfoPacket.RegionInfo3Block()
-                                                {
-                                                    RegionFlagsExtended =
-                                                        args.regionFlags
-                                                }
-                                        };
             rinfopack.RegionInfo3 = new RegionInfoPacket.RegionInfo3Block[1]
                                         {
                                             new RegionInfoPacket.RegionInfo3Block()

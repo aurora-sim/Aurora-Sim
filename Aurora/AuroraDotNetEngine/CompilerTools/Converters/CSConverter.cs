@@ -410,7 +410,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 if (newline != line)
                 {
                     line = newline;
-                    return;
                 }
             }
         }

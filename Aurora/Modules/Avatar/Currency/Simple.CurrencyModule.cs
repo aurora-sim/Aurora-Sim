@@ -149,7 +149,7 @@ namespace Simple.Currency
         public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)
         {
             return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, objectID, (uint) amount, "Object payment",
-                                                    TransactionType.ObjectPaysAvatar, UUID.Zero);
+                                                    TransactionType.ObjectPays, UUID.Zero);
         }
 
         public int Balance(UUID agentID)
@@ -170,18 +170,11 @@ namespace Simple.Currency
         }
 
         public event ObjectPaid OnObjectPaid;
-        public event PostObjectPaid OnPostObjectPaid;
 
-        public void FireObjectPaid(UUID uuid1, UUID uuid2, int p)
+        public void FireObjectPaid(UUID objectID, UUID agentID, int amount)
         {
             if (OnObjectPaid != null)
-                OnObjectPaid(uuid1, uuid2, p);
-        }
-
-        public void FirePostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount)
-        {
-            if (OnPostObjectPaid != null)
-                OnPostObjectPaid(localID, regionHandle, agentID, amount);
+                OnObjectPaid(objectID, agentID, amount);
         }
 
         public bool Transfer(UUID toID, UUID fromID, int amount, string description)
@@ -205,9 +198,9 @@ namespace Simple.Currency
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
                 if(manager != null && manager.Scene != null)
                 {
-                    ISceneChildEntity ent = manager.Scene.GetSceneObjectPart(toID);
+                    ISceneChildEntity ent = manager.Scene.GetSceneObjectPart(toObjectID);
                     if(ent != null)
-                        FirePostObjectPaid(ent.LocalId, manager.Scene.RegionInfo.RegionHandle, fromID, amount);
+                        FireObjectPaid(toObjectID, fromID, amount);
                 }
             }
             return result;
@@ -263,7 +256,7 @@ namespace Simple.Currency
                         bool success = m_connector.UserCurrencyTransfer(ent.OwnerID, fromID, UUID.Zero, UUID.Zero, (uint)amount, description,
                                              (TransactionType)type, UUID.Random());
                         if (success)
-                            FirePostObjectPaid(ent.LocalId, manager.Scene.RegionInfo.RegionHandle, fromID, amount);
+                            FireObjectPaid(toID, fromID, amount);
                     }
                     else
                     {
@@ -342,7 +335,7 @@ namespace Simple.Currency
                 bool giveResult = m_connector.UserCurrencyTransfer(landParcel.LandData.OwnerID, fromID, UUID.Zero,
                                                                    UUID.Zero,
                                                                    (uint) landParcel.LandData.PassPrice, "Parcel Pass",
-                                                                   TransactionType.LandPassFee, UUID.Random());
+                                                                   TransactionType.LandPassSale, UUID.Random());
                 if (giveResult)
                 {
                     ParcelManager.ParcelAccessEntry entry

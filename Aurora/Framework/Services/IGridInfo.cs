@@ -12,8 +12,8 @@ namespace Aurora.Framework.Services
         string GridHelpURI { get; }
         string GridRegisterURI { get; }
         string GridForgotPasswordURI { get; }
-        string GridMapTileURI { get; }
-        string AgentAppearanceURI { get; }
+        string GridMapTileURI { get; set; }
+        string AgentAppearanceURI { get; set; }
         string GridWebProfileURI { get; }
         string GridSearchURI { get; }
         string GridDestinationURI { get; }

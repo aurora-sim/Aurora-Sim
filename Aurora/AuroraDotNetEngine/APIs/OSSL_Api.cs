@@ -2841,5 +2841,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             return DateTime.Now;
         }
+
+        public string osGetPhysicsEngineType()
+        {
+            // High because it can be used to target attacks to known weaknesses
+            // This would allow a new class of griefer scripts that don't even
+            // require their user to know what they are doing (see script
+            // kiddie)
+            // Because it would be nice if scripts didn't blow up if the information
+            //    about the physics engine, this function returns an empty string if
+            //    the user does not have permission to see it. This as opposed to
+            //    throwing an exception.
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetPhysicsEngineType", m_host, "OSSL", m_itemID)) return "";
+
+            string ret = null;
+            if (m_host.ParentEntity.Scene.PhysicsScene != null)
+            {
+                ret = m_host.ParentEntity.Scene.PhysicsScene.EngineType;
+            }
+            // An old physics engine might have an uninitialized engine type
+            if (ret == null)
+                ret = "unknown";
+
+            return ret;
+        }
     }
 }

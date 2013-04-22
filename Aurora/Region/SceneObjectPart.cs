@@ -1210,28 +1210,6 @@ namespace Aurora.Region
         [XmlIgnore]
         public bool CreateSelected { get; set; }
 
-        [XmlIgnore]
-        public bool IsSelected
-        {
-            get { return m_IsSelected; }
-            set
-            {
-                if (m_IsSelected != value)
-                {
-                    if (PhysActor != null)
-                    {
-                        PhysActor.Selected = value;
-                    }
-                    if (ParentID != 0 && ParentGroup != null &&
-                        ParentGroup.RootPart != null && ParentGroup.RootPart != this &&
-                        ParentGroup.RootPart.IsSelected != value)
-                        ParentGroup.RootPart.IsSelected = value;
-
-                    m_IsSelected = value;
-                }
-            }
-        }
-
         #endregion
 
         #region Public Properties with only Get
@@ -3966,8 +3944,8 @@ namespace Aurora.Region
                 (CollisionSound != UUID.Zero) ||
                 PassCollisions != 2)
             {
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision_start) != 0 ||
-                    (m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision) != 0)
+                if ((AggregateScriptEvents & scriptEvents.collision_start) != 0 ||
+                    (AggregateScriptEvents & scriptEvents.collision) != 0)
                 {
                     // do event notification
                     if (startedColliders.Count > 0)
@@ -4135,7 +4113,7 @@ namespace Aurora.Region
                     }
                 }
 
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision) != 0)
+                if ((AggregateScriptEvents & scriptEvents.collision) != 0)
                 {
                     if (m_lastColliders.Count > 0)
                     {
@@ -4294,7 +4272,7 @@ namespace Aurora.Region
                     }
                 }
 
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision_end) != 0)
+                if ((AggregateScriptEvents & scriptEvents.collision_end) != 0)
                 {
                     if (endedColliders.Count > 0)
                     {
@@ -4460,8 +4438,8 @@ namespace Aurora.Region
                         }
                     }
                 }
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision_start) != 0 ||
-                    (m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision) != 0)
+                if ((AggregateScriptEvents & scriptEvents.land_collision_start) != 0 ||
+                    (AggregateScriptEvents & scriptEvents.land_collision) != 0)
                 {
                     if (startedColliders.Count > 0)
                     {
@@ -4518,7 +4496,7 @@ namespace Aurora.Region
                         }
                     }
                 }
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision) != 0)
+                if ((AggregateScriptEvents & scriptEvents.land_collision) != 0)
                 {
                     if (m_lastColliders.Count > 0)
                     {
@@ -4581,7 +4559,7 @@ namespace Aurora.Region
                         }
                     }
                 }
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision_end) != 0)
+                if ((AggregateScriptEvents & scriptEvents.land_collision_end) != 0)
                 {
                     if (endedColliders.Count > 0)
                     {

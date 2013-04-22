@@ -68,7 +68,7 @@ namespace Aurora.Modules.Startup
             IMesher meshEngine = null;
             if (_MeshPlugins.ContainsKey(meshEngineName))
             {
-                meshEngine = _MeshPlugins[meshEngineName].GetMesher(config);
+                meshEngine = _MeshPlugins[meshEngineName].GetMesher(config, scene);
             }
             else
             {

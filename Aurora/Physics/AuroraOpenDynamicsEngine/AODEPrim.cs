@@ -148,7 +148,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 showposition; // a temp hack for now rest of code expects position to be changed immediately
 
         public AuroraODEPrim(string name, byte physicsType, PrimitiveBaseShape shape, Vector3 position, Vector3 size, Quaternion rotation, 
-                            AuroraODEPhysicsScene parent_scene)
+            int material, float friction, float restitution, float gravityMultiplier, float density, AuroraODEPhysicsScene parent_scene)
         {
             m_vehicle = new AuroraODEDynamics();
 
@@ -184,6 +184,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             hasOOBoffsetFromMesh = false;
             _triMeshData = IntPtr.Zero;
+
+            SetMaterial(material, friction, restitution, gravityMultiplier, density);
 
             CalcPrimBodyData();
 
@@ -2172,6 +2174,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override void link(PhysicsActor obj)
         {
             _parent_scene.AddSimulationChange(() => changelink((AuroraODEPrim) obj));
+        }
+
+        public override void linkGroupToThis(PhysicsActor[] objs)
+        {
+            for(int i = 0 ; i < objs.Length; i++)
+                _parent_scene.AddSimulationChange(() => ((AuroraODEPrim) objs[i]).changelink(this));
         }
 
         public override void delink()

@@ -1636,16 +1636,16 @@ namespace Aurora.Region
                     if (part.SitTargetAvatar.Contains(UUID))
                         part.RemoveAvatarOnSitTarget(UUID);
 
-                    m_parentPosition = part.GetWorldPosition();
+                    /*m_parentPosition = part.GetWorldPosition();
                     Vector3 MovePos = new Vector3 {X = 1};
                     //TODO: Make this configurable
                     MovePos *= Rotation;
                     m_parentPosition += MovePos;
                     ControllingClient.SendClearFollowCamProperties(part.ParentUUID);
                     if (part.PhysActor != null)
-                        part.PhysActor.Selected = false;
+                        part.PhysActor.Selected = false;*/
                 }
-                m_pos += m_parentPosition + new Vector3(0.0f, 0.0f, 2.0f*m_sitAvatarHeight);
+                m_pos += m_parentPosition;// +new Vector3(0.0f, 0.0f, 2.0f * m_sitAvatarHeight);
                 m_parentPosition = Vector3.Zero;
                 Rotation = Quaternion.Identity;
             }
@@ -1999,6 +1999,7 @@ namespace Aurora.Region
 
                 m_parentID = m_requestedSitTargetUUID;
                 Velocity = Vector3.Zero;
+                m_AngularVelocity = Vector3.Zero;
                 //Force send a full update
                 ControllingClient.SendAvatarDataImmediate(this);
                 foreach (IScenePresence sp in m_scene.GetScenePresences())
@@ -2695,7 +2696,7 @@ namespace Aurora.Region
                             //We were sitting on something when we crossed
                             if (Scene.SceneGraph.RestorePrimToScene(sceneObject, false))
                             {
-                                if (sceneObject.RootChild.IsSelected)
+                                if (sceneObject.IsSelected)
                                     sceneObject.RootChild.CreateSelected = true;
                                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                                 sceneObject.CreateScriptInstances(0, false, StateSource.PrimCrossing, UUID.Zero, false);

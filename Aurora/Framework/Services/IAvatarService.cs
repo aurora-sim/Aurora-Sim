@@ -72,6 +72,8 @@ namespace Aurora.Framework.Services
     public interface IAgentAppearanceService
     {
         string ServiceURI { get; }
+
+        AvatarAppearance BakeAppearance(UUID agentID, int cof_version);
     }
     
     public interface IAvatarData : IAuroraDataPlugin

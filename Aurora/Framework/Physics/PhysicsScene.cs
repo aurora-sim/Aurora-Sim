@@ -62,6 +62,8 @@ namespace Aurora.Framework.Physics
             get { return 0; }
         }
 
+        public virtual bool AllowGroupLink { get { return false; } }
+
         public virtual bool IsThreaded
         {
             get { return false; }
@@ -101,17 +103,29 @@ namespace Aurora.Framework.Physics
 
         public abstract void Initialise(IMesher meshmerizer, IScene scene);
         public abstract void PostInitialise(IConfigSource config);
+        public abstract string EngineType { get; }
 
         public abstract PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint LocalID, UUID UUID);
 
         public abstract void RemoveAvatar(PhysicsActor actor);
 
+        /// <summary>
+        /// Removes a single prim from the group that it is in 
+        /// (or removes it entirely from the scene if it is as single prim)
+        /// </summary>
+        /// <param name="prim"></param>
         public abstract void RemovePrim(PhysicsActor prim);
+
+        /// <summary>
+        /// Removes an entire group from the physics scene
+        /// </summary>
+        /// <param name="prim"></param>
         public abstract void DeletePrim(PhysicsActor prim);
 
         public abstract PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
-            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical);
+            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical, int material, float friction, float restitution,
+            float gravityMultiplier, float density);
 
         public abstract void Simulate(float timeStep);
 
@@ -198,6 +212,8 @@ namespace Aurora.Framework.Physics
             set { }
         }
 
+        public override string EngineType { get { return "NullPhysics"; } }
+
         public override bool UseUnderWaterPhysics
         {
             get { return false; }
@@ -244,7 +260,8 @@ namespace Aurora.Framework.Physics
         */
 
         public override PhysicsActor AddPrimShape(UUID primID, uint localID, string name, byte physicsType, PrimitiveBaseShape shape,
-            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical)
+            Vector3 position, Vector3 size, Quaternion rotation, bool isPhysical, int material, float friction, float restitution, 
+            float gravityMultiplier, float density)
         {
             return new NullObjectPhysicsActor();
         }

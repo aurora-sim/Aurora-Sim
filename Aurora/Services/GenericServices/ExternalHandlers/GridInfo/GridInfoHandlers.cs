@@ -55,8 +55,8 @@ namespace Aurora.Services
         public string GridHelpURI { get; protected set; }
         public string GridRegisterURI { get; protected set; }
         public string GridForgotPasswordURI { get; protected set; }
-        public string GridMapTileURI { get; protected set; }
-        public string AgentAppearanceURI { get; protected set; }
+        public string GridMapTileURI { get; set; }
+        public string AgentAppearanceURI { get; set; }
         public string GridWebProfileURI { get; protected set; }
         public string GridSearchURI { get; protected set; }
         public string GridDestinationURI { get; protected set; }

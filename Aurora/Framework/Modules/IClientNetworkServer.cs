@@ -28,6 +28,8 @@
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Nini.Config;
+using OpenMetaverse;
+using System.Net;
 
 namespace Aurora.Framework.Modules
 {
@@ -38,6 +40,8 @@ namespace Aurora.Framework.Modules
         void Start();
         void Stop();
         IClientNetworkServer Copy();
+        bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint,
+                                         AgentCircuitData sessionInfo);
         void RemoveClient(IClientAPI iClientAPI);
     }
 }

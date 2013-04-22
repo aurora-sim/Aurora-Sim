@@ -977,7 +977,7 @@ namespace Aurora.ClientStack
                 action(client);
         }
 
-        protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint,
+        public virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint,
                                          AgentCircuitData sessionInfo)
         {
             MainConsole.Instance.Debug("[LLUDPServer] AddClient-" + circuitCode + "-" + agentID + "-" + sessionID + "-" +

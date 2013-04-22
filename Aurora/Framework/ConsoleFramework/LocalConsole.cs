@@ -373,8 +373,11 @@ namespace Aurora.Framework.ConsoleFramework
                     (DateTime.Now.Minute < 10 ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString()),
                     (DateTime.Now.Second < 10 ? "0" + DateTime.Now.Second : DateTime.Now.Second.ToString()), text);
                 MainConsole.TriggerLog(level.ToString(), text);
-                m_logFile.WriteLine(text);
-                m_logFile.Flush();
+                if (m_logFile != null)
+                {
+                    m_logFile.WriteLine(text);
+                    m_logFile.Flush();
+                }
                 lock (cmdline)
                 {
                     if (y == -1)

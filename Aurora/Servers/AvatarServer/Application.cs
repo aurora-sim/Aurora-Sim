@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using Aurora.Framework;
 using Aurora.Framework.Services;
 using Aurora.Simulation.Base;
+using Aurora.Framework.Modules;
 
 namespace Aurora.Servers.AvatarServer
 {
@@ -60,7 +61,8 @@ namespace Aurora.Servers.AvatarServer
                                                                        typeof (IExternalCapsHandler),
                                                                        typeof (IConfigurationService),
                                                                        typeof (IGridServerInfoService),
-                                                                       typeof (IAgentAppearanceService)
+                                                                       typeof (IAgentAppearanceService),
+                                                                       typeof (IJ2KDecoder)
                                                                    }));
         }
     }

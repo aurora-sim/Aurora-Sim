@@ -55,10 +55,6 @@ namespace Aurora.Framework.Services.ClassHelpers.Other
         ///     param is a UUID of an agent
         ///     SignficantCameraMovement - The Camera has moved a distance that has triggered this update
         ///     param is a ScenePresence
-        ///     ObjectSelected - An object has been selected
-        ///     param is a SceneObjectPart
-        ///     ObjectDeselected - An object has been selected
-        ///     param is a SceneObjectPart
         ///     ObjectChangedOwner - An object's owner was changed
         ///     param is a SceneObjectGroup
         ///     ObjectChangedPhysicalStatus - An object's physical status has changed

@@ -33,32 +33,41 @@ using Aurora.Framework.Services;
 
 namespace Aurora.Framework.Modules
 {
-    //public delegate void ObjectPaid(UUID objectID, UUID agentID, int amount);
-    // For legacy money module. Fumi.Iseki
     public delegate bool ObjectPaid(UUID objectID, UUID agentID, int amount);
-
-    // For DTL money module.
-    public delegate bool PostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount);
 
     public enum TransactionType
     {
         SystemGenerated = 0,
-        GroupCreate = 1002,
-        UploadFee = 1101,
-        AuctionFee = 1102,
-        ClassifiedFee = 1103,
-        DirectoryFee = 2003,
-        ClassifiedRenewFee = 2005,
-        Inventory = 3000,
-        ObjectBuy = 5000,
-        Gift = 5001,
-        LandSale = 5002,
-        LandPassFee = 5006,
-        PayIntoObject = 5008,
-        ObjectPaysAvatar = 5009,
-        GroupLiability = 6003,
-        GroupDividend = 6004,
-        StipendPayment = 10000
+        // One-Time Charges
+        GroupCreate    	= 1002,
+        GroupJoin      	= 1004,
+        UploadCharge   	= 1101,
+        LandAuction    	= 1102,
+        ClassifiedCharge= 1103,
+        // Recurrent Charges
+        ParcelDirFee  	= 2003,
+        ClassifiedRenew = 2005,
+        ScheduledFee    = 2900,
+        // Inventory Transactions
+        GiveInventory   = 3000,
+        // Transfers Between Users
+        ObjectSale     	= 5000,
+        Gift           	= 5001,
+        LandSale       	= 5002,
+        ReferBonus     	= 5003,
+        InvntorySale   	= 5004,
+        RefundPurchase 	= 5005,
+        LandPassSale   	= 5006,
+        DwellBonus     	= 5007,
+        PayObject      	= 5008,
+        ObjectPays     	= 5009,
+        BuyMoney       	= 5010,
+        MoveMoney      	= 5011,
+        // Group Transactions
+        GroupLiability 	= 6003,
+        GroupDividend  	= 6004,
+        // Stipend Credits
+        StipendPayment 	= 10000
     }
 
     public class GroupBalance : IDataTransferable
@@ -112,7 +121,6 @@ namespace Aurora.Framework.Modules
         bool Charge(UUID agentID, int amount, string text);
 
         event ObjectPaid OnObjectPaid;
-        event PostObjectPaid OnPostObjectPaid;
 
         bool Transfer(UUID toID, UUID fromID, int amount, string description);
         bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type);

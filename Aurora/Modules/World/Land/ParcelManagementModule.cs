@@ -889,7 +889,7 @@ namespace Aurora.Modules.Land
                                                                                         wasPhantom,
                                                                                         wasVD, null);
                             if (needsPhysicalRebuild)
-                                group.RebuildPhysicalRepresentation(true);
+                                group.RebuildPhysicalRepresentation(true, null);
                         }
                         //Send an update so that all clients see it
                         group.ScheduleGroupTerseUpdate();

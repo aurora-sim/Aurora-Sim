@@ -33,6 +33,7 @@ using Aurora.Framework.Services.ClassHelpers.Inventory;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ProtoBuf;
+using Aurora.Framework.Modules;
 
 namespace Aurora.Framework.SceneInfo.Entities
 {
@@ -48,7 +49,7 @@ namespace Aurora.Framework.SceneInfo.Entities
     }
 
     [Serializable, ProtoContract()]
-    public class KeyframeAnimation
+    public class KeyframeAnimation : IDataTransferable
     {
         public enum Modes
         {
@@ -194,7 +195,7 @@ namespace Aurora.Framework.SceneInfo.Entities
 
         void ForcePersistence();
 
-        void RebuildPhysicalRepresentation(bool keepSelectedStatus);
+        void RebuildPhysicalRepresentation(bool keepSelectedStatus, Action actionToDoWhilePhysActorNull);
 
         void ScheduleGroupTerseUpdate();
 
@@ -288,5 +289,10 @@ namespace Aurora.Framework.SceneInfo.Entities
         void UpdateGroupRotationR(Quaternion rot);
 
         void ApplyPermissions(uint p);
+
+        EntityIntersection TestIntersection(Ray hRay, bool frontFacesOnly, bool faceCenters);
+
+        void GetAxisAlignedBoundingBoxRaw(out float minX, out float maxX, out float minY, out float maxY,
+                                                 out float minZ, out float maxZ);
     }
 }

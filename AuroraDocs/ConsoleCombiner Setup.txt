@@ -1,0 +1,33 @@
+ConsoleCombiner.exe allows you to run multiple regions or grid servers in one
+   single console. To set this up, follow the steps below.
+   
+   
+1. Run ConsoleCombiner.exe once, and press enter when it says that you need to
+   set up the config.
+   
+2. Open up config.xml in your favorite text editor. It should look something like this
+
+<Config xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RegionsToStart>TestRegion1,TestRegion2</RegionsToStart>
+  <RegionPorts>9000,9001</RegionPorts>
+  <RegionLocation>Aurora.exe</RegionLocation>
+  <ServerLocations>Aurora.AssetServer.exe,Aurora.AvatarServer.exe,Aurora.GridServer.exe,Aurora.InventoryServer.exe,Aurora.Server.exe</ServerLocations>
+</Config>
+
+3. If you want to set up the ConsoleCombiner to run multiple regions, continue with this step, otherwise, skip to the next step.
+   To set up multiple regions, you'll edit the <RegionsToStart> line, adding in any names of regions that you want to start.
+   (Make sure NOT to put a space after the ',' in the config!)
+   For example, the config above would start TestRegion1 and TestRegion2.
+   You will also need to set the <RegionPorts> line, giving each region set above a unique port to use
+   (Make sure that you put a port for every region name you put)
+   After you have done this, if you have any sim.sim files that you want to load for those regions, you need to rename them to
+   the region names you set above.
+   For example, in the config above, you'd set the .sim files to "TestRegion1.sim" and "TestRegion2.sim" in the bin directory.
+   The regions are now set up, move on to the next step.
+ 
+4. If you want to set up the ConsoleCombiner to run any of the grid services, continue with this step, otherwise, skip to the next step.
+   To set up grid services, you'll edit the <ServerLocations> line, but by default, it is set up to run all of the grid services.
+   If you want it to just run certain ones, you can remove the .exe names from that line.
+   
+5. Save config.xml and start ConsoleCombiner.exe again, it'll now be running all of your exe files in one console. Type 'switch console'
+   to switch between the different consoles that it is combining.

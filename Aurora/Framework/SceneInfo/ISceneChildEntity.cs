@@ -378,8 +378,6 @@ namespace Aurora.Framework.SceneInfo
 
         Vector3 SavedAttachedPos { get; set; }
 
-        bool IsSelected { get; set; }
-
         DateTime Rezzed { get; set; }
 
         byte ObjectSaleType { get; set; }
