@@ -258,10 +258,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             int StartTime = Util.EnvironmentTickCount();
 
             if (!Started) //Break early
+            {
+                Interlocked.Exchange(ref CmdHandlerQueueIsRunning, 0);
                 return;
+            }
 
             if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled || !m_ScriptEngine.Scene.ShouldRunHeartbeat)
+            {
+                Interlocked.Exchange(ref CmdHandlerQueueIsRunning, 0);
                 return;
+            }
 
             //Check timers, etc
             bool didAnything = false;
@@ -437,25 +443,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, EventPriority priority,
                                      params object[] param)
         {
-            QueueItemStruct QIS;
+            QueueItemStruct QIS = new QueueItemStruct
+            {
+                EventsProcData = new ScriptEventsProcData(),
+                ID = ID,
+                functionName = FunctionName,
+                llDetectParams = qParams,
+                param = param,
+                VersionID = Interlocked.Read(ref ID.VersionID),
+                State = ID.State,
+                CurrentlyAt = null
+            };
 
             if (ID == null || ID.Script == null || ID.IgnoreNew)
                 return;
 
-            if (!ID.SetEventParams(FunctionName, qParams)) // check events delay rules
+            if (!ID.SetEventParams(QIS)) // check events delay rules
                 return;
-
-            QIS = new QueueItemStruct
-                      {
-                          EventsProcData = new ScriptEventsProcData(),
-                          ID = ID,
-                          functionName = FunctionName,
-                          llDetectParams = qParams,
-                          param = param,
-                          VersionID = Interlocked.Read(ref ID.VersionID),
-                          State = ID.State,
-                          CurrentlyAt = null
-                      };
 
             ScriptEvents.Enqueue(QIS);
 
@@ -474,7 +478,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return false;
             }
 
-            if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
+            if (!QIS.ID.SetEventParams(QIS)) // check events delay rules
             {
                 EventManager.EventComplete(QIS);
                 return false;

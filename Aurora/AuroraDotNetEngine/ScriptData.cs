@@ -38,8 +38,10 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Lifetime;
 using System.Threading;
@@ -70,8 +72,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             NextEventDelay.Add("land_collision", 0);
             NextEventDelay.Add("land_collision_end", 0);
             NextEventDelay.Add("land_collision_start", 0);
-            //Don't limit link_message, too important!
-            //NextEventDelay.Add("link_message", 0);
+            NextEventDelay.Add("link_message", 0);
             NextEventDelay.Add("listen", 0);
             NextEventDelay.Add("money", 0);
             NextEventDelay.Add("moving_end", 0);
@@ -107,7 +108,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #region Declares
 
         private Dictionary<string, long> NextEventDelay;
-
+        private static string[] funcsToDrop = new string[9]
+        { "timer", "collision", "control", "land_collision", "touch", 
+        "moving_start", "moving_end", "not_at_target", "not_at_rot_target" };
+            
         //This is the UUID of the actual script.
         private readonly ScriptEngine m_ScriptEngine;
         public Dictionary<string, IScriptApi> Apis;
@@ -162,6 +166,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private double TouchEventDelayTicks;
         private const long TicksPerMillisecond = 1000;
         public UUID UserInventoryItemID;
+        private System.Threading.Timer m_eventQueueTimer = null;
+        private object m_eventQueueLock = new object();
+        private ConcurrentQueue<QueueItemStruct> m_eventQueue = new ConcurrentQueue<QueueItemStruct>();
 
         /// <summary>
         ///     This helps make sure that we clear out previous versions so that we don't have overlapping script versions running
@@ -823,19 +830,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Event Processing
 
-        public bool SetEventParams(string functionName, DetectParams[] qParams)
+        public bool SetEventParams(QueueItemStruct itm)
         {
             if (Suspended || !Running)
                 return false; //No suspended scripts...
-            if (qParams.Length > 0)
-                LastDetectParams = qParams;
+            if (itm.llDetectParams.Length > 0)
+                LastDetectParams = itm.llDetectParams;
 
-            if ( /*functionName == "control" || */functionName == "state_entry" || functionName == "on_rez" ||
-                                                  functionName == "link_message")
-            {
-                //For vehicles, otherwise breaks them. DO NOT REMOVE UNLESS YOU FIND A BETTER WAY TO FIX
+            if (itm.functionName == "state_entry" || itm.functionName == "state_exit" || itm.functionName == "on_rez")
                 return true;
-            }
 
             long NowTicks = Util.EnvironmentTickCount();
 
@@ -845,48 +848,82 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return false;
                 NextEventTimeTicks = NowTicks + EventDelayTicks;
             }
-            switch (functionName)
+            switch (itm.functionName)
             {
                     //Times pulled from http://wiki.secondlife.com/wiki/LSL_Delay
                 case "touch": //Limits for 0.1 seconds
                 case "touch_start":
                 case "touch_end":
-                    if (NowTicks < NextEventDelay[functionName])
-                        return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (TouchEventDelayTicks*TicksPerMillisecond);
+                    if (NowTicks < NextEventDelay[itm.functionName])
+                        return CheckAddEventToQueue(itm);
+                    NextEventDelay[itm.functionName] = NowTicks + (long) (TouchEventDelayTicks*TicksPerMillisecond);
                     break;
                 case "timer": //Settable timer limiter
-                    if (NowTicks < NextEventDelay[functionName])
-                        return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (TimerEventDelayTicks*TicksPerMillisecond);
+                    if (NowTicks < NextEventDelay[itm.functionName])
+                        return CheckAddEventToQueue(itm);
+                    NextEventDelay[itm.functionName] = NowTicks + (long) (TimerEventDelayTicks*TicksPerMillisecond);
                     break;
-                case "collision": //Collision limiters taken off of reporting from WhiteStar in mantis 0004513
+                case "collision":
                 case "collision_start":
                 case "collision_end":
                 case "land_collision":
                 case "land_collision_start":
                 case "land_collision_end":
-                    if (NowTicks < NextEventDelay[functionName])
-                        return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (CollisionEventDelayTicks*TicksPerMillisecond);
+                    if (NowTicks < NextEventDelay[itm.functionName])
+                        return CheckAddEventToQueue(itm);
+                    NextEventDelay[itm.functionName] = NowTicks + (long) (CollisionEventDelayTicks*TicksPerMillisecond);
                     break;
                 case "control":
-                    if (NowTicks < NextEventDelay[functionName])
-                        return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (0.05f*TicksPerMillisecond);
+                    if (NowTicks < NextEventDelay[itm.functionName])
+                        return CheckAddEventToQueue(itm);
+                    NextEventDelay[itm.functionName] = NowTicks + (long) (0.05f*TicksPerMillisecond);
                     break;
                 default: //Default is 0.05 seconds for event limiting
-                    if (!NextEventDelay.ContainsKey(functionName))
+                    if (!NextEventDelay.ContainsKey(itm.functionName))
                         break; //If it doesn't exist, we don't limit it
-                    if (NowTicks < NextEventDelay[functionName])
-                        return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (DefaultEventDelayTicks*TicksPerMillisecond);
+                    if (NowTicks < NextEventDelay[itm.functionName])
+                        return CheckAddEventToQueue(itm);
+                    NextEventDelay[itm.functionName] = NowTicks + (long) (DefaultEventDelayTicks*TicksPerMillisecond);
                     break;
             }
             //Add the event to the stats
             ScriptScore++;
             m_ScriptEngine.ScriptEPS++;
             return true;
+        }
+
+        private bool CheckAddEventToQueue(QueueItemStruct itm)
+        {
+            if (funcsToDrop.Contains(itm.functionName))
+                return false;//Drop them, don't enqueue
+
+
+            lock (m_eventQueueLock)
+            {
+                if (m_eventQueueTimer == null)//Have it try again in 5ms
+                    m_eventQueueTimer = new Timer(EventQueuePoke, null, 5, 5);
+
+                m_eventQueue.Enqueue(itm);
+            }
+            return false;
+        }
+
+        private void EventQueuePoke(object o)
+        {
+            QueueItemStruct itm;
+            lock (m_eventQueueLock)
+            {
+                if (!m_eventQueue.TryDequeue(out itm))
+                {
+                    if (m_eventQueueTimer != null)
+                    {
+                        m_eventQueueTimer.Change(0, 0);
+                        m_eventQueueTimer = null;
+                    }
+                    return;
+                }
+            }
+            m_ScriptEngine.MaintenanceThread.AddEventSchQIS(itm, EventPriority.FirstStart);
         }
 
         #endregion
