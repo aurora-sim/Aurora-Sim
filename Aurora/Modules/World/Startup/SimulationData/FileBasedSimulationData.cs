@@ -142,12 +142,17 @@ namespace Aurora.Modules
             
             info.RegionType = MainConsole.Instance.Prompt("Region Type: ",
                                                           (info.RegionType == "" ? "Mainland" : info.RegionType));
-            
+
             info.SeeIntoThisSimFromNeighbor =
                 bool.Parse(
                     MainConsole.Instance.Prompt("See into this sim from neighbors: ",
                                                 info.SeeIntoThisSimFromNeighbor.ToString().ToLower(),
-                                                new List<string>() {"true", "false"}).ToLower());
+                                                new List<string>() { "true", "false" }).ToLower());
+            info.InfiniteRegion =
+                bool.Parse(
+                    MainConsole.Instance.Prompt("Make an infinite region: ",
+                                                info.InfiniteRegion.ToString().ToLower(),
+                                                new List<string>() { "true", "false" }).ToLower());
             
             info.ObjectCapacity =
                 int.Parse(MainConsole.Instance.Prompt("Object capacity: ",
