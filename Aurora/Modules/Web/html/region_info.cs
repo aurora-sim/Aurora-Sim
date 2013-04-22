@@ -83,10 +83,13 @@ namespace Aurora.Modules.Web
                     List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
                     foreach (var client in usersInRegion)
                     {
+                        UserAccount account = userService.GetUserAccount(null, client.UserID);
+                        if (account == null)
+                            continue;
                         Dictionary<string, object> user = new Dictionary<string, object>();
                         user.Add("UserNameText", translator.GetTranslatedString("UserNameText"));
                         user.Add("UserUUID", client.UserID);
-                        user.Add("UserName", userService.GetUserAccount(null, client.UserID).Name);
+                        user.Add("UserName", account.Name);
                         users.Add(user);
                     }
                     vars.Add("UsersInRegion", users);

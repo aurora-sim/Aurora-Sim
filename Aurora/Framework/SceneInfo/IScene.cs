@@ -92,17 +92,19 @@ namespace Aurora.Framework.SceneInfo
         AgentCircuitManager AuthenticateHandler { get; }
         IConfigSource Config { get; set; }
         ISimulationDataStore SimulationDataService { get; }
+        List<IClientNetworkServer> ClientServers { get; }
 
         #endregion
 
         #region Initialize/Close
 
         bool ShouldRunHeartbeat { get; set; }
+        bool CloseQuietly { get; set; }
         void Initialize(RegionInfo regionInfo);
         void Initialize(RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers);
         void StartHeartbeat();
         void FinishedStartup(string p, List<string> list);
-        void Close();
+        void Close(bool killAgents);
 
         #endregion
 

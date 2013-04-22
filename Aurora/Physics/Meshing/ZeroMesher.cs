@@ -32,6 +32,7 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Physics;
+using Aurora.Framework.Modules;
 
 /*
  * This is the zero mesher.
@@ -55,7 +56,7 @@ namespace Aurora.Physics.Meshing
             return "ZeroMesher";
         }
 
-        public IMesher GetMesher(IConfigSource config)
+        public IMesher GetMesher(IConfigSource config, IRegistryCore registry)
         {
             return new ZeroMesher();
         }

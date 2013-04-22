@@ -150,7 +150,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
             return DoJ2KDecode(assetID, j2kData, m_useCSJ2K);
         }
 
-        private bool DoJ2KDecode(UUID assetID, byte[] j2kData, bool m_useCSJ2K)
+        private bool DoJ2KDecode(UUID assetID, byte[] j2kData, bool useCSJ2K)
         {
             //int DecodeTime = 0;
             //DecodeTime = Environment.TickCount;
@@ -218,7 +218,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
 
                 if (layers == null || layers.Length == 0)
                 {
-                    if (m_useCSJ2K == this.m_useCSJ2K)
+                    if (useCSJ2K == this.m_useCSJ2K)
                     {
                         MainConsole.Instance.Warn("[J2KDecoderModule]: Failed to decode layer data with (" +
                                                   (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID +

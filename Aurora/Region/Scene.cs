@@ -55,6 +55,8 @@ namespace Aurora.Region
             get { return m_PhysicsReturns; }
         }
 
+        public bool CloseQuietly { get; set; }
+
         /// <value>
         ///     The scene graph for this scene
         /// </value>
@@ -69,6 +71,10 @@ namespace Aurora.Region
 
         protected RegionInfo m_regInfo;
         protected List<IClientNetworkServer> m_clientServers;
+        public List<IClientNetworkServer> ClientServers
+        {
+            get { return m_clientServers; }
+        }
 
         protected AuroraEventManager m_AuroraEventManager = null;
         protected EventManager m_eventManager;
@@ -336,7 +342,7 @@ namespace Aurora.Region
         /// <summary>
         ///     This is the method that shuts down the scene.
         /// </summary>
-        public void Close()
+        public void Close(bool killAgents)
         {
             if (shuttingdown)
             {
@@ -345,35 +351,38 @@ namespace Aurora.Region
                 return;
             }
 
+            // Stop updating the scene objects and agents.
+            shuttingdown = true;
+
             MainConsole.Instance.InfoFormat("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
 
             SimulationDataService.Shutdown();
 
-            // Kick all ROOT agents with the message, 'The simulator is going down'
-            ForEachScenePresence(delegate(IScenePresence avatar)
-                                     {
-                                         if (!avatar.IsChildAgent)
-                                             avatar.ControllingClient.Kick("The simulator is going down.");
-                                     });
-
-            //Let things process and get sent for a bit
-            Thread.Sleep(1000);
-
-            IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
-            if (transferModule != null)
+            if (killAgents)
             {
-                foreach (IScenePresence avatar in new List<IScenePresence>(GetScenePresences()))
+                // Kick all ROOT agents with the message, 'The simulator is going down'
+                ForEachScenePresence(delegate(IScenePresence avatar)
+                                         {
+                                             if (!avatar.IsChildAgent)
+                                                 avatar.ControllingClient.Kick("The simulator is going down.");
+                                         });
+
+                //Let things process and get sent for a bit
+                Thread.Sleep(1000);
+
+                IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
+                if (transferModule != null)
                 {
-                    transferModule.IncomingCloseAgent(this, avatar.UUID);
+                    foreach (IScenePresence avatar in new List<IScenePresence>(GetScenePresences()))
+                    {
+                        transferModule.IncomingCloseAgent(this, avatar.UUID);
+                    }
                 }
             }
             m_ShouldRunHeartbeat = false; //Stop the heartbeat
 
             if (m_sceneGraph.PhysicsScene != null)
                 m_sceneGraph.PhysicsScene.Dispose();
-
-            // Stop updating the scene objects and agents.
-            shuttingdown = true;
 
             m_sceneGraph.Close();
             foreach (IClientNetworkServer clientServer in m_clientServers)

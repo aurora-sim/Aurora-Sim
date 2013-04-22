@@ -63,7 +63,8 @@ namespace Aurora.Servers.InventoryServer
                                                                        typeof (IAgentInfoService),
                                                                        typeof (IExternalCapsHandler),
                                                                        typeof (IConfigurationService),
-                                                                       typeof (IGridServerInfoService)
+                                                                       typeof (IGridServerInfoService),
+                                                                       typeof (IJ2KDecoder)
                                                                    }));
         }
     }

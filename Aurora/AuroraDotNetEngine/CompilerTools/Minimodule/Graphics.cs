@@ -32,6 +32,7 @@ using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services.ClassHelpers.Assets;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
+using Aurora.Framework.Modules;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -68,9 +69,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public Bitmap LoadBitmap(UUID assetID)
         {
             byte[] bmp = m_scene.AssetService.GetData(assetID.ToString());
-            ManagedImage outimg;
-            Image img;
-            OpenJPEG.DecodeToImage(bmp, out outimg, out img);
+            Image img = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(bmp);
 
             return new Bitmap(img);
         }

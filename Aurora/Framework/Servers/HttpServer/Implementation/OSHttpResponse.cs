@@ -68,13 +68,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
             set { _httpResponse.KeepAlive = value; }
         }
 
-        public string ProtocolVersion
-        {
-            get { return _httpResponse.ProtocolVersion.ToString(); }
-
-            set { _httpResponse.ProtocolVersion = new System.Version(value); }
-        }
-
         /// <summary>
         ///     Set a redirct location.
         /// </summary>
@@ -83,7 +76,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
             // get { return _redirectLocation; }
             set { _httpResponse.Redirect(value); }
         }
-
 
         /// <summary>
         ///     Chunk transfers.

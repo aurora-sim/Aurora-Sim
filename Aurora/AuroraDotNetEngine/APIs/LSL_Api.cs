@@ -12982,7 +12982,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ILandObject parcel =
                 m_host.ParentEntity.Scene.RequestModuleInterface<IParcelManagementModule>()
-                      .GetLandObject(m_host.ParentEntity.LastParcelUUID);
+                      .GetLandObject(m_host.ParentEntity.AbsolutePosition.X, m_host.ParentEntity.AbsolutePosition.Y);
             return new LSL_String(parcel.LandData.MusicURL);
         }
 

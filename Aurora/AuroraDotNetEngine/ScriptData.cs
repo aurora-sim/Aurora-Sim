@@ -187,30 +187,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this, true);
 
-            if (shouldbackup)
-            {
-                if (Script != null)
-                {
-                    /*
-                    //Fire this directly so its not closed before its fired
-                    SetEventParams("state_exit", new DetectParams[0]);
-
-                    m_ScriptEngine.MaintenanceThread.ProcessQIS(new QueueItemStruct()
-                    {
-                        ID = this,
-                        CurrentlyAt = null,
-                        functionName = "state_exit",
-                        param = new object[0],
-                        llDetectParams = new DetectParams[0],
-                        VersionID = VersionID
-                    });
-                    */
-                    // dont think we should fire state_exit here
-                    //                    m_ScriptEngine.MaintenanceThread.DoAndWaitEventSch(this, "state_exit",
-                    //                        new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
-                    m_ScriptEngine.StateSave.SaveStateTo(this);
-                }
-            }
             if (Script != null)
             {
                 //Fire the exit event for scripts that support it

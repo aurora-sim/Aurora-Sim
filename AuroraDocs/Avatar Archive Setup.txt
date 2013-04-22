@@ -1,0 +1,42 @@
+##
+## Info on how to set up Avatar Archives for the web interfaces (used for default avatar selection)
+##
+
+
+##
+##  Creating an avatar archive
+##
+To create an avatar archive, you'll first set up a user on your sim, and have that user wear all of 
+   the clothing and attachments that you want the archive to have.
+After this is done, then you'll type the following into the console
+
+save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> (--snapshot <UUID>) (--public)
+
+in which <First> is the user from above's first name, <Last> is the user from above's last name,
+  <Filename> is the file that you want to save it into (add the extension .aa),
+  <FolderNameToSaveInfo> is the folder name that will be created when this is loaded into a new
+  avatar. The last two parameters are optional, but necessary for setting up default avatars.
+  Adding "--snapshot <UUID>" will assign a screenshot to the archive, allowing a picture of it to be
+  set for the web interface. Adding "--public" will allow the archive to be found by the web interface,
+  and is required for default avatars.
+  
+  
+##
+##  Setting up default avatars
+##
+Once you have followed the step above for all default avatars, and you have set them all to have "--public", 
+  you are all set, and the default avatars will now show up in the registration page. Note that you must leave the 
+  .aa files in the bin directory where the web interface is run though for them to be loaded.
+  
+  
+##
+##  Loading an avatar archive
+##
+If you want to load an avatar archive to a user (and replace their current appearance), you can load
+an archive. To do this, make sure that the user is not logged in, then type the following into the console
+
+load avatar archive <First> <Last> <Filename>
+
+in which <First> is the user from above's first name, <Last> is the user from above's last name,
+  <Filename> is the file that you want to load (including the extension .aa). Once you type this, 
+  it will load the archive, and the avatar will be wearing the clothes from the archive the next time they log in.

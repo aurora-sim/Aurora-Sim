@@ -227,7 +227,7 @@ namespace Aurora.Modules.Chat
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand(
-                    "alert", "alert [first] [last] [message]", "Send an alert to a user", HandleAlertConsoleCommand);
+                    "alert user", "alert user [first] [last] [message]", "Send an alert to a user", HandleAlertConsoleCommand);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "alert general", "alert general [message]", "Send an alert to everyone", HandleAlertConsoleCommand);
@@ -279,9 +279,9 @@ namespace Aurora.Modules.Chat
             }
             else
             {
-                string firstName = cmdparams[1];
-                string lastName = cmdparams[2];
-                string message = Util.CombineParams(cmdparams, 3);
+                string firstName = cmdparams[2];
+                string lastName = cmdparams[3];
+                string message = Util.CombineParams(cmdparams, 4);
 
                 MainConsole.Instance.InfoFormat(
                     "[DIALOG]: Sending alert in region {0} to {1} {2} with message {3}",

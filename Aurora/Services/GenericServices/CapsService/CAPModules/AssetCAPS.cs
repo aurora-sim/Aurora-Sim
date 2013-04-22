@@ -56,6 +56,7 @@ namespace Aurora.Services
     public class AssetCAPS : IExternalCapsRequestHandler
     {
         protected IAssetService m_assetService;
+        protected IJ2KDecoder m_j2kDecoder;
         protected UUID m_AgentID;
         public const string DefaultFormat = "x-j2c";
         // TODO: Change this to a config option
@@ -70,6 +71,7 @@ namespace Aurora.Services
         {
             m_AgentID = agentID;
             m_assetService = simbase.ApplicationRegistry.RequestModuleInterface<IAssetService>();
+            m_j2kDecoder = simbase.ApplicationRegistry.RequestModuleInterface<IJ2KDecoder>();
 
             m_getTextureURI = "/CAPS/GetTexture/" + UUID.Random() + "/";
             capURLs["GetTexture"] = MainServer.Instance.ServerURI + m_getTextureURI;
@@ -326,36 +328,30 @@ namespace Aurora.Services
             byte[] data = new byte[0];
 
             MemoryStream imgstream = new MemoryStream();
-            Bitmap mTexture = new Bitmap(1, 1);
-            ManagedImage managedImage;
-            Image image = mTexture;
+            Image image = null;
 
             try
             {
                 // Taking our jpeg2000 data, decoding it, then saving it to a byte array with regular data
+                image = m_j2kDecoder.DecodeToImage(texture.Data);
+                if (image == null)
+                    return data;
+                // Save to bitmap
+                image = new Bitmap(image);
 
-                imgstream = new MemoryStream();
+                EncoderParameters myEncoderParameters = new EncoderParameters();
+                myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
 
-                // Decode image to System.Drawing.Image
-                if (OpenJPEG.DecodeToImage(texture.Data, out managedImage, out image))
+                // Save bitmap to stream
+                ImageCodecInfo codec = GetEncoderInfo("image/" + format);
+                if (codec != null)
                 {
-                    // Save to bitmap
-                    mTexture = new Bitmap(image);
-
-                    EncoderParameters myEncoderParameters = new EncoderParameters();
-                    myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
-
-                    // Save bitmap to stream
-                    ImageCodecInfo codec = GetEncoderInfo("image/" + format);
-                    if (codec != null)
-                    {
-                        mTexture.Save(imgstream, codec, myEncoderParameters);
-                        // Write the stream to a byte array for output
-                        data = imgstream.ToArray();
-                    }
-                    else
-                        MainConsole.Instance.WarnFormat("[GETTEXTURE]: No such codec {0}", format);
+                    image.Save(imgstream, codec, myEncoderParameters);
+                    // Write the stream to a byte array for output
+                    data = imgstream.ToArray();
                 }
+                else
+                    MainConsole.Instance.WarnFormat("[GETTEXTURE]: No such codec {0}", format);
             }
             catch (Exception e)
             {
@@ -366,9 +362,6 @@ namespace Aurora.Services
             {
                 // Reclaim memory, these are unmanaged resources
                 // If we encountered an exception, one or more of these will be null
-                mTexture.Dispose();
-                mTexture = null;
-                managedImage = null;
 
                 if (image != null)
                     image.Dispose();
