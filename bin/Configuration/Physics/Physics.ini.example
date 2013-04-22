@@ -8,8 +8,5 @@
 	;; Makes AuroraOpenDynamicsEngine avatars feel like they are in Second Life
     Include-SLAuroraOpenDynamicsEngine = Configuration/Physics/SecondLifeFeelingAuroraOpenDynamicsEngine.ini 
 
-    ;; ModifiedBulletSim is an alternate physics engine that is not as developed and has plenty of bugs still to work out.
-    ;Include-ModifiedBulletSim = Configuration/Physics/BulletPhysics.ini 
-
     ;; The most basic of all BasicPhysics
     ;DefaultPhysicsEngine = basicphysics
