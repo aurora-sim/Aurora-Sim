@@ -402,14 +402,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private void LSLReadLine(ref string line)
         {
+            string testLine = line;
             foreach (KeyValuePair<string, IScriptApi> functionName in m_compiler.ScriptEngine.GetAllFunctionNamesAPIs())
             {
-                string newline = line.Replace(functionName.Key,
-                                              "((" + functionName.Value.InterfaceName + ")m_apis[\"" +
-                                              functionName.Value.Name + "\"])." + functionName.Key);
+                string newline = testLine.Replace(functionName.Key, "<>");
                 if (newline != line)
                 {
-                    line = newline;
+                    testLine = newline;
+                    line = line.Replace(functionName.Key,
+                                                  "((" + functionName.Value.InterfaceName + ")m_apis[\"" +
+                                                  functionName.Value.Name + "\"])." + functionName.Key);
                 }
             }
         }
