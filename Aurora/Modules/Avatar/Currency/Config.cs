@@ -29,6 +29,7 @@ namespace Simple.Currency
         private uint m_clientPort = 8002;
         private bool m_StipendsLoadOldUsers = true;
         private bool m_GiveStipendsOnlyWhenLoggedIn = false;
+        private bool m_saveTransactionLogs = false;
 
         #endregion
 
@@ -219,6 +220,12 @@ namespace Simple.Currency
         {
             get { return m_GiveStipendsOnlyWhenLoggedIn; }
             set { m_GiveStipendsOnlyWhenLoggedIn = value; }
+        }
+
+        public bool SaveTransactionLogs
+        {
+            get { return m_saveTransactionLogs; }
+            set { m_saveTransactionLogs = value; }
         }
 
         #endregion
