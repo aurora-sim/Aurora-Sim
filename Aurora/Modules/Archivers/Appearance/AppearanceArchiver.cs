@@ -233,7 +233,7 @@ namespace Aurora.Modules.Archivers
                 if (cmdparams[7].StartsWith("--public"))
                     isPublic = true;
                 else
-                    snapshotUUID = UUID.Parse(cmdparams[7]);
+                    snapshotUUID = UUID.Parse(cmdparams[8]);
             }
             if (cmdparams.Length > 8)
             {
