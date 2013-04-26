@@ -23,6 +23,9 @@ namespace Aurora.Framework.Servers.HttpServer
             _workers = new Thread[maxThreads];
             _queue = new ConcurrentQueue<HttpListenerContext>();
             _listener = new HttpListener();
+#if LINUX
+            _listener.IgnoreWriteExceptions = true;
+#endif
             _listenerThread = new Thread(HandleRequests);
             _isSecure = isSecure;
         }

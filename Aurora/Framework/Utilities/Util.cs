@@ -2242,8 +2242,8 @@ namespace Aurora.Framework.Utilities
         public static string BasePathCombine(string p)
         {
             if (p == "")
-                return Application.StartupPath;
-            return Path.Combine(Application.StartupPath, p);
+                return AppDomain.CurrentDomain.BaseDirectory;
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, p);
         }
 
         public static void GetReaderLock(ReaderWriterLockSlim l)

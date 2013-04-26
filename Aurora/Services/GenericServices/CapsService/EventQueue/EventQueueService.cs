@@ -369,7 +369,7 @@ namespace Aurora.Services
 
         public byte[] NoEvents(UUID requestID, UUID agentID, OSHttpResponse response)
         {
-            response.KeepAlive = true;
+            response.KeepAlive = false;
             response.ContentType = "text/plain";
             response.StatusCode = 502;
             return Encoding.UTF8.GetBytes("Upstream error: ");
