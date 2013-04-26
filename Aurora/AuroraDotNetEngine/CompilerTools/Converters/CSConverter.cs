@@ -199,7 +199,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             #endregion
 
             CompiledScript = CreateCompilerScript(Script);
-            PositionMap = null;
+            PositionMap = 22 + m_includedDefines.Count;
         }
 
         public string Name
@@ -276,8 +276,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void FindErrorLine(CompilerError CompErr, object PositionMap, string script, out int LineN, out int CharN)
         {
-            LineN = CompErr.Line;
-            CharN = CompErr.Column;
+            LineN = CompErr.Line - ((int)PositionMap) + 1;
+            CharN = CompErr.Column - 1;
         }
 
         #endregion
@@ -406,7 +406,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (KeyValuePair<string, IScriptApi> functionName in m_compiler.ScriptEngine.GetAllFunctionNamesAPIs())
             {
                 string newline = testLine.Replace(functionName.Key, "<>");
-                if (newline != line)
+                if (newline != testLine)
                 {
                     testLine = newline;
                     line = line.Replace(functionName.Key,
