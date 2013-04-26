@@ -552,16 +552,19 @@ namespace Aurora.Framework.ConsoleFramework
 
             if (isCommand)
             {
-                string[] cmd = m_Commands.Resolve(Parser.Parse(cmdinput));
-
-                if (cmd.Length != 0)
+                if (cmdinput != null)
                 {
-                    int i;
+                    string[] cmd = m_Commands.Resolve(Parser.Parse(cmdinput));
 
-                    for (i = 0; i < cmd.Length; i++)
+                    if (cmd.Length != 0)
                     {
-                        if (cmd[i].Contains(" "))
-                            cmd[i] = "\"" + cmd[i] + "\"";
+                        int i;
+
+                        for (i = 0; i < cmd.Length; i++)
+                        {
+                            if (cmd[i].Contains(" "))
+                                cmd[i] = "\"" + cmd[i] + "\"";
+                        }
                     }
                 }
                 m_defaultPrompt = oldDefaultPrompt;

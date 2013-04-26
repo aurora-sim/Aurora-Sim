@@ -892,7 +892,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return true;
         }
 
-        private bool CheckAddEventToQueue(QueueItemStruct itm)
+        public bool CheckAddEventToQueue(QueueItemStruct itm)
         {
             if (funcsToDrop.Contains(itm.functionName))
                 return false;//Drop them, don't enqueue

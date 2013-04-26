@@ -3937,7 +3937,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IScenePresence presence = World.GetScenePresence(grp.OwnerID);
             IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachmentsModule != null)
-                attachmentsModule.DetachSingleAttachmentToInventory(grp.GroupID, presence.ControllingClient);
+                attachmentsModule.DetachSingleAttachmentToInventory(grp.RootChild.FromUserInventoryItemID, presence.ControllingClient);
         }
 
         public void llAttachToAvatarTemp(int attachmentPoint)
