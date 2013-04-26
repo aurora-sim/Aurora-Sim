@@ -472,9 +472,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool AddEventSchQIS(QueueItemStruct QIS, EventPriority priority)
         {
-            if (QIS.ID == null || QIS.ID.Script == null || QIS.ID.IgnoreNew)
+            if (QIS.ID == null || QIS.ID.IgnoreNew)
             {
                 EventManager.EventComplete(QIS);
+                return false;
+            }
+
+            if (QIS.ID.Script == null)
+            {
+                QIS.ID.CheckAddEventToQueue(QIS);
                 return false;
             }
 
