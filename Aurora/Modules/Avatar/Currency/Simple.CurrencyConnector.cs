@@ -370,10 +370,6 @@ namespace Simple.Currency
         public void GetMoney(string[] cmd)
         {
             string name = MainConsole.Instance.Prompt("User Name: ");
-            uint amount = 0;
-            while (!uint.TryParse(MainConsole.Instance.Prompt("Set User's Money Amount: ", "0"), out amount))
-                MainConsole.Instance.Info("Bad input, must be a number > 0");
-
             UserAccount account =
                 m_registry.RequestModuleInterface<IUserAccountService>()
                           .GetUserAccount(new List<UUID> {UUID.Zero}, name);
@@ -383,6 +379,11 @@ namespace Simple.Currency
                 return;
             }
             var currency = GetUserCurrency(account.PrincipalID);
+            if (currency == null)
+            {
+                MainConsole.Instance.Info("No currency account found");
+                return;
+            }
             MainConsole.Instance.Info(account.Name + " has $" + currency.Amount);
         }
 
