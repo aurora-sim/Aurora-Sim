@@ -249,8 +249,19 @@ namespace Simple.Currency
                 FromOSD(osdMap);
         }
 
-        public UserCurrency()
+        public UserCurrency(List<string> queryResults)
         {
+           FromArray(queryResults);
+        }
+
+        public UserCurrency(UUID agentID, uint balance, uint landuse, uint tier_bal, bool group_toggle, uint stipend_bal)
+        {
+            PrincipalID = agentID;
+            Amount = landuse;
+            LandInUse = landuse;
+            Tier = tier_bal;
+            IsGroup = group_toggle;
+            StipendsBalance = stipend_bal;
         }
 
         /// <summary></summary>
