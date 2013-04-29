@@ -48,8 +48,8 @@ namespace Aurora.DataManager.Migration.Migrators.Auth
 
             AddSchema("auth", ColDefs(
                 ColDef("UUID", ColumnTypes.Char36),
-                ColDef("passwordHash", ColumnTypes.String1024),
-                ColDef("passwordSalt", ColumnTypes.String1024),
+                ColDef("passwordHash", ColumnTypes.String512),
+                ColDef("passwordSalt", ColumnTypes.String512),
                 ColDef("accountType", ColumnTypes.Char32)
                                   ), IndexDefs(
                                       IndexDef(new string[2] {"UUID", "accountType"}, IndexType.Primary),

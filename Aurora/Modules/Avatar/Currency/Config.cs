@@ -29,6 +29,7 @@ namespace Simple.Currency
         private uint m_clientPort = 8002;
         private bool m_StipendsLoadOldUsers = true;
         private bool m_GiveStipendsOnlyWhenLoggedIn = false;
+        private bool m_saveTransactionLogs = false;
 
         #endregion
 
@@ -221,6 +222,12 @@ namespace Simple.Currency
             set { m_GiveStipendsOnlyWhenLoggedIn = value; }
         }
 
+        public bool SaveTransactionLogs
+        {
+            get { return m_saveTransactionLogs; }
+            set { m_saveTransactionLogs = value; }
+        }
+
         #endregion
     }
 
@@ -242,8 +249,19 @@ namespace Simple.Currency
                 FromOSD(osdMap);
         }
 
-        public UserCurrency()
+        public UserCurrency(List<string> queryResults)
         {
+           FromArray(queryResults);
+        }
+
+        public UserCurrency(UUID agentID, uint balance, uint landuse, uint tier_bal, bool group_toggle, uint stipend_bal)
+        {
+            PrincipalID = agentID;
+            Amount = landuse;
+            LandInUse = landuse;
+            Tier = tier_bal;
+            IsGroup = group_toggle;
+            StipendsBalance = stipend_bal;
         }
 
         /// <summary></summary>

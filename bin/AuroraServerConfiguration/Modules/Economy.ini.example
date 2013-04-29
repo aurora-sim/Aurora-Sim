@@ -17,6 +17,9 @@
 	;;
 	;;Uncomment this line to enable currency if you agree to the above
 	;Module = SimpleCurrency
+
+    ;; To Enable transaction logs
+    SaveTransactionLogs = true
 	
 	;;Don't change this option unless you know what you're doing
 	RunServer = true

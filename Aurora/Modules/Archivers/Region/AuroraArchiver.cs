@@ -38,6 +38,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading;
 using System.Windows.Forms;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.Modules.Archivers
 {
@@ -120,9 +121,12 @@ namespace Aurora.Modules.Archivers
             const string ext = ".abackup";
             try
             {
-                RegistryKey key = Registry.ClassesRoot.CreateSubKey(ext + "\\DefaultIcon");
-                key.SetValue("", Application.StartupPath + "\\CrateDownload.ico");
-                key.Close();
+                if(Util.IsWindows())
+                {
+                    RegistryKey key = Registry.ClassesRoot.CreateSubKey(ext + "\\DefaultIcon");
+                    key.SetValue("", Application.StartupPath + "\\CrateDownload.ico");
+                    key.Close();
+                }
             }
             catch
             {

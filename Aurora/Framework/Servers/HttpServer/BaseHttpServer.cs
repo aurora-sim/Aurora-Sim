@@ -429,9 +429,9 @@ namespace Aurora.Framework.Servers.HttpServer
                 return;
             }
 
+            response.KeepAlive = false;
             string requestMethod = request.HttpMethod;
             string uriString = request.RawUrl;
-            string remoteIP = request.RemoteEndPoint.ToString();
             int requestStartTick = Environment.TickCount;
 
             // Will be adjusted later on.
@@ -482,7 +482,7 @@ namespace Aurora.Framework.Servers.HttpServer
                             }
                                 //                        MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Checking for HTTP Handler for request {0}", request.RawUrl);
                             else if (DoWeHaveAHTTPHandler(request.RawUrl))
-                            {
+                        {
                                 buffer = HandleHTTPRequest(req, resp);
                             }
                             else
@@ -504,6 +504,8 @@ namespace Aurora.Framework.Servers.HttpServer
                         response.ContentLength64 = buffer.LongLength;
                         response.Close(buffer, true);
                     }
+                    else
+                        response.Close ();
                 }
                 catch(Exception ex)
                 {
@@ -526,19 +528,17 @@ namespace Aurora.Framework.Servers.HttpServer
                 if (tickdiff > 3000 && requestHandler != null)
                 {
                     MainConsole.Instance.InfoFormat(
-                        "[BASE HTTP SERVER]: Slow handling of {0} {1} from {2} took {3}ms",
+                        "[BASE HTTP SERVER]: Slow handling of {0} {1} took {2}ms",
                         requestMethod,
                         uriString,
-                        remoteIP,
                         tickdiff);
                 }
                 else if (MainConsole.Instance.IsTraceEnabled)
                 {
                     MainConsole.Instance.TraceFormat(
-                        "[BASE HTTP SERVER]: Handling {0} {1} from {2} took {3}ms",
+                        "[BASE HTTP SERVER]: Handling {0} {1} took {32}ms",
                         requestMethod,
                         uriString,
-                        remoteIP,
                         tickdiff);
                 }
             }
@@ -625,7 +625,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
                     XmlRpcMethod method;
                     bool methodWasFound;
-                    bool keepAlive = false;
                     lock (m_rpcHandlers)
                         methodWasFound = m_rpcHandlers.TryGetValue(methodName, out method);
 
@@ -664,9 +663,6 @@ namespace Aurora.Framework.Servers.HttpServer
                             // Code probably set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
                             xmlRpcResponse.SetFault(-32603, errorMessage);
                         }
-
-                        // if the method wasn't found, we can't determine KeepAlive state anyway, so lets do it only here
-                        response.KeepAlive = keepAlive;
                     }
                     else
                     {
@@ -688,7 +684,6 @@ namespace Aurora.Framework.Servers.HttpServer
                     response.StatusCode = 404;
                     response.StatusDescription = "Not Found";
                     responseString = "Not found";
-                    response.KeepAlive = false;
 
                     MainConsole.Instance.ErrorFormat(
                         "[BASE HTTP SERVER]: Handler not found for http request {0} {1}",

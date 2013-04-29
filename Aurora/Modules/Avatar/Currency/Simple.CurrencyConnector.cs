@@ -94,25 +94,16 @@ namespace Simple.Currency
                                                                                 andFilters = where
                                                                             }, null, null, null);
 
-            UserCurrency currency = new UserCurrency();
+            UserCurrency currency;
+
             if (query.Count == 0)
             {
+                currency = new UserCurrency(agentId, 0, 0, 0, false, 0);
                 UserCurrencyCreate(agentId);
                 return currency;
             }
-            currency.FromArray(query);
-            return currency;
-        }
-
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public bool UserCurrencyUpdate(UserCurrency agent)
-        {
-            object remoteValue = DoRemoteByURL("CurrencyServerURI", agent);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (bool) remoteValue;
-
-            UserCurrencyUpdate(agent, false);
-            return true;
+            
+            return new UserCurrency(query);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -191,6 +182,9 @@ namespace Simple.Currency
                                                   .GetUserAccount(null, toID);
                 UserAccount fromAccount = m_registry.RequestModuleInterface<IUserAccountService>()
                                                     .GetUserAccount(null, fromID);
+                if (m_config.SaveTransactionLogs)
+                    AddTransactionRecord((transactionID == UUID.Zero ? UUID.Random() : transactionID), description, toID, fromID, amount, type, (toCurrency == null ? 0 : toCurrency.Amount), (fromCurrency == null ? 0 : fromCurrency.Amount), (toAccount == null ? "System" : toAccount.Name), (fromAccount == null ? "System" : fromAccount.Name));
+
                 if (fromID == toID)
                 {
                     if (toUserInfo != null && toUserInfo.IsOnline)
@@ -223,6 +217,12 @@ namespace Simple.Currency
             map["Message"] = message;
             map["TransactionID"] = transactionID;
             m_syncMessagePoster.Post(serverURI, map);
+        }
+
+        // Method Added By Alicia Raven
+        private void AddTransactionRecord(UUID TransID, string Description, UUID ToID, UUID FromID, uint Amount, TransactionType TransType, uint ToBalance, uint FromBalance, string ToName, string FromName)
+        {
+            m_gd.Insert("simple_currency_history", new object[] { TransID, (Description == null ? "" : Description), FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance });
         }
 
         #endregion

@@ -30,6 +30,7 @@ using System.Net;
 using System.Net.Sockets;
 using Aurora.Framework.ConsoleFramework;
 using OpenMetaverse;
+using Aurora.Framework.Utilities;
 
 namespace Aurora.ClientStack
 {
@@ -129,7 +130,8 @@ namespace Aurora.ClientStack
                 {
                     // This udp socket flag is not supported under mono, 
                     // so we'll catch the exception and continue
-                    m_udpSocket.IOControl(SIO_UDP_CONNRESET, new byte[] {0}, null);
+                    if(Util.IsWindows())
+                        m_udpSocket.IOControl(SIO_UDP_CONNRESET, new byte[] {0}, null);
                     //MainConsole.Instance.Debug("[UDPBASE]: SIO_UDP_CONNRESET flag set");
                 }
                 catch (SocketException)
