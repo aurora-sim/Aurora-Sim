@@ -1521,6 +1521,42 @@ namespace Aurora.Modules.Land
             {
                 if (m_scene.Permissions.CanAbandonParcel(remote_client.AgentId, land))
                 {
+                    UserAccount CurrentAgent = m_scene.UserAccountService.GetUserAccount(null, remote_client.AgentId);
+
+                    string AbandonmentDate = DateTime.Now.ToString("M\\/dd\\/yyyy");
+
+                    if (land.LandData.IsGroupOwned)
+                    {
+                        string GroupName = "[Unknown Group]";
+
+                        IGroupsModule groups = m_scene.RequestModuleInterface<IGroupsModule>();
+
+                        if (groups != null)
+                        {
+                            GroupRecord gr = groups.GetGroupRecord(land.LandData.GroupID);
+                            if (gr != null)
+                            {
+                                GroupName = gr.GroupName;
+                            }
+                        }
+
+                        land.LandData.Description = "Land owned by the group " + GroupName + " was abandoned by " + CurrentAgent.Name + " on " + AbandonmentDate;
+                    }
+                    else
+                    {
+                        if (remote_client.AgentId == land.LandData.OwnerID)
+                        {
+                            land.LandData.Description = "Land abandoned by " + CurrentAgent.Name + " on " + AbandonmentDate;
+                        }
+                        else
+                        {
+                            UserAccount ParcelOwner = m_scene.UserAccountService.GetUserAccount(null, land.LandData.OwnerID);
+                            land.LandData.Description = "Land owned by " + ParcelOwner.Name + " was abandoned by " + CurrentAgent.Name + " on " + AbandonmentDate;
+                        }
+                    }
+
+                    land.LandData.Name = "Abandoned Land " + AbandonmentDate;
+                    
                     land.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                     land.LandData.AuctionID = 0; //This must be reset!
                     land.LandData.GroupID = UUID.Zero;
@@ -1529,8 +1565,12 @@ namespace Aurora.Modules.Land
                     land.LandData.AuthBuyerID = UUID.Zero;
                     land.LandData.Flags &=
                         ~(uint)
-                         (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects |
-                          ParcelFlags.ShowDirectory | ParcelFlags.AllowDeedToGroup | ParcelFlags.ContributeWithDeed);
+                         (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.AllowDamage | ParcelFlags.UseAccessList | ParcelFlags.UseAccessGroup | ParcelFlags.UseBanList | ParcelFlags.UsePassList |
+                          ParcelFlags.ShowDirectory | ParcelFlags.AllowDeedToGroup | ParcelFlags.ContributeWithDeed | ParcelFlags.AllowTerraform | ParcelFlags.ShowDirectory |
+                          ParcelFlags.AllowAPrimitiveEntry | ParcelFlags.CreateObjects | ParcelFlags.RestrictPushObject | ParcelFlags.AllowDeedToGroup | ParcelFlags.DenyAgeUnverified | ParcelFlags.DenyAnonymous);
+
+                    land.LandData.Flags |= (uint)(ParcelFlags.SoundLocal | ParcelFlags.AllowVoiceChat | ParcelFlags.AllowLandmark | ParcelFlags.AllowFly | ParcelFlags.AllowOtherScripts | ParcelFlags.AllowGroupScripts | ParcelFlags.AllowGroupObjectEntry | ParcelFlags.CreateGroupObjects | ParcelFlags.UseEstateVoiceChan);
+
                     m_hasSentParcelOverLay.Clear(); //Clear everyone out
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
