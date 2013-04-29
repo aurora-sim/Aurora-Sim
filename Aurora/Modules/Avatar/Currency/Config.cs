@@ -251,8 +251,10 @@ namespace Simple.Currency
 
         public UserCurrency(List<string> queryResults)
         {
-           FromArray(queryResults);
+            FromArray(queryResults);
         }
+
+        public UserCurrency() { }
 
         public UserCurrency(UUID agentID, uint balance, uint landuse, uint tier_bal, bool group_toggle, uint stipend_bal)
         {
