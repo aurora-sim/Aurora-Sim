@@ -63,15 +63,9 @@ namespace Aurora.Services
         public void FinishedStartup()
         {
             if (!m_enabled) return;
-            IGridServerInfoService serverInfo = m_registry.RequestModuleInterface<IGridServerInfoService>();
-            if (serverInfo != null)
-                serverInfo.AddURI("SSAService", ServiceURI);
-            else
-            {
-                IGridInfo gridInfo = m_registry.RequestModuleInterface<IGridInfo>();
-                if(gridInfo != null)
-                    gridInfo.AgentAppearanceURI = ServiceURI;
-            }
+            IGridInfo gridInfo = m_registry.RequestModuleInterface<IGridInfo>();
+            if(gridInfo != null)
+                gridInfo.AgentAppearanceURI = ServiceURI;
         }
 
         private byte[] GetBakedTexture(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -88,8 +82,10 @@ namespace Aurora.Services
             AssetBase texture = m_assetService.Get(textureID.ToString());
             if (texture == null)
             {
+                MainConsole.Instance.WarnFormat("[AgentAppearanceService]: Could not find baked texture {0} for {1}", textureID, avID);
                 return new byte[0];
             }
+            MainConsole.Instance.InfoFormat("[AgentAppearanceService]: Found baked texture {0} for {1}", textureID, avID);
             // Full content request
             httpResponse.StatusCode = (int)System.Net.HttpStatusCode.OK;
             httpResponse.ContentType = texture.TypeString;

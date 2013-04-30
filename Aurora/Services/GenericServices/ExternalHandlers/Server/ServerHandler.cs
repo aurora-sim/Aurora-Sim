@@ -68,10 +68,6 @@ namespace Aurora.Services
                 IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
                 server.AddStreamHandler(new ServerHandler("/server/", m_registry, null));
-
-                IGridServerInfoService gridServers = m_registry.RequestModuleInterface<IGridServerInfoService>();
-                if (gridServers != null)
-                    gridServers.AddURI("ServerURI", server.ServerURI + "/server/");
                 //AddUDPConector(8008);
             }
         }

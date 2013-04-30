@@ -124,10 +124,10 @@ namespace Aurora.Services
             if (!m_enabled) return;
             IGridServerInfoService serverInfo = m_registry.RequestModuleInterface<IGridServerInfoService>();
             if (serverInfo != null)
-            {
-                serverInfo.AddURI("MapService", MapServiceURL);
                 serverInfo.AddURI("MapAPIService", MapServiceAPIURL);
-            }
+            IGridInfo gridInfo = m_registry.RequestModuleInterface<IGridInfo>();
+            if (gridInfo != null)
+                gridInfo.GridMapTileURI = MapServiceURL;
         }
 
         public string MapServiceURL
