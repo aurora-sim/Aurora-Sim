@@ -35,7 +35,7 @@ namespace Aurora.Services.GenericServices
             if (conf == null)
                 return;
             foreach (string key in conf.GetKeys())
-                m_gridURIs.Add(key, Util.ConvertToList(conf.GetString(key)));
+                m_gridURIs.Add(key, Util.ConvertToList(conf.GetString(key).Replace("ServersHostname", MainServer.Instance.HostName)));
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

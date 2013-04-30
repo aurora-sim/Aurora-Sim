@@ -232,7 +232,7 @@ namespace Aurora.Modules.Archivers
             {
                 if (cmdparams[i].StartsWith("--private"))
                 {
-                    isPublic = true;
+                    isPublic = false;
                     i++;
                 }
                 else if (cmdparams[i].StartsWith("--snapshot"))

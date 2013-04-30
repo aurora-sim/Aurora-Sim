@@ -1,7 +1,8 @@
 [Configuration]
 	;; If you have the Aurora.*Server.exe applications running over multiple
-	;;  servers, change the 127.0.0.1 below to your external IP or DNS name
-    Define-ServersHostname = 127.0.0.1
+	;;  servers, change the ServersHostname line below to your external IP or DNS name
+	;;  and uncommment it
+    ;Define-ServersHostname = 
     ServerURI = "http://ServersHostname:8003/server/"                    ; Aurora.Server
     MapAPIService = http://ServersHostname:8012/MapAPI/                  ; Aurora.GridServer
     MapService = http://ServersHostname:8012/MapService/                 ; Aurora.GridServer
