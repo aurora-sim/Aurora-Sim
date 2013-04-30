@@ -202,60 +202,57 @@ namespace Aurora.Modules.Attachments
         public void SuspendAvatar(IScenePresence presence, GridRegion destination)
         {
             IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-            Util.FireAndForget((o0) =>
-                                   {
-                                       presence.AttachmentsLoaded = false;
-                                       ISceneEntity[] attachments = GetAttachmentsForAvatar(presence.UUID);
-                                       foreach (ISceneEntity group in attachments)
-                                       {
-                                           if (group.RootChild.AttachedPos != group.RootChild.SavedAttachedPos ||
-                                               group.RootChild.SavedAttachmentPoint != group.RootChild.AttachmentPoint)
-                                           {
-                                               group.RootChild.SavedAttachedPos = group.RootChild.AttachedPos;
-                                               group.RootChild.SavedAttachmentPoint = group.RootChild.AttachmentPoint;
-                                               //Make sure we get updated
-                                               group.HasGroupChanged = true;
-                                           }
+            presence.AttachmentsLoaded = false;
+            ISceneEntity[] attachments = GetAttachmentsForAvatar(presence.UUID);
+            foreach (ISceneEntity group in attachments)
+            {
+                if (group.RootChild.AttachedPos != group.RootChild.SavedAttachedPos ||
+                    group.RootChild.SavedAttachmentPoint != group.RootChild.AttachmentPoint)
+                {
+                    group.RootChild.SavedAttachedPos = group.RootChild.AttachedPos;
+                    group.RootChild.SavedAttachmentPoint = group.RootChild.AttachmentPoint;
+                    //Make sure we get updated
+                    group.HasGroupChanged = true;
+                }
 
-                                           // If an item contains scripts, it's always changed.
-                                           // This ensures script state is saved on detach
-                                           foreach (ISceneChildEntity p in group.ChildrenEntities())
-                                           {
-                                               if (p.Inventory.ContainsScripts())
-                                               {
-                                                   group.HasGroupChanged = true;
-                                                   break;
-                                               }
-                                           }
-                                           if (group.HasGroupChanged)
-                                           {
-                                               UUID assetID = UpdateKnownItem(presence.ControllingClient, group,
-                                                                              group.RootChild.FromUserInventoryItemID,
-                                                                              group.OwnerID);
-                                               group.RootChild.FromUserInventoryAssetID = assetID;
-                                           }
-                                       }
-                                       if (appearance != null)
-                                       {
-                                           appearance.Appearance.SetAttachments(attachments);
-                                           presence.Scene.AvatarService.SetAppearance(presence.UUID,
-                                                                                      appearance.Appearance);
-                                       }
-                                       IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule>();
-                                       if (backup != null)
-                                       {
-                                           bool sendUpdates = destination == null;
-                                           if (!sendUpdates)
-                                           {
-                                               List<GridRegion> regions =
-                                                   presence.Scene.RequestModuleInterface<IGridRegisterModule>()
-                                                           .GetNeighbors(presence.Scene);
-                                               regions.RemoveAll((r) => r.RegionID != destination.RegionID);
-                                               sendUpdates = regions.Count == 0;
-                                           }
-                                           backup.DeleteSceneObjects(attachments, false, sendUpdates);
-                                       }
-                                   });
+                // If an item contains scripts, it's always changed.
+                // This ensures script state is saved on detach
+                foreach (ISceneChildEntity p in group.ChildrenEntities())
+                {
+                    if (p.Inventory.ContainsScripts())
+                    {
+                        group.HasGroupChanged = true;
+                        break;
+                    }
+                }
+                if (group.HasGroupChanged)
+                {
+                    UUID assetID = UpdateKnownItem(presence.ControllingClient, group,
+                                                    group.RootChild.FromUserInventoryItemID,
+                                                    group.OwnerID);
+                    group.RootChild.FromUserInventoryAssetID = assetID;
+                }
+            }
+            if (appearance != null)
+            {
+                appearance.Appearance.SetAttachments(attachments);
+                presence.Scene.AvatarService.SetAppearance(presence.UUID,
+                                                            appearance.Appearance);
+            }
+            IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule>();
+            if (backup != null)
+            {
+                bool sendUpdates = destination == null;
+                if (!sendUpdates)
+                {
+                    List<GridRegion> regions =
+                        presence.Scene.RequestModuleInterface<IGridRegisterModule>()
+                                .GetNeighbors(presence.Scene);
+                    regions.RemoveAll((r) => r.RegionID != destination.RegionID);
+                    sendUpdates = regions.Count == 0;
+                }
+                backup.DeleteSceneObjects(attachments, false, sendUpdates);
+            }
         }
 
         #endregion

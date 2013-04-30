@@ -180,7 +180,7 @@ namespace Aurora.Framework.Services
         /// <param name="AgentID"></param>
         /// <param name="Region"></param>
         /// <param name="markAgentAsLeaving"></param>
-        bool MakeChildAgent(UUID AgentID, GridRegion Region, bool markAgentAsLeaving);
+        bool MakeChildAgent(UUID AgentID, GridRegion oldRegion, GridRegion Region, bool markAgentAsLeaving);
 
         /// <summary>
         ///     Sends that a teleport failed to the given user

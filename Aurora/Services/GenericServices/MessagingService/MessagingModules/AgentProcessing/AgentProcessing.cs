@@ -674,7 +674,7 @@ namespace Aurora.Services
                             agentInfoService.SetLastPosition(AgentID.ToString(), destination.RegionID,
                                                              agentData.Position, Vector3.Zero, destination.ServerURI);
 
-                        SimulationService.MakeChildAgent(AgentID, regionCaps.Region, false);
+                        SimulationService.MakeChildAgent(AgentID, regionCaps.Region, destination, false);
                         reason = "";
                     }
                 }
@@ -973,7 +973,7 @@ namespace Aurora.Services
                             if (agentInfoService != null)
                                 agentInfoService.SetLastPosition(AgentID.ToString(), crossingRegion.RegionID,
                                                                  pos, Vector3.Zero, crossingRegion.ServerURI);
-                            SimulationService.MakeChildAgent(AgentID, requestingRegionCaps.Region, true);
+                            SimulationService.MakeChildAgent(AgentID, requestingRegionCaps.Region, crossingRegion, true);
                         }
                     }
 

@@ -229,14 +229,14 @@ namespace Aurora.Services
             return true;
         }
 
-        public bool MakeChildAgent(UUID AgentID, GridRegion destination, bool isCrossing)
+        public bool MakeChildAgent(UUID AgentID, GridRegion oldRegion, GridRegion destination, bool isCrossing)
         {
             MakeChildAgentRequest request = new MakeChildAgentRequest();
             request.AgentID = AgentID;
             request.Destination = destination;
             request.IsCrossing = isCrossing;
 
-            m_syncMessagePoster.Post(destination.ServerURI, request.ToOSD());
+            m_syncMessagePoster.Post(oldRegion.ServerURI, request.ToOSD());
             return true;
         }
 

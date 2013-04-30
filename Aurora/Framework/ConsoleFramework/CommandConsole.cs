@@ -567,6 +567,10 @@ namespace Aurora.Framework.ConsoleFramework
                         }
                     }
                 }
+                else
+                {
+                    Environment.Exit(0);
+                }
                 m_defaultPrompt = oldDefaultPrompt;
                 return String.Empty;
             }
