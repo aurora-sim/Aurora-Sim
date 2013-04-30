@@ -228,19 +228,18 @@ namespace Aurora.Modules.Archivers
             bool isPublic = true;
             if (cmdparams.Length > 6)
                 foldername = OSD.FromString(cmdparams[6]);
-            if (cmdparams.Length > 7)
+            for (int i = 7; i < cmdparams.Length; )
             {
-                if (cmdparams[7].StartsWith("--public"))
+                if (cmdparams[i].StartsWith("--private"))
+                {
                     isPublic = true;
-                else
-                    snapshotUUID = UUID.Parse(cmdparams[8]);
-            }
-            if (cmdparams.Length > 8)
-            {
-                if (cmdparams[8].StartsWith("--public"))
-                    isPublic = true;
-                else
-                    snapshotUUID = UUID.Parse(cmdparams[9]);
+                    i++;
+                }
+                else if (cmdparams[i].StartsWith("--snapshot"))
+                {
+                    snapshotUUID = UUID.Parse(cmdparams[i+1]);
+                    i += 2;
+                }
             }
 
             SaveAvatarArchive(cmdparams[5], account.PrincipalID, foldername, snapshotUUID, isPublic);
@@ -475,8 +474,8 @@ namespace Aurora.Modules.Archivers
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand("save avatar archive",
-                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> (--snapshot <UUID>) (--public)",
-                                                         "Saves appearance to an avatar archive (.aa is the recommended file extension) (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive) Both --snapshot and --public are optional.",
+                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> (--snapshot <UUID>) (--private)",
+                                                         "Saves appearance to an avatar archive (.aa is the recommended file extension) (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive) Both --snapshot and --private are optional. --private tells any web interfaces that they cannot display this as a default avatar. --snapshot sets a picture to display on the web interface if this archive is being used as a default avatar.",
                                                          HandleSaveAvatarArchive);
                 MainConsole.Instance.Commands.AddCommand("load avatar archive",
                                                          "load avatar archive <First> <Last> <Filename>",
