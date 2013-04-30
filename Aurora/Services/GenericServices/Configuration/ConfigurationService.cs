@@ -27,6 +27,7 @@
 
 using Aurora.Framework;
 using Aurora.Framework.Modules;
+using Aurora.Framework.Servers;
 using Aurora.Framework.Services;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
@@ -88,7 +89,7 @@ namespace Aurora.Services
 
             //Get the urls from the config
             foreach (string key in m_config.Configs["Configuration"].GetKeys().Where((k) => k.EndsWith("URI")))
-                m_urls[key] = m_config.Configs["Configuration"].GetString(key);
+                m_urls[key] = m_config.Configs["Configuration"].GetString(key).Replace("ServersHostname", MainServer.Instance.HostName);
         }
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
