@@ -10,7 +10,7 @@ How to add another region in grid mode:
 How to remove a region in grid mode:
     
 	To remove a region, simply don't start that region's Aurora.exe file, and to remove it from the map, switch to
-	Aurora.Server.exe and type 'grid remove region <name>'.
+	Aurora.Server.exe and type 'grid clear region <name>'.
 	
 How to update a region:
 
