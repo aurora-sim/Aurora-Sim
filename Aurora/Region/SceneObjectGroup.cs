@@ -1317,7 +1317,7 @@ namespace Aurora.Region
                 ent.FinishedSerializingGenericProperties();
         }
 
-        public void DetachToGround()
+        public void DetachToGround(Vector3 forcedPos, Quaternion forcedRotation)
         {
             IScenePresence avatar = m_scene.GetScenePresence(m_rootPart.AttachedAvatar);
             if (avatar == null)
@@ -1325,7 +1325,12 @@ namespace Aurora.Region
 
             RootPart.FromUserInventoryItemID = UUID.Zero;
 
-            AbsolutePosition = avatar.AbsolutePosition;
+            if (forcedPos == Vector3.Zero)
+                AbsolutePosition = avatar.AbsolutePosition;
+            else
+                AbsolutePosition = forcedPos;
+            if (forcedRotation != Quaternion.Identity)
+                UpdateGroupRotationR(forcedRotation);
             m_rootPart.AttachedAvatar = UUID.Zero;
             //Anakin Lohner bug #3839 
             foreach (SceneObjectPart p in m_partsList)

@@ -33,6 +33,8 @@ using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 
 namespace Aurora.BotManager
 {
@@ -52,6 +54,7 @@ namespace Aurora.BotManager
         void botSitObject(string bot, string objectID, LSL_Vector offset);
         void botStandUp(string bot);
         void botTouchObject(string bot, string objectID);
+        void botSetRot(LSL_Key npc, LSL_Rotation rotation);
         void botAddTag(string bot, string tag);
         LSL_List botGetBotsWithTag(string tag);
         void botRemoveBotsWithTag(string tag);

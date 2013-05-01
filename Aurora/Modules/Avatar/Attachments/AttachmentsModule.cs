@@ -582,6 +582,11 @@ namespace Aurora.Modules.Attachments
 
         public void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient)
         {
+            DetachSingleAttachmentToGround(itemID, remoteClient, Vector3.Zero, Quaternion.Identity);
+        }
+
+        public void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient, Vector3 forcedPos, Quaternion forcedRotation)
+        {
             ISceneChildEntity part = m_scene.GetSceneObjectPart(itemID);
             if (part == null || part.ParentEntity == null)
                 return;
@@ -604,7 +609,7 @@ namespace Aurora.Modules.Attachments
 
                 AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
-                part.ParentEntity.DetachToGround();
+                part.ParentEntity.DetachToGround(forcedPos, forcedRotation);
 
                 List<UUID> uuids = new List<UUID> {inventoryID};
                 m_scene.InventoryService.DeleteItems(remoteClient.AgentId, uuids);

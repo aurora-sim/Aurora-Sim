@@ -60,8 +60,9 @@ namespace Aurora.Framework.Modules
         /// <param name="name">name to filter on</param>
         /// <param name="id">key to filter on (user given, could be totally faked)</param>
         /// <param name="msg">msg to filter on</param>
+        /// <param name="regexBitfield">Bitfield indicating which strings should be processed as regex.</param>
         /// <returns>number of the scripts handle</returns>
-        int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg);
+        int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg, int regexBitfield);
 
         /// <summary>
         ///     This method scans over the objects which registered an interest in listen callbacks.

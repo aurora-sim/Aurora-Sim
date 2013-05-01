@@ -236,6 +236,20 @@ namespace Aurora.BotManager
             sp.StandUp();
         }
 
+        public void botSetRot(LSL_Key npc, LSL_Rotation rotation)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "botStandUp", m_host, "bot", m_itemID)) return;
+            IScenePresence sp = World.GetScenePresence(UUID.Parse(npc));
+            if (sp == null)
+                return;
+            UUID npcId;
+            if (!UUID.TryParse(npc.m_string, out npcId))
+                return;
+
+            if (sp != null)
+                sp.Rotation = rotation.ToQuaternion();
+        }
+
         public void botAddTag(string bot, string tag)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "botAddTag", m_host, "bot", m_itemID)) return;

@@ -1042,7 +1042,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID keyID;
             UUID.TryParse(ID, out keyID);
             if (m_comms != null)
-                return m_comms.Listen(m_itemID, m_host.UUID, channelID, name, keyID, msg);
+                return m_comms.Listen(m_itemID, m_host.UUID, channelID, name, keyID, msg, 0);
             return -1;
         }
 

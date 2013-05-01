@@ -293,8 +293,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     cur = "q" + ob;
                 else if (ob.GetType() == typeof (LSL_Types.LSLString))
                     cur = "\"" + EscapeString(ob.ToString()) + "\"";
-                else if (ob.GetType() == typeof (LSL_Types.key))
-                    cur = "k\"" + ob + "\"";
                 else if (o.GetType() == typeof (LSL_Types.list))
                     cur = "{" + ListToString(ob) + "}";
 
@@ -338,8 +336,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                             cur = "q" + o;
                         else if (o.GetType() == typeof (LSL_Types.LSLString))
                             cur = "\"" + EscapeString(o.ToString()) + "\"";
-                        else if (o.GetType() == typeof (LSL_Types.key))
-                            cur = "k\"" + o + "\"";
                         else if (o.GetType() == typeof (LSL_Types.list))
                             cur = "{" + ListToString(o) + "}";
 
@@ -450,17 +446,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                                     len = totlen - start;
                                 param = UnEscapeString(inval.Substring(start, len));
                                 v.Add(new LSL_Types.LSLString(param));
-                                end++;
-                                break;
-                            case 'k':
-                                start++;
-                                end = inval.IndexOf('"', start);
-                                if (end > 0)
-                                    len = end - start;
-                                else
-                                    len = totlen - start;
-                                param = inval.Substring(start, len);
-                                v.Add(new LSL_Types.key(param));
                                 end++;
                                 break;
                             case '{':

@@ -497,8 +497,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             size += 8;
                         else if (o is LSL_Types.LSLString)
                             size += ((LSL_Types.LSLString) o).m_string.Length;
-                        else if (o is LSL_Types.key)
-                            size += ((LSL_Types.key) o).value.Length;
                         else if (o is LSL_Types.Vector3)
                             size += 32;
                         else if (o is LSL_Types.Quaternion)
@@ -575,11 +573,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public LSL_Types.LSLString GetLSLStringItem(int itemIndex)
             {
-                if (m_data[itemIndex] is LSL_Types.key)
-                {
-                    return (LSL_Types.key) m_data[itemIndex];
-                }
-                else if (m_data[itemIndex] is String)
+                if (m_data[itemIndex] is String)
                 {
                     return new LSL_Types.LSLString((string) m_data[itemIndex]);
                 }
@@ -658,11 +652,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             ? m_data[itemIndex].GetType().Name
                             : "null"));
                 }
-            }
-
-            public LSL_Types.key GetKeyItem(int itemIndex)
-            {
-                return (LSL_Types.key) m_data[itemIndex];
             }
 
             public static list operator +(list a, list b)
@@ -931,13 +920,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 int ret = 0;
 
-                if (left is key)
-                {
-                    key l = (key) left;
-                    key r = (key) right;
-                    ret = String.CompareOrdinal(l.value, r.value);
-                }
-                else if (left is LSLString)
+                if (left is LSLString)
                 {
                     LSLString l = (LSLString) left;
                     LSLString r = (LSLString) right;
@@ -1382,121 +1365,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
         }
 
-        public struct key
-        {
-            public string value;
-
-            #region Constructors
-
-            public key(string s)
-            {
-                value = s;
-            }
-
-            public key(OpenMetaverse.UUID s)
-            {
-                value = s.ToString();
-            }
-
-            public key(LSLString s)
-            {
-                value = s.ToString();
-            }
-
-            #endregion
-
-            #region Methods
-
-            public static bool Parse2Key(string s)
-            {
-                Regex isuuid =
-                    new Regex(@"^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$",
-                              RegexOptions.Compiled);
-                if (isuuid.IsMatch(s))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            #endregion
-
-            #region Operators
-
-            public static implicit operator Boolean(key k)
-            {
-                if (k.value.Length == 0)
-                {
-                    return false;
-                }
-
-                if (k.value == "00000000-0000-0000-0000-000000000000")
-                {
-                    return false;
-                }
-                Regex isuuid =
-                    new Regex(@"^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$",
-                              RegexOptions.Compiled);
-                if (isuuid.IsMatch(k.value))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            public static implicit operator key(string s)
-            {
-                return new key(s);
-            }
-
-            public static implicit operator String(key k)
-            {
-                return k.value;
-            }
-
-            public static implicit operator LSLString(key k)
-            {
-                return k.value;
-            }
-
-            public static bool operator ==(key k1, key k2)
-            {
-                return k1.value == k2.value;
-            }
-
-            public static bool operator !=(key k1, key k2)
-            {
-                return k1.value != k2.value;
-            }
-
-            #endregion
-
-            #region Overriders
-
-            public override bool Equals(object o)
-            {
-                return o.ToString() == value;
-            }
-
-            public override int GetHashCode()
-            {
-                return value.GetHashCode();
-            }
-
-            public override string ToString()
-            {
-                return value;
-            }
-
-            #endregion
-        }
-
         public struct LSLString
         {
             public string m_string;
@@ -1586,11 +1454,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             public static implicit operator list(LSLString s)
             {
                 return new list(new object[] {s});
-            }
-
-            public static implicit operator key(LSLString s)
-            {
-                return new key(s);
             }
 
             #endregion

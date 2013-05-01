@@ -2865,5 +2865,224 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             return ret;
         }
+
+        /// <summary>
+        /// Wraps to Math.Min()
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public LSL_Float osMin(double a, double b)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osMin", m_host, "OSSL", m_itemID)) return 0;
+
+            return Math.Min(a, b);
+        }
+
+        /// <summary>
+        /// Wraps to Math.max()
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public LSL_Float osMax(double a, double b)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osMax", m_host, "OSSL", m_itemID)) return 0;
+
+            return Math.Max(a, b);
+        }
+
+        /// <summary>
+        /// Checks if thing is a UUID.
+        /// </summary>
+        /// <param name="thing"></param>
+        /// <returns>1 if thing is a valid UUID, 0 otherwise</returns>
+        public LSL_Integer osIsUUID(string thing)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osIsUUID", m_host, "OSSL", m_itemID)) return 0;
+
+            UUID test;
+            return UUID.TryParse(thing, out test) ? 1 : 0;
+        }
+
+        public LSL_String osReplaceString(string src, string pattern, string replace, int count, int start)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osReplaceString", m_host, "OSSL", m_itemID)) return "";
+
+            // Normalize indices (if negative).
+            // After normlaization they may still be
+            // negative, but that is now relative to
+            // the start, rather than the end, of the
+            // sequence.
+            if (start < 0)
+            {
+                start = src.Length + start;
+            }
+
+            if (start < 0 || start >= src.Length)
+            {
+                return src;
+            }
+
+            // Find matches beginning at start position
+            Regex matcher = new Regex(pattern);
+            return matcher.Replace(src, replace, count, start);
+        }
+
+        /// <summary>
+        /// Sets the response type for an HTTP request/response
+        /// </summary>
+        /// <returns></returns>
+        public void osSetContentType(LSL_Key id, string type)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetContentType", m_host, "OSSL", m_itemID)) return;
+
+            IUrlModule urlModule = World.RequestModuleInterface<IUrlModule>();
+            if (urlModule != null)
+                urlModule.SetContentType(new UUID(id.m_string), type);
+        }
+
+        public void osDropAttachment()
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osDropAttachment", m_host, "OSSL", m_itemID)) return;
+            DropAttachment(true);
+        }
+
+        public void osForceDropAttachment()
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceDropAttachment", m_host, "OSSL", m_itemID)) return;
+
+            DropAttachment(false);
+        }
+
+        public void osDropAttachmentAt(LSL_Vector pos, LSL_Rotation rot)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osDropAttachmentAt", m_host, "OSSL", m_itemID)) return;
+
+            DropAttachmentAt(true, pos, rot);
+        }
+
+        public void osForceDropAttachmentAt(LSL_Vector pos, LSL_Rotation rot)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceDropAttachmentAt", m_host, "OSSL", m_itemID)) return;
+
+            DropAttachmentAt(false, pos, rot);
+        }
+
+        /// Shout an error if the object owner did not grant the script the specified permissions.
+        /// </summary>
+        /// <param name="perms"></param>
+        /// <returns>boolean indicating whether an error was shouted.</returns>
+        protected bool ShoutErrorOnLackingOwnerPerms(int perms, string errorPrefix)
+        {
+            bool fail = false;
+            TaskInventoryItem item = m_host.TaskInventory[m_itemID];
+            if (item.PermsGranter != m_host.OwnerID)
+            {
+                fail = true;
+                OSSLShoutError(string.Format("{0}. Permissions not granted to owner.", errorPrefix));
+            }
+            else if ((item.PermsMask & perms) == 0)
+            {
+                fail = true;
+                OSSLShoutError(string.Format("{0}. Permissions not granted.", errorPrefix));
+            }
+
+            return fail;
+        }
+
+        protected void DropAttachment(bool checkPerms)
+        {
+            if (checkPerms && ShoutErrorOnLackingOwnerPerms(ScriptBaseClass.PERMISSION_ATTACH, "Cannot drop attachment"))
+            {
+                return;
+            }
+
+            IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
+            IScenePresence sp = attachmentsModule == null ? null : World.GetScenePresence(m_host.OwnerID);
+
+            if (attachmentsModule != null && sp != null)
+            {
+                attachmentsModule.DetachSingleAttachmentToGround(m_host.FromUserInventoryItemID, sp.ControllingClient);
+            }
+        }
+
+        protected void DropAttachmentAt(bool checkPerms, LSL_Vector pos, LSL_Rotation rot)
+        {
+            if (checkPerms && ShoutErrorOnLackingOwnerPerms(ScriptBaseClass.PERMISSION_ATTACH, "Cannot drop attachment"))
+            {
+                return;
+            }
+
+            IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
+            IScenePresence sp = attachmentsModule == null ? null : World.GetScenePresence(m_host.OwnerID);
+
+            if (attachmentsModule != null && sp != null)
+            {
+                attachmentsModule.DetachSingleAttachmentToGround(m_host.ParentEntity.UUID, sp.ControllingClient, pos.ToVector3(), rot.ToQuaternion());
+            }
+        }
+
+        public LSL_Integer osListenRegex(int channelID, string name, string ID, string msg, int regexBitfield)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osListenRegex", m_host, "OSSL", m_itemID)) return 0;
+
+            UUID keyID;
+            UUID.TryParse(ID, out keyID);
+
+            // if we want the name to be used as a regular expression, ensure it is valid first.
+            if ((regexBitfield & ScriptBaseClass.OS_LISTEN_REGEX_NAME) == ScriptBaseClass.OS_LISTEN_REGEX_NAME)
+            {
+                try
+                {
+                    Regex.IsMatch("", name);
+                }
+                catch (Exception)
+                {
+                    OSSLShoutError("Name regex is invalid.");
+                    return -1;
+                }
+            }
+
+            // if we want the msg to be used as a regular expression, ensure it is valid first.
+            if ((regexBitfield & ScriptBaseClass.OS_LISTEN_REGEX_MESSAGE) == ScriptBaseClass.OS_LISTEN_REGEX_MESSAGE)
+            {
+                try
+                {
+                    Regex.IsMatch("", msg);
+                }
+                catch (Exception)
+                {
+                    OSSLShoutError("Message regex is invalid.");
+                    return -1;
+                }
+            }
+
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
+            return (wComm == null) ? -1 : wComm.Listen(
+                m_itemID,
+                m_host.UUID,
+                channelID,
+                name,
+                keyID,
+                msg,
+                regexBitfield
+            );
+        }
+
+        public LSL_Integer osRegexIsMatch(string input, string pattern)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osRegexIsMatch", m_host, "OSSL", m_itemID)) return 0;
+
+            try
+            {
+                return Regex.IsMatch(input, pattern) ? 1 : 0;
+            }
+            catch (Exception)
+            {
+                OSSLShoutError("Possible invalid regular expression detected.");
+                return 0;
+            }
+        }
     }
 }

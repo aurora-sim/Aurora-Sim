@@ -38,6 +38,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 /*****************************************************
  *
@@ -190,11 +191,11 @@ namespace Aurora.Modules.Scripting
         /// <param name="id">key to filter on (user given, could be totally faked)</param>
         /// <param name="msg">msg to filter on</param>
         /// <returns>number of the scripts handle</returns>
-        public int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
+        public int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg, int regexBitfield)
         {
             //Make sure that the cmd handler thread is running
             m_scriptModule.PokeThreads(itemID);
-            return m_listenerManager.AddListener(itemID, hostID, channel, name, id, msg);
+            return m_listenerManager.AddListener(itemID, hostID, channel, name, id, msg, 0);
         }
 
         /// <summary>
@@ -460,7 +461,7 @@ namespace Aurora.Modules.Scripting
             m_curlisteners = 0;
         }
 
-        public int AddListener(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
+        public int AddListener(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg, int regexBitfield)
         {
             // do we already have a match on this particular filter event?
             List<ListenerInfo> coll = GetListeners(itemID, channel, name, id, msg);
@@ -480,7 +481,7 @@ namespace Aurora.Modules.Scripting
 
                     if (newHandle > 0)
                     {
-                        ListenerInfo li = new ListenerInfo(newHandle, itemID, hostID, channel, name, id, msg);
+                        ListenerInfo li = new ListenerInfo(newHandle, itemID, hostID, channel, name, id, msg, regexBitfield);
 
                         List<ListenerInfo> listeners;
                         if (!m_listeners.TryGetValue(channel, out listeners))
@@ -611,6 +612,22 @@ namespace Aurora.Modules.Scripting
             return m_listeners.Count;
         }
 
+        /// These are duplicated from ScriptBaseClass
+        /// http://opensimulator.org/mantis/view.php?id=6106#c21945
+        #region Constants for the bitfield parameter of osListenRegex
+
+        /// <summary>
+        /// process name parameter as regex
+        /// </summary>
+        public const int OS_LISTEN_REGEX_NAME = 0x1;
+
+        /// <summary>
+        /// process message parameter as regex
+        /// </summary>
+        public const int OS_LISTEN_REGEX_MESSAGE = 0x2;
+
+        #endregion
+
         // Theres probably a more clever and efficient way to
         // do this, maybe with regex.
         // PM2008: Ha, one could even be smart and define a specialized Enumerator.
@@ -630,6 +647,10 @@ namespace Aurora.Modules.Scripting
                                     where li.IsActive()
                                     where itemID.Equals(UUID.Zero) || li.GetItemID().Equals(itemID)
                                     where li.GetName().Length <= 0 || li.GetName().Equals(name)
+                                    where li.GetName().Length > 0 && ((li.RegexBitfield & OS_LISTEN_REGEX_NAME) != OS_LISTEN_REGEX_NAME && !li.GetName().Equals(name)) ||
+                                            ((li.RegexBitfield & OS_LISTEN_REGEX_NAME) == OS_LISTEN_REGEX_NAME && !Regex.IsMatch(name, li.GetName()))
+                                    where li.GetName().Length > 0 && ((li.RegexBitfield & OS_LISTEN_REGEX_MESSAGE) != OS_LISTEN_REGEX_MESSAGE && !li.GetMessage().Equals(msg)) ||
+                                            ((li.RegexBitfield & OS_LISTEN_REGEX_MESSAGE) == OS_LISTEN_REGEX_MESSAGE && !Regex.IsMatch(msg, li.GetMessage()))
                                     where li.GetID().Equals(UUID.Zero) || li.GetID().Equals(id)
                                     where li.GetMessage().Length <= 0 || li.GetMessage().Equals(msg)
                                     select li);
@@ -662,7 +683,7 @@ namespace Aurora.Modules.Scripting
                 OSDMap item = (OSDMap) kvp.Value;
                 ListenerInfo info = ListenerInfo.FromData(itemID, hostID, item);
                 AddListener(info.GetItemID(), info.GetHostID(), info.GetChannel(), info.GetName(), info.GetID(),
-                            info.GetMessage());
+                            info.GetMessage(), info.RegexBitfield);
             }
         }
     }
@@ -678,15 +699,16 @@ namespace Aurora.Modules.Scripting
         private UUID m_itemID; // ID of the host script engine
         private string m_message; // The message
         private string m_name; // Object name to filter messages from
+        public int RegexBitfield { get; private set; }
 
-        public ListenerInfo(int handle, UUID ItemID, UUID hostID, int channel, string name, UUID id, string message)
+        public ListenerInfo(int handle, UUID ItemID, UUID hostID, int channel, string name, UUID id, string message, int regexBitfield)
         {
-            Initialise(handle, ItemID, hostID, channel, name, id, message);
+            Initialise(handle, ItemID, hostID, channel, name, id, message, regexBitfield);
         }
 
         public ListenerInfo(ListenerInfo li, string name, UUID id, string message)
         {
-            Initialise(li.m_handle, li.m_itemID, li.m_hostID, li.m_channel, name, id, message);
+            Initialise(li.m_handle, li.m_itemID, li.m_hostID, li.m_channel, name, id, message, 0);
         }
 
         #region IWorldCommListenerInfo Members
@@ -758,7 +780,7 @@ namespace Aurora.Modules.Scripting
         #endregion
 
         private void Initialise(int handle, UUID ItemID, UUID hostID, int channel, string name,
-                                UUID id, string message)
+                                UUID id, string message, int regexBitfield)
         {
             m_active = true;
             m_handle = handle;
@@ -768,6 +790,7 @@ namespace Aurora.Modules.Scripting
             m_name = name;
             m_id = id;
             m_message = message;
+            RegexBitfield = regexBitfield;
         }
 
         public static ListenerInfo FromData(UUID ItemID, UUID hostID, OSDMap data)
@@ -778,10 +801,11 @@ namespace Aurora.Modules.Scripting
             string Message = data["Message"].AsString();
             UUID ID = data["ID"].AsUUID();
             bool Active = data["Active"].AsBoolean();
+            int RegexBitfield = data["RegexBitfield"].AsInteger();
 
             ListenerInfo linfo = new ListenerInfo(Handle,
                                                   ItemID, hostID, Channel, Name,
-                                                  ID, Message) {m_active = Active};
+                                                  ID, Message, RegexBitfield) { m_active = Active };
 
             return linfo;
         }

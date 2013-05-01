@@ -63,6 +63,15 @@ namespace Aurora.Framework.Modules
         /// </summary>
         /// <param name="itemID"></param>
         /// <param name="remoteClient"></param>
+        /// <param name="forcedPos"></param>
+        /// <param name="forcedRot"></param>
+        void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient, Vector3 forcedPos, Quaternion forcedRot);
+
+        /// <summary>
+        ///     Detach the given item to the ground.
+        /// </summary>
+        /// <param name="itemID"></param>
+        /// <param name="remoteClient"></param>
         void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient);
 
         /// <summary>

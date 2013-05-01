@@ -251,7 +251,7 @@ namespace Aurora.Framework.SceneInfo.Entities
 
         bool UpdateInventoryItem(TaskInventoryItem item);
 
-        void DetachToGround();
+        void DetachToGround(Vector3 forcedPos, Quaternion forcedRotation);
 
         void UpdatePermissions(UUID agentID, byte field, uint localId, uint mask, byte set);
 
