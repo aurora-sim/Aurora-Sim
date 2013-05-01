@@ -311,7 +311,10 @@ namespace Aurora.Services
             regionCaps.ClientCaps.Close();
 
             if (agentInfoService != null)
+            {
                 agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, UUID.Zero, "");
+                agentInfoService.FireUserStatusChangeEvent(regionCaps.AgentID.ToString(), false, UUID.Zero);
+            }
 
             m_capsService.RemoveCAPS(regionCaps.AgentID);
         }
