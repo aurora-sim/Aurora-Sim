@@ -35,6 +35,8 @@ using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 {
@@ -207,5 +209,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_String osGetInventoryDesc(string item);
         LSL_Integer osInviteToGroup(LSL_Key agentId);
         LSL_Integer osEjectFromGroup(LSL_Key agentId);
+
+        LSL_Float osMin(double a, double b);
+        LSL_Float osMax(double a, double b);
+        LSL_Integer osIsUUID(string thing);
+        LSL_String osReplaceString(string src, string pattern, string replace, int count, int start);
+        void osSetContentType(LSL_Key id, string type);
+        void osDropAttachment();
+        void osForceDropAttachment();
+        void osDropAttachmentAt(LSL_Vector pos, LSL_Rotation rot);
+        void osForceDropAttachmentAt(LSL_Vector pos, LSL_Rotation rot);
+        LSL_Integer osListenRegex(int channelID, string name, string ID, string msg, int regexBitfield);
+        LSL_Integer osRegexIsMatch(string input, string pattern);
     }
 }
