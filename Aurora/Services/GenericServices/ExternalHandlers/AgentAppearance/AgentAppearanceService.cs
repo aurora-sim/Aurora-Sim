@@ -113,7 +113,20 @@ namespace Aurora.Services
         {
             AvatarAppearance appearance = m_avatarService.GetAppearance(agentID);
             List<BakeType> pendingBakes = new List<BakeType>();
-            List<InventoryItemBase> items = m_inventoryService.GetFolderItems(agentID, m_inventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CurrentOutfitFolder).ID);
+            InventoryFolderBase cof = m_inventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CurrentOutfitFolder);
+            if (cof.Version < cof_version)
+            {
+                int i = 0;
+                while (i < 10)
+                {
+                    cof = m_inventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CurrentOutfitFolder);
+                    System.Threading.Thread.Sleep(100);
+                    if (cof.Version >= cof_version)
+                        break;
+                    i++;
+                }
+            }
+            List<InventoryItemBase> items = m_inventoryService.GetFolderItems(agentID, cof.ID);
             foreach (InventoryItemBase itm in items)
                 MainConsole.Instance.Warn("[ServerSideAppearance]: Baking " + itm.Name);
 
@@ -127,27 +140,33 @@ namespace Aurora.Services
                 if (itm.AssetType == (int)AssetType.Link)
                 {
                     UUID assetID = m_inventoryService.GetItemAssetID(agentID, itm.AssetID);
-                    currentItemIDs.Add(assetID);
-                    //if (m_lastInventoryItemIDs.Contains(assetID))
-                    //    continue;
-                    WearableData wearable = new WearableData();
-                    AssetBase asset = m_assetService.Get(assetID.ToString());
-                    if (asset != null && asset.TypeAsset != AssetType.Object)
+                    if (appearance.Wearables.Any((w) => w.GetItem(assetID) != UUID.Zero))
                     {
-                        wearable.Asset = new AssetClothing(assetID, asset.Data);
-                        if (wearable.Asset.Decode())
+                        currentItemIDs.Add(assetID);
+                        //if (m_lastInventoryItemIDs.Contains(assetID))
+                        //    continue;
+                        WearableData wearable = new WearableData();
+                        AssetBase asset = m_assetService.Get(assetID.ToString());
+                        if (asset != null && asset.TypeAsset != AssetType.Object)
                         {
-                            wearable.AssetID = assetID;
-                            wearable.AssetType = wearable.Asset.AssetType;
-                            wearable.WearableType = wearable.Asset.WearableType;
-                            wearable.ItemID = itm.AssetID;
-                            if (wearable.WearableType == WearableType.Alpha)
+                            wearable.Asset = new AssetClothing(assetID, asset.Data);
+                            if (wearable.Asset.Decode())
                             {
-                                alphaWearable = wearable;
-                                continue;
+                                wearable.AssetID = assetID;
+                                wearable.AssetType = wearable.Asset.AssetType;
+                                wearable.WearableType = wearable.Asset.WearableType;
+                                wearable.ItemID = itm.AssetID;
+                                if (wearable.WearableType == WearableType.Alpha)
+                                {
+                                    alphaWearable = wearable;
+                                    continue;
+                                }
+                                AppearanceManager.DecodeWearableParams(wearable, ref Textures);
                             }
-                            AppearanceManager.DecodeWearableParams(wearable, ref Textures);
                         }
+                    }
+                    else
+                    {
                     }
                 }
             }
@@ -248,6 +267,12 @@ namespace Aurora.Services
             MainConsole.Instance.ErrorFormat("[ServerSideAppearance]: Baking took {0} ms", (Environment.TickCount - start));
 
             appearance.Serial = cof_version + 1;
+            cof = m_inventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CurrentOutfitFolder);
+            if (cof.Version > cof_version)
+            {
+                //it changed during the baking... kill it with fire!
+                return null;
+            }
             m_avatarService.SetAppearance(agentID, appearance);
             return appearance;
         }

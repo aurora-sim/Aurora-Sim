@@ -99,6 +99,14 @@ namespace Aurora.Services
                 string error = "";
                 AvatarAppearance appearance = m_appearanceService.BakeAppearance(m_agentID, cof_version);
 
+                OSDMap map = new OSDMap();
+                if (appearance == null)
+                {
+                    map["success"] = false;
+                    map["error"] = "Wrong COF";
+                    map["agent_id"] = m_agentID;
+                    return OSDParser.SerializeLLSDXmlBytes(map);
+                }
 
                 OSDMap uaamap = new OSDMap();
                 uaamap["Method"] = "UpdateAvatarAppearance";
@@ -107,7 +115,6 @@ namespace Aurora.Services
                 m_syncMessage.Post(m_region.ServerURI, uaamap);
                 success = true;
 
-                OSDMap map = new OSDMap();
                 map["success"] = success;
                 map["error"] = error;
                 map["agent_id"] = m_agentID;

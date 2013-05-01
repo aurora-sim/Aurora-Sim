@@ -907,8 +907,8 @@ namespace Aurora.Services.SQLServices.InventoryService
             //
             foreach (UUID id in itemIDs)
             {
-                m_Database.IncrementFolderByItem(id);
                 m_Database.DeleteItems("inventoryID", id.ToString());
+                m_Database.IncrementFolderByItem(id);
             }
 
             return true;
