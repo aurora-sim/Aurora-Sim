@@ -52,7 +52,7 @@ namespace Aurora.Modules.Search
         private IScene m_Scene;
         private IGroupsModule GroupsModule;
         private IProfileConnector ProfileFrontend;
-        private IDirectoryServiceConnector directoryService;
+        private IDirectoryServiceConnector DirectoryService;
         private bool m_SearchEnabled;
 
         #endregion
@@ -117,7 +117,7 @@ namespace Aurora.Modules.Search
                                       int queryStart)
         {
             List<DirPlacesReplyData> ReturnValues =
-                directoryService.FindLand(queryText, category.ToString(), queryStart,
+                DirectoryService.FindLand(queryText, category.ToString(), queryStart,
                                           (uint) queryFlags, remoteClient.ScopeID);
 
             SplitPackets(ReturnValues,
@@ -127,7 +127,7 @@ namespace Aurora.Modules.Search
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
         {
             List<DirPopularReplyData> ReturnValues =
-                directoryService.FindPopularPlaces(queryFlags, remoteClient.ScopeID);
+                DirectoryService.FindPopularPlaces(queryFlags, remoteClient.ScopeID);
 
             remoteClient.SendDirPopularReply(queryID, ReturnValues.ToArray());
         }
@@ -146,7 +146,7 @@ namespace Aurora.Modules.Search
                                  uint area, int queryStart)
         {
             List<DirLandReplyData> ReturnValues =
-                new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area,
+                new List<DirLandReplyData>(DirectoryService.FindLandForSale(searchType.ToString(), price, area,
                                                                             queryStart, queryFlags, remoteClient.ScopeID));
 
             SplitPackets(ReturnValues,
@@ -255,7 +255,7 @@ namespace Aurora.Modules.Search
                                    int queryStart)
         {
             List<DirEventsReplyData> ReturnValues =
-                new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart,
+                new List<DirEventsReplyData>(DirectoryService.FindEvents(queryText, queryFlags, queryStart,
                                                                          remoteClient.ScopeID));
 
             SplitPackets(ReturnValues, data => remoteClient.SendDirEventsReply(queryID, data));
@@ -265,7 +265,7 @@ namespace Aurora.Modules.Search
                                        uint category, int queryStart)
         {
             List<DirClassifiedReplyData> ReturnValues =
-                new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(),
+                new List<DirClassifiedReplyData>(DirectoryService.FindClassifieds(queryText, category.ToString(),
                                                                                   queryFlags, queryStart,
                                                                                   remoteClient.ScopeID));
 
@@ -300,7 +300,7 @@ namespace Aurora.Modules.Search
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
         {
             //Find the event
-            EventData data = directoryService.GetEventInfo(queryEventID);
+            EventData data = DirectoryService.GetEventInfo(queryEventID);
             if (data == null)
                 return;
             //Send the event
@@ -367,10 +367,10 @@ namespace Aurora.Modules.Search
             //PG land that is for sale
             if (itemtype == (uint) GridItemType.LandForSale)
             {
-                if (directoryService == null)
+                if (DirectoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                List<DirLandReplyData> Landdata = directoryService.FindLandForSaleInRegion("0", uint.MaxValue, 0, 0, 0,
+                List<DirLandReplyData> Landdata = DirectoryService.FindLandForSaleInRegion("0", uint.MaxValue, 0, 0, 0,
                                                                                            GR.RegionID);
 
                 int locX = 0;
@@ -379,7 +379,7 @@ namespace Aurora.Modules.Search
                 {
                     if (landDir == null)
                         continue;
-                    LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
+                    LandData landdata = DirectoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
                     if (m_Scene.RegionInfo.RegionID == landdata.RegionID)
@@ -424,17 +424,17 @@ namespace Aurora.Modules.Search
             //Adult or mature land that is for sale
             if (itemtype == (uint) GridItemType.AdultLandForSale)
             {
-                if (directoryService == null)
+                if (DirectoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0,
+                List<DirLandReplyData> Landdata = DirectoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0,
                                                                                    remoteClient.ScopeID);
 
                 int locX = 0;
                 int locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
-                    LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
+                    LandData landdata = DirectoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
 
@@ -485,7 +485,7 @@ namespace Aurora.Modules.Search
                 itemtype == (uint) GridItemType.MatureEvent ||
                 itemtype == (uint) GridItemType.AdultEvent)
             {
-                if (directoryService == null)
+                if (DirectoryService == null)
                     return;
 
                 //Find the maturity level
@@ -496,12 +496,12 @@ namespace Aurora.Modules.Search
                                          : (int) DirectoryManager.EventFlags.Adult;
 
                 //Gets all the events occuring in the given region by maturity level
-                List<DirEventsReplyData> Eventdata = directoryService.FindAllEventsInRegion(GR.RegionName, maturity);
+                List<DirEventsReplyData> Eventdata = DirectoryService.FindAllEventsInRegion(GR.RegionName, maturity);
 
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
                     //Get more info on the event
-                    EventData eventdata = directoryService.GetEventInfo(eventData.eventID);
+                    EventData eventdata = DirectoryService.GetEventInfo(eventData.eventID);
                     if (eventdata == null)
                         continue; //Can't do anything about it
                     Vector3 globalPos = eventdata.globalPos;
@@ -533,10 +533,10 @@ namespace Aurora.Modules.Search
 
             if (itemtype == (uint) GridItemType.Classified)
             {
-                if (directoryService == null)
+                if (DirectoryService == null)
                     return;
                 //Get all the classifieds in this region
-                List<Classified> Classifieds = directoryService.GetClassifiedsInRegion(GR.RegionName);
+                List<Classified> Classifieds = DirectoryService.GetClassifiedsInRegion(GR.RegionName);
                 foreach (Classified classified in Classifieds)
                 {
                     //Get the region so we have its position
@@ -577,13 +577,13 @@ namespace Aurora.Modules.Search
             if (QueryFlags == 64) //Agent Owned
             {
                 //Get all the parcels
-                client.SendPlacesQuery(directoryService.GetParcelByOwner(client.AgentId).ToArray(), QueryID,
+                client.SendPlacesQuery(DirectoryService.GetParcelByOwner(client.AgentId).ToArray(), QueryID,
                                        TransactionID);
             }
             if (QueryFlags == 256) //Group Owned
             {
                 //Find all the group owned land
-                List<ExtendedLandData> parcels = directoryService.GetParcelByOwner(QueryID);
+                List<ExtendedLandData> parcels = DirectoryService.GetParcelByOwner(QueryID);
 
                 //Send if we have any parcels
                 if (parcels.Count != 0)
@@ -650,12 +650,12 @@ namespace Aurora.Modules.Search
 
         private void client_OnEventNotificationRemoveRequest(uint EventID, IClientAPI client)
         {
-            directoryService.RemoveEventNofication(client.AgentId, EventID);
+            DirectoryService.RemoveEventNofication(client.AgentId, EventID);
         }
 
         private void client_OnEventNotificationAddRequest(uint EventID, IClientAPI client)
         {
-            directoryService.AddEventNofication(client.AgentId, EventID);
+            DirectoryService.AddEventNofication(client.AgentId, EventID);
         }
 
         #endregion
@@ -696,7 +696,7 @@ namespace Aurora.Modules.Search
                 return;
             //Pull in the services we need
             ProfileFrontend = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
-            directoryService = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            DirectoryService = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             GroupsModule = scene.RequestModuleInterface<IGroupsModule>();
         }
 
