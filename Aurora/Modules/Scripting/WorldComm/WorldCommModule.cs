@@ -647,9 +647,9 @@ namespace Aurora.Modules.Scripting
                                     where li.IsActive()
                                     where itemID.Equals(UUID.Zero) || li.GetItemID().Equals(itemID)
                                     where li.GetName().Length <= 0 || li.GetName().Equals(name)
-                                    where li.GetName().Length > 0 && ((li.RegexBitfield & OS_LISTEN_REGEX_NAME) != OS_LISTEN_REGEX_NAME && !li.GetName().Equals(name)) ||
+                                    where li.GetName().Length <= 0 || ((li.RegexBitfield & OS_LISTEN_REGEX_NAME) != OS_LISTEN_REGEX_NAME && !li.GetName().Equals(name)) ||
                                             ((li.RegexBitfield & OS_LISTEN_REGEX_NAME) == OS_LISTEN_REGEX_NAME && !Regex.IsMatch(name, li.GetName()))
-                                    where li.GetName().Length > 0 && ((li.RegexBitfield & OS_LISTEN_REGEX_MESSAGE) != OS_LISTEN_REGEX_MESSAGE && !li.GetMessage().Equals(msg)) ||
+                                    where li.GetName().Length <= 0 || ((li.RegexBitfield & OS_LISTEN_REGEX_MESSAGE) != OS_LISTEN_REGEX_MESSAGE && !li.GetMessage().Equals(msg)) ||
                                             ((li.RegexBitfield & OS_LISTEN_REGEX_MESSAGE) == OS_LISTEN_REGEX_MESSAGE && !Regex.IsMatch(msg, li.GetMessage()))
                                     where li.GetID().Equals(UUID.Zero) || li.GetID().Equals(id)
                                     where li.GetMessage().Length <= 0 || li.GetMessage().Equals(msg)
