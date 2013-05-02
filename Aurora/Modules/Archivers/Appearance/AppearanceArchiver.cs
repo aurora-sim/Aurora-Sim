@@ -237,8 +237,13 @@ namespace Aurora.Modules.Archivers
                 }
                 else if (cmdparams[i].StartsWith("--snapshot"))
                 {
-                    snapshotUUID = UUID.Parse(cmdparams[i+1]);
+                    snapshotUUID = UUID.Parse(cmdparams[i + 1]);
                     i += 2;
+                }
+                else
+                {
+                    MainConsole.Instance.WarnFormat("Unknown parameter: " + cmdparams[i]);
+                    i++;
                 }
             }
 
