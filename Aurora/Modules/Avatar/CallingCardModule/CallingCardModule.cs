@@ -174,7 +174,7 @@ namespace Aurora.Modules.CallingCards
         private void OnOfferCallingCard(IClientAPI client, UUID destID, UUID transactionID)
         {
             MainConsole.Instance.DebugFormat(
-                "[AURORA CALLING CARD MODULE]: got offer from {0} for {1}, transaction {2}",
+                "[AURORA CALLING CARD MODULE]: Got offer from {0} for {1}, transaction {2}",
                 client.AgentId, destID, transactionID);
 
             IClientAPI friendClient = LocateClientObject(destID);

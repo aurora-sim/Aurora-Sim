@@ -1,4 +1,4 @@
-﻿//Written by skidz tweak
+//Written by skidz tweak
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,10 +31,10 @@ namespace Simple.Currency
             m_options = options;
             m_registry = registry;
             taskTimer.Interval = 360000;
-            taskTimer.Elapsed += TimerElasped;
+            taskTimer.Elapsed += TimerElapsed;
             m_scheduler = registry.RequestModuleInterface<IScheduleService>();
             if (m_scheduler == null) return;
-            m_scheduler.Register("StipendsPayout", StupendsPayOutEvent);
+            m_scheduler.Register("StipendsPayout", StipendsPayOutEvent);
             if (m_options.StipendsLoadOldUsers) taskTimer.Enabled = true;
             registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);
             registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("CreateUserInformation", CreateUserInformation);
@@ -73,7 +73,7 @@ namespace Simple.Currency
             return null;
         }
 
-        private object StupendsPayOutEvent(string functionName, object parameters)
+        private object StipendsPayOutEvent(string functionName, object parameters)
         {
             if (functionName != "StipendsPayout") return null;
             StipendsInfo si = new StipendsInfo();
@@ -99,7 +99,7 @@ namespace Simple.Currency
             return "";
         }
 
-        private void TimerElasped(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void TimerElapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
             taskTimer.Enabled = false;
             IUserAccountService userService = m_registry.RequestModuleInterface<IUserAccountService>();

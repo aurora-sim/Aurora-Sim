@@ -218,13 +218,13 @@ textures 1
 
         private void EventManager_OnNewPresence(IScenePresence presence)
         {
-            AvatarApperanceModule m = new AvatarApperanceModule(presence);
+            AvatarAppearanceModule m = new AvatarAppearanceModule(presence);
             presence.RegisterModuleInterface<IAvatarAppearanceModule>(m);
         }
 
         private void EventManager_OnRemovePresence(IScenePresence presence)
         {
-            AvatarApperanceModule m = (AvatarApperanceModule) presence.RequestModuleInterface<IAvatarAppearanceModule>();
+            AvatarAppearanceModule m = (AvatarAppearanceModule)presence.RequestModuleInterface<IAvatarAppearanceModule>();
             if (m != null)
             {
                 m.Close();
@@ -250,7 +250,7 @@ textures 1
             IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
 
-            appearance.Appearance.Serial = (int) serial;
+            appearance.Appearance.Serial = (int)serial;
             //MainConsole.Instance.InfoFormat("[AVFACTORY]: start SetAppearance for {0}", client.AgentId);
 
             bool texturesChanged = false;
@@ -502,21 +502,21 @@ textures 1
                         NeedsRebake = true;
                         wear.ItemID = module.DefaultUnderpants;
                         InventoryItemBase item = new InventoryItemBase(UUID.Random())
-                                                     {
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         AssetType = (int) AssetType.Clothing,
-                                                         Name = "Default Underpants",
-                                                         Folder =
-                                                             m_scene.InventoryService.GetFolderForType(client.AgentId,
-                                                                                                       InventoryType.
-                                                                                                           Wearable,
-                                                                                                       AssetType.
-                                                                                                           Clothing).ID,
-                                                         Owner = client.AgentId,
-                                                         CurrentPermissions = 0,
-                                                         CreatorId = UUID.Zero.ToString(),
-                                                         AssetID = module.DefaultUnderpants
-                                                     };
+                        {
+                            InvType = (int)InventoryType.Wearable,
+                            AssetType = (int)AssetType.Clothing,
+                            Name = "Default Underpants",
+                            Folder =
+                                m_scene.InventoryService.GetFolderForType(client.AgentId,
+                                                                          InventoryType.
+                                                                              Wearable,
+                                                                          AssetType.
+                                                                              Clothing).ID,
+                            Owner = client.AgentId,
+                            CurrentPermissions = 0,
+                            CreatorId = UUID.Zero.ToString(),
+                            AssetID = module.DefaultUnderpants
+                        };
                         //Locked
                         client.SendInventoryItemCreateUpdate(item, 0);
                     }
@@ -524,25 +524,25 @@ textures 1
                     {
                         NeedsRebake = true;
                         InventoryItemBase item = new InventoryItemBase(UUID.Random())
-                                                     {
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         AssetType = (int) AssetType.Clothing,
-                                                         Name = "Default Underpants",
-                                                         Folder =
-                                                             m_scene.InventoryService.GetFolderForType(client.AgentId,
-                                                                                                       InventoryType.
-                                                                                                           Wearable,
-                                                                                                       AssetType.
-                                                                                                           Clothing).ID,
-                                                         Owner = client.AgentId,
-                                                         CurrentPermissions = 0
-                                                     };
+                        {
+                            InvType = (int)InventoryType.Wearable,
+                            AssetType = (int)AssetType.Clothing,
+                            Name = "Default Underpants",
+                            Folder =
+                                m_scene.InventoryService.GetFolderForType(client.AgentId,
+                                                                          InventoryType.
+                                                                              Wearable,
+                                                                          AssetType.
+                                                                              Clothing).ID,
+                            Owner = client.AgentId,
+                            CurrentPermissions = 0
+                        };
                         //Locked
                         if (m_underPantsUUID == UUID.Zero)
                         {
                             m_underPantsUUID = UUID.Random();
                             AssetBase asset = new AssetBase(m_underPantsUUID, "Default Underpants", AssetType.Clothing,
-                                                            UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderPants)};
+                                                            UUID.Zero) { Data = Utils.StringToBytes(m_defaultUnderPants) };
                             asset.ID = m_scene.AssetService.Store(asset);
                             m_underPantsUUID = asset.ID;
                         }
@@ -557,21 +557,21 @@ textures 1
                         NeedsRebake = true;
                         wear.ItemID = module.DefaultUndershirt;
                         InventoryItemBase item = new InventoryItemBase(UUID.Random())
-                                                     {
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         AssetType = (int) AssetType.Clothing,
-                                                         Name = "Default Undershirt",
-                                                         Folder =
-                                                             m_scene.InventoryService.GetFolderForType(client.AgentId,
-                                                                                                       InventoryType.
-                                                                                                           Wearable,
-                                                                                                       AssetType.
-                                                                                                           Clothing).ID,
-                                                         Owner = client.AgentId,
-                                                         CurrentPermissions = 0,
-                                                         CreatorId = UUID.Zero.ToString(),
-                                                         AssetID = module.DefaultUndershirt
-                                                     };
+                        {
+                            InvType = (int)InventoryType.Wearable,
+                            AssetType = (int)AssetType.Clothing,
+                            Name = "Default Undershirt",
+                            Folder =
+                                m_scene.InventoryService.GetFolderForType(client.AgentId,
+                                                                          InventoryType.
+                                                                              Wearable,
+                                                                          AssetType.
+                                                                              Clothing).ID,
+                            Owner = client.AgentId,
+                            CurrentPermissions = 0,
+                            CreatorId = UUID.Zero.ToString(),
+                            AssetID = module.DefaultUndershirt
+                        };
                         //Locked
                         client.SendInventoryItemCreateUpdate(item, 0);
                     }
@@ -579,25 +579,25 @@ textures 1
                     {
                         NeedsRebake = true;
                         InventoryItemBase item = new InventoryItemBase(UUID.Random())
-                                                     {
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         AssetType = (int) AssetType.Clothing,
-                                                         Name = "Default Undershirt",
-                                                         Folder =
-                                                             m_scene.InventoryService.GetFolderForType(client.AgentId,
-                                                                                                       InventoryType.
-                                                                                                           Wearable,
-                                                                                                       AssetType.
-                                                                                                           Clothing).ID,
-                                                         Owner = client.AgentId,
-                                                         CurrentPermissions = 0
-                                                     };
+                        {
+                            InvType = (int)InventoryType.Wearable,
+                            AssetType = (int)AssetType.Clothing,
+                            Name = "Default Undershirt",
+                            Folder =
+                                m_scene.InventoryService.GetFolderForType(client.AgentId,
+                                                                          InventoryType.
+                                                                              Wearable,
+                                                                          AssetType.
+                                                                              Clothing).ID,
+                            Owner = client.AgentId,
+                            CurrentPermissions = 0
+                        };
                         //Locked
                         if (m_underShirtUUID == UUID.Zero)
                         {
                             m_underShirtUUID = UUID.Random();
                             AssetBase asset = new AssetBase(m_underShirtUUID, "Default Undershirt", AssetType.Clothing,
-                                                            UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderShirt)};
+                                                            UUID.Zero) { Data = Utils.StringToBytes(m_defaultUnderShirt) };
                             asset.ID = m_scene.AssetService.Store(asset);
                             m_underShirtUUID = asset.ID;
                         }
@@ -675,7 +675,7 @@ textures 1
                     {
                         MainConsole.Instance.ErrorFormat(
                             "[AvatarFactory]: Can't find inventory item {0} for {1}, setting to default",
-                            appearance.Wearables[i][j].ItemID, (WearableType) i);
+                            appearance.Wearables[i][j].ItemID, (WearableType)i);
 
                         appearance.Wearables[i].RemoveItem(appearance.Wearables[i][j].ItemID);
                         appearance.Wearables[i].Add(AvatarWearable.DefaultWearables[i][j].ItemID,
@@ -736,16 +736,16 @@ textures 1
 
         #endregion
 
-        #region Nested type: AvatarApperanceModule
+        #region Nested type: AvatarAppearanceModule
 
-        public class AvatarApperanceModule : IAvatarAppearanceModule
+        public class AvatarAppearanceModule : IAvatarAppearanceModule
         {
             private bool m_InitialHasWearablesBeenSent;
             protected AvatarAppearance m_appearance;
             public IScenePresence m_sp;
             protected IAgentUpdateMonitor _updateMonitor;
 
-            public AvatarApperanceModule(IScenePresence sp)
+            public AvatarAppearanceModule(IScenePresence sp)
             {
                 m_sp = sp;
                 m_sp.Scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
@@ -786,13 +786,13 @@ textures 1
 
                 int count = 0;
                 m_sp.Scene.ForEachScenePresence(delegate(IScenePresence scenePresence)
-                                                    {
-                                                        if (scenePresence.UUID != m_sp.UUID)
-                                                        {
-                                                            SendAvatarDataToAgent(scenePresence, sendAppearance);
-                                                            count++;
-                                                        }
-                                                    });
+                {
+                    if (scenePresence.UUID != m_sp.UUID)
+                    {
+                        SendAvatarDataToAgent(scenePresence, sendAppearance);
+                        count++;
+                    }
+                });
 
                 if (_updateMonitor != null)
                     _updateMonitor.AddAgentUpdates(count);
@@ -827,13 +827,13 @@ textures 1
 
                 int count = 0;
                 m_sp.Scene.ForEachScenePresence(delegate(IScenePresence scenePresence)
-                                                    {
-                                                        if (scenePresence.UUID == m_sp.UUID)
-                                                            return;
+                {
+                    if (scenePresence.UUID == m_sp.UUID)
+                        return;
 
-                                                        SendAppearanceToAgent(scenePresence);
-                                                        count++;
-                                                    });
+                    SendAppearanceToAgent(scenePresence);
+                    count++;
+                });
 
                 if (_updateMonitor != null)
                     _updateMonitor.AddAgentUpdates(count);
@@ -847,22 +847,22 @@ textures 1
             {
                 int count = 0;
                 m_sp.Scene.ForEachScenePresence(delegate(IScenePresence scenePresence)
-                                                    {
-                                                        // only send information about root agents
-                                                        if (scenePresence.IsChildAgent)
-                                                            return;
+                {
+                    // only send information about root agents
+                    if (scenePresence.IsChildAgent)
+                        return;
 
-                                                        // only send information about other root agents
-                                                        if (scenePresence.UUID == m_sp.UUID)
-                                                            return;
+                    // only send information about other root agents
+                    if (scenePresence.UUID == m_sp.UUID)
+                        return;
 
-                                                        IAvatarAppearanceModule appearance =
-                                                            scenePresence.RequestModuleInterface
-                                                                <IAvatarAppearanceModule>();
-                                                        if (appearance != null)
-                                                            appearance.SendAppearanceToAgent(m_sp);
-                                                        count++;
-                                                    });
+                    IAvatarAppearanceModule appearance =
+                        scenePresence.RequestModuleInterface
+                            <IAvatarAppearanceModule>();
+                    if (appearance != null)
+                        appearance.SendAppearanceToAgent(m_sp);
+                    count++;
+                });
 
                 if (_updateMonitor != null)
                     _updateMonitor.AddAgentUpdates(count);
@@ -899,7 +899,7 @@ textures 1
                     //Send everyone to me!
                     SendOtherAgentsAvatarDataToMe();
                     //Check to make sure that we have sent all the appearance info 10 seconds later
-                    Timer t = new Timer(10*1000);
+                    Timer t = new Timer(10 * 1000);
                     t.Elapsed += CheckToMakeSureWearablesHaveBeenSent;
                     t.AutoReset = false;
                     t.Start();
@@ -914,22 +914,22 @@ textures 1
             {
                 int count = 0;
                 m_sp.Scene.ForEachScenePresence(delegate(IScenePresence scenePresence)
-                                                    {
-                                                        // only send information about root agents
-                                                        if (scenePresence.IsChildAgent)
-                                                            return;
+                {
+                    // only send information about root agents
+                    if (scenePresence.IsChildAgent)
+                        return;
 
-                                                        // only send information about other root agents
-                                                        if (scenePresence.UUID == m_sp.UUID)
-                                                            return;
+                    // only send information about other root agents
+                    if (scenePresence.UUID == m_sp.UUID)
+                        return;
 
-                                                        IAvatarAppearanceModule appearance =
-                                                            scenePresence.RequestModuleInterface
-                                                                <IAvatarAppearanceModule>();
-                                                        if (appearance != null)
-                                                            appearance.SendAvatarDataToAgent(m_sp, true);
-                                                        count++;
-                                                    });
+                    IAvatarAppearanceModule appearance =
+                        scenePresence.RequestModuleInterface
+                            <IAvatarAppearanceModule>();
+                    if (appearance != null)
+                        appearance.SendAvatarDataToAgent(m_sp, true);
+                    count++;
+                });
 
                 if (_updateMonitor != null)
                     _updateMonitor.AddAgentUpdates(count);
