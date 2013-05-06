@@ -71,7 +71,7 @@ namespace Aurora.Framework.ClientInterfaces
             BodyMap = ((OSDMap)map["Body"]);
 
             FolderName = map["FolderName"];
-            Snapshot = map["SnapshotUUID"];
+            Snapshot = map["Snapshot"];
             IsPublic = map["Public"];
         }
 
