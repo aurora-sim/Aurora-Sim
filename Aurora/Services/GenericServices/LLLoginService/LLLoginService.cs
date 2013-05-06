@@ -323,6 +323,10 @@ namespace Aurora.Services
             UUID session = UUID.Random();
             UUID secureSession = UUID.Zero;
 
+            MainConsole.Instance.InfoFormat(
+                "[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
+                Name, clientIP.Address, clientVersion, startLocation);
+
             UserAccount account = AgentID != UUID.Zero
                                       ? m_UserAccountService.GetUserAccount(null, AgentID)
                                       : m_UserAccountService.GetUserAccount(null, Name);
@@ -338,7 +342,12 @@ namespace Aurora.Services
             }
 
             if (account.UserLevel < 0) //No allowing anyone less than 0
+            {
+                MainConsole.Instance.InfoFormat(
+                    "[LLOGIN SERVICE]: Login failed for user {0}, reason: user is banned",
+                    account.Name);
                 return LLFailedLoginResponse.PermanentBannedProblem;
+            }
 
             if (account.UserLevel < m_MinLoginLevel)
             {
@@ -363,14 +372,16 @@ namespace Aurora.Services
             {
                 object data;
                 if ((response = module.Login(requestData, account, agent, authType, passwd, out data)) != null)
+                {
+                    MainConsole.Instance.InfoFormat(
+                        "[LLOGIN SERVICE]: Login failed for user {1}, reason: {0}",
+                        data.ToString(), account.Name);
                     return response;
+                }
                 if (data != null)
                     secureSession = (UUID) data; //TODO: NEED TO FIND BETTER WAY TO GET THIS DATA
             }
 
-            MainConsole.Instance.InfoFormat(
-                "[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
-                Name, clientIP.Address, clientVersion, startLocation);
             try
             {
                 string DisplayName = account.Name;

@@ -37,7 +37,10 @@ namespace Aurora.Services
             string token = m_AuthenticationService.Authenticate(account.PrincipalID, authType, password, 30);
             UUID secureSession = UUID.Zero;
             if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
+            {
+                data = "Incorrect password";
                 return LLFailedLoginResponse.AuthenticationProblem;
+            }
             data = secureSession;
             return null;
         }

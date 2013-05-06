@@ -56,7 +56,10 @@ namespace Aurora.Services
             //MAC BANNING START
             string mac = (string) request["mac"];
             if (mac == "")
-                return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, "Bad Viewer Connection", false);
+            {
+                data = "Bad Viewer Connection";
+                return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, data.ToString(), false);
+            }
 
             /*string channel = "Unknown";
             if (request.Contains("channel") && request["channel"] != null)
@@ -80,12 +83,15 @@ namespace Aurora.Services
                 }
             }
             if (!AcceptedNewTOS && !agentInfo.AcceptTOS && m_UseTOS)
+            {
+                data = "TOS not accepted";
                 return new LLFailedLoginResponse(LoginResponseEnum.ToSNeedsSent, File.ReadAllText(Path.Combine(Environment.CurrentDirectory, m_TOSLocation)), false);
-
+            }
             if ((agentInfo.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan)
             {
                 MainConsole.Instance.InfoFormat(
                     "[LLOGIN SERVICE]: Login failed for user {0}, reason: user is permanently banned.", account.Name);
+                data = "Permanently banned";
                 return LLFailedLoginResponse.PermanentBannedProblem;
             }
 
@@ -113,10 +119,9 @@ namespace Aurora.Services
                     MainConsole.Instance.InfoFormat(
                         "[LLOGIN SERVICE]: Login failed for user {0}, reason: user is temporarily banned {1}.",
                         account.Name, until);
+                    data =  string.Format("You are blocked from connecting to this service{0}.", until);
                     return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant,
-                                                     string.Format(
-                                                         "You are blocked from connecting to this service{0}.", until),
-                                                     false);
+                                                    data.ToString(), false);
                 }
             }
             return null;
