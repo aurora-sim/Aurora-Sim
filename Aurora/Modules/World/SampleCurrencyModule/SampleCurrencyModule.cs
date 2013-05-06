@@ -194,7 +194,7 @@ namespace Aurora.Modules.SampleCurrencyModule
         }
 
         /// <summary>
-        ///     Sends the the stored money balance to the client
+        ///     Sends the stored money balance to the client
         /// </summary>
         /// <param name="client"></param>
         /// <param name="agentID"></param>
@@ -237,7 +237,7 @@ namespace Aurora.Modules.SampleCurrencyModule
 
             quoteResponse.Add("success", false);
             quoteResponse.Add("errorMessage", "Invalid parameters passed to the quote box");
-            quoteResponse.Add("errorURI", "http://www.opensimulator.org/wiki");
+            quoteResponse.Add("errorURI", "http://aurora-sim.org/wiki");
             returnval.Value = quoteResponse;
             return returnval;
         }
