@@ -13,7 +13,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private readonly Thread[] _workers;
         private ConcurrentQueue<HttpListenerContext> _queue;
         public event Action<HttpListenerContext> ProcessRequest;
-        private ManualResetEvent _newQueueItem = new ManualResetEvent(false);
+        private ManualResetEvent _newQueueItem = new ManualResetEvent(false), _listenForNextRequest = new ManualResetEvent(false);
         private bool _isSecure = false;
         private bool _isRunning = false;
         private int _lockedQueue = 0;
@@ -73,9 +73,33 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             while (_listener.IsListening)
             {
-                _queue.Enqueue(_listener.GetContext());
-                _newQueueItem.Set();
+                _listener.BeginGetContext(ListenerCallback, null);
+                _listenForNextRequest.WaitOne();
+                _listenForNextRequest.Reset();
             }
+        }
+
+        private void ListenerCallback(IAsyncResult result)
+        {
+            HttpListenerContext context = null;
+
+            try
+            {
+                context = _listener.EndGetContext(result);
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.ErrorFormat("[HttpListenerManager]: Exception occured: {0}", ex.ToString());
+                return;
+            }
+            finally
+            {
+                _listenForNextRequest.Set();
+            }
+            if (context == null)
+                return;
+            _queue.Enqueue(context);
+            _newQueueItem.Set();
         }
 
 #else
@@ -119,7 +143,6 @@ namespace Aurora.Framework.Servers.HttpServer
                     //All done
                     Interlocked.Exchange(ref _lockedQueue, 0);
                 }
-
                 try
                 {
                     if(context != null)

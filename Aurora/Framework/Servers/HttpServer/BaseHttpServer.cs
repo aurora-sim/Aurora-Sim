@@ -505,7 +505,7 @@ namespace Aurora.Framework.Servers.HttpServer
                         response.Close(buffer, true);
                     }
                     else
-                        response.Close ();
+                        response.Close (new byte[0], true);
                 }
                 catch(Exception ex)
                 {
@@ -518,7 +518,7 @@ namespace Aurora.Framework.Servers.HttpServer
             catch (Exception e)
             {
                 MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-                response.Close(new byte[0], false);
+                response.Abort();
             }
             finally
             {
