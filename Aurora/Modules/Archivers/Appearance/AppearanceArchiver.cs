@@ -104,6 +104,7 @@ namespace Aurora.Modules.Archivers
             try
             {
                 LoadAssets(archive.AssetsMap);
+                LoadItems(archive.ItemsMap);
                 appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance,
                                                          account.PrincipalID, out items);
             }
@@ -327,7 +328,7 @@ namespace Aurora.Modules.Archivers
                     if (wearable[ii].ItemID != UUID.Zero)
                     {
                         // Get inventory item and copy it
-                        InventoryItemBase item = InventoryService.GetItem(agentid, wearable[ii].ItemID);
+                        InventoryItemBase item = InventoryService.GetItem(UUID.Zero, wearable[ii].ItemID);
 
                         if (item != null)
                         {
@@ -366,7 +367,7 @@ namespace Aurora.Modules.Archivers
                 if (itemID != UUID.Zero)
                 {
                     // Get inventory item and copy it
-                    InventoryItemBase item = InventoryService.GetItem(source, itemID);
+                    InventoryItemBase item = InventoryService.GetItem(UUID.Zero, itemID);
 
                     if (item != null)
                     {
