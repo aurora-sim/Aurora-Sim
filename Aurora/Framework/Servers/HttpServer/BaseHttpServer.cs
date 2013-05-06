@@ -48,7 +48,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
         protected HttpListenerManager m_internalServer;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
-
+        
         protected Dictionary<string, IStreamedRequestHandler> m_streamHandlers =
             new Dictionary<string, IStreamedRequestHandler>();
 
@@ -233,12 +233,6 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        internal bool TryGetXMLHandler(string methodName, out XmlRpcMethod handler)
-        {
-            lock (m_rpcHandlers)
-                return m_rpcHandlers.TryGetValue(methodName, out handler);
-        }
-
         public XmlRpcMethod GetXmlRPCHandler(string method)
         {
             lock (m_rpcHandlers)
@@ -361,20 +355,16 @@ namespace Aurora.Framework.Servers.HttpServer
                 string handlerKey = GetHandlerKey(request.HttpMethod, path);
                 byte[] buffer = null;
 
-                if (TryGetStreamHandler(handlerKey, out requestHandler))
+                if ((request.ContentType == "application/xml" || request.ContentType == "text/xml") && GetXmlRPCHandler(request.RawUrl) != null)
+                {
+                    buffer = HandleXmlRpcRequests(req, resp);
+                }
+                else if (TryGetStreamHandler(handlerKey, out requestHandler))
                 {
                     response.ContentType = requestHandler.ContentType;
-                        // Lets do this defaulting before in case handler has varying content type.
+                    // Lets do this defaulting before in case handler has varying content type.
 
                     buffer = requestHandler.Handle(path, request.InputStream, req, resp);
-                }
-                else
-                {
-                    if (GetXmlRPCHandler(request.RawUrl) != null)
-                    {
-                        // generic login request.
-                        buffer = HandleXmlRpcRequests(req, resp);
-                    }
                 }
 
                 request.InputStream.Close();
