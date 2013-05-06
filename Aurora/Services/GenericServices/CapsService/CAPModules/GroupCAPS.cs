@@ -75,7 +75,7 @@ namespace Aurora.Services
                 //MainConsole.Instance.Debug("[CAPS]: UploadBakedTexture Request in region: " +
                 //        m_regionName);
 
-                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
                 UUID groupID = rm["group_id"].AsUUID();
 
                 OSDMap defaults = new OSDMap();

@@ -306,7 +306,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             if (SP == null || !SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
                 return new byte[0];
 
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             m_settings.DefaultDrawDistance = rm["draw_distance"].AsInteger();
             m_settings.ForceDrawDistance = rm["force_draw_distance"].AsBoolean();

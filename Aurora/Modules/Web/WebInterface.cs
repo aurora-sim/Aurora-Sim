@@ -152,7 +152,7 @@ namespace Aurora.Modules.Web
                     text = File.ReadAllText(filename);
 
                 var requestParameters = request != null
-                                            ? ParseQueryString(request.ReadUntilEnd())
+                                            ? ParseQueryString(HttpServerHandlerHelpers.ReadString(request))
                                             : new Dictionary<string, object>();
                 if (filename.EndsWith(".xsl"))
                 {

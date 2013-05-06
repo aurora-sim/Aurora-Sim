@@ -104,7 +104,7 @@ namespace Aurora.Modules.Caps
                 return MainServer.BadRequest;
 
 
-            OSD r = OSDParser.DeserializeLLSDXml(request);
+            OSD r = OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             //UUID session_id = UUID.Zero;
             bool bypass_raycast = false;
             uint everyone_mask = 0;

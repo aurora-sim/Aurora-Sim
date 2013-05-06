@@ -125,7 +125,7 @@ namespace Aurora.Modules.Auction
         private byte[] ViewerStartAuction(string path, Stream request,
                                           OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             return MainServer.BlankResponse;
         }

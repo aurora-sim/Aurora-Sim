@@ -159,7 +159,7 @@ namespace Aurora.Modules.SimConsole
             if (SP == null)
                 return new byte[0]; //They don't exist
 
-            OSD rm = OSDParser.DeserializeLLSDXml(request);
+            OSD rm = OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             string message = rm.AsString();
 

@@ -428,7 +428,7 @@ namespace Aurora.Modules.Scripting
                                                new Object[]
                                                    {
                                                        requestID.ToString(), request.HttpMethod,
-                                                       request.InputStream.ReadUntilEnd()
+                                                       HttpServerHandlerHelpers.ReadString(request.InputStream)
                                                    });
                 }
                 catch (Exception we)

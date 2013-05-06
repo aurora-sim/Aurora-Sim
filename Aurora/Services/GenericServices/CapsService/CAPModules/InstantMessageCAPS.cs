@@ -70,7 +70,7 @@ namespace Aurora.Services
         {
             try
             {
-                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
                 return Encoding.UTF8.GetBytes(m_imService.ChatSessionRequest(m_service, rm));
             }

@@ -92,7 +92,7 @@ namespace Aurora.Services
         {
             try
             {
-                OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
                 int cof_version = rm["cof_version"].AsInteger();
 
                 bool success = false;

@@ -1837,7 +1837,7 @@ namespace Aurora.Modules.Inventory
                 MainConsole.Instance.Debug("[Scene]: ScriptTaskInventory Request in region: " +
                                            m_scene.RegionInfo.RegionName);
                 //MainConsole.Instance.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
                 UUID item_id = map["item_id"].AsUUID();
                 UUID task_id = map["task_id"].AsUUID();
                 int is_script_running = map["is_script_running"].AsInteger();
@@ -1887,7 +1887,7 @@ namespace Aurora.Modules.Inventory
         {
             try
             {
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
                 UUID item_id = map["item_id"].AsUUID();
                 UUID task_id = map["task_id"].AsUUID();
                 string capsBase = "/CAPS/" + UUID.Random();
@@ -1936,7 +1936,7 @@ namespace Aurora.Modules.Inventory
             //MainConsole.Instance.Debug("[CAPS]: NoteCardAgentInventory Request in region: " + m_regionName + "\n" + request);
             //MainConsole.Instance.Debug("[CAPS]: NoteCardAgentInventory Request is: " + request);
 
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             string capsBase = "/CAPS/" + UUID.Random();
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");

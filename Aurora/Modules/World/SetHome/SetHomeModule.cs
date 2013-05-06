@@ -130,7 +130,7 @@ namespace Aurora.Modules.SetHome
 
         private byte[] CopyInventoryFromNotecard(Stream request, UUID agentID)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             UUID FolderID = rm["folder-id"].AsUUID();
             UUID ItemID = rm["item-id"].AsUUID();
             UUID NotecardID = rm["notecard-id"].AsUUID();

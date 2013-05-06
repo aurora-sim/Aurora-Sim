@@ -113,7 +113,7 @@ namespace Aurora.Services
         {
             try
             {
-                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
                 OSDArray display_name = (OSDArray) rm["display_name"];
                 string oldDisplayName = display_name[0].AsString();
                 string newDisplayName = display_name[1].AsString();

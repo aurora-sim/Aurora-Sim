@@ -111,7 +111,7 @@ namespace Aurora.Services
 
         private byte[] HomeLocation(Stream request, UUID agentID)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             OSDMap HomeLocation = rm["HomeLocation"] as OSDMap;
             if (HomeLocation != null)
             {
@@ -134,7 +134,7 @@ namespace Aurora.Services
 
         private byte[] ProcessUpdateAgentLanguage(Stream request, UUID agentID)
         {
-            OSDMap rm = OSDParser.DeserializeLLSDXml(request) as OSDMap;
+            OSDMap rm = OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request)) as OSDMap;
             if (rm == null)
                 return MainServer.BadRequest;
             IAgentConnector AgentFrontend = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
@@ -187,7 +187,7 @@ namespace Aurora.Services
 
         private byte[] ProcessUpdateAgentInfo(Stream request, UUID agentID)
         {
-            OSD r = OSDParser.DeserializeLLSDXml(request);
+            OSD r = OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             OSDMap rm = (OSDMap) r;
             OSDMap access = (OSDMap) rm["access_prefs"];
             string Level = access["max"].AsString();
@@ -221,7 +221,7 @@ namespace Aurora.Services
             }
             _isInTeleportCurrently = true;
 
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             OSDMap pos = rm["LocationPos"] as OSDMap;
             Vector3 position = new Vector3((float) pos["X"].AsReal(),
                                            (float) pos["Y"].AsReal(),

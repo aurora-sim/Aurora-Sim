@@ -1808,7 +1808,7 @@ namespace Aurora.Modules.Groups
                                                                       OSHttpRequest httpRequest,
                                                                       OSHttpResponse httpResponse)
                                                                  {
-                                                                     return GroupProposalBallot(request.ReadUntilEnd(),
+                                                                     return GroupProposalBallot(HttpServerHandlerHelpers.ReadString(request),
                                                                                                 agentID);
                                                                  }));
             retVal["StartGroupProposal"] = CapsUtil.CreateCAPS("StartGroupProposal", "");
@@ -1817,7 +1817,7 @@ namespace Aurora.Modules.Groups
                                                                       OSHttpRequest httpRequest,
                                                                       OSHttpResponse httpResponse)
                                                                  {
-                                                                     return StartGroupProposal(request.ReadUntilEnd(),
+                                                                     return StartGroupProposal(HttpServerHandlerHelpers.ReadString(request),
                                                                                                agentID);
                                                                  }));
             return retVal;

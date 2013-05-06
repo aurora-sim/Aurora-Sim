@@ -61,7 +61,7 @@ namespace Aurora.Services
 
             OpenMetaverse.Messages.Linden.ViewerStatsMessage vsm =
                 new OpenMetaverse.Messages.Linden.ViewerStatsMessage();
-            vsm.Deserialize((OSDMap) OSDParser.DeserializeLLSDXml(request));
+            vsm.Deserialize((OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request)));
             dataConnector.UpdateUserStats(vsm, m_service.AgentID, m_service.Region.RegionID);
 
             return MainServer.BlankResponse;

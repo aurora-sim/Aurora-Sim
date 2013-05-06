@@ -73,7 +73,7 @@ namespace Aurora.Modules
                                                              delegate(string path, Stream request,
                                                                       OSHttpRequest httpRequest,
                                                                       OSHttpResponse httpResponse)
-                                                                 { return EnvironmentSettings(request, agentID); }));
+                                                                 { return EnvironmentSettings(agentID); }));
             return retVal;
         }
 
@@ -86,7 +86,7 @@ namespace Aurora.Modules
             string fail_reason = "";
             if (SP.Scene.Permissions.CanIssueEstateCommand(agentID, false))
             {
-                m_scene.RegionInfo.EnvironmentSettings = OSDParser.DeserializeLLSDXml(request);
+                m_scene.RegionInfo.EnvironmentSettings = OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
                 success = true;
 
                 //Tell everyone about the changes
@@ -109,7 +109,7 @@ namespace Aurora.Modules
             return OSDParser.SerializeLLSDXmlBytes(result);
         }
 
-        private byte[] EnvironmentSettings(Stream request, UUID agentID)
+        private byte[] EnvironmentSettings(UUID agentID)
         {
             IScenePresence SP = m_scene.GetScenePresence(agentID);
             if (SP == null)

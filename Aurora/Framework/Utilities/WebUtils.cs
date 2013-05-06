@@ -43,6 +43,7 @@ using System.Threading.Tasks;
 #endif
 using System.Web;
 using System.Xml;
+using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Framework.Utilities
 {
@@ -105,23 +106,26 @@ namespace Aurora.Framework.Utilities
                 client.Timeout = TimeSpan.FromMilliseconds(timeout);
 
                 HttpResponseMessage httpresponse;
-                switch (method)
+                using (MemoryStream stream = new MemoryStream(buffer))
                 {
-                    case "PUT":
-                        httpresponse = await client.PutAsync(url, new ByteArrayContent(buffer));
-                        break;
-                    case "DELETE":
-                        httpresponse = await client.DeleteAsync(url);
-                        break;
-                    case "POST":
-                        httpresponse = await client.PostAsync(url, new ByteArrayContent(buffer));
-                        break;
-                    case "GET":
-                        httpresponse = await client.GetAsync(url);
-                        break;
-                    default:
-                        httpresponse = await client.SendAsync(new HttpRequestMessage(new HttpMethod(method), url) { Content = new ByteArrayContent(buffer) });
-                        break;
+                    switch (method)
+                    {
+                        case "PUT":
+                            httpresponse = await client.PutAsync(url, new StreamContent(stream));
+                            break;
+                        case "DELETE":
+                            httpresponse = await client.DeleteAsync(url);
+                            break;
+                        case "POST":
+                            httpresponse = await client.PostAsync(url, new StreamContent(stream));
+                            break;
+                        case "GET":
+                            httpresponse = await client.GetAsync(url);
+                            break;
+                        default:
+                            httpresponse = await client.SendAsync(new HttpRequestMessage(new HttpMethod(method), url) { Content = new StreamContent(stream) });
+                            break;
+                    }
                 }
                 httpresponse.EnsureSuccessStatusCode();
 
@@ -216,6 +220,7 @@ namespace Aurora.Framework.Utilities
                 request.KeepAlive = false;
                 request.MaximumAutomaticRedirections = 10;
                 request.ReadWriteTimeout = timeout / 4;
+                request.SendChunked = true;
 
                 // If there is some input, write it into the request
                 if (buffer != null && buffer.Length > 0)
@@ -223,7 +228,7 @@ namespace Aurora.Framework.Utilities
                     request.ContentType = "application/json";
                     request.ContentLength = buffer.Length; //Count bytes to send
                     using (Stream requestStream = request.GetRequestStream())
-                        requestStream.Write(buffer, 0, buffer.Length); //Send it
+                        HttpServerHandlerHelpers.WriteChunked(requestStream, buffer);
                 }
 
                 // capture how much time was spent writing, this may seem silly
@@ -234,12 +239,8 @@ namespace Aurora.Framework.Utilities
                 {
                     using (Stream responseStream = response.GetResponseStream())
                     {
-                        // capture how much time was spent writing, this may seem silly
-                        // but with the number concurrent requests, this often blocks
                         tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
-                        string responseStr = responseStream.GetStreamString();
-                        // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                        return responseStr;
+                        return HttpServerHandlerHelpers.ReadString(responseStream);
                     }
                 }
             }

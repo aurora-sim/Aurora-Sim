@@ -147,7 +147,7 @@ namespace Aurora.Services
 
         public byte[] HandleWebFetchInventoryDescendents(Stream request, UUID AgentID)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             OSDArray foldersrequested = (OSDArray) map["folders"];
             try
             {
@@ -176,7 +176,7 @@ namespace Aurora.Services
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
 
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
                 OSDArray foldersrequested = (OSDArray) map["folders"];
 
@@ -199,7 +199,7 @@ namespace Aurora.Services
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
-                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
                 if (requestmap["items"].Type == OSDType.Unknown)
                     return MainServer.BadRequest;
                 OSDArray foldersrequested = (OSDArray) requestmap["items"];
@@ -238,7 +238,7 @@ namespace Aurora.Services
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
 
-                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
                 OSDArray foldersrequested = (OSDArray) requestmap["items"];
 
@@ -284,7 +284,7 @@ namespace Aurora.Services
         public byte[] NewAgentInventoryRequest(string path, Stream request, OSHttpRequest httpRequest,
                                                OSHttpResponse httpResponse)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             string asset_type = map["asset_type"].AsString();
             if (!ChargeUser(asset_type, map))
             {
@@ -299,7 +299,7 @@ namespace Aurora.Services
         public byte[] NewAgentInventoryRequestVariablePrice(string path, Stream request, OSHttpRequest httpRequest,
                                                             OSHttpResponse httpResponse)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             string asset_type = map["asset_type"].AsString();
             int charge = 0;
             int resourceCost = 0;
@@ -393,7 +393,7 @@ namespace Aurora.Services
         public byte[] CreateInventoryCategory(string path, Stream request, OSHttpRequest httpRequest,
                                               OSHttpResponse httpResponse)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             UUID folder_id = map["folder_id"].AsUUID();
             UUID parent_id = map["parent_id"].AsUUID();
             int type = map["type"].AsInteger();
@@ -411,44 +411,6 @@ namespace Aurora.Services
             resp["name"] = name;
 
             return OSDParser.SerializeLLSDXmlBytes(map);
-        }
-
-        public string HandleInventoryItemCreate(string request, UUID AgentID)
-        {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
-            string asset_type = map["asset_type"].AsString();
-            if (!ChargeUser(asset_type, map))
-            {
-                map = new OSDMap();
-                map["uploader"] = "";
-                map["state"] = "error";
-                return OSDParser.SerializeLLSDXmlString(map);
-            }
-
-
-            string assetName = map["name"].AsString();
-            string assetDes = map["description"].AsString();
-            UUID parentFolder = map["folder_id"].AsUUID();
-            string inventory_type = map["inventory_type"].AsString();
-            uint everyone_mask = map["everyone_mask"].AsUInteger();
-            uint group_mask = map["group_mask"].AsUInteger();
-            uint next_owner_mask = map["next_owner_mask"].AsUInteger();
-
-            UUID newAsset = UUID.Random();
-            UUID newInvItem = UUID.Random();
-            string uploadpath = "/CAPS/Upload/" + UUID.Random() + "/";
-
-            AssetUploader uploader =
-                new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, uploadpath, everyone_mask,
-                                  group_mask, next_owner_mask, UploadCompleteHandler);
-            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", uploadpath, uploader.uploaderCaps));
-
-            string uploaderURL = MainServer.Instance.ServerURI + uploadpath;
-            map = new OSDMap();
-            map["uploader"] = uploaderURL;
-            map["state"] = "upload";
-            return OSDParser.SerializeLLSDXmlString(map);
         }
 
         /// <summary>

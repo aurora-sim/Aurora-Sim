@@ -1844,7 +1844,7 @@ namespace Aurora.Modules.Land
                 MainConsole.Instance.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
                 return OSDParser.SerializeLLSDXmlBytes(new OSDMap());
             }
-            OSDMap args = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap args = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             ILandObject o = GetLandObject(args["local-id"].AsInteger());
 
@@ -1866,7 +1866,7 @@ namespace Aurora.Modules.Land
             }
 
             ParcelPropertiesUpdateMessage properties = new ParcelPropertiesUpdateMessage();
-            OSDMap args = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap args = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             properties.Deserialize(args);
 
@@ -1928,7 +1928,7 @@ namespace Aurora.Modules.Land
             UUID parcelID = UUID.Zero;
             try
             {
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
                 if ((map.ContainsKey("region_id") || map.ContainsKey("region_handle")) && map.ContainsKey("location"))
                 {
                     UUID regionID = map["region_id"].AsUUID();

@@ -58,7 +58,7 @@ namespace Aurora.Framework.Servers.HttpServer
                                              string urlToAppend, Dictionary<string, object> variables,
                                              HTTPReturned eventHandler)
         {
-            Uri myUri = new Uri("http://localhost/index.php?" + stream.ReadUntilEnd());
+            Uri myUri = new Uri("http://localhost/index.php?" + HttpServerHandlerHelpers.ReadString(stream));
             Dictionary<string, string> newVars = new Dictionary<string, string>();
             foreach (string key in variables.Keys)
             {

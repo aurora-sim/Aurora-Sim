@@ -116,7 +116,7 @@ namespace Aurora.Modules.Caps
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
                 return MainServer.BlankResponse;
 
-            OSDMap r = (OSDMap) OSDParser.Deserialize(request);
+            OSDMap r = (OSDMap) OSDParser.Deserialize(HttpServerHandlerHelpers.ReadFully(request));
             UploadObjectAssetMessage message = new UploadObjectAssetMessage();
             try
             {

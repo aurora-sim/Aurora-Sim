@@ -164,7 +164,7 @@ namespace Aurora.Modules.Estate
             if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
                 return new byte[0];
 
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             string estate_name = rm["estate_name"].AsString();
             bool allow_direct_teleport = rm["allow_direct_teleport"].AsBoolean();
@@ -212,7 +212,7 @@ namespace Aurora.Modules.Estate
             if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
                 return new byte[0];
 
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             int agent_limit = rm["agent_limit"].AsInteger();
             bool allow_damage = rm["allow_damage"].AsBoolean();

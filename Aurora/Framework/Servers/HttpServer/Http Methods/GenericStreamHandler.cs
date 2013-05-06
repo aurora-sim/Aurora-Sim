@@ -27,6 +27,8 @@
 
 using System.IO;
 using Aurora.Framework.Servers.HttpServer.Implementation;
+using System.Text;
+using System;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -52,23 +54,56 @@ namespace Aurora.Framework.Servers.HttpServer
 
     public class HttpServerHandlerHelpers
     {
+        public const int CHUNK_SIZE = 8192;
         public static byte[] ReadFully(Stream stream)
         {
-            byte[] buffer = new byte[1024];
-            using (MemoryStream ms = new MemoryStream(1024*256))
+            byte[] buffer = new byte[CHUNK_SIZE];
+            using (MemoryStream ms = new MemoryStream())
             {
                 while (true)
                 {
                     int read = stream.Read(buffer, 0, buffer.Length);
 
                     if (read <= 0)
-                    {
                         return ms.ToArray();
-                    }
 
                     ms.Write(buffer, 0, read);
                 }
             }
+        }
+
+        public static void WriteChunked(Stream stream, byte[] content)
+        {
+            int count = content.Length;
+            int pos = 0;
+            while (count > 0)
+            {
+                stream.Write(content, pos, Math.Min(CHUNK_SIZE, count)); //Send it
+                count -= CHUNK_SIZE;
+                pos += CHUNK_SIZE;
+            }
+            //Finish writing
+            stream.Flush();
+        }
+
+        public static string ReadString(Stream stream)
+        {
+            StringBuilder sb = new StringBuilder();
+            byte[] buf = new byte[CHUNK_SIZE];
+            int count = 0;
+            do
+            {
+                count = stream.Read(buf, 0, CHUNK_SIZE);
+                if (count != 0)
+                    sb.Append(Encoding.UTF8.GetString(buf, 0, count));
+
+            } while (count > 0);
+            return sb.ToString();
+            //Doesn't work for chunked requests
+            /*StreamReader sr = new StreamReader(stream);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            return body;*/
         }
     }
 

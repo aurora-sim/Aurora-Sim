@@ -393,10 +393,7 @@ namespace Aurora.Framework.Services
         public override byte[] Handle(string path, Stream requestData,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            StreamReader sr = new StreamReader(requestData);
-            string body = sr.ReadToEnd();
-            sr.Close();
-            body = body.Trim();
+            string body = HttpServerHandlerHelpers.ReadString(requestData).Trim();
 
             try
             {

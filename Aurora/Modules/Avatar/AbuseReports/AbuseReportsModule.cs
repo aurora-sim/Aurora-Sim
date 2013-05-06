@@ -288,7 +288,7 @@ namespace Aurora.Modules.AbuseReports
                                           OSHttpResponse httpResponse) 
         {
             IScenePresence SP = findScenePresence(AgentID);
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             string RegionName = map["abuse-region-name"];
             UUID AbuserID = map["abuser-id"];
             uint Category = map["category"];

@@ -368,13 +368,17 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
 
                 request.InputStream.Close();
-
                 try
                 {
                     if (buffer != null)
                     {
-                        response.ContentLength64 = buffer.LongLength;
-                        response.Close(buffer, true);
+                        response.SendChunked = true;
+                        using (Stream stream = response.OutputStream)
+                        {
+                            HttpServerHandlerHelpers.WriteChunked(stream, buffer);
+                        }
+                        //response.ContentLength64 = buffer.LongLength;
+                        response.Close();
                     }
                     else
                         response.Close (new byte[0], true);
@@ -424,10 +428,8 @@ namespace Aurora.Framework.Servers.HttpServer
         /// <param name="response"></param>
         private byte[] HandleXmlRpcRequests(OSHttpRequest request, OSHttpResponse response)
         {
-            Stream requestStream = request.InputStream;
-            string requestBody = requestStream.ReadUntilEnd();
-            requestStream.Close();
-            //MainConsole.Instance.Debug(requestBody);
+            string requestBody = HttpServerHandlerHelpers.ReadString(request.InputStream);
+
             requestBody = requestBody.Replace("<base64></base64>", "");
             string responseString = String.Empty;
             XmlRpcRequest xmlRprcRequest = null;

@@ -226,7 +226,7 @@ namespace Aurora.Modules.Gods
 
         private byte[] UntrustedSimulatorMessage(UUID AgentID, Stream request)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             if (rm["message"] == "GodKickUser")
             {
                 OSDArray innerArray = ((OSDArray) ((OSDMap) rm["body"])["UserInfo"]);

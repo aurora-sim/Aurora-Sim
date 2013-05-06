@@ -274,7 +274,7 @@ namespace Aurora.Modules.Entities.Media
         {
 //            MainConsole.Instance.DebugFormat("[MOAP]: Got ObjectMedia path [{0}], raw request [{1}]", path, request);
 
-            OSDMap osd = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap osd = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             ObjectMediaMessage omm = new ObjectMediaMessage();
             omm.Deserialize(osd);
 
@@ -451,7 +451,7 @@ namespace Aurora.Modules.Entities.Media
         {
 //            MainConsole.Instance.DebugFormat("[MOAP]: Got ObjectMediaNavigate request [{0}]", request);
 
-            OSDMap osd = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap osd = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
             ObjectMediaNavigateMessage omn = new ObjectMediaNavigateMessage();
             omn.Deserialize(osd);
 

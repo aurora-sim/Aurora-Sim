@@ -72,7 +72,7 @@ namespace Aurora.Services
             HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                OSHttpResponse httpResponse)
                                           {
-                                              return MapLayerRequest(request.ReadUntilEnd(), httpRequest, httpResponse);
+                                              return MapLayerRequest(HttpServerHandlerHelpers.ReadString(request), httpRequest, httpResponse);
                                           };
             m_uri = "/CAPS/MapLayer/" + UUID.Random() + "/";
             capURLs["MapLayer"] = MainServer.Instance.ServerURI + m_uri;

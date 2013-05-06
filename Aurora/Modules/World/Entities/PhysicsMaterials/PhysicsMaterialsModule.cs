@@ -100,7 +100,7 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
 
         private byte[] GetObjectPhysicsData(UUID agentID, Stream request)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(HttpServerHandlerHelpers.ReadFully(request));
 
             OSDArray keys = (OSDArray) rm["object_ids"];
 
