@@ -31,8 +31,7 @@ using Aurora.Framework.Servers.HttpServer.Implementation;
 namespace Aurora.Framework.Servers.HttpServer.Interfaces
 {
     /// <summary>
-    ///     Interface to OpenSimulator's built in HTTP server.  Use this to register handlers (http, llsd, xmlrpc, etc.)
-    ///     for given URLs.
+    ///     Interface to Aurora's built in HTTP server.  Use this to register handlers for given URLs.
     /// </summary>
     public interface IHttpServer
     {
@@ -58,27 +57,6 @@ namespace Aurora.Framework.Servers.HttpServer.Interfaces
         /// </summary>
         string FullHostName { get; }
 
-        /// <summary>
-        ///     Add a handler for an HTTP request.
-        ///     This handler can actually be invoked either as
-        ///     http://hostname:port/?method=methodName
-        ///     or
-        ///     http://hostname:portmethodName
-        ///     if the method name starts with a slash.  For example, AddHTTPHandler("/object/", ...) on a standalone region
-        ///     server will register a handler that can be invoked with either
-        ///     http://localhost:9000/?method=/object/
-        ///     or
-        ///     http://localhost:9000/object/
-        ///     In addition, the handler invoked by the HTTP server for any request is the one when best matches the request
-        ///     URI.  So if a handler for "/myapp/" is registered and a request for "/myapp/page" is received, then
-        ///     the "/myapp/" handler is invoked if no "/myapp/page" handler exists.
-        /// </summary>
-        /// <param name="handler"></param>
-        /// <returns>
-        ///     true if the handler was successfully registered, false if a handler with the same name already existed.
-        /// </returns>
-        bool AddHTTPHandler(IStreamedRequestHandler handler);
-
         bool AddPollServiceHTTPHandler(string methodName, PollServiceEventArgs args);
 
         /// <summary>
@@ -99,10 +77,6 @@ namespace Aurora.Framework.Servers.HttpServer.Interfaces
         void RemovePollServiceHTTPHandler(string httpMethod, string path);
 
         void RemoveStreamHandler(string httpMethod, string path);
-
-        void RemoveHttpStreamHandler(string path);
-
-        void RemoveXmlRPCHandler(string method);
 
         void Start();
 

@@ -44,7 +44,7 @@ namespace Aurora.Services
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             ServiceURI = server.ServerURI + "/";
-            server.AddHTTPHandler(new GenericStreamHandler("GET", "/texture/", GetBakedTexture));
+            server.AddStreamHandler(new GenericStreamHandler("GET", "/texture/", GetBakedTexture));
             registry.RegisterModuleInterface<IAgentAppearanceService>(this);
             m_registry = registry;
         }

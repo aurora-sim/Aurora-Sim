@@ -81,8 +81,8 @@ namespace Aurora.Services
                 CreateCacheDirectories();
 
             m_server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
-            m_server.AddHTTPHandler(new GenericStreamHandler("GET", "/MapService/", MapRequest));
-            m_server.AddHTTPHandler(new GenericStreamHandler("GET", "/MapAPI/", MapAPIRequest));
+            m_server.AddStreamHandler(new GenericStreamHandler("GET", "/MapService/", MapRequest));
+            m_server.AddStreamHandler(new GenericStreamHandler("GET", "/MapAPI/", MapAPIRequest));
 
             registry.RegisterModuleInterface<IMapService>(this);
 

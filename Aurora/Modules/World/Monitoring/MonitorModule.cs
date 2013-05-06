@@ -167,7 +167,7 @@ namespace Aurora.Modules.Monitoring
                 {
                     m_currentScene = scene;
                     //Add the HTTP handler
-                    MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET",
+                    MainServer.Instance.AddStreamHandler(new GenericStreamHandler("GET",
                                                                                 "/monitorstats/" +
                                                                                 scene.RegionInfo.RegionID + "/",
                                                                                 StatsPage));
@@ -190,7 +190,7 @@ namespace Aurora.Modules.Monitoring
                 {
                     //Kill the stats heartbeat and http handler
                     m_report.Stop();
-                    MainServer.Instance.RemoveHttpStreamHandler("/monitorstats/" + m_currentScene.RegionInfo.RegionID + "/");
+                    MainServer.Instance.RemoveStreamHandler("GET", "/monitorstats/" + m_currentScene.RegionInfo.RegionID + "/");
                 }
                 //Remove all monitors/alerts
                 m_alerts.Clear();

@@ -22,27 +22,27 @@ namespace Aurora.Framework.Servers.HttpServer
                             (urlToAppend == "" ? "" : "/") + urlToAppend + "/index.php?method=" + methodName + secret2;
             string url = MainServer.Instance.ServerURI +
                          (urlToAppend == "" ? "" : "/") + urlToAppend + "/index.php?method=" + methodName + secret;
-            MainServer.Instance.RemoveHttpStreamHandler("/index.php?method=" + methodName + secret);
-            MainServer.Instance.RemoveHttpStreamHandler(methodName + secret2);
+            MainServer.Instance.RemoveStreamHandler("GET", "/index.php?method=" + methodName + secret);
+            MainServer.Instance.RemoveStreamHandler("GET", "/index.php?method=" + methodName + secret2);
             variables["url"] = url;
-            MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET", methodName + secret2,
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("GET", "/index.php?method=" + methodName + secret2,
                                                                         delegate(string path, Stream request,
                                                                                  OSHttpRequest httpRequest,
                                                                                  OSHttpResponse httpResponse)
                                                                             {
-                                                                                MainServer.Instance.RemoveHttpStreamHandler
-                                                                                    (methodName + secret2);
+                                                                                MainServer.Instance.RemoveStreamHandler
+                                                                                    ("GET", "/index.php?method=" + methodName + secret2);
                                                                                 return SetUpWebpage(httpResponse, url,
                                                                                                     html, variables);
                                                                             }));
-            MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET",
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("GET",
                                                                         "/index.php?method=" + methodName + secret,
                                                                         delegate(string path, Stream request,
                                                                                  OSHttpRequest httpRequest,
                                                                                  OSHttpResponse httpResponse)
                                                                             {
-                                                                                MainServer.Instance.RemoveHttpStreamHandler(
-                                                                                    "/index.php?method=" + methodName +
+                                                                                MainServer.Instance.RemoveStreamHandler(
+                                                                                    "GET", "/index.php?method=" + methodName +
                                                                                     secret);
                                                                                 return HandleResponse(httpRequest,
                                                                                                       httpResponse,

@@ -95,7 +95,8 @@ namespace Aurora.Modules.Web
             {
                 Registry.RegisterModuleInterface<IWebInterfaceModule>(this);
                 var server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(_port);
-                server.AddHTTPHandler(new GenericStreamHandler("GET", "/", FindAndSendPage));
+                server.AddStreamHandler(new GenericStreamHandler("GET", "/", FindAndSendPage));
+                server.AddStreamHandler(new GenericStreamHandler("POST", "/", FindAndSendPage));
             }
         }
 
@@ -482,7 +483,9 @@ namespace Aurora.Modules.Web
         {
             try
             {
-                string file = Path.Combine("html/", path.StartsWith("/") ? path.Remove(0, 1) : path);
+                string filePath = path.StartsWith("/") ? path.Remove(0, 1) : path;
+                filePath = filePath.IndexOf('?') > 0 ? filePath.Substring(0, filePath.IndexOf('?')) : filePath;
+                string file = Path.Combine("html/", filePath);
                 if (!Path.GetFullPath(file).StartsWith(Path.GetFullPath("html/")))
                 {
                     return "html/index.html";

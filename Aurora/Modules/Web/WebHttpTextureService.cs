@@ -34,7 +34,7 @@ namespace Aurora.Modules.Web
             _server = _registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
             if (_server != null)
             {
-                _server.AddHTTPHandler(new GenericStreamHandler("GET", "GridTexture", OnHTTPGetTextureImage));
+                _server.AddStreamHandler(new GenericStreamHandler("GET", "/index.php?method=GridTexture", OnHTTPGetTextureImage));
                 _registry.RegisterModuleInterface<IWebHttpTextureService>(this);
             }
             IGridInfo gridInfo = _registry.RequestModuleInterface<IGridInfo>();

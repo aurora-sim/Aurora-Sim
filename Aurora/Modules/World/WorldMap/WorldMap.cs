@@ -147,12 +147,12 @@ namespace Aurora.Modules.WorldMap
         // this has to be called with a lock on m_scene
         protected virtual void AddHandlers()
         {
-            string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
+            string regionimage = "/index.php?method=regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
             MainConsole.Instance.Debug("[WORLD MAP]: JPEG Map location: " + MainServer.Instance.ServerURI +
-                                       "/index.php?method=" + regionimage);
+                                       regionimage);
 
-            MainServer.Instance.AddHTTPHandler(new GenericStreamHandler("GET", regionimage, OnHTTPGetMapImage));
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("GET", regionimage, OnHTTPGetMapImage));
 
             m_scene.EventManager.OnNewClient += OnNewClient;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
@@ -164,9 +164,9 @@ namespace Aurora.Modules.WorldMap
             m_scene.EventManager.OnNewClient -= OnNewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
 
-            string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
+            string regionimage = "/index.php?method=regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            MainServer.Instance.RemoveHttpStreamHandler(regionimage);
+            MainServer.Instance.RemoveStreamHandler("GET", regionimage);
         }
 
         #region EventHandlers

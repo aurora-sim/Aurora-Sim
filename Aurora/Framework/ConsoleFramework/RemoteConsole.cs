@@ -100,9 +100,9 @@ namespace Aurora.Framework.ConsoleFramework
         {
             m_Server = server;
 
-            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/StartSession/", HandleHttpStartSession));
-            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/CloseSession/", HandleHttpCloseSession));
-            m_Server.AddHTTPHandler(new GenericStreamHandler("GET", "/SessionCommand/", HandleHttpSessionCommand));
+            m_Server.AddStreamHandler(new GenericStreamHandler("GET", "/StartSession/", HandleHttpStartSession));
+            m_Server.AddStreamHandler(new GenericStreamHandler("GET", "/CloseSession/", HandleHttpCloseSession));
+            m_Server.AddStreamHandler(new GenericStreamHandler("GET", "/SessionCommand/", HandleHttpSessionCommand));
         }
 
         public override void Output(string text, Level level)
