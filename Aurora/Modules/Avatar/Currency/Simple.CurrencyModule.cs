@@ -157,15 +157,15 @@ namespace Simple.Currency
             return (int) m_connector.GetUserCurrency(agentID).Amount;
         }
 
-        public bool Charge(IClientAPI client, int amount)
-        {
-            return m_connector.UserCurrencyTransfer(UUID.Zero, client.AgentId, UUID.Zero, UUID.Zero, (uint) amount,
-                                                    "Charge", TransactionType.SystemGenerated, UUID.Zero);
-        }
-
         public bool Charge(UUID agentID, int amount, string text)
         {
-            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint) amount, text,
+            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint)amount, text,
+                                                    TransactionType.SystemGenerated, UUID.Zero);
+        }
+
+        public bool Charge(UUID agentID, int amount, string text, TransactionType type)
+        {
+            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint)amount, text,
                                                     TransactionType.SystemGenerated, UUID.Zero);
         }
 

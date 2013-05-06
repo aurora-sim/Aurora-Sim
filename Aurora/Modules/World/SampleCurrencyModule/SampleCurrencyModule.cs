@@ -161,6 +161,11 @@ namespace Aurora.Modules.SampleCurrencyModule
             return true;
         }
 
+        public bool Charge(UUID agentID, int amount, string text, TransactionType type)
+        {
+            return true;
+        }
+
         public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)
         {
             return true;
@@ -321,11 +326,6 @@ namespace Aurora.Modules.SampleCurrencyModule
                                          0, 0, 0, 0, 0,
                                          0, 0, 0, 0, 0,
                                          0, 0);
-        }
-
-        public bool Charge(IClientAPI client, int amount)
-        {
-            return true;
         }
 
         #endregion

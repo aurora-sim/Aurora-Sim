@@ -277,7 +277,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
                 if (mm != null)
                 {
-                    if (!mm.Charge(remoteClient, mm.UploadCharge))
+                    if (!mm.Charge(remoteClient.AgentId, mm.UploadCharge, "", TransactionType.UploadCharge))
                     {
                         remoteClient.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
                         return;

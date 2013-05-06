@@ -104,9 +104,8 @@ namespace Aurora.Modules.Archivers
             try
             {
                 LoadAssets(archive.AssetsMap);
-                LoadItems(archive.ItemsMap);
                 appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance,
-                                                         account.PrincipalID, out items);
+                                                         account.PrincipalID, archive.ItemsMap, out items);
             }
             catch (Exception ex)
             {
@@ -311,12 +310,22 @@ namespace Aurora.Modules.Archivers
         private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source,
                                                              AvatarAppearance avatarAppearance,
                                                              InventoryFolderBase destinationFolder, UUID agentid,
+                                                             OSDMap itemsMap,
                                                              out List<InventoryItemBase> items)
         {
             if (destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
             items = new List<InventoryItemBase>();
 
+            List<InventoryItemBase> litems = new List<InventoryItemBase>();
+            foreach (KeyValuePair<string, OSD> kvp in itemsMap)
+            {
+                InventoryItemBase item = new InventoryItemBase();
+                item.FromOSD((OSDMap)kvp.Value);
+                MainConsole.Instance.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
+                litems.Add(item);
+            }
+            
             // Wearables
             AvatarWearable[] wearables = avatarAppearance.Wearables;
 
@@ -330,6 +339,11 @@ namespace Aurora.Modules.Archivers
                         // Get inventory item and copy it
                         InventoryItemBase item = InventoryService.GetItem(UUID.Zero, wearable[ii].ItemID);
 
+                        if (item == null)
+                        {
+                            //Attempt to get from the map if it doesn't already exist on the grid
+                            item = litems.First((itm) => itm.ID == wearable[ii].ItemID);
+                        }
                         if (item != null)
                         {
                             InventoryItemBase destinationItem = InventoryService.InnerGiveInventoryItem(destination,
@@ -454,20 +468,6 @@ namespace Aurora.Modules.Archivers
                     asset = LoadAssetBase(assetMap);
                     asset.ID = AssetService.Store(asset);
                 }
-            }
-        }
-
-        private void LoadItems(OSDMap items, UUID OwnerID, InventoryFolderBase folderForAppearance,
-                               out List<InventoryItemBase> litems)
-        {
-            litems = new List<InventoryItemBase>();
-            foreach (KeyValuePair<string, OSD> kvp in items)
-            {
-                InventoryItemBase item = new InventoryItemBase();
-                item.FromOSD((OSDMap)kvp.Value);
-                MainConsole.Instance.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
-                item = GiveInventoryItem(item.CreatorIdAsUuid, OwnerID, item, folderForAppearance);
-                litems.Add(item);
             }
         }
 

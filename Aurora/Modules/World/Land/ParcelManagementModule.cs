@@ -988,7 +988,7 @@ namespace Aurora.Modules.Land
             if (module != null)
                 if (
                     !module.Transfer(landObject.LandData.OwnerID, client.AgentId, landObject.LandData.PassPrice,
-                                     "Parcel Pass"))
+                                     "Parcel Pass", TransactionType.LandPassSale))
                 {
                     client.SendAlertMessage("You do not have enough funds to complete this transaction.");
                     return;

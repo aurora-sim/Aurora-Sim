@@ -240,7 +240,7 @@ namespace Aurora.Modules.Profiles
                 Classified classcheck = ProfileFrontend.GetClassified(queryclassifiedID);
                 if (classcheck == null)
                 {
-                    if (!money.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified"))
+                    if (!money.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified", TransactionType.ClassifiedCharge))
                     {
                         remoteClient.SendAlertMessage("You do not have enough money to create this classified.");
                         return;

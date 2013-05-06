@@ -117,8 +117,8 @@ namespace Aurora.Framework.Modules
                              int amount);
 
         int Balance(UUID agentID);
-        bool Charge(IClientAPI client, int amount);
         bool Charge(UUID agentID, int amount, string text);
+        bool Charge(UUID agentID, int amount, string text, TransactionType type);
 
         event ObjectPaid OnObjectPaid;
 

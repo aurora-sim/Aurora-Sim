@@ -352,7 +352,7 @@ namespace Aurora.Services
                     resourceCost = mesh_list * m_moneyModule.UploadCharge;
                 }
                 if (charge > 0 &&
-                    !m_moneyModule.Charge(m_agentID, m_moneyModule.UploadCharge, "Upload Charge"))
+                    !m_moneyModule.Charge(m_agentID, m_moneyModule.UploadCharge, "Upload Charge", TransactionType.UploadCharge))
                     return false;
             }
             return true;
