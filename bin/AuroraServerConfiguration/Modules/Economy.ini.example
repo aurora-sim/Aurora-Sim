@@ -44,6 +44,11 @@
 	;; Default is true
 	CanBuyCurrencyInworld = true
 	
+	;; The max amount of money transfered before a transaction will be logged
+	;; Setting to 0 will ignore any 0$ transactions
+	;; Default is -1 (always log)
+	MaxAmountBeforeLogging = -1
+	
 	;;Should we give out stipends?
 	;; Default is false
 	GiveStipends = false

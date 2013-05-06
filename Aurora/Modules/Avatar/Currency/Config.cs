@@ -30,6 +30,7 @@ namespace Simple.Currency
         private bool m_StipendsLoadOldUsers = true;
         private bool m_GiveStipendsOnlyWhenLoggedIn = false;
         private bool m_saveTransactionLogs = false;
+        private int m_maxAmountBeforeLogging = -1;
 
         #endregion
 
@@ -226,6 +227,12 @@ namespace Simple.Currency
         {
             get { return m_saveTransactionLogs; }
             set { m_saveTransactionLogs = value; }
+        }
+
+        public int MaxAmountBeforeLogging
+        {
+            get { return m_maxAmountBeforeLogging; }
+            set { m_maxAmountBeforeLogging = value; }
         }
 
         #endregion

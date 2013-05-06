@@ -222,7 +222,8 @@ namespace Simple.Currency
         // Method Added By Alicia Raven
         private void AddTransactionRecord(UUID TransID, string Description, UUID ToID, UUID FromID, uint Amount, TransactionType TransType, uint ToBalance, uint FromBalance, string ToName, string FromName)
         {
-            m_gd.Insert("simple_currency_history", new object[] { TransID, (Description == null ? "" : Description), FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance });
+            if(Amount > m_config.MaxAmountBeforeLogging)
+                m_gd.Insert("simple_currency_history", new object[] { TransID, (Description == null ? "" : Description), FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance });
         }
 
         #endregion
