@@ -412,7 +412,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 else if (MainConsole.Instance.IsTraceEnabled)
                 {
                     MainConsole.Instance.TraceFormat(
-                        "[BASE HTTP SERVER]: Handling {0} {1} took {32}ms",
+                        "[BASE HTTP SERVER]: Handling {0} {1} took {2}ms",
                         requestMethod,
                         uriString,
                         tickdiff);

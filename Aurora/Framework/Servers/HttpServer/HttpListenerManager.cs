@@ -54,16 +54,12 @@ namespace Aurora.Framework.Servers.HttpServer
             if (!_isRunning)
                 return;
             _isRunning = false;
-#if true //LINUX
-            _listenerThread.Abort();
-            foreach (Thread worker in _workers)
-                worker.Abort();
-#else
+            _listener.Stop();
+            _listenForNextRequest.Set();
             _listenerThread.Join();
+            _newQueueItem.Set();
             foreach (Thread worker in _workers)
                 worker.Join();
-#endif
-            _listener.Stop();
             _listener.Close();
         }
 
@@ -85,7 +81,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
             try
             {
-                context = _listener.EndGetContext(result);
+                if(_listener.IsListening)
+                    context = _listener.EndGetContext(result);
             }
             catch (Exception ex)
             {
