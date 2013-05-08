@@ -372,7 +372,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 {
                     if (buffer != null)
                     {
-                        if (response.ProtocolVersion.Minor == 0)
+                        if (request.ProtocolVersion.Minor == 0)
                         {
                             //HTTP 1.0... no chunking
                             using (Stream stream = response.OutputStream)
