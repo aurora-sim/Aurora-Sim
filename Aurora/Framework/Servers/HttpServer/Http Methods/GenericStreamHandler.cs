@@ -86,6 +86,13 @@ namespace Aurora.Framework.Servers.HttpServer
             stream.Flush();
         }
 
+        public static void WriteNonChunked(Stream stream, byte[] content)
+        {
+            stream.Write(content, 0, content.Length); //Send it
+            //Finish writing
+            stream.Flush();
+        }
+
         public static string ReadString(Stream stream)
         {
             StringBuilder sb = new StringBuilder();

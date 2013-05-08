@@ -372,10 +372,21 @@ namespace Aurora.Framework.Servers.HttpServer
                 {
                     if (buffer != null)
                     {
-                        response.SendChunked = true;
-                        using (Stream stream = response.OutputStream)
+                        if (response.ProtocolVersion.Minor == 0)
                         {
-                            HttpServerHandlerHelpers.WriteChunked(stream, buffer);
+                            //HTTP 1.0... no chunking
+                            using (Stream stream = response.OutputStream)
+                            {
+                                HttpServerHandlerHelpers.WriteNonChunked(stream, buffer);
+                            }
+                        }
+                        else
+                        {
+                            response.SendChunked = true;
+                            using (Stream stream = response.OutputStream)
+                            {
+                                HttpServerHandlerHelpers.WriteChunked(stream, buffer);
+                            }
                         }
                         //response.ContentLength64 = buffer.LongLength;
                         response.Close();
