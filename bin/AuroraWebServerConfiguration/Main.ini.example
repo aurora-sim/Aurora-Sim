@@ -34,6 +34,7 @@
     FreeSwitchHandler = FreeswitchService
     FriendsHandler = FriendsService
     GridHandler = GridService
+    GridInfoInHandler = GridInfoServerInConnector
     GridWideMessage = GridWideMessageModule
     InventoryHandler = InventoryService
 	LoginHandler = LLLoginService
