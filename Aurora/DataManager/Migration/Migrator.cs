@@ -123,8 +123,17 @@ namespace Aurora.DataManager.Migration
                 case ColumnTypes.Char36:
                     type = ColumnTypeDef.Char36;
                     break;
+                case ColumnTypes.Char40:
+                    type = ColumnTypeDef.Char40;
+                    break;
                 case ColumnTypes.Char5:
                     type = ColumnTypeDef.Char5;
+                    break;
+                case ColumnTypes.Char1:
+                    type = ColumnTypeDef.Char1;
+                    break;
+                case ColumnTypes.Char2:
+                    type = ColumnTypeDef.Char2;
                     break;
                 case ColumnTypes.Date:
                     type = ColumnTypeDef.Date;
@@ -144,6 +153,12 @@ namespace Aurora.DataManager.Migration
                 case ColumnTypes.Integer30:
                     type = ColumnTypeDef.Integer30;
                     break;
+                case ColumnTypes.UInteger11:
+                    type = ColumnTypeDef.UInteger11;
+                    break;
+                case ColumnTypes.UInteger30:
+                    type = ColumnTypeDef.UInteger30;
+                    break;
                 case ColumnTypes.LongBlob:
                     type = ColumnTypeDef.LongBlob;
                     break;
@@ -155,9 +170,6 @@ namespace Aurora.DataManager.Migration
                     break;
                 case ColumnTypes.String:
                     type = ColumnTypeDef.Text;
-                    break;
-                case ColumnTypes.String1:
-                    type = ColumnTypeDef.String1;
                     break;
                 case ColumnTypes.String10:
                     type = ColumnTypeDef.String10;
@@ -174,9 +186,7 @@ namespace Aurora.DataManager.Migration
                 case ColumnTypes.String16:
                     type = ColumnTypeDef.String16;
                     break;
-                case ColumnTypes.String2:
-                    type = ColumnTypeDef.String2;
-                    break;
+
                 case ColumnTypes.String255:
                     type = ColumnTypeDef.String255;
                     break;
@@ -212,6 +222,15 @@ namespace Aurora.DataManager.Migration
                     break;
                 case ColumnTypes.TinyInt4:
                     type = ColumnTypeDef.TinyInt4;
+                    break;
+                case ColumnTypes.UTinyInt4:
+                    type = ColumnTypeDef.UTinyInt4;
+                    break;
+                case ColumnTypes.Binary32:
+                    type = ColumnTypeDef.Binary32;
+                    break;
+                case ColumnTypes.Binary64:
+                    type = ColumnTypeDef.Binary64;
                     break;
                 default:
                     type = ColumnTypeDef.Unknown;
