@@ -20,7 +20,7 @@
     ;; This will find the users last logged in date or if they are logged in and display it in the group panel
     FindUserOnlineStatus = true
 
-    ;; Aurora Generic Data backend groups service
+    ;; Aurora Generic Data back-end groups service
     ;; No setup required
     ServicesConnectorModule = AuroraDataGroupsServicesConnectorModule
 
@@ -33,12 +33,12 @@
 	;; The path to your webserver where the FloatSam PHP web server parts are
     ;GroupsServerURI = "http://127.0.0.1/xmlrpc.php"
 
-    ;; XmlRpc Security settings.  These must match those set on your backend groups service.
+    ;; XmlRpc Security settings.  These must match those set on your back-end groups service.
     ;XmlRpcServiceReadKey = 1234
     ;XmlRpcServiceWriteKey = 1234
 
     ;; Disables HTTP Keep-Alive for XmlRpcGroupsServicesConnector HTTP Requests,
     ;; this is a work around for a problem discovered on some Windows based region servers.
     ;; Only disable keep alive if you see a large number (dozens) of the following Exceptions:
-    ;; System.Net.WebException: The request was aborted: The request was canceled.
+    ;; System.Net.WebException: The request was aborted: The request was cancelled.
     ;XmlRpcDisableKeepAlive = true

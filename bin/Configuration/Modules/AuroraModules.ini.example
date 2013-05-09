@@ -125,10 +125,10 @@
     ;; Do we allow team killing?
     AllowTeamKilling = false
 
-    ;; Do we do automatic damage on user's who shoot teammates?
+    ;; Do we do automatic damage on user's who shoot team-mates?
     SendTeamKillerInfo = false
 
-    ;; How many times should team killers be allowed to shoot teammates
+    ;; How many times should team killers be allowed to shoot team-mates
     TeamHitsBeforeSend = 3
 
     ;; Damage to inflict upon team killers
@@ -301,7 +301,7 @@
     ;; Should avatars see tags above their heads?
     ;; Settings:
     ;; 0 - Hide all tags
-    ;; 1 - Temperarily show
+    ;; 1 - Temporarily show
     ;; 2 - Always show
     ;ShowTags = 2
     
