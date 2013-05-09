@@ -35,9 +35,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Aurora.Framework")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("http://opensimulator.org")]
-[assembly: AssemblyProduct("Aurora.Framework")]
-[assembly: AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2012")]
+[assembly: AssemblyCompany("http://aurora-sim.org")]
+[assembly: AssemblyCopyright("(C) Aurora-Sim.org Developers")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -59,5 +58,5 @@ using System.Runtime.InteropServices;
 //      Revision
 //
 
-[assembly: AssemblyVersion("0.1.*")]
-[assembly: AssemblyFileVersion("0.1")]
+[assembly: AssemblyVersion("0.8.0")]
+[assembly: AssemblyFileVersion("0.8.0")]

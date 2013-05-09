@@ -31,6 +31,10 @@ using Aurora.Framework.Services;
 using Aurora.Simulation.Base;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+
+[assembly: AssemblyVersion("0.8.0")]
+[assembly: AssemblyFileVersion("0.8.0")]
 
 namespace Aurora.Servers.AssetServer
 {
