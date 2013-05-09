@@ -241,7 +241,7 @@ namespace Aurora.Modules.Profiles
             IScheduledMoneyModule scheduledMoneyModule = p.Scene.RequestModuleInterface<IScheduledMoneyModule>();
             IMoneyModule moneyModule = p.Scene.RequestModuleInterface<IMoneyModule>();
             Classified classcheck = ProfileFrontend.GetClassified(queryclassifiedID);
-            if (queryclassifiedFlags == 0 && moneyModule != null)
+            if (((queryclassifiedFlags & 32) != 32) && moneyModule != null)
             {
                 //Single week
                 if (!moneyModule.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified", TransactionType.ClassifiedCharge))
@@ -324,7 +324,7 @@ namespace Aurora.Modules.Profiles
             {
                 ProfileFrontend.RemoveClassified(queryClassifiedID);
                 IScheduledMoneyModule scheduledMoneyModule = remoteClient.Scene.RequestModuleInterface<IScheduledMoneyModule>();
-                if (scheduledMoneyModule != null && classcheck != null && classcheck.ClassifiedFlags == 1)
+                if (scheduledMoneyModule != null && classcheck != null && ((classcheck.ClassifiedFlags & 32) == 32))
                 {
                     //Remove auto-renew
                     scheduledMoneyModule.RemoveFromScheduledCharge("Classified" + queryClassifiedID);
@@ -339,7 +339,7 @@ namespace Aurora.Modules.Profiles
                 Classified classcheck = ProfileFrontend.GetClassified(UUID.Parse(identifier.Replace("Classified", "")));
                 ProfileFrontend.RemoveClassified(classcheck.ClassifiedUUID);
                 IScheduledMoneyModule scheduledMoneyModule = m_Scene.RequestModuleInterface<IScheduledMoneyModule>();
-                if (scheduledMoneyModule != null && classcheck != null && classcheck.ClassifiedFlags == 1)
+                if (scheduledMoneyModule != null && classcheck != null && ((classcheck.ClassifiedFlags & 32) == 32))
                 {
                     //Remove auto-renew
                     scheduledMoneyModule.RemoveFromScheduledCharge("Classified" + classcheck.ClassifiedUUID);
@@ -354,7 +354,7 @@ namespace Aurora.Modules.Profiles
                 Classified classcheck = ProfileFrontend.GetClassified(queryClassifiedID);
                 ProfileFrontend.RemoveClassified(queryClassifiedID);
                 IScheduledMoneyModule scheduledMoneyModule = remoteClient.Scene.RequestModuleInterface<IScheduledMoneyModule>();
-                if (scheduledMoneyModule != null && classcheck != null && classcheck.ClassifiedFlags == 1)
+                if (scheduledMoneyModule != null && classcheck != null && ((classcheck.ClassifiedFlags & 32) == 32))
                 {
                     //Remove auto-renew
                     scheduledMoneyModule.RemoveFromScheduledCharge("Classified" + queryClassifiedID);
