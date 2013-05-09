@@ -318,13 +318,20 @@ namespace Aurora.Modules.Land
                             IScheduledMoneyModule moneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
                             if (moneyModule != null)
                             {
-                                if (
-                                    !moneyModule.Charge(remote_client.AgentId, 30,
-                                                        "Parcel Show in Search Fee - " + LandData.GlobalID, 7))
+                                if ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory)
                                 {
-                                    remote_client.SendAlertMessage(
-                                        "You don't have enough money to set this parcel in search.");
-                                    args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
+                                    //Flag is set
+                                    if (!moneyModule.Charge(remote_client.AgentId, 30, "Parcel Show in Search Fee - " + LandData.GlobalID,
+                                        7, TransactionType.ParcelDirFee, "ShowInDirectory" + LandData.GlobalID.ToString(), true))
+                                    {
+                                        remote_client.SendAlertMessage(
+                                            "You don't have enough money to set this parcel in search.");
+                                        args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
+                                    }
+                                }
+                                else
+                                {
+                                    moneyModule.RemoveFromScheduledCharge("ShowInDirectory" + LandData.GlobalID.ToString());
                                 }
                             }
                         }

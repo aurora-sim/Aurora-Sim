@@ -96,6 +96,10 @@ namespace Aurora.Modules.Profiles
             m_Scene = scene;
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
+
+            IScheduledMoneyModule moneyModule = scene.RequestModuleInterface<IScheduledMoneyModule>();
+            if(moneyModule != null)
+                moneyModule.OnUserDidNotPay += moneyModule_OnUserDidNotPay;
         }
 
         public void RemoveRegion(IScene scene)
@@ -233,18 +237,30 @@ namespace Aurora.Modules.Profiles
 
             if (p == null)
                 return; //Just fail
-
-            IMoneyModule money = p.Scene.RequestModuleInterface<IMoneyModule>();
-            if (money != null)
+            
+            IScheduledMoneyModule scheduledMoneyModule = p.Scene.RequestModuleInterface<IScheduledMoneyModule>();
+            IMoneyModule moneyModule = p.Scene.RequestModuleInterface<IMoneyModule>();
+            Classified classcheck = ProfileFrontend.GetClassified(queryclassifiedID);
+            if (queryclassifiedFlags == 0 && moneyModule != null)
             {
-                Classified classcheck = ProfileFrontend.GetClassified(queryclassifiedID);
-                if (classcheck == null)
+                //Single week
+                if (!moneyModule.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified", TransactionType.ClassifiedCharge))
                 {
-                    if (!money.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified", TransactionType.ClassifiedCharge))
-                    {
-                        remoteClient.SendAlertMessage("You do not have enough money to create this classified.");
-                        return;
-                    }
+                    remoteClient.SendAlertMessage("You do not have enough money to create this classified.");
+                    return;
+                }
+            }
+            else if (scheduledMoneyModule != null)
+            {
+                //Auto-renew
+                if (classcheck != null)
+                    scheduledMoneyModule.RemoveFromScheduledCharge("Classified" + queryclassifiedID);
+
+                if (!scheduledMoneyModule.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified (" + queryclassifiedID +")",
+                    7, TransactionType.ClassifiedCharge, "Classified" + queryclassifiedID, true))
+                {
+                    remoteClient.SendAlertMessage("You do not have enough money to create this classified.");
+                    return;
                 }
             }
 
@@ -303,14 +319,46 @@ namespace Aurora.Modules.Profiles
 
         public void ClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            ProfileFrontend.RemoveClassified(queryClassifiedID);
+            Classified classcheck = ProfileFrontend.GetClassified(queryClassifiedID);
+            if (classcheck.CreatorUUID == remoteClient.AgentId)
+            {
+                ProfileFrontend.RemoveClassified(queryClassifiedID);
+                IScheduledMoneyModule scheduledMoneyModule = remoteClient.Scene.RequestModuleInterface<IScheduledMoneyModule>();
+                if (scheduledMoneyModule != null && classcheck != null && classcheck.ClassifiedFlags == 1)
+                {
+                    //Remove auto-renew
+                    scheduledMoneyModule.RemoveFromScheduledCharge("Classified" + queryClassifiedID);
+                }
+            }
+        }
+
+        void moneyModule_OnUserDidNotPay(UUID agentID, string identifier, string paymentTextThatFailed)
+        {
+            if(identifier.StartsWith("Classified"))
+            {
+                Classified classcheck = ProfileFrontend.GetClassified(UUID.Parse(identifier.Replace("Classified", "")));
+                ProfileFrontend.RemoveClassified(classcheck.ClassifiedUUID);
+                IScheduledMoneyModule scheduledMoneyModule = m_Scene.RequestModuleInterface<IScheduledMoneyModule>();
+                if (scheduledMoneyModule != null && classcheck != null && classcheck.ClassifiedFlags == 1)
+                {
+                    //Remove auto-renew
+                    scheduledMoneyModule.RemoveFromScheduledCharge("Classified" + classcheck.ClassifiedUUID);
+                }
+            }
         }
 
         public void GodClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
             if (remoteClient.Scene.Permissions.IsGod(remoteClient.AgentId))
             {
+                Classified classcheck = ProfileFrontend.GetClassified(queryClassifiedID);
                 ProfileFrontend.RemoveClassified(queryClassifiedID);
+                IScheduledMoneyModule scheduledMoneyModule = remoteClient.Scene.RequestModuleInterface<IScheduledMoneyModule>();
+                if (scheduledMoneyModule != null && classcheck != null && classcheck.ClassifiedFlags == 1)
+                {
+                    //Remove auto-renew
+                    scheduledMoneyModule.RemoveFromScheduledCharge("Classified" + queryClassifiedID);
+                }
             }
         }
 

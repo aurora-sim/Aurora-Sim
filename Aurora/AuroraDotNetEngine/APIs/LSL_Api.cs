@@ -13006,7 +13006,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 data = llList2CSV(new LSL_Types.list("GROUP_OWNED"));
             else if (moneyMod != null)
             {
-                success = moneyMod.Transfer(UUID.Parse(destination), m_host.OwnerID, amt, "");
+                success = moneyMod.Transfer(UUID.Parse(destination), m_host.OwnerID, amt, "", TransactionType.ObjectPays);
                 data =
                     llList2CSV(success
                                    ? new LSL_List(destination, amt)

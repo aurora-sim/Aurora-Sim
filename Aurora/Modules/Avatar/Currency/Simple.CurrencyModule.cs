@@ -157,16 +157,10 @@ namespace Simple.Currency
             return (int) m_connector.GetUserCurrency(agentID).Amount;
         }
 
-        public bool Charge(UUID agentID, int amount, string text)
-        {
-            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint)amount, text,
-                                                    TransactionType.SystemGenerated, UUID.Zero);
-        }
-
         public bool Charge(UUID agentID, int amount, string text, TransactionType type)
         {
             return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint)amount, text,
-                                                    TransactionType.SystemGenerated, UUID.Zero);
+                                                    type, UUID.Zero);
         }
 
         public event ObjectPaid OnObjectPaid;
@@ -175,12 +169,6 @@ namespace Simple.Currency
         {
             if (OnObjectPaid != null)
                 OnObjectPaid(objectID, agentID, amount);
-        }
-
-        public bool Transfer(UUID toID, UUID fromID, int amount, string description)
-        {
-            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint) amount, description,
-                                                    TransactionType.Gift, UUID.Zero);
         }
 
         public bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type)
@@ -226,7 +214,6 @@ namespace Simple.Currency
             client.OnEconomyDataRequest += EconomyDataRequestHandler;
             client.OnMoneyBalanceRequest += SendMoneyBalance;
             client.OnMoneyTransferRequest += ProcessMoneyTransferRequest;
-            client.OnParcelBuyPass += ClientOnParcelBuyPass;
         }
 
         private void OnMakeRootAgent(IScenePresence presence)
@@ -240,7 +227,6 @@ namespace Simple.Currency
             client.OnEconomyDataRequest -= EconomyDataRequestHandler;
             client.OnMoneyBalanceRequest -= SendMoneyBalance;
             client.OnMoneyTransferRequest -= ProcessMoneyTransferRequest;
-            client.OnParcelBuyPass -= ClientOnParcelBuyPass;
         }
 
         private void ProcessMoneyTransferRequest(UUID fromID, UUID toID, int amount, int type, string description)
@@ -309,51 +295,6 @@ namespace Simple.Currency
                                         (int) m_connector.GetUserCurrency(client.AgentId).Amount);
             else
                 client.SendAlertMessage("Unable to send your money balance to you!");
-        }
-
-        /// <summary>
-        ///     The client wants to buy a pass for a parcel
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="fromID"></param>
-        /// <param name="parcelLocalId"></param>
-        private void ClientOnParcelBuyPass(IClientAPI client, UUID fromID, int parcelLocalId)
-        {
-            IScenePresence agentSp = m_scene.GetScenePresence(client.AgentId);
-            IParcelManagementModule parcelManagement = agentSp.Scene.RequestModuleInterface<IParcelManagementModule>();
-            ILandObject landParcel = null;
-            List<ILandObject> land = parcelManagement.AllParcels();
-            foreach (ILandObject landObject in land)
-            {
-                if (landObject.LandData.LocalID == parcelLocalId)
-                {
-                    landParcel = landObject;
-                }
-            }
-            if (landParcel != null)
-            {
-                bool giveResult = m_connector.UserCurrencyTransfer(landParcel.LandData.OwnerID, fromID, UUID.Zero,
-                                                                   UUID.Zero,
-                                                                   (uint) landParcel.LandData.PassPrice, "Parcel Pass",
-                                                                   TransactionType.LandPassSale, UUID.Random());
-                if (giveResult)
-                {
-                    ParcelManager.ParcelAccessEntry entry
-                        = new ParcelManager.ParcelAccessEntry
-                              {
-                                  AgentID = fromID,
-                                  Flags = AccessList.Access,
-                                  Time = DateTime.Now.AddHours(landParcel.LandData.PassHours)
-                              };
-                    landParcel.LandData.ParcelAccessList.Add(entry);
-                    agentSp.ControllingClient.SendAgentAlertMessage("You have been added to the parcel access list.",
-                                                                    false);
-                }
-            }
-            else
-            {
-                agentSp.ControllingClient.SendAgentAlertMessage("Unable to find parcel.", false);
-            }
         }
 
         #endregion

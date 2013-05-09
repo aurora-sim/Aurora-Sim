@@ -66,11 +66,6 @@ namespace Aurora.Modules.SampleCurrencyModule
 
         public event ObjectPaid OnObjectPaid;
 
-        public bool Transfer(UUID toID, UUID fromID, int amount, string description)
-        {
-            return true;
-        }
-
         public bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type)
         {
             return true;
@@ -154,11 +149,6 @@ namespace Aurora.Modules.SampleCurrencyModule
         public int Balance(UUID agentID)
         {
             return 0;
-        }
-
-        public bool Charge(UUID agentID, int amount, string text)
-        {
-            return true;
         }
 
         public bool Charge(UUID agentID, int amount, string text, TransactionType type)
