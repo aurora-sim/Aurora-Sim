@@ -9,7 +9,7 @@
 	;; All following options are for the built in web interface only
 	;;
 	
-	;; The default langugae for the interface to be in
+	;; The default language for the interface to be in
 	;; Valid options are
 	;; en, fr, de, es, it
 	DefaultLanguage = en
