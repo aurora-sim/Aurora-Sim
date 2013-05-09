@@ -60,9 +60,14 @@
 
     ;; Should we restart Aurora if the sim crashes?
     AutoRestartOnCrash = false
+	
+[GridServerInfoService]
+	Enabled = true
+	DoRemote = false
     
 [Includes]
     Include-Data = AuroraServerConfiguration/Data/Data.ini
+    Include-GridSetup = AuroraServerConfiguration/GridSetup.ini
     Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
     Include-Login = AuroraServerConfiguration/Login.ini
     Include-Main = AuroraWebServerConfiguration/Main.ini
