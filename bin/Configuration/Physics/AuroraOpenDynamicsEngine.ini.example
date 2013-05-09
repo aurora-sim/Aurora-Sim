@@ -3,7 +3,7 @@
 
     ;;The Base FPS for the calculation of the TimeDilation. To find the best value for you, do the following:
     ;; Log into your sim,
-    ;; Bring up the stats popup box in your viewer (control shift 1)
+    ;; Bring up the stats pop-up box in your viewer (control shift 1)
     ;; Look at the Physics FPS stat and find the average value of it (can be rough) and place it here
     ;;Normally, this value is around 22.5
     BasePhysicsFPS = 45

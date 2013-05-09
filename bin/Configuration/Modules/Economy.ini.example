@@ -9,7 +9,7 @@
 	;;* Do NOT use this module in a production environment.
     ;;* Do NOT use this module with real money.
     ;;* This module is for educational purposes only, and can NOT be
-    ;;  used with real money or in a production enviroment!
+    ;;  used with real money or in a production environment!
     ;;* By using this module you agree that Skidz Tweak, Revolution Smythe, Aurora-Sim, or
     ;;  other contributing developers ARE IN NO WAY responsible for any");
     ;;  damages that may occur as a result of using this module.");
@@ -17,7 +17,7 @@
     ;;  running this module and are fully willing to accept those risks
     ;;  and any consequences that may occur.
     ;;* By downing and using this module you are agreeing to everything
-    ;;  listed above. If you do not agree, stop useing it.
+    ;;  listed above. If you do not agree, stop using it.
 	;;
 	;;Uncomment this line to enable currency if you agree to the above
 	;; and comment the Module = BaseCurrency line above
@@ -52,7 +52,7 @@
 	;; Default is true
 	CanBuyCurrencyInworld = true
 	
-	;; The max amount of money transfered before a transaction will be logged
+	;; The max amount of money transferred before a transaction will be logged
 	;; Setting to 0 will ignore any 0$ transactions
 	;; Default is -1 (always log)
 	MaxAmountBeforeLogging = -1
@@ -70,7 +70,7 @@
 	;; Valid values are: second,minute,hours,days,weeks,months,years,decades,centuries,millennium,Kilenniums,Centrenniums,Megaannum
 	;; Default is weeks
 	StipendsEveryType = weeks
-	;; Number of type (set above) before a stipid is given out
+	;; Number of type (set above) before a stipend is given out
 	;; Default is 1
 	StipendsEvery = 1
 	;; You might want to do this the first time it runs.. let it run at least 30 minutes
