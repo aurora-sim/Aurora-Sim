@@ -267,7 +267,8 @@ namespace Simple.Currency
         {
             if(Amount > m_config.MaxAmountBeforeLogging)
                 m_gd.Insert("simple_currency_history", new object[] { TransID, (Description == null ? "" : Description),
-                    FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance, toObjectName, fromObjectName, regionID });
+                    FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance,
+                    toObjectName == null ? "" : toObjectName, fromObjectName == null ? "" : fromObjectName, regionID });
         }
 
         #endregion
