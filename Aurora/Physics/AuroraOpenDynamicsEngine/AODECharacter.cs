@@ -80,7 +80,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public uint m_localID;
 
         protected float m_mass = 80f;
-        protected string m_name = String.Empty;
         protected int m_preJumpCounter;
         protected Vector3 m_preJumpForce = Vector3.Zero;
         protected Vector3 m_rotationalVelocity;
@@ -109,12 +108,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             get { return m_speedModifier; }
             set { m_speedModifier = value; }
-        }
-
-        public string Name
-        {
-            get { return m_name; }
-            set { m_name = value; }
         }
 
         #endregion
@@ -151,7 +144,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_isPhysical = false; // current status: no ODE information exists
             Size = size;
-            m_name = avName;
+            Name = avName;
         }
 
         public void RebuildAvatar()
@@ -473,7 +466,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 vec = new Vector3(_position.X, _position.Y, _position.Z);
                 base.RaiseOutOfBounds(_position); // Tells ScenePresence that there's a problem!
                 MainConsole.Instance.WarnFormat(
-                    "[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", m_name, m_uuid);
+                    "[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", Name, m_uuid);
             }
 
             // vec is a ptr into internal ode data better not mess with it

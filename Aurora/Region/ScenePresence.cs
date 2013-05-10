@@ -227,8 +227,6 @@ namespace Aurora.Region
         /// </summary>
         private Vector3 posLastSignificantMove;
 
-        private Vector3 posLastTerseUpdate;
-
         private UUID CollisionSoundID = UUID.Zero;
         private int CollisionSoundLastTriggered = 0;
 

@@ -83,7 +83,7 @@ namespace Aurora.Framework.SceneInfo.Entities
         [ProtoMember(8)] public Quaternion InitialRotation = Quaternion.Identity;
         [ProtoMember(9)] public Quaternion[] RotationList = new Quaternion[0];
 
-        public OSDMap ToOSD()
+        public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
             map["CurrentAnimationPosition"] = CurrentAnimationPosition;
@@ -103,7 +103,7 @@ namespace Aurora.Framework.SceneInfo.Entities
             return map;
         }
 
-        public void FromOSD(OSDMap map)
+        public override void FromOSD(OSDMap map)
         {
             CurrentAnimationPosition = map["CurrentAnimationPosition"];
             CurrentMode = (Modes) (int) map["CurrentMode"];
