@@ -185,9 +185,12 @@ namespace Aurora.Framework.Utilities
     {
         Blob,
         LongBlob,
+        Char40,
         Char36,
         Char32,
         Char5,
+        Char1,
+        Char2,
         Date,
         DateTime,
         Double,
@@ -195,9 +198,7 @@ namespace Aurora.Framework.Utilities
         Integer30,
         UInteger11,
         UInteger30,
-        String,
-        String1,
-        String2,
+        String,        
         String10,
         String16,
         String30,
@@ -217,8 +218,11 @@ namespace Aurora.Framework.Utilities
         LongText,
         TinyInt1,
         TinyInt4,
+        UTinyInt4,
         Float,
-        Unknown
+        Binary32,
+        Binary64,
+        Unknown        
     }
 
     public enum ColumnType
@@ -238,7 +242,8 @@ namespace Aurora.Framework.Utilities
         Float,
         Boolean,
         UUID,
-        Unknown
+        Binary,
+        Unknown        
     }
 
     public class ColumnTypeDef
@@ -248,24 +253,27 @@ namespace Aurora.Framework.Utilities
         public static readonly ColumnTypeDef Blob = new ColumnTypeDef(ColumnType.Blob);
         public static readonly ColumnTypeDef Char32 = new ColumnTypeDef(ColumnType.Char, 32);
         public static readonly ColumnTypeDef Char36 = new ColumnTypeDef(ColumnType.Char, 36);
+        public static readonly ColumnTypeDef Char40 = new ColumnTypeDef(ColumnType.Char, 40);
         public static readonly ColumnTypeDef Char5 = new ColumnTypeDef(ColumnType.Char, 5);
+        public static readonly ColumnTypeDef Char1 = new ColumnTypeDef(ColumnType.Char, 1);
+        public static readonly ColumnTypeDef Char2 = new ColumnTypeDef(ColumnType.Char, 2);
         public static readonly ColumnTypeDef Date = new ColumnTypeDef(ColumnType.Date);
         public static readonly ColumnTypeDef DateTime = new ColumnTypeDef(ColumnType.DateTime);
         public static readonly ColumnTypeDef Double = new ColumnTypeDef(ColumnType.Double);
         public static readonly ColumnTypeDef Float = new ColumnTypeDef(ColumnType.Float);
         public static readonly ColumnTypeDef Integer11 = new ColumnTypeDef(ColumnType.Integer, 11);
         public static readonly ColumnTypeDef Integer30 = new ColumnTypeDef(ColumnType.Integer, 30);
+        public static readonly ColumnTypeDef UInteger11 = new ColumnTypeDef(ColumnType.Integer, 11, true);
+        public static readonly ColumnTypeDef UInteger30 = new ColumnTypeDef(ColumnType.Integer, 30, true);
         public static readonly ColumnTypeDef LongBlob = new ColumnTypeDef(ColumnType.LongBlob);
         public static readonly ColumnTypeDef LongText = new ColumnTypeDef(ColumnType.LongText);
         public static readonly ColumnTypeDef MediumText = new ColumnTypeDef(ColumnType.MediumText);
         public static readonly ColumnTypeDef Text = new ColumnTypeDef(ColumnType.Text);
-        public static readonly ColumnTypeDef String1 = new ColumnTypeDef(ColumnType.String, 1);
         public static readonly ColumnTypeDef String10 = new ColumnTypeDef(ColumnType.String, 10);
         public static readonly ColumnTypeDef String100 = new ColumnTypeDef(ColumnType.String, 100);
         public static readonly ColumnTypeDef String1024 = new ColumnTypeDef(ColumnType.String, 1024);
         public static readonly ColumnTypeDef String128 = new ColumnTypeDef(ColumnType.String, 128);
         public static readonly ColumnTypeDef String16 = new ColumnTypeDef(ColumnType.String, 16);
-        public static readonly ColumnTypeDef String2 = new ColumnTypeDef(ColumnType.String, 2);
         public static readonly ColumnTypeDef String255 = new ColumnTypeDef(ColumnType.String, 255);
         public static readonly ColumnTypeDef String30 = new ColumnTypeDef(ColumnType.String, 30);
         public static readonly ColumnTypeDef String32 = new ColumnTypeDef(ColumnType.String, 32);
@@ -277,7 +285,13 @@ namespace Aurora.Framework.Utilities
         public static readonly ColumnTypeDef String8196 = new ColumnTypeDef(ColumnType.String, 8196);
         public static readonly ColumnTypeDef TinyInt1 = new ColumnTypeDef(ColumnType.TinyInt, 1);
         public static readonly ColumnTypeDef TinyInt4 = new ColumnTypeDef(ColumnType.TinyInt, 4);
+        public static readonly ColumnTypeDef UTinyInt4 = new ColumnTypeDef(ColumnType.TinyInt, 4, true);
+        public static readonly ColumnTypeDef Binary32 = new ColumnTypeDef(ColumnType.Binary, 32);
+        public static readonly ColumnTypeDef Binary64 = new ColumnTypeDef(ColumnType.Binary, 64);
         public static readonly ColumnTypeDef Unknown = new ColumnTypeDef(ColumnType.Unknown);
+
+
+        
 
         #endregion
 
@@ -291,6 +305,8 @@ namespace Aurora.Framework.Utilities
         public ColumnTypeDef() { }
         public ColumnTypeDef(ColumnType type) { Type = type; }
         public ColumnTypeDef(ColumnType type, uint size) { Type = type; Size = size; }
+
+        public ColumnTypeDef(ColumnType type, uint size, bool isunsigned) { Type = type; Size = size; unsigned = isunsigned; }
 
         public override bool Equals(object obj)
         {

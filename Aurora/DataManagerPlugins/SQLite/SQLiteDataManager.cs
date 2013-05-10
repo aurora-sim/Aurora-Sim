@@ -968,18 +968,20 @@ namespace Aurora.DataManager.SQLite
                     return "INT(11) UNSIGNED";
                 case ColumnTypes.UInteger30:
                     return "INT(30) UNSIGNED";
+                case ColumnTypes.Char40:
+                    return "CHAR(40)";
                 case ColumnTypes.Char36:
                     return "CHAR(36)";
                 case ColumnTypes.Char32:
                     return "CHAR(32)";
                 case ColumnTypes.Char5:
                     return "CHAR(5)";
+                case ColumnTypes.Char1:
+                    return "CHAR(1)";
+                case ColumnTypes.Char2:
+                    return "CHAR(2)";
                 case ColumnTypes.String:
                     return "TEXT";
-                case ColumnTypes.String1:
-                    return "VARCHAR(1)";
-                case ColumnTypes.String2:
-                    return "VARCHAR(2)";
                 case ColumnTypes.String16:
                     return "VARCHAR(16)";
                 case ColumnTypes.String30:
@@ -1009,9 +1011,9 @@ namespace Aurora.DataManager.SQLite
                 case ColumnTypes.String8196:
                     return "VARCHAR(8196)";
                 case ColumnTypes.Blob:
-                    return "blob";
+                    return "BLOB";
                 case ColumnTypes.LongBlob:
-                    return "blob";
+                    return "BLOB";
                 case ColumnTypes.Text:
                     return "VARCHAR(512)";
                 case ColumnTypes.MediumText:
@@ -1023,13 +1025,19 @@ namespace Aurora.DataManager.SQLite
                 case ColumnTypes.DateTime:
                     return "DATETIME";
                 case ColumnTypes.Float:
-                    return "float";
-                case ColumnTypes.Unknown:
-                    return "";
+                    return "FLOAT";
                 case ColumnTypes.TinyInt1:
                     return "TINYINT(1)";
                 case ColumnTypes.TinyInt4:
                     return "TINYINT(4)";
+                case ColumnTypes.UTinyInt4:
+                    return "TINYINT(4) UNSIGNED";
+                case ColumnTypes.Binary32:
+                    return "BINARY(32)";
+                case ColumnTypes.Binary64:
+                    return "BINARY(64)";
+                case ColumnTypes.Unknown:
+                    return "";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -1085,6 +1093,9 @@ namespace Aurora.DataManager.SQLite
                     break;
                 case ColumnType.UUID:
                     symbol = "CHAR(36)";
+                    break;
+                case ColumnType.Binary:
+                    symbol = "BINARY(" + coldef.Size + ")";
                     break;
                 default:
                     throw new DataManagerException("Unknown column type.");
