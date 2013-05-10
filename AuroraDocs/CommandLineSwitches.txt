@@ -1,6 +1,18 @@
 Startup CommandLine Switches for Aurora
 You can use these switches with either Aurora.exe, Aurora.32BitLaunch.exe, and Aurora.Server.exe
 
+;; Change the sim.sim file name (For Aurora.exe only)
+Aurora.exe -RegionDataFileName=test.sim
+
+;; Change the log file name from Aurora.log to Aurora<file>.log
+;; For example
+Aurora.exe -LogAppendName=test
+;; Makes a log file with Auroratest.log
+
+;; Change the http port set
+;; Overrides whatever is set in [Network]
+Aurora.exe -http_listener_port=9000
+
 ;; Saves all merged .ini files into the bin directory for viewing
 ;; This creates a file in the BIN directory for each ini file loaded in Sequence
 ;; Examples
