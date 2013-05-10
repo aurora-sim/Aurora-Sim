@@ -221,9 +221,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (Compiler != null)
                 Compiler.ReadConfig();
-
-            if (ScriptProtection != null)
-                ScriptProtection.Initialize(this, Config);
         }
 
         public void AddRegion(IScene scene)
@@ -251,8 +248,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
 
                 // Create all objects we'll be using
-                ScriptProtection = new ScriptProtectionModule(this, Config);
-                ScriptProtection.Initialize(this, Config);
+                ScriptProtection = new ScriptProtectionModule();
+                ScriptProtection.Initialize(Config);
 
                 EventManager = new EventManager(this);
 

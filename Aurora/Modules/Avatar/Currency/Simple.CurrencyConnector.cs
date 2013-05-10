@@ -183,7 +183,7 @@ namespace Simple.Currency
             string fromObjectName, uint amount, string description, TransactionType type, UUID transactionID)
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, toObjectName, fromObjectID,
-                amount, fromObjectName, description, type, transactionID);
+                fromObjectName, amount, description, type, transactionID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (bool) remoteValue;
 
@@ -386,7 +386,6 @@ namespace Simple.Currency
                 MainConsole.Instance.Info("No account found");
                 return;
             }
-            var currency = GetUserCurrency(account.PrincipalID);
             m_gd.Update(_REALM,
                         new Dictionary<string, object>
                             {

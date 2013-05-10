@@ -615,7 +615,6 @@ namespace Aurora.Modules.Permissions
             }
 
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
-            IPrimCountModule primCount = m_scene.RequestModuleInterface<IPrimCountModule>();
             foreach (ILandObject parcel in parcelManagement.AllParcels())
             {
                 parcel.LandData.OwnerID = acc.PrincipalID;

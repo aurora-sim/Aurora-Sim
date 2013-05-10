@@ -44,8 +44,6 @@ namespace Aurora.ClientStack
         private const int IMAGE_PACKET_SIZE = 1000;
         private const int FIRST_PACKET_SIZE = 600;
 
-        private readonly LLImageManager m_imageManager;
-
         public UUID AgentID;
         public IAssetService AssetService;
         public sbyte DiscardLevel;
@@ -65,11 +63,6 @@ namespace Aurora.ClientStack
         private bool m_decodeRequested;
         private bool m_sentInfo;
         private uint m_stopPacket;
-
-        public J2KImage(LLImageManager imageManager)
-        {
-            m_imageManager = imageManager;
-        }
 
         public void Dispose()
         {
@@ -365,15 +358,8 @@ namespace Aurora.ClientStack
 
             if (asset == null || asset.Data == null || asset.Type == (int) AssetType.Mesh)
             {
-                /*if (m_imageManager.MissingImage != null)
-                {
-                    m_asset = m_imageManager.MissingImage.Data;
-                }
-                else
-                {*/
-                    m_asset = null;
-                    IsDecoded = true;
-                //}
+                m_asset = null;
+                IsDecoded = true;
             }
             else
             {

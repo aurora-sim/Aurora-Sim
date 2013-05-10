@@ -230,18 +230,11 @@ namespace Aurora.Modules.Scripting
         {
             if (m_openChannels != null)
             {
-                ArrayList tmp = new ArrayList();
-
                 lock (XMLRPCListLock)
                 {
-                    foreach (RPCChannelInfo li in m_openChannels.Values.Where(li => li.GetItemID().Equals(itemID)))
-                    {
-                        tmp.Add(itemID);
-                    }
-
-                    IEnumerator tmpEnumerator = tmp.GetEnumerator();
-                    while (tmpEnumerator.MoveNext())
-                        m_openChannels.Remove((UUID) tmpEnumerator.Current);
+                    int cnt = m_openChannels.Values.Count(li => li.GetItemID().Equals(itemID));
+                    for(int i = 0; i < cnt; i++)
+                        m_openChannels.Remove(itemID);
                 }
             }
 

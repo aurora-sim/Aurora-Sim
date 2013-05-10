@@ -569,7 +569,6 @@ namespace Aurora.BotManager
             double distance = Util.GetDistanceTo(startvector, endvector);
             if (distance == 0)
                 distance = 0.001;
-            Vector3 posToCheck = startvector;
             foreach (ContactResult result in results)
             {
                 ISceneChildEntity child = m_controller.GetScene().GetSceneObjectPart(result.ConsumerID);
@@ -1092,10 +1091,7 @@ namespace Aurora.BotManager
                     if (x == targetX && y == targetY)
                         map[x, y] = 1;
                     else if (x == 11*resolution && y == 11*resolution)
-                    {
-                        int old = map[x, y];
                         map[x, y] = 1;
-                    }
                     else if (map[x, y] == 0)
                         map[x, y] = 1;
                 }

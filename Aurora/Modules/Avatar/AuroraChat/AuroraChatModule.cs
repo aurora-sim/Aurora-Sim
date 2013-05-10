@@ -47,7 +47,6 @@ namespace Aurora.Modules.Chat
     {
         private const int DEBUG_CHANNEL = 2147483647;
         private const int DEFAULT_CHANNEL = 0;
-        private readonly Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
         private readonly Dictionary<UUID, MuteList[]> MuteListCache = new Dictionary<UUID, MuteList[]>();
         private IScene m_Scene;
 

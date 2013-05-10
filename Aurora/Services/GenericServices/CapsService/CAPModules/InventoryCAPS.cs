@@ -605,8 +605,6 @@ namespace Aurora.Services
                         {
                             Vector3 offset = positions[i] - rootPos;
                             grp.ChildrenList[i].SetOffsetPosition(offset);
-                            Vector3 abs = grp.ChildrenList[i].AbsolutePosition;
-                            Vector3 currentPos = positions[i];
                         }
                         //grp.Rotation = rotations[0];
                         for (int i = 0; i < rotations.Count; i++)

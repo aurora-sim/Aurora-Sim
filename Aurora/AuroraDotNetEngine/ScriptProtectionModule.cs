@@ -59,7 +59,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private ThreatLevel m_MaxThreatLevel = 0;
         private bool m_allowFunctionLimiting;
         private IConfig m_config;
-        private ScriptEngine m_scriptEngine;
         public ThreatLevelDefinition m_threatLevelHigh;
 
         public ThreatLevelDefinition m_threatLevelLow;
@@ -175,14 +174,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Constructor
 
-        public ScriptProtectionModule(ScriptEngine engine, IConfig config)
-        {
-        }
-
-        public void Initialize(ScriptEngine engine, IConfig config)
+        public void Initialize(IConfig config)
         {
             m_config = config;
-            m_scriptEngine = engine;
             EnabledAPIs = new List<string>(config.GetString("AllowedAPIs", "LSL").ToLower().Split(','));
 
             allowHTMLLinking = config.GetBoolean("AllowHTMLLinking", true);

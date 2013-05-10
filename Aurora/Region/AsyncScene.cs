@@ -436,11 +436,6 @@ namespace Aurora.Region
         private bool PhysUpdate()
         {
             IMonitorModule monitorModule = RequestModuleInterface<IMonitorModule>();
-            ISimFrameMonitor simFrameMonitor = monitorModule.GetMonitor<ISimFrameMonitor>();
-            ITotalFrameTimeMonitor totalFrameMonitor = monitorModule.GetMonitor<ITotalFrameTimeMonitor>();
-            ILastFrameTimeMonitor lastFrameMonitor = monitorModule.GetMonitor<ILastFrameTimeMonitor>();
-            IOtherFrameMonitor otherFrameMonitor = monitorModule.GetMonitor<IOtherFrameMonitor>();
-            ISleepFrameMonitor sleepFrameMonitor = monitorModule.GetMonitor<ISleepFrameMonitor>();
             IPhysicsFrameMonitor physicsFrameMonitor = monitorModule.GetMonitor<IPhysicsFrameMonitor>();
             IPhysicsUpdateFrameMonitor physicsFrameTimeMonitor = monitorModule.GetMonitor<IPhysicsUpdateFrameMonitor>();
 
@@ -532,8 +527,6 @@ namespace Aurora.Region
             ILastFrameTimeMonitor lastFrameMonitor = monitorModule.GetMonitor<ILastFrameTimeMonitor>();
             IOtherFrameMonitor otherFrameMonitor = monitorModule.GetMonitor<IOtherFrameMonitor>();
             ISleepFrameMonitor sleepFrameMonitor = monitorModule.GetMonitor<ISleepFrameMonitor>();
-            IPhysicsFrameMonitor physicsFrameMonitor = monitorModule.GetMonitor<IPhysicsFrameMonitor>();
-            IPhysicsUpdateFrameMonitor physicsFrameTimeMonitor = monitorModule.GetMonitor<IPhysicsUpdateFrameMonitor>();
 
             while (true)
             {

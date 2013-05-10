@@ -195,8 +195,6 @@ namespace Aurora.Modules
                     MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
                 }
 
-                IDictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
-
                 List<UUID> entitiesToSave = new List<UUID>();
                 foreach (ISceneEntity entity in regiondata.Groups)
                 {

@@ -594,7 +594,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 m_internalServer.Start(m_port);
 
                 // Long Poll Service Manager with 3 worker threads a 25 second timeout for no events
-                m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
+                m_PollServiceManager = new PollServiceRequestManager(3, 25000);
                 m_PollServiceManager.Start();
                 HTTPDRunning = true;
             }

@@ -155,7 +155,6 @@ namespace Aurora.Modules.Startup
                 MainConsole.Instance.Error("[RegisterRegionWithGrid]: Registration of region " +
                                            scene.RegionInfo.RegionName +
                                            " with the grid failed - The region name you specified is already in use. Please change the name.");
-                string oldRegionName = scene.RegionInfo.RegionName;
                 scene.RegionInfo.RegionName = MainConsole.Instance.Prompt("New Region Name", "");
             }
             else if (error.Error == "Region locked out")

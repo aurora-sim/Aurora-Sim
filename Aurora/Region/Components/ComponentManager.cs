@@ -42,12 +42,6 @@ namespace Aurora.Region.Components
 {
     public class ComponentManager : IService, ISOPSerializerModule
     {
-        #region Declares
-
-        private readonly Dictionary<Type, string> m_componentsBaseType = new Dictionary<Type, string>();
-
-        #endregion
-
         #region IComponentManager Members
 
         /// <summary>

@@ -136,7 +136,6 @@ namespace Aurora.Region
         [XmlIgnore] private UUID m_AttachedAvatar;
         [XmlIgnore] private Dictionary<int, string> m_CollisionFilter = new Dictionary<int, string>();
         [XmlIgnore] private bool m_IsAttachment;
-        [XmlIgnore] private bool m_IsSelected;
         [XmlIgnore] private int[] m_PayPrice = {-2, -2, -2, -2, -2};
         [XmlIgnore] private bool m_ValidpartOOB; // control recalcutation
         protected Vector3 m_acceleration;
@@ -733,7 +732,6 @@ namespace Aurora.Region
             get { return m_uuid; }
             set
             {
-                UUID oldID = m_uuid;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_uuid = value;

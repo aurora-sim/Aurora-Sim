@@ -877,7 +877,6 @@ namespace Aurora.Framework.Utilities
         // Clamp the maximum magnitude of a vector
         public static Vector3 ClampV(Vector3 x, float max)
         {
-            Vector3 ret = x;
             float lenSq = x.LengthSquared();
             if (lenSq > (max*max))
             {

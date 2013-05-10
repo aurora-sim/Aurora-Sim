@@ -1691,9 +1691,7 @@ namespace Aurora.Modules.Land
 
         public void EventManagerOnIncomingLandDataFromStorage(List<LandData> data, Vector2 parcelOffset)
         {
-            bool result = true;
-            foreach (LandData t in data.Where(t => !PreprocessIncomingLandObjectFromStorage(t, parcelOffset)))
-                result = false;
+            bool result = data.All(t => PreprocessIncomingLandObjectFromStorage(t, parcelOffset));
 
             if (!result || data.Count == 0) //Force a new base first, then force a merge later
                 ResetSimLandObjects();

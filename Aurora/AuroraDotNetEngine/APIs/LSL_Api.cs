@@ -8430,7 +8430,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     v = rules.GetVector3Item(idx++);
                     if (part is ISceneChildEntity)
-                        SetPos(part as ISceneChildEntity, v, true);
+                        SetPos(part as ISceneChildEntity, GetPartLocalPos(part as ISceneChildEntity) + v, true);
                     else if (part is IScenePresence)
                     {
                         (part as IScenePresence).OffsetPosition = new Vector3((float) v.x, (float) v.y, (float) v.z);
@@ -12341,6 +12341,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (count > 16)
                 count = 16;
+            else if (count <= 0)
+            {
+                LSLError("You must request at least one result from llCastRay.");
+                return new LSL_List();
+            }
 
             List<ContactResult> results = new List<ContactResult>();
 
@@ -12359,7 +12364,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (checkPhysical || checkNonPhysical || detectPhantom)
             {
-                ContactResult[] objectHits = ObjectIntersection(rayStart, rayEnd, checkPhysical, checkNonPhysical, detectPhantom);
+                ContactResult[] objectHits = ObjectIntersection(rayStart, rayEnd, checkPhysical, checkNonPhysical, detectPhantom, count+2);
                 for (int iter = 0; iter < objectHits.Length; iter++)
                 {
                     // Redistance the Depth because the Scene RayCaster returns distance from center to make the rezzing code simpler.
@@ -12389,8 +12394,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     continue;
 
                 // physics ray can return colisions with host prim
+                // this is supposed to happen
                 if (m_host.LocalId == result.ConsumerID)
                     continue;
+
+                if (!checkTerrain && result.ConsumerID == 0)
+                    continue; //Terrain
 
                 UUID itemID = UUID.Zero;
                 int linkNum = 0;
@@ -12419,13 +12428,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
 
                 list.Add(new LSL_String(itemID.ToString()));
-                list.Add(new LSL_String(result.Pos.ToString()));
 
                 if ((dataFlags & ScriptBaseClass.RC_GET_LINK_NUM) == ScriptBaseClass.RC_GET_LINK_NUM)
                     list.Add(new LSL_Integer(linkNum));
 
+                list.Add(new LSL_Vector(result.Pos));
+
                 if ((dataFlags & ScriptBaseClass.RC_GET_NORMAL) == ScriptBaseClass.RC_GET_NORMAL)
-                    list.Add(new LSL_Vector(result.Normal));
+                {
+                    Vector3 norm = result.Normal * -1;
+                    list.Add(new LSL_Vector(norm));
+                }
 
                 values++;
                 if (values >= count)
@@ -12489,101 +12502,99 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return contacts.ToArray();
         }
 
-        private ContactResult[] ObjectIntersection(Vector3 rayStart, Vector3 rayEnd, bool includePhysical, bool includeNonPhysical, bool includePhantom)
+        private ContactResult[] ObjectIntersection(Vector3 rayStart, Vector3 rayEnd, bool includePhysical, bool includeNonPhysical, bool includePhantom, int max)
         {
-            Ray ray = new Ray(rayStart, Vector3.Normalize(rayEnd - rayStart));
-            List<ContactResult> contacts = new List<ContactResult>();
+            List<ContactResult> contacts = World.PhysicsScene.RaycastWorld(rayStart, Vector3.Normalize(rayEnd - rayStart), Vector3.Distance(rayEnd, rayStart), max);
 
-            Vector3 ab = rayEnd - rayStart;
-
-            World.ForEachSceneEntity(delegate(ISceneEntity group)
+            for (int i = 0; i < contacts.Count; i++)
             {
-                if (m_host.ParentEntity == group)
-                    return;
+                ISceneEntity grp = World.GetGroupByPrim(contacts[i].ConsumerID);
+                if(grp == null || (!includePhysical && grp.RootChild.PhysActor.IsPhysical) || 
+                    (!includeNonPhysical && !grp.RootChild.PhysActor.IsPhysical))
+                    contacts.RemoveAt(i--);
+            }
 
-                if (group.IsAttachment)
-                    return;
+            if (includePhantom)
+            {
+                Ray ray = new Ray(rayStart, Vector3.Normalize(rayEnd - rayStart));
 
-                if (group.RootChild.PhysActor == null)
+                Vector3 ab = rayEnd - rayStart;
+
+                ISceneEntity[] objlist = World.Entities.GetEntities();
+                foreach (ISceneEntity group in objlist)
                 {
-                    if (!includePhantom)
-                        return;
+                    if (m_host.ParentEntity == group)
+                        continue;
+
+                    if (group.IsAttachment)
+                        continue;
+
+                    if (group.RootChild.PhysActor != null)
+                        continue;
+
+
+                    // Find the radius ouside of which we don't even need to hit test
+                    float minX;
+                    float maxX;
+                    float minY;
+                    float maxY;
+                    float minZ;
+                    float maxZ;
+
+                    float radius = 0.0f;
+
+                    group.GetAxisAlignedBoundingBoxRaw(out minX, out maxX, out minY, out maxY, out minZ, out maxZ);
+
+                    if (Math.Abs(minX) > radius)
+                        radius = Math.Abs(minX);
+                    if (Math.Abs(minY) > radius)
+                        radius = Math.Abs(minY);
+                    if (Math.Abs(minZ) > radius)
+                        radius = Math.Abs(minZ);
+                    if (Math.Abs(maxX) > radius)
+                        radius = Math.Abs(maxX);
+                    if (Math.Abs(maxY) > radius)
+                        radius = Math.Abs(maxY);
+                    if (Math.Abs(maxZ) > radius)
+                        radius = Math.Abs(maxZ);
+                    radius = radius * 1.413f;
+                    Vector3 ac = group.AbsolutePosition - rayStart;
+                    //                Vector3 bc = group.AbsolutePosition - rayEnd;
+
+                    double d = Math.Abs(Vector3.Mag(Vector3.Cross(ab, ac)) / Vector3.Distance(rayStart, rayEnd));
+
+                    // Too far off ray, don't bother
+                    if (d > radius)
+                        continue;
+
+                    // Behind ray, drop
+                    double d2 = Vector3.Dot(Vector3.Negate(ab), ac);
+                    if (d2 > 0)
+                        continue;
+
+                    ray = new Ray(rayStart, Vector3.Normalize(rayEnd - rayStart));
+                    EntityIntersection intersection = group.TestIntersection(ray, true, false);
+                    // Miss.
+                    if (!intersection.HitTF)
+                        continue;
+
+                    Vector3 b1 = new Vector3(minX, minY, minZ);
+                    Vector3 b2 = new Vector3(maxX, maxY, maxZ);
+                    //m_log.DebugFormat("[LLCASTRAY]: min<{0},{1},{2}>, max<{3},{4},{5}> = hitp<{6},{7},{8}>", b1.X,b1.Y,b1.Z,b2.X,b2.Y,b2.Z,intersection.ipoint.X,intersection.ipoint.Y,intersection.ipoint.Z);
+                    if (!(intersection.ipoint.X >= b1.X && intersection.ipoint.X <= b2.X &&
+                        intersection.ipoint.Y >= b1.Y && intersection.ipoint.Y <= b2.Y &&
+                        intersection.ipoint.Z >= b1.Z && intersection.ipoint.Z <= b2.Z))
+                        continue;
+
+                    ContactResult result = new ContactResult();
+                    result.ConsumerID = group.LocalId;
+                    result.Depth = intersection.distance;
+                    result.Normal = intersection.normal;
+                    result.Pos = intersection.ipoint;
+
+                    contacts.Add(result);
                 }
-                else
-                {
-                    if (group.RootChild.PhysActor.IsPhysical)
-                    {
-                        if (!includePhysical)
-                            return;
-                    }
-                    else
-                    {
-                        if (!includeNonPhysical)
-                            return;
-                    }
-                }
-
-                // Find the radius ouside of which we don't even need to hit test
-                float minX;
-                float maxX;
-                float minY;
-                float maxY;
-                float minZ;
-                float maxZ;
-
-                float radius = 0.0f;
-
-                group.GetAxisAlignedBoundingBoxRaw(out minX, out maxX, out minY, out maxY, out minZ, out maxZ);
-
-                if (Math.Abs(minX) > radius)
-                    radius = Math.Abs(minX);
-                if (Math.Abs(minY) > radius)
-                    radius = Math.Abs(minY);
-                if (Math.Abs(minZ) > radius)
-                    radius = Math.Abs(minZ);
-                if (Math.Abs(maxX) > radius)
-                    radius = Math.Abs(maxX);
-                if (Math.Abs(maxY) > radius)
-                    radius = Math.Abs(maxY);
-                if (Math.Abs(maxZ) > radius)
-                    radius = Math.Abs(maxZ);
-                radius = radius * 1.413f;
-                Vector3 ac = group.AbsolutePosition - rayStart;
-                //                Vector3 bc = group.AbsolutePosition - rayEnd;
-
-                double d = Math.Abs(Vector3.Mag(Vector3.Cross(ab, ac)) / Vector3.Distance(rayStart, rayEnd));
-
-                // Too far off ray, don't bother
-                if (d > radius)
-                    return;
-
-                // Behind ray, drop
-                double d2 = Vector3.Dot(Vector3.Negate(ab), ac);
-                if (d2 > 0)
-                    return;
-
-                ray = new Ray(rayStart, Vector3.Normalize(rayEnd - rayStart));
-                EntityIntersection intersection = group.TestIntersection(ray, true, false);
-                // Miss.
-                if (!intersection.HitTF)
-                    return;
-
-                Vector3 b1 = group.AbsolutePosition + new Vector3(minX, minY, minZ);
-                Vector3 b2 = group.AbsolutePosition + new Vector3(maxX, maxY, maxZ);
-                //m_log.DebugFormat("[LLCASTRAY]: min<{0},{1},{2}>, max<{3},{4},{5}> = hitp<{6},{7},{8}>", b1.X,b1.Y,b1.Z,b2.X,b2.Y,b2.Z,intersection.ipoint.X,intersection.ipoint.Y,intersection.ipoint.Z);
-                if (!(intersection.ipoint.X >= b1.X && intersection.ipoint.X <= b2.X &&
-                    intersection.ipoint.Y >= b1.Y && intersection.ipoint.Y <= b2.Y &&
-                    intersection.ipoint.Z >= b1.Z && intersection.ipoint.Z <= b2.Z))
-                    return;
-
-                ContactResult result = new ContactResult();
-                result.ConsumerID = group.LocalId;
-                result.Depth = intersection.distance;
-                result.Normal = intersection.normal;
-                result.Pos = intersection.ipoint;
-
-                contacts.Add(result);
-            });
+            }
 
             return contacts.ToArray();
         }
@@ -13016,14 +13027,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             List<Vector3> positions = new List<Vector3>();
             List<Quaternion> rotations = new List<Quaternion>();
-            List<int> times = new List<int>();
+            List<float> times = new List<float>();
             for (int i = 0; i < keyframes.Length; i += (dataType == KeyframeAnimation.Data.Both ? 3 : 2))
             {
                 if (dataType == KeyframeAnimation.Data.Both ||
                     dataType == KeyframeAnimation.Data.Translation)
                 {
                     LSL_Vector pos = keyframes.GetVector3Item(i);
-                    positions.Add(pos.ToVector3());
+                    positions.Add(m_host.AbsolutePosition + pos.ToVector3());
                 }
                 if (dataType == KeyframeAnimation.Data.Both ||
                     dataType == KeyframeAnimation.Data.Rotation)
@@ -13033,8 +13044,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     quat.Normalize();
                     rotations.Add(quat);
                 }
-                int time = keyframes.GetLSLIntegerItem(i + (dataType == KeyframeAnimation.Data.Both ? 2 : 1));
-                times.Add(time);
+                LSL_Float time = keyframes.GetLSLFloatItem(i + (dataType == KeyframeAnimation.Data.Both ? 2 : 1));
+                times.Add((float)time);
             }
             KeyframeAnimation animation = new KeyframeAnimation
                                               {

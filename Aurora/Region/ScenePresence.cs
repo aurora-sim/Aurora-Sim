@@ -227,8 +227,6 @@ namespace Aurora.Region
         /// </summary>
         private Vector3 posLastSignificantMove;
 
-        private Vector3 posLastTerseUpdate;
-
         private UUID CollisionSoundID = UUID.Zero;
         private int CollisionSoundLastTriggered = 0;
 
@@ -1824,7 +1822,6 @@ namespace Aurora.Region
             m_requestedSitTargetUUID = part.UUID;
             m_sitting = true;
             part.SetAvatarOnSitTarget(UUID);
-            var root = part.ParentEntity.RootChild;
             if (SitTargetisSet)
             {
                 offset = new Vector3(avSitOffSet.X, avSitOffSet.Y, avSitOffSet.Z);
@@ -2242,7 +2239,6 @@ namespace Aurora.Region
             // Minimum Draw distance is 64 meters, the Radius of the draw distance sphere is 32m
             double tmpsq = m_sceneViewer.Prioritizer.ChildReprioritizationDistance;
             tmpsq *= tmpsq;
-            float vel = Velocity.LengthSquared();
             if (Vector3.DistanceSquared(AbsolutePosition, m_lastChildAgentUpdatePosition) >= tmpsq ||
                 Vector3.DistanceSquared(CameraPosition, m_lastChildAgentUpdateCamPosition) >= tmpsq)
 

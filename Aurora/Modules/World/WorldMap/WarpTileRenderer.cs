@@ -52,7 +52,6 @@ namespace Aurora.Modules.WorldMap
 {
     public class WarpTileRenderer : IMapTileTerrainRenderer
     {
-        private static readonly UUID TEXTURE_METADATA_MAGIC = new UUID("802dc0e0-f080-4931-8b57-d1be8611c4f3");
         private static readonly Color4 WATER_COLOR = new Color4(29, 72, 96, 216);
         private readonly Dictionary<UUID, Color4> m_colors = new Dictionary<UUID, Color4>();
         private IConfigSource m_config;
