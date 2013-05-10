@@ -398,6 +398,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 {
                     MainConsole.Instance.WarnFormat(
                         "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
+                    response.Abort();
                 }
 
                 requestEndTick = Environment.TickCount;
