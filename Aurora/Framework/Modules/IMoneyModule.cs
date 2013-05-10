@@ -114,8 +114,7 @@ namespace Aurora.Framework.Modules
         int DirectoryFeeCharge { get; }
         int ClientPort { get; }
 
-        bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
-                             int amount);
+        bool ObjectGiveMoney(UUID objectID, string objectName, UUID fromID, UUID toID, int amount);
 
         int Balance(UUID agentID);
         bool Charge(UUID agentID, int amount, string text, TransactionType type);
@@ -124,7 +123,7 @@ namespace Aurora.Framework.Modules
 
         bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type);
 
-        bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
+        bool Transfer(UUID toID, UUID fromID, UUID toObjectID, string toObjectName, UUID fromObjectID, string fromObjectName, int amount, string description,
                       TransactionType type);
 
         /// <summary>

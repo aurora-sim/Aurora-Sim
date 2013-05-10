@@ -3056,7 +3056,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             bool result = money.ObjectGiveMoney(
-                m_host.ParentEntity.UUID, m_host.OwnerID, toID, amount);
+                m_host.ParentEntity.UUID, m_host.Name, m_host.OwnerID, toID, amount);
 
             if (result)
                 return 1;

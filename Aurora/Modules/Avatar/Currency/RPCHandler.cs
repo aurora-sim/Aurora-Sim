@@ -89,7 +89,7 @@ namespace Simple.Currency
                 if (UUID.TryParse((string) requestData["agentId"], out agentId))
                 {
                     uint amountBuying = uint.Parse(requestData["currencyBuy"].ToString());
-                    m_connector.UserCurrencyTransfer(agentId, UUID.Zero, UUID.Zero, UUID.Zero, amountBuying,
+                    m_connector.UserCurrencyTransfer(agentId, UUID.Zero, amountBuying,
                                                      "Inworld purchase", TransactionType.SystemGenerated, UUID.Zero);
                     success = true;
                 }

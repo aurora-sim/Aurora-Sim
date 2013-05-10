@@ -154,7 +154,7 @@ namespace Simple.Currency
 
         public bool InworldCurrencyBuyTransaction(UUID agentID, uint amount, IPEndPoint ep)
         {
-            UserCurrencyTransfer(agentID, UUID.Zero, UUID.Zero, UUID.Zero, amount,
+            UserCurrencyTransfer(agentID, UUID.Zero, amount,
                                              "Inworld purchase", TransactionType.SystemGenerated, UUID.Zero);
 
             //Log to the database
@@ -172,9 +172,15 @@ namespace Simple.Currency
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount,
+        public bool UserCurrencyTransfer(UUID toID, UUID fromID, uint amount,
                                          string description, TransactionType type, UUID transactionID)
+        {
+            return UserCurrencyTransfer(toID, fromID, UUID.Zero, "", UUID.Zero, "", amount, description, type, transactionID);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, string toObjectName, UUID fromObjectID,
+            string fromObjectName, uint amount, string description, TransactionType type, UUID transactionID)
         {
             object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, fromObjectID, amount,
                                                description, type, transactionID);
@@ -215,7 +221,11 @@ namespace Simple.Currency
                 UserAccount fromAccount = m_registry.RequestModuleInterface<IUserAccountService>()
                                                     .GetUserAccount(null, fromID);
                 if (m_config.SaveTransactionLogs)
-                    AddTransactionRecord((transactionID == UUID.Zero ? UUID.Random() : transactionID), description, toID, fromID, amount, type, (toCurrency == null ? 0 : toCurrency.Amount), (fromCurrency == null ? 0 : fromCurrency.Amount), (toAccount == null ? "System" : toAccount.Name), (fromAccount == null ? "System" : fromAccount.Name));
+                    AddTransactionRecord((transactionID == UUID.Zero ? UUID.Random() : transactionID), 
+                        description, toID, fromID, amount, type, (toCurrency == null ? 0 : toCurrency.Amount), 
+                        (fromCurrency == null ? 0 : fromCurrency.Amount), (toAccount == null ? "System" : toAccount.Name), 
+                        (fromAccount == null ? "System" : fromAccount.Name), toObjectName, fromObjectName, (fromUserInfo == null ? 
+                        UUID.Zero : fromUserInfo.CurrentRegionID));
 
                 if (fromID == toID)
                 {
@@ -252,10 +262,12 @@ namespace Simple.Currency
         }
 
         // Method Added By Alicia Raven
-        private void AddTransactionRecord(UUID TransID, string Description, UUID ToID, UUID FromID, uint Amount, TransactionType TransType, uint ToBalance, uint FromBalance, string ToName, string FromName)
+        private void AddTransactionRecord(UUID TransID, string Description, UUID ToID, UUID FromID, uint Amount,
+            TransactionType TransType, uint ToBalance, uint FromBalance, string ToName, string FromName, string toObjectName, string fromObjectName, UUID regionID)
         {
             if(Amount > m_config.MaxAmountBeforeLogging)
-                m_gd.Insert("simple_currency_history", new object[] { TransID, (Description == null ? "" : Description), FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance });
+                m_gd.Insert("simple_currency_history", new object[] { TransID, (Description == null ? "" : Description),
+                    FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance, toObjectName, fromObjectName, regionID });
         }
 
         #endregion

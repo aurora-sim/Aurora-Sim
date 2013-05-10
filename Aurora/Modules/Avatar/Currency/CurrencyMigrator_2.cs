@@ -48,7 +48,10 @@ namespace Simple.Currency
                 ColDef("TransType", ColumnTypes.Integer11),
                 ColDef("Created", ColumnTypes.Integer30),
                 ColDef("ToBalance", ColumnTypes.Integer30),
-                ColDef("FromBalance", ColumnTypes.Integer30)),
+                ColDef("FromBalance", ColumnTypes.Integer30),
+                ColDef("FromObjectName", ColumnTypes.Integer30),
+                ColDef("ToObjectName", ColumnTypes.Integer30),
+                ColDef("RegionID", ColumnTypes.Integer30)),
                 IndexDefs(
                     IndexDef(new string[1] { "TransactionID" }, IndexType.Primary)
                     ));

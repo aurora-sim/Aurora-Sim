@@ -76,7 +76,7 @@ namespace Aurora.Modules.SampleCurrencyModule
             return true;
         }
 
-        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
+        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, string toObjectName, UUID fromObjectID, string fromObjectName, int amount, string description,
                              TransactionType type)
         {
             if ((type == TransactionType.PayObject) && (OnObjectPaid != null))
@@ -161,7 +161,7 @@ namespace Aurora.Modules.SampleCurrencyModule
             return true;
         }
 
-        public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)
+        public bool ObjectGiveMoney(UUID objectID, string objectName, UUID fromID, UUID toID, int amount)
         {
             return true;
         }

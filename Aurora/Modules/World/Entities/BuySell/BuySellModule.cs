@@ -323,8 +323,7 @@ namespace Aurora.Modules.Entities.BuySell
             IMoneyModule moneyMod = remoteClient.Scene.RequestModuleInterface<IMoneyModule>();
             if (moneyMod != null)
             {
-                if (
-                    !moneyMod.Transfer(part.OwnerID, remoteClient.AgentId, part.ParentUUID, UUID.Zero, part.SalePrice,
+                if (!moneyMod.Transfer(part.OwnerID, remoteClient.AgentId, part.ParentUUID, part.Name, UUID.Zero, "", part.SalePrice,
                                        "Object Purchase", TransactionType.ObjectSale))
                 {
                     remoteClient.SendAgentAlertMessage("You do not have enough money to buy this object.", false);
