@@ -16,6 +16,7 @@ namespace Simple.Currency
 
         private uint m_priceUpload = 0;
         private uint m_priceGroupCreate = 0;
+        private uint m_priceDirectoryFee = 0;
         private int m_stipend = 0;
         private string m_upgradeMembershipUri = "";
 
@@ -31,6 +32,9 @@ namespace Simple.Currency
         private bool m_GiveStipendsOnlyWhenLoggedIn = false;
         private bool m_saveTransactionLogs = false;
         private int m_maxAmountBeforeLogging = -1;
+        private int m_AdditionPercentage = 291;
+        private int m_AdditionAmount = 30;
+        private int m_realCurrencyConversionFactor = 1;
 
         #endregion
 
@@ -193,6 +197,12 @@ namespace Simple.Currency
             set { m_priceUpload = (uint) value; }
         }
 
+        public int PriceDirectoryFee
+        {
+            get { return (int)m_priceDirectoryFee; }
+            set { m_priceDirectoryFee = (uint)value; }
+        }
+
         public bool StipendsPremiumOnly
         {
             get { return m_stipendsPremiumOnly; }
@@ -233,6 +243,24 @@ namespace Simple.Currency
         {
             get { return m_maxAmountBeforeLogging; }
             set { m_maxAmountBeforeLogging = value; }
+        }
+
+        public int AdditionPercentage
+        {
+            get { return m_AdditionPercentage; }
+            set { m_AdditionPercentage = value; }
+        }
+
+        public int AdditionAmount
+        {
+            get { return m_AdditionAmount; }
+            set { m_AdditionAmount = value; }
+        }
+
+        public int RealCurrencyConversionFactor
+        {
+            get { return m_realCurrencyConversionFactor; }
+            set { m_realCurrencyConversionFactor = value; }
         }
 
         #endregion

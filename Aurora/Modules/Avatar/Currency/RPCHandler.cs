@@ -118,7 +118,7 @@ namespace Simple.Currency
                                                   "currency",
                                                   new Hashtable
                                                       {
-                                                          {"estimatedCost", 0},
+                                                          {"estimatedCost", m_connector.CalculateEstimatedCost(amount)},
                                                           {"currencyBuy", (int) amount}
                                                       }
                                               },
@@ -164,9 +164,7 @@ namespace Simple.Currency
                 if (UUID.TryParse((string) requestData["agentId"], out agentId))
                 {
                     uint amountBuying = uint.Parse(requestData["currencyBuy"].ToString());
-                    m_connector.UserCurrencyTransfer(agentId, UUID.Zero, UUID.Zero, UUID.Zero, amountBuying,
-                                                     "Inworld purchase", TransactionType.SystemGenerated, UUID.Zero);
-                    success = true;
+                    success = m_connector.InworldCurrencyBuyTransaction(agentId, amountBuying, ep);
                 }
             }
             XmlRpcResponse returnval = new XmlRpcResponse();

@@ -57,6 +57,11 @@ namespace Aurora.Modules.SampleCurrencyModule
             get { return 0; }
         }
 
+        public int DirectoryFeeCharge
+        {
+            get { return 0; }
+        }
+
         public int ClientPort
         {
             get { return m_config.Configs["Handlers"].GetInt("LLLoginHandlerPort", (int) MainServer.Instance.Port); }

@@ -111,6 +111,7 @@ namespace Aurora.Framework.Modules
     {
         int UploadCharge { get; }
         int GroupCreationCharge { get; }
+        int DirectoryFeeCharge { get; }
         int ClientPort { get; }
 
         bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,

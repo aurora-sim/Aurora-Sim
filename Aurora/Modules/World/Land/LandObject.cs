@@ -315,13 +315,14 @@ namespace Aurora.Modules.Land
                         {
                             //If the flags have changed, we need to charge them.. maybe
                             // We really need to check per month or whatever
-                            IScheduledMoneyModule moneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
-                            if (moneyModule != null)
+                            IScheduledMoneyModule scheduledMoneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
+                            IMoneyModule moneyModule = m_scene.RequestModuleInterface<IMoneyModule>();
+                            if (scheduledMoneyModule != null)
                             {
                                 if ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory)
                                 {
                                     //Flag is set
-                                    if (!moneyModule.Charge(remote_client.AgentId, 30, "Parcel Show in Search Fee - " + LandData.GlobalID,
+                                    if (!scheduledMoneyModule.Charge(remote_client.AgentId, moneyModule.DirectoryFeeCharge, "Parcel Show in Search Fee - " + LandData.GlobalID,
                                         7, TransactionType.ParcelDirFee, "ShowInDirectory" + LandData.GlobalID.ToString(), true))
                                     {
                                         remote_client.SendAlertMessage(
@@ -331,7 +332,7 @@ namespace Aurora.Modules.Land
                                 }
                                 else
                                 {
-                                    moneyModule.RemoveFromScheduledCharge("ShowInDirectory" + LandData.GlobalID.ToString());
+                                    scheduledMoneyModule.RemoveFromScheduledCharge("ShowInDirectory" + LandData.GlobalID.ToString());
                                 }
                             }
                         }

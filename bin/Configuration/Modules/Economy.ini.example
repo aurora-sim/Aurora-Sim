@@ -43,6 +43,9 @@
 	;;Price to create a new group
 	;; Default is 0
 	PriceGroupCreate = 0
+	;;Price to list a parcel in search
+	;; Default is 0
+	PriceDirectoryFee = 0
 	
 	;;The port to start the server on
 	;; Default is 0
@@ -51,6 +54,15 @@
 	;;Should users be able to buy currency inworld?
 	;; Default is true
 	CanBuyCurrencyInworld = true
+	;; Factor to multiply real money by to get inworld money
+	;; Example: 500 means that 1 real $ is 500 inworld $s
+	RealCurrencyConversionFactor = 500
+	;; Additional Percentage to charge default 2.91%
+	;; Note, this value is divided by 10,000
+	AdditionPercentage = 291
+	;; Addition amount to charge default $0.30
+	;; Note, this value is divided by 100
+	AdditionAmount = 30
 	
 	;; The max amount of money transfered before a transaction will be logged
 	;; Setting to 0 will ignore any 0$ transactions

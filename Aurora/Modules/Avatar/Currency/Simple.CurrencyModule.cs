@@ -136,14 +136,14 @@ namespace Simple.Currency
             get { return Config.PriceGroupCreate; }
         }
 
-        public int ClientPort
+        public int DirectoryFeeCharge
         {
-            get 
-            {
-                int port = Config.ClientPort;
-                if (port == 0) return (int)MainServer.Instance.Port;
-                return port;
-            }
+            get { return Config.PriceDirectoryFee; }
+        }
+
+        public int ClientPort 
+        {
+            get  { return Config.ClientPort; }
         }
 
         public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)

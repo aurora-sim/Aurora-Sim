@@ -9,6 +9,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
+using System.Net;
 
 namespace Simple.Currency
 {
@@ -138,6 +139,37 @@ namespace Simple.Currency
 
             int.TryParse(queryResults[1], out gb.TotalTierCredits);
             return gb;
+        }
+
+        public int CalculateEstimatedCost(uint amount)
+        {
+            return Convert.ToInt32(
+                Math.Round(((float.Parse(amount.ToString()) /
+                            m_config.RealCurrencyConversionFactor) +
+                            ((float.Parse(amount.ToString()) /
+                            m_config.RealCurrencyConversionFactor) *
+                            (m_config.AdditionPercentage / 10000.0)) +
+                            (m_config.AdditionAmount / 100.0)) * 100));
+        }
+
+        public bool InworldCurrencyBuyTransaction(UUID agentID, uint amount, IPEndPoint ep)
+        {
+            UserCurrencyTransfer(agentID, UUID.Zero, UUID.Zero, UUID.Zero, amount,
+                                             "Inworld purchase", TransactionType.SystemGenerated, UUID.Zero);
+
+            //Log to the database
+            List<object> values = new List<object>
+            {
+                UUID.Random(),                         // TransactionID
+                agentID.ToString(),                    // PrincipalID
+                ep.ToString(),                         // IP
+                amount,                                // Amount
+                CalculateEstimatedCost(amount),        // Actual cost
+                Utils.GetUnixTime(),                   // Created
+                Utils.GetUnixTime()                    // Updated
+            };
+            m_gd.Insert("simple_purchased", values.ToArray());
+            return true;
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
