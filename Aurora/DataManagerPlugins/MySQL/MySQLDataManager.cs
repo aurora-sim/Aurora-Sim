@@ -795,25 +795,27 @@ namespace Aurora.DataManager.MySQL
                 case ColumnTypes.Double:
                     return "DOUBLE";
                 case ColumnTypes.Integer11:
-                    return "int(11)";
+                    return "INT(11)";
                 case ColumnTypes.Integer30:
-                    return "int(30)";
+                    return "INT(30)";
                 case ColumnTypes.UInteger11:
                     return "INT(11) UNSIGNED";
                 case ColumnTypes.UInteger30:
                     return "INT(30) UNSIGNED";
+                case ColumnTypes.Char40:
+                    return "CHAR(40)";
                 case ColumnTypes.Char36:
-                    return "char(36)";
+                    return "CHAR(36)";
                 case ColumnTypes.Char32:
-                    return "char(32)";
+                    return "CHAR(32)";
                 case ColumnTypes.Char5:
-                    return "char(5)";
+                    return "CHAR(5)";
+                case ColumnTypes.Char1:
+                    return "CHAR(1)";
+                case ColumnTypes.Char2:
+                    return "CHAR(2)";
                 case ColumnTypes.String:
                     return "TEXT";
-                case ColumnTypes.String1:
-                    return "VARCHAR(1)";
-                case ColumnTypes.String2:
-                    return "VARCHAR(2)";
                 case ColumnTypes.String10:
                     return "VARCHAR(10)";
                 case ColumnTypes.String16:
@@ -849,19 +851,25 @@ namespace Aurora.DataManager.MySQL
                 case ColumnTypes.LongText:
                     return "LONGTEXT";
                 case ColumnTypes.Blob:
-                    return "blob";
+                    return "BLOB";
                 case ColumnTypes.LongBlob:
-                    return "longblob";
+                    return "LONGBLOB";
                 case ColumnTypes.Date:
                     return "DATE";
                 case ColumnTypes.DateTime:
                     return "DATETIME";
                 case ColumnTypes.Float:
-                    return "float";
+                    return "FLOAT";
                 case ColumnTypes.TinyInt1:
                     return "TINYINT(1)";
                 case ColumnTypes.TinyInt4:
                     return "TINYINT(4)";
+                case ColumnTypes.UTinyInt4:
+                    return "TINYINT(4) UNSIGNED";
+                case ColumnTypes.Binary32:
+                    return "BINARY(32)";
+                case ColumnTypes.Binary64:
+                    return "BINARY(64)";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -916,6 +924,9 @@ namespace Aurora.DataManager.MySQL
                     break;
                 case ColumnType.UUID:
                     symbol = "CHAR(36)";
+                    break;
+                case ColumnType.Binary:
+                    symbol = "BINARY(" + coldef.Size + ")";
                     break;
                 default:
                     throw new DataManagerException("Unknown column type.");
