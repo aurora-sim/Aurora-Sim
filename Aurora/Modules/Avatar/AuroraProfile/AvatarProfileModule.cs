@@ -163,6 +163,8 @@ namespace Aurora.Modules.Profiles
             client.OnPickInfoUpdate -= PickInfoUpdate;
             client.OnPickDelete -= PickDelete;
             client.OnPickGodDelete -= GodPickDelete;
+
+            ProfileFrontend.ClearCache(client.AgentId);
         }
 
         public void NewClient(IClientAPI client)
