@@ -47,7 +47,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <summary>
         ///     ODE contact array to be filled by the collision testing
         /// </summary>
-        private readonly d.ContactGeom[] contacts = new d.ContactGeom[5];
+        protected int contactsPerCollision = 16;
+        protected IntPtr ContactgeomsArray = IntPtr.Zero;
 
         private readonly List<ContactResult> m_contactResults = new List<ContactResult>();
 
@@ -76,6 +77,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             m_scene = pScene;
             nearCallback = near;
+
+            ContactgeomsArray = Marshal.AllocHGlobal(contactsPerCollision * d.ContactGeom.unmanagedSizeOf);
         }
 
         /// <summary>
@@ -237,9 +240,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Find closest contact and object.
             lock (m_contactResults)
             {
+                m_contactResults.Sort(delegate(ContactResult a, ContactResult b)
+                {
+                    return a.Depth.CompareTo(b.Depth);
+                });
+                
                 // Return results
                 if (req.callbackMethod != null)
-                    req.callbackMethod(m_contactResults);
+                    req.callbackMethod(m_contactResults.Take(req.Count).ToList());
             }
         }
 
@@ -349,10 +357,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (g1 == g2)
                     return; // Can't collide with yourself
 
-                lock (contacts)
-                {
-                    count = d.Collide(g1, g2, contacts.GetLength(0), contacts, d.ContactGeom.unmanagedSizeOf);
-                }
+                count = d.CollidePtr(g1, g2, (contactsPerCollision & 0xffff), ContactgeomsArray,
+                                        d.ContactGeom.unmanagedSizeOf);
             }
             catch (SEHException)
             {
@@ -366,17 +372,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             PhysicsActor p1 = null;
-            PhysicsActor p2 = null;
 
             if (g1 != IntPtr.Zero)
                 m_scene.actor_name_map.TryGetValue(g1, out p1);
 
-            if (g2 != IntPtr.Zero)
-                m_scene.actor_name_map.TryGetValue(g1, out p2);
-
             // Loop over contacts, build results.
+            d.ContactGeom curContact = new d.ContactGeom();
             for (int i = 0; i < count; i++)
             {
+                if (!GetCurContactGeom(i, ref curContact))
+                    break;
+
                 if (p1 != null)
                 {
                     if (p1 is AuroraODEPrim)
@@ -385,37 +391,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                             {
                                                                 ConsumerID = ((AuroraODEPrim) p1).LocalID,
                                                                 Pos =
-                                                                    new Vector3(contacts[i].pos.X, contacts[i].pos.Y,
-                                                                                contacts[i].pos.Z),
-                                                                Depth = contacts[i].depth,
+                                                                    new Vector3(curContact.pos.X, curContact.pos.Y,
+                                                                                curContact.pos.Z),
+                                                                Depth = curContact.depth,
                                                                 Normal =
-                                                                    new Vector3(contacts[i].normal.X,
-                                                                                contacts[i].normal.Y,
-                                                                                contacts[i].normal.Z)
+                                                                    new Vector3(curContact.normal.X,
+                                                                                curContact.normal.Y,
+                                                                                curContact.normal.Z)
                                                             };
-
-                        lock (m_contactResults)
-                            m_contactResults.Add(collisionresult);
-                    }
-                }
-
-                if (p2 != null)
-                {
-                    if (p2 is AuroraODEPrim)
-                    {
-                        ContactResult collisionresult = new ContactResult
-                                                            {
-                                                                ConsumerID = ((AuroraODEPrim) p2).LocalID,
-                                                                Pos =
-                                                                    new Vector3(contacts[i].pos.X, contacts[i].pos.Y,
-                                                                                contacts[i].pos.Z),
-                                                                Depth = contacts[i].depth,
-                                                                Normal =
-                                                                    new Vector3(contacts[i].normal.X,
-                                                                                contacts[i].normal.Y,
-                                                                                contacts[i].normal.Z)
-                                                            };
-
 
                         lock (m_contactResults)
                             m_contactResults.Add(collisionresult);
@@ -424,12 +407,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        private bool GetCurContactGeom(int index, ref d.ContactGeom newcontactgeom)
+        {
+            if (ContactgeomsArray == IntPtr.Zero || index >= contactsPerCollision)
+                return false;
+
+            IntPtr contactptr = new IntPtr(ContactgeomsArray.ToInt64() + (index * d.ContactGeom.unmanagedSizeOf));
+            newcontactgeom = (d.ContactGeom)Marshal.PtrToStructure(contactptr, typeof(d.ContactGeom));
+            return true;
+        }
+
         /// <summary>
         ///     Dereference the creator scene so that it can be garbage collected if needed.
         /// </summary>
         internal void Dispose()
         {
             m_scene = null;
+            if (ContactgeomsArray != IntPtr.Zero)
+                Marshal.FreeHGlobal(ContactgeomsArray);
         }
     }
 

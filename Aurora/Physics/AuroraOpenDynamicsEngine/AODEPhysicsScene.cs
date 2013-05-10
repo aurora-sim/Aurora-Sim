@@ -537,23 +537,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Contact Loop
 
+            for (int i = 0; i < count; i++)
             {
-                for (int i = 0; i < count; i++)
-                {
-                    if (!GetCurContactGeom(i, ref curContact))
-                        break;
+                if (!GetCurContactGeom(i, ref curContact))
+                    break;
 
-                    if (curContact.depth > maxDepthContact.PenetrationDepth)
-                    {
-                        maxDepthContact.PenetrationDepth = curContact.depth;
-                        maxDepthContact.Position.X = curContact.pos.X;
-                        maxDepthContact.Position.Y = curContact.pos.Y;
-                        maxDepthContact.Position.Z = curContact.pos.Z;
-                        maxDepthContact.Type = (ActorTypes) p1.PhysicsActorType;
-                        maxDepthContact.SurfaceNormal.X = curContact.normal.X;
-                        maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
-                        maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
-                    }
+                if (curContact.depth > maxDepthContact.PenetrationDepth)
+                {
+                    maxDepthContact.PenetrationDepth = curContact.depth;
+                    maxDepthContact.Position.X = curContact.pos.X;
+                    maxDepthContact.Position.Y = curContact.pos.Y;
+                    maxDepthContact.Position.Z = curContact.pos.Z;
+                    maxDepthContact.Type = (ActorTypes) p1.PhysicsActorType;
+                    maxDepthContact.SurfaceNormal.X = curContact.normal.X;
+                    maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
+                    maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
                 }
             }
             if (p1 is AuroraODECharacter || p2 is AuroraODECharacter)
