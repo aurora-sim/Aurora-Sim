@@ -413,17 +413,22 @@ namespace Aurora.DataManager
                     typeDef.Type = ColumnType.Integer;
                     typeDef.Size = 11;
                     break;
+                case "binary":
+                    typeDef.Type = ColumnType.Binary;
+                    break;
                 default:
                     string regexInt = "^int\\((\\d+)\\)( unsigned)?$";
                     string regexTinyint = "^tinyint\\((\\d+)\\)( unsigned)?$";
                     string regexChar = "^char\\((\\d+)\\)$";
                     string regexString = "^varchar\\((\\d+)\\)$";
+                    string regexBinary = "^binary\\((\\d+)\\)$";
 
-                    Dictionary<string, ColumnType> regexChecks = new Dictionary<string, ColumnType>(4);
+                    Dictionary<string, ColumnType> regexChecks = new Dictionary<string, ColumnType>(5);
                     regexChecks[regexInt] = ColumnType.Integer;
                     regexChecks[regexTinyint] = ColumnType.TinyInt;
-                    regexChecks[regexChar] = ColumnType.Char;
+                    regexChecks[regexChar] = ColumnType.Char;                    
                     regexChecks[regexString] = ColumnType.String;
+                    regexChecks[regexBinary] = ColumnType.Binary;
 
                     Match type = Regex.Match("foo", "^bar$");
                     foreach (KeyValuePair<string, ColumnType> regexCheck in regexChecks)
