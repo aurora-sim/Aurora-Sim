@@ -150,7 +150,7 @@ namespace Aurora.Region.Animation
             if (animID == UUID.Zero)
             {
                 if (DefaultAnimations.AnimsUUID.ContainsKey(name.ToUpper()))
-                    animID = DefaultAnimations.AnimsUUID[name];
+                    animID = DefaultAnimations.AnimsUUID[name.ToUpper()];
                 else
                     return false;
             }
