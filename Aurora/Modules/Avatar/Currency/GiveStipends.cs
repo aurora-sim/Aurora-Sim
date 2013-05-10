@@ -91,7 +91,7 @@ namespace Simple.Currency
                 IMoneyModule mo = m_registry.RequestModuleInterface<IMoneyModule>();
                 if (mo == null) return null;
                 UUID transid = UUID.Random();
-                if (m_currencyService.UserCurrencyTransfer(ua.PrincipalID, UUID.Zero, UUID.Zero, UUID.Zero, (uint)m_options.Stipend, "Stipend Payment", TransactionType.StipendPayment, transid))
+                if (m_currencyService.UserCurrencyTransfer(ua.PrincipalID, UUID.Zero, (uint)m_options.Stipend, "Stipend Payment", TransactionType.StipendPayment, transid))
                 {
                     return transid.ToString();
                 }

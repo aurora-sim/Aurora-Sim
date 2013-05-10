@@ -78,10 +78,6 @@
 	;; *not recognized by all viewers
 	;; RealCurrencySymbol = "$"
 	
-	;; directory fee: optional: the amount of in-world currency a directory listing costs
-	;; *not recognized by all viewers
-	;; DirectoryFee = 0
-	
 	;; max groups: optional: the maximum number of groups allowed
 	;; *not recognized by all viewers
 	;; MaxGroups = 50

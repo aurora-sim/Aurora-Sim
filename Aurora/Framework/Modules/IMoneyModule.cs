@@ -111,21 +111,19 @@ namespace Aurora.Framework.Modules
     {
         int UploadCharge { get; }
         int GroupCreationCharge { get; }
+        int DirectoryFeeCharge { get; }
         int ClientPort { get; }
 
-        bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
-                             int amount);
+        bool ObjectGiveMoney(UUID objectID, string objectName, UUID fromID, UUID toID, int amount);
 
         int Balance(UUID agentID);
-        bool Charge(UUID agentID, int amount, string text);
         bool Charge(UUID agentID, int amount, string text, TransactionType type);
 
         event ObjectPaid OnObjectPaid;
 
-        bool Transfer(UUID toID, UUID fromID, int amount, string description);
         bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type);
 
-        bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
+        bool Transfer(UUID toID, UUID fromID, UUID toObjectID, string toObjectName, UUID fromObjectID, string fromObjectName, int amount, string description,
                       TransactionType type);
 
         /// <summary>
@@ -140,7 +138,7 @@ namespace Aurora.Framework.Modules
         GroupBalance GetGroupBalance(UUID groupID);
     }
 
-    public delegate void UserDidNotPay(UUID agentID, string paymentTextThatFailed);
+    public delegate void UserDidNotPay(UUID agentID, string identifier, string paymentTextThatFailed);
 
     public delegate bool CheckWhetherUserShouldPay(UUID agentID, string paymentTextThatFailed);
 
@@ -148,7 +146,8 @@ namespace Aurora.Framework.Modules
     {
         event UserDidNotPay OnUserDidNotPay;
         event CheckWhetherUserShouldPay OnCheckWhetherUserShouldPay;
-        bool Charge(UUID agentID, int amount, string text, int daysUntilNextCharge);
+        bool Charge(UUID agentID, int amount, string text, int daysUntilNextCharge, TransactionType type, string identifier, bool chargeImmediately);
+        void RemoveFromScheduledCharge(string identifer);
     }
 
     public interface ISimpleCurrencyConnector : IAuroraDataPlugin

@@ -110,6 +110,10 @@
     ;; only enable this in a trusted environment otherwise you may be subject to hijacking
     ;; Default is false.
     ; AutomaticLinkPermission = false
+	
+    ; Allow for llSetPrimitiveParams and related functions to use OpenSim
+    ; params via OS_* constants.
+    ;AllowOpenSimParamsInLLFunctions = false
 
     ;; Disable underground movement of prims set to
     ;; false to allow script controlled underground positioning of

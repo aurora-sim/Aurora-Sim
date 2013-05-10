@@ -80,14 +80,23 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public IUserProfileInfo GetUserProfile(UUID agentID)
         {
+            IUserProfileInfo UserProfile = new IUserProfileInfo();
+            lock (UserProfilesCache)
+            {
+                //Try from the user profile first before getting from the DB
+                if (UserProfilesCache.TryGetValue(agentID, out UserProfile))
+                    return UserProfile;
+            }
+
             object remoteValue = DoRemote(agentID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (IUserProfileInfo) remoteValue;
-
-            IUserProfileInfo UserProfile = new IUserProfileInfo();
-            //Try from the user profile first before getting from the DB
-            if (UserProfilesCache.TryGetValue(agentID, out UserProfile))
+            {
+                UserProfile = (IUserProfileInfo)remoteValue;
+                //Add to the cache
+                lock (UserProfilesCache)
+                    UserProfilesCache[agentID] = UserProfile;
                 return UserProfile;
+            }
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ID"] = agentID;
@@ -105,7 +114,8 @@ namespace Aurora.Services.DataService
             UserProfile.FromOSD(profile);
 
             //Add to the cache
-            UserProfilesCache[agentID] = UserProfile;
+            lock(UserProfilesCache)
+                UserProfilesCache[agentID] = UserProfile;
 
             return UserProfile;
         }
@@ -140,9 +150,16 @@ namespace Aurora.Services.DataService
             filter.andFilters["`Key`"] = "LLProfile";
 
             //Update cache
-            UserProfilesCache[Profile.PrincipalID] = Profile;
+            lock(UserProfilesCache)
+                UserProfilesCache[Profile.PrincipalID] = Profile;
 
             return GD.Update("userdata", values, null, filter, null, null);
+        }
+
+        public void ClearCache(UUID agentID)
+        {
+            lock (UserProfilesCache)
+                UserProfilesCache.Remove(agentID);
         }
 
         /// <summary>

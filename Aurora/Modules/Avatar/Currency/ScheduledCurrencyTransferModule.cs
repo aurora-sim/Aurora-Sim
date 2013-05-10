@@ -46,14 +46,17 @@ namespace Aurora.Modules.Avatar.Currency
         public event UserDidNotPay OnUserDidNotPay;
         public event CheckWhetherUserShouldPay OnCheckWhetherUserShouldPay;
 
-        public bool Charge(UUID agentID, int amount, string text, int daysUntilNextCharge)
+        public bool Charge(UUID agentID, int amount, string text, int daysUntilNextCharge, TransactionType type, string identifer, bool chargeImmediately)
         {
             IMoneyModule moneyModule = m_registry.RequestModuleInterface<IMoneyModule>();
             if (moneyModule != null)
             {
-                bool success = moneyModule.Charge(agentID, amount, text);
-                if (!success)
-                    return false;
+                if (chargeImmediately)
+                {
+                    bool success = moneyModule.Charge(agentID, amount, text, type);
+                    if (!success)
+                        return false;
+                }
                 IScheduleService scheduler = m_registry.RequestModuleInterface<IScheduleService>();
                 if (scheduler != null)
                 {
@@ -61,9 +64,10 @@ namespace Aurora.Modules.Avatar.Currency
                     itemInfo.Add("AgentID", agentID);
                     itemInfo.Add("Amount", amount);
                     itemInfo.Add("Text", text);
-                    SchedulerItem item = new SchedulerItem("ScheduledPayment",
+                    itemInfo.Add("Type", (int)type);
+                    SchedulerItem item = new SchedulerItem("ScheduledPayment" + identifer,
                                                            OSDParser.SerializeJsonString(itemInfo), false,
-                                                           DateTime.UtcNow, 1, RepeatType.months, agentID);
+                                                           DateTime.UtcNow, daysUntilNextCharge, RepeatType.days, agentID);
                     itemInfo.Add("SchedulerID", item.id);
                     scheduler.Save(item);
                 }
@@ -71,9 +75,16 @@ namespace Aurora.Modules.Avatar.Currency
             return true;
         }
 
+        public void RemoveFromScheduledCharge(string identifer)
+        {
+            IScheduleService scheduler = m_registry.RequestModuleInterface<IScheduleService>();
+            if (scheduler != null)
+                scheduler.Remove("ScheduledPayment" + identifer);
+        }
+
         private object ChargeNext(string functionName, object parameters)
         {
-            if (functionName == "ScheduledPayment")
+            if (functionName.StartsWith("ScheduledPayment"))
             {
                 OSDMap itemInfo = (OSDMap) OSDParser.DeserializeJson(parameters.ToString());
                 IMoneyModule moneyModule = m_registry.RequestModuleInterface<IMoneyModule>();
@@ -81,13 +92,14 @@ namespace Aurora.Modules.Avatar.Currency
                 string scdID = itemInfo["SchedulerID"];
                 string text = itemInfo["Text"];
                 int amount = itemInfo["Amount"];
+                TransactionType type = !itemInfo.ContainsKey("Type") ? TransactionType.SystemGenerated : (TransactionType)itemInfo["Type"].AsInteger();
                 if (CheckWhetherUserShouldPay(agentID, text))
                 {
-                    bool success = moneyModule.Charge(agentID, amount, text);
+                    bool success = moneyModule.Charge(agentID, amount, text, type);
                     if (!success)
                     {
                         if (OnUserDidNotPay != null)
-                            OnUserDidNotPay(agentID, text);
+                            OnUserDidNotPay(agentID, functionName.Replace("ScheduledPayment", ""), text);
                     }
                 }
                 else

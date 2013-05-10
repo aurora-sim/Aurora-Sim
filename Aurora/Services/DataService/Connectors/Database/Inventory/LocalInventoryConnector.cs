@@ -312,7 +312,7 @@ namespace Aurora.Services.DataService
                     if (moreLinkedItems.Count > 0)
                     {
                         addToCount = false;
-                        query = String.Format("where {0} = '{1}' and (", "avatarID", AgentID);
+                        query = "where (";
 
                         query = moreLinkedItems.Aggregate(query,
                                                           (current, t) =>

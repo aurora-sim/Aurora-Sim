@@ -101,7 +101,12 @@ namespace Aurora.Services
                 if (GridEconomyURI == "")
                 {
                     if (moneyModule != null)
-                        GridEconomyURI = MainServer.Instance.FullHostName + ":" + moneyModule.ClientPort + "/";
+                    {
+                        int port = moneyModule.ClientPort;
+                        if (port == 0)
+                            port = (int)MainServer.Instance.Port;
+                        GridEconomyURI = MainServer.Instance.FullHostName + ":" + port + "/";
+                    }
                     else
                         GridEconomyURI = MainServer.Instance.FullHostName + ":" + 9000 + "/"; //Fallback... we dunno
                 }

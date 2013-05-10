@@ -244,7 +244,7 @@ namespace Aurora.Modules.Land
             return true;
         }
 
-        private void moneyModule_OnUserDidNotPay(UUID agentID, string paymentTextThatFailed)
+        private void moneyModule_OnUserDidNotPay(UUID agentID, string identifier, string paymentTextThatFailed)
         {
             UUID parcelGlobalID = UUID.Parse(paymentTextThatFailed.Substring("Parcel Show in Search Fee - ".Length));
             ILandObject parcel;

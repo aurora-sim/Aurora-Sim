@@ -2230,7 +2230,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ISceneChildEntity part = m_host.ParentEntity.GetLinkNumPart(linknumber) as ISceneChildEntity;
 
             //Check to see if the requested part exists (NOT null) and if so, get it's rules
-            if (part != null) retVal = ((LSL_Api) m_LSL_Api).GetLinkPrimitiveParams(part, rules);
+            if (part != null) retVal = ((LSL_Api) m_LSL_Api).GetLinkPrimitiveParams(part, rules, true);
 
             //Will retun rules for specific part, or an empty list if part == null
             return retVal;
@@ -2370,7 +2370,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_LSL_Api.SetPrimitiveParamsEx(prim, rules);
         }
 
-        /// <summary>
+        public void osSetLinkPrimitiveParams(LSL_Integer link, LSL_List rules)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osSetLinkPrimitiveParams", m_host, "OSSL", m_itemID))
+                return;
+
+            InitLSL();
+            // One needs to cast m_LSL_Api because we're using functions not
+            // on the ILSL_Api interface.
+            LSL_Api LSL_Api = (LSL_Api)m_LSL_Api;
+            List<IEntity> parts = LSL_Api.GetLinkPartsAndEntities(link);
+
+            foreach (IEntity part in parts)
+                LSL_Api.SetPrimParams(part, rules, true);
+        }
+
+         /// <summary>
         ///     Set parameters for light projection in host prim
         /// </summary>
         public void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb)

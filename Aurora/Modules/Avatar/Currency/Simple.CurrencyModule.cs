@@ -105,7 +105,7 @@ namespace Simple.Currency
                 if ((AuthorizedID == UUID.Zero || AuthorizedID == e.agentId) && e.parcelPrice >= saleprice &&
                     landforsale)
                 {
-                    if (m_connector.UserCurrencyTransfer(lob.LandData.OwnerID, e.agentId, UUID.Zero, UUID.Zero,
+                    if (m_connector.UserCurrencyTransfer(lob.LandData.OwnerID, e.agentId,
                                                          (uint) saleprice, "Land Buy", TransactionType.LandSale,
                                                          UUID.Zero))
                     {
@@ -136,19 +136,19 @@ namespace Simple.Currency
             get { return Config.PriceGroupCreate; }
         }
 
-        public int ClientPort
+        public int DirectoryFeeCharge
         {
-            get 
-            {
-                int port = Config.ClientPort;
-                if (port == 0) return (int)MainServer.Instance.Port;
-                return port;
-            }
+            get { return Config.PriceDirectoryFee; }
         }
 
-        public bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount)
+        public int ClientPort 
         {
-            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, objectID, (uint) amount, "Object payment",
+            get  { return Config.ClientPort; }
+        }
+
+        public bool ObjectGiveMoney(UUID objectID, string objectName, UUID fromID, UUID toID, int amount)
+        {
+            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, "", objectID, objectName, (uint) amount, "Object payment",
                                                     TransactionType.ObjectPays, UUID.Zero);
         }
 
@@ -157,16 +157,10 @@ namespace Simple.Currency
             return (int) m_connector.GetUserCurrency(agentID).Amount;
         }
 
-        public bool Charge(UUID agentID, int amount, string text)
-        {
-            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint)amount, text,
-                                                    TransactionType.SystemGenerated, UUID.Zero);
-        }
-
         public bool Charge(UUID agentID, int amount, string text, TransactionType type)
         {
-            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, UUID.Zero, UUID.Zero, (uint)amount, text,
-                                                    TransactionType.SystemGenerated, UUID.Zero);
+            return m_connector.UserCurrencyTransfer(UUID.Zero, agentID, (uint)amount, text,
+                                                    type, UUID.Zero);
         }
 
         public event ObjectPaid OnObjectPaid;
@@ -177,22 +171,17 @@ namespace Simple.Currency
                 OnObjectPaid(objectID, agentID, amount);
         }
 
-        public bool Transfer(UUID toID, UUID fromID, int amount, string description)
-        {
-            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint) amount, description,
-                                                    TransactionType.Gift, UUID.Zero);
-        }
-
         public bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type)
         {
-            return m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint) amount, description, type,
+            return m_connector.UserCurrencyTransfer(toID, fromID, (uint) amount, description, type,
                                                     UUID.Zero);
         }
 
-        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
-                             TransactionType type)
+        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, string toObjectName, UUID fromObjectID, 
+            string fromObjectName, int amount, string description, TransactionType type)
         {
-            bool result = m_connector.UserCurrencyTransfer(toID, fromID, toObjectID, fromObjectID, (uint)amount, description, type, UUID.Zero);
+            bool result = m_connector.UserCurrencyTransfer(toID, fromID, toObjectID, toObjectName, 
+                fromObjectID, fromObjectName, (uint)amount, description, type, UUID.Zero);
             if (toObjectID != UUID.Zero)
             {
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
@@ -226,7 +215,6 @@ namespace Simple.Currency
             client.OnEconomyDataRequest += EconomyDataRequestHandler;
             client.OnMoneyBalanceRequest += SendMoneyBalance;
             client.OnMoneyTransferRequest += ProcessMoneyTransferRequest;
-            client.OnParcelBuyPass += ClientOnParcelBuyPass;
         }
 
         private void OnMakeRootAgent(IScenePresence presence)
@@ -240,7 +228,6 @@ namespace Simple.Currency
             client.OnEconomyDataRequest -= EconomyDataRequestHandler;
             client.OnMoneyBalanceRequest -= SendMoneyBalance;
             client.OnMoneyTransferRequest -= ProcessMoneyTransferRequest;
-            client.OnParcelBuyPass -= ClientOnParcelBuyPass;
         }
 
         private void ProcessMoneyTransferRequest(UUID fromID, UUID toID, int amount, int type, string description)
@@ -253,14 +240,14 @@ namespace Simple.Currency
                     ISceneChildEntity ent = manager.Scene.GetSceneObjectPart(toID);
                     if (ent != null)
                     {
-                        bool success = m_connector.UserCurrencyTransfer(ent.OwnerID, fromID, UUID.Zero, UUID.Zero, (uint)amount, description,
+                        bool success = m_connector.UserCurrencyTransfer(ent.OwnerID, fromID, (uint)amount, description,
                                              (TransactionType)type, UUID.Random());
                         if (success)
                             FireObjectPaid(toID, fromID, amount);
                     }
                     else
                     {
-                        m_connector.UserCurrencyTransfer(toID, fromID, UUID.Zero, UUID.Zero, (uint)amount, description,
+                        m_connector.UserCurrencyTransfer(toID, fromID, (uint)amount, description,
                                                  (TransactionType)type, UUID.Random());
                     }
                 }
@@ -269,7 +256,7 @@ namespace Simple.Currency
 
         private bool ValidateLandBuy(EventManager.LandBuyArgs e)
         {
-            return m_connector.UserCurrencyTransfer(e.parcelOwnerID, e.agentId, UUID.Zero, UUID.Zero,
+            return m_connector.UserCurrencyTransfer(e.parcelOwnerID, e.agentId,
                                                     (uint) e.parcelPrice, "Land Purchase", TransactionType.LandSale,
                                                     UUID.Random());
         }
@@ -309,51 +296,6 @@ namespace Simple.Currency
                                         (int) m_connector.GetUserCurrency(client.AgentId).Amount);
             else
                 client.SendAlertMessage("Unable to send your money balance to you!");
-        }
-
-        /// <summary>
-        ///     The client wants to buy a pass for a parcel
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="fromID"></param>
-        /// <param name="parcelLocalId"></param>
-        private void ClientOnParcelBuyPass(IClientAPI client, UUID fromID, int parcelLocalId)
-        {
-            IScenePresence agentSp = m_scene.GetScenePresence(client.AgentId);
-            IParcelManagementModule parcelManagement = agentSp.Scene.RequestModuleInterface<IParcelManagementModule>();
-            ILandObject landParcel = null;
-            List<ILandObject> land = parcelManagement.AllParcels();
-            foreach (ILandObject landObject in land)
-            {
-                if (landObject.LandData.LocalID == parcelLocalId)
-                {
-                    landParcel = landObject;
-                }
-            }
-            if (landParcel != null)
-            {
-                bool giveResult = m_connector.UserCurrencyTransfer(landParcel.LandData.OwnerID, fromID, UUID.Zero,
-                                                                   UUID.Zero,
-                                                                   (uint) landParcel.LandData.PassPrice, "Parcel Pass",
-                                                                   TransactionType.LandPassSale, UUID.Random());
-                if (giveResult)
-                {
-                    ParcelManager.ParcelAccessEntry entry
-                        = new ParcelManager.ParcelAccessEntry
-                              {
-                                  AgentID = fromID,
-                                  Flags = AccessList.Access,
-                                  Time = DateTime.Now.AddHours(landParcel.LandData.PassHours)
-                              };
-                    landParcel.LandData.ParcelAccessList.Add(entry);
-                    agentSp.ControllingClient.SendAgentAlertMessage("You have been added to the parcel access list.",
-                                                                    false);
-                }
-            }
-            else
-            {
-                agentSp.ControllingClient.SendAgentAlertMessage("Unable to find parcel.", false);
-            }
         }
 
         #endregion

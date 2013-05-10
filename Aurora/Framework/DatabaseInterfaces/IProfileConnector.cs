@@ -69,5 +69,7 @@ namespace Aurora.Framework.DatabaseInterfaces
         ProfilePickInfo GetPick(UUID queryPickID);
         List<ProfilePickInfo> GetPicks(UUID ownerID);
         void RemovePick(UUID queryPickID);
+
+        void ClearCache(UUID agentID);
     }
 }

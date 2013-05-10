@@ -548,10 +548,15 @@ namespace Aurora.Services.SQLServices.UserAccountService
             string pass = MainConsole.Instance.Prompt("Password", "");
             if (pass == "")
                 return;
+            UserAccount account = GetUserAccount(null, name);
+            if (account == null)
+            {
+                MainConsole.Instance.Warn("No user with that name!");
+                return;
+            }
             bool archive = MainConsole.Instance.Prompt("Archive Information (just disable their login, but keep their information)", "false").ToLower() == "true";
             bool all = MainConsole.Instance.Prompt("Remove all user information", "false").ToLower() == "true";
 
-            UserAccount account = GetUserAccount(null, name);
             DeleteUser(account.PrincipalID, account.Name, pass, archive, all);
         }
 

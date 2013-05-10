@@ -315,16 +315,24 @@ namespace Aurora.Modules.Land
                         {
                             //If the flags have changed, we need to charge them.. maybe
                             // We really need to check per month or whatever
-                            IScheduledMoneyModule moneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
-                            if (moneyModule != null)
+                            IScheduledMoneyModule scheduledMoneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
+                            IMoneyModule moneyModule = m_scene.RequestModuleInterface<IMoneyModule>();
+                            if (scheduledMoneyModule != null)
                             {
-                                if (
-                                    !moneyModule.Charge(remote_client.AgentId, 30,
-                                                        "Parcel Show in Search Fee - " + LandData.GlobalID, 7))
+                                if ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory)
                                 {
-                                    remote_client.SendAlertMessage(
-                                        "You don't have enough money to set this parcel in search.");
-                                    args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
+                                    //Flag is set
+                                    if (!scheduledMoneyModule.Charge(remote_client.AgentId, moneyModule.DirectoryFeeCharge, "Parcel Show in Search Fee - " + LandData.GlobalID,
+                                        7, TransactionType.ParcelDirFee, "ShowInDirectory" + LandData.GlobalID.ToString(), true))
+                                    {
+                                        remote_client.SendAlertMessage(
+                                            "You don't have enough money to set this parcel in search.");
+                                        args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
+                                    }
+                                }
+                                else
+                                {
+                                    scheduledMoneyModule.RemoveFromScheduledCharge("ShowInDirectory" + LandData.GlobalID.ToString());
                                 }
                             }
                         }

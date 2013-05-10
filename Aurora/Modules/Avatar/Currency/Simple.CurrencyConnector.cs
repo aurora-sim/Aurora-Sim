@@ -9,6 +9,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
+using System.Net;
 
 namespace Simple.Currency
 {
@@ -140,12 +141,49 @@ namespace Simple.Currency
             return gb;
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, uint amount,
+        public int CalculateEstimatedCost(uint amount)
+        {
+            return Convert.ToInt32(
+                Math.Round(((float.Parse(amount.ToString()) /
+                            m_config.RealCurrencyConversionFactor) +
+                            ((float.Parse(amount.ToString()) /
+                            m_config.RealCurrencyConversionFactor) *
+                            (m_config.AdditionPercentage / 10000.0)) +
+                            (m_config.AdditionAmount / 100.0)) * 100));
+        }
+
+        public bool InworldCurrencyBuyTransaction(UUID agentID, uint amount, IPEndPoint ep)
+        {
+            UserCurrencyTransfer(agentID, UUID.Zero, amount,
+                                             "Inworld purchase", TransactionType.SystemGenerated, UUID.Zero);
+
+            //Log to the database
+            List<object> values = new List<object>
+            {
+                UUID.Random(),                         // TransactionID
+                agentID.ToString(),                    // PrincipalID
+                ep.ToString(),                         // IP
+                amount,                                // Amount
+                CalculateEstimatedCost(amount),        // Actual cost
+                Utils.GetUnixTime(),                   // Created
+                Utils.GetUnixTime()                    // Updated
+            };
+            m_gd.Insert("simple_purchased", values.ToArray());
+            return true;
+        }
+
+        public bool UserCurrencyTransfer(UUID toID, UUID fromID, uint amount,
                                          string description, TransactionType type, UUID transactionID)
         {
-            object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, fromObjectID, amount,
-                                               description, type, transactionID);
+            return UserCurrencyTransfer(toID, fromID, UUID.Zero, "", UUID.Zero, "", amount, description, type, transactionID);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, string toObjectName, UUID fromObjectID,
+            string fromObjectName, uint amount, string description, TransactionType type, UUID transactionID)
+        {
+            object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, toObjectName, fromObjectID,
+                amount, fromObjectName, description, type, transactionID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (bool) remoteValue;
 
@@ -183,7 +221,11 @@ namespace Simple.Currency
                 UserAccount fromAccount = m_registry.RequestModuleInterface<IUserAccountService>()
                                                     .GetUserAccount(null, fromID);
                 if (m_config.SaveTransactionLogs)
-                    AddTransactionRecord((transactionID == UUID.Zero ? UUID.Random() : transactionID), description, toID, fromID, amount, type, (toCurrency == null ? 0 : toCurrency.Amount), (fromCurrency == null ? 0 : fromCurrency.Amount), (toAccount == null ? "System" : toAccount.Name), (fromAccount == null ? "System" : fromAccount.Name));
+                    AddTransactionRecord((transactionID == UUID.Zero ? UUID.Random() : transactionID), 
+                        description, toID, fromID, amount, type, (toCurrency == null ? 0 : toCurrency.Amount), 
+                        (fromCurrency == null ? 0 : fromCurrency.Amount), (toAccount == null ? "System" : toAccount.Name), 
+                        (fromAccount == null ? "System" : fromAccount.Name), toObjectName, fromObjectName, (fromUserInfo == null ? 
+                        UUID.Zero : fromUserInfo.CurrentRegionID));
 
                 if (fromID == toID)
                 {
@@ -220,10 +262,13 @@ namespace Simple.Currency
         }
 
         // Method Added By Alicia Raven
-        private void AddTransactionRecord(UUID TransID, string Description, UUID ToID, UUID FromID, uint Amount, TransactionType TransType, uint ToBalance, uint FromBalance, string ToName, string FromName)
+        private void AddTransactionRecord(UUID TransID, string Description, UUID ToID, UUID FromID, uint Amount,
+            TransactionType TransType, uint ToBalance, uint FromBalance, string ToName, string FromName, string toObjectName, string fromObjectName, UUID regionID)
         {
             if(Amount > m_config.MaxAmountBeforeLogging)
-                m_gd.Insert("simple_currency_history", new object[] { TransID, (Description == null ? "" : Description), FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance });
+                m_gd.Insert("simple_currency_history", new object[] { TransID, (Description == null ? "" : Description),
+                    FromID.ToString(), FromName, ToID.ToString(), ToName, Amount, (int)TransType, Util.UnixTimeSinceEpoch(), ToBalance, FromBalance,
+                    toObjectName == null ? "" : toObjectName, fromObjectName == null ? "" : fromObjectName, regionID });
         }
 
         #endregion
