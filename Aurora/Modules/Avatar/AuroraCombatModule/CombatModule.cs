@@ -583,11 +583,11 @@ namespace Aurora.Modules.Combat
                     }
                     else
                     {
-                        float Z = m_SP.Velocity.Length()/20;
-                        if (coldata[localid].PenetrationDepth >= 0.05f && m_SP.Velocity.Z < -5 &&
-                            !m_SP.PhysicsActor.Flying)
+                        float Z = m_SP.Velocity.Length();
+                        if (coldata[localid].PenetrationDepth >= 0.05f && m_SP.Velocity.Z < -3 &&
+                            !m_SP.PhysicsActor.Flying && !m_SP.PhysicsActor.IsJumping)
                         {
-                            Z = Math.Min(Z, 1.5f);
+                            Z = Math.Max(Z, 1.5f) * 10;
                             float damage = Math.Min(coldata[localid].PenetrationDepth, 15f);
                             Health -= damage*Z;
                         }
