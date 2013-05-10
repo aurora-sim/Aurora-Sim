@@ -182,8 +182,8 @@ namespace Simple.Currency
         public bool UserCurrencyTransfer(UUID toID, UUID fromID, UUID toObjectID, string toObjectName, UUID fromObjectID,
             string fromObjectName, uint amount, string description, TransactionType type, UUID transactionID)
         {
-            object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, fromObjectID, amount,
-                                               description, type, transactionID);
+            object remoteValue = DoRemoteByURL("CurrencyServerURI", toID, fromID, toObjectID, toObjectName, fromObjectID,
+                amount, fromObjectName, description, type, transactionID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (bool) remoteValue;
 
