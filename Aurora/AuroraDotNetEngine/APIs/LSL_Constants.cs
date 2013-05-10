@@ -348,6 +348,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger PRIM_LINK_TARGET = 34;
         public static readonly LSL_Types.LSLInteger PRIM_PHYSICS_SHAPE_TYPE = 35;
 
+        public static readonly LSL_Types.LSLInteger OS_PRIM_VELOCITY = 65032;
+        public static readonly LSL_Types.LSLInteger OS_PRIM_ACCELERATION = 65033;
+        public static readonly LSL_Types.LSLInteger OS_PRIM_PROJECTION = 65036;
+
         public static readonly LSL_Types.LSLInteger PRIM_TEXGEN_DEFAULT = 0;
         public static readonly LSL_Types.LSLInteger PRIM_TEXGEN_PLANAR = 1;
 

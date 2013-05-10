@@ -105,6 +105,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected Dictionary<UUID, UserInfoCacheEntry> m_userInfoCache =
             new Dictionary<UUID, UserInfoCacheEntry>();
 
+        /// <summary>
+        /// Determines whether OpenSim params can be used with
+        /// llSetPrimitiveParams etc.
+        /// </summary>
+        protected bool m_allowOpenSimParams = false;
+
         public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID,
                                ScriptProtectionModule module)
         {
@@ -122,6 +128,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_ScriptEngine.Config.GetFloat("MinTimerInterval", 0.5f);
             m_automaticLinkPermission =
                 m_ScriptEngine.Config.GetBoolean("AutomaticLinkPermission", false);
+            m_allowOpenSimParams =
+                m_ScriptEngine.Config.GetBoolean("AllowOpenSimParamsInLLFunctions", false);
             m_notecardLineReadCharsMax =
                 m_ScriptEngine.Config.GetInt("NotecardLineReadCharsMax", 255);
             if (m_notecardLineReadCharsMax > 65535)
@@ -8344,7 +8352,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
-            SetPrimParams(m_host, rules);
+            SetPrimParams(m_host, rules, m_allowOpenSimParams);
         }
 
         public void llSetLinkPrimitiveParams(int linknumber, LSL_List rules)
@@ -8355,7 +8363,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<IEntity> parts = GetLinkPartsAndEntities(linknumber);
 
             foreach (IEntity part in parts)
-                SetPrimParams(part, rules);
+                SetPrimParams(part, rules, m_allowOpenSimParams);
         }
 
         public void llSetLinkPrimitiveParamsFast(int linknumber, LSL_List rules)
@@ -8363,7 +8371,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<ISceneChildEntity> parts = GetLinkParts(linknumber);
 
             foreach (ISceneChildEntity part in parts)
-                SetPrimParams(part, rules);
+                SetPrimParams(part, rules, m_allowOpenSimParams);
         }
 
         public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
@@ -8373,7 +8381,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return new LSL_Integer(faces);
         }
 
-        protected void SetPrimParams(IEntity part, LSL_List rules)
+        public void SetPrimParams(IEntity part, LSL_List rules, bool allowOpenSimParams)
         {
             int idx = 0;
 
@@ -8885,6 +8893,46 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (entities.Count > 0)
                         part = entities[0];
                 }
+                else if (code == (int)ScriptBaseClass.OS_PRIM_PROJECTION)
+                {
+                    if (remain < 5 || !allowOpenSimParams)
+                        return;
+                    bool projection = rules.GetLSLIntegerItem(idx++) != 0;
+                    string texture = rules.GetLSLStringItem(idx++);
+                    UUID textureKey;
+                    UUID.TryParse(texture, out textureKey);
+                    float fov = (float)rules.GetLSLFloatItem(idx++);
+                    float focus = (float)rules.GetLSLFloatItem(idx++);
+                    float ambiance =
+                            (float)rules.GetLSLFloatItem(idx++);
+
+                    if (part is ISceneChildEntity)
+                    {
+                        (part as ISceneChildEntity).Shape.ProjectionEntry = projection;
+                        (part as ISceneChildEntity).Shape.ProjectionTextureUUID = textureKey;
+                        (part as ISceneChildEntity).Shape.ProjectionFOV = fov;
+                        (part as ISceneChildEntity).Shape.ProjectionFocus = focus;
+                        (part as ISceneChildEntity).Shape.ProjectionAmbiance = ambiance;
+
+                        (part as ISceneChildEntity).ScheduleUpdate(PrimUpdateFlags.FullUpdate);
+                    }
+                }
+                else if (code == (int)ScriptBaseClass.OS_PRIM_VELOCITY)
+                {
+                    if (remain < 1 || !allowOpenSimParams)
+                        return;
+                    LSL_Vector velocity = rules.GetVector3Item(idx++);
+                    (part as ISceneChildEntity).Velocity = velocity.ToVector3();
+                    (part as ISceneChildEntity).ScheduleTerseUpdate();
+                }
+                else if (code == (int)ScriptBaseClass.OS_PRIM_ACCELERATION)
+                {
+                    if (remain < 1 || !allowOpenSimParams)
+                        return;
+                    LSL_Vector accel = rules.GetVector3Item(idx++);
+                    (part as ISceneChildEntity).Acceleration = accel.ToVector3();
+                    (part as ISceneChildEntity).ScheduleTerseUpdate();
+                }
             }
         }
 
@@ -9180,7 +9228,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
                 return new LSL_List();
 
-            return GetLinkPrimitiveParams(m_host, rules);
+            return GetLinkPrimitiveParams(m_host, rules, m_allowOpenSimParams);
         }
 
         public LSL_List llGetLinkPrimitiveParams(int linknumber, LSL_List rules)
@@ -9193,11 +9241,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_List res = new LSL_List();
 
-            return parts.Select(part => GetLinkPrimitiveParams(part, rules))
+            return parts.Select(part => GetLinkPrimitiveParams(part, rules, m_allowOpenSimParams))
                         .Aggregate(res, (current, partRes) => current + partRes);
         }
 
-        public LSL_List GetLinkPrimitiveParams(ISceneChildEntity part, LSL_List rules)
+        public LSL_List GetLinkPrimitiveParams(ISceneChildEntity part, LSL_List rules, bool allowOpenSimParams)
         {
             LSL_List res = new LSL_List();
             int idx = 0;
@@ -9595,7 +9643,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     res.Add(new LSL_Integer(part.PhysicsType));
                 }
-                else if (code == (int) ScriptBaseClass.PRIM_LINK_TARGET)
+                else if (code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
                 {
                     if (remain < 1)
                         continue;
@@ -9603,6 +9651,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     List<ISceneChildEntity> entities = GetLinkParts(nextLink);
                     if (entities.Count > 0)
                         part = entities[0];
+                }
+                else if (code == (int)ScriptBaseClass.OS_PRIM_PROJECTION)
+                {
+                    if (!allowOpenSimParams)
+                        return null;
+                    res.Add((LSL_Integer)(
+                            part.Shape.ProjectionEntry ? 1 : 0));
+                    res.Add((LSL_Key)part.Shape.ProjectionTextureUUID.ToString());
+                    res.Add((LSL_Float)part.Shape.ProjectionFOV);
+                    res.Add((LSL_Float)part.Shape.ProjectionFocus);
+                    res.Add((LSL_Float)part.Shape.ProjectionAmbiance);
+                }
+                else if (code == (int)ScriptBaseClass.OS_PRIM_VELOCITY)
+                {
+                    if (!allowOpenSimParams)
+                        return null;
+                    res.Add(new LSL_Vector(part.Velocity));
+                }
+                else if (code == (int)ScriptBaseClass.OS_PRIM_ACCELERATION)
+                {
+                    if (!allowOpenSimParams)
+                        return null;
+                    res.Add(new LSL_Vector(part.Acceleration));
                 }
             }
             return res;
@@ -12859,7 +12930,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (obj.OwnerID != m_host.OwnerID)
                 return;
 
-            SetPrimParams(obj, rules);
+            SetPrimParams(obj, rules, m_allowOpenSimParams);
         }
 
         public LSL_List GetLinkPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
@@ -12871,7 +12942,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (obj.OwnerID == m_host.OwnerID)
                 return new LSL_List();
 
-            return GetLinkPrimitiveParams(obj, rules);
+            return GetLinkPrimitiveParams(obj, rules, true);
         }
 
         public void print(string str)
