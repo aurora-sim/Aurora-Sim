@@ -15,7 +15,7 @@
     ;; Default: true
     UseDistanceBasedCulling = true;
 	
-    ;; Distance child agent cameras have to move before updates are reprioritized
+    ;; Distance child agent cameras have to move before updates are re-prioritized
     ChildReprioritizationDistance = 20.0
 
 [ObjectCache]

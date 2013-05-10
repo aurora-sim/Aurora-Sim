@@ -94,7 +94,7 @@
     murmur_ice_cb = tcp -h 127.0.0.1 -p 6503
     
     ;;
-    ;; NOTE: The following config options are for standalone or grid users that do not have a grid-wide Mumur service set up!
+    ;; NOTE: The following config options are for standalone or grid users that do not have a grid-wide Murmur service set up!
     ;;
     
     ;; Hostname to the public Murmur server
