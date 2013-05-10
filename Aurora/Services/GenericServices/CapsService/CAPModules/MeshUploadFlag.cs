@@ -41,14 +41,12 @@ namespace Aurora.Services
     {
         private IProfileConnector m_profileConnector;
         private IRegionClientCapsService m_service;
-        private IUserAccountService m_userService;
 
         #region ICapsServiceConnector Members
 
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
-            m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
             m_profileConnector = Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>();
             m_service.AddStreamHandler("MeshUploadFlag",
                                        new GenericStreamHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),

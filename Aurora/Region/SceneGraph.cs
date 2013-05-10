@@ -2180,7 +2180,6 @@ namespace Aurora.Region
             entity.ClearChildren();
             foreach (ISceneChildEntity child in children)
             {
-                UUID oldID = child.UUID;
                 child.ResetEntityIDs();
                 entity.AddChild(child, child.LinkNum);
             }

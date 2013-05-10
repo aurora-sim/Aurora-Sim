@@ -285,7 +285,6 @@ namespace Aurora.Framework.ConsoleFramework
             DoExpire();
 
             Hashtable post = DecodePostString(HttpServerHandlerHelpers.ReadString(request));
-            Hashtable reply = new Hashtable();
 
             httpResponse.StatusCode = 401;
             httpResponse.ContentType = "text/plain";

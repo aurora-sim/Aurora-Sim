@@ -129,7 +129,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Quaternion m_lastorientation;
         private Vector3 m_lastposition;
         private uint m_localID;
-        private int m_material = (int) Material.Wood;
         private bool m_primIsRemoved;
         private Vector3 m_pushForce;
         private Vector3 m_rotationalVelocity;
@@ -512,7 +511,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastorientation = Orientation;
             m_lastposition = Position;
             m_lastVelocity = _velocity;
-            if (Body != null && Body != IntPtr.Zero)
+            if (Body != IntPtr.Zero)
                 d.BodySetLinearVel(Body, 0, 0, 0);
         }
 
@@ -769,7 +768,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void SetInStaticSpace(AuroraODEPrim prm)
         {
-            if (prm.m_targetSpace != null && prm.m_targetSpace == _parent_scene.space)
+            if (prm.m_targetSpace != IntPtr.Zero && prm.m_targetSpace == _parent_scene.space)
             {
                 if (d.SpaceQuery(prm.m_targetSpace, prm.prim_geom))
                     d.SpaceRemove(prm.m_targetSpace, prm.prim_geom);
@@ -1541,7 +1540,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                 {
                     Vector3 dcpos = d.BodyGetPosition(Body).ToVector3();
-                    Vector3 vel = d.BodyGetLinearVel(Body).ToVector3();
 
                     Vector3 gravForce = new Vector3();
                     _parent_scene.CalculateGravity(_mass, dcpos, true,
@@ -2471,7 +2469,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void SetMaterial(int pMaterial, float friction, float restitution, float gravityMultiplier, float density)
         {
-            m_material = pMaterial;
             Friction = friction;
             Restitution = restitution;
             GravityMultiplier = gravityMultiplier;

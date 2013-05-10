@@ -628,8 +628,6 @@ namespace Aurora.Modules.Inventory
 
         private byte[] BuildLandmark(IScenePresence presence)
         {
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
-                                                                            presence.UUID);
             Vector3 pos = presence.AbsolutePosition;
             string strdata = String.Format(
                 "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}",

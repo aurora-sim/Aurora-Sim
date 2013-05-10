@@ -45,9 +45,7 @@ namespace Aurora.Modules.Gods
         #region Declares 
 
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IScene m_Scene;
         private bool m_Enabled = true;
-        private IConfigSource m_config;
         private string m_oar_directory = "";
 
         #endregion
@@ -56,7 +54,6 @@ namespace Aurora.Modules.Gods
 
         public void Initialise(IConfigSource source)
         {
-            m_config = source;
             if (source.Configs["GodModule"] != null)
             {
                 if (source.Configs["GodModule"].GetString(
@@ -75,8 +72,6 @@ namespace Aurora.Modules.Gods
             if (!m_Enabled)
                 return;
 
-            m_Scene = scene;
-
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
@@ -85,8 +80,6 @@ namespace Aurora.Modules.Gods
         {
             if (!m_Enabled)
                 return;
-
-            m_Scene = null;
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -190,7 +183,6 @@ namespace Aurora.Modules.Gods
                 return;
 
             //Update their current region with new information
-            string oldRegionName = client.Scene.RegionInfo.RegionName;
             client.Scene.RegionInfo.RegionName = Utils.BytesToString(SimName);
 
             //Set the region loc X and Y

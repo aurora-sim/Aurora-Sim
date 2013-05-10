@@ -732,7 +732,6 @@ namespace Aurora.Region
             get { return m_uuid; }
             set
             {
-                UUID oldID = m_uuid;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_uuid = value;

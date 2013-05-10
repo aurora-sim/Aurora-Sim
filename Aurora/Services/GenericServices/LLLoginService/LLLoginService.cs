@@ -892,8 +892,6 @@ namespace Aurora.Services
                 // Valid specification of a remote grid
 
                 regionName = parts[0];
-                string domainLocator = parts[1];
-
                 //Try now that we removed the domain locator
                 GridRegion region = m_GridService.GetRegionByName(account.AllScopeIDs, regionName);
                 if (region != null && region.RegionName == regionName)

@@ -51,8 +51,7 @@ namespace Aurora.Modules.Scripting
         public const int DISP_EXPIRE = 1;
         public const int DISP_TEMP = 2;
 
-        private readonly Dictionary<UUID, IScene> RegisteredScenes = new Dictionary<UUID, IScene>();
-
+        private IScene m_scene;
         private readonly Dictionary<string, IDynamicTextureRender> RenderPlugins =
             new Dictionary<string, IDynamicTextureRender>();
 
@@ -87,13 +86,7 @@ namespace Aurora.Modules.Scripting
             }
 
             if (updater != null)
-            {
-                if (RegisteredScenes.ContainsKey(updater.SimUUID))
-                {
-                    IScene scene = RegisteredScenes[updater.SimUUID];
-                    updater.DataReceived(data, scene);
-                }
-            }
+                updater.DataReceived(data, m_scene);
 
             if (updater.UpdateTimer == 0)
             {
@@ -231,11 +224,8 @@ namespace Aurora.Modules.Scripting
 
         public void AddRegion(IScene scene)
         {
-            if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
-            {
-                RegisteredScenes.Add(scene.RegionInfo.RegionID, scene);
-                scene.RegisterModuleInterface<IDynamicTextureManager>(this);
-            }
+            m_scene = scene;
+            scene.RegisterModuleInterface<IDynamicTextureManager>(this);
         }
 
         public void RemoveRegion(IScene scene)

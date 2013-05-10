@@ -39,7 +39,6 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private readonly IHttpServer m_server;
         private static Queue m_requests = Queue.Synchronized(new Queue());
         private uint m_WorkerThreadCount = 0;
         private Thread[] m_workerThreads;
@@ -54,9 +53,8 @@ namespace Aurora.Framework.Servers.HttpServer
             get { return m_running; }
         }
 
-        public PollServiceRequestManager(IHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
+        public PollServiceRequestManager(uint pWorkerThreadCount, int pTimeout)
         {
-            m_server = pSrv;
             m_WorkerThreadCount = pWorkerThreadCount;
             m_pollTimeout = pTimeout;
         }
@@ -71,7 +69,7 @@ namespace Aurora.Framework.Servers.HttpServer
             //startup worker threads
             for (uint i = 0; i < m_WorkerThreadCount; i++)
             {
-                m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, m_pollTimeout);
+                m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_pollTimeout);
                 m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
 
                 m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart)

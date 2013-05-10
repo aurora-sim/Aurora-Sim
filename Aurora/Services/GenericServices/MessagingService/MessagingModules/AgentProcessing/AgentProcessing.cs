@@ -218,7 +218,6 @@ namespace Aurora.Services
                     destination.FromOSD((OSDMap) body["Region"]);
 
                     uint TeleportFlags = body["TeleportFlags"].AsUInteger();
-                    int DrawDistance = body["DrawDistance"].AsInteger();
 
                     AgentCircuitData Circuit = new AgentCircuitData();
                     Circuit.FromOSD((OSDMap)body["Circuit"]);
@@ -291,7 +290,6 @@ namespace Aurora.Services
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
             IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
-            IEventQueueService eventQueue = m_registry.RequestModuleInterface<IEventQueueService>();
 
             if (SimulationService != null && GridService != null)
             {

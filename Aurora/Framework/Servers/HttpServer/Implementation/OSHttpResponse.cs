@@ -131,12 +131,10 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
         }
 
         protected HttpListenerResponse _httpResponse;
-        private HttpListenerContext _httpClientContext;
 
         public OSHttpResponse(HttpListenerContext context)
         {
             _httpResponse = context.Response;
-            _httpClientContext = context;
         }
 
         /// <summary>

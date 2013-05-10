@@ -142,7 +142,7 @@ namespace Aurora.ClientStack
                         //MainConsole.Instance.DebugFormat("[TEX]: (NEW) ID={0}: D={1}, S={2}, P={3}",
                         //    newRequest.RequestedAssetID, newRequest.DiscardLevel, newRequest.PacketNumber, newRequest.Priority);
 
-                        imgrequest = new J2KImage(this)
+                        imgrequest = new J2KImage()
                                          {
                                              J2KDecoder = m_j2kDecodeModule,
                                              AssetService = m_assetCache,
@@ -172,7 +172,7 @@ namespace Aurora.ClientStack
                 return null;
 
             lock (m_syncRoot)
-                return m_queue.Find(new J2KImage(this) {TextureID = newRequest.RequestedAssetID},
+                return m_queue.Find(new J2KImage() {TextureID = newRequest.RequestedAssetID},
                                     new Comparer());
         }
 

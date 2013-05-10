@@ -416,7 +416,7 @@ namespace Aurora.Modules.WorldMap
 
                         foreach (GridRegion region in regions)
                         {
-                            if ((item.mapBlocks & 0) == 0 || (item.mapBlocks & 0x10000) != 0)
+                            if ((item.mapBlocks & 0) == 0)
                                 mapBlocks.Add(MapBlockFromGridRegion(region, region.RegionLocX, region.RegionLocY));
                             else if ((item.mapBlocks & 1) == 1)
                                 mapBlocks.Add(TerrainBlockFromGridRegion(region));
@@ -445,7 +445,7 @@ namespace Aurora.Modules.WorldMap
 
                         foreach (GridRegion region in regions)
                         {
-                            if ((item.mapBlocks & 0) == 0 || (item.mapBlocks & 0x10000) != 0)
+                            if ((item.mapBlocks & 0) == 0)
                                 mapBlocks.Add(MapBlockFromGridRegion(region, region.RegionLocX, region.RegionLocY));
                             else if ((item.mapBlocks & 1) == 1)
                                 mapBlocks.Add(TerrainBlockFromGridRegion(region));

@@ -386,7 +386,6 @@ namespace Simple.Currency
                 MainConsole.Instance.Info("No account found");
                 return;
             }
-            var currency = GetUserCurrency(account.PrincipalID);
             m_gd.Update(_REALM,
                         new Dictionary<string, object>
                             {

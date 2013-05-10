@@ -44,8 +44,6 @@ namespace Aurora.Services
 {
     public class LLLoginServiceInConnector : IService
     {
-        private IConfigSource m_Config;
-
         private ILoginService m_loginService;
         private bool m_Proxy;
 
@@ -84,7 +82,6 @@ namespace Aurora.Services
 
         private void ReadLocalServiceFromConfig(IConfigSource config)
         {
-            m_Config = config;
             IConfig serverConfig = config.Configs["LoginService"];
             if (serverConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));

@@ -277,7 +277,6 @@ namespace Aurora.Services
             try
             {
                 int mapLayer = int.Parse(uri.Substring(4, 1));
-                int mapView = (int) Math.Pow(2, (mapLayer - 1));
                 int regionX = int.Parse(splitUri[2]);
                 int regionY = int.Parse(splitUri[3]);
                 int distance = (int)Math.Pow(2, mapLayer);
@@ -392,7 +391,6 @@ namespace Aurora.Services
 
         private Bitmap BuildMapTile(int regionX, int regionY, List<GridRegion> regions)
         {
-            byte[] jpeg = new byte[0];
             if (regions == null)
             {
                 int maxRegionSize = m_gridService.GetMaxRegionSize();
@@ -406,8 +404,6 @@ namespace Aurora.Services
 
             List<Image> bitImages = new List<Image>();
             List<GridRegion> badRegions = new List<GridRegion>();
-            int newregionX = regionX * Constants.RegionSize;
-            int newregionY = regionY * Constants.RegionSize;
             Rectangle mapRect = new Rectangle(regionX * Constants.RegionSize, regionY * Constants.RegionSize, Constants.RegionSize, Constants.RegionSize);
             foreach (GridRegion r in regions)
             {

@@ -64,7 +64,6 @@ namespace Aurora.Framework.SceneInfo
         private OSDMap m_Generic = new OSDMap();
         private String m_LoadedCreationID = String.Empty;
         private double m_ObjectBonus = 1.0;
-        private UUID m_PaintTerrainTexture = UUID.Zero;
 
         private UUID m_RegionUUID = UUID.Zero;
         private double m_TerrainLowerLimit = -100;

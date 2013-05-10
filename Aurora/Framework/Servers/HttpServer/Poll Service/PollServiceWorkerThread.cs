@@ -43,15 +43,13 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         public event ReQueuePollServiceItem ReQueue;
 
-        private readonly IHttpServer m_server;
         private BlockingQueue<PollServiceHttpRequest> m_request;
         private bool m_running = true;
         private int m_timeout = 250;
 
-        public PollServiceWorkerThread(IHttpServer pSrv, int pTimeout)
+        public PollServiceWorkerThread(int pTimeout)
         {
             m_request = new BlockingQueue<PollServiceHttpRequest>();
-            m_server = pSrv;
             m_timeout = pTimeout;
         }
 

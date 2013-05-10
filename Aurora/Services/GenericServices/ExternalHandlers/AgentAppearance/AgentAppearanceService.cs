@@ -72,7 +72,7 @@ namespace Aurora.Services
         {
             string[] req = path.Split('/');
             UUID avID = UUID.Parse(req[2]);
-            string type = req[3];
+            //string type = req[3];
             UUID textureID = UUID.Parse(req[4]);
 
             //IAvatarService avService = m_registry.RequestModuleInterface<IAvatarService>();
@@ -93,7 +93,7 @@ namespace Aurora.Services
         }
 
         private TextureData[] Textures = new TextureData[(int)AvatarTextureIndex.NumberOfEntries];
-        private List<UUID> m_lastInventoryItemIDs = new List<UUID>();
+        //private List<UUID> m_lastInventoryItemIDs = new List<UUID>();
 
         private void BakeAvatar(string[] cmd)
         {
@@ -192,7 +192,7 @@ namespace Aurora.Services
                     }
                 }
             }*/
-            m_lastInventoryItemIDs = currentItemIDs;
+            //m_lastInventoryItemIDs = currentItemIDs;
             for (int i = 0; i < Textures.Length; i++)
             {
                 /*if (Textures[i].TextureID == UUID.Zero)

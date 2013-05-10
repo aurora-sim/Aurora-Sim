@@ -860,7 +860,6 @@ namespace Aurora.Modules.EntityTransfer
             string reason;
             if (!AuthorizeUser(scene, agent, out reason))
             {
-                OSDMap map = new OSDMap();
                 response.Reason = reason;
                 response.Success = false;
                 return false;

@@ -41,7 +41,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
     public class OSHttpRequest
     {
         protected HttpListenerRequest _request = null;
-        protected HttpListenerContext _context = null;
         protected Dictionary<string, HttpFile> _files = new Dictionary<string, HttpFile>();
 
         public sealed class HttpFile : IDisposable
@@ -183,7 +182,6 @@ namespace Aurora.Framework.Servers.HttpServer.Implementation
         public OSHttpRequest(HttpListenerContext context)
         {
             _request = context.Request;
-            _context = context;
 
             if (null != _request.Headers["content-encoding"])
                 _contentEncoding = Encoding.GetEncoding(_request.Headers["content-encoding"]);

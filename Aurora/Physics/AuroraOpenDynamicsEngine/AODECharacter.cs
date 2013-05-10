@@ -276,7 +276,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     _parent_scene.AddSimulationChange(() =>
                                                           {
-                                                              if (!value.ApproxEquals(_position, 0.05f) && Body != null)
+                                                              if (!value.ApproxEquals(_position, 0.05f) && Body != IntPtr.Zero)
                                                                   _parent_ref.SetPositionLocked(value);
                                                           });
                 }

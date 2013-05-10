@@ -188,7 +188,6 @@ namespace Aurora.Modules.Chat
         {
             if (im.dialog == (byte) InstantMessageDialog.RequestTeleport)
             {
-                UUID sessionID = new UUID(im.imSessionID);
                 MainConsole.Instance.DebugFormat(
                     "[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.imSessionID,
                     im.RegionID, im.message);
