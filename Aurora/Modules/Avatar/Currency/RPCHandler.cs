@@ -111,6 +111,7 @@ namespace Simple.Currency
                 if (m_connector.GetConfig().CanBuyCurrencyInworld)
                 {
                     uint amount = uint.Parse(requestData["currencyBuy"].ToString());
+                    amount = Math.Min(amount, (uint)m_connector.GetConfig().MaxAmountPurchasable);
                     returnval.Value = new Hashtable
                                           {
                                               {"success", true},
@@ -164,6 +165,7 @@ namespace Simple.Currency
                 if (UUID.TryParse((string) requestData["agentId"], out agentId))
                 {
                     uint amountBuying = uint.Parse(requestData["currencyBuy"].ToString());
+                    amountBuying = Math.Min(amountBuying, (uint)m_connector.GetConfig().MaxAmountPurchasable);
                     success = m_connector.InworldCurrencyBuyTransaction(agentId, amountBuying, ep);
                 }
             }

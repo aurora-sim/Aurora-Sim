@@ -35,6 +35,7 @@ namespace Simple.Currency
         private int m_AdditionPercentage = 291;
         private int m_AdditionAmount = 30;
         private int m_realCurrencyConversionFactor = 1;
+        private int m_maxAmountPurchasable = 10000;
 
         #endregion
 
@@ -261,6 +262,12 @@ namespace Simple.Currency
         {
             get { return m_realCurrencyConversionFactor; }
             set { m_realCurrencyConversionFactor = value; }
+        }
+
+        public int MaxAmountPurchasable
+        {
+            get { return m_maxAmountPurchasable; }
+            set { m_maxAmountPurchasable = value; }
         }
 
         #endregion
