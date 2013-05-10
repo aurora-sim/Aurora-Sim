@@ -77,7 +77,7 @@ namespace Aurora.Framework.SceneInfo.Entities
         [ProtoMember(2)] public bool PingPongForwardMotion = true;
         [ProtoMember(3)] public Modes CurrentMode = Modes.Forward;
         [ProtoMember(4)] public int CurrentFrame = 0;
-        [ProtoMember(5)] public int[] TimeList = new int[0];
+        [ProtoMember(5)] public float[] TimeList = new float[0];
         [ProtoMember(6)] public Vector3 InitialPosition = Vector3.Zero;
         [ProtoMember(7)] public Vector3[] PositionList = new Vector3[0];
         [ProtoMember(8)] public Quaternion InitialRotation = Quaternion.Identity;
@@ -89,7 +89,7 @@ namespace Aurora.Framework.SceneInfo.Entities
             map["CurrentAnimationPosition"] = CurrentAnimationPosition;
             map["CurrentMode"] = (int) CurrentMode;
             OSDArray times = new OSDArray();
-            foreach (int time in TimeList)
+            foreach (float time in TimeList)
                 times.Add(time);
             map["TimeList"] = times;
             OSDArray positions = new OSDArray();
@@ -118,7 +118,7 @@ namespace Aurora.Framework.SceneInfo.Entities
                 rot.Add(o);
             RotationList = rot.ToArray();
             OSDArray times = (OSDArray) map["TimeList"];
-            List<int> time = new List<int>();
+            List<float> time = new List<float>();
             foreach (OSD o in times)
                 time.Add(o);
             TimeList = time.ToArray();

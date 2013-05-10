@@ -2183,16 +2183,17 @@ namespace Aurora.Region
 
         public void moveKeyframeMotion()
         {
-            if (m_rootPart.KeyframeAnimation == null || m_rootPart.KeyframeAnimation.TimeList.Length == 0)
+            if (IsDeleted || m_rootPart.KeyframeAnimation == null || m_rootPart.KeyframeAnimation.TimeList.Length == 0)
             {
                 m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                 return;
             }
             try
             {
-                int currentTime =
-                    m_rootPart.KeyframeAnimation.TimeList[m_rootPart.KeyframeAnimation.CurrentAnimationPosition];
-                float timeAmt = (1f/(float) currentTime);
+                if (m_rootPart.KeyframeAnimation.CurrentFrame == 0)
+                    m_rootPart.KeyframeAnimation.CurrentFrame = Environment.TickCount;
+                float timeAmt = m_rootPart.KeyframeAnimation.TimeList[m_rootPart.KeyframeAnimation.CurrentAnimationPosition];
+                int currentTime = (int)(timeAmt * 1000);
                 Vector3 currentTarget = m_rootPart.KeyframeAnimation.PositionList.Length == 0
                                             ? Vector3.Zero
                                             : m_rootPart.KeyframeAnimation.PositionList[
@@ -2201,11 +2202,11 @@ namespace Aurora.Region
                                         ? Quaternion.Identity
                                         : m_rootPart.KeyframeAnimation.RotationList[
                                             m_rootPart.KeyframeAnimation.CurrentAnimationPosition];
-                m_rootPart.KeyframeAnimation.CurrentFrame++;
-                    //Add one to the current frame so that we know when to stops
+                //Add one to the current frame so that we know when to stops
                 bool AllDoneMoving = false;
                 bool MadeItToCheckpoint = false;
-                if (m_rootPart.KeyframeAnimation.CurrentFrame == currentTime)
+                int timeSinceEpoch = Environment.TickCount;
+                if (m_rootPart.KeyframeAnimation.CurrentFrame + currentTime < timeSinceEpoch)
                 {
                     if (m_rootPart.KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Forward)
                     {
@@ -2259,17 +2260,18 @@ namespace Aurora.Region
                             }
                         }
                     }
-                    m_rootPart.KeyframeAnimation.CurrentFrame = 0;
+                    m_rootPart.KeyframeAnimation.CurrentFrame = Environment.TickCount;
                     MadeItToCheckpoint = true;
                 }
 
+                float progress = (((float)(timeSinceEpoch - m_rootPart.KeyframeAnimation.CurrentFrame)) / (float)currentTime);
                 if (m_rootPart.KeyframeAnimation.PositionList.Length != 0)
                 {
                     Vector3 _target_velocity =
                         new Vector3(
-                            (currentTarget.X - m_rootPart.KeyframeAnimation.InitialPosition.X)*timeAmt,
-                            (currentTarget.Y - m_rootPart.KeyframeAnimation.InitialPosition.Y)*timeAmt,
-                            (currentTarget.Z - m_rootPart.KeyframeAnimation.InitialPosition.Z)*timeAmt
+                            (currentTarget.X - m_rootPart.KeyframeAnimation.InitialPosition.X) * progress,
+                            (currentTarget.Y - m_rootPart.KeyframeAnimation.InitialPosition.Y) * progress,
+                            (currentTarget.Z - m_rootPart.KeyframeAnimation.InitialPosition.Z) * progress
                             );
                     if (MadeItToCheckpoint)
                     {
@@ -2280,17 +2282,14 @@ namespace Aurora.Region
                     }
                     else
                     {
-                        SetAbsolutePosition(true, m_rootPart.AbsolutePosition + _target_velocity);
-                        m_rootPart.Velocity = _target_velocity/45f;
+                        Velocity = (m_rootPart.KeyframeAnimation.InitialPosition + _target_velocity) - AbsolutePosition;
+                        SetAbsolutePosition(true, m_rootPart.KeyframeAnimation.InitialPosition + _target_velocity);
                     }
                 }
                 if (m_rootPart.KeyframeAnimation.RotationList.Length != 0)
                 {
                     Quaternion source = m_rootPart.GetRotationOffset();
-                    Quaternion newInterpolation = Quaternion.Slerp(source, target,
-                                                                   1f/
-                                                                   ((float) currentTime -
-                                                                    (float) m_rootPart.KeyframeAnimation.CurrentFrame));
+                    Quaternion newInterpolation = Quaternion.Slerp(source, target, progress);
                     m_rootPart.UpdateRotation(newInterpolation);
                     if (MadeItToCheckpoint)
                     {

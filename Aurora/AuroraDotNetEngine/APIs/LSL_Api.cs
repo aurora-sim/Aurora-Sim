@@ -13027,14 +13027,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             List<Vector3> positions = new List<Vector3>();
             List<Quaternion> rotations = new List<Quaternion>();
-            List<int> times = new List<int>();
+            List<float> times = new List<float>();
             for (int i = 0; i < keyframes.Length; i += (dataType == KeyframeAnimation.Data.Both ? 3 : 2))
             {
                 if (dataType == KeyframeAnimation.Data.Both ||
                     dataType == KeyframeAnimation.Data.Translation)
                 {
                     LSL_Vector pos = keyframes.GetVector3Item(i);
-                    positions.Add(pos.ToVector3());
+                    positions.Add(m_host.AbsolutePosition + pos.ToVector3());
                 }
                 if (dataType == KeyframeAnimation.Data.Both ||
                     dataType == KeyframeAnimation.Data.Rotation)
@@ -13044,8 +13044,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     quat.Normalize();
                     rotations.Add(quat);
                 }
-                int time = keyframes.GetLSLIntegerItem(i + (dataType == KeyframeAnimation.Data.Both ? 2 : 1));
-                times.Add(time);
+                LSL_Float time = keyframes.GetLSLFloatItem(i + (dataType == KeyframeAnimation.Data.Both ? 2 : 1));
+                times.Add((float)time);
             }
             KeyframeAnimation animation = new KeyframeAnimation
                                               {
