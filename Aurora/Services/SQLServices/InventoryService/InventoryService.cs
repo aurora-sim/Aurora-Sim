@@ -1027,11 +1027,14 @@ namespace Aurora.Services.SQLServices.InventoryService
         {
             UUID user = (UUID) param;
             var skel = GetInventorySkeleton(user);
-            foreach (var folder in skel)
+            if (skel != null)
             {
-                var items = GetFolderContent(user, folder.ID);
-                DeleteItems(user, items.Items.ConvertAll<UUID>((item) => item.ID));
-                ForcePurgeFolder(folder);
+                foreach (var folder in skel)
+                {
+                    var items = GetFolderContent(user, folder.ID);
+                    DeleteItems(user, items.Items.ConvertAll<UUID>((item) => item.ID));
+                    ForcePurgeFolder(folder);
+                }
             }
             return null;
         }
