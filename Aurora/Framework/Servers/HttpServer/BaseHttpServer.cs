@@ -396,8 +396,11 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 catch(Exception ex)
                 {
-                    MainConsole.Instance.WarnFormat(
-                        "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
+                    if (!(ex is HttpListenerException && (ex as HttpListenerException).ErrorCode == 1229))
+                    {
+                        MainConsole.Instance.WarnFormat(
+                            "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
+                    }
                     response.Abort();
                 }
 
