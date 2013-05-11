@@ -804,8 +804,20 @@ namespace Aurora.DataManager.MySQL
                     return "INT(30) UNSIGNED";
                 case ColumnTypes.Char40:
                     return "CHAR(40)";
+                case ColumnTypes.Char39:
+                    return "CHAR(39)";
+                case ColumnTypes.Char38:
+                    return "CHAR(38)";
+                case ColumnTypes.Char37:
+                    return "CHAR(37)";
                 case ColumnTypes.Char36:
                     return "CHAR(36)";
+                case ColumnTypes.Char35:
+                    return "CHAR(35)";
+                case ColumnTypes.Char34:
+                    return "CHAR(34)";
+                case ColumnTypes.Char33:
+                    return "CHAR(33)";
                 case ColumnTypes.Char32:
                     return "CHAR(32)";
                 case ColumnTypes.Char5:

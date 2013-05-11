@@ -186,7 +186,13 @@ namespace Aurora.Framework.Utilities
         Blob,
         LongBlob,
         Char40,
+        Char39,
+        Char38,
+        Char37,
         Char36,
+        Char35,
+        Char34,
+        Char33,
         Char32,
         Char5,
         Char1,
@@ -252,7 +258,13 @@ namespace Aurora.Framework.Utilities
 
         public static readonly ColumnTypeDef Blob = new ColumnTypeDef(ColumnType.Blob);
         public static readonly ColumnTypeDef Char32 = new ColumnTypeDef(ColumnType.Char, 32);
+        public static readonly ColumnTypeDef Char33 = new ColumnTypeDef(ColumnType.Char, 33);
+        public static readonly ColumnTypeDef Char34 = new ColumnTypeDef(ColumnType.Char, 34);
+        public static readonly ColumnTypeDef Char35 = new ColumnTypeDef(ColumnType.Char, 35);
         public static readonly ColumnTypeDef Char36 = new ColumnTypeDef(ColumnType.Char, 36);
+        public static readonly ColumnTypeDef Char37 = new ColumnTypeDef(ColumnType.Char, 37);
+        public static readonly ColumnTypeDef Char38 = new ColumnTypeDef(ColumnType.Char, 38);
+        public static readonly ColumnTypeDef Char39 = new ColumnTypeDef(ColumnType.Char, 39);
         public static readonly ColumnTypeDef Char40 = new ColumnTypeDef(ColumnType.Char, 40);
         public static readonly ColumnTypeDef Char5 = new ColumnTypeDef(ColumnType.Char, 5);
         public static readonly ColumnTypeDef Char1 = new ColumnTypeDef(ColumnType.Char, 1);
