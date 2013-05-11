@@ -386,7 +386,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                         IdentExpression identEx = (IdentExpression)objChild;
                                         if (
                                             m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(
-                                                identEx.Name))
+                                                identEx.Name) && m_localVariableValuesStr[GetLocalVariableDictionaryKey()][identEx.Name] != null)
                                         {
                                             changed = true;
                                             p[i] = new IdentExpression(identEx.yyps,
