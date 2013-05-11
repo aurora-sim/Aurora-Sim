@@ -120,8 +120,26 @@ namespace Aurora.DataManager.Migration
                 case ColumnTypes.Char32:
                     type = ColumnTypeDef.Char32;
                     break;
+                case ColumnTypes.Char33:
+                    type = ColumnTypeDef.Char33;
+                    break;
+                case ColumnTypes.Char34:
+                    type = ColumnTypeDef.Char34;
+                    break;
+                case ColumnTypes.Char35:
+                    type = ColumnTypeDef.Char35;
+                    break;
                 case ColumnTypes.Char36:
                     type = ColumnTypeDef.Char36;
+                    break;
+                case ColumnTypes.Char37:
+                    type = ColumnTypeDef.Char37;
+                    break;
+                case ColumnTypes.Char38:
+                    type = ColumnTypeDef.Char38;
+                    break;
+                case ColumnTypes.Char39:
+                    type = ColumnTypeDef.Char39;
                     break;
                 case ColumnTypes.Char40:
                     type = ColumnTypeDef.Char40;
