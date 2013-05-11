@@ -61,7 +61,6 @@ namespace Aurora.Framework.SceneInfo
         void UpdateLandSold(UUID avatarID, UUID groupID, bool groupOwned, uint AuctionID, int claimprice, int area);
 
         void DeedToGroup(UUID groupID);
-        void SetInfoID();
 
         /// <summary>
         ///     Set the media url for this land parcel

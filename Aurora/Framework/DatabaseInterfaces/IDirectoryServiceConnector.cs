@@ -57,7 +57,7 @@ namespace Aurora.Framework.DatabaseInterfaces
         #region Parcels
 
         /// <summary>
-        ///     Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)
+        ///     Gets a parcel from the search database by ParcelID (GlobalID)
         /// </summary>
         /// <param name="ParcelID"></param>
         /// <returns></returns>
@@ -70,6 +70,15 @@ namespace Aurora.Framework.DatabaseInterfaces
         /// <param name="ParcelName"></param>
         /// <returns></returns>
         LandData GetParcelInfo(UUID RegionID, string ParcelName);
+
+        /// <summary>
+        ///     Gets a parcel from the search database by region and location in the region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        LandData GetParcelInfo(UUID regionID, int x, int y);
 
         /// <summary>
         ///     Gets all parcels owned by the given user

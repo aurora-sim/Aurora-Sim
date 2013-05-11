@@ -64,7 +64,6 @@ namespace Aurora.Framework.SceneInfo
 
         private UUID _globalID = UUID.Zero;
         private UUID _groupID = UUID.Zero;
-        protected UUID _infoUUID;
         private bool _isGroupOwned;
 
         private byte _landingType = 2;
@@ -266,16 +265,6 @@ namespace Aurora.Framework.SceneInfo
         {
             get { return _globalID; }
             set { _globalID = value; }
-        }
-
-        /// <summary>
-        ///     Grid Wide ID for the parcel.
-        /// </summary>
-        [ProtoMember(17)]
-        public UUID InfoUUID
-        {
-            get { return _infoUUID; }
-            set { _infoUUID = value; }
         }
 
         /// <summary>
@@ -626,7 +615,6 @@ namespace Aurora.Framework.SceneInfo
                                         _obscureMedia = _obscureMedia,
                                         _regionID = _regionID,
                                         _regionHandle = _regionHandle,
-                                        _infoUUID = _infoUUID,
                                         _Maturity = _Maturity,
                                         _private = _private
                                     };
@@ -661,7 +649,6 @@ namespace Aurora.Framework.SceneInfo
             map["Area"] = OSD.FromInteger(Area);
             map["AuctionID"] = OSD.FromUInteger(AuctionID);
             map["SalePrice"] = OSD.FromInteger(SalePrice);
-            map["InfoUUID"] = OSD.FromUUID(InfoUUID);
             map["Dwell"] = OSD.FromInteger(Dwell);
             map["Flags"] = OSD.FromInteger((int) Flags);
             map["Name"] = OSD.FromString(Name);
@@ -714,7 +701,6 @@ namespace Aurora.Framework.SceneInfo
             Description = map["Description"].AsString();
             Flags = (uint) map["Flags"].AsInteger();
             Dwell = map["Dwell"].AsInteger();
-            InfoUUID = map["InfoUUID"].AsUUID();
             AuctionID = map["AuctionID"].AsUInteger();
             Area = map["Area"].AsInteger();
             Maturity = map["Maturity"].AsInteger();

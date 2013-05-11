@@ -11990,9 +11990,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     else if ((LSL_Integer) o == ScriptBaseClass.PARCEL_DETAILS_AREA)
                         ret.Add(new LSL_Integer(land.Area));
                     else if ((LSL_Integer) o == ScriptBaseClass.PARCEL_DETAILS_ID)
-                        //Returning the InfoUUID so that we can use this for landmarks outside of this region
-                        // http://wiki.secondlife.com/wiki/PARCEL_DETAILS_ID
-                        ret.Add(new LSL_Key(land.InfoUUID.ToString()));
+                        ret.Add(new LSL_Key(land.GlobalID.ToString()));
                     else if ((LSL_Integer) o == ScriptBaseClass.PARCEL_DETAILS_PRIVACY)
                         ret.Add(new LSL_Integer(land.Private ? 1 : 0));
                     else

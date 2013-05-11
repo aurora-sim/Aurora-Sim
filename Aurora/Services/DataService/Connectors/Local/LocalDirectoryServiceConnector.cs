@@ -105,7 +105,6 @@ namespace Aurora.Services.DataService
             {
                 var OrFilters = new Dictionary<string, object>();
                 OrFilters.Add("ParcelID", parcel.GlobalID);
-                OrFilters.Add("InfoUUID", parcel.InfoUUID);
                 GD.Delete("searchparcel", new QueryFilter {orFilters = OrFilters});
             }
 
@@ -121,7 +120,7 @@ namespace Aurora.Services.DataService
                                                                          args.Description,
                                                                          args.Flags,
                                                                          args.Dwell,
-                                                                         args.InfoUUID,
+                                                                         UUID.Zero,
                                                                          ((args.Flags & (uint) ParcelFlags.ForSale) ==
                                                                           (uint) ParcelFlags.ForSale)
                                                                              ? 1
@@ -180,7 +179,7 @@ namespace Aurora.Services.DataService
                                             Description = Query[i + 7],
                                             Flags = uint.Parse(Query[i + 8]),
                                             Dwell = int.Parse(Query[i + 9]),
-                                            InfoUUID = UUID.Parse(Query[i + 10]),
+                                            //InfoUUID = UUID.Parse(Query[i + 10]),
                                             AuctionID = uint.Parse(Query[i + 13]),
                                             Area = int.Parse(Query[i + 14]),
                                             Maturity = int.Parse(Query[i + 16]),
@@ -206,58 +205,88 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///     Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)
+        ///     Gets a parcel from the search database by ParcelID (GlobalID)
         /// </summary>
-        /// <param name="InfoUUID"></param>
+        /// <param name="globalID"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public LandData GetParcelInfo(UUID InfoUUID)
+        public LandData GetParcelInfo(UUID globalID)
         {
-            object remoteValue = DoRemote(InfoUUID);
+            object remoteValue = DoRemote(globalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (LandData) remoteValue;
+                return (LandData)remoteValue;
 
-            //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
-            int RegionX, RegionY;
-            uint X, Y;
-            ulong RegionHandle;
-            Util.ParseFakeParcelID(InfoUUID, out RegionHandle, out X, out Y);
-
-            Util.UlongToInts(RegionHandle, out RegionX, out RegionY);
-
-            GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(null, RegionX,
-                                                                                                 RegionY);
-            if (r == null)
-            {
-//                MainConsole.Instance.Warn("[DirectoryService]: Could not find region for ParcelID: " + InfoUUID);
-                return null;
-            }
-            //Get info about a specific parcel somewhere in the metaverse
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["RegionID"] = r.RegionID;
-            List<string> Query = GD.Query(new[] {"*"}, "searchparcel", filter, null, null, null);
+            filter.andFilters["ParcelID"] = globalID;
+            List<string> Query = GD.Query(new[] { "*" }, "searchparcel", filter, null, null, null);
             //Cant find it, return
             if (Query.Count == 0)
             {
-                return null;
+                //Try fake parcel ID for compatibility reasons, 
+                // given that they were saved into the database with 
+                // classifieds and picks (plus it's not hard to keep this here).
+                ulong RegionHandle = 0;
+                uint X, Y, Z;
+                Util.ParseFakeParcelID(globalID, out RegionHandle,
+                                       out X, out Y, out Z);
+
+                int regX, regY;
+                Util.UlongToInts(RegionHandle, out regX, out regY);
+
+                GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(null, regX, regY);
+                if (r == null)
+                    return null;
+                else
+                    return GetParcelInfo(r.RegionID, (int)X, (int)Y);
             }
 
-            List<LandData> Lands = Query2LandData(Query);
             LandData LandData = null;
+            List<LandData> Lands = Query2LandData(Query);
+            if (LandData == null && Lands.Count != 0)
+                LandData = Lands[0];
+            return LandData;
+        }
 
-            bool[,] tempConvertMap = new bool[r.RegionSizeX/4,r.RegionSizeX/4];
+        /// <summary>
+        ///     Gets a parcel from the search database by region and location in the region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public LandData GetParcelInfo(UUID regionID, int x, int y)
+        {
+            object remoteValue = DoRemote(regionID, x, y);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (LandData)remoteValue;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+            List<string> Query = GD.Query(new[] { "*" }, "searchparcel", filter, null, null, null);
+            //Cant find it, return
+            if (Query.Count == 0)
+                return null;
+
+            LandData LandData = null;
+            List<LandData> Lands = Query2LandData(Query);
+
+            GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null, regionID);
+            if (r == null)
+                return null;
+            
+            bool[,] tempConvertMap = new bool[r.RegionSizeX / 4, r.RegionSizeX / 4];
             tempConvertMap.Initialize();
 
             foreach (LandData land in Lands.Where(land => land.Bitmap != null))
             {
                 ConvertBytesToLandBitmap(ref tempConvertMap, land.Bitmap, r.RegionSizeX);
-                if (tempConvertMap[X/64, Y/64])
+                if (tempConvertMap[x / 4, y / 4])
                 {
                     LandData = land;
                     break;
                 }
             }
-
             if (LandData == null && Lands.Count != 0)
                 LandData = Lands[0];
             return LandData;
@@ -281,7 +310,7 @@ namespace Aurora.Services.DataService
                     filter.andFilters["RegionID"] = RegionID;
                     filter.andFilters["Name"] = ParcelName;
 
-                    List<string> query = GD.Query(new[] {"InfoUUID"}, "searchparcel", filter, null, 0, 1);
+                    List<string> query = GD.Query(new[] { "ParcelID" }, "searchparcel", filter, null, 0, 1);
 
                     if (query.Count >= 1 && UUID.TryParse(query[0], out parcelInfoID))
                     {
@@ -497,7 +526,7 @@ namespace Aurora.Services.DataService
 
             List<string> retVal = GD.Query(new[]
                                                {
-                                                   "InfoUUID",
+                                                   "ParcelID",
                                                    "Name",
                                                    "ForSale",
                                                    "Auction",
@@ -579,7 +608,7 @@ namespace Aurora.Services.DataService
 
             List<string> retVal = GD.Query(new[]
                                                {
-                                                   "InfoUUID",
+                                                   "ParcelID",
                                                    "Name",
                                                    "Auction",
                                                    "SalePrice",
@@ -675,7 +704,7 @@ namespace Aurora.Services.DataService
 
             List<string> retVal = GD.Query(new[]
                                                {
-                                                   "InfoUUID",
+                                                   "ParcelID",
                                                    "Name",
                                                    "Auction",
                                                    "SalePrice",
@@ -755,7 +784,7 @@ namespace Aurora.Services.DataService
 
             List<string> retVal = GD.Query(new[]
                                                {
-                                                   "InfoUUID",
+                                                   "ParcelID",
                                                    "Name",
                                                    "Dwell",
                                                    "Flags"

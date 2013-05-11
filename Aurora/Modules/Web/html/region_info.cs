@@ -111,7 +111,7 @@ namespace Aurora.Modules.Web
                         Dictionary<string, object> parcel = new Dictionary<string, object>();
                         parcel.Add("ParcelNameText", translator.GetTranslatedString("ParcelNameText"));
                         parcel.Add("ParcelOwnerText", translator.GetTranslatedString("ParcelOwnerText"));
-                        parcel.Add("ParcelUUID", p.InfoUUID);
+                        parcel.Add("ParcelUUID", p.GlobalID);
                         parcel.Add("ParcelName", p.Name);
                         parcel.Add("ParcelOwnerUUID", p.OwnerID);
                         IUserAccountService accountService =

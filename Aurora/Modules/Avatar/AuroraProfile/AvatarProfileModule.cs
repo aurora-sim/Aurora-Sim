@@ -288,7 +288,7 @@ namespace Aurora.Modules.Profiles
                 if (parcel != null)
                 {
                     parcelname = parcel.LandData.Name;
-                    parceluuid = parcel.LandData.InfoUUID;
+                    parceluuid = parcel.LandData.GlobalID;
                 }
             }
 
@@ -424,7 +424,7 @@ namespace Aurora.Modules.Profiles
                     if (parcelOwner != null)
                         user = parcelOwner.Name;
 
-                    parceluuid = targetlandObj.LandData.InfoUUID;
+                    parceluuid = targetlandObj.LandData.GlobalID;
 
                     OrigionalName = targetlandObj.LandData.Name;
                 }

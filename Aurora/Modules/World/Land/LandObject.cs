@@ -117,14 +117,6 @@ namespace Aurora.Modules.Land
             //We don't set up the InfoID here... it will just be overwriten
         }
 
-        public void SetInfoID()
-        {
-            //Make the InfoUUID for this parcel
-            uint x = (uint) LandData.UserLocation.X, y = (uint) LandData.UserLocation.Y;
-            findPointInParcel(this, ref x, ref y); // find a suitable spot
-            LandData.InfoUUID = Util.BuildFakeParcelID(m_scene.RegionInfo.RegionHandle, x, y);
-        }
-
         // this is needed for non-convex parcels (example: rectangular parcel, and in the exact center
         // another, smaller rectangular parcel). Both will have the same initial coordinates.
         private void findPointInParcel(ILandObject land, ref uint refX, ref uint refY)
