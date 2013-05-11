@@ -399,10 +399,9 @@ namespace Aurora.Services
             int type = map["type"].AsInteger();
             string name = map["name"].AsString();
 
-            UUID newFolderId = UUID.Random();
             InventoryFolderBase newFolder
                 = new InventoryFolderBase(
-                    newFolderId, name, m_agentID, (short)type, parent_id, 1);
+                    folder_id, name, m_agentID, (short)type, parent_id, 1);
             m_inventoryService.AddFolder(newFolder);
             OSDMap resp = new OSDMap();
             resp["folder_id"] = folder_id;
