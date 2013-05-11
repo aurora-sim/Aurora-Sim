@@ -399,19 +399,16 @@ namespace Aurora.Modules.Scripting
                     if (requestData.headers == null)
                         requestData.headers = new Dictionary<string, string>();
 
-                    foreach (KeyValuePair<string, string> header in request.Headers)
-                    {
-                        string key = header.Key;
-                        string value = header.Value;
-                        requestData.headers.Add(key, value);
-                    }
+                    foreach (string header in request.Headers.Keys)
+                        requestData.headers.Add(header, request.Headers[header]);
 
                     //if this machine is behind DNAT/port forwarding, currently this is being
                     //set to address of port forwarding router
-                    requestData.headers["x-remote-ip"] = requestData.headers["remote_addr"];
+                    requestData.headers["x-remote-ip"] = request.RemoteIPEndPoint.ToString();
                     requestData.headers["x-path-info"] = pathInfo;
                     requestData.headers["x-query-string"] = request.QueryString.ToString();
                     requestData.headers["x-script-url"] = url.url;
+                    requestData.contentType = "text/plain";
 
                     //requestData.ev = new ManualResetEvent(false);
                     lock (url.requests)

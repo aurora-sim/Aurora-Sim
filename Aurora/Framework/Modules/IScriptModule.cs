@@ -215,6 +215,7 @@ namespace Aurora.Framework.Modules
         no_sensor = 8589934592,
         on_rez = 17179869184,
         sensor = 34359738368,
-        http_request = 68719476736
+        transaction_event = 68719476736,
+        http_request = 137438953472
     }
 }

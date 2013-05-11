@@ -104,13 +104,28 @@ namespace Aurora.Framework.Servers.HttpServer
                     }
                     if (buffer != null)
                     {
-                        req.Context.Response.SendChunked = false;
                         req.Context.Response.ContentEncoding = Encoding.UTF8;
 
                         try
                         {
-                            req.Context.Response.ContentLength64 = buffer.LongLength;
-                            req.Context.Response.Close(buffer, true);
+                            if (req.Context.Request.ProtocolVersion.Minor == 0)
+                            {
+                                //HTTP 1.0... no chunking
+                                req.Context.Response.ContentLength64 = buffer.Length;
+                                using (Stream stream = req.Context.Response.OutputStream)
+                                {
+                                    HttpServerHandlerHelpers.WriteNonChunked(stream, buffer);
+                                }
+                            }
+                            else
+                            {
+                                req.Context.Response.SendChunked = true;
+                                using (Stream stream = req.Context.Response.OutputStream)
+                                {
+                                    HttpServerHandlerHelpers.WriteChunked(stream, buffer);
+                                }
+                            }
+                            req.Context.Response.Close();
                         }
                         catch (Exception ex)
                         {

@@ -76,7 +76,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             no_sensor = 8589934592,
             on_rez = 17179869184,
             sensor = 34359738368,
-            transaction_event = 68719476736
+            transaction_event = 68719476736,
+            http_request = 137438953472
         }
 
         #endregion
@@ -273,6 +274,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_eventFlagsMap.Add("control", scriptEvents.control);
             m_eventFlagsMap.Add("dataserver", scriptEvents.dataserver);
             m_eventFlagsMap.Add("email", scriptEvents.email);
+            m_eventFlagsMap.Add("http_request", scriptEvents.http_request);
             m_eventFlagsMap.Add("http_response", scriptEvents.http_response);
             m_eventFlagsMap.Add("land_collision", scriptEvents.land_collision);
             m_eventFlagsMap.Add("land_collision_end", scriptEvents.land_collision_end);
