@@ -460,9 +460,8 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters[field] = val;
             if (safe)
-            {
-                filter.andFilters["type"] = "-1";
-            }
+                filter.orMultiFilters["type"] = new List<object>() { "-1", "47" };
+
             return GD.Delete(m_foldersrealm, filter);
         }
 
