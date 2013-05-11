@@ -1651,6 +1651,7 @@ namespace Aurora.BotManager
         public event DeGrabObject OnDeGrabObject;
         public event MoveObject OnGrabUpdate;
         public event ViewerEffectEventHandler OnViewerEffect;
+        public event VelocityInterpolateChangeRequest OnVelocityInterpolateChangeRequest;
 
         public event FetchInventory OnAgentDataUpdateRequest;
         public event TeleportLocationRequest OnSetStartLocationRequest;

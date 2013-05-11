@@ -188,6 +188,7 @@ namespace Aurora.ClientStack
         public event ParcelReclaim OnParcelReclaim;
         public event ParcelReturnObjectsRequest OnParcelReturnObjectsRequest;
         public event ParcelReturnObjectsRequest OnParcelDisableObjectsRequest;
+        public event VelocityInterpolateChangeRequest OnVelocityInterpolateChangeRequest;
         public event ParcelDeedToGroup OnParcelDeedToGroup;
         public event RegionInfoRequest OnRegionInfoRequest;
         public event EstateCovenantRequest OnEstateCovenantRequest;
@@ -5687,6 +5688,8 @@ namespace Aurora.ClientStack
             AddLocalPacketHandler(PacketType.TeleportCancel, HandleTeleportCancel);
             AddLocalPacketHandler(PacketType.ViewerStartAuction, HandleViewerStartAuction);
             AddLocalPacketHandler(PacketType.ParcelDisableObjects, HandleParcelDisableObjects);
+            AddLocalPacketHandler(PacketType.VelocityInterpolateOn, HandleVelocityInterpolate);
+            AddLocalPacketHandler(PacketType.VelocityInterpolateOff, HandleVelocityInterpolate);
         }
 
         #region Packet Handlers
@@ -10856,6 +10859,18 @@ namespace Aurora.ClientStack
                 handlerParcelDisableObjectsRequest(aPacket.ParcelData.LocalID, aPacket.ParcelData.ReturnType,
                                                    aPacket.OwnerIDs.Select(block => block.OwnerID).ToArray(),
                                                    aPacket.TaskIDs.Select(block => block.TaskID).ToArray(), this);
+                return true;
+            }
+            return false;
+        }
+
+        private bool HandleVelocityInterpolate(IClientAPI client, Packet packet)
+        {
+            VelocityInterpolateChangeRequest handlerVelocityInterpolateChangeRequest = OnVelocityInterpolateChangeRequest;
+
+            if (handlerVelocityInterpolateChangeRequest != null)
+            {
+                handlerVelocityInterpolateChangeRequest(packet is VelocityInterpolateOnPacket, this);
                 return true;
             }
             return false;
