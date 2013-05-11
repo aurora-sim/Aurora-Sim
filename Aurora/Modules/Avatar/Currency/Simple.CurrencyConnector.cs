@@ -155,6 +155,8 @@ namespace Simple.Currency
 
         public int CheckMinMaxTransferSettings(UUID agentID, uint amount)
         {
+            amount = Math.Max(amount, (uint)m_config.MinAmountPurchasable);
+            amount = Math.Min(amount, (uint)m_config.MaxAmountPurchasable);
             List<uint> recentTransactions = GetAgentRecentTransactions(agentID);
 
             long currentlyBought = recentTransactions.Sum((u) => u);

@@ -41,6 +41,8 @@
 	
 	;; The maximum amount someone can buy at once
 	MaxAmountPurchasable = 10000
+	;; The minimum amount someone can buy at once
+	MinAmountPurchasable = 0
 	;; The maximum amount that someone can buy over time (the time is specified below)
 	MaxAmountPurchasableOverTime = 100000
 	;; The amount of time to pass before they can buy more currency
