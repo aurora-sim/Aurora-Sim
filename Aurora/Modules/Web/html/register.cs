@@ -103,7 +103,7 @@ namespace Aurora.Modules.Web
                             profileData.CreateNewProfile(userID);
 
                             IUserProfileInfo profile = profileData.GetUserProfile(userID);
-                            profile.AArchiveName = AvatarArchive + ".database";
+                            profile.AArchiveName = AvatarArchive;
                             profile.IsNewUser = true;
                             profileData.UpdateUserProfile(profile);
                         }
