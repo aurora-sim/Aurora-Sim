@@ -47,6 +47,21 @@
 	;; Default is 0
 	PriceDirectoryFee = 0
 	
+	;; The maximum amount someone can buy at once
+	MaxAmountPurchasable = 10000
+	;; The maximum amount that someone can buy over time (the time is specified below)
+	MaxAmountPurchasableOverTime = 100000
+	;; The amount of time to pass before they can buy more currency
+	;; If this is set to weeks, then they can only buy MaxAmountPurchasableOverTime
+	;;   every week
+	MaxAmountPurchasableEveryType = weeks
+	;; Amount of type set above to force the user to wait
+	;; If this is not set to 1, the user will have to wait multiple of the 
+	;;   type set above.
+	;; If set to 2, and type is set to weeks, they will have to wait 2 weeks
+	MaxAmountPurchasableEveryAmount = 1
+	
+	
 	;;The port to start the server on
 	;; Default is 0
 	ClientPort = 0

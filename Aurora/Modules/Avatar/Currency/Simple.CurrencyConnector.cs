@@ -9,6 +9,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 namespace Simple.Currency
@@ -152,8 +153,19 @@ namespace Simple.Currency
                             (m_config.AdditionAmount / 100.0)) * 100));
         }
 
+        public int CheckMinMaxTransferSettings(UUID agentID, uint amount)
+        {
+            List<uint> recentTransactions = GetAgentRecentTransactions(agentID);
+
+            long currentlyBought = recentTransactions.Sum((u) => u);
+            return (int)Math.Min(amount, m_config.MaxAmountPurchasableOverTime - currentlyBought);
+        }
+
         public bool InworldCurrencyBuyTransaction(UUID agentID, uint amount, IPEndPoint ep)
         {
+            amount = (uint)CheckMinMaxTransferSettings(agentID, amount);
+            if (amount == 0)
+                return false;
             UserCurrencyTransfer(agentID, UUID.Zero, amount,
                                              "Inworld purchase", TransactionType.SystemGenerated, UUID.Zero);
 
@@ -170,6 +182,44 @@ namespace Simple.Currency
             };
             m_gd.Insert("simple_purchased", values.ToArray());
             return true;
+        }
+
+        private List<uint> GetAgentRecentTransactions(UUID agentID)
+        {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PrincipalID"] = agentID;
+            DateTime now = DateTime.Now;
+            RepeatType runevertype = (RepeatType)Enum.Parse(typeof(RepeatType), m_config.MaxAmountPurchasableEveryType);
+            switch (runevertype)
+            {
+                case RepeatType.second:
+                    now = now.AddSeconds(-m_config.MaxAmountPurchasableEveryAmount);
+                    break;
+                case RepeatType.minute:
+                    now = now.AddMinutes(-m_config.MaxAmountPurchasableEveryAmount);
+                    break;
+                case RepeatType.hours:
+                    now = now.AddHours(-m_config.MaxAmountPurchasableEveryAmount);
+                    break;
+                case RepeatType.days:
+                    now = now.AddDays(-m_config.MaxAmountPurchasableEveryAmount);
+                    break;
+                case RepeatType.weeks:
+                    now = now.AddDays(-m_config.MaxAmountPurchasableEveryAmount * 7);
+                    break;
+                case RepeatType.months:
+                    now = now.AddMonths(-m_config.MaxAmountPurchasableEveryAmount);
+                    break;
+                case RepeatType.years:
+                    now = now.AddYears(-m_config.MaxAmountPurchasableEveryAmount);
+                    break;
+            }
+            filter.andGreaterThanEqFilters["Created"] = Utils.DateTimeToUnixTime(now);//Greater than the time that we are checking against
+            filter.andLessThanEqFilters["Created"] = Utils.GetUnixTime();//Less than now
+            List<string> query = m_gd.Query(new string[1] { "Amount" }, "simple_purchased", filter, null, null, null);
+            if (query == null)
+                return new List<uint>();
+            return query.ConvertAll<uint>(s=>uint.Parse(s));
         }
 
         public bool UserCurrencyTransfer(UUID toID, UUID fromID, uint amount,

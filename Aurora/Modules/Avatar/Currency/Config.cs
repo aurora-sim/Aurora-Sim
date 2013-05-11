@@ -36,6 +36,9 @@ namespace Simple.Currency
         private int m_AdditionAmount = 30;
         private int m_realCurrencyConversionFactor = 1;
         private int m_maxAmountPurchasable = 10000;
+        private int m_maxAmountPurchasableOverTime = 100000;
+        private int m_maxAmountPurchasableEveryAmount = 1;
+        private string m_maxAmountPurchasableEveryType = "week";
 
         #endregion
 
@@ -268,6 +271,24 @@ namespace Simple.Currency
         {
             get { return m_maxAmountPurchasable; }
             set { m_maxAmountPurchasable = value; }
+        }
+
+        public int MaxAmountPurchasableOverTime
+        {
+            get { return m_maxAmountPurchasableOverTime; }
+            set { m_maxAmountPurchasableOverTime = value; }
+        }
+
+        public int MaxAmountPurchasableEveryAmount
+        {
+            get { return m_maxAmountPurchasableEveryAmount; }
+            set { m_maxAmountPurchasableEveryAmount = value; }
+        }
+
+        public string MaxAmountPurchasableEveryType
+        {
+            get { return m_maxAmountPurchasableEveryType; }
+            set { m_maxAmountPurchasableEveryType = value; }
         }
 
         #endregion

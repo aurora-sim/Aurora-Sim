@@ -112,6 +112,7 @@ namespace Simple.Currency
                 {
                     uint amount = uint.Parse(requestData["currencyBuy"].ToString());
                     amount = Math.Min(amount, (uint)m_connector.GetConfig().MaxAmountPurchasable);
+                    amount = (uint)m_connector.CheckMinMaxTransferSettings(UUID.Parse(requestData["agentId"].ToString()), amount);
                     returnval.Value = new Hashtable
                                           {
                                               {"success", true},
