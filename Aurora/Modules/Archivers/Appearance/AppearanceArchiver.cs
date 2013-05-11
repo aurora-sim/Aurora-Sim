@@ -351,7 +351,7 @@ namespace Aurora.Modules.Archivers
                                                                                                         item,
                                                                                                         destinationFolder
                                                                                                             .ID,
-                                                                                                        false);
+                                                                                                        false, false);
                             items.Add(destinationItem);
                             MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}",
                                                              destinationItem.ID, destinationFolder.ID);
@@ -388,7 +388,7 @@ namespace Aurora.Modules.Archivers
                         InventoryItemBase destinationItem = InventoryService.InnerGiveInventoryItem(destination,
                                                                                                     destination, item,
                                                                                                     destinationFolder.ID,
-                                                                                                    false);
+                                                                                                    false, false);
                         items.Add(destinationItem);
                         MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID,
                                                          destinationFolder.ID);

@@ -242,7 +242,7 @@ namespace Aurora.Framework.Services
         /// <param name="doOwnerCheck"></param>
         /// <returns></returns>
         InventoryItemBase InnerGiveInventoryItem(UUID recipient, UUID senderId, InventoryItemBase item,
-                                                 UUID recipientFolderId, bool doOwnerCheck);
+                                                 UUID recipientFolderId, bool doOwnerCheck, bool checkTransferPermission);
 
         #region OSD methods
 

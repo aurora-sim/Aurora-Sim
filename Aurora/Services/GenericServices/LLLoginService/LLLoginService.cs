@@ -1195,7 +1195,7 @@ namespace Aurora.Services
                 {
                     InventoryItemBase newcopy = m_InventoryService.InnerGiveInventoryItem(user, folderOwnerID, itemBase,
                                                                                           folderForAppearance.ID,
-                                                                                          true);
+                                                                                          true, true);
 
                     if (newcopy.InvType == (int) InventoryType.Object)
                     {

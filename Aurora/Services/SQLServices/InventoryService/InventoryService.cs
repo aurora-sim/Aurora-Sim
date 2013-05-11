@@ -1130,7 +1130,7 @@ namespace Aurora.Services.SQLServices.InventoryService
                                        // Give all the items
                                        foreach (InventoryItemBase item in contents.Items)
                                        {
-                                           InnerGiveInventoryItem(recipientId, senderId, item, newFolder.ID, true);
+                                           InnerGiveInventoryItem(recipientId, senderId, item, newFolder.ID, true, true);
                                        }
                                        success(newFolder);
                                    });
@@ -1158,12 +1158,12 @@ namespace Aurora.Services.SQLServices.InventoryService
                                    {
                                        InventoryItemBase item = GetItem(senderId, itemId);
                                        success(InnerGiveInventoryItem(recipient, senderId,
-                                                                      item, recipientFolderId, doOwnerCheck));
+                                                                      item, recipientFolderId, doOwnerCheck, true));
                                    });
         }
 
         public InventoryItemBase InnerGiveInventoryItem(
-            UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
+            UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck, bool checkTransferPermission)
         {
             if (item == null)
             {
@@ -1172,8 +1172,11 @@ namespace Aurora.Services.SQLServices.InventoryService
             }
             if (!doOwnerCheck || item.Owner == senderId)
             {
-                if ((item.CurrentPermissions & (uint) PermissionMask.Transfer) == 0)
-                    return null;
+                if (checkTransferPermission)
+                {
+                    if ((item.CurrentPermissions & (uint)PermissionMask.Transfer) == 0)
+                        return null;
+                }
 
                 // Insert a copy of the item into the recipient
                 InventoryItemBase itemCopy = new InventoryItemBase
