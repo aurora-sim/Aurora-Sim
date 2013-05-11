@@ -12726,7 +12726,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             contacts.Sort(delegate(ContactResult a, ContactResult b)
             {
-                return (int)(a.Depth - b.Depth);
+                return a.Depth.CompareTo(b.Depth);
             });
 
             return contacts[0];
