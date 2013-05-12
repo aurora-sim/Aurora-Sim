@@ -26,6 +26,7 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
@@ -82,6 +83,7 @@ namespace Aurora.Services
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void PostInternal(bool remote, string url, OSDMap request)
         {
+            LogMessage(remote, url, request);
             if (remote)
                 DoRemoteCallPost(true, url + "/syncmessage/", false, url + "/syncmessage/", request);
             else
@@ -101,6 +103,7 @@ namespace Aurora.Services
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void PostToServerInternal(bool remote, OSDMap request)
         {
+            LogMessage(remote, "", request);
             if (remote)
                 DoRemoteCallPost(true, "SyncMessageServerURI", false, request);
             else
@@ -120,6 +123,7 @@ namespace Aurora.Services
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public OSDMap GetInternal(bool remote, string url, OSDMap request)
         {
+            LogMessage(remote, url, request);
             if (remote)
             {
                 if (url != "")
@@ -133,16 +137,14 @@ namespace Aurora.Services
             return m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
         }
 
-        #endregion
-
-        private OSDMap CreateWebRequest(OSDMap request)
+        private void LogMessage(bool remote, string url, OSDMap request)
         {
-            OSDMap message = new OSDMap();
-
-            message["Method"] = "SyncPost";
-            message["Message"] = request;
-
-            return message;
+            MainConsole.Instance.DebugFormat("[SyncMessagePosterService]: Sending message ({0}) to {1}, method {2}",
+                remote ? "remotely" : "locally",
+                url == "" ? "grid server" : url,
+                (request != null && request.ContainsKey("Method")) ? request["Method"].AsString() : "no method set");
         }
+
+        #endregion
     }
 }
