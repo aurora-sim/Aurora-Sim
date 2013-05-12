@@ -272,7 +272,7 @@ namespace Aurora.Framework.ConsoleFramework
                             }
                         }
                     }
-                    else
+                    else if(commandPath.Length > 0)
                     {
                         string cmdToExecute = commandPath[0];
                         if (cmdToExecute == "help")
