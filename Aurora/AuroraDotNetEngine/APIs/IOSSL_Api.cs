@@ -230,5 +230,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osForceDropAttachmentAt(LSL_Vector pos, LSL_Rotation rot);
         LSL_Integer osListenRegex(int channelID, string name, string ID, string msg, int regexBitfield);
         LSL_Integer osRegexIsMatch(string input, string pattern);
+
+        LSL_String osGetPhysicsEngineType();
     }
 }

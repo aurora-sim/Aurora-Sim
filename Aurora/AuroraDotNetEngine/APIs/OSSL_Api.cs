@@ -2857,7 +2857,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return DateTime.Now;
         }
 
-        public string osGetPhysicsEngineType()
+        public LSL_String osGetPhysicsEngineType()
         {
             // High because it can be used to target attacks to known weaknesses
             // This would allow a new class of griefer scripts that don't even
