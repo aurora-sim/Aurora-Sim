@@ -64,7 +64,7 @@ namespace Aurora.DataManager.SQLite
 
         #region Database
 
-        public override void ConnectToDatabase(string connectionString, string migratorName, bool validateTables)
+        public override void ConnectToDatabase(string connectionString)
         {
             _connectionString = connectionString;
             string[] s1 = _connectionString.Split(new[] {"Data Source=", ","}, StringSplitOptions.RemoveEmptyEntries);
@@ -74,13 +74,6 @@ namespace Aurora.DataManager.SQLite
             _fileName = Path.GetFileName(s1[0]);
             if (_fileName == s1[0]) //Only add this if we arn't an absolute path already
                 _connectionString = string.Format("Data Source=file://{0}", Path.Combine(Util.BasePathCombine(""), _fileName));
-
-            SqliteConnection connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            var migrationManager = new MigrationManager(this, migratorName, validateTables);
-            migrationManager.DetermineOperation();
-            migrationManager.ExecuteOperation();
-            connection.Close();
         }
 
         public override void CloseDatabase(DataReaderConnection conn)

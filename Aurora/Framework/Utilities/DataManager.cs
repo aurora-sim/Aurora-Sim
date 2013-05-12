@@ -83,7 +83,7 @@ namespace Aurora.Framework.Utilities
         /// <param name="plugin"></param>
         public static void RegisterPlugin(IAuroraDataPlugin plugin)
         {
-            RegisterPlugin(plugin.Name, plugin);
+            RegisterPlugin(plugin.InterfaceName, plugin);
         }
 
         /// <summary>

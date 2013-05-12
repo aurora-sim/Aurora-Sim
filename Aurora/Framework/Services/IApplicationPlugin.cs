@@ -227,12 +227,10 @@ namespace Aurora.Framework.Services
         #endregion
 
         /// <summary>
-        ///     Connects to the database and then performs migrations
+        /// Sets the connection string
         /// </summary>
         /// <param name="connectionString"></param>
-        /// <param name="migrationName"></param>
-        /// <param name="validateTables"></param>
-        void ConnectToDatabase(string connectionString, string migrationName, bool validateTables);
+        void ConnectToDatabase(string connectionString);
 
         /// <summary>
         ///     Makes a copy of the IGenericData plugin
@@ -241,12 +239,12 @@ namespace Aurora.Framework.Services
         IGenericData Copy();
 
         /// <summary>
-        ///     Close the given database connection
+        /// Close the given database connection
         /// </summary>
         void CloseDatabase(DataReaderConnection connection);
 
         /// <summary>
-        ///     in the sql the strings will return joined fields
+        ///  in the sql the strings will return joined fields
         /// </summary>
         /// <param name="toConCat"></param>
         /// <returns></returns>
@@ -665,7 +663,7 @@ namespace Aurora.Framework.Services
         ///     Returns the plugin name
         /// </summary>
         /// <returns></returns>
-        string Name { get; }
+        string InterfaceName { get; }
 
         /// <summary>
         ///     Starts the database plugin, performs migrations if needed
@@ -673,9 +671,7 @@ namespace Aurora.Framework.Services
         /// <param name="GenericData">The Database Plugin</param>
         /// <param name="source">Config if more parameters are needed</param>
         /// <param name="simBase"></param>
-        /// <param name="DefaultConnectionString">The connection string to use</param>
-        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                        string DefaultConnectionString);
+        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase);
     }
 
     public class QueryTables

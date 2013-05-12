@@ -41,26 +41,15 @@ namespace Aurora.Modules.Ban
         private IGenericData GD = null;
         private string DatabaseToAuthTable = "auth";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry,
-                               string DefaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            if (source.Configs["AuroraConnectors"].GetString("PresenceInfoConnector", "LocalConnector") ==
-                "LocalConnector")
-            {
-                GD = GenericData;
+            GD = genericData;
 
-                if (source.Configs[Name] != null)
-                {
-                    DefaultConnectionString = source.Configs[Name].GetString("ConnectionString", DefaultConnectionString);
-                    DatabaseToAuthTable = source.Configs[Name].GetString("DatabasePathToAuthTable", DatabaseToAuthTable);
-                }
-                if (GD != null)
-                    GD.ConnectToDatabase(DefaultConnectionString, "PresenceInfo", true);
-                Framework.Utilities.DataManager.RegisterPlugin(this);
-            }
+            if (source.Configs[InterfaceName] != null)
+                DatabaseToAuthTable = source.Configs[InterfaceName].GetString("DatabasePathToAuthTable", DatabaseToAuthTable);
         }
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IPresenceInfo"; }
         }

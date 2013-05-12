@@ -53,25 +53,12 @@ namespace Aurora.Services.DataService
 
         #region IGenericsConnector Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            if (source.Configs["AuroraConnectors"].GetString("GenericsConnector", "LocalConnector") == "LocalConnector")
-            {
-                GD = GenericData;
-
-                if (source.Configs[Name] != null)
-                    defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-                if (GD != null)
-                    GD.ConnectToDatabase(defaultConnectionString, "Generics",
-                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-
-                Framework.Utilities.DataManager.RegisterPlugin(this);
-            }
+            GD = genericData;
         }
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IGenericsConnector"; }
         }

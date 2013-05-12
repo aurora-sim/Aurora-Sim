@@ -291,7 +291,7 @@ namespace Aurora.Simulation.Base
 
         public virtual void InitializeModules()
         {
-            LocalDataService lds = new LocalDataService();
+            DataService lds = new DataService();
             lds.Initialise(ConfigSource, ApplicationRegistry, m_dataPlugins);
 
             List<dynamic> modules = new List<dynamic>();

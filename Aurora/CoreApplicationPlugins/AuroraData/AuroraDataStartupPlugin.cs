@@ -42,7 +42,7 @@ namespace Aurora.CoreApplicationPlugins.AuroraData
 
         public void Initialize(ISimulationBase openSim)
         {
-            LocalDataService service = new LocalDataService();
+            DataService service = new DataService();
             service.Initialise(openSim.ConfigSource, openSim.ApplicationRegistry);
         }
 

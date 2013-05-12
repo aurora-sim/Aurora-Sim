@@ -29,31 +29,18 @@ namespace Simple.Currency
 
         #region IAuroraDataPlugin Members
 
-        public string Name
+        public string InterfaceName
         {
             get { return "ISimpleCurrencyConnector"; }
         }
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            m_gd = GenericData;
-            m_registry = registry;
+            m_gd = genericData;
 
-            IConfig config = source.Configs["Currency"];
-            if (config == null || source.Configs["Currency"].GetString("Module", "") != "SimpleCurrency")
-                return;
+            m_config = new SimpleCurrencyConfig(source.Configs["Currency"]);
 
-            if (source.Configs[Name] != null)
-                defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-            if (GenericData != null)
-                GenericData.ConnectToDatabase(defaultConnectionString, "SimpleCurrency", true);
-            DataManager.RegisterPlugin(Name, this);
-
-            m_config = new SimpleCurrencyConfig(config);
-
-            Init(m_registry, Name, "", "/currency/", "CurrencyServerURI");
+            Init(m_registry, InterfaceName, "", "/currency/", "CurrencyServerURI");
 
             if (!m_doRemoteCalls)
             {

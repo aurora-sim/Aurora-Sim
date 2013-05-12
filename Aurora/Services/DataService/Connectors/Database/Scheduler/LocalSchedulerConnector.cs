@@ -55,7 +55,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         ///     Returns the plugin name
         /// </summary>
         /// <returns></returns>
-        public string Name
+        public string InterfaceName
         {
             get { return "ISchedulerDataPlugin"; }
         }
@@ -66,21 +66,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         /// <param name="GenericData">The Database Plugin</param>
         /// <param name="source">Config if more parameters are needed</param>
         /// <param name="simBase"></param>
-        /// <param name="DefaultConnectionString">The connection string to use</param>
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string DefaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            if (source.Configs["AuroraConnectors"].GetString("SchedulerConnector", "LocalConnector") != "LocalConnector")
-                return;
-
-            if (source.Configs[Name] != null)
-                DefaultConnectionString = source.Configs[Name].GetString("ConnectionString", DefaultConnectionString);
-            if (GenericData != null)
-                GenericData.ConnectToDatabase(DefaultConnectionString, "Scheduler",
-                                              source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-
-            m_Gd = GenericData;
-            Framework.Utilities.DataManager.RegisterPlugin(this);
+            m_Gd = genericData;
         }
 
         #endregion

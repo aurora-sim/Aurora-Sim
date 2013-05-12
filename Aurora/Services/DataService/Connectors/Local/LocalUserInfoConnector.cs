@@ -47,34 +47,21 @@ namespace Aurora.Services.DataService
 
         #region IAgentInfoConnector Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            if (source.Configs["AuroraConnectors"].GetString("UserInfoConnector", "LocalConnector") == "LocalConnector")
+            GD = genericData;
+            if (source.Configs[InterfaceName] != null)
             {
-                GD = GenericData;
-
-                string connectionString = defaultConnectionString;
-                if (source.Configs[Name] != null)
-                {
-                    connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-                    m_allowDuplicatePresences =
-                        source.Configs[Name].GetBoolean("AllowDuplicatePresences",
-                                                        m_allowDuplicatePresences);
-                    m_checkLastSeen =
-                        source.Configs[Name].GetBoolean("CheckLastSeen",
-                                                        m_checkLastSeen);
-                }
-                if (GD != null)
-                    GD.ConnectToDatabase(connectionString, "UserInfo",
-                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-
-                Framework.Utilities.DataManager.RegisterPlugin(this);
+                m_allowDuplicatePresences =
+                    source.Configs[InterfaceName].GetBoolean("AllowDuplicatePresences",
+                                                    m_allowDuplicatePresences);
+                m_checkLastSeen =
+                    source.Configs[InterfaceName].GetBoolean("CheckLastSeen",
+                                                    m_checkLastSeen);
             }
         }
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IAgentInfoConnector"; }
         }

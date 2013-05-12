@@ -42,26 +42,12 @@ namespace Aurora.Services.DataService
         private IGenericData GD = null;
         private const string m_realm = "statsdata";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            if (source.Configs["AuroraConnectors"].GetString("WebStatsDataConnector", "LocalConnector") ==
-                "LocalConnector")
-            {
-                GD = GenericData;
-
-                if (source.Configs[Name] != null)
-                    defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-                if (GD != null)
-                    GD.ConnectToDatabase(defaultConnectionString, "Stats",
-                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-
-                Framework.Utilities.DataManager.RegisterPlugin(Name, this);
-            }
+            GD = genericData;
         }
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IUserStatsDataConnector"; }
         }

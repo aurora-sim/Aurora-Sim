@@ -41,27 +41,13 @@ namespace Aurora.Services.DataService
         private string m_realm = "friends";
 
         #region IFriendsData Members
-
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            if (source.Configs["AuroraConnectors"].GetString("FriendsConnector", "LocalConnector") == "LocalConnector")
-            {
-                GD = GenericData;
-
-                string connectionString = defaultConnectionString;
-                if (source.Configs[Name] != null)
-                    connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-                if (GD != null)
-                    GD.ConnectToDatabase(connectionString, "Friends",
-                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-
-                Framework.Utilities.DataManager.RegisterPlugin(this);
-            }
+            GD = genericData;
         }
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IFriendsData"; }
         }

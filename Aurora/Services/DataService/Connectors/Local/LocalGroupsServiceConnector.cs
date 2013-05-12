@@ -44,43 +44,26 @@ namespace Aurora.Services.DataService
     {
         #region Declares
 
-        private IGenericData data;
+        private IGenericData GD;
         private List<UUID> agentsCanBypassGroupNoticePermsCheck = new List<UUID>();
 
         #endregion
 
         #region IAuroraDataPlugin members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            data = GenericData;
-
-            if (source.Configs[Name] != null)
-            {
-                defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-            }
+            GD = genericData;
             if (source.Configs["Groups"] != null)
             {
                 agentsCanBypassGroupNoticePermsCheck =
                     Util.ConvertToList(source.Configs["Groups"].GetString("AgentsCanBypassGroupNoticePermsCheck", ""))
                         .ConvertAll(x => new UUID(x));
             }
-
-            if (data != null)
-                data.ConnectToDatabase(defaultConnectionString, "Groups",
-                                       source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-
-            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
-
-            if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "LocalConnector")
-            {
-                Framework.Utilities.DataManager.RegisterPlugin(this);
-            }
-            Init(simBase, Name);
+            Init(simBase, InterfaceName);
         }
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IGroupsServiceConnector"; }
         }
@@ -167,7 +150,7 @@ namespace Aurora.Services.DataService
             row["MaturePublish"] = maturePublish ? 1 : 0;
             row["OwnerRoleID"] = OwnerRoleID;
 
-            data.Insert("osgroup", row);
+            GD.Insert("osgroup", row);
 
             //Add everyone role to group
             AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.",
@@ -209,7 +192,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = groupID;
 
-            data.Update("osgroup", values, null, filter, null, null);
+            GD.Update("osgroup", values, null, filter, null, null);
 
             if (!newUserExists)
                 AddAgentToGroup(newOwner, newOwner, groupID, record.OwnerRoleID);
@@ -244,7 +227,7 @@ namespace Aurora.Services.DataService
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["GroupID"] = groupID;
 
-                data.Update("osgroup", values, null, filter, null, null);
+                GD.Update("osgroup", values, null, filter, null, null);
             }
         }
 
@@ -271,7 +254,7 @@ namespace Aurora.Services.DataService
                 row["AssetType"] = AssetType;
                 row["ItemName"] = ItemName == null ? "" : ItemName;
 
-                data.Insert("osgroupnotice", row);
+                GD.Insert("osgroupnotice", row);
             }
         }
 
@@ -319,7 +302,7 @@ namespace Aurora.Services.DataService
             update["Subject"] = subject.Trim();
             update["Message"] = message.Trim();
 
-            return data.Update("osgroupnotice", update, null, filter, null, null);
+            return GD.Update("osgroupnotice", update, null, filter, null, null);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.High)]
@@ -356,7 +339,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["GroupID"] = groupID;
             filter.andFilters["NoticeID"] = noticeID;
 
-            return data.Delete("osgroupnotice", filter);
+            return GD.Delete("osgroupnotice", filter);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -368,19 +351,19 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = AgentID;
-            if (data.Query(new[] {"*"}, "osagent", filter, null, null, null).Count != 0)
+            if (GD.Query(new[] {"*"}, "osagent", filter, null, null, null).Count != 0)
             {
                 Dictionary<string, object> values = new Dictionary<string, object>(1);
                 values["ActiveGroupID"] = GroupID;
 
-                data.Update("osagent", values, null, filter, null, null);
+                GD.Update("osagent", values, null, filter, null, null);
             }
             else
             {
                 Dictionary<string, object> row = new Dictionary<string, object>(2);
                 row["AgentID"] = AgentID;
                 row["ActiveGroupID"] = GroupID;
-                data.Insert("osagent", row);
+                GD.Insert("osagent", row);
             }
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
@@ -395,7 +378,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = AgentID;
-            List<string> groups = data.Query(new string[1] {"ActiveGroupID"}, "osagent", filter, null, null, null);
+            List<string> groups = GD.Query(new string[1] {"ActiveGroupID"}, "osagent", filter, null, null, null);
 
             return (groups.Count != 0) ? UUID.Parse(groups[0]) : UUID.Zero;
         }
@@ -414,7 +397,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["AgentID"] = AgentID;
             filter.andFilters["GroupID"] = GroupID;
 
-            data.Update("osgroupmembership", values, null, filter, null, null);
+            GD.Update("osgroupmembership", values, null, filter, null, null);
 
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
@@ -431,7 +414,7 @@ namespace Aurora.Services.DataService
             where["AgentID"] = AgentID;
             where["GroupID"] = GroupID;
 
-            if (data.Query(new[] {"*"}, "osgroupmembership", new QueryFilter
+            if (GD.Query(new[] {"*"}, "osgroupmembership", new QueryFilter
                                                                  {
                                                                      andFilters = where
                                                                  }, null, null, null).Count != 0)
@@ -446,7 +429,7 @@ namespace Aurora.Services.DataService
             row["Contribution"] = 0;
             row["ListInProfile"] = 1;
             row["AcceptNotices"] = 1;
-            data.Insert("osgroupmembership", row);
+            GD.Insert("osgroupmembership", row);
 
             // Make sure they're in the Everyone role
             AddAgentToRole(requestingAgentID, AgentID, GroupID, UUID.Zero);
@@ -477,16 +460,16 @@ namespace Aurora.Services.DataService
                 values["ActiveGroupID"] = UUID.Zero;
 
                 // 1. If group is agent's active group, change active group to uuidZero
-                data.Update("osagent", values, null, filter, null, null);
+                GD.Update("osagent", values, null, filter, null, null);
 
                 filter.andFilters.Remove("ActiveGroupID");
                 filter.andFilters["GroupID"] = GroupID;
 
                 // 2. Remove Agent from group (osgroupmembership)
-                data.Delete("osgrouprolemembership", filter);
+                GD.Delete("osgrouprolemembership", filter);
 
                 // 3. Remove Agent from all of the groups roles (osgrouprolemembership)
-                data.Delete("osgroupmembership", filter);
+                GD.Delete("osgroupmembership", filter);
 
                 return true;
             }
@@ -510,7 +493,7 @@ namespace Aurora.Services.DataService
                 row["Description"] = Description != null ? Description : "";
                 row["Title"] = Title;
                 row["Powers"] = (long) Powers;
-                data.Insert("osrole", row);
+                GD.Insert("osrole", row);
             }
         }
 
@@ -543,7 +526,7 @@ namespace Aurora.Services.DataService
                 filter.andFilters["GroupID"] = GroupID;
                 filter.andFilters["RoleID"] = RoleID;
 
-                data.Update("osrole", values, null, filter, null, null);
+                GD.Update("osrole", values, null, filter, null, null);
             }
         }
 
@@ -567,9 +550,9 @@ namespace Aurora.Services.DataService
                 dfilter.andFilters["GroupID"] = GroupID;
                 dfilter.andFilters["RoleID"] = RoleID;
 
-                data.Delete("osgrouprolemembership", dfilter);
-                data.Update("osgroupmembership", values, null, ufilter, null, null);
-                data.Delete("osrole", dfilter);
+                GD.Delete("osgrouprolemembership", dfilter);
+                GD.Update("osgroupmembership", values, null, ufilter, null, null);
+                GD.Delete("osrole", dfilter);
             }
         }
 
@@ -602,14 +585,14 @@ namespace Aurora.Services.DataService
             filter.andFilters["AgentID"] = AgentID;
             //Make sure they arn't already in this role
             if (
-                uint.Parse(data.Query(new[] {"COUNT(AgentID)"}, "osgrouprolemembership", filter, null, null, null)[0]) ==
+                uint.Parse(GD.Query(new[] {"COUNT(AgentID)"}, "osgrouprolemembership", filter, null, null, null)[0]) ==
                 0)
             {
                 Dictionary<string, object> row = new Dictionary<string, object>(3);
                 row["GroupID"] = GroupID;
                 row["RoleID"] = RoleID;
                 row["AgentID"] = AgentID;
-                data.Insert("osgrouprolemembership", row);
+                GD.Insert("osgrouprolemembership", row);
             }
         }
 
@@ -630,11 +613,11 @@ namespace Aurora.Services.DataService
                 filter.andFilters["GroupID"] = GroupID;
                 filter.andFilters["SelectedRoleID"] = RoleID;
 
-                data.Update("osgroupmembership", values, null, filter, null, null);
+                GD.Update("osgroupmembership", values, null, filter, null, null);
 
                 filter.andFilters.Remove("SelectedRoleID");
                 filter.andFilters["RoleID"] = RoleID;
-                data.Delete("osgrouprolemembership", filter);
+                GD.Delete("osgrouprolemembership", filter);
             }
         }
 
@@ -661,7 +644,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["GroupID"] = AgentID;
             filter.andFilters["AgentID"] = GroupID;
 
-            data.Update("osgroupmembership", values, null, filter, null, null);
+            GD.Update("osgroupmembership", values, null, filter, null, null);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -677,7 +660,7 @@ namespace Aurora.Services.DataService
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["AgentID"] = AgentID;
                 filter.andFilters["GroupID"] = GroupID;
-                data.Delete("osgroupinvite", filter);
+                GD.Delete("osgroupinvite", filter);
 
                 Dictionary<string, object> row = new Dictionary<string, object>(6);
                 row["InviteID"] = inviteID;
@@ -686,7 +669,7 @@ namespace Aurora.Services.DataService
                 row["AgentID"] = AgentID;
                 row["TMStamp"] = Util.UnixTimeSinceEpoch();
                 row["FromAgentName"] = FromAgentName;
-                data.Insert("osgroupinvite", row);
+                GD.Insert("osgroupinvite", row);
             }
         }
 
@@ -699,7 +682,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["InviteID"] = inviteID;
-            data.Delete("osgroupinvite", filter);
+            GD.Delete("osgroupinvite", filter);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -710,7 +693,7 @@ namespace Aurora.Services.DataService
                 return;
 
             if (CheckGroupPermissions(agentID, info.GroupID, (ulong) GroupPowers.StartProposal))
-                GenericUtils.AddGeneric(info.GroupID, "Proposal", info.VoteID.ToString(), info.ToOSD(), data);
+                GenericUtils.AddGeneric(info.GroupID, "Proposal", info.VoteID.ToString(), info.ToOSD(), GD);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -723,7 +706,7 @@ namespace Aurora.Services.DataService
             if (!CheckGroupPermissions(agentID, groupID, (ulong) GroupPowers.VoteOnProposal))
                 return new List<GroupProposalInfo>();
 
-            List<GroupProposalInfo> proposals = GenericUtils.GetGenerics<GroupProposalInfo>(groupID, "Proposal", data);
+            List<GroupProposalInfo> proposals = GenericUtils.GetGenerics<GroupProposalInfo>(groupID, "Proposal", GD);
             proposals = (from p in proposals where p.Ending > DateTime.Now select p).ToList();
             foreach (GroupProposalInfo p in proposals)
                 p.VoteCast = GetHasVoted(agentID, p);
@@ -741,14 +724,14 @@ namespace Aurora.Services.DataService
             if (!CheckGroupPermissions(agentID, groupID, (ulong) GroupPowers.VoteOnProposal))
                 return new List<GroupProposalInfo>();
 
-            List<GroupProposalInfo> proposals = GenericUtils.GetGenerics<GroupProposalInfo>(groupID, "Proposal", data);
+            List<GroupProposalInfo> proposals = GenericUtils.GetGenerics<GroupProposalInfo>(groupID, "Proposal", GD);
             proposals = (from p in proposals where p.Ending < DateTime.Now select p).ToList();
             List<GroupProposalInfo> proposalsNeedingResults =
                 (from p in proposals where !p.HasCalculatedResult select p).ToList();
             foreach (GroupProposalInfo p in proposalsNeedingResults)
             {
                 List<OpenMetaverse.StructuredData.OSDMap> maps = GenericUtils.GetGenerics(p.GroupID, p.VoteID.ToString(),
-                                                                                          data);
+                                                                                          GD);
                 int yes = 0;
                 int no = 0;
                 foreach (OpenMetaverse.StructuredData.OSDMap vote in maps)
@@ -765,7 +748,7 @@ namespace Aurora.Services.DataService
                 else
                     p.Result = false;*/
                 p.HasCalculatedResult = true;
-                GenericUtils.AddGeneric(p.GroupID, "Proposal", p.VoteID.ToString(), p.ToOSD(), data);
+                GenericUtils.AddGeneric(p.GroupID, "Proposal", p.VoteID.ToString(), p.ToOSD(), GD);
             }
             foreach (GroupProposalInfo p in proposals)
                 p.VoteCast = GetHasVoted(agentID, p);
@@ -776,7 +759,7 @@ namespace Aurora.Services.DataService
         private string GetHasVoted(UUID agentID, GroupProposalInfo p)
         {
             OpenMetaverse.StructuredData.OSDMap map = GenericUtils.GetGeneric(p.GroupID, p.VoteID.ToString(),
-                                                                              agentID.ToString(), data);
+                                                                              agentID.ToString(), GD);
             if (map != null)
                 return map["Vote"];
             return "";
@@ -794,7 +777,7 @@ namespace Aurora.Services.DataService
 
             OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
             map["Vote"] = vote;
-            GenericUtils.AddGeneric(groupID, proposalID.ToString(), agentID.ToString(), map, data);
+            GenericUtils.AddGeneric(groupID, proposalID.ToString(), agentID.ToString(), map, GD);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -842,7 +825,7 @@ namespace Aurora.Services.DataService
                 filter.orMultiFilters["GroupID"] = filterGroupIDs;
             }
 
-            return uint.Parse(data.Query(new[] {"COUNT(NoticeID)"}, "osgroupnotice", filter, null, null, null)[0]);
+            return uint.Parse(GD.Query(new[] {"COUNT(NoticeID)"}, "osgroupnotice", filter, null, null, null)[0]);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -863,7 +846,7 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            return uint.Parse(data.Query(new[] {"COUNT(GroupID)"}, "osgroup", filter, null, null, null)[0]);
+            return uint.Parse(GD.Query(new[] {"COUNT(GroupID)"}, "osgroup", filter, null, null, null)[0]);
         }
 
         private static GroupRecord GroupRecordQueryResult2GroupRecord(List<String> result)
@@ -905,7 +888,7 @@ namespace Aurora.Services.DataService
             {
                 return null;
             }
-            List<string> osgroupsData = data.Query(new[]
+            List<string> osgroupsData = GD.Query(new[]
                                                        {
                                                            "GroupID",
                                                            "Name",
@@ -955,7 +938,7 @@ namespace Aurora.Services.DataService
 
             List<GroupRecord> Reply = new List<GroupRecord>();
 
-            List<string> osgroupsData = data.Query(new[]
+            List<string> osgroupsData = GD.Query(new[]
                                                        {
                                                            "GroupID",
                                                            "Name",
@@ -1001,7 +984,7 @@ namespace Aurora.Services.DataService
                 filter.orMultiFilters["GroupID"].Add(groupID);
             }
 
-            List<string> osgroupsData = data.Query(new[]
+            List<string> osgroupsData = GD.Query(new[]
                                                        {
                                                            "GroupID",
                                                            "Name",
@@ -1047,7 +1030,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter2 = new QueryFilter();
             filter2.andFilters["GroupID"] = GroupID;
 
-            List<string> Membership = data.Query(new[]
+            List<string> Membership = GD.Query(new[]
                                                      {
                                                          "Contribution",
                                                          "ListInProfile",
@@ -1055,13 +1038,13 @@ namespace Aurora.Services.DataService
                                                      }, "osgroupmembership", filter1, null, null, null);
 
             int GroupMemCount =
-                int.Parse(data.Query(new[] {"COUNT(AgentID)"}, "osgroupmembership", filter2, null, null, null)[0]);
+                int.Parse(GD.Query(new[] {"COUNT(AgentID)"}, "osgroupmembership", filter2, null, null, null)[0]);
 
-            int GroupRoleCount = int.Parse(data.Query(new[] {"COUNT(RoleID)"}, "osrole", filter2, null, null, null)[0]);
+            int GroupRoleCount = int.Parse(GD.Query(new[] {"COUNT(RoleID)"}, "osrole", filter2, null, null, null)[0]);
 
             QueryFilter filter3 = new QueryFilter();
             filter3.andFilters["RoleID"] = Membership[2];
-            List<string> GroupRole = data.Query(new[]
+            List<string> GroupRole = GD.Query(new[]
                                                     {
                                                         "Name",
                                                         "Powers"
@@ -1128,7 +1111,7 @@ namespace Aurora.Services.DataService
                                       "osg.OpenEnrollment",
                                       "osg.ShowInList"
                                   };
-            List<string> Membership = data.Query(fields, tables, filter, null, null, null);
+            List<string> Membership = GD.Query(fields, tables, filter, null, null, null);
 
             if (fields.Length != Membership.Count)
                 return null;
@@ -1177,7 +1160,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["osgm.AgentID"] = requestingAgentID;
             filter.andFilters["osgm.GroupID"] = GroupID;
 
-            List<string> Membership = data.Query(new[]
+            List<string> Membership = GD.Query(new[]
                                                      {
                                                          "osgm.SelectedRoleID",
                                                          "osgrm.RoleID",
@@ -1232,7 +1215,7 @@ namespace Aurora.Services.DataService
                                       "osg.ShowInList",
                                       "osg.GroupID"
                                   };
-            List<string> Membership = data.Query(fields, tables, filter, null, null, null);
+            List<string> Membership = GD.Query(fields, tables, filter, null, null, null);
             List<GroupMembershipData> results = new List<GroupMembershipData>();
             for (int loop = 0; loop < Membership.Count; loop += fields.Length)
             {
@@ -1274,7 +1257,7 @@ namespace Aurora.Services.DataService
             where["AgentID"] = requestingAgentID;
             where["InviteID"] = inviteID;
 
-            List<string> groupInvite = data.Query(new[] {"*"}, "osgroupinvite", new QueryFilter
+            List<string> groupInvite = GD.Query(new[] {"*"}, "osgroupinvite", new QueryFilter
                                                                                     {
                                                                                         andFilters = where
                                                                                     }, null, null, null);
@@ -1302,7 +1285,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupInviteInfo>) remoteValue;
 
-            List<string> groupInvite = data.Query(new[] {"*"}, "osgroupinvite", filter, null, null, null);
+            List<string> groupInvite = GD.Query(new[] {"*"}, "osgroupinvite", filter, null, null, null);
 
             List<GroupInviteInfo> invites = new List<GroupInviteInfo>();
 
@@ -1333,7 +1316,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["GroupID"] = GroupID;
             filter.andFilters["AgentID"] = AgentID;
 
-            List<string> Membership = data.Query(new string[4]
+            List<string> Membership = GD.Query(new string[4]
                                                      {
                                                          "AcceptNotices",
                                                          "Contribution",
@@ -1349,7 +1332,7 @@ namespace Aurora.Services.DataService
             filter.andFilters.Remove("AgentID");
             filter.andFilters["RoleID"] = Membership[3];
 
-            List<string> GroupRole = data.Query(new string[2]
+            List<string> GroupRole = GD.Query(new string[2]
                                                     {
                                                         "Title",
                                                         "Powers"
@@ -1362,7 +1345,7 @@ namespace Aurora.Services.DataService
 
             filter.andFilters.Remove("RoleID");
 
-            List<string> OwnerRoleID = data.Query(new string[1]
+            List<string> OwnerRoleID = GD.Query(new string[1]
                                                       {
                                                           "OwnerRoleID"
                                                       }, "osgroup", filter, null, null, null);
@@ -1370,7 +1353,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["RoleID"] = OwnerRoleID[0];
             filter.andFilters["AgentID"] = AgentID;
 
-            bool IsOwner = uint.Parse(data.Query(new string[1]
+            bool IsOwner = uint.Parse(GD.Query(new string[1]
                                                      {
                                                          "COUNT(AgentID)"
                                                      }, "osgrouprolemembership", filter, null, null, null)[0]) == 1;
@@ -1397,7 +1380,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = GroupID;
-            List<string> Agents = data.Query(new[] {"AgentID"}, "osgroupmembership", filter, null, null, null);
+            List<string> Agents = GD.Query(new[] {"AgentID"}, "osgroupmembership", filter, null, null, null);
 
             List<GroupMembersData> list = new List<GroupMembersData>();
             foreach (string agent in Agents)
@@ -1429,7 +1412,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andLikeFilters["Name"] = "%" + search + "%";
 
-            List<string> retVal = data.Query(new[]
+            List<string> retVal = GD.Query(new[]
                                                  {
                                                      "GroupID",
                                                      "Name",
@@ -1464,7 +1447,7 @@ namespace Aurora.Services.DataService
                 filter = new QueryFilter();
                 filter.andFilters["GroupID"] = dirgroup.groupID;
                 dirgroup.members =
-                    int.Parse(data.Query(new[] {"COUNT(AgentID)"}, "osgroupmembership", filter, null, null, null)[0]);
+                    int.Parse(GD.Query(new[] {"COUNT(AgentID)"}, "osgroupmembership", filter, null, null, null)[0]);
 
                 Reply.Add(dirgroup);
             }
@@ -1497,7 +1480,7 @@ namespace Aurora.Services.DataService
                                       "osr.Powers",
                                       "osr.RoleID"
                                   };
-            List<string> Roles = data.Query(fields, tables, filter, null, null, null);
+            List<string> Roles = GD.Query(fields, tables, filter, null, null, null);
 
             filter = new QueryFilter();
 
@@ -1535,7 +1518,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter rolesFilter = new QueryFilter();
             rolesFilter.andFilters["GroupID"] = GroupID;
-            List<string> Roles = data.Query(new[]
+            List<string> Roles = GD.Query(new[]
                                                 {
                                                     "Name",
                                                     "Description",
@@ -1551,7 +1534,7 @@ namespace Aurora.Services.DataService
             {
                 filter.andFilters["RoleID"] = UUID.Parse(Roles[i + 4]);
                 int Count =
-                    int.Parse(data.Query(new[] {"COUNT(AgentID)"}, "osgrouprolemembership", filter, null, null, null)[0]);
+                    int.Parse(GD.Query(new[] {"COUNT(AgentID)"}, "osgrouprolemembership", filter, null, null, null)[0]);
 
                 GroupRoles.Add(new GroupRolesData
                                    {
@@ -1587,7 +1570,7 @@ namespace Aurora.Services.DataService
                                       "osgrm.AgentID",
                                       "osr.Powers"
                                   };
-            List<string> Roles = data.Query(fields, tables, filter, null, null, null);
+            List<string> Roles = GD.Query(fields, tables, filter, null, null, null);
 
             GroupMembersData GMD = GetAgentGroupMemberData(requestingAgentID, GroupID, requestingAgentID);
             const long canViewMemebersBit = 140737488355328L;
@@ -1632,7 +1615,7 @@ namespace Aurora.Services.DataService
                                       "AssetType",
                                       "ItemName"
                                   };
-            List<string> notice = data.Query(fields, "osgroupnotice", filter, null, null, null);
+            List<string> notice = GD.Query(fields, "osgroupnotice", filter, null, null, null);
 
             if (notice.Count != fields.Length)
             {
@@ -1679,7 +1662,7 @@ namespace Aurora.Services.DataService
                                       "AssetType",
                                       "ItemName"
                                   };
-            List<string> notice = data.Query(fields, "osgroupnotice", filter, null, null, null);
+            List<string> notice = GD.Query(fields, "osgroupnotice", filter, null, null, null);
 
             if (notice.Count != fields.Length)
             {
@@ -1784,7 +1767,7 @@ namespace Aurora.Services.DataService
                 if (count != 0)
                     c = count;
 
-                List<string> notice = data.Query(new[]
+                List<string> notice = GD.Query(new[]
                                                      {
                                                          "GroupID",
                                                          "Timestamp",

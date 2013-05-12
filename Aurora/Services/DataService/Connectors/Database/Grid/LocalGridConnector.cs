@@ -49,35 +49,18 @@ namespace Aurora.Services.DataService
 
         #region IRegionData Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            if (source.Configs["AuroraConnectors"].GetString("GridConnector", "LocalConnector") == "LocalConnector")
+            GD = genericData;
+            if (MainConsole.Instance != null)
             {
-                GD = GenericData;
-
-                string connectionString = (source.Configs[Name] != null)
-                                              ? connectionString =
-                                                source.Configs[Name].GetString("ConnectionString",
-                                                                               defaultConnectionString)
-                                              : defaultConnectionString;
-
-                if (GD != null)
-                    GD.ConnectToDatabase(connectionString, "GridRegions",
-                                         source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-
-                Framework.Utilities.DataManager.RegisterPlugin(this);
-
-                if (MainConsole.Instance != null)
-                {
-                    MainConsole.Instance.Commands.AddCommand("fix missing region owner", "fix missing region owner",
-                                                             "Attempts to fix missing region owners in the database.",
-                                                             delegate(string[] cmd) { FixMissingRegionOwners(); });
-                }
+                MainConsole.Instance.Commands.AddCommand("fix missing region owner", "fix missing region owner",
+                                                            "Attempts to fix missing region owners in the database.",
+                                                            delegate(string[] cmd) { FixMissingRegionOwners(); });
             }
         }
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IRegionData"; }
         }

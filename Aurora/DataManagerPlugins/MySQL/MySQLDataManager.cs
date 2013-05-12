@@ -48,16 +48,19 @@ namespace Aurora.DataManager.MySQL
 
         #region Database
 
-        public override void ConnectToDatabase(string connectionstring, string migratorName, bool validateTables)
+        public override void ConnectToDatabase(string connectionstring)
         {
             m_connectionString = connectionstring;
-            MySqlConnection c = new MySqlConnection(connectionstring);
-            int subStrA = connectionstring.IndexOf("Database=");
-            int subStrB = connectionstring.IndexOf(";", subStrA);
+        }
+
+        public void CreateSchema()
+        {
+            MySqlConnection c = new MySqlConnection(m_connectionString);
+            int subStrA = m_connectionString.IndexOf("Database=");
+            int subStrB = m_connectionString.IndexOf(";", subStrA);
             string noDatabaseConnector = m_connectionString.Substring(0, subStrA) +
                                          m_connectionString.Substring(subStrB + 1);
-
-            retry:
+        retry:
             try
             {
                 ExecuteNonQuery(noDatabaseConnector, "create schema IF NOT EXISTS " + c.Database,
@@ -70,26 +73,12 @@ namespace Aurora.DataManager.MySQL
                 Console.Read();
                 goto retry;
             }
-
-            var migrationManager = new MigrationManager(this, migratorName, validateTables);
-            migrationManager.DetermineOperation();
-            migrationManager.ExecuteOperation();
-        }
-
-        public void CloseDatabase(MySqlConnection connection)
-        {
-            //Interlocked.Decrement (ref m_locked);
-            //connection.Close();
-            //connection.Dispose();
         }
 
         public override void CloseDatabase(DataReaderConnection conn)
         {
             if (conn != null && conn.DataReader != null)
                 conn.DataReader.Close();
-            //Interlocked.Decrement (ref m_locked);
-            //m_connection.Close();
-            //m_connection.Dispose();
         }
 
         #endregion

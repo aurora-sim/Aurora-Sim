@@ -46,29 +46,14 @@ namespace Aurora.Services.DataService
 
         #region IEstateConnector Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            GD = GenericData;
-            m_registry = registry;
-
-            if (source.Configs[Name] != null)
-                defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-            if (GD != null)
-                GD.ConnectToDatabase(defaultConnectionString, "Estate",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-
-            Framework.Utilities.DataManager.RegisterPlugin(Name + "Local", this);
-
-            if (source.Configs["AuroraConnectors"].GetString("EstateConnector", "LocalConnector") == "LocalConnector")
-            {
-                Framework.Utilities.DataManager.RegisterPlugin(this);
-            }
-            Init(registry, Name);
+            GD = genericData;
+            m_registry = simBase;
+            Init(simBase, InterfaceName);
         }
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IEstateConnector"; }
         }

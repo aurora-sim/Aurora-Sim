@@ -39,119 +39,73 @@ using System.Collections.Generic;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalDataService
+    public class DataService
     {
-        private string ConnectionString = "";
-        private string StorageProvider = "";
-
         public void Initialise(IConfigSource source, IRegistryCore simBase)
         {
-            IConfig m_config = source.Configs["AuroraData"];
-            if (m_config != null)
-            {
-                StorageProvider = m_config.GetString("StorageProvider", StorageProvider);
-                ConnectionString = m_config.GetString("ConnectionString", ConnectionString);
-            }
-
-            IGenericData DataConnector = null;
-            if (StorageProvider == "MySQL")
-                //Allow for fallback when AuroraData isn't set
-            {
-                MySQLDataLoader GenericData = new MySQLDataLoader();
-
-                DataConnector = GenericData;
-            }
-                /*else if (StorageProvider == "MSSQL2008")
-            {
-                MSSQLDataLoader GenericData = new MSSQLDataLoader();
-
-                DataConnector = GenericData;
-            }
-            else if (StorageProvider == "MSSQL7")
-            {
-                MSSQLDataLoader GenericData = new MSSQLDataLoader();
-
-                DataConnector = GenericData;
-            }*/
-            else if (StorageProvider == "SQLite")
-                //Allow for fallback when AuroraData isn't set
-            {
-                SQLiteLoader GenericData = new SQLiteLoader();
-
-                DataConnector = GenericData;
-            }
-
             List<IAuroraDataPlugin> Plugins = AuroraModuleLoader.PickupModules<IAuroraDataPlugin>();
             foreach (IAuroraDataPlugin plugin in Plugins)
             {
-                try
-                {
-                    plugin.Initialize(DataConnector == null ? null : DataConnector.Copy(), source, simBase,
-                                      ConnectionString);
-                }
-                catch (Exception ex)
-                {
-                    if (MainConsole.Instance != null)
-                        MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " +
-                                                  plugin.Name + ", " + ex.ToString());
-                }
+                InitializeDataPlugin(source, simBase, plugin);
             }
         }
 
         public void Initialise(IConfigSource source, IRegistryCore simBase, List<Type> types)
         {
-            IConfig m_config = source.Configs["AuroraData"];
-            if (m_config != null)
-            {
-                StorageProvider = m_config.GetString("StorageProvider", StorageProvider);
-                ConnectionString = m_config.GetString("ConnectionString", ConnectionString);
-            }
-
-            IGenericData DataConnector = null;
-            if (StorageProvider == "MySQL")
-                //Allow for fallback when AuroraData isn't set
-            {
-                MySQLDataLoader GenericData = new MySQLDataLoader();
-
-                DataConnector = GenericData;
-            }
-                /*else if (StorageProvider == "MSSQL2008")
-            {
-                MSSQLDataLoader GenericData = new MSSQLDataLoader();
-
-                DataConnector = GenericData;
-            }
-            else if (StorageProvider == "MSSQL7")
-            {
-                MSSQLDataLoader GenericData = new MSSQLDataLoader();
-
-                DataConnector = GenericData;
-            }*/
-            else if (StorageProvider == "SQLite")
-                //Allow for fallback when AuroraData isn't set
-            {
-                SQLiteLoader GenericData = new SQLiteLoader();
-
-                DataConnector = GenericData;
-            }
-
             foreach (Type t in types)
             {
                 List<dynamic> Plugins = AuroraModuleLoader.PickupModules(t);
                 foreach (dynamic plugin in Plugins)
                 {
-                    try
-                    {
-                        plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (MainConsole.Instance != null)
-                            MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " +
-                                                      plugin.Name + ", " + ex.ToString());
-                    }
+                    InitializeDataPlugin(source, simBase, plugin);
                 }
             }
+        }
+
+        private void InitializeDataPlugin(IConfigSource source, IRegistryCore simBase, IAuroraDataPlugin plugin)
+        {
+            try
+            {
+                IConfig config = source.Configs["AuroraConnectors"];
+                if (config.GetString(plugin.InterfaceName, "LocalConnector") != "LocalConnector")
+                    return;
+                plugin.Initialize(CreateDataService(plugin.InterfaceName, source), source, simBase);
+                Framework.Utilities.DataManager.RegisterPlugin(plugin);
+            }
+            catch (Exception ex)
+            {
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " +
+                                              plugin.InterfaceName + ", " + ex.ToString());
+            }
+        }
+
+        private IGenericData CreateDataService(string pluginName, IConfigSource source)
+        {
+
+            IConfig config = source.Configs["AuroraData"];
+            string storageProvider, connectionString;
+            if (config != null)
+            {
+                storageProvider = config.GetString("StorageProvider");
+                connectionString = config.GetString("ConnectionString");
+            }
+            else
+                return null;
+            if (source.Configs[pluginName] != null)
+                connectionString = source.Configs[pluginName].GetString("ConnectionString", connectionString);
+
+            IGenericData DataConnector = null;
+            if (storageProvider == "MySQL")
+                DataConnector = new MySQLDataLoader();
+            else if (storageProvider == "SQLite")
+                DataConnector = new SQLiteLoader();
+            else
+                return null;
+
+            DataConnector.ConnectToDatabase(connectionString);
+
+            return DataConnector;
         }
     }
 }

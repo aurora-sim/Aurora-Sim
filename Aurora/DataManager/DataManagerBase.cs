@@ -356,7 +356,7 @@ namespace Aurora.DataManager
 
         #endregion
 
-        public abstract void ConnectToDatabase(string connectionString, string migratorName, bool validateTables);
+        public abstract void ConnectToDatabase(string connectionString);
 
         public abstract void CloseDatabase(DataReaderConnection connection);
 

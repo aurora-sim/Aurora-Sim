@@ -17,24 +17,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #region Implementation of IAuroraDataPlugin
 
-        public string Name
+        public string InterfaceName
         {
             get { return "IAssetDataPlugin"; }
         }
 
-        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") != "LocalConnector")
-                return;
             m_Gd = genericData;
-
-            if (source.Configs[Name] != null)
-                defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-            if (genericData != null)
-                genericData.ConnectToDatabase(defaultConnectionString, "Asset",
-                                              source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
             Framework.Utilities.DataManager.RegisterPlugin(this);
         }
 
