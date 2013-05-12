@@ -240,8 +240,8 @@ namespace Simple.Currency
                     ISceneChildEntity ent = manager.Scene.GetSceneObjectPart(toID);
                     if (ent != null)
                     {
-                        bool success = m_connector.UserCurrencyTransfer(ent.OwnerID, fromID, (uint)amount, description,
-                                             (TransactionType)type, UUID.Random());
+                        bool success = m_connector.UserCurrencyTransfer(ent.OwnerID, fromID, ent.UUID, ent.Name, UUID.Zero, "", 
+                            (uint)amount, description, (TransactionType)type, UUID.Random());
                         if (success)
                             FireObjectPaid(toID, fromID, amount);
                     }
