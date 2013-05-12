@@ -100,11 +100,16 @@ namespace Aurora.Modules.Friends
                 //MainConsole.Instance.DebugFormat("[FRIENDS]: Local Status Notify {0} that user {1} is {2}", friendID, userID, online);
                 // the  friend in this sim as root agent
                 if (online)
-                    friendClient.SendAgentOnline(new[] {userID});
+                    friendClient.SendAgentOnline(new[] { userID });
                 else
-                    friendClient.SendAgentOffline(new[] {userID});
+                    friendClient.SendAgentOffline(new[] { userID });
                 // we're done
                 return;
+            }
+            else
+            {
+                MainConsole.Instance.ErrorFormat("[FriendsModule]: Could not send status update ({2}) to non-existant client {0} for {1}.", 
+                    FriendToInformID, userID, "user is " + (online ? "online" : "offline"));
             }
         }
 
