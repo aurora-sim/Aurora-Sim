@@ -64,6 +64,9 @@
 [GridServerInfoService]
 	Enabled = true
 	DoRemote = false
+	
+[GridInfoService]
+    GridInfoInHandlerPort = 80
     
 [Includes]
     Include-Data = AuroraServerConfiguration/Data/Data.ini
