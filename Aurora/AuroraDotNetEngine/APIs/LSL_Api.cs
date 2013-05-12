@@ -484,8 +484,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 TaskInventoryItem itm;
                 lock (m_host.TaskInventory)
                     m_host.TaskInventory.TryGetValue(key, out itm);
-                if(itm.Type == (int)type)
+                if(itm != null && itm.Type == (int)type)
                     return key;
+                else if(itm == null)
+                    return key;
+                //The item was not of the right type
             }
             // else try to locate the name in inventory of object. found returns key,
             // not found returns UUID.Zero which will translate to the default particle texture

@@ -2243,6 +2243,8 @@ namespace Aurora.Region
         public void SendSound(string sound, double volume, bool triggered, byte flags, float radius, bool useMaster,
                               bool isMaster)
         {
+            if (sound == "" || sound == UUID.Zero.ToString())
+                return;
             volume = Util.Clip((float)volume, 0, 1);
 
             UUID ownerID = _ownerID;
