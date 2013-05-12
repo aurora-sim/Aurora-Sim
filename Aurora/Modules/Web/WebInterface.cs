@@ -471,6 +471,7 @@ namespace Aurora.Modules.Web
                     return "text/html";
                 case ".css":
                     //response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
+                    response.AddHeader("Cache-Control", "no-cache");
                     return "text/css";
                 case ".js":
                     //response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
