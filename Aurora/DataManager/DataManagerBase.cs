@@ -368,7 +368,6 @@ namespace Aurora.DataManager
         public abstract void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions,
                                          Dictionary<string, string> renameColumns);
 
-        public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
         public abstract string GetColumnTypeStringSymbol(ColumnTypeDef coldef);
 
         public ColumnTypeDef ConvertTypeToColumnType(string typeString)

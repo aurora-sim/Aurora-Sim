@@ -33,54 +33,63 @@ namespace Aurora.DataManager.Migration.Migrators.Inventory
 {
     public class InventoryMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("inventoryfolders",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "folderID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "agentID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "parentFolderID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "folderName", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "type", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "version", Type = ColumnTypeDef.Integer11},
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"folderID", "agentID", "parentFolderID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"folderID"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"agentID", "folderID"}, Type = IndexType.Index }
+                }),
+            new SchemaDefinition("inventoryitems",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "assetID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "assetType", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "inventoryName", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "inventoryDescription", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "inventoryNextPermissions", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "inventoryCurrentPermissions", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "invType", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "creatorID", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "inventoryBasePermissions", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "inventoryEveryOnePermissions", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "salePrice", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "saleType", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "creationDate", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "groupID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "groupOwned", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "flags", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "inventoryID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "avatarID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "parentFolderID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "inventoryGroupPermissions", Type = ColumnTypeDef.Integer11}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"assetType", "flags", "inventoryID", "avatarID", "parentFolderID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"parentFolderID", "avatarID"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"avatarID", "assetType"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"inventoryID"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"assetID", "avatarID"}, Type = IndexType.Index }
+                }),
+        };
+
         public InventoryMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "Inventory";
-
-            schema = new List<SchemaDefinition>();
-
-            AddSchema("inventoryfolders", ColDefs(
-                ColDef("folderID", ColumnTypes.Char36),
-                ColDef("agentID", ColumnTypes.Char36),
-                ColDef("parentFolderID", ColumnTypes.Char36),
-                ColDef("folderName", ColumnTypes.String64),
-                ColDef("type", ColumnTypes.Integer11),
-                ColDef("version", ColumnTypes.Integer11)
-                                              ), IndexDefs(
-                                                  IndexDef(new string[3] {"folderID", "agentID", "parentFolderID"},
-                                                           IndexType.Primary)
-                                                     ));
-
-            AddSchema("inventoryitems", ColDefs(
-                ColDef("assetID", ColumnTypes.Char36),
-                ColDef("assetType", ColumnTypes.Integer11),
-                ColDef("inventoryName", ColumnTypes.String64),
-                ColDef("inventoryDescription", ColumnTypes.String128),
-                ColDef("inventoryNextPermissions", ColumnTypes.Integer11),
-                ColDef("inventoryCurrentPermissions", ColumnTypes.Integer11),
-                ColDef("invType", ColumnTypes.Integer11),
-                ColDef("creatorID", ColumnTypes.String128),
-                ColDef("inventoryBasePermissions", ColumnTypes.Integer11),
-                ColDef("inventoryEveryOnePermissions", ColumnTypes.Integer11),
-                ColDef("salePrice", ColumnTypes.Integer11),
-                ColDef("saleType", ColumnTypes.Integer11),
-                ColDef("creationDate", ColumnTypes.Integer11),
-                ColDef("groupID", ColumnTypes.Char36),
-                ColDef("groupOwned", ColumnTypes.Integer11),
-                ColDef("flags", ColumnTypes.Integer11),
-                ColDef("inventoryID", ColumnTypes.Char36),
-                ColDef("avatarID", ColumnTypes.Char36),
-                ColDef("parentFolderID", ColumnTypes.Char36),
-                ColDef("inventoryGroupPermissions", ColumnTypes.Integer11)
-                                            ), IndexDefs(
-                                                IndexDef(
-                                                    new string[5]
-                                                        {
-                                                            "assetType", "flags", "inventoryID", "avatarID",
-                                                            "parentFolderID"
-                                                        }, IndexType.Primary)
-                                                   ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

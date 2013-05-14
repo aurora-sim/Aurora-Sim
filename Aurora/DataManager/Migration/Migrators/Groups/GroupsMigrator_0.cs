@@ -31,96 +31,125 @@ using Aurora.Framework.Utilities;
 
 namespace Aurora.DataManager.Migration.Migrators.Groups
 {
+    /// <summary>
+    ///     Changes:
+    /// </summary>
     public class GroupsMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("osagent",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "AgentID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "ActiveGroupID", Type = ColumnTypeDef.Char36}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"AgentID"}, Type = IndexType.Primary }
+                }),
+            new SchemaDefinition("osgroup",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "GroupID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Name", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "Charter", Type = ColumnTypeDef.Text},
+                    new ColumnDefinition {Name = "InsigniaID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "FounderID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "MembershipFee", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "OpenEnrollment", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "ShowInList", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "AllowPublish", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "MaturePublish", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "OwnerRoleID", Type = ColumnTypeDef.Char36}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"GroupID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"Name"}, Type = IndexType.Unique }
+                }),
+            new SchemaDefinition("osgroupinvite",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "InviteID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "GroupID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "RoleID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "AgentID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "TMStamp", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "FromAgentName", Type = ColumnTypeDef.String50}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"InviteID", "GroupID", "RoleID", "AgentID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"AgentID", "InviteID"}, Type = IndexType.Index }
+                }),
+            new SchemaDefinition("osgroupmembership",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "GroupID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "AgentID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "SelectedRoleID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Contribution", Type = ColumnTypeDef.String45},
+                    new ColumnDefinition {Name = "ListInProfile", Type = ColumnTypeDef.String45},
+                    new ColumnDefinition {Name = "AcceptNotices", Type = ColumnTypeDef.String45}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"GroupID", "AgentID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"AgentID"}, Type = IndexType.Index }
+                }),
+            new SchemaDefinition("osgroupnotice",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "GroupID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "NoticeID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Timestamp", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "FromName", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "Subject", Type = ColumnTypeDef.String255},
+                    new ColumnDefinition {Name = "Message", Type = ColumnTypeDef.Text},
+                    new ColumnDefinition {Name = "HasAttachment", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "ItemID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "AssetType", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "ItemName", Type = ColumnTypeDef.String50}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"GroupID", "NoticeID", "Timestamp"}, Type = IndexType.Primary }
+                }),
+            new SchemaDefinition("osgrouprolemembership",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "GroupID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "RoleID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "AgentID", Type = ColumnTypeDef.Char36}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"GroupID", "RoleID", "AgentID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"AgentID", "GroupID"}, Type = IndexType.Index }
+                }),
+            new SchemaDefinition("osrole",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "GroupID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "RoleID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Name", Type = ColumnTypeDef.String255},
+                    new ColumnDefinition {Name = "Description", Type = ColumnTypeDef.String255},
+                    new ColumnDefinition {Name = "Title", Type = ColumnTypeDef.String255},
+                    new ColumnDefinition {Name = "Powers", Type = ColumnTypeDef.String50}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"GroupID", "RoleID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"RoleID"}, Type = IndexType.Index }
+                }),
+        };
+
         public GroupsMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "Groups";
-
-            schema = new List<SchemaDefinition>();
-
-            AddSchema("osagent", ColDefs(
-                ColDef("AgentID", ColumnTypes.String50),
-                ColDef("ActiveGroupID", ColumnTypes.String50)
-                                     ), IndexDefs(
-                                         IndexDef(new string[1] {"AgentID"}, IndexType.Primary)
-                                            ));
-
-            AddSchema("osgroup", ColDefs(
-                ColDef("GroupID", ColumnTypes.String50),
-                ColDef("Name", ColumnTypes.String50),
-                ColDef("Charter", ColumnTypes.String50),
-                ColDef("InsigniaID", ColumnTypes.String50),
-                ColDef("FounderID", ColumnTypes.String50),
-                ColDef("MembershipFee", ColumnTypes.String50),
-                ColDef("OpenEnrollment", ColumnTypes.String50),
-                ColDef("ShowInList", ColumnTypes.String50),
-                ColDef("AllowPublish", ColumnTypes.String50),
-                ColDef("MaturePublish", ColumnTypes.String50),
-                ColDef("OwnerRoleID", ColumnTypes.String50)
-                                     ), IndexDefs(
-                                         IndexDef(new string[1] {"GroupID"}, IndexType.Primary)
-                                            ));
-
-            AddSchema("osgroupinvite", ColDefs(
-                ColDef("InviteID", ColumnTypes.String50),
-                ColDef("GroupID", ColumnTypes.String50),
-                ColDef("RoleID", ColumnTypes.String50),
-                ColDef("AgentID", ColumnTypes.String50),
-                ColDef("TMStamp", ColumnTypes.String50),
-                ColDef("FromAgentName", ColumnTypes.String50)
-                                           ), IndexDefs(
-                                               IndexDef(new string[4] {"InviteID", "GroupID", "RoleID", "AgentID"},
-                                                        IndexType.Primary)
-                                                  ));
-
-            AddSchema("osgroupmembership", ColDefs(
-                ColDef("GroupID", ColumnTypes.String50),
-                ColDef("AgentID", ColumnTypes.String50),
-                ColDef("SelectedRoleID", ColumnTypes.String50),
-                ColDef("Contribution", ColumnTypes.String45),
-                ColDef("ListInProfile", ColumnTypes.String45),
-                ColDef("AcceptNotices", ColumnTypes.String45)
-                                               ), IndexDefs(
-                                                   IndexDef(new string[2] {"GroupID", "AgentID"}, IndexType.Primary)
-                                                      ));
-
-            AddSchema("osgroupnotice", ColDefs(
-                ColDef("GroupID", ColumnTypes.String50),
-                ColDef("NoticeID", ColumnTypes.String50),
-                ColDef("Timestamp", ColumnTypes.String50),
-                ColDef("FromName", ColumnTypes.String50),
-                ColDef("Subject", ColumnTypes.String50),
-                ColDef("Message", ColumnTypes.String1024),
-                ColDef("HasAttachment", ColumnTypes.String50),
-                ColDef("ItemID", ColumnTypes.String50),
-                ColDef("AssetType", ColumnTypes.String50),
-                ColDef("ItemName", ColumnTypes.String50)
-                                           ), IndexDefs(
-                                               IndexDef(new string[3] {"GroupID", "NoticeID", "Timestamp"},
-                                                        IndexType.Primary)
-                                                  ));
-
-            AddSchema("osgrouprolemembership", ColDefs(
-                ColDef("GroupID", ColumnTypes.String50),
-                ColDef("RoleID", ColumnTypes.String50),
-                ColDef("AgentID", ColumnTypes.String50)
-                                                   ), IndexDefs(
-                                                       IndexDef(new string[3] {"GroupID", "RoleID", "AgentID"},
-                                                                IndexType.Primary)
-                                                          ));
-
-            AddSchema("osrole", ColDefs(
-                ColDef("GroupID", ColumnTypes.String50),
-                ColDef("RoleID", ColumnTypes.String50),
-                ColDef("Name", ColumnTypes.String512),
-                ColDef("Description", ColumnTypes.String512),
-                ColDef("Title", ColumnTypes.String512),
-                ColDef("Powers", ColumnTypes.String50)
-                                    ), IndexDefs(
-                                        IndexDef(new string[2] {"GroupID", "RoleID"}, IndexType.Primary)
-                                           ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

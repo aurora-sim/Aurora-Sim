@@ -95,17 +95,17 @@ namespace Aurora.Services.DataService
             if (source.Configs[pluginName] != null)
                 connectionString = source.Configs[pluginName].GetString("ConnectionString", connectionString);
 
-            IGenericData DataConnector = null;
+            IGenericData dataConnector = null;
             if (storageProvider == "MySQL")
-                DataConnector = new MySQLDataLoader();
+                dataConnector = new MySQLDataLoader();
             else if (storageProvider == "SQLite")
-                DataConnector = new SQLiteLoader();
+                dataConnector = new SQLiteLoader();
             else
                 return null;
 
-            DataConnector.ConnectToDatabase(connectionString);
+            dataConnector.ConnectToDatabase(connectionString);
 
-            return DataConnector;
+            return dataConnector;
         }
     }
 }

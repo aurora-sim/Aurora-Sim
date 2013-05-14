@@ -33,20 +33,41 @@ namespace Aurora.DataManager.Migration.Migrators.Estate
 {
     public class EstateMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("estateregions",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "RegionID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "EstateID", Type = ColumnTypeDef.Integer11}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"RegionID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"EstateID"}, Type = IndexType.Index }
+                }),
+            new SchemaDefinition("estatesettings",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "EstateID", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "EstateName", Type = ColumnTypeDef.String100},
+                    new ColumnDefinition {Name = "EstateOwner", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "ParentEstateID", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Settings", Type = ColumnTypeDef.MediumText},
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"EstateID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"EstateOwner"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"EstateName", "EstateOwner"}, Type = IndexType.Index }
+                }),
+        };
+
         public EstateMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "Estate";
-
-            schema = new List<SchemaDefinition>();
-
-            AddSchema("estates", ColDefs(
-                ColDef("ID", ColumnTypes.String45),
-                ColDef("Key", ColumnTypes.String50),
-                ColDef("Value", ColumnTypes.Text)
-                                     ), IndexDefs(
-                                         IndexDef(new string[2] {"ID", "Key"}, IndexType.Primary)
-                                            ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

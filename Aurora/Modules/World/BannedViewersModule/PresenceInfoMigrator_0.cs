@@ -1,6 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
- * See CONTRIBUTORS.TXT for a full list of copyright holders.
+ * Copyright 2011 Matthew Beardmore
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,39 +26,43 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework;
+using Aurora.DataManager.Migration;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators.UserAccounts
+namespace Aurora.Modules.Ban
 {
-    public class UserAccountsMigrator_5 : Migrator
+    public class PresenceInfoMigrator_0 : Migrator
     {
-        public UserAccountsMigrator_5()
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
         {
-            Version = new Version(0, 0, 5);
-            MigrationName = "UserAccounts";
+            new SchemaDefinition("baninfo",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "AgentID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Flags", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "KnownAlts", Type = ColumnTypeDef.LongText},
+                    new ColumnDefinition {Name = "KnownID0s", Type = ColumnTypeDef.LongText},
+                    new ColumnDefinition {Name = "KnownIPs", Type = ColumnTypeDef.LongText},
+                    new ColumnDefinition {Name = "KnownMacs", Type = ColumnTypeDef.LongText},
+                    new ColumnDefinition {Name = "KnownViewers", Type = ColumnTypeDef.LongText},
+                    new ColumnDefinition {Name = "LastKnownID0", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "LastKnownIP", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "LastKnownMac", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "LastKnownViewer", Type = ColumnTypeDef.String255},
+                    new ColumnDefinition {Name = "Platform", Type = ColumnTypeDef.String50},
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"AgentID"}, Type = IndexType.Primary }
+                }),
+        };
 
-            schema = new List<SchemaDefinition>();
-
-            //Remove the `OSD` column
-            AddSchema("useraccounts", ColDefs(
-                ColDef("PrincipalID", ColumnTypes.Char36),
-                ColDef("ScopeID", ColumnTypes.Char36),
-                ColDef("FirstName", ColumnTypes.String64),
-                ColDef("LastName", ColumnTypes.String64),
-                ColDef("Email", ColumnTypes.String64),
-                ColDef("Created", ColumnTypes.Integer11),
-                ColDef("UserLevel", ColumnTypes.Integer11),
-                ColDef("UserFlags", ColumnTypes.Integer11),
-                ColDef("Name", ColumnTypes.String255)
-                                          ), IndexDefs(
-                                              IndexDef(new string[1] {"PrincipalID"}, IndexType.Primary),
-                                              IndexDef(new string[3] {"ScopeID", "FirstName", "LastName"},
-                                                       IndexType.Index),
-                                              IndexDef(new string[2] {"FirstName", "LastName"}, IndexType.Index),
-                                              IndexDef(new string[2] {"ScopeID", "PrincipalID"}, IndexType.Index),
-                                              IndexDef(new string[2] {"ScopeID", "Name"}, IndexType.Index),
-                                              IndexDef(new string[1] {"Name"}, IndexType.Index)
-                                                 ));
+        public PresenceInfoMigrator_0()
+        {
+            Version = new Version(0, 1, 0);
+            MigrationName = "PresenceInfo";
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)
@@ -80,6 +83,11 @@ namespace Aurora.DataManager.Migration.Migrators.UserAccounts
         protected override void DoPrepareRestorePoint(IDataConnector genericData)
         {
             CopyAllTablesToTempVersions(genericData);
+        }
+
+        public override void FinishedMigration(IDataConnector genericData)
+        {
+            genericData.Delete("baninfo", null);
         }
     }
 }

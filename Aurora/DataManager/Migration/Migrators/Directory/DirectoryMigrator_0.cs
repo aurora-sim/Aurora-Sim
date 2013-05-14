@@ -33,68 +33,87 @@ namespace Aurora.DataManager.Migration.Migrators.Directory
 {
     public class DirectoryMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("searchparcel",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "RegionID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "ParcelID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "LocalID", Type = ColumnTypeDef.Integer30},
+                    new ColumnDefinition {Name = "LandingX", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "LandingY", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "LandingZ", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Description", Type = ColumnTypeDef.String255},
+                    new ColumnDefinition {Name = "Flags", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Dwell", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "InfoUUID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "ForSale", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "SalePrice", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Auction", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "Area", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "EstateID", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Maturity", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "OwnerID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "GroupID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "ShowInSearch", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "SnapshotID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Bitmap", Type = ColumnTypeDef.LongBlob},
+                    new ColumnDefinition {Name = "Category", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "ScopeID", Type = ColumnTypeDef.Char36DefaultZero}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"PrincipalID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"RegionID", "OwnerID", "Flags", "Category"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"OwnerID"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"RegionID", "Name"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"ForSale", "SalePrice", "Area"}, Type = IndexType.Index }
+                }),
+            new SchemaDefinition("asevents",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "EID", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "creator", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "region", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "parcel", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "date", Type = ColumnTypeDef.Date},
+                    new ColumnDefinition {Name = "cover", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "maturity", Type = ColumnTypeDef.TinyInt4},
+                    new ColumnDefinition {Name = "flags", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "duration", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "localPosX", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "localPosY", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "localPosZ", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "name", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "description", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "category", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "scopeID", Type = ColumnTypeDef.Char36}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"EID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"name"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"date", "flags"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"region", "maturity"}, Type = IndexType.Index }
+                }),
+            new SchemaDefinition("event_notifications",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "UserID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "EventID", Type = ColumnTypeDef.Integer11}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"UserID"}, Type = IndexType.Primary }
+                }),
+        };
+
         public DirectoryMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "Directory";
-
-            schema = new List<SchemaDefinition>();
-
-            AddSchema("searchparcel", ColDefs(
-                ColDef("RegionID", ColumnTypes.String50),
-                ColDef("ParcelID", ColumnTypes.String50),
-                ColDef("LocalID", ColumnTypes.String50),
-                ColDef("LandingX", ColumnTypes.String50),
-                ColDef("LandingY", ColumnTypes.String50),
-                ColDef("LandingZ", ColumnTypes.String50),
-                ColDef("Name", ColumnTypes.String50),
-                ColDef("Description", ColumnTypes.String50),
-                ColDef("Flags", ColumnTypes.String50),
-                ColDef("Dwell", ColumnTypes.String50),
-                ColDef("InfoUUID", ColumnTypes.String50),
-                ColDef("ForSale", ColumnTypes.String50),
-                ColDef("SalePrice", ColumnTypes.String50),
-                ColDef("Auction", ColumnTypes.String50),
-                ColDef("Area", ColumnTypes.String50),
-                ColDef("EstateID", ColumnTypes.String50),
-                ColDef("Maturity", ColumnTypes.String50),
-                ColDef("OwnerID", ColumnTypes.String50),
-                ColDef("GroupID", ColumnTypes.String50),
-                ColDef("ShowInSearch", ColumnTypes.String50),
-                ColDef("SnapshotID", ColumnTypes.String50),
-                ColDef("Bitmap", ColumnTypes.String1024)
-                                          ), IndexDefs(
-                                              IndexDef(new string[1] {"ParcelID"}, IndexType.Primary)
-                                                 ));
-
-            AddSchema("events", ColDefs(
-                ColDef("EOwnerID", ColumnTypes.String50),
-                ColDef("EName", ColumnTypes.String50),
-                ColDef("EID", ColumnTypes.String50),
-                ColDef("ECreatorID", ColumnTypes.String50),
-                ColDef("ECategory", ColumnTypes.String50),
-                ColDef("EDesc", ColumnTypes.String50),
-                ColDef("EDate", ColumnTypes.String50),
-                ColDef("ECoverCharge", ColumnTypes.String50),
-                ColDef("ECoverAmount", ColumnTypes.String50),
-                ColDef("ESimName", ColumnTypes.String50),
-                ColDef("EGlobalPos", ColumnTypes.String50),
-                ColDef("EFlags", ColumnTypes.String50),
-                ColDef("EMature", ColumnTypes.String50),
-                ColDef("EDuration", ColumnTypes.String50)
-                                    ), IndexDefs(
-                                        IndexDef(new string[1] {"EID"}, IndexType.Primary)
-                                           ));
-
-            AddSchema("profileclassifieds", ColDefs(
-                ColDef("Name", ColumnTypes.String50),
-                ColDef("Category", ColumnTypes.String50),
-                ColDef("SimName", ColumnTypes.String50),
-                ColDef("ClassifiedUUID", ColumnTypes.String50),
-                ColDef("Classified", ColumnTypes.String8196)
-                                                ), IndexDefs(
-                                                    IndexDef(new string[1] {"ClassifiedUUID"}, IndexType.Primary)
-                                                       ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

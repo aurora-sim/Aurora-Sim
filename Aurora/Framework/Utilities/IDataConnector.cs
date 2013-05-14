@@ -181,56 +181,6 @@ namespace Aurora.Framework.Utilities
         }
     }
 
-    public enum ColumnTypes
-    {
-        Blob,
-        LongBlob,
-        Char40,
-        Char39,
-        Char38,
-        Char37,
-        Char36,
-        Char35,
-        Char34,
-        Char33,
-        Char32,
-        Char5,
-        Char1,
-        Char2,
-        Date,
-        DateTime,
-        Double,
-        Integer11,
-        Integer30,
-        UInteger11,
-        UInteger30,
-        String,        
-        String10,
-        String16,
-        String30,
-        String32,
-        String36,
-        String45,
-        String50,
-        String64,
-        String128,
-        String100,
-        String255,
-        String512,
-        String1024,
-        String8196,
-        Text,
-        MediumText,
-        LongText,
-        TinyInt1,
-        TinyInt4,
-        UTinyInt4,
-        Float,
-        Binary32,
-        Binary64,
-        Unknown        
-    }
-
     public enum ColumnType
     {
         Blob,
@@ -262,6 +212,7 @@ namespace Aurora.Framework.Utilities
         public static readonly ColumnTypeDef Char34 = new ColumnTypeDef(ColumnType.Char, 34);
         public static readonly ColumnTypeDef Char35 = new ColumnTypeDef(ColumnType.Char, 35);
         public static readonly ColumnTypeDef Char36 = new ColumnTypeDef(ColumnType.Char, 36);
+        public static readonly ColumnTypeDef Char36DefaultZero = new ColumnTypeDef(ColumnType.Char, 36, OpenMetaverse.UUID.Zero.ToString());
         public static readonly ColumnTypeDef Char37 = new ColumnTypeDef(ColumnType.Char, 37);
         public static readonly ColumnTypeDef Char38 = new ColumnTypeDef(ColumnType.Char, 38);
         public static readonly ColumnTypeDef Char39 = new ColumnTypeDef(ColumnType.Char, 39);
@@ -302,9 +253,6 @@ namespace Aurora.Framework.Utilities
         public static readonly ColumnTypeDef Binary64 = new ColumnTypeDef(ColumnType.Binary, 64);
         public static readonly ColumnTypeDef Unknown = new ColumnTypeDef(ColumnType.Unknown);
 
-
-        
-
         #endregion
 
         public ColumnType Type { get; set; }
@@ -315,8 +263,9 @@ namespace Aurora.Framework.Utilities
         public bool auto_increment { get; set; }
 
         public ColumnTypeDef() { }
-        public ColumnTypeDef(ColumnType type) { Type = type; }
-        public ColumnTypeDef(ColumnType type, uint size) { Type = type; Size = size; }
+        private ColumnTypeDef(ColumnType type) { Type = type; }
+        private ColumnTypeDef(ColumnType type, uint size) { Type = type; Size = size; }
+        private ColumnTypeDef(ColumnType type, uint size, string defaultValue) { Type = type; Size = size; this.defaultValue = defaultValue; }
 
         public ColumnTypeDef(ColumnType type, uint size, bool isunsigned) { Type = type; Size = size; unsigned = isunsigned; }
 

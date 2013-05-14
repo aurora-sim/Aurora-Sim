@@ -33,35 +33,40 @@ namespace Aurora.DataManager.Migration.Migrators.AbuseReports
 {
     public class AbuseReportsMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("abusereports",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "Category", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "ReporterName", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "ObjectName", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "ObjectUUID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "AbuserName", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "AbuseLocation", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "AbuseDetails", Type = ColumnTypeDef.Text},
+                    new ColumnDefinition {Name = "ObjectPosition", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "RegionName", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "ScreenshotID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "AbuseSummary", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "Number", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "AssignedTo", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "Active", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "Checked", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "Notes", Type = ColumnTypeDef.MediumText}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"Number"}, Type = IndexType.Primary }
+                })
+        };
+
         public AbuseReportsMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "AbuseReports";
 
-            schema = new List<SchemaDefinition>();
-
-            AddSchema("abusereports", ColDefs(
-                ColDef("Category", ColumnTypes.String100),
-                ColDef("ReporterName", ColumnTypes.String100),
-                ColDef("ObjectName", ColumnTypes.String100),
-                ColDef("ObjectUUID", ColumnTypes.String100),
-                ColDef("AbuserName", ColumnTypes.String100),
-                ColDef("AbuseLocation", ColumnTypes.String100),
-                ColDef("AbuseDetails", ColumnTypes.String512),
-                ColDef("ObjectPosition", ColumnTypes.String100),
-                ColDef("RegionName", ColumnTypes.String100),
-                ColDef("ScreenshotID", ColumnTypes.String100),
-                ColDef("AbuseSummary", ColumnTypes.String100),
-                ColDef("Number", ColumnTypes.String100),
-                ColDef("AssignedTo", ColumnTypes.String100),
-                ColDef("Active", ColumnTypes.String100),
-                ColDef("Checked", ColumnTypes.String100),
-                ColDef("Notes", ColumnTypes.String1024)
-                                          ),
-                      IndexDefs(
-                          IndexDef(new string[1] {"Number"}, IndexType.Primary)
-                          )
-                );
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

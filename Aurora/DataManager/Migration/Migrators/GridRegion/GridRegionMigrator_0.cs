@@ -33,36 +33,40 @@ namespace Aurora.DataManager.Migration.Migrators.GridRegion
 {
     public class GridRegionMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("gridregions",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "ScopeID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "RegionUUID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "RegionName", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "LocX", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "LocY", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "LocZ", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "OwnerUUID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Access", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "SizeX", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "SizeY", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "SizeZ", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Flags", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "SessionID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Info", Type = ColumnTypeDef.MediumText},
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"ScopeID", "RegionUUID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"RegionName"}, Type = IndexType.Unique },
+                    new IndexDefinition() { Fields = new string[] {"Flags", "ScopeID"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"LocX", "LocY", "ScopeID"}, Type = IndexType.Unique }
+                }),
+        };
+
         public GridRegionMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "GridRegions";
-
-            schema = new List<SchemaDefinition>();
-
-            //
-            // Change summery:
-            //
-            //   Add the new 'gridregions' table to replace the old 'regions' table
-            //
-            AddSchema("gridregions", ColDefs(
-                ColDef("ScopeID", ColumnTypes.String45),
-                ColDef("RegionUUID", ColumnTypes.String45),
-                ColDef("RegionName", ColumnTypes.String50),
-                ColDef("LocX", ColumnTypes.Integer11),
-                ColDef("LocY", ColumnTypes.Integer11),
-                ColDef("LocZ", ColumnTypes.Integer11),
-                ColDef("OwnerUUID", ColumnTypes.String45),
-                ColDef("Access", ColumnTypes.Integer11),
-                ColDef("SizeX", ColumnTypes.Integer11),
-                ColDef("SizeY", ColumnTypes.Integer11),
-                ColDef("SizeZ", ColumnTypes.Integer11),
-                ColDef("Flags", ColumnTypes.Integer11),
-                ColDef("SessionID", ColumnTypes.String45),
-                ColDef("Info", ColumnTypes.Text)
-                                         ), IndexDefs(
-                                             IndexDef(new string[1] {"RegionUUID"}, IndexType.Primary)
-                                                ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

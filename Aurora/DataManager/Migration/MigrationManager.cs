@@ -31,10 +31,64 @@ using System.Linq;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Utilities;
+using Aurora.Framework.Services;
 
 namespace Aurora.DataManager.Migration
 {
     public class MigrationManager
+    {
+        private readonly IDataConnector genericData;
+        private readonly List<Migrator> migrators = new List<Migrator>();
+        private const string VERSION_TABLE_NAME = "aurora_migrator_version";
+        private const string COLUMN_NAME = "name";
+        private const string COLUMN_VERSION = "version";
+
+        public MigrationManager(IDataConnector genericData, bool validateTables)
+        {
+            this.genericData = genericData;
+            migrators = AuroraModuleLoader.PickupModules<IMigrator>().Cast<Migrator>().ToList();
+        }
+
+        public void ExecuteMigration()
+        {
+            //migrators = allMigrators.Cast<Migrator>().Where(m => m.MigrationName != null && m.MigrationName == migratorName).ToList();
+            if (!CheckAndLockDatabase())
+            {
+                //We need to wait for the database to finish migrating, then we can just exit
+                WaitForDatabaseLock();
+                return;
+            }
+        }
+
+        private bool CheckAndLockDatabase()
+        {
+            //Set locked = 1 again
+            //If locked == 1, then we will not be migrating anything, but we also must stop this process until the migration is complete
+            //  so that we don't end up doing this while migration is going on
+            Dictionary<string, object> updateVals = new Dictionary<string,object>();
+            updateVals[COLUMN_VERSION] = 1;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters.Add(COLUMN_NAME, "locked");
+            return genericData.Update(VERSION_TABLE_NAME, updateVals, null, filter, null, null);
+        }
+
+        private void WaitForDatabaseLock()
+        {
+            throw new NotImplementedException("Database lock wait not implemented");
+        }
+
+        private void ReleaseDatabaseLock()
+        {
+            //Set locked = 0 again
+            Dictionary<string, object> updateVals = new Dictionary<string, object>();
+            updateVals[COLUMN_VERSION] = 0;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters.Add(COLUMN_NAME, "locked");
+            genericData.Update(VERSION_TABLE_NAME, updateVals, null, filter, null, null);
+        }
+    }
+
+    public class Migration
     {
         private readonly IDataConnector genericData;
         private readonly string migratorName;
@@ -45,19 +99,12 @@ namespace Aurora.DataManager.Migration
         private IRestorePoint restorePoint;
         private bool rollback;
 
-        public MigrationManager(IDataConnector genericData, string migratorName, bool validateTables)
+        public Migration(IDataConnector genericData, string migratorName, List<Migrator> migrators, bool validateTables)
         {
             this.genericData = genericData;
             this.migratorName = migratorName;
             this.validateTables = validateTables;
-            List<IMigrator> allMigrators = AuroraModuleLoader.PickupModules<IMigrator>();
-
-            foreach (
-                IMigrator m in
-                    allMigrators.Where(m => m.MigrationName != null).Where(m => m.MigrationName == migratorName))
-            {
-                migrators.Add((Migrator) m);
-            }
+            this.migrators = migrators;
         }
 
         public Version LatestVersion

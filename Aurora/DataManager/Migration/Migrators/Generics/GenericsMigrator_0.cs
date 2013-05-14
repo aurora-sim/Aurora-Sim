@@ -29,34 +29,32 @@ using System;
 using System.Collections.Generic;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators.Estate
+namespace Aurora.DataManager.Migration.Migrators.Generics
 {
-    public class EstateMigrator_2 : Migrator
+    public class GenericsMigrator_0 : Migrator
     {
-        public EstateMigrator_2()
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
         {
-            Version = new Version(0, 0, 2);
-            MigrationName = "Estate";
+            new SchemaDefinition("generics",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "OwnerID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Type", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "Key", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "Value", Type = ColumnTypeDef.LongText},
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"OwnerID", "Type", "Key"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"Type", "Key"}, Type = IndexType.Index }
+                }),
+        };
 
-            schema = new List<SchemaDefinition>();
-
-            AddSchema("estateregions", ColDefs(
-                ColDef("RegionID", ColumnTypes.String36),
-                ColDef("EstateID", ColumnTypes.Integer11)
-                                           ), IndexDefs(
-                                               IndexDef(new string[] {"RegionID"}, IndexType.Primary)
-                                                  ));
-
-            AddSchema("estatesettings", ColDefs(
-                ColDef("EstateID", ColumnTypes.Integer11),
-                ColDef("EstateName", ColumnTypes.String100),
-                ColDef("EstateOwner", ColumnTypes.String36),
-                ColDef("ParentEstateID", ColumnTypes.Integer11),
-                ColDef("Settings", ColumnTypes.Text)
-                                            ), IndexDefs(
-                                                IndexDef(new string[] {"EstateID"}, IndexType.Primary),
-                                                IndexDef(new string[] {"EstateOwner"}, IndexType.Index)
-                                                   ));
+        public GenericsMigrator_0()
+        {
+            Version = new Version(0, 1, 0);
+            MigrationName = "Generics";
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

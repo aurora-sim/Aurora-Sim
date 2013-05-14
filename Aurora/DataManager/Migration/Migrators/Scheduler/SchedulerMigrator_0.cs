@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://aurora-sim.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -29,42 +29,57 @@ using System;
 using System.Collections.Generic;
 using Aurora.Framework.Utilities;
 
-namespace Aurora.DataManager.Migration.Migrators.Auth
+namespace Aurora.DataManager.Migration.Migrators.Scheduler
 {
-    public class AuthMigrator_0 : Migrator
+    public class SchedulerMigrator_0 : Migrator
     {
         private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
         {
-            new SchemaDefinition("auth",  
+            new SchemaDefinition("scheduler",  
                 new ColumnDefinition[]
                 {
-                    new ColumnDefinition {Name = "UUID", Type = ColumnTypeDef.Char36},
-                    new ColumnDefinition {Name = "passwordHash", Type = ColumnTypeDef.MediumText},
-                    new ColumnDefinition {Name = "passwordSalt", Type = ColumnTypeDef.MediumText},
-                    new ColumnDefinition {Name = "accountType", Type = ColumnTypeDef.String36}
+                    new ColumnDefinition {Name = "id", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "fire_function", Type = ColumnTypeDef.String128},
+                    new ColumnDefinition {Name = "fire_params", Type = ColumnTypeDef.MediumText},
+                    new ColumnDefinition {Name = "run_once", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "run_every", Type = ColumnTypeDef.Integer30},
+                    new ColumnDefinition {Name = "runs_next", Type = ColumnTypeDef.DateTime},
+                    new ColumnDefinition {Name = "keep_history", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "require_reciept", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "last_history_id", Type = ColumnTypeDef.String36},
+                    new ColumnDefinition {Name = "create_time", Type = ColumnTypeDef.DateTime},
+                    new ColumnDefinition {Name = "start_time", Type = ColumnTypeDef.DateTime},
+                    new ColumnDefinition {Name = "run_every_type", Type = ColumnTypeDef.Integer30},
+                    new ColumnDefinition {Name = "enabled", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "schedule_for", Type = ColumnTypeDef.Char36DefaultZero},
                 },
                 new IndexDefinition[] 
                 {
-                    new IndexDefinition() { Fields = new string[] {"UUID", "accountType"}, Type = IndexType.Primary },
-                    new IndexDefinition() { Fields = new string[] {"passwordHash"}, Type = IndexType.Index }
+                    new IndexDefinition() { Fields = new string[] {"id"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"runs_next", "enabled"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"schedule_for", "fire_function"}, Type = IndexType.Index }
                 }),
-            new SchemaDefinition("tokens",  
+            new SchemaDefinition("scheduler_history",  
                 new ColumnDefinition[]
                 {
-                    new ColumnDefinition {Name = "UUID", Type = ColumnTypeDef.Char36},
-                    new ColumnDefinition {Name = "token", Type = ColumnTypeDef.String255},
-                    new ColumnDefinition {Name = "validity", Type = ColumnTypeDef.Integer11}
+                    new ColumnDefinition {Name = "id", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "scheduler_id", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "ran_time", Type = ColumnTypeDef.DateTime},
+                    new ColumnDefinition {Name = "run_time", Type = ColumnTypeDef.DateTime},
+                    new ColumnDefinition {Name = "reciept", Type = ColumnTypeDef.MediumText},
+                    new ColumnDefinition {Name = "is_complete", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "complete_time", Type = ColumnTypeDef.DateTime},
                 },
                 new IndexDefinition[] 
                 {
-                    new IndexDefinition() { Fields = new string[] {"UUID", "token"}, Type = IndexType.Primary }
-                })
+                    new IndexDefinition() { Fields = new string[] {"id", "scheduler_id"}, Type = IndexType.Primary }
+                }),
         };
 
-        public AuthMigrator_0()
+        public SchedulerMigrator_0()
         {
             Version = new Version(0, 1, 0);
-            MigrationName = "Auth";
+            MigrationName = "Scheduler";
             base.schema = _schema;
         }
 

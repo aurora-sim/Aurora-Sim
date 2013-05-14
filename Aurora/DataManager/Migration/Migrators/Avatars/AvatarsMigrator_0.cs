@@ -33,22 +33,24 @@ namespace Aurora.DataManager.Migration.Migrators.Avatars
 {
     public class AvatarsMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("appearance",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "PrincipalID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Appearance", Type = ColumnTypeDef.MediumText}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"PrincipalID"}, Type = IndexType.Primary }
+                })
+        };
         public AvatarsMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "Avatars";
-
-            schema = new List<SchemaDefinition>();
-            this.RenameSchema("Avatars", "avatars");
-            this.RemoveSchema("avatars");
-
-            AddSchema("avatars", ColDefs(
-                ColDef("PrincipalID", ColumnTypes.Char36),
-                ColDef("Name", ColumnTypes.String32),
-                ColDef("Value", ColumnTypes.Text)
-                                     ), IndexDefs(
-                                         IndexDef(new string[2] {"PrincipalID", "Name"}, IndexType.Primary)
-                                            ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

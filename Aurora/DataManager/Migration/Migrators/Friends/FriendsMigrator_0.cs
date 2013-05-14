@@ -33,33 +33,29 @@ namespace Aurora.DataManager.Migration.Migrators.Friends
 {
     public class FriendsMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("friends",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "PrincipalID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Friend", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "Flags", Type = ColumnTypeDef.String16},
+                    new ColumnDefinition {Name = "Offered", Type = ColumnTypeDef.Char32},
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"PrincipalID", "Friend"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"EstateOwner"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"EstateName", "EstateOwner"}, Type = IndexType.Index }
+                }),
+        };
+
         public FriendsMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "Friends";
-
-            schema = new List<SchemaDefinition>();
-
-            //
-            // Change summery:
-            //
-            //   Force 'Friends' to 'friends'
-            //     Note: we do multiple renames here as it doesn't 
-            //     always like just switching to lowercase (as in SQLite)
-            //
-            this.RenameSchema("Friends", "friends");
-
-            //Remove the old name
-            this.RemoveSchema("friends");
-            //Add the new lowercase one
-            AddSchema("friends", ColDefs(
-                ColDef("PrincipalID", ColumnTypes.Char36),
-                ColDef("Friend", ColumnTypes.String255),
-                ColDef("Flags", ColumnTypes.String16),
-                ColDef("Offered", ColumnTypes.Char32)
-                                     ), IndexDefs(
-                                         IndexDef(new string[1] {"PrincipalID"}, IndexType.Primary)
-                                            ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

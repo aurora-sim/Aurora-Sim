@@ -33,49 +33,58 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
 {
     public class AssetMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("userdata",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "ID", Type = ColumnTypeDef.String45},
+                    new ColumnDefinition {Name = "Key", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "Value", Type = ColumnTypeDef.Text} 
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"ID", "Key"}, Type = IndexType.Primary }
+                }),
+            new SchemaDefinition("assets",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "id", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "name", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "description", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "assetType", Type = ColumnTypeDef.TinyInt4},
+                    new ColumnDefinition {Name = "local", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "temporary", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "asset_flags", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "creatorID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "data", Type = ColumnTypeDef.LongBlob},
+                    new ColumnDefinition {Name = "create_time", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "access_time", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "data", Type = ColumnTypeDef.LongBlob}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"id"}, Type = IndexType.Primary }
+                }),
+            new SchemaDefinition("lslgenericdata",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "Token", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "KeySetting", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "ValueSetting", Type = ColumnTypeDef.MediumText}
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"Token", "KeySetting"}, Type = IndexType.Primary }
+                }),
+        };
+
         public AssetMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "Asset";
 
-            schema = new List<SchemaDefinition>();
-
-            AddSchema("lslgenericdata", ColDefs(
-                ColDef("Token", ColumnTypes.String50),
-                ColDef("KeySetting", ColumnTypes.String50),
-                ColDef("ValueSetting", ColumnTypes.String50)
-                                            ), IndexDefs(
-                                                IndexDef(new string[2] {"Token", "KeySetting"}, IndexType.Primary)
-                                                   ));
-
-            AddSchema("assetblob", ColDefs(
-                ColDef("AssetID", ColumnTypes.Char36),
-                ColDef("AssetType", ColumnTypes.Integer11),
-                ColDef("OwnerID", ColumnTypes.Char36),
-                ColDef("Data", ColumnTypes.LongBlob),
-                ColDef("Info", ColumnTypes.String512)
-                                       ), IndexDefs(
-                                           IndexDef(new string[2] {"AssetID", "OwnerID"}, IndexType.Primary)
-                                              ));
-
-            AddSchema("assettext", ColDefs(
-                ColDef("AssetID", ColumnTypes.Char36),
-                ColDef("AssetType", ColumnTypes.Integer11),
-                ColDef("OwnerID", ColumnTypes.Char36),
-                ColDef("Data", ColumnTypes.Text),
-                ColDef("Info", ColumnTypes.String512)
-                                       ), IndexDefs(
-                                           IndexDef(new string[2] {"AssetID", "OwnerID"}, IndexType.Primary)
-                                              ));
-
-            AddSchema("assetmesh", ColDefs(
-                ColDef("AssetID", ColumnTypes.Char36),
-                ColDef("OwnerID", ColumnTypes.Char36),
-                ColDef("Data", ColumnTypes.LongBlob),
-                ColDef("Info", ColumnTypes.String512)
-                                       ), IndexDefs(
-                                           IndexDef(new string[2] {"AssetID", "OwnerID"}, IndexType.Primary)
-                                              ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

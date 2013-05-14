@@ -33,30 +33,37 @@ namespace Aurora.DataManager.Migration.Migrators.UserInfo
 {
     public class UserInfoMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("userinfo",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "UserID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "RegionID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "LastSeen", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "IsOnline", Type = ColumnTypeDef.TinyInt1},
+                    new ColumnDefinition {Name = "LastLogin", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "LastLogout", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Info", Type = ColumnTypeDef.MediumText},
+                    new ColumnDefinition {Name = "CurrentRegionID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "CurrentPosition", Type = ColumnTypeDef.String36},
+                    new ColumnDefinition {Name = "CurrentLookat", Type = ColumnTypeDef.String36},
+                    new ColumnDefinition {Name = "HomeRegionID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "HomePosition", Type = ColumnTypeDef.String36},
+                    new ColumnDefinition {Name = "HomeLookat", Type = ColumnTypeDef.String36},
+                    new ColumnDefinition {Name = "CurrentRegionURI", Type = ColumnTypeDef.String255},
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"UserID"}, Type = IndexType.Primary }
+                }),
+        };
+
         public UserInfoMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "UserInfo";
-
-            schema = new List<SchemaDefinition>();
-
-            //
-            // Change summery:
-            //
-            //   Add the new UserInfo table that replaces the GridUser and Presence tables
-            //
-            AddSchema("userinfo", ColDefs(
-                ColDef("UserID", ColumnTypes.String50),
-                ColDef("RegionID", ColumnTypes.String50),
-                ColDef("SessionID", ColumnTypes.String50),
-                ColDef("LastSeen", ColumnTypes.Integer30),
-                ColDef("IsOnline", ColumnTypes.String36),
-                ColDef("LastLogin", ColumnTypes.String50),
-                ColDef("LastLogout", ColumnTypes.String50),
-                ColDef("Info", ColumnTypes.String512)
-                                      ), IndexDefs(
-                                          IndexDef(new string[2] {"UserID", "RegionID"}, IndexType.Primary)
-                                             ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -33,40 +33,37 @@ namespace Aurora.DataManager.Migration.Migrators.UserAccounts
 {
     public class UserAccountsMigrator_0 : Migrator
     {
+        private static readonly List<SchemaDefinition> _schema = new List<SchemaDefinition>()
+        {
+            new SchemaDefinition("useraccounts",  
+                new ColumnDefinition[]
+                {
+                    new ColumnDefinition {Name = "PrincipalID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "ScopeID", Type = ColumnTypeDef.Char36},
+                    new ColumnDefinition {Name = "FirstName", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "LastName", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "Email", Type = ColumnTypeDef.String64},
+                    new ColumnDefinition {Name = "Created", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "UserLevel", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "UserFlags", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Name", Type = ColumnTypeDef.String255},
+                },
+                new IndexDefinition[] 
+                {
+                    new IndexDefinition() { Fields = new string[] {"PrincipalID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"ScopeID", "FirstName", "LastName"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"FirstName", "LastName"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"ScopeID", "PrincipalID"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"ScopeID", "Name"}, Type = IndexType.Index },
+                    new IndexDefinition() { Fields = new string[] {"Name"}, Type = IndexType.Index }
+                }),
+        };
+
         public UserAccountsMigrator_0()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 1, 0);
             MigrationName = "UserAccounts";
-
-            schema = new List<SchemaDefinition>();
-
-            //
-            // Change summery:
-            //
-            //   Force 'UserAccounts' to 'useraccounts'
-            //     Note: we do multiple renames here as it doesn't 
-            //     always like just switching to lowercase (as in SQLite)
-            //
-            this.RenameSchema("UserAccounts", "useraccountslower");
-            this.RenameSchema("useraccountslower", "useraccounts");
-
-            //Remove the old name
-            this.RemoveSchema("UserAccounts");
-            //Add the new lowercase one
-            AddSchema("useraccounts", ColDefs(
-                ColDef("PrincipalID", ColumnTypes.Char36),
-                ColDef("ScopeID", ColumnTypes.Char36),
-                ColDef("FirstName", ColumnTypes.String64),
-                ColDef("LastName", ColumnTypes.String64),
-                ColDef("Email", ColumnTypes.String64),
-                ColDef("ServiceURLs", ColumnTypes.Text),
-                ColDef("Created", ColumnTypes.Integer11),
-                ColDef("UserLevel", ColumnTypes.Integer11),
-                ColDef("UserFlags", ColumnTypes.Integer11),
-                ColDef("UserTitle", ColumnTypes.String64)
-                                          ), IndexDefs(
-                                              IndexDef(new string[1] {"PrincipalID"}, IndexType.Primary)
-                                                 ));
+            base.schema = _schema;
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)
