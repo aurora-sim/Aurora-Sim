@@ -454,18 +454,18 @@ namespace Aurora.BotManager
                     return;
                 bot.SendInstantMessage(new GridInstantMessage
                                            {
-                                               binaryBucket = new byte[0],
-                                               dialog = (byte) InstantMessageDialog.MessageFromAgent,
-                                               message = message,
-                                               fromAgentID = botID,
-                                               fromAgentName = bot.Controller.Name,
-                                               fromGroup = false,
-                                               imSessionID = UUID.Random(),
-                                               offline = 0,
+                                               BinaryBucket = new byte[0],
+                                               Dialog = (byte) InstantMessageDialog.MessageFromAgent,
+                                               Message = message,
+                                               FromAgentID = botID,
+                                               FromAgentName = bot.Controller.Name,
+                                               FromGroup = false,
+                                               SessionID = UUID.Random(),
+                                               Offline = 0,
                                                ParentEstateID = 0,
                                                RegionID = bot.Controller.GetScene().RegionInfo.RegionID,
-                                               timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                               toAgentID = toUser
+                                               Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                               ToAgentID = toUser
                                            });
             }
         }

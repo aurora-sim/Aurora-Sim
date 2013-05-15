@@ -4051,27 +4051,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             GridInstantMessage msg = new GridInstantMessage
                                          {
-                                             fromAgentID = m_host.UUID,
-                                             toAgentID = UUID.Parse(user),
-                                             imSessionID = friendTransactionID,
-                                             fromAgentName = m_host.Name
+                                             FromAgentID = m_host.UUID,
+                                             ToAgentID = UUID.Parse(user),
+                                             SessionID = friendTransactionID,
+                                             FromAgentName = m_host.Name,
+                                             RegionID = m_host.ParentEntity.Scene.RegionInfo.RegionID
                                          };
 
             // This is the item we're mucking with here
 
             // Cap the message length at 1024.
             if (message != null && message.Length > 1024)
-                msg.message = message.Substring(0, 1024);
+                msg.Message = message.Substring(0, 1024);
             else
-                msg.message = message;
+                msg.Message = message;
 
-            msg.dialog = (byte) InstantMessageDialog.MessageFromObject;
-            msg.fromGroup = false;
-            msg.offline = 0;
+            msg.Dialog = (byte) InstantMessageDialog.MessageFromObject;
+            msg.FromGroup = false;
+            msg.Offline = 0;
             msg.ParentEstateID = 0;
             msg.Position = m_host.AbsolutePosition;
             msg.RegionID = World.RegionInfo.RegionID;
-            msg.binaryBucket
+            msg.BinaryBucket
                 = Util.StringToBytes256(
                     "{0}/{1}/{2}/{3}",
                     World.RegionInfo.RegionName,
@@ -4968,16 +4969,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 byte[] objBytes = agentItem.ID.GetBytes();
                 Array.Copy(objBytes, 0, bucket, 1, 16);
 
-                GridInstantMessage msg = new GridInstantMessage(World,
-                                                                m_host.UUID, m_host.Name + ", an object owned by " +
-                                                                             resolveName(m_host.OwnerID) + ",", destId,
-                                                                (byte) InstantMessageDialog.InventoryOffered,
-                                                                false,
-                                                                objName + "'\n'" + m_host.Name + "' is located at " +
-                                                                m_host.AbsolutePosition.ToString() + " in '" +
-                                                                World.RegionInfo.RegionName,
-                                                                agentItem.ID, true, m_host.AbsolutePosition,
-                                                                bucket);
+                GridInstantMessage msg = new GridInstantMessage()
+                    {
+                        FromAgentID = m_host.UUID,
+                        FromAgentName = m_host.Name + ", an object owned by " +
+                                                                              resolveName(m_host.OwnerID) + ",",
+                        ToAgentID = destId,
+                        Dialog = (byte)InstantMessageDialog.InventoryOffered,
+                        Message = objName + "'\n'" + m_host.Name + "' is located at " +
+                                                                 m_host.AbsolutePosition.ToString() + " in '" +
+                                                                 World.RegionInfo.RegionName,
+                        SessionID = agentItem.ID,
+                        Offline = 1,
+                        Position = m_host.AbsolutePosition,
+                        BinaryBucket = bucket,
+                        RegionID = m_host.ParentEntity.Scene.RegionInfo.RegionID
+                    };
 
                 if (m_TransferModule != null)
                     m_TransferModule.SendInstantMessage(msg);
@@ -7503,16 +7510,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             bucket[0] = (byte) AssetType.Folder;
             byte[] objBytes = folderID.GetBytes();
             Array.Copy(objBytes, 0, bucket, 1, 16);
-
-            GridInstantMessage msg = new GridInstantMessage(World,
-                                                            m_host.UUID, m_host.Name + ", an object owned by " +
-                                                                         resolveName(m_host.OwnerID) + ",", destID,
-                                                            (byte) InstantMessageDialog.InventoryOffered,
-                                                            false, category + "\n" + m_host.Name + " is located at " +
+            
+            GridInstantMessage msg = new GridInstantMessage()
+                {
+                    FromAgentID = m_host.UUID,
+                    FromAgentName = m_host.Name + ", an object owned by " +
+                                                                         resolveName(m_host.OwnerID) + ",",
+                    ToAgentID = destID,
+                    Dialog = (byte)InstantMessageDialog.InventoryOffered,
+                    Message = category + "\n" + m_host.Name + " is located at " +
                                                                    World.RegionInfo.RegionName + " " +
                                                                    m_host.AbsolutePosition.ToString(),
-                                                            folderID, true, m_host.AbsolutePosition,
-                                                            bucket);
+                    SessionID = folderID,
+                    Offline = 1,
+                    Position = m_host.AbsolutePosition,
+                    BinaryBucket = bucket,
+                    RegionID = m_host.ParentEntity.Scene.RegionInfo.RegionID
+                };
 
             if (m_TransferModule != null)
                 m_TransferModule.SendInstantMessage(msg);

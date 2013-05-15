@@ -718,7 +718,7 @@ namespace Aurora.Modules.Chat
         /// <param name="im"></param>
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
-            byte dialog = im.dialog;
+            byte dialog = im.Dialog;
             switch (dialog)
             {
                 case (byte) InstantMessageDialog.SessionGroupStart:

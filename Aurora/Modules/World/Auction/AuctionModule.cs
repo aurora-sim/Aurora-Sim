@@ -181,22 +181,22 @@ namespace Aurora.Modules.Auction
                 if (offlineMessages != null)
                     offlineMessages.AddOfflineMessage(new GridInstantMessage()
                                                           {
-                                                              binaryBucket = new byte[0],
-                                                              dialog = (byte) InstantMessageDialog.MessageBox,
-                                                              fromAgentID = UUID.Zero,
-                                                              fromAgentName = "System",
-                                                              fromGroup = false,
-                                                              imSessionID = UUID.Random(),
-                                                              message =
+                                                              BinaryBucket = new byte[0],
+                                                              Dialog = (byte) InstantMessageDialog.MessageBox,
+                                                              FromAgentID = UUID.Zero,
+                                                              FromAgentName = "System",
+                                                              FromGroup = false,
+                                                              SessionID = UUID.Random(),
+                                                              Message =
                                                                   "You won the auction for the parcel " +
                                                                   landObject.LandData.Name + ", paying " +
                                                                   highestBid.Amount + " for it",
-                                                              offline = 0,
+                                                              Offline = 0,
                                                               ParentEstateID = 0,
                                                               Position = Vector3.Zero,
                                                               RegionID = m_scene.RegionInfo.RegionID,
-                                                              timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                                              toAgentID = highestBid.AuctionBidder
+                                                              Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                              ToAgentID = highestBid.AuctionBidder
                                                           });
                 landObject.UpdateLandSold(highestBid.AuctionBidder, UUID.Zero, false, landObject.LandData.AuctionID,
                                           highestBid.Amount, landObject.LandData.Area);

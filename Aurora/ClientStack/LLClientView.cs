@@ -843,28 +843,28 @@ namespace Aurora.ClientStack
         // Don't remove transaction ID! Groups and item gives need to set it!
         public void SendInstantMessage(GridInstantMessage im)
         {
-            if (m_scene.Permissions.CanInstantMessage(im.fromAgentID, im.toAgentID))
+            if (m_scene.Permissions.CanInstantMessage(im.FromAgentID, im.ToAgentID))
             {
                 ImprovedInstantMessagePacket msg
                     = (ImprovedInstantMessagePacket) PacketPool.Instance.GetPacket(PacketType.ImprovedInstantMessage);
 
-                msg.AgentData.AgentID = im.fromAgentID;
+                msg.AgentData.AgentID = im.FromAgentID;
                 msg.AgentData.SessionID = UUID.Zero;
-                msg.MessageBlock.FromAgentName = Util.StringToBytes256(im.fromAgentName);
-                msg.MessageBlock.Dialog = im.dialog;
-                msg.MessageBlock.FromGroup = im.fromGroup;
-                if (im.imSessionID == UUID.Zero)
-                    msg.MessageBlock.ID = im.fromAgentID ^ im.toAgentID;
+                msg.MessageBlock.FromAgentName = Util.StringToBytes256(im.FromAgentName);
+                msg.MessageBlock.Dialog = im.Dialog;
+                msg.MessageBlock.FromGroup = im.FromGroup;
+                if (im.SessionID == UUID.Zero)
+                    msg.MessageBlock.ID = im.FromAgentID ^ im.ToAgentID;
                 else
-                    msg.MessageBlock.ID = im.imSessionID;
-                msg.MessageBlock.Offline = im.offline;
-                msg.MessageBlock.ParentEstateID = im.ParentEstateID;
+                    msg.MessageBlock.ID = im.SessionID;
+                msg.MessageBlock.Offline = im.Offline;
+                msg.MessageBlock.ParentEstateID = 0;
                 msg.MessageBlock.Position = im.Position;
                 msg.MessageBlock.RegionID = im.RegionID;
-                msg.MessageBlock.Timestamp = im.timestamp;
-                msg.MessageBlock.ToAgentID = im.toAgentID;
-                msg.MessageBlock.Message = Util.StringToBytes1024(im.message);
-                msg.MessageBlock.BinaryBucket = im.binaryBucket;
+                msg.MessageBlock.Timestamp = im.Timestamp;
+                msg.MessageBlock.ToAgentID = im.ToAgentID;
+                msg.MessageBlock.Message = Util.StringToBytes1024(im.Message);
+                msg.MessageBlock.BinaryBucket = im.BinaryBucket;
 
                 OutPacket(msg, ThrottleOutPacketType.AvatarInfo);
             }
@@ -2521,8 +2521,17 @@ namespace Aurora.ClientStack
         public void SendBlueBoxMessage(UUID FromAvatarID, String FromAvatarName, String Message)
         {
             if (!ChildAgentStatus())
-                SendInstantMessage(new GridInstantMessage(null, FromAvatarID, FromAvatarName, AgentId, 1, Message, false,
-                                                          new Vector3()));
+                SendInstantMessage(new GridInstantMessage()
+            {
+                FromAgentID = FromAvatarID,
+                FromAgentName = FromAvatarName,
+                ToAgentID = AgentId,
+                Dialog = (byte)InstantMessageDialog.MessageBox,
+                Message = Message,
+                Offline = 0,
+                Position = new Vector3(),
+                RegionID = Scene.RegionInfo.RegionID
+            });
 
             //SendInstantMessage(FromAvatarID, fromSessionID, Message, AgentId, SessionId, FromAvatarName, (byte)21,(uint) Util.UnixTimeSinceEpoch());
         }
@@ -6204,17 +6213,20 @@ namespace Aurora.ClientStack
 
             if (handlerInstantMessage != null)
             {
-                GridInstantMessage im = new GridInstantMessage(Scene,
-                                                               msgpack.AgentData.AgentID,
-                                                               IMfromName,
-                                                               msgpack.MessageBlock.ToAgentID,
-                                                               msgpack.MessageBlock.Dialog,
-                                                               msgpack.MessageBlock.FromGroup,
-                                                               IMmessage,
-                                                               msgpack.MessageBlock.ID,
-                                                               msgpack.MessageBlock.Offline != 0,
-                                                               msgpack.MessageBlock.Position,
-                                                               msgpack.MessageBlock.BinaryBucket);
+                GridInstantMessage im = new GridInstantMessage()
+                    {
+                        RegionID = Scene.RegionInfo.RegionID,
+                        FromAgentID = msgpack.AgentData.AgentID,
+                        FromAgentName = IMfromName,
+                        ToAgentID = msgpack.MessageBlock.ToAgentID,
+                        Dialog = msgpack.MessageBlock.Dialog,
+                        FromGroup = msgpack.MessageBlock.FromGroup,
+                        Message = IMmessage,
+                        SessionID = msgpack.MessageBlock.ID,
+                        Offline = msgpack.MessageBlock.Offline,
+                        Position = msgpack.MessageBlock.Position,
+                        BinaryBucket = msgpack.MessageBlock.BinaryBucket
+                    };
 
                 PreSendImprovedInstantMessage handlerPreSendInstantMessage = OnPreSendInstantMessage;
                 if (handlerPreSendInstantMessage != null)

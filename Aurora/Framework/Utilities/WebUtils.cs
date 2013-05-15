@@ -59,7 +59,15 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public static string PostToService(string url, OSDMap data)
         {
-            Task<string> t = ServiceOSDRequest(url, data, "POST", m_defaultTimeout);
+            byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
+            Task<byte[]> t = ServiceOSDRequest(url, buffer, "POST", m_defaultTimeout);
+            t.Wait();
+            return Encoding.UTF8.GetString(t.Result);
+        }
+
+        public static byte[] PostToService(string url, byte[] data)
+        {
+            Task<byte[]> t = ServiceOSDRequest(url, data, "POST", m_defaultTimeout);
             t.Wait();
             return t.Result;
         }
@@ -70,9 +78,9 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public static string GetFromService(string url)
         {
-            Task<string> t = ServiceOSDRequest(url, null, "GET", m_defaultTimeout);
+            Task<byte[]> t = ServiceOSDRequest(url, null, "GET", m_defaultTimeout);
             t.Wait();
-            return t.Result;
+            return Encoding.UTF8.GetString(t.Result);
         }
 
         /// <summary>
@@ -81,9 +89,10 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public static string PutToService(string url, OSDMap data)
         {
-            Task<string> t = ServiceOSDRequest(url, data, "PUT", m_defaultTimeout);
+            byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
+            Task<byte[]> t = ServiceOSDRequest(url, buffer, "PUT", m_defaultTimeout);
             t.Wait();
-            return t.Result;
+            return Encoding.UTF8.GetString(t.Result);
         }
 
         /// <summary>
@@ -91,15 +100,15 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public static void DeleteFromService(string url)
         {
-            Task<string> t = ServiceOSDRequest(url, null, "DELETE", m_defaultTimeout);
+            Task<byte[]> t = ServiceOSDRequest(url, null, "DELETE", m_defaultTimeout);
             t.Wait();
         }
 
-        public static async Task<string> ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
+        public static async Task<byte[]> ServiceOSDRequest(string url, byte[] buffer, string method, int timeout)
         {
-            string errorMessage = "", response = null;
+            string errorMessage = "";
+            byte[] response = null;
             int tickstart = Util.EnvironmentTickCount(), tickelapsed = 0;
-            byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
             try
             {
                 HttpClient client = new HttpClient();
@@ -129,8 +138,7 @@ namespace Aurora.Framework.Utilities
                 }
                 httpresponse.EnsureSuccessStatusCode();
 
-                response = await httpresponse.Content.ReadAsStringAsync();
-
+                response = await httpresponse.Content.ReadAsByteArrayAsync();
                 tickelapsed = Util.EnvironmentTickCountSubtract(tickstart);
 
                 if (MainConsole.Instance != null)
@@ -143,13 +151,13 @@ namespace Aurora.Framework.Utilities
                             System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
 
                             MainConsole.Instance.Debug(
-                                string.Format("[WebUtils]: osd request (URI:{0}, METHOD:{1}, UPSTACK(4):{3}) took {2}ms",
+                                string.Format("[WebUtils]: request (URI:{0}, METHOD:{1}, UPSTACK(4):{3}) took {2}ms",
                                 url, method, tickelapsed,
                                 stackTrace.GetFrame(3).GetMethod().Name));
                         }
                         if (tickelapsed > 5000)
                             MainConsole.Instance.Info(
-                                string.Format("[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms",
+                                string.Format("[WebUtils]: request took too long (URI:{0}, METHOD:{1}) took {2}ms",
                                 url, method, tickelapsed));
                     }
                 }
@@ -157,9 +165,7 @@ namespace Aurora.Framework.Utilities
             catch (Exception ex)
             {
                 if (MainConsole.Instance != null)
-                    MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", ex.ToString(),
-                                                    url,
-                                                    data != null ? data.AsString() : "");
+                    MainConsole.Instance.WarnFormat("[WebUtils] request failed: {0} to {1}", ex.ToString(), url);
             }
             return response;
         }
@@ -172,6 +178,16 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public static string PostToService(string url, OSDMap data)
         {
+            byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
+            return Encoding.UTF8.GetString(ServiceOSDRequest(url, buffer, "POST", m_defaultTimeout));
+        }
+
+        /// <summary>
+        ///     POST URL-encoded form data to a web service that returns LLSD or
+        ///     JSON data
+        /// </summary>
+        public static byte[] PostToService(string url, byte[] data)
+        {
             return ServiceOSDRequest(url, data, "POST", m_defaultTimeout);
         }
 
@@ -181,7 +197,7 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public static string GetFromService(string url)
         {
-            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout);
+            return Encoding.UTF8.GetString(ServiceOSDRequest(url, null, "GET", m_defaultTimeout));
         }
 
         /// <summary>
@@ -190,7 +206,8 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public static string PutToService(string url, OSDMap data)
         {
-            return ServiceOSDRequest(url, data, "PUT", m_defaultTimeout);
+            byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
+            return Encoding.UTF8.GetString(ServiceOSDRequest(url, buffer, "PUT", m_defaultTimeout));
         }
 
         /// <summary>
@@ -199,10 +216,10 @@ namespace Aurora.Framework.Utilities
         /// </summary>
         public static string DeleteFromService(string url)
         {
-            return ServiceOSDRequest(url, null, "DELETE", m_defaultTimeout);
+            return Encoding.UTF8.GetString(ServiceOSDRequest(url, null, "DELETE", m_defaultTimeout));
         }
 
-        public static string ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
+        public static byte[] ServiceOSDRequest(string url, byte[] buffer, string method, int timeout)
         {
             // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
 
@@ -210,7 +227,6 @@ namespace Aurora.Framework.Utilities
             int tickstart = Util.EnvironmentTickCount();
             int tickdata = 0;
             int tickserialize = 0;
-            byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
             HttpWebRequest request = null;
             try
             {
@@ -240,7 +256,7 @@ namespace Aurora.Framework.Utilities
                     using (Stream responseStream = response.GetResponseStream())
                     {
                         tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
-                        return HttpServerHandlerHelpers.ReadString(responseStream);
+                        return HttpServerHandlerHelpers.ReadBytes(responseStream);
                     }
                 }
             }
@@ -252,13 +268,13 @@ namespace Aurora.Framework.Utilities
                     HttpWebResponse webResponse = (HttpWebResponse)we.Response;
                     if (webResponse.StatusCode == HttpStatusCode.BadRequest)
                         MainConsole.Instance.WarnFormat("[WebUtils]: bad request to {0}, data {1}", url,
-                                                        data != null ? OSDParser.SerializeJsonString(data) : "");
+                                                        buffer != null ? OSDParser.SerializeJsonString(buffer) : "");
                     else
                         MainConsole.Instance.Warn(string.Format("[WebUtils]: {0} to {1}, data {2}, response {3}",
                                                         webResponse.StatusCode, url,
-                                                        data != null ? OSDParser.SerializeJsonString(data) : "",
+                                                        buffer != null ? OSDParser.SerializeJsonString(buffer) : "",
                                                         webResponse.StatusDescription));
-                    return "";
+                    return new byte[0];
                 }
                 if (request != null)
                     request.Abort();
@@ -291,21 +307,20 @@ namespace Aurora.Framework.Utilities
                         }
                         else if (MainConsole.Instance.IsDebugEnabled)
                             MainConsole.Instance.Debug(
-                                string.Format("[WebUtils]: osd request (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                string.Format("[WebUtils]: request (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
                                 url, method, tickdiff, tickdata, tickserialize));
                         if (tickdiff > 5000)
                             MainConsole.Instance.Info(
-                                string.Format("[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                string.Format("[WebUtils]: request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
                                 url, method, tickdiff, tickdata, tickserialize));
                     }
                 }
             }
 
             if (MainConsole.Instance != null)
-                MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage,
-                                                url,
-                                                data != null ? data.AsString() : "");
-            return "";
+                MainConsole.Instance.WarnFormat("[WebUtils]: request failed: {0} to {1}, data {2}", errorMessage,
+                                                url, buffer != null ? OSDParser.SerializeJsonString(buffer) : "");
+            return new byte[0];
         }
 
 #endif

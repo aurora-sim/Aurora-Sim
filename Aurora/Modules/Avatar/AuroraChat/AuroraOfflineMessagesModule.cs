@@ -175,7 +175,7 @@ namespace Aurora.Modules.Chat
             if (msglist == null)
                 msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
             msglist.Sort(
-                delegate(GridInstantMessage a, GridInstantMessage b) { return a.timestamp.CompareTo(b.timestamp); });
+                delegate(GridInstantMessage a, GridInstantMessage b) { return a.Timestamp.CompareTo(b.Timestamp); });
             foreach (GridInstantMessage IM in msglist)
             {
                 // Send through scene event manager so all modules get a chance
@@ -184,7 +184,7 @@ namespace Aurora.Modules.Chat
                 // Needed for proper state management for stored group
                 // invitations
                 //
-                IM.offline = 1;
+                IM.Offline = 1;
                 m_Scene.EventManager.TriggerIncomingInstantMessage(IM);
             }
         }
@@ -193,25 +193,29 @@ namespace Aurora.Modules.Chat
         {
             if (OfflineMessagesConnector == null || im == null)
                 return;
-            IClientAPI client = FindClient(im.fromAgentID);
-            if ((client == null) && (im.dialog != 32))
+            IClientAPI client = FindClient(im.FromAgentID);
+            if ((client == null) && (im.Dialog != 32))
                 return;
             if (!OfflineMessagesConnector.AddOfflineMessage(im))
             {
-                if ((!im.fromGroup) && (reason != "User does not exist.") && (client != null))
-                    client.SendInstantMessage(new GridInstantMessage(
-                                                  null, im.toAgentID,
-                                                  "System", im.fromAgentID,
-                                                  (byte) InstantMessageDialog.MessageFromAgent,
-                                                  "User has too many IMs already, please try again later.",
-                                                  false, Vector3.Zero));
+                if ((!im.FromGroup) && (reason != "User does not exist.") && (client != null))
+                    client.SendInstantMessage(new GridInstantMessage()
+                    {
+                        FromAgentID = im.ToAgentID,
+                        FromAgentName = "System",
+                        ToAgentID = im.FromAgentID,
+                        Dialog = (byte)InstantMessageDialog.MessageFromAgent,
+                        Message = "User has too many IMs already, please try again later.",
+                        Offline = 0,
+                        RegionID = im.RegionID
+                    });
                 else if (client == null)
                     return;
             }
-            else if ((im.offline != 0)
-                     && (!im.fromGroup || im.fromGroup))
+            else if ((im.Offline != 0)
+                     && (!im.FromGroup || im.FromGroup))
             {
-                if (im.dialog == 32) //Group notice
+                if (im.Dialog == 32) //Group notice
                 {
                     IGroupsModule module = m_Scene.RequestModuleInterface<IGroupsModule>();
                     if (module != null)
@@ -223,49 +227,57 @@ namespace Aurora.Modules.Chat
                 if (emailModule != null && m_SendOfflineMessagesToEmail)
                 {
                     IUserProfileInfo profile =
-                        Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(im.toAgentID);
+                        Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(im.ToAgentID);
                     if (profile != null && profile.IMViaEmail)
                     {
-                        UserAccount account = m_Scene.UserAccountService.GetUserAccount(null, im.toAgentID.ToString());
+                        UserAccount account = m_Scene.UserAccountService.GetUserAccount(null, im.ToAgentID.ToString());
                         if (account != null && !string.IsNullOrEmpty(account.Email))
                         {
                             emailModule.SendEmail(UUID.Zero, account.Email,
-                                                  string.Format("Offline Message from {0}", im.fromAgentName),
+                                                  string.Format("Offline Message from {0}", im.FromAgentName),
                                                   string.Format("Time: {0}\n",
-                                                                Util.ToDateTime(im.timestamp).ToShortDateString()) +
-                                                  string.Format("From: {0}\n", im.fromAgentName) +
-                                                  string.Format("Message: {0}\n", im.message), m_Scene);
+                                                                Util.ToDateTime(im.Timestamp).ToShortDateString()) +
+                                                  string.Format("From: {0}\n", im.FromAgentName) +
+                                                  string.Format("Message: {0}\n", im.Message), m_Scene);
                         }
                     }
                 }
 
-                if (im.dialog == (byte) InstantMessageDialog.MessageFromAgent && !im.fromGroup)
+                if (im.Dialog == (byte) InstantMessageDialog.MessageFromAgent && !im.FromGroup)
                 {
-                    client.SendInstantMessage(new GridInstantMessage(
-                                                  null, im.toAgentID,
-                                                  "System", im.fromAgentID,
-                                                  (byte) InstantMessageDialog.MessageFromAgent,
-                                                  "Message saved, reason: " + reason,
-                                                  false, new Vector3()));
+                    client.SendInstantMessage(new GridInstantMessage()
+                    {
+                        FromAgentID = im.ToAgentID,
+                        FromAgentName = "System",
+                        ToAgentID = im.FromAgentID,
+                        Dialog = (byte)InstantMessageDialog.MessageFromAgent,
+                        Message = "Message saved, reason: " + reason,
+                        Offline = 0,
+                        RegionID = im.RegionID
+                    });
                 }
 
-                if (im.dialog == (byte) InstantMessageDialog.InventoryOffered)
+                if (im.Dialog == (byte) InstantMessageDialog.InventoryOffered)
                     client.SendAlertMessage("User is not online. Inventory has been saved");
             }
-            else if (im.offline == 0)
+            else if (im.Offline == 0)
             {
                 if (client == null) return;
-                if (im.dialog == (byte) InstantMessageDialog.MessageFromAgent && !im.fromGroup)
+                if (im.Dialog == (byte) InstantMessageDialog.MessageFromAgent && !im.FromGroup)
                 {
-                    client.SendInstantMessage(new GridInstantMessage(
-                                                  null, im.toAgentID,
-                                                  "System", im.fromAgentID,
-                                                  (byte) InstantMessageDialog.MessageFromAgent,
-                                                  "Message saved, reason: " + reason,
-                                                  false, new Vector3()));
+                    client.SendInstantMessage(new GridInstantMessage()
+                    {
+                        FromAgentID = im.ToAgentID,
+                        FromAgentName = "System",
+                        ToAgentID = im.FromAgentID,
+                        Dialog = (byte)InstantMessageDialog.MessageFromAgent,
+                        Message = "Message saved, reason: " + reason,
+                        Offline = 0,
+                        RegionID = im.RegionID
+                    });
                 }
 
-                if (im.dialog == (byte) InstantMessageDialog.InventoryOffered)
+                if (im.Dialog == (byte) InstantMessageDialog.InventoryOffered)
                     client.SendAlertMessage("User not able to be found. Inventory has been saved");
             }
         }

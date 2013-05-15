@@ -140,26 +140,25 @@ namespace Aurora.Modules.Chat
                 (uint) position.Y,
                 (uint) position.Z);
 
-            GridInstantMessage m;
+            GridInstantMessage m = new GridInstantMessage()
+                {
+                    FromAgentID = client.AgentId,
+                    FromAgentName = client.Name,
+                    ToAgentID = targetid,
+                    Dialog = (byte)InstantMessageDialog.RequestTeleport,
+                    Message = "",
+                    SessionID = dest,
+                    Offline = 0,
+                    Position = presence.AbsolutePosition,
+                    BinaryBucket = new Byte[0],
+                    RegionID = client.Scene.RegionInfo.RegionID
+                };
 
             if (m_allowGodTeleports && client.Scene.Permissions.CanGodTeleport(client.AgentId, targetid))
-                //if we are an admin and are in god mode
+            //if we are an admin and are in god mode
             {
                 //God tp them
-                m = new GridInstantMessage(client.Scene, client.AgentId,
-                                           client.Name, targetid,
-                                           (byte) InstantMessageDialog.GodLikeRequestTeleport, false,
-                                           "", dest, false, presence.AbsolutePosition,
-                                           new Byte[0]);
-            }
-            else
-            {
-                //Not a god, so no god tp
-                m = new GridInstantMessage(client.Scene, client.AgentId,
-                                           client.Name, targetid,
-                                           (byte) InstantMessageDialog.RequestTeleport, false,
-                                           message, dest, false, presence.AbsolutePosition,
-                                           new Byte[0]);
+                m.Dialog = (byte)InstantMessageDialog.GodLikeRequestTeleport;
             }
 
             if (m_TransferModule != null)
@@ -186,11 +185,11 @@ namespace Aurora.Modules.Chat
 
         private void OnGridInstantMessage(GridInstantMessage im)
         {
-            if (im.dialog == (byte) InstantMessageDialog.RequestTeleport)
+            if (im.Dialog == (byte) InstantMessageDialog.RequestTeleport)
             {
                 MainConsole.Instance.DebugFormat(
-                    "[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.imSessionID,
-                    im.RegionID, im.message);
+                    "[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.SessionID,
+                    im.RegionID, im.Message);
 
                 // Forward. We do this, because the IM module explicitly rejects
                 // IMs of this type

@@ -281,16 +281,16 @@ namespace Aurora.Modules.Friends
 
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
-            if ((InstantMessageDialog) im.dialog == InstantMessageDialog.FriendshipOffered)
+            if ((InstantMessageDialog) im.Dialog == InstantMessageDialog.FriendshipOffered)
             {
                 // we got a friendship offer
-                UUID principalID = im.fromAgentID;
-                UUID friendID = im.toAgentID;
+                UUID principalID = im.FromAgentID;
+                UUID friendID = im.ToAgentID;
 
                 //Can't trust the incoming name for friend offers, so we have to find it ourselves.
                 UserAccount sender = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
                                                                                principalID);
-                im.fromAgentName = sender.Name;
+                im.FromAgentName = sender.Name;
                 UserAccount reciever = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
                                                                                  friendID);
 
@@ -308,11 +308,11 @@ namespace Aurora.Modules.Friends
         {
             // !!!!!!!! This is a hack so that we don't have to keep state (transactionID/imSessionID)
             // We stick this agent's ID as imSession, so that it's directly available on the receiving end
-            im.imSessionID = im.fromAgentID;
+            im.SessionID = im.FromAgentID;
 
             // Try the local sim
             UserAccount account = UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, agentID);
-            im.fromAgentName = (account == null) ? "Unknown" : account.Name;
+            im.FromAgentName = (account == null) ? "Unknown" : account.Name;
 
             if (LocalFriendshipOffered(friendID, im))
                 return;
@@ -459,9 +459,14 @@ namespace Aurora.Modules.Friends
             // Barrowed a few lines from SendFriendsOnlineIfNeeded() above.
             UUID agentID = client.AgentId;
             FriendInfo[] friends = FriendsService.GetFriendsRequest(agentID).ToArray();
-            GridInstantMessage im = new GridInstantMessage(client.Scene, UUID.Zero, String.Empty, agentID,
-                                                           (byte) InstantMessageDialog.FriendshipOffered,
-                                                           "Will you be my friend?", true, Vector3.Zero);
+            GridInstantMessage im = new GridInstantMessage() 
+            {
+                ToAgentID = agentID,
+                Dialog = (byte)InstantMessageDialog.FriendshipOffered,
+                Message = "Will you be my friend?", 
+                Offline = 1,
+                RegionID = client.Scene.RegionInfo.RegionID
+            };
             foreach (FriendInfo fi in friends)
             {
                 if (fi.MyFlags == 0)
@@ -472,11 +477,11 @@ namespace Aurora.Modules.Friends
 
                     UserAccount account = m_scene.UserAccountService.GetUserAccount(
                         client.Scene.RegionInfo.AllScopeIDs, fromAgentID);
-                    im.fromAgentID = fromAgentID;
+                    im.FromAgentID = fromAgentID;
                     if (account != null)
-                        im.fromAgentName = account.Name;
-                    im.offline = 1;
-                    im.imSessionID = im.fromAgentID;
+                        im.FromAgentName = account.Name;
+                    im.Offline = 1;
+                    im.SessionID = im.FromAgentID;
 
                     LocalFriendshipOffered(agentID, im);
                 }
@@ -522,9 +527,16 @@ namespace Aurora.Modules.Friends
                     us.SendAgentOnline(new[] {friendID});
 
                 // the prospective friend in this sim as root agent
-                GridInstantMessage im = new GridInstantMessage(m_scene, userID, name, friendID,
-                                                               (byte) InstantMessageDialog.FriendshipAccepted,
-                                                               userID.ToString(), false, Vector3.Zero);
+                GridInstantMessage im = new GridInstantMessage()
+                {
+                    FromAgentID = userID,
+                    FromAgentName = name,
+                    ToAgentID = friendID,
+                    Dialog = (byte)InstantMessageDialog.FriendshipAccepted,
+                    Message = userID.ToString(),
+                    Offline = 0,
+                    RegionID = us.Scene.RegionInfo.RegionID
+                };
                 friendClient.SendInstantMessage(im);
 
                 // Update the local cache
@@ -557,9 +569,16 @@ namespace Aurora.Modules.Friends
             if (friendClient != null)
             {
                 // the prospective friend in this sim as root agent
-                GridInstantMessage im = new GridInstantMessage(m_scene, userID, userName, friendID,
-                                                               (byte) InstantMessageDialog.FriendshipDeclined,
-                                                               userID.ToString(), false, Vector3.Zero);
+                GridInstantMessage im = new GridInstantMessage()
+                {
+                    FromAgentID = userID,
+                    FromAgentName = userName,
+                    ToAgentID = friendID,
+                    Dialog = (byte)InstantMessageDialog.FriendshipDeclined,
+                    Message = userID.ToString(),
+                    Offline = 0,
+                    RegionID = friendClient.Scene.RegionInfo.RegionID
+                };
                 friendClient.SendInstantMessage(im);
                 // we're done
                 return true;

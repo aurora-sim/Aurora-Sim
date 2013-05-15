@@ -341,31 +341,31 @@ namespace Aurora.Modules.Land
 
                         GridInstantMessage msg = new GridInstantMessage
                                                      {
-                                                         fromAgentID = UUID.Zero,
-                                                         toAgentID = ret.Key,
-                                                         imSessionID = transaction,
-                                                         timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                                         fromAgentName = "Server",
-                                                         dialog = 19,
-                                                         fromGroup = false,
-                                                         offline = 1,
+                                                         FromAgentID = UUID.Zero,
+                                                         ToAgentID = ret.Key,
+                                                         SessionID = transaction,
+                                                         Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                         FromAgentName = "Server",
+                                                         Dialog = 19,
+                                                         FromGroup = false,
+                                                         Offline = 1,
                                                          ParentEstateID =
                                                              m_scene.RegionInfo.EstateSettings.ParentEstateID,
                                                          Position = Vector3.Zero,
                                                          RegionID = m_scene.RegionInfo.RegionID,
-                                                         binaryBucket = Util.StringToBytes256("\0")
+                                                         BinaryBucket = Util.StringToBytes256("\0")
                                                      };
                         // From server
                         // Object msg
                         // We must fill in a null-terminated 'empty' string here since bytes[0] will crash viewer 3.
 
                         if (ret.Value.count > 1)
-                            msg.message =
+                            msg.Message =
                                 string.Format("Your {0} objects were returned from {1} in region {2} due to {3}",
                                               ret.Value.count, ret.Value.location.ToString(),
                                               m_scene.RegionInfo.RegionName, ret.Value.reason);
                         else
-                            msg.message = string.Format(
+                            msg.Message = string.Format(
                                 "Your object {0} was returned from {1} in region {2} due to {3}", ret.Value.objectName,
                                 ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
 

@@ -106,9 +106,9 @@ namespace Aurora.Services.DataService
                 return remoteValue == null ? false : (bool) remoteValue;
 
             if (m_maxOfflineMessages <= 0 ||
-                GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
+                GenericUtils.GetGenericCount(message.ToAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
             {
-                GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(),
+                GenericUtils.AddGeneric(message.ToAgentID, "OfflineMessages", UUID.Random().ToString(),
                                         message.ToOSD(), GD);
                 return true;
             }
