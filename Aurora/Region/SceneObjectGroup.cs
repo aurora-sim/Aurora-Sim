@@ -2171,6 +2171,8 @@ namespace Aurora.Region
             if (command == KeyframeAnimation.Commands.Play)
             {
                 m_rootPart.KeyframeAnimation = animation;
+                //Only have one at a time
+                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                 m_scene.EventManager.OnFrame += moveKeyframeMotion;
             }
             else
@@ -2288,8 +2290,9 @@ namespace Aurora.Region
                 }
                 if (m_rootPart.KeyframeAnimation.RotationList.Length != 0)
                 {
-                    Quaternion source = m_rootPart.GetRotationOffset();
-                    Quaternion newInterpolation = Quaternion.Slerp(source, target, progress);
+                    target = m_rootPart.KeyframeAnimation.InitialRotation * target;
+                    Quaternion newInterpolation = Quaternion.Slerp(m_rootPart.KeyframeAnimation.InitialRotation, target, progress);
+                    newInterpolation.Normalize();
                     m_rootPart.UpdateRotation(newInterpolation);
                     if (MadeItToCheckpoint)
                     {
