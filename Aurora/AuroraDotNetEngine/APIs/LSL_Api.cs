@@ -2705,8 +2705,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 foreach (UUID child in m_host.ParentEntity.LoopSoundSlavePrims)
                 {
                     ISceneChildEntity part = m_host.ParentEntity.GetChildPart(child);
+                    if (part == null)
+                        continue;
                     part.Sound = KeyOrName(sound, AssetType.Sound, true);
                     part.SoundGain = volume;
+                    part.AdjustSoundGain(volume);
                     part.SoundFlags = (byte)SoundFlags.Loop; // looping
                     if (part.SoundRadius == 0)
                         part.SoundRadius = 20; // Magic number, 20 seems reasonable. Make configurable?
@@ -2714,16 +2717,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     part.ScheduleUpdate(PrimUpdateFlags.FindBest);
                 }
             }
-            if (m_host.Sound != UUID.Zero)
-                llStopSound();
+            //if (m_host.Sound != UUID.Zero)
+            //    llStopSound();
 
+            m_host.AdjustSoundGain(volume);
             m_host.Sound = KeyOrName(sound, AssetType.Sound, true);
             m_host.SoundGain = volume;
             m_host.SoundFlags = (byte) SoundFlags.Loop; // looping
             if (m_host.SoundRadius == 0)
                 m_host.SoundRadius = 20; // Magic number, 20 seems reasonable. Make configurable?
 
-            m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
+            m_host.ScheduleUpdate(PrimUpdateFlags.ForcedFullUpdate);
         }
 
         public void llLoopSoundSlave(string sound, double volume)
@@ -2767,6 +2771,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     foreach (UUID child in m_host.ParentEntity.LoopSoundSlavePrims)
                     {
                         ISceneChildEntity part = m_host.ParentEntity.GetChildPart(child);
+                        if (part == null)
+                            continue;
                         part.Sound = UUID.Zero;
                         part.SoundGain = 0;
                         part.SoundFlags = (byte)SoundFlags.None;
