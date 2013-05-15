@@ -1925,12 +1925,21 @@ namespace Aurora.Modules.Land
                         if (info != null)
                             regionID = info.RegionID;
                     }
-                    IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
-                    if (DSC != null)
+                    if (regionID == m_scene.RegionInfo.RegionID)
                     {
-                        LandData data = DSC.GetParcelInfo(regionID, (int)x, (int)y);
-                        if(data != null)
-                            parcelID = data.GlobalID;
+                        ILandObject parcel = GetLandObject(x, y);
+                        if (parcel != null)
+                            parcelID = parcel.LandData.GlobalID;
+                    }
+                    if(parcelID == UUID.Zero)
+                    {
+                        IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                        if (DSC != null)
+                        {
+                            LandData data = DSC.GetParcelInfo(regionID, (int)x, (int)y);
+                            if (data != null)
+                                parcelID = data.GlobalID;
+                        }
                     }
                 }
             }
