@@ -2285,9 +2285,8 @@ namespace Aurora.Region
                                                      regionHandle, radius);
                         else
                             soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
-                        ParentGroup.PlaySoundMasterPrim = this;
                         ownerID = _ownerID;
-                        objectID = ParentGroup.RootPart.UUID;
+                        objectID = UUID;
                         parentID = GetRootPartUUID();
                         position = AbsolutePosition; // region local
                         regionHandle = ParentGroup.Scene.RegionInfo.RegionHandle;
@@ -2296,26 +2295,29 @@ namespace Aurora.Region
                                                      regionHandle, radius);
                         else
                             soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
-                        foreach (SceneObjectPart prim in ParentGroup.PlaySoundSlavePrims)
+                        lock (PlaySoundSlavePrims)
                         {
-                            ownerID = prim._ownerID;
-                            objectID = prim.ParentGroup.RootPart.UUID;
-                            parentID = prim.GetRootPartUUID();
-                            position = prim.AbsolutePosition; // region local
-                            regionHandle = prim.ParentGroup.Scene.RegionInfo.RegionHandle;
-                            if (triggered)
-                                soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position,
-                                                         regionHandle, radius);
-                            else
-                                soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags,
-                                                              radius);
+                            foreach (UUID child in ParentGroup.PlaySoundSlavePrims)
+                            {
+                                SceneObjectPart prim = ParentGroup.GetChildPart(child) as SceneObjectPart;
+                                objectID = prim.UUID;
+                                parentID = prim.GetRootPartUUID();
+                                position = prim.AbsolutePosition; // region local
+                                regionHandle = ParentGroup.Scene.RegionInfo.RegionHandle;
+                                if (triggered)
+                                    soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position,
+                                                             regionHandle, radius);
+                                else
+                                    soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags,
+                                                                  radius);
+                            }
+                            ParentGroup.PlaySoundSlavePrims.Clear();
                         }
-                        ParentGroup.PlaySoundSlavePrims.Clear();
-                        ParentGroup.PlaySoundMasterPrim = null;
                     }
                     else
                     {
-                        ParentGroup.PlaySoundSlavePrims.Add(this);
+                        lock(PlaySoundSlavePrims)
+                            ParentGroup.PlaySoundSlavePrims.Add(this.UUID);
                     }
                 }
                 else

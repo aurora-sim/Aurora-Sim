@@ -2699,21 +2699,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
-            m_host.ParentEntity.LoopSoundMasterPrim = m_host;
             lock (m_host.ParentEntity.LoopSoundSlavePrims)
             {
-                foreach (ISceneChildEntity prim in m_host.ParentEntity.LoopSoundSlavePrims)
+                m_host.ParentEntity.LoopSoundMasterPrim = m_host.UUID;
+                foreach (UUID child in m_host.ParentEntity.LoopSoundSlavePrims)
                 {
-                    if (prim.Sound != UUID.Zero)
-                        llStopSound();
+                    ISceneChildEntity part = m_host.ParentEntity.GetChildPart(child);
+                    part.Sound = KeyOrName(sound, AssetType.Sound, true);
+                    part.SoundGain = volume;
+                    part.SoundFlags = (byte)SoundFlags.Loop; // looping
+                    if (part.SoundRadius == 0)
+                        part.SoundRadius = 20; // Magic number, 20 seems reasonable. Make configurable?
 
-                    prim.Sound = KeyOrName(sound, AssetType.Sound, true);
-                    prim.SoundGain = volume;
-                    prim.SoundFlags = (byte) SoundFlags.Loop; // looping
-                    if (prim.SoundRadius == 0)
-                        prim.SoundRadius = 20; // Magic number, 20 seems reasonable. Make configurable?
-
-                    prim.ScheduleUpdate(PrimUpdateFlags.FindBest);
+                    part.ScheduleUpdate(PrimUpdateFlags.FindBest);
                 }
             }
             if (m_host.Sound != UUID.Zero)
@@ -2734,7 +2732,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.ParentEntity.LoopSoundSlavePrims)
             {
-                m_host.ParentEntity.LoopSoundSlavePrims.Add(m_host);
+                if(m_host.UUID != m_host.ParentEntity.LoopSoundMasterPrim)//Can't set the master as a slave
+                    m_host.ParentEntity.LoopSoundSlavePrims.Add(m_host.UUID);
             }
         }
 
@@ -2761,34 +2760,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
             m_host.AdjustSoundGain(0);
-            if (m_host.ParentEntity.LoopSoundSlavePrims.Contains(m_host))
+            lock (m_host.ParentEntity.LoopSoundSlavePrims)
             {
-                if (m_host.ParentEntity.LoopSoundMasterPrim == m_host)
+                if (m_host.ParentEntity.LoopSoundMasterPrim == m_host.UUID)
                 {
-                    foreach (ISceneChildEntity part in m_host.ParentEntity.LoopSoundSlavePrims)
+                    foreach (UUID child in m_host.ParentEntity.LoopSoundSlavePrims)
                     {
+                        ISceneChildEntity part = m_host.ParentEntity.GetChildPart(child);
                         part.Sound = UUID.Zero;
                         part.SoundGain = 0;
-                        part.SoundFlags = (byte) SoundFlags.None;
+                        part.SoundFlags = (byte)SoundFlags.None;
+                        part.AdjustSoundGain(0);
                         part.ScheduleUpdate(PrimUpdateFlags.FindBest);
                     }
-                    m_host.ParentEntity.LoopSoundMasterPrim = null;
+                    m_host.ParentEntity.LoopSoundMasterPrim = UUID.Zero;
                     m_host.ParentEntity.LoopSoundSlavePrims.Clear();
                 }
                 else
                 {
-                    m_host.Sound = UUID.Zero;
-                    m_host.SoundGain = 0;
-                    m_host.SoundFlags = (byte) SoundFlags.None;
-                    m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
+                    if (m_host.ParentEntity.LoopSoundSlavePrims.Contains(m_host.UUID))
+                    {
+                        m_host.Sound = UUID.Zero;
+                        m_host.SoundGain = 0;
+                        m_host.SoundFlags = (byte)SoundFlags.None;
+                        m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
+                    }
+                    else
+                    {
+                        m_host.Sound = UUID.Zero;
+                        m_host.SoundGain = 0;
+                        m_host.SoundFlags = (byte)SoundFlags.Stop | (byte)SoundFlags.None;
+                        m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
+                    }
                 }
-            }
-            else
-            {
-                m_host.Sound = UUID.Zero;
-                m_host.SoundGain = 0;
-                m_host.SoundFlags = (byte) SoundFlags.Stop | (byte) SoundFlags.None;
-                m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
             }
         }
 

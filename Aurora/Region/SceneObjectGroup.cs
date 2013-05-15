@@ -98,8 +98,8 @@ namespace Aurora.Region
 
         #region Properties
 
-        private List<ISceneChildEntity> m_LoopSoundSlavePrims = new List<ISceneChildEntity>();
-        private List<ISceneChildEntity> m_PlaySoundSlavePrims = new List<ISceneChildEntity>();
+        private List<UUID> m_LoopSoundSlavePrims = new List<UUID>();
+        private List<UUID> m_PlaySoundSlavePrims = new List<UUID>();
 
         /// <summary>
         ///     Added because the Parcel code seems to use it
@@ -163,9 +163,8 @@ namespace Aurora.Region
             }
         }
 
-        public ISceneChildEntity PlaySoundMasterPrim { get; set; }
-
-        public List<ISceneChildEntity> PlaySoundSlavePrims
+        [ProtoMember(2)]
+        public List<UUID> PlaySoundSlavePrims
         {
             get { return m_PlaySoundSlavePrims; }
             set { m_PlaySoundSlavePrims = value; }
@@ -306,9 +305,11 @@ namespace Aurora.Region
             }
         }
 
-        public ISceneChildEntity LoopSoundMasterPrim { get; set; }
+        [ProtoMember(3)]
+        public UUID LoopSoundMasterPrim { get; set; }
 
-        public List<ISceneChildEntity> LoopSoundSlavePrims
+        [ProtoMember(4)]
+        public List<UUID> LoopSoundSlavePrims
         {
             get { return m_LoopSoundSlavePrims; }
             set { m_LoopSoundSlavePrims = value; }
