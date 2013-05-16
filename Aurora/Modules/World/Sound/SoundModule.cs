@@ -174,8 +174,10 @@ namespace Aurora.Modules.Sound
                                                  else
                                                      thisSpGain = (float) ((double) gain*((radius - dis)/radius));
 
-                                                 if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
-                                                     flags += (int) SoundFlags.Queue;
+                                                 if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1 &&
+                                                     (flags & (int)SoundFlags.Queue) == 0)
+                                                     flags |= (int) SoundFlags.Queue;
+
                                                  sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID,
                                                                                             thisSpGain, flags);
                                              });

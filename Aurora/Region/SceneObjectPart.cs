@@ -539,9 +539,7 @@ namespace Aurora.Region
         private int _ownershipCost;
         private uint _parentID;
         private int _salePrice;
-        private List<SceneObjectPart> m_LoopSoundSlavePrims = new List<SceneObjectPart>();
         private byte[] m_ParticleSystem;
-        private List<SceneObjectPart> m_PlaySoundSlavePrims = new List<SceneObjectPart>();
         private string m_currentMediaVersion = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
         private int m_passCollision;
         private byte[] m_textureAnimation;
@@ -647,26 +645,6 @@ namespace Aurora.Region
 
         [ProtoMember(69)]
         public bool APIDEnabled { get; set; }
-
-        [XmlIgnore]
-        public SceneObjectPart PlaySoundMasterPrim { get; set; }
-
-        [XmlIgnore]
-        public List<SceneObjectPart> PlaySoundSlavePrims
-        {
-            get { return m_PlaySoundSlavePrims; }
-            set { m_PlaySoundSlavePrims = value; }
-        }
-
-        [XmlIgnore]
-        public SceneObjectPart LoopSoundMasterPrim { get; set; }
-
-        [XmlIgnore]
-        public List<SceneObjectPart> LoopSoundSlavePrims
-        {
-            get { return m_LoopSoundSlavePrims; }
-            set { m_LoopSoundSlavePrims = value; }
-        }
 
         [XmlIgnore, ProtoMember(64)]
         public float Damage { get; set; }
@@ -2240,8 +2218,7 @@ namespace Aurora.Region
         /// <param name="radius"></param>
         /// <param name="useMaster"></param>
         /// <param name="isMaster"></param>
-        public void SendSound(string sound, double volume, bool triggered, byte flags, float radius, bool useMaster,
-                              bool isMaster)
+        public void SendSound(string sound, double volume, bool triggered, byte flags, float radius)
         {
             if (sound == "" || sound == UUID.Zero.ToString())
                 return;
@@ -2276,58 +2253,11 @@ namespace Aurora.Region
             ISoundModule soundModule = m_parentGroup.Scene.RequestModuleInterface<ISoundModule>();
             if (soundModule != null)
             {
-                if (useMaster)
-                {
-                    if (isMaster)
-                    {
-                        if (triggered)
-                            soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position,
-                                                     regionHandle, radius);
-                        else
-                            soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
-                        ownerID = _ownerID;
-                        objectID = UUID;
-                        parentID = GetRootPartUUID();
-                        position = AbsolutePosition; // region local
-                        regionHandle = ParentGroup.Scene.RegionInfo.RegionHandle;
-                        if (triggered)
-                            soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position,
-                                                     regionHandle, radius);
-                        else
-                            soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
-                        lock (PlaySoundSlavePrims)
-                        {
-                            foreach (UUID child in ParentGroup.PlaySoundSlavePrims)
-                            {
-                                SceneObjectPart prim = ParentGroup.GetChildPart(child) as SceneObjectPart;
-                                objectID = prim.UUID;
-                                parentID = prim.GetRootPartUUID();
-                                position = prim.AbsolutePosition; // region local
-                                regionHandle = ParentGroup.Scene.RegionInfo.RegionHandle;
-                                if (triggered)
-                                    soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position,
-                                                             regionHandle, radius);
-                                else
-                                    soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags,
-                                                                  radius);
-                            }
-                            ParentGroup.PlaySoundSlavePrims.Clear();
-                        }
-                    }
-                    else
-                    {
-                        lock(PlaySoundSlavePrims)
-                            ParentGroup.PlaySoundSlavePrims.Add(this.UUID);
-                    }
-                }
+                if (triggered)
+                    soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position, regionHandle,
+                                                radius);
                 else
-                {
-                    if (triggered)
-                        soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position, regionHandle,
-                                                 radius);
-                    else
-                        soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
-                }
+                    soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
             }
         }
 
@@ -3743,8 +3673,6 @@ namespace Aurora.Region
             dupe.Flags = Flags;
             dupe.LinkNum = LinkNum;
             dupe.SitTargetAvatar = new List<UUID>();
-            dupe.m_LoopSoundSlavePrims = new List<SceneObjectPart>();
-            dupe.m_PlaySoundSlavePrims = new List<SceneObjectPart>();
 
             dupe.m_ValidpartOOB = false;
 
@@ -3885,7 +3813,7 @@ namespace Aurora.Region
             // play the sound.
             if (startedColliders.Count > 0 && CollisionSound != UUID.Zero && CollisionSoundVolume > 0.0f)
             {
-                SendSound(CollisionSound.ToString(), CollisionSoundVolume, true, 0, 0, false, false);
+                SendSound(CollisionSound.ToString(), CollisionSoundVolume, true, 0, 0);
             }
             else if (startedColliders.Count > 0)
             {
@@ -3895,32 +3823,32 @@ namespace Aurora.Region
                         break; // Agents will play the sound so we don't
 
                     case ActorTypes.Ground:
-                        SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
+                        SendSound(SoundWoodCollision, 1, true, 0, 0);
                         break; //Always play the click or thump sound when hitting ground
 
                     case ActorTypes.Prim:
                         switch (Material)
                         {
                             case (int) OpenMetaverse.Material.Flesh:
-                                SendSound(SoundFleshCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundFleshCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Glass:
-                                SendSound(SoundGlassCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundGlassCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Metal:
-                                SendSound(SoundMetalCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundMetalCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Plastic:
-                                SendSound(SoundPlasticCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundPlasticCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Rubber:
-                                SendSound(SoundRubberCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundRubberCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Stone:
-                                SendSound(SoundStoneCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundStoneCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Wood:
-                                SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundWoodCollision, 1, true, 0, 0);
                                 break;
                         }
                         break; //Play based on material type in prim2prim collisions

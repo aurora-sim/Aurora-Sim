@@ -2665,7 +2665,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, false, 0, 0, false, false);
+            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, false, 0, 0);
         }
 
         // Xantor 20080528 we should do this differently.
@@ -2736,7 +2736,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.ParentEntity.LoopSoundSlavePrims)
             {
-                if(m_host.UUID != m_host.ParentEntity.LoopSoundMasterPrim)//Can't set the master as a slave
+                if(m_host.UUID != m_host.ParentEntity.LoopSoundMasterPrim &&
+                    !m_host.ParentEntity.LoopSoundSlavePrims.Contains(m_host.UUID))//Can't set the master as a slave
                     m_host.ParentEntity.LoopSoundSlavePrims.Add(m_host.UUID);
             }
         }
@@ -2747,7 +2748,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, false, 0, 0, true, false);
+            //This kinda works, but I haven't found a way to be able to tell the client to sync it with the looping master sound
+            if (m_host.ParentEntity.LoopSoundMasterPrim != UUID.Zero)
+            {
+                ISceneChildEntity part = m_host.ParentEntity.GetChildPart(m_host.ParentEntity.LoopSoundMasterPrim);
+                if (part != null)
+                {
+                    foreach (IScenePresence sp in m_host.ParentEntity.Scene.GetScenePresences())
+                    {
+                        //sp.ControllingClient.SendPlayAttachedSound(part.Sound, part.UUID, part.OwnerID, (float)part.SoundGain, (byte)SoundFlags.Stop);
+                        sp.ControllingClient.SendPlayAttachedSound(KeyOrName(sound, AssetType.Sound, true), m_host.UUID, m_host.OwnerID, (float)(m_host.SoundGain == 0 ? 1.0 : m_host.SoundGain), (byte)(SoundFlags.Queue | SoundFlags.SyncMaster));
+                        sp.ControllingClient.SendPlayAttachedSound(part.Sound, part.UUID, part.OwnerID, (float)part.SoundGain, (byte)(SoundFlags.Queue | SoundFlags.Loop | SoundFlags.SyncSlave));
+                    }
+                    //if (part.Sound != UUID.Zero)
+                    //    part.SendSound(part.Sound.ToString(), part.SoundGain, false, (int)(SoundFlags.Loop | SoundFlags.Queue), (float)part.SoundRadius);
+                }
+            }
+            else
+                m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, false, 0, 0);
         }
 
         public void llTriggerSound(string sound, double volume)
@@ -2755,7 +2773,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, true, 0, 0, false, false);
+            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, true, 0, 0);
         }
 
         // Xantor 20080528: Clear prim data of sound instead
@@ -6818,7 +6836,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             double radius1 = (float) llVecDist(llGetPos(), top_north_east);
             double radius2 = (float) llVecDist(llGetPos(), bottom_south_west);
             double radius = Math.Abs(radius1 - radius2);
-            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, true, 0, (float)radius, false, false);
+            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, true, 0, (float)radius);
         }
 
         public DateTime llEjectFromLand(string pest)

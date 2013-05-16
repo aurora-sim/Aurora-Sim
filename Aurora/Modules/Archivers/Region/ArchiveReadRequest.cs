@@ -704,6 +704,8 @@ namespace Aurora.Modules.Archivers
             currentRegionSettings.UseEstateSun = loadedRegionSettings.UseEstateSun;
             currentRegionSettings.WaterHeight = loadedRegionSettings.WaterHeight;
 
+            m_scene.SimulationDataService.Tainted();
+
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
 
             if (estateModule != null)

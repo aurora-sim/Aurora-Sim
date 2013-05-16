@@ -741,7 +741,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             if (!CanEdit())
                 return;
 
-            GetSOP().SendSound(asset.ToString(), volume, true, 0, 0, false, false);
+            GetSOP().SendSound(asset.ToString(), volume, true, 0, 0);
         }
 
         #endregion

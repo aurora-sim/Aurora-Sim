@@ -229,7 +229,7 @@ namespace Aurora.Framework.SceneInfo
 
         double SoundRadius { get; set; }
 
-        void SendSound(string p, double volume, bool p_2, byte p_3, float p_4, bool p_5, bool p_6);
+        void SendSound(string sound, double volume, bool triggered, byte flags, float radius);
 
         void PreloadSound(string sound);
 

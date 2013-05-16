@@ -1485,8 +1485,7 @@ namespace Aurora.Region
             if (startedColliders.Count > 0 && RootPart.CollisionSound != UUID.Zero &&
                 RootPart.CollisionSoundVolume > 0.0f)
             {
-                RootPart.SendSound(RootPart.CollisionSound.ToString(), RootPart.CollisionSoundVolume, true, 0, 0, false,
-                                   false);
+                RootPart.SendSound(RootPart.CollisionSound.ToString(), RootPart.CollisionSoundVolume, true, 0, 0);
             }
             if (RootPart.CollisionSprite != UUID.Zero && RootPart.CollisionSoundVolume > 0.0f)
                 // The collision volume isn't a mistake, its an SL feature/bug
