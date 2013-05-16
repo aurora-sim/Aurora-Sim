@@ -306,14 +306,14 @@ namespace Aurora.Modules.Chat
         public void OnNewClient(IClientAPI client)
         {
             IScenePresence SP = client.Scene.GetScenePresence(client.AgentId);
+            //If chat is not blocked for now, add to the not blocked list
+            if (!m_blockChat)
+            {
+                if (!m_authorizedSpeakers.Contains(client.AgentId))
+                    m_authorizedSpeakers.Add(client.AgentId);
+            }
             if (!SP.IsChildAgent)
             {
-                //If chat is not blocked for now, add to the not blocked list
-                if (!m_blockChat)
-                {
-                    if (!m_authorizedSpeakers.Contains(client.AgentId))
-                        m_authorizedSpeakers.Add(client.AgentId);
-                }
 
                 //Tell all the clients about the incoming client if it is enabled
                 if (m_announceNewAgents)
