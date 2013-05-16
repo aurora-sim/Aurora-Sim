@@ -76,13 +76,7 @@ namespace Aurora.Services
             {
                 //A user has logged in or out... we need to update friends lists across the grid
 
-                System.Threading.WaitCallback delayed = state =>
-                {
-                    System.Threading.Thread.Sleep(5000);
-                    SendFriendStatusChanges(parameters);
-                };
-
-                System.Threading.ThreadPool.QueueUserWorkItem(delayed);
+                new System.Threading.Timer(SendFriendStatusChanges, parameters, 10000, System.Threading.Timeout.Infinite);
             }
             return null;
         }
@@ -108,23 +102,23 @@ namespace Aurora.Services
                     if (!UUID.TryParse(friend.Friend, out FriendToInform))
                         continue;
 
-                    UserInfo user = m_agentInfoService.GetUserInfo(friend.Friend);
+                    UserInfo friendToInformUser = m_agentInfoService.GetUserInfo(friend.Friend);
                     //Now find their caps service so that we can find where they are root (and if they are logged in)
-                    if (user != null && user.IsOnline)
+                    if (friendToInformUser != null && friendToInformUser.IsOnline)
                     {
                         //Find the root agent
                         OnlineFriends.Add(FriendToInform);
                         //Post!
-                        asyncPoster.Post(user.CurrentRegionURI,
+                        asyncPoster.Post(friendToInformUser.CurrentRegionURI,
                                          SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
                     }
                 }
                 //If the user is coming online, send all their friends online statuses to them
                 if (isOnline)
                 {
-                    UserInfo user = m_agentInfoService.GetUserInfo(us.ToString());
-                    if (user != null)
-                        asyncPoster.Post(user.CurrentRegionURI,
+                    UserInfo statusChangeUser = m_agentInfoService.GetUserInfo(us.ToString());
+                    if (statusChangeUser != null)
+                        asyncPoster.Post(statusChangeUser.CurrentRegionURI,
                                          SyncMessageHelper.AgentStatusChanges(OnlineFriends, us, true));
                 }
             }
@@ -150,7 +144,7 @@ namespace Aurora.Services
                     if (friendsModule != null)
                     {
                         //Send the message
-                        friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentID, NewStatus);
+                        friendsModule.SendFriendsStatusMessage(FriendToInformID, new [] { AgentID }, NewStatus);
                     }
                 }
             }
@@ -170,8 +164,7 @@ namespace Aurora.Services
                     if (friendsModule != null)
                     {
                         //Send the message
-                        foreach (UUID agentID in AgentIDs)
-                            friendsModule.SendFriendsStatusMessage(FriendToInformID, agentID, NewStatus);
+                        friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentIDs.ToArray(), NewStatus);
                     }
                 }
             }

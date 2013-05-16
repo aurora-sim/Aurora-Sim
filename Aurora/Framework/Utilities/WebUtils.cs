@@ -62,7 +62,7 @@ namespace Aurora.Framework.Utilities
             byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
             Task<byte[]> t = ServiceOSDRequest(url, buffer, "POST", m_defaultTimeout);
             t.Wait();
-            return Encoding.UTF8.GetString(t.Result);
+            return t.Result == null ? null : Encoding.UTF8.GetString(t.Result);
         }
 
         public static byte[] PostToService(string url, byte[] data)
@@ -80,7 +80,7 @@ namespace Aurora.Framework.Utilities
         {
             Task<byte[]> t = ServiceOSDRequest(url, null, "GET", m_defaultTimeout);
             t.Wait();
-            return Encoding.UTF8.GetString(t.Result);
+            return t.Result == null ? null : Encoding.UTF8.GetString(t.Result);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace Aurora.Framework.Utilities
             byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
             Task<byte[]> t = ServiceOSDRequest(url, buffer, "PUT", m_defaultTimeout);
             t.Wait();
-            return Encoding.UTF8.GetString(t.Result);
+            return t.Result == null ? null : Encoding.UTF8.GetString(t.Result);
         }
 
         /// <summary>
