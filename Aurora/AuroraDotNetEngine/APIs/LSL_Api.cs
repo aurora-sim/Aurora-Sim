@@ -13032,7 +13032,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     dataType == KeyframeAnimation.Data.Translation)
                 {
                     LSL_Vector pos = keyframes.GetVector3Item(i);
-                    positions.Add(m_host.AbsolutePosition + pos.ToVector3());
+                    positions.Add(pos.ToVector3());
                 }
                 if (dataType == KeyframeAnimation.Data.Both ||
                     dataType == KeyframeAnimation.Data.Rotation)
