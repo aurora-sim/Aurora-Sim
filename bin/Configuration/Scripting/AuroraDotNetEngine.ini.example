@@ -187,172 +187,24 @@
 	VeryHighUserSet = None
 	SevereUserSet = None
 
-    ;; Functions enable/disable thanks to WhiteStar Magic
-    ;; The default for all functions allows them if below the threat level as defined above
+	;; Function limiting
+    ;; Functions below the threat level set above are automatically allowed
+	;; To allow certain (or all) users to use higher level functions, you will set them below
     ;; If a Higher Threat Level Function is set to TRUE This will operate OVER the above define default level
     ;;
-    ;; = true   allows the use of the function unconditionally
-    ;; = false  completely disallows regardless
-    ;; = UUID allows that Individual Avatar/Group Access to osFunction
-    ;;   UUID,UUID,UUID would allow the 3 different avatars/group to access function
+    ;; Allow_function_name = true   allows the use of the function unconditionally
+    ;; Allow_function_name = false  completely disallows regardless
+    ;; Allow_function_name = UUID allows that Individual Avatar/Group Access to osFunction
+    ;; Allow_function_name = UUID,UUID,UUID would allow the 3 different avatars/group to access function
     ;;
-    ;; ### AA AURORA Functions ###
-    ;; *** Threat-Level=None
-    ;Allow_aaAvatarFullName2Key = true
-    ;Allow_aaDeregisterFromAvatarDeathEvents = true
-    ;Allow_aaGetFlyDisabled = true
-    ;Allow_aaGetHealth = true
-    ;Allow_aaGetLastOwner = true
-    ;Allow_aaGetText = true
-    ;Allow_aaGetWalkDisabled = true
-    ;Allow_aaRaiseError = true
-    ;Allow_aaRegisterToAvatarDeathEvents = true
-    ;Allow_aaRequestCombatPermission = true
-    ;Allow_aaSetCharacterStat = true
-    ;Allow_aaSetFlyDisabled = true
-    ;Allow_aaSetWalkDisabled = true
-    ;; *** Threat-Level=Nuisance
-    ;; *** Threat-Level=VeryLow
-    ;Allow_aaSayDistance = true    
-    ;; *** Threat-Level=Low
-    ;Allow_aaGetTeam = true
-    ;Allow_aaGetTeamMembers = true
-    ;Allow_aaJoinCombat = true
-    ;Allow_aaJoinCombatTeam = true
-    ;Allow_aaLeaveCombat = true
-    ;Allow_aaSayTo = true
-    ;Allow_aaSetConeOfSilence = true
-    ;; *** Threat-Level=Moderate
-    ;Allow_aaDeserializeXMLKeys = true
-    ;Allow_aaDeserializeXMLValues = true
-    ;Allow_aaFreezeAvatar = true
-    ;Allow_aaQueryDatabase = true
-    ;Allow_aaSerializeXML = true
-    ;Allow_aaSetCloudDensity = true
-    ;Allow_aaThawAvatar = true
-    ;Allow_aaUpdateDatabase = true
-    ;; *** Threat-Level=High    Recommended to use UUID for those set as false
-    ;Allow_aaSetCenterOfGravity = false
-    ;; *** Threat-Level=VeryHigh    Recommended to use UUID for those set as false
-    ;Allow_aaSetEnv = true
-    ;; *** Threat-Level=Severe    Recommended to use UUID for those set as false
-    ;;
-    ;; ### BOT Functions ###
-    ;; *** Threat-Level=Moderate
-    ;Allow_botCreateBot = true
-    ;Allow_botSetShouldFly = true
-    ;Allow_botSetMap = true
-    ;Allow_botPause = true
-    ;Allow_botResume = true
-    ;Allow_botStop = true
-    ;Allow_botStart = true
-    ;Allow_botRemoveBot = true
-    ;Allow_botFollowAvatar = true
-    ;Allow_botStopFollowAvatar = true
-    ;Allow_botSetPathMap = true
-    ;Allow_botFindPath = true
-    ;Allow_botSendChatMessage = true
-	;Allow_botSendIM = true
-    ;; ### OS OpenSim Functions ###
-    ;; *** Threat-Level=None
-    ;Allow_osDrawEllipse = true
-    ;Allow_osDrawFilledPolygon = true
-    ;Allow_osDrawPolygon = true
-    ;Allow_osDrawFilledRectangle = true
-    ;Allow_osDrawImage = true
-    ;Allow_osDrawLine = true
-    ;Allow_osDrawLine = true
-    ;Allow_osDrawRectangle = true
-    ;Allow_osDrawText = true
-    ;Allow_osGetAgents = true
-    ;Allow_osGetAvatarList = true
-    ;Allow_osGetCurrentSunHour = true
-    ;Allow_osGetMapTexture = true
-    ;Allow_osList2Double = true
-    ;Allow_osMovePen = true
-    ;Allow_osParseJSON = true
-    ;Allow_osRezObject = true
-    ;Allow_osSetFontName = true
-    ;Allow_osSetFontSize = true
-    ;Allow_osSetPenCap = true
-    ;Allow_osSetPenColour = true
-    ;Allow_osSetPenSize = true
-    ;Allow_osGetSunParam = true
-    ;Allow_osSetSunParam = true
-    ;Allow_osGetTerrainHeight = true
-    ;Allow_osWindActiveModelPluginName = true
-    ;; *** Threat-Level=Nuisance
-    ;Allow_osSetEstateSunSettings = false
-    ;Allow_osSetRegionSunSettings = false
-    ;; *** Threat-Level=VeryLow
-    ;Allow_osGetDrawStringSize = true
-    ;Allow_osSetDynamicTextureData = true
-    ;Allow_osSetDynamicTextureDataBlend = true
-    ;Allow_osSetDynamicTextureDataBlendFace = true
-    ;Allow_osSetDynamicTextureURL = true
-    ;Allow_osSetDynamicTextureURLBlend = true
-    ;Allow_osSetDynamicTextureURLBlendFace = true
-    ;Allow_osSetParcelMediaURL = false
-    ;Allow_osSetParcelSIPAddress = false
-    ;Allow_osSetPrimFloatOnWater = true
-    ;Allow_osTerrainFlush = false
-    ;; Allow_osGetWindParam = true   ;; Not Available at this time
-    ;; Allow_osSetWindParam = true   ;; Not Available at this time
-    ;; *** Threat-Level=Low
-    ;Allow_osAddAgentToGroup = true
-    ;Allow_osAvatarName2Key = true
-    ;Allow_osFormatString = true
-    ;Allow_osKey2Name = true
-    ;Allow_osLoadedCreationDate = false
-    ;Allow_osLoadedCreationID = false
-    ;Allow_osLoadedCreationTime = false
-    ;Allow_osMessageObject = true
-    ;; *** Threat-Level=Moderate
-    ;Allow_osGetGridLoginURI = true
-    ;Allow_osGetGridName = true
-    ;Allow_osGetGridNick = true
-    ;Allow_osGetRegionStats = true
-    ;Allow_osGetSimulatorMemory = true
-    ;Allow_osReturnObject = true
-    ;Allow_osReturnObjects = true
-    ;Allow_osSetSpeed = true
-    ;; *** Threat-Level=High    Recommended to use UUID for those set as false
-    ;Allow_osCauseDamage = false
-    ;Allow_osCauseHealing = false
-    ;Allow_osGetAgentIP = false
-    ;Allow_osGetLinkPrimitiveParams = true
-    ;Allow_osGetPrimitiveParams = true
-    ;Allow_osSetPrimitiveParams = true
-    ;Allow_osGetRegionMapTexture = true
-    ;Allow_osGetScriptEngineName = false
-    ;Allow_osMakeNotecard = false
-    ;Allow_osMatchString = true
-    ;Allow_osNpcCreate = false
-    ;Allow_osNpcMoveTo = false
-    ;Allow_osNpcRemove = false
-    ;Allow_osNpcSay = false
-    ;Allow_osParcelJoin = false
-    ;Allow_osParcelSetDetails = false
-    ;Allow_osParcelSubdivide = false
-    ;Allow_osRegionRestart = false
-    ;Allow_osSetProjectionParams = false
-    ;Allow_osSetRegionWaterHeight = false
-    ;Allow_osSetStateEvents = false
-    ;Allow_osShutDown = false
-    ;Allow_osTeleportAgent = false
-    ;Allow_osTerrainSetHeight = false
-    ;Allow_osGetSimulatorVersion = true
-    ;; *** Threat-Level=VeryHigh    Recommended to use UUID for those set as false
-    ;Allow_osAvatarPlayAnimation = false
-    ;Allow_osAvatarStopAnimation = false
-    ;Allow_osGetNotecard = false
-    ;Allow_osGetNotecardLine = false
-    ;Allow_osGetNumberOfNotecardLines = false
-    ;Allow_osRegionNotice = false
-    ;Allow_osSetRot = false
-    ;; *** Threat-Level=Severe    Recommended to use UUID for those set as false
-    ;Allow_osKickAvatar = false
-
+	;; Example:
+	;; 
+	;; Disabling llRezObject for all users
+	;; Allow_llRezObject = false
+	;; Enable llRezObject for all users
+	;; Allow_llRezObject = true
+	
+	
     ;;
     ;; Limits Section
     ;;
