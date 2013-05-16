@@ -1958,6 +1958,10 @@ namespace Aurora.BotManager
         {
         }
 
+        public void SetDebugPacketName(string packetName, bool remove)
+        {
+        }
+
         public void ProcessInPacket(Packet NewPack)
         {
         }

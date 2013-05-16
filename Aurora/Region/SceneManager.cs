@@ -422,7 +422,11 @@ namespace Aurora.Region
             MainConsole.Instance.Commands.AddCommand("force update", "force update",
                                                      "Force the update of all objects on clients", HandleForceUpdate);
 
-            MainConsole.Instance.Commands.AddCommand("debug packet", "debug packet [level]", "Turn on packet debugging",
+            MainConsole.Instance.Commands.AddCommand("debug packet level", "debug packet level [level]", "Turn on packet debugging",
+                                                     Debug);
+            MainConsole.Instance.Commands.AddCommand("debug packet name", "debug packet name [packetname]", "Turn on packet debugging for a specific packet",
+                                                     Debug);
+            MainConsole.Instance.Commands.AddCommand("debug packet name remove", "debug packet name [packetname]", "Turn off packet debugging for a specific packet",
                                                      Debug);
             MainConsole.Instance.Commands.AddCommand("debug scene", "debug scene [scripting] [collisions] [physics]",
                                                      "Turn on scene debugging", Debug);
@@ -647,26 +651,40 @@ namespace Aurora.Region
         /// <param name="args"></param>
         protected void Debug(string[] args)
         {
-            if (args.Length == 1)
+            if (args.Length != 4)
                 return;
 
             switch (args[1])
             {
                 case "packet":
-                    if (args.Length > 2)
+                    switch (args[2])
                     {
-                        int newDebug;
-                        if (int.TryParse(args[2], out newDebug))
-                        {
-                            SetDebugPacketLevelOnCurrentScene(newDebug);
-                        }
-                        else
-                        {
-                            MainConsole.Instance.Info("packet debug should be 0..255");
-                        }
-                        MainConsole.Instance.Info(String.Format("New packet debug: {0}", newDebug));
-                    }
+                        case "name":
+                            bool remove = false;
+                            string packetName = args[3];
+                            if (packetName == "remove")
+                            {
+                                packetName = args[4];
+                                remove = true;
+                            }
+                            SetDebugPacketName(packetName, remove);
+                            MainConsole.Instance.Info(String.Format("Added packet {0} to debug list", packetName));
 
+                            break;
+                        case "level":
+                            int newDebug;
+                            if (int.TryParse(args[3], out newDebug))
+                            {
+                                SetDebugPacketLevel(newDebug);
+                            }
+                            else
+                            {
+                                MainConsole.Instance.Info("packet debug should be 0..255");
+                            }
+                            MainConsole.Instance.Info(String.Format("New packet debug: {0}", newDebug));
+
+                            break;
+                    }
                     break;
                 default:
 
@@ -680,19 +698,38 @@ namespace Aurora.Region
         ///     console.
         /// </summary>
         /// <param name="newDebug"></param>
-        private void SetDebugPacketLevelOnCurrentScene(int newDebug)
+        private void SetDebugPacketLevel(int newDebug)
         {
             m_scene.ForEachScenePresence(scenePresence =>
-                                             {
-                                                 if (scenePresence.IsChildAgent) return;
-                                                 MainConsole.Instance.DebugFormat(
-                                                     "Packet debug for {0} set to {1}",
-                                                     scenePresence.Name,
-                                                     newDebug);
+            {
+                if (scenePresence.IsChildAgent) return;
+                    MainConsole.Instance.DebugFormat(
+                        "Packet debug for {0} set to {1}",
+                        scenePresence.Name,
+                        newDebug);
 
-                                                 scenePresence.ControllingClient.SetDebugPacketLevel(
-                                                     newDebug);
-                                             });
+                scenePresence.ControllingClient.SetDebugPacketLevel(
+                    newDebug);
+            });
+        }
+
+        /// <summary>
+        ///     Set the debug packet level on the current scene.  This level governs which packets are printed out to the
+        ///     console.
+        /// </summary>
+        /// <param name="newDebug"></param>
+        private void SetDebugPacketName(string name, bool remove)
+        {
+            m_scene.ForEachScenePresence(scenePresence =>
+            {
+                if (scenePresence.IsChildAgent) return;
+                    MainConsole.Instance.DebugFormat(
+                        "Packet debug for {0} {2} to {1}",
+                        scenePresence.Name,
+                        name, remove ? "removed" : "set");
+
+                    scenePresence.ControllingClient.SetDebugPacketName(name, remove);
+            });
         }
 
         private void HandleShowUsers(string[] cmd)

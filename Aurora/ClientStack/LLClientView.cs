@@ -63,6 +63,8 @@ namespace Aurora.ClientStack
         ///     Debug packet level.  See OpenSim.RegisterConsoleCommands() for more details.
         /// </value>
         private int m_debugPacketLevel;
+        private List<string> m_debugPackets = new List<string>();
+        private List<string> m_debugRemovePackets = new List<string>();
 
         private readonly bool m_allowUDPInv;
 
@@ -516,6 +518,20 @@ namespace Aurora.ClientStack
         public void SetDebugPacketLevel(int newDebug)
         {
             m_debugPacketLevel = newDebug;
+        }
+        
+        public void SetDebugPacketName(string packetName, bool remove)
+        {
+            if (remove)
+            {
+                m_debugRemovePackets.Add(packetName);
+                m_debugPackets.Remove(packetName);
+            }
+            else
+            {
+                m_debugPackets.Add(packetName);
+                m_debugRemovePackets.Remove(packetName);
+            }
         }
 
         #region Client Methods
@@ -12750,7 +12766,7 @@ namespace Aurora.ClientStack
         private void OutPacket(Packet packet, ThrottleOutPacketType throttlePacketType, bool doAutomaticSplitting,
                                UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
         {
-            if (m_debugPacketLevel > 0)
+            if (m_debugPacketLevel > 0 || m_debugPackets.Contains(packet.Type.ToString()))
             {
                 bool outputPacket = true;
 
@@ -12779,8 +12795,11 @@ namespace Aurora.ClientStack
                     && packet.Type == PacketType.ObjectPropertiesFamily)
                     outputPacket = false;
 
-                if (outputPacket)
-                    MainConsole.Instance.DebugFormat("[CLIENT]: Packet OUT {0}", packet.Type);
+                if (m_debugPackets.Contains(packet.Type.ToString()))
+                    outputPacket = true;
+
+                if (outputPacket && !m_debugRemovePackets.Contains(packet.Type.ToString()))
+                    MainConsole.Instance.DebugFormat("[CLIENT ({1})]: Packet OUT {0}", packet.Type, Name);
             }
 
             m_udpServer.SendPacket(m_udpClient, packet, throttlePacketType, doAutomaticSplitting, resendMethod,
@@ -12847,7 +12866,7 @@ namespace Aurora.ClientStack
         /// <param name="packet">OpenMetaverse.packet</param>
         public void ProcessInPacket(Packet packet)
         {
-            if (m_debugPacketLevel > 0)
+            if (m_debugPacketLevel > 0 || m_debugPackets.Contains(packet.Type.ToString()))
             {
                 bool outputPacket = true;
 
@@ -12861,8 +12880,11 @@ namespace Aurora.ClientStack
                     (packet.Type == PacketType.ViewerEffect || packet.Type == PacketType.AgentAnimation))
                     outputPacket = false;
 
-                if (outputPacket)
-                    MainConsole.Instance.DebugFormat("[CLIENT]: Packet IN {0}", packet.Type);
+                if (m_debugPackets.Contains(packet.Type.ToString()))
+                    outputPacket = true;
+
+                if (outputPacket && !m_debugRemovePackets.Contains(packet.Type.ToString()))
+                    MainConsole.Instance.DebugFormat("[CLIENT ({1})]: Packet IN {0}", packet.Type, Name);
             }
 
             if (!ProcessPacketMethod(packet))
