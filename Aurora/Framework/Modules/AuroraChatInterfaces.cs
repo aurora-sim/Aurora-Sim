@@ -81,7 +81,7 @@ namespace Aurora.Framework.Modules
         IConfig Config { get; }
         void RegisterChatPlugin(string main, IChatPlugin plugin);
 
-        void TrySendChatMessage(IScenePresence presence, Vector3 fromPos, Vector3 regionPos,
+        void TrySendChatMessage(IScenePresence presence, Vector3 fromPos,
                                 UUID fromAgentID, string fromName, ChatTypeEnum type,
                                 string message, ChatSourceType src, float Range);
 

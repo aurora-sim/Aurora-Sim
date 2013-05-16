@@ -1019,7 +1019,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (presence != null)
                 {
                     if (chatModule != null)
-                        chatModule.TrySendChatMessage(presence, m_host.AbsolutePosition, m_host.AbsolutePosition,
+                        chatModule.TrySendChatMessage(presence, m_host.AbsolutePosition,
                                                       m_host.UUID, m_host.Name, ChatTypeEnum.Say, text,
                                                       ChatSourceType.Object, 10000);
                 }
