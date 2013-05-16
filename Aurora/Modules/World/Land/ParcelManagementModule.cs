@@ -1149,6 +1149,10 @@ namespace Aurora.Modules.Land
 
         private void UpdateParcelBitmap(ILandObject lo)
         {
+            int size = (m_scene.RegionInfo.RegionSizeX / 4) * (m_scene.RegionInfo.RegionSizeY / 4) / 8;
+            if (lo.LandData.Bitmap.Length != size)
+                lo.LandData.Bitmap = new byte[size];
+
             int y, x, i = 0, byteNum = 0;
             byte tempByte = 0;
             for (y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
@@ -1707,6 +1711,46 @@ namespace Aurora.Modules.Land
             }
             if (AllParcels().Count == 0) //Serious fallback
                 ResetSimLandObjects();
+        }
+
+        public void IncomingLandDataFromOAR(List<LandData> data, bool merge, Vector2 parcelOffset)
+        {
+            if (!merge || data.Count == 0) //Serious fallback
+                ResetSimLandObjects();
+            foreach (LandData t in data)
+            {
+                int oldRegionSize = (int)Math.Sqrt(t.Bitmap.Length * 8);
+                int x = (int)(parcelOffset.X > 0 ? (parcelOffset.X / 4f) : 0),
+                    y = (int)(parcelOffset.Y > 0 ? (parcelOffset.Y / 4f) : 0),
+                    i = 0, bitNum = 0;
+                byte tempByte;
+                lock (m_landListLock)
+                {
+                    //Update the localID
+                    t.LocalID = ++m_lastLandLocalID;
+                }
+                for (int oldY = 0; oldY < oldRegionSize; oldY++)
+                {
+                    for (int oldX = 0; oldX < oldRegionSize; oldX++)
+                    {
+                        int bitmapX = oldX / 8;
+                        bitNum = oldX % 8;
+                        tempByte = t.Bitmap[bitmapX + bitNum];
+                        bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & 1);
+                        if (bit)
+                            m_landIDList[x + oldX, y + oldY] = t.LocalID;
+                    }
+                }
+                ILandObject new_land = new LandObject(t.OwnerID, t.IsGroupOwned, m_scene);
+                new_land.LandData = t;
+                new_land.ForceUpdateLandInfo();
+                lock (m_landListLock)
+                {
+                    m_lastLandLocalID -= 1;
+                }
+                AddLandObject(new_land);
+            }
+            UpdateAllParcelBitmaps();
         }
 
         private bool SetLandBitmapFromByteArray(ILandObject parcel, bool forceSet, Vector2 offsetOfParcel)

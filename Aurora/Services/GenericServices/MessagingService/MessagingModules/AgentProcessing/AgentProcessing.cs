@@ -1121,9 +1121,17 @@ namespace Aurora.Services
                     //Fix this so that it gets sent to the client that way
                     regionClientCaps.AddCAPS(createAgentResponse.CapsURIs);
                     regionClientCaps = clientCaps.GetCapsService(region.RegionID);
-                    regionClientCaps.LoopbackRegionIP = ipAddress;
-                    regionClientCaps.CircuitData.RegionUDPPort = requestedUDPPort;
-                    regionClientCaps.RootAgent = true;
+                    if (regionClientCaps != null)
+                    {
+                        regionClientCaps.LoopbackRegionIP = ipAddress;
+                        regionClientCaps.CircuitData.RegionUDPPort = requestedUDPPort;
+                        regionClientCaps.RootAgent = true;
+                    }
+                    else
+                    {
+                        success = false;
+                        reason = "Timeout error";
+                    }
                 }
             }
             else

@@ -482,7 +482,7 @@ namespace Aurora.Modules.WorldMap
                     for (int x = 0; x < m_scene.RegionInfo.RegionSizeX/4; x++)
                     {
                         for (int y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
-                            if (land.LandData.Bitmap[x + (y*(m_scene.RegionInfo.RegionSizeY/128))] > 0)
+                            if (land.ContainsPoint(x, y))
                                 if (land.LandData.AuctionID > 0)
                                     auctionBitmap[x, y] = true;
                                 else

@@ -437,12 +437,8 @@ namespace Aurora.Modules.Archivers
             MainConsole.Instance.InfoFormat("[ARCHIVER]: Loading {0} parcels.  Please wait.", landData.Count);
 
             IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
-            if (!m_merge && parcelManagementModule != null)
-                parcelManagementModule.ClearAllParcels();
-            if (landData.Count > 0)
-                m_scene.EventManager.TriggerIncomingLandDataFromStorage(landData, new Vector2(m_offsetX, m_offsetY));
-            else if (parcelManagementModule != null)
-                parcelManagementModule.ResetSimLandObjects();
+            if (parcelManagementModule != null)
+                parcelManagementModule.IncomingLandDataFromOAR(landData, m_merge, new Vector2(m_offsetX, m_offsetY));
 
             MainConsole.Instance.InfoFormat("[ARCHIVER]: Restored {0} parcels.", landData.Count);
 
