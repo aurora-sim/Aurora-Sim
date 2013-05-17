@@ -1720,8 +1720,8 @@ namespace Aurora.Modules.Land
             foreach (LandData t in data)
             {
                 int oldRegionSize = (int)Math.Sqrt(t.Bitmap.Length * 8);
-                int x = (int)(parcelOffset.X > 0 ? (parcelOffset.X / 4f) : 0),
-                    y = (int)(parcelOffset.Y > 0 ? (parcelOffset.Y / 4f) : 0),
+                int offset_x = (int)(parcelOffset.X > 0 ? (parcelOffset.X / 4f) : 0),
+                    offset_y = (int)(parcelOffset.Y > 0 ? (parcelOffset.Y / 4f) : 0),
                     i = 0, bitNum = 0;
                 byte tempByte;
                 lock (m_landListLock)
@@ -1729,16 +1729,21 @@ namespace Aurora.Modules.Land
                     //Update the localID
                     t.LocalID = ++m_lastLandLocalID;
                 }
-                for (int oldY = 0; oldY < oldRegionSize; oldY++)
+                int x = 0, y = 0;
+                for (i = 0; i < t.Bitmap.Length; i++)
                 {
-                    for (int oldX = 0; oldX < oldRegionSize; oldX++)
+                    tempByte = t.Bitmap[i];
+                    for (bitNum = 0; bitNum < 8; bitNum++)
                     {
-                        int bitmapX = oldX / 8;
-                        bitNum = oldX % 8;
-                        tempByte = t.Bitmap[bitmapX + bitNum];
-                        bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & 1);
+                        bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
                         if (bit)
-                            m_landIDList[x + oldX, y + oldY] = t.LocalID;
+                            m_landIDList[offset_x + x, offset_y + y] = t.LocalID;
+                        x++;
+                        if (x > oldRegionSize - 1)
+                        {
+                            x = 0;
+                            y++;
+                        }
                     }
                 }
                 ILandObject new_land = new LandObject(t.OwnerID, t.IsGroupOwned, m_scene);
