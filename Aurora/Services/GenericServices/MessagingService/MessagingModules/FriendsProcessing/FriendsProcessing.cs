@@ -76,7 +76,14 @@ namespace Aurora.Services
             {
                 //A user has logged in or out... we need to update friends lists across the grid
 
-                new System.Threading.Timer(SendFriendStatusChanges, parameters, 10000, System.Threading.Timeout.Infinite);
+                var timer = new System.Timers.Timer(10 * 1000);
+                timer.Elapsed += (o, e) =>
+                {
+                    SendFriendStatusChanges(parameters);
+                    timer.Stop();
+                    timer.Dispose();
+                };
+                timer.Start();
             }
             return null;
         }
