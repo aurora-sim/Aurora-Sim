@@ -91,12 +91,12 @@ namespace Aurora.DataManager.Migration
                                                         new ColumnDefinition
                                                             {
                                                                 Name = COLUMN_VERSION,
-                                                                Type =
-                                                                    new ColumnTypeDef
-                                                                        {
-                                                                            Type = ColumnType.String,
-                                                                            Size = 100
-                                                                        }
+                                                                Type = ColumnTypeDef.Text
+                                                            },
+                                                        new ColumnDefinition
+                                                            {
+                                                                Name = COLUMN_NAME,
+                                                                Type = ColumnTypeDef.Text
                                                             }
                                                     }, new IndexDefinition[0]);
             }
@@ -112,12 +112,7 @@ namespace Aurora.DataManager.Migration
                 genericData.Insert(VERSION_TABLE_NAME, new object[2] { 1, "locked" });
                 return true;
             }
-            //Set locked = 1 again
-            //If locked == 1, then we will not be migrating anything, but we also must stop this process until the migration is complete
-            //  so that we don't end up doing this while migration is going on
-            Dictionary<string, object> updateVals = new Dictionary<string,object>();
-            updateVals[COLUMN_VERSION] = 1;
-            return genericData.Update(VERSION_TABLE_NAME, updateVals, null, filter, null, null);
+            return false;
         }
 
         private void WaitForDatabaseLock()
@@ -128,11 +123,9 @@ namespace Aurora.DataManager.Migration
         private void ReleaseDatabaseLock()
         {
             //Set locked = 0 again
-            Dictionary<string, object> updateVals = new Dictionary<string, object>();
-            updateVals[COLUMN_VERSION] = 0;
             QueryFilter filter = new QueryFilter();
             filter.andFilters.Add(COLUMN_NAME, "locked");
-            genericData.Update(VERSION_TABLE_NAME, updateVals, null, filter, null, null);
+            genericData.Delete(VERSION_TABLE_NAME, filter);
         }
     }
 

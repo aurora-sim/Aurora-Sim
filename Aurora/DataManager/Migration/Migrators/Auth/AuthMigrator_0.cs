@@ -45,8 +45,7 @@ namespace Aurora.DataManager.Migration.Migrators.Auth
                 },
                 new IndexDefinition[] 
                 {
-                    new IndexDefinition() { Fields = new string[] {"UUID", "accountType"}, Type = IndexType.Primary },
-                    new IndexDefinition() { Fields = new string[] {"passwordHash"}, Type = IndexType.Index }
+                    new IndexDefinition() { Fields = new string[] {"UUID", "accountType"}, Type = IndexType.Primary }
                 }),
             new SchemaDefinition("tokens",  
                 new ColumnDefinition[]

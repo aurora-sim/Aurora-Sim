@@ -58,7 +58,7 @@ namespace Aurora.DataManager.Migration.Migrators.Agent
                     new ColumnDefinition {Name = "ClassifiedUUID", Type = ColumnTypeDef.Char36},
                     new ColumnDefinition {Name = "Classified", Type = ColumnTypeDef.MediumText},
                     new ColumnDefinition {Name = "Price", Type = ColumnTypeDef.Integer11},
-                    new ColumnDefinition {Name = "Keyword", Type = ColumnTypeDef.MediumText}
+                    new ColumnDefinition {Name = "Keyword", Type = ColumnTypeDef.String128}
                 },
                 new IndexDefinition[] 
                 {

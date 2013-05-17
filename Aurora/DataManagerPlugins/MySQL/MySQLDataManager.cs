@@ -51,6 +51,7 @@ namespace Aurora.DataManager.MySQL
         public override void ConnectToDatabase(string connectionstring)
         {
             m_connectionString = connectionstring;
+            CreateSchema();
         }
 
         public void CreateSchema()
@@ -105,17 +106,17 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public void ExecuteNonQuery(string sql, Dictionary<string, object> parameters)
+        public int ExecuteNonQuery(string sql, Dictionary<string, object> parameters)
         {
-            ExecuteNonQuery(m_connectionString, sql, parameters);
+            return ExecuteNonQuery(m_connectionString, sql, parameters);
         }
 
-        public void ExecuteNonQuery(string connStr, string sql, Dictionary<string, object> parameters)
+        public int ExecuteNonQuery(string connStr, string sql, Dictionary<string, object> parameters)
         {
-            ExecuteNonQuery(connStr, sql, parameters, true);
+            return ExecuteNonQuery(connStr, sql, parameters, true);
         }
 
-        public void ExecuteNonQuery(string connStr, string sql, Dictionary<string, object> parameters, bool spamConsole)
+        public int ExecuteNonQuery(string connStr, string sql, Dictionary<string, object> parameters, bool spamConsole)
         {
             try
             {
@@ -126,7 +127,7 @@ namespace Aurora.DataManager.MySQL
                     param[i] = new MySqlParameter(p.Key, p.Value);
                     i++;
                 }
-                MySqlHelper.ExecuteNonQuery(connStr, sql, param);
+                return MySqlHelper.ExecuteNonQuery(connStr, sql, param);
             }
             catch (Exception e)
             {
@@ -135,6 +136,7 @@ namespace Aurora.DataManager.MySQL
                 else
                     throw e;
             }
+            return -1;
         }
 
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
@@ -382,11 +384,13 @@ namespace Aurora.DataManager.MySQL
 
             try
             {
-                ExecuteNonQuery(query, ps);
+                int result = ExecuteNonQuery(query, ps);
+                return result > 0;
             }
             catch (MySqlException e)
             {
                 MainConsole.Instance.Error("[MySQLDataLoader] Update(" + query + "), " + e);
+                return false;
             }
             return true;
         }
