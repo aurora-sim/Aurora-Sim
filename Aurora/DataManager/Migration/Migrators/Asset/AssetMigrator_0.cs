@@ -59,8 +59,7 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                     new ColumnDefinition {Name = "creatorID", Type = ColumnTypeDef.Char36},
                     new ColumnDefinition {Name = "data", Type = ColumnTypeDef.LongBlob},
                     new ColumnDefinition {Name = "create_time", Type = ColumnTypeDef.Integer11},
-                    new ColumnDefinition {Name = "access_time", Type = ColumnTypeDef.Integer11},
-                    new ColumnDefinition {Name = "data", Type = ColumnTypeDef.LongBlob}
+                    new ColumnDefinition {Name = "access_time", Type = ColumnTypeDef.Integer11}
                 },
                 new IndexDefinition[] 
                 {

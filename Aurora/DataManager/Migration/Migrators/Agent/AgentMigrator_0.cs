@@ -63,7 +63,9 @@ namespace Aurora.DataManager.Migration.Migrators.Agent
                 new IndexDefinition[] 
                 {
                     new IndexDefinition() { Fields = new string[] {"ClassifiedUUID"}, Type = IndexType.Primary },
-                    new IndexDefinition() { Fields = new string[] {"Name", "Category", "OwnerUUID", "Keyword"}, Type = IndexType.Index }
+                    new IndexDefinition() { Fields = new string[] {"Name", "Category"}, Type = IndexType.Index },
+                        new IndexDefinition() { Fields = new string[] {"OwnerUUID"}, Type = IndexType.Index },
+                        new IndexDefinition() { Fields = new string[] {"Keyword"}, Type = IndexType.Index }
                 }),
             new SchemaDefinition("userpicks",  
                 new ColumnDefinition[]

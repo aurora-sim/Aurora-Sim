@@ -45,9 +45,7 @@ namespace Aurora.DataManager.Migration.Migrators.Friends
                 },
                 new IndexDefinition[] 
                 {
-                    new IndexDefinition() { Fields = new string[] {"PrincipalID", "Friend"}, Type = IndexType.Primary },
-                    new IndexDefinition() { Fields = new string[] {"EstateOwner"}, Type = IndexType.Index },
-                    new IndexDefinition() { Fields = new string[] {"EstateName", "EstateOwner"}, Type = IndexType.Index }
+                    new IndexDefinition() { Fields = new string[] {"PrincipalID", "Friend"}, Type = IndexType.Primary }
                 }),
         };
 

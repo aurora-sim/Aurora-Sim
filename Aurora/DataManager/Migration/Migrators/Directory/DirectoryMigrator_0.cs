@@ -44,6 +44,7 @@ namespace Aurora.DataManager.Migration.Migrators.Directory
                     new ColumnDefinition {Name = "LandingX", Type = ColumnTypeDef.Integer11},
                     new ColumnDefinition {Name = "LandingY", Type = ColumnTypeDef.Integer11},
                     new ColumnDefinition {Name = "LandingZ", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Name", Type = ColumnTypeDef.String50},
                     new ColumnDefinition {Name = "Description", Type = ColumnTypeDef.String255},
                     new ColumnDefinition {Name = "Flags", Type = ColumnTypeDef.Integer11},
                     new ColumnDefinition {Name = "Dwell", Type = ColumnTypeDef.Integer11},
@@ -64,7 +65,7 @@ namespace Aurora.DataManager.Migration.Migrators.Directory
                 },
                 new IndexDefinition[] 
                 {
-                    new IndexDefinition() { Fields = new string[] {"PrincipalID"}, Type = IndexType.Primary },
+                    new IndexDefinition() { Fields = new string[] {"ParcelID"}, Type = IndexType.Primary },
                     new IndexDefinition() { Fields = new string[] {"RegionID", "OwnerID", "Flags", "Category"}, Type = IndexType.Index },
                     new IndexDefinition() { Fields = new string[] {"OwnerID"}, Type = IndexType.Index },
                     new IndexDefinition() { Fields = new string[] {"RegionID", "Name"}, Type = IndexType.Index },
