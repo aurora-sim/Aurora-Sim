@@ -1,0 +1,24 @@
+##
+## How to set up Vivox Voice
+##
+
+## 
+## Region setup
+##
+
+In Configuration/Modules/VoiceModules.ini, you will find a section
+  with [Voice], you will need to comment (put a ;) in front of 
+    Module = GenericVoice
+
+  and remove the comment (the ;) in front of 
+    Module = VivoxVoice
+
+  then, you will go to the section [VivoxVoice], and you will put
+  in the server information you have received from Vivox.
+  
+##
+## Grid setup
+##
+
+Do the same as above (you can even just copy the file!) to 
+AuroraServerConfiguration/Modules/VoiceModules.ini
