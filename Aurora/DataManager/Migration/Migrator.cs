@@ -123,14 +123,14 @@ namespace Aurora.DataManager.Migration
 
         protected bool TestThatAllTablesValidate(IDataConnector genericData)
         {
-            return schema.All(s => genericData.VerifyTableExists(s.Name, s.Columns, s.Indices));
+            return schema.All(s => genericData.VerifyTableExists(s.Name, s.Columns, s.Indices, true));
         }
 
         public bool DebugTestThatAllTablesValidate(IDataConnector genericData, out SchemaDefinition reason)
         {
             reason = null;
 
-            foreach (var s in schema.Where(s => !genericData.VerifyTableExists(s.Name, s.Columns, s.Indices)))
+            foreach (var s in schema.Where(s => !genericData.VerifyTableExists(s.Name, s.Columns, s.Indices, true)))
             {
                 reason = s;
                 return false;
@@ -142,7 +142,7 @@ namespace Aurora.DataManager.Migration
         {
             foreach (var s in schema)
             {
-                CopyTableToTempVersion(genericData, s.Name, s.Columns, s.Indices);
+                CopyTableToTempVersion(genericData, s.Name);
             }
         }
 
@@ -150,15 +150,13 @@ namespace Aurora.DataManager.Migration
         {
             foreach (var s in schema)
             {
-                RestoreTempTableToReal(genericData, s.Name, s.Columns, s.Indices);
+                RestoreTempTableToReal(genericData, s.Name);
             }
         }
 
-        private void CopyTableToTempVersion(IDataConnector genericData, string tablename,
-                                            ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
+        private void CopyTableToTempVersion(IDataConnector genericData, string tablename)
         {
-            genericData.CopyTableToTable(tablename, GetTempTableNameFromTableName(tablename), columnDefinitions,
-                                         indexDefinitions);
+            genericData.CopyTableToTable(tablename, GetTempTableNameFromTableName(tablename));
         }
 
         private string GetTempTableNameFromTableName(string tablename)
@@ -166,11 +164,9 @@ namespace Aurora.DataManager.Migration
             return tablename + "_temp";
         }
 
-        private void RestoreTempTableToReal(IDataConnector genericData, string tablename,
-                                            ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
+        private void RestoreTempTableToReal(IDataConnector genericData, string tablename)
         {
-            genericData.CopyTableToTable(GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)),
-                                         tablename, columnDefinitions, indexDefinitions);
+            genericData.CopyTableToTable(GetTempTableNameFromTableName(GetTempTableNameFromTableName(tablename)), tablename);
         }
 
         public void ClearRestorePoint(IDataConnector genericData)

@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.DataManager.Migration;
 //using Aurora.DataManager.MSSQL;
 using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
@@ -33,6 +34,7 @@ using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
 using System;
 using System.Collections.Generic;
@@ -41,6 +43,8 @@ namespace Aurora.Services.DataService
 {
     public class DataService
     {
+        private readonly Dictionary<string, IDataConnector> m_genericDataPlugins = new Dictionary<string, IDataConnector>();
+
         public void Initialise(IConfigSource source, IRegistryCore simBase)
         {
             List<IAuroraDataPlugin> Plugins = AuroraModuleLoader.PickupModules<IAuroraDataPlugin>();
@@ -82,7 +86,6 @@ namespace Aurora.Services.DataService
 
         private IGenericData CreateDataService(string pluginName, IConfigSource source)
         {
-
             IConfig config = source.Configs["AuroraData"];
             string storageProvider, connectionString;
             if (config != null)
@@ -94,8 +97,11 @@ namespace Aurora.Services.DataService
                 return null;
             if (source.Configs[pluginName] != null)
                 connectionString = source.Configs[pluginName].GetString("ConnectionString", connectionString);
+            
+            IDataConnector dataConnector = null;
+            if (m_genericDataPlugins.TryGetValue(connectionString, out dataConnector))
+                return dataConnector;
 
-            IGenericData dataConnector = null;
             if (storageProvider == "MySQL")
                 dataConnector = new MySQLDataLoader();
             else if (storageProvider == "SQLite")
@@ -105,6 +111,10 @@ namespace Aurora.Services.DataService
 
             dataConnector.ConnectToDatabase(connectionString);
 
+            MigrationManager manager = new MigrationManager(dataConnector, true);
+            manager.ExecuteMigration();
+
+            m_genericDataPlugins.Add(connectionString, dataConnector);
             return dataConnector;
         }
     }

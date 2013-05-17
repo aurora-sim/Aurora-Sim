@@ -77,8 +77,7 @@ namespace Aurora.Framework.Utilities
         /// <param name="destinationTableName"></param>
         /// <param name="columnDefinitions"></param>
         /// <param name="indexDefinitions"></param>
-        void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions,
-                              IndexDefinition[] indexDefinitions);
+        void CopyTableToTable(string sourceTableName, string destinationTableName);
 
         /// <summary>
         ///     Check whether the data table exists and that the columns are correct
@@ -88,7 +87,7 @@ namespace Aurora.Framework.Utilities
         /// <param name="indexDefinitions"></param>
         /// <returns></returns>
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions,
-                               IndexDefinition[] indexDefinitions);
+                               IndexDefinition[] indexDefinitions, bool showWarnings);
 
         /// <summary>
         ///     Check whether the data table exists and that the columns are correct

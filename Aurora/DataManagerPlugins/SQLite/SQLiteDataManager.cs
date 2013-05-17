@@ -493,16 +493,17 @@ namespace Aurora.DataManager.SQLite
             SqliteCommand cmd = new SqliteCommand(query);
             AddParams(ref cmd, ps);
 
+            int result = 0;
             try
             {
-                ExecuteNonQuery(cmd);
+                result = ExecuteNonQuery(cmd);
             }
             catch (SqliteException e)
             {
                 MainConsole.Instance.Error("[SqliteLoader] Update(" + query + "), " + e);
             }
             CloseReaderCommand(cmd);
-            return true;
+            return result > 0;
         }
 
         #endregion
