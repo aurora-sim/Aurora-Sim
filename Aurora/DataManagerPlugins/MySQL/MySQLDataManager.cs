@@ -139,52 +139,9 @@ namespace Aurora.DataManager.MySQL
             return -1;
         }
 
-        public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
-        {
-            string query = String.Format("select {0} from {1} {2}", wantedValue, table, whereClause);
-            return QueryFullData2(query);
-        }
-
-        public override List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue)
-        {
-            string query = string.Format("SELECT {0} FROM {1} {2}", wantedValue, tables.ToSQL(), whereClause);
-            return QueryFullData2(query);
-        }
-
-        private List<string> QueryFullData2(string query)
-        {
-            IDataReader reader = null;
-            List<string> retVal = new List<string>();
-            try
-            {
-                using (reader = Query(query, new Dictionary<string, object>()))
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            retVal.Add(reader.GetString(i));
-                        }
-                    }
-                    return retVal;
-                }
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] QueryFullData(" + query + "), " + e);
-                return null;
-            }
-        }
-
         public override DataReaderConnection QueryData(string whereClause, string table, string wantedValue)
         {
             string query = String.Format("select {0} from {1} {2}", wantedValue, table, whereClause);
-            return new DataReaderConnection {DataReader = QueryData2(query)};
-        }
-
-        public override DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue)
-        {
-            string query = string.Format("SELECT {0} FROM {1} {2}", wantedValue, tables.ToSQL(), whereClause);
             return new DataReaderConnection {DataReader = QueryData2(query)};
         }
 
@@ -263,61 +220,6 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        /*public override Dictionary<string, List<string>> QueryNames(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
-        {
-        }*/
-
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
-                                                                    string wantedValue)
-        {
-            string query = String.Format("select {0} from {1} where ", wantedValue, table);
-            return QueryNames2(keyRow, keyValue, query);
-        }
-
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue,
-                                                                    QueryTables tables, string wantedValue)
-        {
-            string query = string.Format("SELECT {0} FROM {1} where ", wantedValue, tables.ToSQL());
-            return QueryNames2(keyRow, keyValue, query);
-        }
-
-        private Dictionary<string, List<string>> QueryNames2(string[] keyRow, object[] keyValue, string query)
-        {
-            IDataReader reader = null;
-            Dictionary<string, List<string>> retVal = new Dictionary<string, List<string>>();
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            int i = 0;
-            foreach (object value in keyValue)
-            {
-                query += String.Format("{0} = ?{1} and ", keyRow[i], keyRow[i]);
-                ps["?" + keyRow[i]] = value;
-                i++;
-            }
-            query = query.Remove(query.Length - 5);
-
-            try
-            {
-                using (reader = Query(query, ps))
-                {
-                    while (reader.Read())
-                    {
-                        for (i = 0; i < reader.FieldCount; i++)
-                        {
-                            Type r = reader[i].GetType();
-                            AddValueToList(ref retVal, reader.GetName(i),
-                                           r == typeof (DBNull) ? null : reader[i].ToString());
-                        }
-                    }
-                    return retVal;
-                }
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] QueryNames(" + query + "), " + e);
-                return null;
-            }
-        }
-
         private void AddValueToList(ref Dictionary<string, List<string>> dic, string key, string value)
         {
             if (!dic.ContainsKey(key))
@@ -392,7 +294,6 @@ namespace Aurora.DataManager.MySQL
                 MainConsole.Instance.Error("[MySQLDataLoader] Update(" + query + "), " + e);
                 return false;
             }
-            return true;
         }
 
         #endregion
@@ -486,31 +387,6 @@ namespace Aurora.DataManager.MySQL
         public override bool Insert(string table, Dictionary<string, object> row)
         {
             return InsertOrReplace(table, row, true);
-        }
-
-        public override bool Insert(string table, object[] values, string updateKey, object updateValue)
-        {
-            string query = String.Format("insert into {0} VALUES(", table);
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            int i = 0;
-            foreach (object o in values)
-            {
-                param["?" + Util.ConvertDecString(i)] = o;
-                query += "?" + Util.ConvertDecString(i++) + ",";
-            }
-            param["?update"] = updateValue;
-            query = query.Remove(query.Length - 1);
-            query += String.Format(") ON DUPLICATE KEY UPDATE {0} = ?update", updateKey);
-            try
-            {
-                ExecuteNonQuery(query, param);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
-                return false;
-            }
-            return true;
         }
 
         public override bool InsertSelect(string tableA, string[] fieldsA, string tableB, string[] valuesB)
@@ -1029,10 +905,5 @@ namespace Aurora.DataManager.MySQL
         }
 
         #endregion
-
-        public override IGenericData Copy()
-        {
-            return new MySQLDataLoader();
-        }
     }
 }

@@ -275,22 +275,10 @@ namespace Aurora.DataManager
         public abstract List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter,
                                            Dictionary<string, bool> sort, uint? start, uint? count);
 
-        public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);
-
         public abstract DataReaderConnection QueryData(string whereClause, string table, string wantedValue);
-
-        public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
-                                                                    string wantedValue);
 
         public abstract List<string> Query(string[] wantedValue, QueryTables tables, QueryFilter queryFilter,
                                            Dictionary<string, bool> sort, uint? start, uint? count);
-
-        public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue,
-                                                                    QueryTables tables, string wantedValue);
-
-        public abstract DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue);
-
-        public abstract List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue);
 
         #endregion
 
@@ -298,7 +286,6 @@ namespace Aurora.DataManager
 
         public abstract bool Insert(string table, object[] values);
         public abstract bool Insert(string table, Dictionary<string, object> row);
-        public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
         public abstract bool InsertMultiple(string table, List<object[]> values);
         public abstract bool InsertSelect(string tableA, string[] fieldsA, string tableB, string[] valuesB);
 
@@ -321,7 +308,6 @@ namespace Aurora.DataManager
 
         public abstract void CloseDatabase(DataReaderConnection connection);
 
-        public abstract IGenericData Copy();
         public abstract string ConCat(string[] toConcat);
 
         #endregion

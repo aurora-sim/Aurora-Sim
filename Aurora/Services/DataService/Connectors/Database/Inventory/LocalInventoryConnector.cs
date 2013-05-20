@@ -64,8 +64,14 @@ namespace Aurora.Services.DataService
 
         public virtual List<InventoryFolderBase> GetFolders(string[] fields, string[] vals)
         {
-            Dictionary<string, List<string>> retVal = GD.QueryNames(fields, vals, m_foldersrealm, "*");
-            return ParseInventoryFolders(ref retVal);
+            QueryFilter filter = new QueryFilter();
+            for(int i = 0; i < fields.Length; i++)
+                filter.andFilters.Add(fields[i], vals[i]);
+            List<string> retVal = GD.Query(new string[6] {
+                "folderName", "type", "version", 
+                "folderID", "agentID", "parentFolderID" }
+                , m_foldersrealm, filter, null, null, null);
+            return ParseInventoryFolders(retVal);
         }
 
         public virtual List<InventoryItemBase> GetItems(UUID avatarID, string[] fields, string[] vals)
@@ -583,21 +589,21 @@ namespace Aurora.Services.DataService
             return array;
         }
 
-        private List<InventoryFolderBase> ParseInventoryFolders(ref Dictionary<string, List<string>> retVal)
+        private List<InventoryFolderBase> ParseInventoryFolders(List<string> retVal)
         {
             List<InventoryFolderBase> folders = new List<InventoryFolderBase>();
             if (retVal.Count == 0)
                 return folders;
-            for (int i = 0; i < retVal.ElementAt(0).Value.Count; i++)
+            for (int i = 0; i < retVal.Count; i+=6)
             {
                 InventoryFolderBase folder = new InventoryFolderBase
                                                  {
-                                                     Name = retVal["folderName"][i],
-                                                     Type = short.Parse(retVal["type"][i]),
-                                                     Version = (ushort) int.Parse(retVal["version"][i]),
-                                                     ID = UUID.Parse(retVal["folderID"][i]),
-                                                     Owner = UUID.Parse(retVal["agentID"][i]),
-                                                     ParentID = UUID.Parse(retVal["parentFolderID"][i])
+                                                     Name = retVal[i],
+                                                     Type = short.Parse(retVal[i+1]),
+                                                     Version = (ushort) int.Parse(retVal[i+2]),
+                                                     ID = UUID.Parse(retVal[i+3]),
+                                                     Owner = UUID.Parse(retVal[i+4]),
+                                                     ParentID = UUID.Parse(retVal[i+5])
                                                  };
                 folders.Add(folder);
             }

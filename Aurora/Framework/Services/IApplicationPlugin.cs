@@ -120,29 +120,12 @@ namespace Aurora.Framework.Services
         /// <summary>
         ///     select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
-        List<string> QueryFullData(string whereClause, string table, string wantedValue);
-
-        /// <summary>
-        ///     select 'wantedValue' from 'table' 'whereClause'
-        /// </summary>
         DataReaderConnection QueryData(string whereClause, string table, string wantedValue);
-
-        /// <summary>
-        ///     select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
-        ///     This gives the row names as well as the values
-        /// </summary>
-        Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
         #region JOIN
 
         List<string> Query(string[] wantedValue, QueryTables tables, QueryFilter queryFilter,
                            Dictionary<string, bool> sort, uint? start, uint? count);
-
-        Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, QueryTables tables,
-                                                    string wantedValue);
-
-        DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue);
-        List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue);
 
         #endregion
 
@@ -172,18 +155,8 @@ namespace Aurora.Framework.Services
         bool InsertMultiple(string table, List<object[]> values);
 
         /// <summary>
-        ///     Inserts a row into the database
-        ///     insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
-        /// </summary>
-        /// <param name="table">table name</param>
-        /// <param name="values">All values to be inserted in the correct table order</param>
-        /// <param name="updateKey">If a row is already existing, update this key</param>
-        /// <param name="updateValue">If a row is already existing, update this value</param>
-        /// <returns></returns>
-        bool Insert(string table, object[] values, string updateKey, object updateValue);
-
-        /// <summary>
         ///     Inserts rows selected from another table.
+        ///     NOT ALL DATABASES SUPPORT THIS
         /// </summary>
         /// <param name="tableA"></param>
         /// <param name="fieldsA"></param>
@@ -231,12 +204,6 @@ namespace Aurora.Framework.Services
         /// </summary>
         /// <param name="connectionString"></param>
         void ConnectToDatabase(string connectionString);
-
-        /// <summary>
-        ///     Makes a copy of the IGenericData plugin
-        /// </summary>
-        /// <returns></returns>
-        IGenericData Copy();
 
         /// <summary>
         /// Close the given database connection

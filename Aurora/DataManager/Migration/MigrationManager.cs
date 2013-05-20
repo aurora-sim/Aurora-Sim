@@ -32,6 +32,7 @@ using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Utilities;
 using Aurora.Framework.Services;
+using System.Threading;
 
 namespace Aurora.DataManager.Migration
 {
@@ -73,12 +74,27 @@ namespace Aurora.DataManager.Migration
                     migratorsToRun[m.MigrationName] = m;
             }
 
+            List<Migration> migrationsToComplete = new List<Migration>();
             foreach (Migrator m in migratorsToRun.Values)
             {
                 Migration migration = new Migration(genericData, m, doBackup);
                 migration.DetermineOperation();
-                migration.ExecuteOperation();
+                if(migration.OperationDescription != Migration.MigrationOperationTypes.DoNothing)
+                    migrationsToComplete.Add(migration);
             }
+
+            if (migrationsToComplete.Count > 0)
+            {
+                MainConsole.Instance.Info("[DatabaseMigrator]: Database migrations are needed, now beginning the process");
+
+                foreach(Migration migration in migrationsToComplete)
+                {
+                    migration.ExecuteOperation();
+                }
+
+                MainConsole.Instance.Info("[DatabaseMigrator]: Database migrations have been completed");
+            }
+
             ReleaseDatabaseLock();
         }
 
@@ -104,10 +120,7 @@ namespace Aurora.DataManager.Migration
 
         private bool CheckAndLockDatabase()
         {
-            QueryFilter filter = new QueryFilter();
-            filter.andFilters.Add(COLUMN_NAME, "locked");
-            List<string> exists = genericData.Query(new string[1] { COLUMN_NAME }, VERSION_TABLE_NAME, filter, null, null, null);
-            if (exists.Count == 0)
+            if (!CheckIfDatabaseIsLocked())
             {
                 genericData.Insert(VERSION_TABLE_NAME, new object[2] { 1, "locked" });
                 return true;
@@ -115,9 +128,20 @@ namespace Aurora.DataManager.Migration
             return false;
         }
 
+        private bool CheckIfDatabaseIsLocked()
+        {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters.Add(COLUMN_NAME, "locked");
+            List<string> exists = genericData.Query(new string[1] { COLUMN_NAME }, VERSION_TABLE_NAME, filter, null, null, null);
+            return exists.Count != 0;
+        }
+
         private void WaitForDatabaseLock()
         {
-            throw new NotImplementedException("Database lock wait - not implemented");
+            while (CheckIfDatabaseIsLocked())
+            {
+                Thread.Sleep(100);
+            }
         }
 
         private void ReleaseDatabaseLock()
@@ -131,13 +155,11 @@ namespace Aurora.DataManager.Migration
 
     public class Migration
     {
-        private readonly IDataConnector genericData;
-        private readonly Migrator migrator = null;
-        private readonly bool doBackup;
-        private bool executed;
-        private MigrationOperationTypes operationDescription = MigrationOperationTypes.DoNothing;
-        private IRestorePoint restorePoint;
-        private bool rollback;
+        private readonly IDataConnector _genericData;
+        private readonly Migrator _migrator = null;
+        private readonly bool _doBackup;
+        public MigrationOperationTypes OperationDescription = MigrationOperationTypes.DoNothing;
+        private IRestorePoint _restorePoint;
 
         public enum MigrationOperationTypes
         {
@@ -148,74 +170,76 @@ namespace Aurora.DataManager.Migration
 
         public Migration(IDataConnector genericData, Migrator migrator, bool doBackup)
         {
-            this.genericData = genericData;
-            this.doBackup = doBackup;
-            this.migrator = migrator;
+            this._genericData = genericData;
+            this._doBackup = doBackup;
+            this._migrator = migrator;
         }
 
         public void DetermineOperation()
         {
-            executed = false;
-            Version currentVersion = genericData.GetAuroraVersion(migrator.MigrationName);
+            Version currentVersion = _genericData.GetAuroraVersion(_migrator.MigrationName);
 
             //if there is no aurora version, this is likely an entirely new installation
             if (currentVersion == null)
-                operationDescription = MigrationOperationTypes.CreateDefaultAndUpgradeToTarget;
-            else if(migrator.Version != currentVersion)
-                operationDescription = MigrationOperationTypes.UpgradeToTarget;
+                OperationDescription = MigrationOperationTypes.CreateDefaultAndUpgradeToTarget;
+            else if(_migrator.Version != currentVersion)
+                OperationDescription = MigrationOperationTypes.UpgradeToTarget;
         }
 
         public void ExecuteOperation()
         {
             //if we are creating default, do it now
-            if (operationDescription == MigrationOperationTypes.CreateDefaultAndUpgradeToTarget)
+            if (OperationDescription == MigrationOperationTypes.CreateDefaultAndUpgradeToTarget)
             {
+                MainConsole.Instance.InfoFormat("[DatabaseMigrator]: Now creating default tables for {0}",
+                     _migrator.MigrationName);
                 try
                 {
-                    migrator.CreateDefaults(genericData);
+                    _migrator.CreateDefaults(_genericData);
                 }
                 catch
                 {
                 }
-                executed = true;
             }
-            else if (operationDescription == MigrationOperationTypes.UpgradeToTarget)
+            else if (OperationDescription == MigrationOperationTypes.UpgradeToTarget)
             {
+                MainConsole.Instance.InfoFormat("[DatabaseMigrator]: Now applying migration {0} for {1}",
+                    _migrator.Version, _migrator.MigrationName);
                 bool success = true;
                 //prepare restore point if something goes wrong
-                if (doBackup)
-                    restorePoint = migrator.PrepareRestorePoint(genericData);
+                if (_doBackup)
+                    _restorePoint = _migrator.PrepareRestorePoint(_genericData);
 
                 try
                 {
-                    migrator.Migrate(genericData);
+                    _migrator.Migrate(_genericData);
                 }
                 catch (Exception ex)
                 {
-                    if (migrator != null)
+                    if (_migrator != null)
                     {
-                        migrator.DoRestore(genericData);
-                        migrator.ClearRestorePoint(genericData);
+                        _migrator.DoRestore(_genericData);
+                        _migrator.ClearRestorePoint(_genericData);
                         throw new MigrationOperationException(string.Format("Migrating {0} to version {1} failed, aborting and rolling back all changes. {2}.",
-                                                                            migrator.MigrationName, migrator.Version, ex));
+                                                                            _migrator.MigrationName, _migrator.Version, ex));
                     }
                 }
-                success = migrator.Validate(genericData);
+                success = _migrator.Validate(_genericData);
                 if (!success)
                 {
-                    if (doBackup)
+                    if (_doBackup)
                     {
-                        migrator.DoRestore(genericData);
-                        migrator.ClearRestorePoint(genericData);
+                        _migrator.DoRestore(_genericData);
+                        _migrator.ClearRestorePoint(_genericData);
                     }
                     throw new MigrationOperationException(string.Format("Validating {0} version {1} failed, rolling back changes.",
-                                                                        migrator.MigrationName, migrator.Version));
+                                                                        _migrator.MigrationName, _migrator.Version));
                 }
-                migrator.FinishedMigration(genericData);
+                _migrator.FinishedMigration(_genericData);
 
                 //clear restore point now that we've successfully finished
-                if (success && doBackup)
-                    migrator.ClearRestorePoint(genericData);
+                if (success && _doBackup)
+                    _migrator.ClearRestorePoint(_genericData);
             }
         }
     }

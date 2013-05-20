@@ -239,55 +239,9 @@ namespace Aurora.DataManager.SQLite
                 cmd.Parameters.Add(key, value);
         }
 
-        public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
-        {
-            string query = String.Format("select {0} from {1} {2} ", wantedValue, table, whereClause);
-            return QueryFullData2(query);
-        }
-
-        public override List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue)
-        {
-            string query = string.Format("SELECT {0} FROM {1} {2} ", wantedValue, tables.ToSQL(), whereClause);
-            return QueryFullData2(query);
-        }
-
-        private List<string> QueryFullData2(string query)
-        {
-            var cmd = PrepReader(query);
-            lock (GetLock())
-            {
-                using (SqliteDataReader reader = cmd.ExecuteReader())
-                {
-                    var RetVal = new List<string>();
-                    while (reader.Read())
-                    {
-                        if (reader.HasRows)
-                        {
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                RetVal.Add(reader.GetValue(i).ToString());
-                            }
-                        }
-                    }
-                    //reader.Close();
-                    CloseReaderCommand(cmd);
-
-                    return RetVal;
-                }
-            }
-        }
-
         public override DataReaderConnection QueryData(string whereClause, string table, string wantedValue)
         {
             string query = String.Format("select {0} from {1} {2}", wantedValue, table, whereClause);
-            SqliteConnection conn;
-            var data = QueryData2(query, out conn);
-            return new DataReaderConnection {DataReader = data, Connection = conn};
-        }
-
-        public override DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue)
-        {
-            string query = string.Format("SELECT {0} FROM {1} {2}", wantedValue, tables, whereClause);
             SqliteConnection conn;
             var data = QueryData2(query, out conn);
             return new DataReaderConnection {DataReader = data, Connection = conn};
@@ -364,60 +318,6 @@ namespace Aurora.DataManager.SQLite
                         {
                             for (i = 0; i < reader.FieldCount; i++)
                                 RetVal.Add(reader[i] == null ? null : reader[i].ToString());
-                        }
-                    }
-                    //reader.Close();
-                    CloseReaderCommand(cmd);
-
-                    return RetVal;
-                }
-            }
-        }
-
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
-                                                                    string wantedValue)
-        {
-            string query = String.Format("select {0} from {1} where ", wantedValue, table);
-            return QueryNames2(keyRow, keyValue, query);
-        }
-
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue,
-                                                                    QueryTables tables, string wantedValue)
-        {
-            string query = string.Format("SELECT {0} FROM {1} where ", wantedValue, tables.ToSQL());
-            return QueryNames2(keyRow, keyValue, query);
-        }
-
-        private Dictionary<string, List<string>> QueryNames2(string[] keyRow, object[] keyValue, string query)
-        {
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            int i = 0;
-            foreach (object value in keyValue)
-            {
-                ps[":" + keyRow[i].Replace("`", "")] = value;
-                query += String.Format("{0} = :{1} and ", keyRow[i], keyRow[i].Replace("`", ""));
-                i++;
-            }
-            query = query.Remove(query.Length - 5);
-            var cmd = PrepReader(query);
-            AddParams(ref cmd, ps);
-            lock (GetLock())
-            {
-                using (SqliteDataReader reader = cmd.ExecuteReader())
-                {
-                    var RetVal = new Dictionary<string, List<string>>();
-                    while (reader.Read())
-                    {
-                        if (reader.HasRows)
-                        {
-                            for (i = 0; i < reader.FieldCount; i++)
-                            {
-                                Type r = reader[i].GetType();
-                                if (r == typeof (DBNull))
-                                    AddValueToList(ref RetVal, reader.GetName(i), null);
-                                else
-                                    AddValueToList(ref RetVal, reader.GetName(i), reader[i].ToString());
-                            }
                         }
                     }
                     //reader.Close();
@@ -584,40 +484,6 @@ namespace Aurora.DataManager.SQLite
         public override bool Insert(string table, Dictionary<string, object> row)
         {
             return InsertOrReplace(table, row, true);
-        }
-
-        public override bool Insert(string table, object[] values, string updateKey, object updateValue)
-        {
-            var cmd = new SqliteCommand();
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-
-            string query = "";
-            query = String.Format("insert into {0} values (", table);
-            int i = 0;
-            foreach (object value in values)
-            {
-                ps[":" + Util.ConvertDecString(i)] = value;
-                query = String.Format(query + ":{0},", Util.ConvertDecString(i++));
-            }
-            query = query.Remove(query.Length - 1);
-            query += ")";
-            cmd.CommandText = query;
-            AddParams(ref cmd, ps);
-            try
-            {
-                ExecuteNonQuery(cmd);
-                CloseReaderCommand(cmd);
-            }
-                //Execute the update then...
-            catch (Exception)
-            {
-                cmd = new SqliteCommand();
-                query = String.Format("UPDATE {0} SET {1} = '{2}'", table, updateKey, updateValue);
-                cmd.CommandText = query;
-                ExecuteNonQuery(cmd);
-                CloseReaderCommand(cmd);
-            }
-            return true;
         }
 
         public override bool InsertSelect(string tableA, string[] fieldsA, string tableB, string[] valuesB)
@@ -1225,10 +1091,5 @@ namespace Aurora.DataManager.SQLite
         }
 
         #endregion
-
-        public override IGenericData Copy()
-        {
-            return new SQLiteLoader();
-        }
     }
 }
