@@ -116,10 +116,8 @@ namespace Aurora.Framework.Services
         /// <returns></returns>
         bool Delete(UUID principalID, string friend);
 
-        void Initialize(IConfigSource config, IRegistryCore registry);
+        List<UUID> GetFriendOnlineStatuses(UUID user, bool online);
 
-        void FinishedStartup();
-
-        void Start(IConfigSource config, IRegistryCore registry);
+        void SendFriendOnlineStatuses(UUID user, bool online);
     }
 }

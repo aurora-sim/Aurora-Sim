@@ -46,8 +46,10 @@ namespace Aurora.Modules.Friends
 {
     public class FriendsModule : INonSharedRegionModule, IFriendsModule
     {
-        protected Dictionary<UUID, UserFriendData> m_Friends =
-            new Dictionary<UUID, UserFriendData>();
+        protected Dictionary<UUID, List<FriendInfo>> m_Friends =
+            new Dictionary<UUID, List<FriendInfo>>();
+        protected Dictionary<UUID, List<UUID>> m_FriendOnlineStatuses =
+            new Dictionary<UUID, List<UUID>>();
 
         protected IScene m_scene;
         public bool m_enabled = true;
@@ -97,7 +99,7 @@ namespace Aurora.Modules.Friends
             IClientAPI friendClient = LocateClientObject(FriendToInformID);
             if (friendClient != null)
             {
-                //MainConsole.Instance.DebugFormat("[FRIENDS]: Local Status Notify {0} that user {1} is {2}", friendID, userID, online);
+                MainConsole.Instance.InfoFormat("[FriendsModule]: Local Status Notify {0} that {1} users are {2}", FriendToInformID, userIDs.Length, online);
                 // the  friend in this sim as root agent
                 if (online)
                     friendClient.SendAgentOnline(userIDs);
@@ -116,37 +118,11 @@ namespace Aurora.Modules.Friends
 
         public FriendInfo[] GetFriends(UUID agentID)
         {
-            UserFriendData friendsData;
-
+            List<FriendInfo> friends = new List<FriendInfo>();
             lock (m_Friends)
             {
-                if (m_Friends.TryGetValue(agentID, out friendsData))
-                    return friendsData.Friends;
-                else
-                {
-                    UpdateFriendsCache(agentID);
-                    if (m_Friends.TryGetValue(agentID, out friendsData))
-                        return friendsData.Friends;
-                }
-            }
-
-            return new FriendInfo[0];
-        }
-
-        public FriendInfo[] GetFriendsRequest(UUID agentID)
-        {
-            UserFriendData friendsData;
-
-            lock (m_Friends)
-            {
-                if (m_Friends.TryGetValue(agentID, out friendsData))
-                    return friendsData.Friends;
-                else
-                {
-                    UpdateFriendsCache(agentID);
-                    if (m_Friends.TryGetValue(agentID, out friendsData))
-                        return friendsData.Friends;
-                }
+                if (m_Friends.TryGetValue(agentID, out friends))
+                    return friends.ToArray();
             }
 
             return new FriendInfo[0];
@@ -174,6 +150,8 @@ namespace Aurora.Modules.Friends
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnCachedUserInfo += UpdateCachedInfo;
+            scene.EventManager.OnMakeRootAgent += MakeRootAgent;
         }
 
         public void RegionLoaded(IScene scene)
@@ -193,6 +171,8 @@ namespace Aurora.Modules.Friends
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnCachedUserInfo -= UpdateCachedInfo;
+            scene.EventManager.OnMakeRootAgent -= MakeRootAgent;
         }
 
         public string Name
@@ -206,6 +186,30 @@ namespace Aurora.Modules.Friends
         }
 
         #endregion
+
+        private void UpdateCachedInfo(UUID agentID, CachedUserInfo info)
+        {
+            lock (m_FriendOnlineStatuses)
+            {
+                if(info.FriendOnlineStatuses.Count > 0)
+                    m_FriendOnlineStatuses[agentID] = info.FriendOnlineStatuses;
+                else
+                    m_FriendOnlineStatuses.Remove(agentID);
+            }
+        }
+
+        void MakeRootAgent(IScenePresence presence)
+        {
+            lock (m_FriendOnlineStatuses)
+            {
+                List<UUID> friendOnlineStatuses;
+                if (m_FriendOnlineStatuses.TryGetValue(presence.UUID, out friendOnlineStatuses))
+                {
+                    SendFriendsStatusMessage(presence.UUID, friendOnlineStatuses.ToArray(), true);
+                    m_FriendOnlineStatuses.Remove(presence.UUID);
+                }
+            }
+        }
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
@@ -491,16 +495,8 @@ namespace Aurora.Modules.Friends
 
         private void UpdateFriendsCache(UUID agentID)
         {
-            UserFriendData friendsData = new UserFriendData
-                                             {
-                                                 PrincipalID = agentID,
-                                                 Refcount = 0,
-                                                 Friends = FriendsService.GetFriends(agentID).ToArray()
-                                             };
             lock (m_Friends)
-            {
-                m_Friends[agentID] = friendsData;
-            }
+                m_Friends[agentID] = FriendsService.GetFriends(agentID);
         }
 
         #region Local
@@ -648,22 +644,6 @@ namespace Aurora.Modules.Friends
             }
 
             return false;
-        }
-
-        #endregion
-
-        #region Nested type: UserFriendData
-
-        protected class UserFriendData
-        {
-            public FriendInfo[] Friends;
-            public UUID PrincipalID;
-            public int Refcount;
-
-            public bool IsFriend(string friend)
-            {
-                return Friends.Any(fi => fi.Friend == friend);
-            }
         }
 
         #endregion

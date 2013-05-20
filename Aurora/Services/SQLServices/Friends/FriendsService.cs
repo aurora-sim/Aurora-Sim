@@ -28,6 +28,7 @@
 using Aurora.Framework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Services;
+using Aurora.Framework.Services.ClassHelpers.Other;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
@@ -41,6 +42,7 @@ namespace Aurora.Services
         #region Declares
 
         protected IFriendsData m_Database;
+        protected IAgentInfoService m_agentInfoService;
 
         #endregion
 
@@ -69,6 +71,7 @@ namespace Aurora.Services
 
         public virtual void FinishedStartup()
         {
+            m_agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
         }
 
         #endregion
@@ -118,6 +121,56 @@ namespace Aurora.Services
                 return remoteValue == null ? false : (bool) remoteValue;
 
             return m_Database.Delete(PrincipalID, friend);
+        }
+
+        public List<UUID> GetFriendOnlineStatuses(UUID user, bool isOnline)
+        {
+            List<UUID> OnlineFriends = new List<UUID>();
+            ISyncMessagePosterService asyncPoster = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+            if (asyncPoster != null)
+            {
+                List<FriendInfo> friends = GetFriends(user);
+                foreach (FriendInfo friend in friends)
+                {
+                    if (friend.TheirFlags == -1 || friend.MyFlags == -1)
+                        continue; //Not validiated yet!
+                    UUID FriendToInform = UUID.Zero;
+                    if (!UUID.TryParse(friend.Friend, out FriendToInform))
+                        continue;
+
+                    UserInfo friendToInformUser = m_agentInfoService.GetUserInfo(friend.Friend);
+                    //Now find their caps service so that we can find where they are root (and if they are logged in)
+                    if (friendToInformUser != null && friendToInformUser.IsOnline)
+                        OnlineFriends.Add(FriendToInform);
+                }
+            }
+            return OnlineFriends;
+        }
+
+        public void SendFriendOnlineStatuses(UUID user, bool isOnline)
+        {
+            ISyncMessagePosterService asyncPoster = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
+            if (asyncPoster != null)
+            {
+                List<FriendInfo> friends = GetFriends(user);
+                foreach (FriendInfo friend in friends)
+                {
+                    if (friend.TheirFlags == -1 || friend.MyFlags == -1)
+                        continue; //Not validiated yet!
+                    UUID FriendToInform = UUID.Zero;
+                    if (!UUID.TryParse(friend.Friend, out FriendToInform))
+                        continue;
+
+                    UserInfo friendToInformUser = m_agentInfoService.GetUserInfo(friend.Friend);
+                    //Now find their caps service so that we can find where they are root (and if they are logged in)
+                    if (friendToInformUser != null && friendToInformUser.IsOnline)
+                    {
+                        //Post!
+                        asyncPoster.Post(friendToInformUser.CurrentRegionURI,
+                                         SyncMessageHelper.AgentStatusChange(user, FriendToInform, isOnline));
+                    }
+                }
+            }
         }
 
         #endregion
