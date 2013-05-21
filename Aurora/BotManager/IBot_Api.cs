@@ -58,5 +58,6 @@ namespace Aurora.BotManager
         void botAddTag(string bot, string tag);
         LSL_List botGetBotsWithTag(string tag);
         void botRemoveBotsWithTag(string tag);
+        void botSetSpeed(LSL_Key bot, LSL_Float SpeedModifier);
     }
 }
