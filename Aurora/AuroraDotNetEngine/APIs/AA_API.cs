@@ -32,7 +32,6 @@ using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
 using System;
@@ -50,7 +49,7 @@ using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
-    public class AA_Api : MarshalByRefObject, IAA_Api, IScriptApi
+    public class AA_Api : MarshalByRefObject, IScriptApi
     {
         internal IAssetConnector AssetConnector;
         internal ScriptProtectionModule ScriptProtection;
@@ -828,7 +827,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         internal void ShoutError(string msg)
         {
-            ILSL_Api api = (ILSL_Api) m_ScriptEngine.GetApi(m_itemID, "ll");
+            dynamic api = m_ScriptEngine.GetApi(m_itemID, "ll");
             api.llShout(ScriptBaseClass.DEBUG_CHANNEL, msg);
         }
 

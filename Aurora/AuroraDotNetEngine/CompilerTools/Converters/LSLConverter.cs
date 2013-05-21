@@ -49,6 +49,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public void Initialise(Compiler compiler)
         {
             m_compiler = compiler;
+            new CSCodeGenerator(compiler);
             //            LSL_Converter = new CSCodeGenerator(null, compiler);
         }
 

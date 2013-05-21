@@ -46,7 +46,6 @@ using Aurora.Framework.Servers;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Utilities;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
 using OpenMetaverse;
@@ -64,10 +63,10 @@ using Aurora.Framework.DatabaseInterfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
-    public class OSSL_Api : MarshalByRefObject, IOSSL_Api, IScriptApi
+    public class OSSL_Api : MarshalByRefObject, IScriptApi
     {
         internal ScriptProtectionModule ScriptProtection;
-        internal ILSL_Api m_LSL_Api; // get a reference to the LSL API so we can call methods housed there
+        internal LSL_Api m_LSL_Api; // get a reference to the LSL API so we can call methods housed there
         internal bool m_OSFunctionsEnabled;
         internal float m_ScriptDelayFactor = 1.0f;
         internal float m_ScriptDistanceFactor = 1.0f;
@@ -575,7 +574,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceAttachToAvatar", m_host, "OSSL", m_itemID))
                 return;
             InitLSL();
-            ((LSL_Api) m_LSL_Api).AttachToAvatar(attachmentPoint, false);
+            m_LSL_Api.AttachToAvatar(attachmentPoint, false);
         }
 
         public void osForceDetachFromAvatar()
@@ -584,7 +583,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 !ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceDetachFromAvatar", m_host, "OSSL", m_itemID))
                 return;
             InitLSL();
-            ((LSL_Api) m_LSL_Api).DetachFromAvatar();
+            m_LSL_Api.DetachFromAvatar();
         }
 
         public string osSetDynamicTextureDataBlendFace(string dynamicID, string contentType, string data,
@@ -2231,7 +2230,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ISceneChildEntity part = m_host.ParentEntity.GetLinkNumPart(linknumber) as ISceneChildEntity;
 
             //Check to see if the requested part exists (NOT null) and if so, get it's rules
-            if (part != null) retVal = ((LSL_Api) m_LSL_Api).GetLinkPrimitiveParams(part, rules, true);
+            if (part != null) retVal = m_LSL_Api.GetLinkPrimitiveParams(part, rules, true);
 
             //Will retun rules for specific part, or an empty list if part == null
             return retVal;
@@ -2377,13 +2376,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return;
 
             InitLSL();
-            // One needs to cast m_LSL_Api because we're using functions not
-            // on the ILSL_Api interface.
-            LSL_Api LSL_Api = (LSL_Api)m_LSL_Api;
-            List<IEntity> parts = LSL_Api.GetLinkPartsAndEntities(link);
+            List<IEntity> parts = m_LSL_Api.GetLinkPartsAndEntities(link);
 
             foreach (IEntity part in parts)
-                LSL_Api.SetPrimParams(part, rules, true);
+                m_LSL_Api.SetPrimParams(part, rules, true);
         }
 
          /// <summary>
@@ -2769,7 +2765,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (m_LSL_Api != null)
                 return;
 
-            m_LSL_Api = (ILSL_Api) m_ScriptEngine.GetApi(m_itemID, "ll");
+            m_LSL_Api = (LSL_Api)m_ScriptEngine.GetApi(m_itemID, "ll");
         }
 
         //

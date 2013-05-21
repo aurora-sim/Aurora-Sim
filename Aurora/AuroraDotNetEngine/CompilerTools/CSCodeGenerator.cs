@@ -2514,7 +2514,7 @@ default
             retVal.Append(GenerateLine("try", null));
             retVal.Append(GenerateLine("{", null));
             retVal.Append(Generate(
-                String.Format("((ILSL_Api)m_apis[\"ll\"]).state(\"{0}\");", sc.NewState)
+                String.Format("((dynamic)m_apis[\"ll\"]).state(\"{0}\");", sc.NewState)
                 , sc));
             retVal.Append(GenerateLine("}", null));
             retVal.Append(GenerateLine("catch", null));
@@ -2955,8 +2955,7 @@ default
             if (m_apiFunctions.ContainsKey(CheckName(fc.Id)))
             {
                 //Add the m_apis link
-                fc.Id = String.Format("(({0})m_apis[\"{1}\"]).{2}",
-                                      m_apiFunctions[CheckName(fc.Id)].InterfaceName,
+                fc.Id = String.Format("((dynamic)m_apis[\"{0}\"]).{1}",
                                       m_apiFunctions[CheckName(fc.Id)].Name, fc.Id);
             }
 

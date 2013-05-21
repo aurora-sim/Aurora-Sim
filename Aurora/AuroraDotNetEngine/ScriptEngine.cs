@@ -1197,11 +1197,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public List<string> GetFunctionNames(IScriptApi api)
         {
-            MemberInfo[] members = api.GetType().GetMembers();
+            MethodInfo[] members = api.GetType().GetMethods();
             List<string> FunctionNames = new List<string>();
-            foreach (MemberInfo member in members)
+            foreach (MethodInfo member in members)
             {
-                if (member.Name.StartsWith(api.Name, StringComparison.CurrentCultureIgnoreCase))
+                if (member.Name.StartsWith(api.Name, StringComparison.CurrentCultureIgnoreCase) && member.IsPublic)
                     FunctionNames.Add(member.Name);
             }
             members = null;

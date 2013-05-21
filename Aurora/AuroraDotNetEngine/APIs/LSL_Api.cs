@@ -42,7 +42,6 @@ using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
@@ -72,7 +71,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     /// <summary>
     ///     Contains all LSL ll-functions. This class will be in Default AppDomain.
     /// </summary>
-    public class LSL_Api : MarshalByRefObject, ILSL_Api, IScriptApi
+    public class LSL_Api : MarshalByRefObject, IScriptApi
     {
         protected IScriptModulePlugin m_ScriptEngine;
         protected ISceneChildEntity m_host;

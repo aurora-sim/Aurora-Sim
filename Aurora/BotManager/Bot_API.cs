@@ -48,7 +48,7 @@ using ThreatLevel = Aurora.ScriptEngine.AuroraDotNetEngine.ThreatLevel;
 
 namespace Aurora.BotManager
 {
-    public class Bot_Api : MarshalByRefObject, IBot_Api, IScriptApi
+    public class Bot_Api : MarshalByRefObject, IScriptApi
     {
         internal ScriptProtectionModule ScriptProtection;
         internal IScriptModulePlugin m_ScriptEngine;
