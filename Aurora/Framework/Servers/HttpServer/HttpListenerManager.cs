@@ -8,6 +8,10 @@ namespace Aurora.Framework.Servers.HttpServer
 {
     public sealed class HttpListenerManager : IDisposable
     {
+        //Error codes to ignore if something goes wrong
+        // 1229 - An operation was attempted on a nonexistent network connection
+        // 995  - The I/O operation has been aborted because of either a thread exit or an application request.
+        public static readonly int[] IGNORE_ERROR_CODES = new int[3] { 64, 1229, 995 };
         private readonly HttpListener _listener;
         private readonly Thread _listenerThread;
         private readonly Thread[] _workers;
