@@ -153,6 +153,16 @@ namespace Aurora.BotManager
                 manager.RemoveAvatar(UUID.Parse(bot), m_host.ParentEntity.Scene, m_host.OwnerID);
         }
 
+        public void botSetSpeed(LSL_Key bot, LSL_Float SpeedModifier)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "botSetSpeed", m_host, "OSSL", m_itemID))
+                return;
+
+            IBotManager manager = World.RequestModuleInterface<IBotManager>();
+            if (manager != null)
+                manager.SetSpeed(UUID.Parse(bot), m_host.OwnerID, (float)SpeedModifier);
+        }
+
         public void botFollowAvatar(string bot, string avatarName, LSL_Float startFollowDistance,
                                     LSL_Float endFollowDistance)
         {

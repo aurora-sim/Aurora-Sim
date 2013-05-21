@@ -68,6 +68,7 @@ namespace Aurora.Framework.Modules
         void SetBotShouldFly(UUID botID, bool shouldFly, UUID userAttempting);
         void PauseMovement(UUID botID, UUID userAttempting);
         void ResumeMovement(UUID botID, UUID userAttempting);
+        void SetSpeed(UUID botID, UUID userAttempting, float speedModifier);
 
         #endregion
 

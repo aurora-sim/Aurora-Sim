@@ -45,6 +45,7 @@ namespace Aurora.BotManager
     public class BotManager : INonSharedRegionModule, IBotManager
     {
         private readonly Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot>();
+        private IScene m_scene;
 
         #region INonSharedRegionModule Members
 
@@ -54,6 +55,7 @@ namespace Aurora.BotManager
 
         public void AddRegion(IScene scene)
         {
+            m_scene = scene;
             scene.RegisterModuleInterface<IBotManager>(this);
             scene.RegisterModuleInterface(this);
         }
@@ -405,6 +407,20 @@ namespace Aurora.BotManager
                 if (!CheckPermission(bot, userAttempting))
                     return;
                 bot.FollowAvatar(avatarName, startFollowDistance, endFollowDistance, offsetFromAvatar, requireLOS);
+            }
+        }
+
+        public void SetSpeed(UUID botID, UUID userAttempting, float speedModifier)
+        {
+            Bot bot;
+            if (m_bots.TryGetValue(botID, out bot))
+            {
+                if (!CheckPermission(bot, userAttempting))
+                    return;
+
+                IScenePresence avatar = m_scene.GetScenePresence(botID);
+                if (avatar != null)
+                    avatar.SpeedModifier = speedModifier;
             }
         }
 
