@@ -528,6 +528,17 @@ namespace Aurora.BotManager
                 m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
             }
 
+            if (bot_forward.X > 0)
+            {
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT;
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS;
+            }
+            if (bot_forward.X < 0)
+            {
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT;
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG;
+            }
+
             if (m_controller.CanMove)
                 m_controller.OnBotAgentUpdate(bot_toward, m_movementFlag, m_bodyDirection);
             m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
