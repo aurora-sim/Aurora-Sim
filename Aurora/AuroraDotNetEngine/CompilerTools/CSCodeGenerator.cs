@@ -317,8 +317,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 foreach (string nameSpace in api.NamespaceAdditions)
                     sb.AppendFormat("using {0};\n", nameSpace);
             sb.AppendLine(
-@"using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using LSL_Types = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types;
+@"using LSL_Types = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types;
 using System;
 namespace Script
 {
