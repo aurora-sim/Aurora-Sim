@@ -10381,6 +10381,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return "Aurora-Sim Server";
             if (name == "sim_version")
                 return World.RequestModuleInterface<ISimulationBase>().Version;
+            if (name == "frame_number")
+                return new LSL_String(World.Frame.ToString());
+            if (name == "region_idle")
+                return new LSL_String("1");
+            if (name == "dynamic_pathfinding")
+                return new LSL_String("disabled");
             return "";
         }
 
@@ -12971,7 +12977,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
                 return LSL_Integer.FALSE;
-            if (World.Permissions.IsAdministrator(m_host.OwnerID))
+            if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
             {
                 if (action == ScriptBaseClass.ESTATE_ACCESS_ALLOWED_AGENT_ADD)
                     World.RegionInfo.EstateSettings.AddEstateUser(UUID.Parse(avatar));
@@ -12991,6 +12997,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     World.RegionInfo.EstateSettings.RemoveBan(UUID.Parse(avatar));
                 return LSL_Integer.TRUE;
             }
+            else
+                ShoutError("llManageEstateAccess object owner must manage estate.");
             return LSL_Integer.FALSE;
         }
 

@@ -420,6 +420,13 @@ namespace Aurora.Modules.Estate
             {
                 if (isOwner)
                 {
+                    if ((estateAccessType & (int)AccessDeltaRequest.AddEstateManager) != 0)
+                        actions.Add(es.AddEstateManager);
+                    else if ((estateAccessType & (int)AccessDeltaRequest.RemoveEstateManager) != 0)
+                        actions.Add(es.RemoveEstateManager);
+                }
+                if (isManager)
+                {
                     if ((estateAccessType & (int)AccessDeltaRequest.AddAllowedUser) != 0)
                         actions.Add(es.AddEstateUser);
                     else if ((estateAccessType & (int)AccessDeltaRequest.RemoveAllowedUser) != 0)
@@ -428,14 +435,7 @@ namespace Aurora.Modules.Estate
                         actions.Add(es.AddEstateGroup);
                     else if ((estateAccessType & (int)AccessDeltaRequest.RemoveAllowedGroup) != 0)
                         actions.Add(es.RemoveEstateGroup);
-                    else if ((estateAccessType & (int)AccessDeltaRequest.AddEstateManager) != 0)
-                        actions.Add(es.AddEstateManager);
-                    else if ((estateAccessType & (int)AccessDeltaRequest.RemoveEstateManager) != 0)
-                        actions.Add(es.RemoveEstateManager);
-                }
-                else if (isManager)
-                {
-                    if ((estateAccessType & (int)AccessDeltaRequest.AddBannedUser) != 0)
+                    else if ((estateAccessType & (int)AccessDeltaRequest.AddBannedUser) != 0)
                         actions.Add((userID) =>
                         {
                             IScenePresence SP = m_scene.GetScenePresence(user);
