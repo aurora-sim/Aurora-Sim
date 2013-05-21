@@ -8,7 +8,7 @@ namespace Aurora.Simulation.Base
 {
     public class BinMigratorService
     {
-        private const int _currentBinVersion = 8;
+        private const int _currentBinVersion = 10;
 
         public void MigrateBin()
         {
@@ -58,6 +58,14 @@ namespace Aurora.Simulation.Base
         {
             if (File.Exists("Aurora.UserServer.exe"))
                 File.Delete("Aurora.UserServer.exe");
+        }
+
+        public void RunMigration10()
+        {
+            foreach (string dir in Directory.GetDirectories("ScriptEngines/"))
+            {
+                Directory.Delete(dir, true);
+            }
         }
     }
 
