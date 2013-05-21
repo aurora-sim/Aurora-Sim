@@ -137,6 +137,8 @@ namespace Aurora.Services
                     UUID FriendToInform = UUID.Zero;
                     if (!UUID.TryParse(friend.Friend, out FriendToInform))
                         continue;
+                    if ((friend.MyFlags & (int)FriendRights.CanSeeOnline) != (int)FriendRights.CanSeeOnline)
+                        continue;//if we haven't given them the rights to see our online status, don't send the online status
 
                     UserInfo friendToInformUser = m_agentInfoService.GetUserInfo(friend.Friend);
                     //Now find their caps service so that we can find where they are root (and if they are logged in)
@@ -160,6 +162,8 @@ namespace Aurora.Services
                     UUID FriendToInform = UUID.Zero;
                     if (!UUID.TryParse(friend.Friend, out FriendToInform))
                         continue;
+                    if ((friend.MyFlags & (int)FriendRights.CanSeeOnline) != (int)FriendRights.CanSeeOnline)
+                        continue;//if we haven't given them the rights to see our online status, don't send the online status
 
                     UserInfo friendToInformUser = m_agentInfoService.GetUserInfo(friend.Friend);
                     //Now find their caps service so that we can find where they are root (and if they are logged in)
