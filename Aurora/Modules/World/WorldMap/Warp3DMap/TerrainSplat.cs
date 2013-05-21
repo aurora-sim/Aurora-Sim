@@ -138,7 +138,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                                 }
                                 catch (Exception ex)
                                 {
-                                    MainConsole.Instance.Warn("Failed to decode terrain texture " + asset.ID + ": " +
+                                    MainConsole.Instance.Warn("Failed to decode terrain texture " + textureIDs[i] + ": " +
                                                               ex.Message);
                                 }
                             }

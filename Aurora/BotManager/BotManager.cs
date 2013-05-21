@@ -373,7 +373,12 @@ namespace Aurora.BotManager
             if (userAttempting == UUID.Zero)
                 return true; //Forced override
             if (bot != null)
-                return bot.AvatarCreatorID == userAttempting;
+            {
+                if(bot.AvatarCreatorID == userAttempting)
+                    return true;
+                else
+                    throw new Exception("Bot permission error, you cannot control this bot");
+            }
             return false;
         }
 
