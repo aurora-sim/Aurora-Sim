@@ -13261,6 +13261,115 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     controller.StopMoving(false, true);
             }
         }
+
+        public LSL_Float llGetSimStats(LSL_Integer statType)
+        {
+            LSL_Float retVal = 0;
+            if (statType == ScriptBaseClass.SIM_STAT_PCT_CHARS_STEPPED)
+            {
+                //TODO: Not implemented
+                retVal = 0;
+            }
+            return retVal;
+        }
+
+        public void llSetAnimationOverride(LSL_String anim_state, LSL_String anim)
+        {
+            //anim_state - animation state to be overriden
+            //anim       - an animation in the prim's inventory or the name of the built-in animation
+
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
+                return;
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter == UUID.Zero)
+                return;
+
+            if ((item.PermsMask & ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION) != 0)
+            {
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    // Do NOT try to parse UUID, animations cannot be triggered by ID
+                    UUID animID = KeyOrName(anim, AssetType.Animation, false);
+
+                    presence.Animator.SetDefaultAnimationOverride(anim_state, animID, anim);
+                }
+            }
+        }
+
+        public void llResetAnimationOverride(LSL_String anim_state)
+        {
+            //anim_state - animation state to be reset
+            
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
+                return;
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter == UUID.Zero)
+                return;
+
+            if ((item.PermsMask & ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION) != 0)
+            {
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    presence.Animator.ResetDefaultAnimationOverride(anim_state);
+                }
+            }
+        }
+
+        public LSL_String llGetAnimationOverride(string anim_state)
+        {
+            //anim_state - animation state to be reset
+
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
+                return "";
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return "";
+                item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter == UUID.Zero)
+                return "";
+
+            if ((item.PermsMask & ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION) != 0)
+            {
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    return new LSL_String(presence.Animator.GetDefaultAnimationOverride(anim_state));
+                }
+            }
+            return "";
+        }
     }
 
     public class NotecardCache

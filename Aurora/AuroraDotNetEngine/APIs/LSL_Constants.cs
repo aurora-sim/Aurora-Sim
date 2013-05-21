@@ -789,6 +789,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger CHARACTER_CMD_STOP = 0x0;
         public static readonly LSL_Types.LSLInteger CHARACTER_CMD_JUMP = 0x1;
 
+        public static readonly LSL_Types.LSLInteger SIM_STAT_PCT_CHARS_STEPPED = 0;
+
         /// <summary>
         /// process name parameter as regex
         /// </summary>

@@ -193,5 +193,8 @@ namespace Aurora.Framework.PresenceInfo
         void SendAnimPackToClient(IClientAPI client);
         void SendAnimPack();
         void Close();
+        void ResetDefaultAnimationOverride(string anim_state);
+        void SetDefaultAnimationOverride(string anim_state, UUID animID, string animation);
+        string GetDefaultAnimationOverride(string anim_state);
     }
 }

@@ -629,6 +629,21 @@ namespace Aurora.Region.Animation
             m_scenePresence = null;
         }
 
+        public void ResetDefaultAnimationOverride(string anim_state)
+        {
+            m_animations.ResetDefaultAnimationOverride(anim_state);
+        }
+
+        public void SetDefaultAnimationOverride(string anim_state, UUID animID, string animation)
+        {
+            m_animations.SetDefaultAnimationOverride(anim_state, animID, animation);
+        }
+
+        public string GetDefaultAnimationOverride(string anim_state)
+        {
+            return m_animations.GetDefaultAnimationOverride(anim_state);
+        }
+
         #endregion
     }
 }
