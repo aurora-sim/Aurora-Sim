@@ -196,6 +196,8 @@ namespace Aurora.Modules.Friends
                 else
                     m_FriendOnlineStatuses.Remove(agentID);
             }
+            lock (m_Friends)
+                m_Friends[agentID] = info.Friends;
         }
 
         void MakeRootAgent(IScenePresence presence)
