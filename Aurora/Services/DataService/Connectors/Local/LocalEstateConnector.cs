@@ -78,7 +78,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(regionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return ReturnEstateSettings(remoteValue);
+                return (EstateSettings)remoteValue;
 
             EstateSettings settings = new EstateSettings() {EstateID = 0};
             int estateID = GetEstateID(regionID);
@@ -92,26 +92,16 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(EstateID);
             if (remoteValue != null || m_doRemoteOnly)
-                return ReturnEstateSettings(remoteValue);
+                return (EstateSettings)remoteValue;
 
             return GetEstate(EstateID);
-        }
-
-        private EstateSettings ReturnEstateSettings(object remoteValue)
-        {
-            EstateSettings es = (EstateSettings) remoteValue;
-            if (es != null)
-                es.OnSave += SaveEstateSettings;
-            return es;
         }
 
         public EstateSettings GetEstateSettings(string name)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateName"] = name;
-            return ReturnEstateSettings(GetEstate(
-                int.Parse(GD.Query(new string[1] {"EstateID"}, "estatesettings", filter, null, null, null)[0]))
-                );
+            return GetEstate(int.Parse(GD.Query(new string[1] {"EstateID"}, "estatesettings", filter, null, null, null)[0])));
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -261,7 +251,7 @@ namespace Aurora.Services.DataService
 
                 if (Add)
                 {
-                    settings.Add(ReturnEstateSettings(es));
+                    settings.Add(es);
                 }
             }
             return settings;
@@ -291,10 +281,8 @@ namespace Aurora.Services.DataService
                                               EstateID = 0
                                           };
             if (retVals.Count > 0)
-            {
                 settings.FromOSD((OSDMap) OSDParser.DeserializeJson(retVals[4]));
-            }
-            settings.OnSave += SaveEstateSettings;
+
             return settings;
         }
 
