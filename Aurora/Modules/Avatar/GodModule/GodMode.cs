@@ -200,8 +200,9 @@ namespace Aurora.Modules.Gods
                     client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                 else
                 {
-                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint) EstateID;
-                    client.Scene.RegionInfo.EstateSettings.Save();
+                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                    Aurora.Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().
+                        SaveEstateSettings(client.Scene.RegionInfo.EstateSettings);
                 }
             }
 

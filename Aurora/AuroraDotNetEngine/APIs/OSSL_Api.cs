@@ -1131,7 +1131,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 World.RegionInfo.EstateSettings.UseGlobalTime = !sunFixed;
                 World.RegionInfo.EstateSettings.SunPosition = sunHour;
                 World.RegionInfo.EstateSettings.FixedSun = sunFixed;
-                World.RegionInfo.EstateSettings.Save();
+                Aurora.Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().
+                    SaveEstateSettings(World.RegionInfo.EstateSettings);
 
                 World.EventManager.TriggerEstateToolsSunUpdate(World.RegionInfo.RegionHandle, sunFixed,
                                                                World.RegionInfo.RegionSettings.UseEstateSun,

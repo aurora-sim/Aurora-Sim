@@ -101,7 +101,7 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateName"] = name;
-            return GetEstate(int.Parse(GD.Query(new string[1] {"EstateID"}, "estatesettings", filter, null, null, null)[0])));
+            return GetEstate(int.Parse(GD.Query(new string[1] {"EstateID"}, "estatesettings", filter, null, null, null)[0]));
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
