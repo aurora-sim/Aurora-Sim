@@ -491,7 +491,7 @@ namespace Aurora.Simulation.Base
         {
             MainConsole.Instance.Info(
                 String.Format(
-                    "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion));
+                    "Version: {0}", m_version));
         }
 
         #endregion
