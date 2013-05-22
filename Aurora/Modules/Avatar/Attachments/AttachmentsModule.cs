@@ -873,6 +873,14 @@ namespace Aurora.Modules.Attachments
                         "Unable to save attachment. Error inventory item ID.", false);
                     return;
                 }
+
+                // XXYY!!
+                if (assetID == UUID.Zero)
+                {
+                    assetID = m_scene.InventoryService.GetItemAssetID(remoteClient.AgentId, itemID);
+                    //Update the ItemID with the new item
+                    group.SetFromItemID(itemID, assetID);
+                }
             }
             else
             {
@@ -880,20 +888,6 @@ namespace Aurora.Modules.Attachments
                 // 4 == AttachedRez
                 group.CreateScriptInstances(0, true, StateSource.AttachedRez, UUID.Zero, false);
                 group.RootChild.FromUserInventoryItemID = UUID.Zero;
-
-                IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                AssetBase asset;
-                if (inventoryAccess != null)
-                    assetID = inventoryAccess.SaveAsAsset(new List<ISceneEntity>(1) {group}, out asset);
-                group.SetFromItemID(UUID.Zero, assetID);
-            }
-
-            // XXYY!!
-            if (assetID == UUID.Zero)
-            {
-                assetID = m_scene.InventoryService.GetItemAssetID(remoteClient.AgentId, itemID);
-                //Update the ItemID with the new item
-                group.SetFromItemID(itemID, assetID);
             }
 
             AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
@@ -901,10 +895,13 @@ namespace Aurora.Modules.Attachments
             {
                 attPlugin.AddAttachment(group);
                 presence.SetAttachments(attPlugin.Get());
-                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+                if (!isTempAttach)
+                {
+                    IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
 
-                appearance.Appearance.SetAttachments(attPlugin.Get());
-                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+                    appearance.Appearance.SetAttachments(attPlugin.Get());
+                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+                }
             }
 
 

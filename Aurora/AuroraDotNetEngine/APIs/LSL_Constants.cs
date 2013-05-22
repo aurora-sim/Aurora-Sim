@@ -237,6 +237,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger ATTACH_HUD_BOTTOM_LEFT = 36;
         public static readonly LSL_Types.LSLInteger ATTACH_HUD_BOTTOM = 37;
         public static readonly LSL_Types.LSLInteger ATTACH_HUD_BOTTOM_RIGHT = 38;
+        public static readonly LSL_Types.LSLInteger ATTACH_NECK = 39;
+        public static readonly LSL_Types.LSLInteger ATTACH_AVATAR_CENTER = 40;
 
         public static readonly LSL_Types.LSLInteger LAND_LEVEL = 0;
         public static readonly LSL_Types.LSLInteger LAND_RAISE = 1;
