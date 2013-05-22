@@ -348,7 +348,7 @@ public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.Script
             {
                 //               lock (p)
                 {
-                    codeTransformer = new LSL2CSCodeTransformer(p.Parse(script));
+                    codeTransformer = new LSL2CSCodeTransformer(p.Parse(FixAdditionalEvents(script)), script);
                     //                    p.m_lexer.Reset();
                 }
             }
@@ -412,6 +412,14 @@ public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.Script
                 return ex.Message;
             }
             return CreateCompilerScript(m_compiler, MethodsToAdd, returnstring);
+        }
+
+        private string FixAdditionalEvents(string script)
+        {
+            string retVal = script;
+            foreach(string ev in LSL2CSCodeTransformer.GetNewLSLEvents())
+                retVal = retVal.Replace(ev, "remote_data");
+            return retVal;
         }
 
         private string GenerateFireEventMethod()
@@ -1907,6 +1915,7 @@ public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.Script
             // we need to separate the argument declaration list from other kids
             List<SYMBOL> argumentDeclarationListKids = new List<SYMBOL>();
             List<SYMBOL> remainingKids = new List<SYMBOL>();
+            LSL2CSCodeTransformer.FixEventName(this.OriginalScript, ref se);
 
             _currentLocalFunctionDeclaration = se;
 

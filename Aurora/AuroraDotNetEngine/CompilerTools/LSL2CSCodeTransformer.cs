@@ -52,6 +52,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private string m_currentEvent = "";
         private string m_currentState = "";
+        private string m_originalScript = "";
 
         public Dictionary<string, SYMBOL> DuplicatedGlobalVars
         {
@@ -77,9 +78,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         ///     Pass the new CodeTranformer an abstract syntax tree.
         /// </summary>
         /// <param name="astRoot">The root node of the AST.</param>
-        public LSL2CSCodeTransformer(SYMBOL astRoot)
+        /// <param name="originalScript">The original script that we are converting</param>
+        public LSL2CSCodeTransformer(SYMBOL astRoot, string originalScript)
         {
             m_astRoot = astRoot;
+            m_originalScript = originalScript;
 
             // let's populate the dictionary
             if (null == m_datatypeLSL2OpenSim)
@@ -192,6 +195,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 //Reset the variables, we changed events
                 StateEvent evt = (StateEvent) s;
+                FixEventName(m_originalScript, ref evt);
                 m_currentEvent = evt.Name;
                 m_localVariableValues.Add(m_currentState + "_" + evt.Name, new Dictionary<string, SYMBOL>());
                 m_localVariableValuesStr.Add(m_currentState + "_" + evt.Name, new Dictionary<string, string>());
@@ -561,6 +565,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // we need to remove the current scope from the parent since we are no longer in that scope
                 if (scopeAdded)
                     scopesParent.Remove(scopeCurrent);
+            }
+        }
+
+        private static List<string> _newLSLEvents = new List<string>();
+        public static void AddLSLEvent(string ev)
+        {
+            _newLSLEvents.Add(ev);
+        }
+
+        public static List<string> GetNewLSLEvents()
+        {
+            return new List<string>(_newLSLEvents.ToArray());
+        }
+
+        public static void FixEventName(string script, ref StateEvent evt)
+        {
+            if (evt.Name == "remote_data")
+            {
+                string[] lines = script.Split(new [] { '\n' });
+                string line = lines[evt.Line-1];
+                if (line.IndexOf('(') > 0)
+                {
+                    line = line.Substring(0, line.IndexOf('(')).Trim();
+                    if(_newLSLEvents.Contains(line))
+                        evt.Name = line;
+                }
             }
         }
 

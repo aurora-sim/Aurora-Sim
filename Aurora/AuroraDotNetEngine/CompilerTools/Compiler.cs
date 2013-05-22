@@ -103,6 +103,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             SetupCompilers();
             //Find the default compiler
             FindDefaultCompiler();
+
+#if ADNE_DEBUG
+            TestScripts();
+        }
+        
+        public void TestScripts()
+        {
+            string testScript = @"
+            default
+            {
+                state_entry() { }
+                transaction_result(key id, integer success, string data) { }
+                remote_data( integer event_type, key channel, key message_id, string sender, integer idata, string sdata)
+                {
+                }
+            }";
+            string assembly;
+            PerformScriptCompile(testScript, UUID.Zero, out assembly);
+            if (GetErrors().Length > 0)
+            {
+                MainConsole.Instance.Warn("Failed to pass script test 1: " + string.Join("\n", GetErrors()));
+                ClearErrors();
+            }
+#endif
         }
 
         private void MakeFilePrefixSafe()
