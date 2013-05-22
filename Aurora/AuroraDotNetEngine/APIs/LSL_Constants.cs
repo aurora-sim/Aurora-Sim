@@ -80,6 +80,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger PERMISSION_CONTROL_CAMERA = 2048;
         public static readonly LSL_Types.LSLInteger PERMISSION_TELEPORT = 4096;
         public static readonly LSL_Types.LSLInteger PERMISSION_COMBAT = 8196;
+        public static readonly LSL_Types.LSLInteger PERMISSION_OVERRIDE_ANIMATIONS = 32768;
 
         public static readonly LSL_Types.LSLInteger AGENT_FLYING = 1;
         public static readonly LSL_Types.LSLInteger AGENT_ATTACHMENTS = 2;
@@ -790,6 +791,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger CHARACTER_CMD_JUMP = 0x1;
 
         public static readonly LSL_Types.LSLInteger SIM_STAT_PCT_CHARS_STEPPED = 0;
+
+        public static readonly LSL_Types.LSLString JSON_ARRAY = "JSON_ARRAY";
+        public static readonly LSL_Types.LSLString JSON_OBJECT = "JSON_OBJECT";
+        public static readonly LSL_Types.LSLString JSON_INVALID = "JSON_INVALID";
+        public static readonly LSL_Types.LSLString JSON_NUMBER = "JSON_NUMBER";
+        public static readonly LSL_Types.LSLString JSON_STRING = "JSON_STRING";
+        public static readonly LSL_Types.LSLString JSON_TRUE = "JSON_TRUE";
+        public static readonly LSL_Types.LSLString JSON_FALSE = "JSON_FALSE";
+        public static readonly LSL_Types.LSLString JSON_NULL = "JSON_NULL";
+        public static readonly LSL_Types.LSLString JSON_APPEND = "JSON_APPEND";
 
         /// <summary>
         /// process name parameter as regex
