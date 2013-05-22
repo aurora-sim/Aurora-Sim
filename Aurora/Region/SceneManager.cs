@@ -279,6 +279,16 @@ namespace Aurora.Region
             MainConsole.Instance.Warn("Region " + m_scene.RegionInfo.RegionName + " was reset");
         }
 
+        public void RemoveRegion()
+        {
+            m_scene.SimulationDataService.RemoveRegion();
+            IGridRegisterModule gridRegisterModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
+            gridRegisterModule.DeleteRegion(m_scene);
+            MainConsole.Instance.Warn("Region " + m_scene.RegionInfo.RegionName + " was removed, restarting the instance in 10 seconds");
+            System.Threading.Thread.Sleep(10000);
+            Environment.Exit(0);
+        }
+
         #endregion
 
         #region Restart a region
@@ -463,6 +473,10 @@ namespace Aurora.Region
                                                      "Reset region to the default terrain, wipe all prims, etc.",
                                                      RunCommand);
 
+            MainConsole.Instance.Commands.AddCommand("remove region", "remove region",
+                                                     "Remove region from the grid, and delete all info associated with it",
+                                                     RunCommand);
+
             MainConsole.Instance.Commands.AddCommand("restart-instance", "restart-instance",
                                                      "Restarts the instance (as if you closed and re-opened Aurora)",
                                                      RunCommand);
@@ -627,6 +641,16 @@ namespace Aurora.Region
                                 "yes")
                                 return;
                             ResetRegion();
+                        }
+                    break;
+                case "remove":
+                    if (cmdparams.Length > 0)
+                        if (cmdparams[0] == "region")
+                        {
+                            if (MainConsole.Instance.Prompt("Are you sure you want to remove the region?", "yes") !=
+                                "yes")
+                                return;
+                            RemoveRegion();
                         }
                     break;
                 case "command-script":
