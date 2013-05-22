@@ -7,6 +7,7 @@ using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework.SceneInfo
 {
@@ -363,6 +364,7 @@ namespace Aurora.Framework.SceneInfo
 
         List<UUID> SitTargetAvatar { get; set; }
         Dictionary<int, string> CollisionFilter { get; }
+        OSDArray RenderMaterials { get; set; }
 
         bool GetBlockGrab(bool wholeObjectBlock);
 

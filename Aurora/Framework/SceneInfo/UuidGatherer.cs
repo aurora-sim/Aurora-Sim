@@ -34,6 +34,7 @@ using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -82,9 +83,7 @@ namespace Aurora.Framework.SceneInfo
         /// <param name="assetUuid">The uuid of the asset for which to gather referenced assets</param>
         /// <param name="assetType">The type of the asset for the uuid given</param>
         /// <param name="assetUuids">The assets gathered</param>
-        /// <param name="scene"></param>
-        public void GatherAssetUuids(UUID assetUuid, AssetType assetType, IDictionary<UUID, AssetType> assetUuids,
-                                     IRegistryCore scene)
+        public void GatherAssetUuids(UUID assetUuid, AssetType assetType, IDictionary<UUID, AssetType> assetUuids)
         {
             // avoid infinite loops
             if (assetUuids.ContainsKey(assetUuid))
@@ -105,7 +104,7 @@ namespace Aurora.Framework.SceneInfo
                     GetScriptAssetUuids(assetUuid, assetUuids);
                     break;
                 case AssetType.Object:
-                    GetSceneObjectAssetUuids(assetUuid, assetUuids, scene);
+                    GetSceneObjectAssetUuids(assetUuid, assetUuids);
                     break;
             }
         }
@@ -119,8 +118,7 @@ namespace Aurora.Framework.SceneInfo
         /// <param name="sceneObject">The scene object for which to gather assets</param>
         /// <param name="assetUuids">The assets gathered</param>
         /// <param name="scene"></param>
-        public void GatherAssetUuids(ISceneEntity sceneObject, IDictionary<UUID, AssetType> assetUuids,
-                                     IRegistryCore scene)
+        public void GatherAssetUuids(ISceneEntity sceneObject, IDictionary<UUID, AssetType> assetUuids)
         {
 //            MainConsole.Instance.DebugFormat(
 //                "[ASSET GATHERER]: Getting assets for object {0}, {1}", sceneObject.Name, sceneObject.UUID);
@@ -163,8 +161,10 @@ namespace Aurora.Framework.SceneInfo
                         TaskInventoryItem tii in
                             taskDictionary.Values.Where(tii => !assetUuids.ContainsKey(tii.AssetID)))
                     {
-                        GatherAssetUuids(tii.AssetID, (AssetType) tii.Type, assetUuids, scene);
+                        if (!assetUuids.ContainsKey(tii.AssetID))
+                            GatherAssetUuids(tii.AssetID, (AssetType)tii.Type, assetUuids);
                     }
+                    GatherMaterialsUuids(part, assetUuids);
                 }
                 catch (Exception e)
                 {
@@ -172,6 +172,58 @@ namespace Aurora.Framework.SceneInfo
                     MainConsole.Instance.DebugFormat(
                         "[UUID GATHERER]: Texture entry length for prim was {0} (min is 46)",
                         part.Shape.TextureEntry.Length);
+                }
+            }
+        }
+
+        
+        /// <summary>
+        /// Gather all of the texture asset UUIDs used to reference "Materials" such as normal and specular maps
+        /// </summary>
+        /// <param name="part"></param>
+        /// <param name="assetUuids"></param>
+        public void GatherMaterialsUuids(ISceneChildEntity part, IDictionary<UUID, AssetType> assetUuids)
+        {
+            // scan through the rendermaterials of this part for any textures used as materials
+            if (part.RenderMaterials == null)
+                return;
+
+            lock (part.RenderMaterials)
+            {
+                OSDArray matsArr = part.RenderMaterials as OSDArray;
+                foreach (OSDMap matMap in matsArr)
+                {
+                    try
+                    {
+                        if (matMap.ContainsKey("Material"))
+                        {
+                            OSDMap mat = matMap["Material"] as OSDMap;
+                            if (mat.ContainsKey("NormMap"))
+                            {
+                                UUID normalMapId = mat["NormMap"].AsUUID();
+                                if (normalMapId != UUID.Zero)
+                                {
+                                    assetUuids[normalMapId] = AssetType.Texture;
+                                    //m_log.Info("[UUID Gatherer]: found normal map ID: " + normalMapId.ToString());
+                                }
+                            }
+                            if (mat.ContainsKey("SpecMap"))
+                            {
+                                UUID specularMapId = mat["SpecMap"].AsUUID();
+                                if (specularMapId != UUID.Zero)
+                                {
+                                    assetUuids[specularMapId] = AssetType.Texture;
+                                    //m_log.Info("[UUID Gatherer]: found specular map ID: " + specularMapId.ToString());
+                                }
+                            }
+                        }
+                        //Add the material itself
+                        assetUuids[matMap["ID"].AsUUID()] = AssetType.Texture;
+                    }
+                    catch (Exception e)
+                    {
+                        MainConsole.Instance.Warn("[UUID Gatherer]: exception getting materials: " + e.ToString());
+                    }
                 }
             }
         }
@@ -277,18 +329,17 @@ namespace Aurora.Framework.SceneInfo
         /// <param name="sceneObjectUuid"></param>
         /// <param name="assetUuids"></param>
         /// <param name="scene"></param>
-        protected void GetSceneObjectAssetUuids(UUID sceneObjectUuid, IDictionary<UUID, AssetType> assetUuids,
-                                                IRegistryCore scene)
+        protected void GetSceneObjectAssetUuids(UUID sceneObjectUuid, IDictionary<UUID, AssetType> assetUuids)
         {
             AssetBase objectAsset = GetAsset(sceneObjectUuid);
 
             if (null != objectAsset)
             {
                 string xml = Utils.BytesToString(objectAsset.Data);
-                ISceneEntity group = SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(xml, scene);
+                ISceneEntity group = SceneEntitySerializer.SceneObjectSerializer.FromOriginalXmlFormat(xml, null);
                 if (group == null)
                     return;
-                GatherAssetUuids(group, assetUuids, scene);
+                GatherAssetUuids(group, assetUuids);
             }
         }
 
