@@ -5231,52 +5231,46 @@ namespace Aurora.ClientStack
                                                                                          CompressedFlags updateFlags,
                                                                                          PrimUpdateFlags flags)
         {
-            byte[] objectData = new byte[500];
+            System.IO.MemoryStream objectData = new System.IO.MemoryStream();
+            byte[] byteData = new byte[16];
             int i = 0;
-            part.UUID.ToBytes(objectData, 0);
+            objectData.Write(part.UUID.GetBytes(), i, 16);
             i += 16;
-            Utils.UIntToBytes(part.LocalId, objectData, i);
+            Utils.UIntToBytes(part.LocalId, byteData, 0);
+            objectData.Write(byteData, i, 4);
             i += 4;
-            objectData[i] = part.Shape.PCode; //Type of prim
+            objectData.WriteByte(part.Shape.PCode); //Type of prim
             i += 1;
 
             if (part.Shape.PCode == (byte) PCode.Tree || part.Shape.PCode == (byte) PCode.NewTree)
                 updateFlags |= CompressedFlags.Tree;
 
             //Attachment point
-            objectData[i] = (byte) part.AttachmentPoint;
+            objectData.WriteByte((byte) part.AttachmentPoint);
             i += 1;
             //CRC
-            Utils.UIntToBytes(part.CRC, objectData, i);
+            Utils.UIntToBytes(part.CRC, byteData, 0);
+            objectData.Write(byteData, i, 4);
             i += 4;
-            objectData[i] = (byte) part.Material;
+            objectData.WriteByte((byte)part.Material);
             i++;
-            objectData[i] = part.ClickAction;
+            objectData.WriteByte((byte)part.ClickAction);
             i++;
-            part.Shape.Scale.ToBytes(objectData, i);
+            objectData.Write(part.Shape.Scale.GetBytes(), i, 12);
             i += 12;
-            part.RelativePosition.ToBytes(objectData, i);
+            objectData.Write(part.RelativePosition.GetBytes(), i, 12);
             i += 12;
-            try
-            {
-                part.GetRotationOffset().ToBytes(objectData, i);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Warn(
-                    "[LLClientView]: exception converting quaternion to bytes, using Quaternion.Identity. Exception: " +
-                    e);
-                Quaternion.Identity.ToBytes(objectData, i);
-            }
+            objectData.Write(part.GetRotationOffset().GetBytes(), i, 12);
             i += 12;
-            Utils.UIntToBytes((uint) updateFlags, objectData, i);
+            Utils.UIntToBytes((uint)updateFlags, byteData, 0);
+            objectData.Write(byteData, i, 4);
             i += 4;
-            part.OwnerID.ToBytes(objectData, i);
+            objectData.Write(part.OwnerID.GetBytes(), i, 16);
             i += 16;
 
             if ((updateFlags & CompressedFlags.HasAngularVelocity) != 0)
             {
-                part.AngularVelocity.ToBytes(objectData, i);
+                objectData.Write(part.AngularVelocity.GetBytes(), i, 12);
                 i += 12;
             }
             if ((updateFlags & CompressedFlags.HasParent) != 0)
@@ -5284,15 +5278,16 @@ namespace Aurora.ClientStack
                 if (part.IsAttachment)
                 {
                     IScenePresence us = m_scene.GetScenePresence(AgentId);
-                    Utils.UIntToBytes(us.LocalId, objectData, i);
+                    Utils.UIntToBytes(us.LocalId, byteData, 0);
                 }
                 else
-                    Utils.UIntToBytes(part.ParentID, objectData, i);
+                    Utils.UIntToBytes(part.ParentID, byteData, 0);
+                objectData.Write(byteData, i, 4);
                 i += 4;
             }
             if ((updateFlags & CompressedFlags.Tree) != 0)
             {
-                objectData[i] = part.Shape.State; //Tree type
+                objectData.WriteByte(part.Shape.State); //Tree type
                 i++;
             }
             else if ((updateFlags & CompressedFlags.ScratchPad) != 0)
@@ -5303,17 +5298,17 @@ namespace Aurora.ClientStack
             if ((updateFlags & CompressedFlags.HasText) != 0)
             {
                 byte[] text = Utils.StringToBytes(part.Text);
-                Buffer.BlockCopy(text, 0, objectData, i, text.Length);
+                objectData.Write(text, i, text.Length);
                 i += text.Length;
 
                 byte[] textcolor = part.GetTextColor().GetBytes(false);
-                Buffer.BlockCopy(textcolor, 0, objectData, i, textcolor.Length);
+                objectData.Write(textcolor, i, textcolor.Length);
                 i += 4;
             }
             if ((updateFlags & CompressedFlags.MediaURL) != 0)
             {
                 byte[] text = Util.StringToBytes256(part.CurrentMediaVersion);
-                Buffer.BlockCopy(text, 0, objectData, i, text.Length);
+                objectData.Write(text, i, text.Length);
                 i += text.Length;
             }
 
@@ -5323,30 +5318,32 @@ namespace Aurora.ClientStack
                 {
                     Primitive.ParticleSystem Sys = new Primitive.ParticleSystem();
                     byte[] pdata = Sys.GetBytes();
-                    Buffer.BlockCopy(pdata, 0, objectData, i, pdata.Length);
+                    objectData.Write(pdata, i, pdata.Length);
                     i += pdata.Length; //86
                     //updateFlags = updateFlags & ~CompressedFlags.HasParticles;
                 }
                 else
                 {
-                    Buffer.BlockCopy(part.ParticleSystem, 0, objectData, i, part.ParticleSystem.Length);
+                    objectData.Write(part.ParticleSystem, i, part.ParticleSystem.Length);
                     i += part.ParticleSystem.Length; //86
                 }
             }
 
             byte[] ExtraData = part.Shape.ExtraParamsToBytes();
-            Buffer.BlockCopy(ExtraData, 0, objectData, i, ExtraData.Length);
+            objectData.Write(ExtraData, i, ExtraData.Length);
             i += ExtraData.Length;
 
             if ((updateFlags & CompressedFlags.HasSound) != 0)
             {
-                part.Sound.ToBytes(objectData, i);
+                objectData.Write(part.Sound.GetBytes(), i, 16);
                 i += 16;
-                Utils.FloatToBytes((float) part.SoundGain, objectData, i);
+                Utils.FloatToBytes((float)part.SoundGain, byteData, 0);
+                objectData.Write(byteData, i, 4);
                 i += 4;
-                objectData[i] = part.SoundFlags;
+                objectData.WriteByte(part.SoundFlags);
                 i++;
-                Utils.FloatToBytes((float) part.SoundRadius, objectData, i);
+                Utils.FloatToBytes((float)part.SoundRadius, byteData, 0);
+                objectData.Write(byteData, i, 4);
                 i += 4;
             }
             if ((updateFlags & CompressedFlags.HasNameValues) != 0)
@@ -5354,69 +5351,76 @@ namespace Aurora.ClientStack
                 if (part.IsAttachment)
                 {
                     byte[] NV = Util.StringToBytes256("AttachItemID STRING RW SV " + part.FromUserInventoryItemID);
-                    Buffer.BlockCopy(NV, 0, objectData, i, NV.Length);
+                    objectData.Write(NV, i, NV.Length);
                     i += NV.Length;
                 }
             }
 
-            objectData[i] = part.Shape.PathCurve;
+            objectData.WriteByte(part.Shape.PathCurve);
             i++;
-            Utils.UInt16ToBytes(part.Shape.PathBegin, objectData, i);
+            Utils.UInt16ToBytes(part.Shape.PathBegin, byteData, 0);
+            objectData.Write(byteData, i, 2);
             i += 2;
-            Utils.UInt16ToBytes(part.Shape.PathEnd, objectData, i);
+            Utils.UInt16ToBytes(part.Shape.PathEnd, byteData, 0);
+            objectData.Write(byteData, i, 2);
             i += 2;
-            objectData[i] = part.Shape.PathScaleX;
+            objectData.WriteByte(part.Shape.PathScaleX);
             i++;
-            objectData[i] = part.Shape.PathScaleY;
+            objectData.WriteByte(part.Shape.PathScaleY);
             i++;
-            objectData[i] = part.Shape.PathShearX;
+            objectData.WriteByte(part.Shape.PathShearX);
             i++;
-            objectData[i] = part.Shape.PathShearY;
+            objectData.WriteByte(part.Shape.PathShearY);
             i++;
-            objectData[i] = (byte) part.Shape.PathTwist;
+            objectData.WriteByte((byte)part.Shape.PathTwist);
             i++;
-            objectData[i] = (byte) part.Shape.PathTwistBegin;
+            objectData.WriteByte((byte)part.Shape.PathTwistBegin);
             i++;
-            objectData[i] = (byte) part.Shape.PathRadiusOffset;
+            objectData.WriteByte((byte)part.Shape.PathRadiusOffset);
             i++;
-            objectData[i] = (byte) part.Shape.PathTaperX;
+            objectData.WriteByte((byte)part.Shape.PathTaperX);
             i++;
-            objectData[i] = (byte) part.Shape.PathTaperY;
+            objectData.WriteByte((byte)part.Shape.PathTaperY);
             i++;
-            objectData[i] = part.Shape.PathRevolutions;
+            objectData.WriteByte(part.Shape.PathRevolutions);
             i++;
-            objectData[i] = (byte) part.Shape.PathSkew;
+            objectData.WriteByte((byte)part.Shape.PathSkew);
             i++;
-
-            objectData[i] = part.Shape.ProfileCurve;
+            objectData.WriteByte(part.Shape.ProfileCurve);
             i++;
-            Utils.UInt16ToBytes(part.Shape.ProfileBegin, objectData, i);
+            Utils.UInt16ToBytes(part.Shape.ProfileBegin, byteData, 0);
+            objectData.Write(byteData, i, 2);
             i += 2;
-            Utils.UInt16ToBytes(part.Shape.ProfileEnd, objectData, i);
+            Utils.UInt16ToBytes(part.Shape.ProfileEnd, byteData, 0);
+            objectData.Write(byteData, i, 2);
             i += 2;
-            Utils.UInt16ToBytes(part.Shape.ProfileHollow, objectData, i);
+            Utils.UInt16ToBytes(part.Shape.ProfileHollow, byteData, 0);
+            objectData.Write(byteData, i, 2);
             i += 2;
 
             if (part.Shape.TextureEntry != null && part.Shape.TextureEntry.Length > 0)
             {
                 // Texture Length
-                Utils.IntToBytes(part.Shape.TextureEntry.Length, objectData, i);
+                Utils.IntToBytes(part.Shape.TextureEntry.Length, byteData, 0);
+                objectData.Write(byteData, i, 4);
                 i += 4;
                 // Texture
-                Buffer.BlockCopy(part.Shape.TextureEntry, 0, objectData, i, part.Shape.TextureEntry.Length);
+                objectData.Write(part.Shape.TextureEntry, i, part.Shape.TextureEntry.Length);
                 i += part.Shape.TextureEntry.Length;
             }
             else
             {
-                Utils.IntToBytes(0, objectData, i);
+                Utils.IntToBytes(0, byteData, 0);
+                objectData.Write(byteData, i, 4);
                 i += 4;
             }
 
             if ((updateFlags & CompressedFlags.TextureAnimation) != 0)
             {
-                Utils.UInt64ToBytes((ulong) part.TextureAnimation.Length, objectData, i);
+                Utils.UInt64ToBytes((ulong)part.TextureAnimation.Length, byteData, 0);
+                objectData.Write(byteData, i, 4);
                 i += 4;
-                Buffer.BlockCopy(part.TextureAnimation, 0, objectData, i, part.TextureAnimation.Length);
+                objectData.Write(part.TextureAnimation, i, part.TextureAnimation.Length);
                 i += part.TextureAnimation.Length;
             }
 
@@ -5443,9 +5447,7 @@ namespace Aurora.ClientStack
 
             #endregion PrimFlags
 
-            byte[] PacketObjectData = new byte[i]; //Makes the packet smaller so we can send more!
-            Buffer.BlockCopy(objectData, 0, PacketObjectData, 0, i);
-            update.Data = PacketObjectData;
+            update.Data = objectData.ToArray();
 
             return update;
         }
