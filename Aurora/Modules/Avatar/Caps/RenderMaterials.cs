@@ -268,7 +268,7 @@ namespace Aurora.Modules.Caps
                                                         sop.TriggerScriptChangedEvent(Changed.TEXTURE);
                                                         sop.ParentEntity.HasGroupChanged = true;
 
-                                                        sop.ScheduleUpdate(PrimUpdateFlags.Textures);
+                                                        sop.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
 
                                                         AssetBase asset = new AssetBase(id, "RenderMaterial",
                                                             AssetType.Texture, sop.OwnerID)
@@ -425,11 +425,11 @@ namespace Aurora.Modules.Caps
                 using (ZOutputStream zOut = new ZOutputStream(msSinkCompressed))
                 {
                     CopyStream(new MemoryStream(OSDParser.SerializeLLSDBinary(inOsd, useHeader)), zOut);
+                    msSinkCompressed.Seek(0L, SeekOrigin.Begin);
+                    osd = OSD.FromBinary(msSinkCompressed.ToArray());
                     zOut.Close();
                 }
 
-                msSinkCompressed.Seek(0L, SeekOrigin.Begin);
-                osd = OSD.FromBinary(msSinkCompressed.ToArray());
             }
 
             return osd;
@@ -444,10 +444,10 @@ namespace Aurora.Modules.Caps
                 using(ZInputStream zOut = new ZInputStream(msSinkUnCompressed))
                 {
                     zOut.Read(input, 0, input.Length);
+                    msSinkUnCompressed.Seek(0L, SeekOrigin.Begin);
+                    osd = OSDParser.DeserializeLLSDBinary(msSinkUnCompressed.ToArray());
                     zOut.Close();
                 }
-                msSinkUnCompressed.Seek(0L, SeekOrigin.Begin);
-                osd = OSDParser.DeserializeLLSDBinary(msSinkUnCompressed.ToArray());
             }
 
             return osd;
